@@ -80,7 +80,7 @@ export const CurrentEventSection = () => {
                   transition={{ duration: 0.8, delay: 0.2 + idx * 0.15 }}
                   whileHover={{ 
                     scale: 1.02,
-                    transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+                    transition: { duration: 0.4, ease: "easeOut" }
                   }}
                 >
                   <div className="relative overflow-hidden rounded-xl">
@@ -119,7 +119,7 @@ export const CurrentEventSection = () => {
                   className="mt-4 text-base text-center text-[#c0caff] italic"
                   initial={{ opacity: 0, y: 10 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + idx * 0.1, duration: 0.5, ease: [0.19, 1, 0.22, 1] }}
+                  transition={{ delay: 0.3 + idx * 0.1, duration: 0.5, ease: "easeOut" }}
                   style={{
                     textShadow: "0 0 8px rgba(30, 174, 219, 0.5)"
                   }}
@@ -186,7 +186,7 @@ export const CurrentEventSection = () => {
               initial={{ y: "100%" }}
               whileInView={{ y: "0%" }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1], delay: 0.2 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
             >
               {currentEvent.title}
             </motion.p>
@@ -199,7 +199,7 @@ export const CurrentEventSection = () => {
               initial={{ y: "100%" }}
               whileInView={{ y: "0%" }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1], delay: 0.3 }}
+              transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
             >
               {currentEvent.description}
             </motion.p>
@@ -235,11 +235,11 @@ export const CurrentEventSection = () => {
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
-                      transition={{ delay: 0.5 + idx * 0.1, duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
+                      transition={{ delay: 0.5 + idx * 0.1, duration: 0.6, ease: "easeOut" }}
                       whileHover={{ 
                         scale: 1.08,
                         y: -5,
-                        transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+                        transition: { duration: 0.4, ease: "easeOut" }
                       }}
                     >
                       <div className="overflow-hidden rounded-lg">
@@ -249,7 +249,7 @@ export const CurrentEventSection = () => {
                           className="rounded-lg w-32 h-20 object-cover border-2 border-[#00a3ff77] shadow-md mb-2 transition-all duration-300"
                           whileHover={{
                             scale: 1.1,
-                            transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+                            transition: { duration: 0.4, ease: "easeOut" }
                           }}
                         />
                       </div>

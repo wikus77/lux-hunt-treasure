@@ -56,7 +56,7 @@ const HeroSection = () => {
         <motion.div
           initial={fadeSlideUpHidden}
           animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-6"
         >
           <h2 className="text-sm md:text-base uppercase tracking-[0.3em] text-cyan-300">Benvenuto in</h2>
@@ -65,7 +65,7 @@ const HeroSection = () => {
         <motion.div
           initial={fadeSlideUpHidden}
           animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1], delay: 0.1 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
           className="mb-4"
         >
           <h1 className="text-6xl md:text-8xl font-orbitron font-bold gradient-text-cyan mb-4">
@@ -76,7 +76,7 @@ const HeroSection = () => {
         <motion.div
           initial={fadeSlideUpHidden}
           animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1], delay: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
           className="mb-10"
         >
           <h3 className="text-xl md:text-3xl text-white/90 font-light">
@@ -90,7 +90,7 @@ const HeroSection = () => {
         <motion.div
           initial={fadeSlideUpHidden}
           animate={fadeSlideUpShow}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1], delay: 0.3 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
           className="flex flex-col md:flex-row items-center justify-center gap-6"
         >
           <motion.div
@@ -128,7 +128,7 @@ const HeroSection = () => {
           }}
           transition={{ 
             duration: 0.6, 
-            ease: [0.4, 0, 0.2, 1], 
+            ease: "easeOut",
             delay: 0.4,
             y: { duration: 2, repeat: Infinity, ease: "easeInOut" }
           }}

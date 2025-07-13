@@ -57,7 +57,7 @@ const SplitWords = ({ text, delay = 0 }: { text: string; delay?: number }) => {
             transition={{ 
               duration: 0.4, 
               delay: 0.05 * i + delay,
-              ease: [0.19, 1, 0.22, 1]
+              ease: "easeOut"
             }}
           >
             <span className={textClass}>{word}</span>{" "}

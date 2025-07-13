@@ -33,10 +33,10 @@ export const MissionCard: React.FC<MissionCardProps> = ({ prize, index }) => {
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.7, delay: 0.1 * index, ease: [0.19, 1, 0.22, 1] }}
+        transition={{ duration: 0.7, delay: 0.1 * index, ease: "easeOut" }}
         whileHover={{ 
           scale: 1.03,
-          transition: { duration: 0.4, ease: [0.19, 1, 0.22, 1] }
+          transition: { duration: 0.4, ease: "easeOut" }
         }}
       >
         {/* 3D rotation effect container */}
@@ -63,7 +63,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ prize, index }) => {
               }}
               whileHover={{
                 scale: 1.08,
-                transition: { duration: 0.7, ease: [0.19, 1, 0.22, 1] }
+                transition: { duration: 0.7, ease: "easeOut" }
               }}
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
@@ -84,7 +84,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ prize, index }) => {
                 transition={{ 
                   duration: 0.5, 
                   delay: 0.2 + 0.05 * index,
-                  ease: [0.19, 1, 0.22, 1]
+                  ease: "easeOut"
                 }}
               >
                 {prize.name}
@@ -100,7 +100,7 @@ export const MissionCard: React.FC<MissionCardProps> = ({ prize, index }) => {
                 transition={{ 
                   duration: 0.5,
                   delay: 0.3 + 0.05 * index,
-                  ease: [0.19, 1, 0.22, 1] 
+                  ease: "easeOut" 
                 }}
               >
                 {prize.description}

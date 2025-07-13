@@ -169,7 +169,7 @@ const CarShowcase = () => {
                       <motion.div
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: current === index ? 1 : 0, y: current === index ? 0 : 40 }}
-                        transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
+                        transition={{ duration: 0.7, ease: "easeOut" }}
                       >
                         <h3 className="text-4xl md:text-6xl font-orbitron font-bold mb-4" style={{ color: car.color }}>
                           {car.name}
