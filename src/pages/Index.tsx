@@ -74,7 +74,10 @@ const Index = () => {
         countdownCompleted={countdownCompleted}
         showAgeVerification={showAgeVerification}
         showInviteFriend={showInviteFriend}
-        onIntroComplete={() => handleIntroComplete(setIntroCompleted)}
+        onIntroComplete={() => {
+          handleIntroComplete();
+          setIntroCompleted(true);
+        }}
         onRetry={handleRetry}
         onRegisterClick={handleRegisterClick}
         openInviteFriend={openInviteFriend}
@@ -87,3 +90,9 @@ const Index = () => {
 };
 
 export default Index;
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Index Page refactorizzato con Custom Hooks per iOS Capacitor
+ * Problema TypeScript risolto: handleIntroComplete function signature
+ */

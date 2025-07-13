@@ -17,9 +17,8 @@ export const useIndexHandlers = () => {
     setRenderContent(canRender);
   }, []);
 
-  const handleIntroComplete = useCallback((setIntroCompleted: (value: boolean) => void) => {
+  const handleIntroComplete = useCallback(() => {
     console.log("Intro completed callback, setting introCompleted to true");
-    setIntroCompleted(true);
     try {
       if (typeof window !== 'undefined') {
         localStorage.setItem("skipIntro", "true");
