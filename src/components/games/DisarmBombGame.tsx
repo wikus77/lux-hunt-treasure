@@ -48,45 +48,51 @@ const DisarmBombGame: React.FC = () => {
 
   // Genera istruzioni criptiche basate sulla sequenza
   const generateInstructions = useCallback((sequence: string[]) => {
-    const instructions: Instruction[] = [];
+    let instructions: Instruction[] = [];
     
     switch (difficulty) {
       case 'easy':
-        instructions.push({
+        const firstInstruction: Instruction = {
           text: `Prima taglia il filo ${sequence[0]?.toUpperCase()}`,
           hint: "Inizia sempre con questo colore"
-        });
+        };
+        instructions = [...instructions, firstInstruction];
         if (sequence[1]) {
-          instructions.push({
+          const secondInstruction: Instruction = {
             text: `Poi taglia il filo ${sequence[1]?.toUpperCase()}`,
             hint: "Il secondo della sequenza"
-          });
+          };
+          instructions = [...instructions, secondInstruction];
         }
         break;
         
       case 'medium':
-        instructions.push({
+        const mediumFirstInstruction: Instruction = {
           text: `Il primo filo è il colore del ${sequence[0] === 'red' ? 'fuoco' : sequence[0] === 'blue' ? 'cielo' : sequence[0] === 'green' ? 'prato' : sequence[0] === 'yellow' ? 'sole' : sequence[0] === 'purple' ? 'tramonto' : 'autunno'}`,
           hint: "Decodifica il colore"
-        });
+        };
+        instructions = [...instructions, mediumFirstInstruction];
         if (sequence[1]) {
-          instructions.push({
+          const mediumSecondInstruction: Instruction = {
             text: `Il secondo è ${sequence[1] === 'blue' ? 'freddo come il ghiaccio' : sequence[1] === 'red' ? 'caldo come il fuoco' : sequence[1] === 'green' ? 'naturale come la foresta' : sequence[1] === 'yellow' ? 'brillante come oro' : sequence[1] === 'purple' ? 'regale come un re' : 'vibrante come un tramonto'}`,
             hint: "Trova l'associazione"
-          });
+          };
+          instructions = [...instructions, mediumSecondInstruction];
         }
         break;
         
       case 'hard':
-        instructions.push({
+        const hardFirstInstruction: Instruction = {
           text: `RGB(${sequence[0] === 'red' ? '255,0,0' : sequence[0] === 'blue' ? '0,0,255' : sequence[0] === 'green' ? '0,255,0' : sequence[0] === 'yellow' ? '255,255,0' : sequence[0] === 'purple' ? '128,0,128' : '255,165,0'}) → 1°`,
           hint: "Decodifica il codice colore"
-        });
+        };
+        instructions = [...instructions, hardFirstInstruction];
         if (sequence[1]) {
-          instructions.push({
+          const hardSecondInstruction: Instruction = {
             text: `Lunghezza d'onda ${sequence[1] === 'red' ? '700nm' : sequence[1] === 'blue' ? '450nm' : sequence[1] === 'green' ? '550nm' : sequence[1] === 'yellow' ? '580nm' : sequence[1] === 'purple' ? '400nm' : '600nm'} → 2°`,
             hint: "Spettro elettromagnetico"
-          });
+          };
+          instructions = [...instructions, hardSecondInstruction];
         }
         break;
     }

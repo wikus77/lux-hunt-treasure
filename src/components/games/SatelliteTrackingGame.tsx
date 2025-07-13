@@ -51,9 +51,9 @@ const SatelliteTrackingGame: React.FC = () => {
   }, [gameStarted, isGameComplete]);
 
   const generateSatellites = () => {
-    const newSatellites: SatelliteData[] = [];
+    let newSatellites: SatelliteData[] = [];
     for (let i = 0; i < 6; i++) {
-      newSatellites.push({
+      const satelliteItem: SatelliteData = {
         id: i,
         x: Math.random() * 350 + 25,
         y: Math.random() * 250 + 25,
@@ -61,7 +61,8 @@ const SatelliteTrackingGame: React.FC = () => {
         direction: Math.random() * Math.PI * 2,
         isTarget: false,
         isTracked: false
-      });
+      };
+      newSatellites = [...newSatellites, satelliteItem];
     }
     
     // Set one as target

@@ -95,9 +95,10 @@ const MemoryHackGame: React.FC = () => {
   // Genera nuova sequenza
   const generateSequence = useCallback((level: number): number[] => {
     const sequenceLength = Math.min(3 + level, 12); // Max 12 elementi
-    const sequence = [];
+    let sequence: number[] = [];
     for (let i = 0; i < sequenceLength; i++) {
-      sequence.push(Math.floor(Math.random() * 8)); // 8 colori disponibili
+      const randomNumber = Math.floor(Math.random() * 8); // 8 colori disponibili
+      sequence = [...sequence, randomNumber];
     }
     return sequence;
   }, []);

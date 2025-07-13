@@ -52,7 +52,7 @@ const DisarmTheBombGame: React.FC = () => {
 
     // Generate cutting sequence and instructions
     const correctSequence = Math.floor(Math.random() * 3); // 0, 1, or 2
-    const newInstructions: string[] = [];
+    let newInstructions: string[] = [];
 
     switch (correctSequence) {
       case 0:
@@ -61,19 +61,19 @@ const DisarmTheBombGame: React.FC = () => {
         const blueIndex = newWires.findIndex(w => w.color === 'blue');
         if (redIndex !== -1) newWires[redIndex].isCorrect = true;
         if (blueIndex !== -1) newWires[blueIndex].isCorrect = true;
-        newInstructions.push('Taglia prima il filo rosso, poi quello blu');
+        newInstructions = [...newInstructions, 'Taglia prima il filo rosso, poi quello blu'];
         break;
       case 1:
         // Cut the last wire
         newWires[newWires.length - 1].isCorrect = true;
-        newInstructions.push('Taglia l\'ultimo filo');
+        newInstructions = [...newInstructions, 'Taglia l\'ultimo filo'];
         break;
       case 2:
         // Cut all wires except black
         newWires.forEach(wire => {
           if (wire.color !== 'black') wire.isCorrect = true;
         });
-        newInstructions.push('Taglia tutti i fili tranne quello nero');
+        newInstructions = [...newInstructions, 'Taglia tutti i fili tranne quello nero'];
         break;
     }
 

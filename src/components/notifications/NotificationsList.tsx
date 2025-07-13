@@ -38,7 +38,7 @@ export const NotificationsList: React.FC<NotificationsListProps> = ({
       if (!acc[category]) {
         acc[category] = [];
       }
-      acc[category].push(notification);
+      acc[category] = [...acc[category], notification];
       return acc;
     }, {} as Record<string, typeof notifications>);
     

@@ -50,7 +50,7 @@ export const AgentDiary: React.FC<AgentDiaryProps> = ({
 
     try {
       setLoading(true);
-      const diaryEntries: DiaryEntry[] = [];
+      let diaryEntries: DiaryEntry[] = [];
 
       // Get recent clues unlocked
       const { data: clues } = await supabase
@@ -60,16 +60,20 @@ export const AgentDiary: React.FC<AgentDiaryProps> = ({
         .order('created_at', { ascending: false })
         .limit(5);
 
-      clues?.forEach(clue => {
-        diaryEntries.push({
-          id: `clue_${clue.clue_id}`,
-          type: 'clue_unlocked',
-          title: 'Indizio Sbloccato',
-          description: clue.title_it,
-          timestamp: clue.created_at,
-          reward: `${clue.buzz_cost} crediti spesi`
-        });
-      });
+      // Process clues
+      if (clues) {
+        for (const clue of clues) {
+          const clueEntry: DiaryEntry = {
+            id: `clue_${clue.clue_id}`,
+            type: 'clue_unlocked' as const,
+            title: 'Indizio Sbloccato',
+            description: clue.title_it,
+            timestamp: clue.created_at,
+            reward: `${clue.buzz_cost} crediti spesi`
+          };
+          diaryEntries = [...diaryEntries, clueEntry];
+        }
+      }
 
       // Get recent buzz actions
       const { data: buzzActions } = await supabase
@@ -79,17 +83,21 @@ export const AgentDiary: React.FC<AgentDiaryProps> = ({
         .order('created_at', { ascending: false })
         .limit(5);
 
-      buzzActions?.forEach(action => {
-        diaryEntries.push({
-          id: `buzz_${action.id}`,
-          type: 'buzz_used',
-          title: 'BUZZ Attivato',
-          description: `Area di ${action.radius_generated}km sbloccata`,
-          timestamp: action.created_at,
-          reward: `${action.clue_count} indizi trovati`,
-          metadata: { cost: action.cost_eur }
-        });
-      });
+      // Process buzz actions
+      if (buzzActions) {
+        for (const action of buzzActions) {
+          const actionEntry: DiaryEntry = {
+            id: `buzz_${action.id}`,
+            type: 'buzz_used' as const,
+            title: 'BUZZ Attivato',
+            description: `Area di ${action.radius_generated}km sbloccata`,
+            timestamp: action.created_at,
+            reward: `${action.clue_count} indizi trovati`,
+            metadata: { cost: action.cost_eur }
+          };
+          diaryEntries = [...diaryEntries, actionEntry];
+        }
+      }
 
       // Get recent map areas
       const { data: areas } = await supabase
@@ -99,16 +107,20 @@ export const AgentDiary: React.FC<AgentDiaryProps> = ({
         .order('created_at', { ascending: false })
         .limit(3);
 
-      areas?.forEach(area => {
-        diaryEntries.push({
-          id: `area_${area.id}`,
-          type: 'area_unlocked',
-          title: 'Nuova Area Esplorata',
-          description: `Settimana ${area.week} - Raggio ${area.radius_km}km`,
-          timestamp: area.created_at,
-          location: `${area.lat.toFixed(4)}, ${area.lng.toFixed(4)}`
-        });
-      });
+      // Process areas
+      if (areas) {
+        for (const area of areas) {
+          const areaEntry: DiaryEntry = {
+            id: `area_${area.id}`,
+            type: 'area_unlocked' as const,
+            title: 'Nuova Area Esplorata',
+            description: `Settimana ${area.week} - Raggio ${area.radius_km}km`,
+            timestamp: area.created_at,
+            location: `${area.lat.toFixed(4)}, ${area.lng.toFixed(4)}`
+          };
+          diaryEntries = [...diaryEntries, areaEntry];
+        }
+      }
 
       // Sort by timestamp and limit
       const sortedEntries = diaryEntries

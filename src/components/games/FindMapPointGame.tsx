@@ -37,21 +37,22 @@ const FindMapPointGame: React.FC = () => {
   }, [isTimerRunning, isGameComplete]);
 
   const generateMap = () => {
-    const newPoints: MapPoint[] = [];
+    let newPoints: MapPoint[] = [];
     const locations = [
       'Roma', 'Milano', 'Napoli', 'Torino', 'Palermo',
       'Genova', 'Bologna', 'Firenze', 'Bari', 'Catania'
     ];
 
     for (let i = 0; i < 8; i++) {
-      newPoints.push({
+      const pointItem: MapPoint = {
         id: i,
         x: Math.random() * 300 + 50, // Random position within map bounds
         y: Math.random() * 200 + 50,
         isTarget: false,
         isSelected: false,
         label: locations[i]
-      });
+      };
+      newPoints = [...newPoints, pointItem];
     }
 
     // Set one point as target

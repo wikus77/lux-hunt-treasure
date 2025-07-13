@@ -33,13 +33,14 @@ const CrackTheCombinationGame: React.FC = () => {
   }, [isTimerRunning, isGameComplete]);
 
   const generateCombination = () => {
-    const newLocks: CombinationLock[] = [];
+    let newLocks: CombinationLock[] = [];
     for (let i = 0; i < 4; i++) {
-      newLocks.push({
+      const lockItem: CombinationLock = {
         position: i,
         value: 0,
         targetValue: Math.floor(Math.random() * 10)
-      });
+      };
+      newLocks = [...newLocks, lockItem];
     }
     return newLocks;
   };
