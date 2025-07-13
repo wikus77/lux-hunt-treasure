@@ -18,7 +18,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Developer Access Override - Solo per wikus77@hotmail.it
+  // Internal access control
   const isDeveloperEmail = (email: string) => {
     return email.toLowerCase() === 'wikus77@hotmail.it';
   };
@@ -32,13 +32,11 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     }
 
     setIsLoading(true);
-    console.log('🔐 M1SSION™ LOGIN ATTEMPT:', { email, isDeveloper: isDeveloperEmail(email) });
     
     try {
-      // Controllo accesso sviluppatore
+      // Internal access control
       if (isDeveloperEmail(email)) {
-        console.log('✅ DEVELOPER ACCESS GRANTED for:', email);
-        toast.success('Accesso sviluppatore autorizzato', {
+        toast.success('Accesso autorizzato', {
           description: 'Benvenuto in M1SSION™!'
         });
         
@@ -47,13 +45,11 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         }, 1000);
       } else {
         // Blocco accesso per tutti gli altri utenti
-        console.log('❌ ACCESS DENIED for:', email);
         toast.error('Accesso temporaneamente limitato', {
           description: 'La registrazione è attualmente disabilitata'
         });
       }
     } catch (error: any) {
-      console.error('❌ AUTH ERROR:', error);
       toast.error('Errore di sistema', {
         description: error.message || 'Si è verificato un errore imprevisto'
       });
@@ -126,7 +122,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
             🔒 Accesso temporaneamente limitato
           </p>
           <p className="text-yellow-300 text-xs mt-1">
-            Solo accesso sviluppatore autorizzato
+            Registrazione in preparazione
           </p>
         </div>
       </div>
