@@ -1,73 +1,122 @@
-# Welcome to your Lovable project
+# 🕵️ M1SSION™ - Elite Treasure Hunt App
 
-## Project info
+**🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™**
 
-**URL**: https://lovable.dev/projects/2716f91b-957c-47ba-91e0-6f572f3ce00d
+## 📱 Project Overview
 
-## How can I edit this code?
+M1SSION™ is an elite treasure hunting application featuring:
+- 🗺️ Interactive BUZZ MAP with dynamic geolocation
+- 🎯 Real-time treasure hunting with premium subscriptions
+- 🎮 Mini-games and interactive challenges
+- 💳 Integrated Stripe payments (Silver, Gold, Black tiers)
+- 📱 Native iOS compatibility via Capacitor
+- 🔔 Push notifications with Dynamic Island support
 
-There are several ways of editing your application.
+## 🛠 Technologies Used
 
-**Use Lovable**
+- **Frontend**: React + TypeScript + Vite
+- **UI Framework**: Tailwind CSS + shadcn/ui
+- **Backend**: Supabase (Database, Auth, Edge Functions)
+- **Mobile**: Capacitor for iOS native compatibility
+- **Payments**: Stripe Integration (Live Mode)
+- **Notifications**: Firebase FCM + Dynamic Island
+- **Maps**: Leaflet with custom M1SSION™ styling
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/2716f91b-957c-47ba-91e0-6f572f3ce00d) and start prompting.
+## 🚀 Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- iOS development: Xcode 14+ (for iOS builds)
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to project directory
+cd m1ssion-app
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
+
+# Build for production
+npm run build
 ```
 
-**Edit a file directly in GitHub**
+### 📱 iOS Capacitor Build
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Add iOS platform
+npx cap add ios
 
-**Use GitHub Codespaces**
+# Sync with native project
+npx cap sync
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Open in Xcode
+npx cap open ios
+```
 
-## What technologies are used for this project?
+## 🎯 Core Features
 
-This project is built with:
+### 🗺️ BUZZ MAP System
+- Dynamic area generation based on subscription tier
+- Real-time geolocation with proximity detection
+- Premium clue generation and discovery
+- Dynamic pricing based on weekly usage
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 💳 Subscription Tiers
+- **Silver**: €3.99/month - Basic features
+- **Gold**: €6.99/month - Enhanced capabilities  
+- **Black**: €9.99/month - VIP access with exclusive events
 
-## How can I deploy this project?
+### 🎮 Mini-Games
+- Crack the Combination
+- Disarm the Bomb
+- Satellite Tracking
+- Flash Interrogation
+- Find Map Point
 
-Simply open [Lovable](https://lovable.dev/projects/2716f91b-957c-47ba-91e0-6f572f3ce00d) and click on Share -> Publish.
+## 🔐 Security & Architecture
 
-## Can I connect a custom domain to my Lovable project?
+- **Row Level Security (RLS)** on all Supabase tables
+- **JWT Authentication** with secure session management
+- **Encrypted payment processing** via Stripe
+- **GDPR Compliant** data handling
+- **Secure API endpoints** with abuse protection
 
-Yes, you can!
+## 📱 iOS Features
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- Dynamic Island integration for live activities
+- Push notifications with custom categories
+- Native iOS gestures and safe area handling
+- Offline capability for core features
+- App Store ready configuration
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## 🔧 Configuration
+
+All environment variables and secrets are managed through:
+- Supabase Edge Function secrets
+- Capacitor native configuration
+- Firebase project settings
+
+## 📞 Support & Contact
+
+For technical support or business inquiries:
+- **CEO**: Joseph Mulè
+- **Company**: Niyvora KFT™
+- **Email**: [Contact through app]
+
+---
+
+## 📄 License & Ownership
+
+**© 2025 NIYVORA KFT™ - All Rights Reserved**
+
+This project and all its components are the exclusive property of Joseph Mulè and Niyvora KFT™. Unauthorized copying, distribution, or modification is strictly prohibited.
+
+**🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™**

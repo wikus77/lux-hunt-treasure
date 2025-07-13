@@ -9,6 +9,10 @@ interface PaymentResult {
   error?: string;
 }
 
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Stripe Payment Hook - Live Mode Ready
+ */
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuthContext();
@@ -34,7 +38,8 @@ export const useStripePayment = () => {
           is_buzz_map: isBuzzMap,
           currency: 'EUR',
           redirect_url: redirectUrl,
-          session_id: sessionId
+          session_id: sessionId,
+          mode: 'live' // Force live mode for production
         }
       });
 
@@ -73,7 +78,8 @@ export const useStripePayment = () => {
         body: {
           user_id: user.id,
           plan,
-          payment_method: paymentMethod || 'card'
+          payment_method: paymentMethod || 'card',
+          mode: 'live' // Force live mode for production
         }
       });
 
@@ -84,8 +90,13 @@ export const useStripePayment = () => {
       }
 
       if (data?.url) {
-        // Redirect to Stripe checkout
+        // Open Stripe checkout in new tab for live payments
         window.open(data.url, '_blank');
+        
+        // Show live payment notification
+        toast.success('Pagamento Live', {
+          description: 'Verrai reindirizzato al checkout sicuro di Stripe',
+        });
       } else {
         toast.error('Errore nel creare la sessione di pagamento');
       }
@@ -119,3 +130,7 @@ export const useStripePayment = () => {
     loading
   };
 };
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ */

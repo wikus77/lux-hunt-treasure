@@ -1,3 +1,7 @@
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ iOS Push Notifications Hook - Production Ready
+ */
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
@@ -24,10 +28,21 @@ export const usePushNotifications = () => {
         setPermission(Notification.permission);
       }
 
+      // Check for iOS Capacitor environment
+      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
+      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
+      
+      if (isCapacitor && isIOS) {
+        console.log('🍎 iOS Capacitor detected - Enhanced push notification support');
+        setIsSupported(true);
+      }
+
       // Check if messaging is supported
       const messaging = await getMessagingInstance();
       if (!messaging) {
         setIsSupported(false);
+      } else {
+        console.log('🔥 Firebase messaging initialized successfully');
       }
     };
     
@@ -38,14 +53,16 @@ export const usePushNotifications = () => {
   useEffect(() => {
     if (isSupported && permission === 'granted') {
       setupMessageListener((payload) => {
+        console.log('📨 Foreground message received:', payload);
+        
         // Create an in-app notification
         if (payload.notification) {
           const { title, body } = payload.notification;
-          createNotification(title || 'Nuova notifica', body || '');
+          createNotification(title || 'M1SSION™', body || 'Nuova notifica');
           
-          // Show toast
-          toast(title || 'Nuova notifica', {
-            description: body || '',
+          // Show toast with M1SSION™ branding
+          toast(title || 'M1SSION™', {
+            description: body || 'Nuova notifica ricevuta',
             duration: 5000,
           });
         }
@@ -53,16 +70,54 @@ export const usePushNotifications = () => {
     }
   }, [isSupported, permission, createNotification]);
 
-  // Request permission
+  // Request permission with iOS native support
   const requestPermission = useCallback(async () => {
     if (!isSupported) {
-      toast.error('Le notifiche non sono supportate in questo browser');
+      toast.error('Le notifiche push non sono supportate su questo dispositivo');
       return { success: false };
     }
     
     setLoading(true);
     
     try {
+      // For iOS Capacitor, use native permission request
+      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
+      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
+
+      if (isCapacitor && isIOS) {
+        console.log('🍎 Requesting iOS native push permission...');
+        
+        try {
+          // Use Capacitor's native push notification plugin
+          const { PushNotifications } = await import('@capacitor/push-notifications');
+          
+          const permResult = await PushNotifications.requestPermissions();
+          console.log('📱 iOS permission result:', permResult);
+          
+          if (permResult.receive === 'granted') {
+            setPermission('granted');
+            
+            // Register for push notifications
+            await PushNotifications.register();
+            
+            toast.success('✅ Notifiche push attivate!', {
+              description: 'Riceverai aggiornamenti su missioni e premi',
+            });
+            
+            setLoading(false);
+            return { success: true };
+          } else {
+            setPermission('denied');
+            toast.error('❌ Permesso notifiche negato');
+            setLoading(false);
+            return { success: false, reason: 'permission-denied' };
+          }
+        } catch (capacitorError) {
+          console.warn('Capacitor push notifications not available, falling back to web API');
+        }
+      }
+
+      // Fallback to web notification API
       const result = await requestNotificationPermission();
       
       if (result.success) {
@@ -71,12 +126,15 @@ export const usePushNotifications = () => {
         if (result.token) {
           setToken(result.token);
         }
-        toast.success('Notifiche attivate con successo!');
+        
+        toast.success('✅ Notifiche push attivate!', {
+          description: 'Riceverai aggiornamenti su missioni e premi',
+        });
       } else {
         if (result.reason === 'permission-denied') {
           setPermission('denied');
-          toast.error('Permesso negato per le notifiche', {
-            description: 'Puoi abilitarle nelle impostazioni del browser'
+          toast.error('❌ Permesso notifiche negato', {
+            description: 'Puoi attivare le notifiche dalle impostazioni del browser'
           });
         } else {
           toast.error('Non è stato possibile attivare le notifiche');
@@ -93,11 +151,47 @@ export const usePushNotifications = () => {
     }
   }, [isSupported, createNotification]);
 
+  // iOS Dynamic Island integration
+  const startLiveActivity = useCallback(async (activityData: {
+    missionId: string;
+    timeLeft: number;
+    progress: number;
+    status: string;
+  }) => {
+    try {
+      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
+      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
+
+      if (isCapacitor && isIOS) {
+        console.log('🏝️ Starting Dynamic Island live activity...', activityData);
+        
+        // Call native Dynamic Island plugin if available
+        const { DynamicIsland } = await import('@/plugins/DynamicIslandPlugin');
+        
+        if (DynamicIsland) {
+          await DynamicIsland.startMissionActivity(activityData);
+          console.log('✅ Dynamic Island activity started');
+        }
+      }
+    } catch (error) {
+      console.warn('Dynamic Island not available:', error);
+    }
+  }, []);
+
   return {
     isSupported,
     permission,
     token,
     loading,
     requestPermission,
+    startLiveActivity,
+    // iOS-specific features
+    isIOSCapacitor: typeof window !== 'undefined' && 
+      (window as any).Capacitor?.isNativePlatform() && 
+      (window as any).Capacitor?.getPlatform() === 'ios'
   };
 };
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ */
