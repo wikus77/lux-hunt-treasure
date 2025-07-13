@@ -71,8 +71,12 @@ export const ExpandableDynamicIsland: React.FC<ExpandableDynamicIslandProps> = (
               className="w-full h-full flex items-center justify-center"
             >
               <motion.div
-                animate={hasNewNotification ? { scale: [1, 1.2, 1] } : {}}
-                transition={{ duration: 0.5 }}
+                animate={hasNewNotification ? { scale: 1.2 } : {}}
+                transition={{ 
+                  duration: 0.5,
+                  repeat: hasNewNotification ? Infinity : 0,
+                  repeatType: "reverse"
+                }}
               >
                 <Bell className="w-5 h-5 text-white" />
                 {hasNewNotification && (

@@ -13,8 +13,12 @@ const BuzzPulseAnimation: React.FC = () => {
       <motion.div
         className="absolute inset-0 bg-cyan-500/20 rounded-full"
         animate={{
-          scale: [1, 2, 3],
-          opacity: [0.8, 0.4, 0],
+          scale: 3,
+          opacity: 0,
+        }}
+        initial={{
+          scale: 1,
+          opacity: 0.8,
         }}
         transition={{
           duration: 3,
