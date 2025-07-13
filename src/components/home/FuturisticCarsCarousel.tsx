@@ -1,3 +1,8 @@
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Futuristic Cars Carousel - Carosello Auto Futuristiche
+ */
+
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { CirclePlay } from "lucide-react";

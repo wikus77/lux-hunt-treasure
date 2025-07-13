@@ -1,8 +1,13 @@
 
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Luxury Cars Section - Auto di Lusso
+ */
+
 import { motion } from "framer-motion";
 import FuturisticCarsCarousel from "./FuturisticCarsCarousel";
 
-const LuxuryCarsSection = () => {
+export const LuxuryCarsSection = () => {
   return (
     <div className="mt-8 px-4">
       <motion.h2 
