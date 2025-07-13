@@ -74,14 +74,14 @@ export function UserLeaderboard() {
   }, []);
   
   const getRankColor = (rank: number): string => {
-    if (rank === 0) return "text-projectx-gold";
+    if (rank === 0) return "text-yellow-400";
     if (rank === 1) return "text-slate-300";
     if (rank === 2) return "text-amber-600";
     return "text-gray-200";
   };
   
   const getRankIcon = (rank: number) => {
-    if (rank === 0) return <Trophy className="h-5 w-5 text-projectx-gold" />;
+    if (rank === 0) return <Trophy className="h-5 w-5 text-yellow-400" />;
     if (rank === 1) return <Trophy className="h-5 w-5 text-slate-300" />;
     if (rank === 2) return <Trophy className="h-5 w-5 text-amber-600" />;
     return <span className="font-bold">{rank + 1}</span>;
@@ -91,7 +91,7 @@ export function UserLeaderboard() {
     <div className="space-y-2">
       {isLoading ? (
         <div className="flex justify-center py-10">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-projectx-blue"></div>
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
         </div>
       ) : (
         leaderboard.map((user, index) => (
@@ -134,10 +134,10 @@ export function UserLeaderboard() {
   );
   
   return (
-    <Card className="w-full bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
+    <Card className="w-full bg-black/40 backdrop-blur-sm border-m1ssion-deep-blue/40">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Award className="h-6 w-6 text-projectx-gold" />
+          <Award className="h-6 w-6 text-yellow-400" />
           Classifiche
         </CardTitle>
         <CardDescription>

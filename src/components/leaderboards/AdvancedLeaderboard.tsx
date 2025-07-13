@@ -169,7 +169,7 @@ export function AdvancedLeaderboard() {
   }, []);
 
   const getRankIcon = (rank: number) => {
-    if (rank === 0) return <Trophy className="h-5 w-5 text-[hsl(var(--projectx-gold))]" />;
+    if (rank === 0) return <Trophy className="h-5 w-5 text-yellow-400" />;
     if (rank === 1) return <Trophy className="h-5 w-5 text-[hsl(var(--muted-foreground))]" />;
     if (rank === 2) return <Trophy className="h-5 w-5 text-amber-600" />;
     return <span className="font-bold text-[hsl(var(--foreground))]">{rank + 1}</span>;
@@ -183,8 +183,8 @@ export function AdvancedLeaderboard() {
 
   const getTierBadgeColor = (tier: string) => {
     switch (tier) {
-      case 'vip': return 'bg-[hsl(var(--projectx-gold))] text-black';
-      case 'premium': return 'bg-[hsl(var(--projectx-blue))] text-white';
+      case 'vip': return 'bg-yellow-400 text-black';
+      case 'premium': return 'bg-m1ssion-blue text-white';
       default: return 'bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]';
     }
   };
@@ -198,7 +198,7 @@ export function AdvancedLeaderboard() {
         key={user.id}
         className={`flex items-center justify-between p-4 border-b border-[hsl(var(--border))] transition-all duration-300 ${
           index < 3 ? 'bg-[hsl(var(--accent))]/20' : 'hover:bg-[hsl(var(--accent))]/10'
-        } ${userPosition === index + 1 ? 'ring-2 ring-[hsl(var(--projectx-blue))] bg-[hsl(var(--projectx-blue))]/5' : ''}`}
+        } ${userPosition === index + 1 ? 'ring-2 ring-m1ssion-blue bg-m1ssion-blue/5' : ''}`}
       >
         <div className="flex items-center gap-4 flex-1">
           <div className="flex items-center gap-2">
@@ -245,7 +245,7 @@ export function AdvancedLeaderboard() {
         </div>
 
         <div className="text-right">
-          <p className="text-2xl font-bold text-[hsl(var(--projectx-blue))]">
+          <p className="text-2xl font-bold text-m1ssion-blue">
             {score.toLocaleString()}
           </p>
           <div className="text-xs text-[hsl(var(--muted-foreground))]">
@@ -265,11 +265,11 @@ export function AdvancedLeaderboard() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Award className="h-6 w-6 text-[hsl(var(--projectx-gold))]" />
+            <Award className="h-6 w-6 text-yellow-400" />
             Classifica Avanzata
           </CardTitle>
           {userPosition && (
-            <Badge variant="outline" className="text-[hsl(var(--projectx-blue))]">
+            <Badge variant="outline" className="text-m1ssion-blue">
               La tua posizione: #{userPosition}
             </Badge>
           )}
@@ -322,7 +322,7 @@ export function AdvancedLeaderboard() {
             <div className="space-y-1">
               {loading ? (
                 <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(var(--projectx-blue))]"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
                 </div>
               ) : (
                 filteredRankings.map((user, index) => renderAdvancedLeaderboardRow(user, index))
@@ -334,7 +334,7 @@ export function AdvancedLeaderboard() {
             <div className="space-y-1">
               {loading ? (
                 <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(var(--projectx-blue))]"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
                 </div>
               ) : (
                 filteredRankings.map((user, index) => renderAdvancedLeaderboardRow(user, index))
@@ -346,7 +346,7 @@ export function AdvancedLeaderboard() {
             <div className="space-y-1">
               {loading ? (
                 <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-[hsl(var(--projectx-blue))]"></div>
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
                 </div>
               ) : (
                 filteredRankings.map((user, index) => renderAdvancedLeaderboardRow(user, index))

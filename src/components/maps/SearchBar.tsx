@@ -52,7 +52,7 @@ const SearchBar: React.FC<Props> = ({
               setSearching(true);
             }}
             placeholder="Cerca una città o provincia italiana..."
-            className="bg-black/70 border-projectx-deep-blue py-2"
+            className="bg-black/70 border-m1ssion-deep-blue py-2"
             onFocus={() => setSearching(true)}
             onBlur={() => setTimeout(() => setSearching(false), 200)}
           />
@@ -107,7 +107,7 @@ const SearchBar: React.FC<Props> = ({
       <Button
         type="submit"
         variant="outline"
-        className="bg-projectx-deep-blue hover:bg-projectx-blue"
+        className="bg-m1ssion-deep-blue hover:bg-m1ssion-blue"
       >
         Cerca
       </Button>

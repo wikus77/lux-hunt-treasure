@@ -80,9 +80,9 @@ const MainLayout = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-projectx-dark transition-colors duration-300 text-white relative full-viewport retina-optimized">
+    <div className="min-h-screen w-full bg-black transition-colors duration-300 text-white relative full-viewport retina-optimized">
       <CookiebotInit />
-      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-projectx-card/40 border-b border-white/10 transition-all duration-300 header-safe-area">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10 transition-all duration-300 header-safe-area">
         <div className="max-w-screen-xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex justify-between items-center safe-area-left safe-area-right">
           <div className="flex items-center">
             <DropdownMenu>

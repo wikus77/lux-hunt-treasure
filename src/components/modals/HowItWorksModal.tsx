@@ -11,9 +11,9 @@ interface HowItWorksModalProps {
 const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ open, onClose }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg bg-black text-white border-projectx-neon-blue">
+      <DialogContent className="max-w-lg bg-black text-white border-m1ssion-blue">
         <DialogHeader>
-          <DialogTitle className="text-projectx-neon-blue font-bold text-xl">Come Funziona</DialogTitle>
+          <DialogTitle className="text-m1ssion-blue font-bold text-xl">Come Funziona</DialogTitle>
         </DialogHeader>
         <DialogDescription asChild>
           <div className="text-sm mt-2 space-y-3 max-h-[60vh] overflow-y-auto">
@@ -29,7 +29,7 @@ const HowItWorksModal: React.FC<HowItWorksModalProps> = ({ open, onClose }) => {
             <p>Per vincere analizza subito ogni indizio, valuta i pacchetti premium e agisci rapidamente se pensi di aver trovato la soluzione!</p>
           </div>
         </DialogDescription>
-        <Button onClick={onClose} className="mt-4 w-full bg-projectx-neon-blue text-black font-bold hover:bg-blue-400 rounded">Chiudi</Button>
+        <Button onClick={onClose} className="mt-4 w-full bg-m1ssion-blue text-black font-bold hover:bg-blue-400 rounded">Chiudi</Button>
       </DialogContent>
     </Dialog>
   );
