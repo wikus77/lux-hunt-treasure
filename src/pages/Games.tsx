@@ -205,7 +205,7 @@ const Games = () => {
         }}
       >
         <div className="container mx-auto">
-          {/* Fix by Lovable AI per Joseph Mulé – M1SSION™ - Colorazione dinamica titolo */}
+          {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ - Colorazione dinamica titolo */}
           <motion.h1
             className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
             initial={{ opacity: 0, y: -10 }}

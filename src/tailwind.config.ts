@@ -1,6 +1,6 @@
 
-// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
-// M1SSION™ Treasure Hunt App - Custom Tailwind Design System
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// M1SSION™ - Custom Tailwind Design System
 // Enhanced with app-specific colors, animations, and mobile optimizations
 
 import type { Config } from 'tailwindcss';

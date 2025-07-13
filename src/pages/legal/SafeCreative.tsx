@@ -45,7 +45,7 @@ const SafeCreative: React.FC = () => {
                 <h3 className="text-lg font-semibold text-[#00D1FF] mb-3">Certificazione Ufficiale</h3>
                 <div className="bg-black/20 p-4 rounded-lg border border-[#00D1FF]/20">
                   <p className="font-medium text-[#00D1FF] mb-2">
-                    🔐 M1SSION™ Treasure Hunt Application
+                    🔐 M1SSION™
                   </p>
                   <p><strong>Autore:</strong> Joseph Mulé</p>
                   <p><strong>Data di Creazione:</strong> 2025</p>

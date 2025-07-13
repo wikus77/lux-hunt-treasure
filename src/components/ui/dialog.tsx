@@ -1,4 +1,4 @@
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 "use client"
 
 import * as React from "react"

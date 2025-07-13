@@ -31,8 +31,8 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
       
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // fix by Lovable AI per Joseph Mulé – M1SSION™
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // fix by Lovable AI per Joseph Mulé – M1SSION™
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
           height: '100dvh',
           overflowY: 'auto',
           position: 'relative',
@@ -40,13 +40,7 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
         }}
       >
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          {/* ✅ fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-          {/* ✅ Compatibilità Capacitor iOS – testata */}
-          
-          {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-          {/* // Compatibile Capacitor iOS ✅ */}
-          
-          {/* ✅ Fix by Joseph Mulé — M1SSION™ */}
+          {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
           {/* ✅ Compatibile Capacitor iOS */}
           
           {children}

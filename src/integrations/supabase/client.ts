@@ -1,6 +1,6 @@
 
-// 🔐 Customized for M1SSION™ by Joseph – Cleaned on 2025-07-10
-// M1SSION™ Treasure Hunt App - Custom Supabase Client Configuration
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// M1SSION™ - Custom Supabase Client Configuration
 // Specialized for M1SSION game mechanics, user management, and real-time features
 
 import { createClient } from '@supabase/supabase-js';

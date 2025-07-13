@@ -1,4 +1,4 @@
-// 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -84,7 +84,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible */}
+      {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
       <Button
         variant="ghost"
         className="p-1 rounded-full hover:bg-white/10 transition-colors"

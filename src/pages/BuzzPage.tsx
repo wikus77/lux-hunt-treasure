@@ -85,11 +85,7 @@ export const BuzzPage: React.FC = () => {
         }}
       >
         <div className="container mx-auto px-4">
-          {/* // fix by Lovable AI per Joseph Mulé – M1SSION™ */}
-          {/* // Compatibile Capacitor iOS ✅ */}
-          
-          {/* ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™ */}
-          {/* ✅ Compatibile Capacitor iOS */}
+          {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
           
           {/* Titolo BUZZ - Spostato 10% più in basso */}
           <div className="text-center mt-[10%] mb-8">

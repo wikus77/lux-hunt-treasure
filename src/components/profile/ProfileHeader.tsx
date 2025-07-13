@@ -1,6 +1,5 @@
 
-// ✅ Fix by Lovable AI per Joseph Mulé — M1SSION™
-// ✅ Compatibile Capacitor iOS
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, Save } from "lucide-react";

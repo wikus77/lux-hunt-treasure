@@ -1,4 +1,4 @@
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";

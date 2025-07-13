@@ -1,5 +1,5 @@
 
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";

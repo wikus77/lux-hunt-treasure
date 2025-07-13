@@ -1,4 +1,4 @@
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -147,12 +147,17 @@ const LegalSettings: React.FC = () => {
             </div>
             <div className="space-y-1">
               <p className="text-white/70 text-sm">Sviluppatore</p>
-              <p className="text-white font-medium">Joseph Mulé</p>
+              <p className="text-white font-medium">NIYVORA KFT™</p>
             </div>
             <div className="space-y-1">
               <p className="text-white/70 text-sm">Copyright</p>
               <p className="text-white font-medium">M1SSION™ 2025</p>
             </div>
+          </div>
+          <div className="mt-4 p-3 bg-[#00D1FF]/10 rounded-lg border border-[#00D1FF]/20">
+            <p className="text-[#00D1FF] text-sm font-medium">
+              M1SSION™ è un'app ufficiale creata e sviluppata da NIYVORA KFT™.
+            </p>
           </div>
         </CardContent>
       </Card>

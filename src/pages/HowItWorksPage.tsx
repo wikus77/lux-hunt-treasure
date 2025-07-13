@@ -120,7 +120,7 @@ export const HowItWorksPage: React.FC = () => {
         </div>
         
         <p className="text-gray-400 max-w-2xl mx-auto text-lg">
-          M1SSION™ è il primo treasure hunt digitale al mondo. 
+          M1SSION™ è il primo treasure hunt digitale al mondo.
           Esplora il mondo reale per trovare premi di lusso nascosti.
         </p>
 
