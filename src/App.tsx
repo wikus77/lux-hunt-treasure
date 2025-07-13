@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
+import ProductionSafety from "./components/debug/ProductionSafety";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -32,6 +33,7 @@ function App() {
         </div>
       </div>
     }>
+    <ProductionSafety>
       <Router>
         <SoundProvider>
           <AuthProvider>
@@ -42,6 +44,7 @@ function App() {
           </AuthProvider>
         </SoundProvider>
       </Router>
+    </ProductionSafety>
     </ErrorBoundary>
   );
 }

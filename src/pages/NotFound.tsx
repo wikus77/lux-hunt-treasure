@@ -7,10 +7,10 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    // Production-safe logging - BY JOSEPH MULE / NIYVORA KFT™
+    if (process.env.NODE_ENV === 'development') {
+      console.log("404 Navigation attempt:", location.pathname);
+    }
   }, [location.pathname]);
 
   return (
