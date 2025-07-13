@@ -124,7 +124,7 @@ const HeroSection = () => {
           initial={fadeSlideUpHidden}
           animate={{ 
             ...fadeSlideUpShow, 
-            y: [0, 10, 0] 
+            y: 10 
           }}
           transition={{ 
             duration: 0.6, 

@@ -32,8 +32,8 @@ export default function HomeIntro({ onEnd }: { onEnd: () => void }) {
               filter: "blur(1px)"
             }}
             animate={{
-              y: [0, -10, 0, 10, 0],
-              opacity: [0.2, 0.8, 0.5, 0.6, 0.2]
+              y: -10,
+              opacity: 0.8
             }}
             transition={{
               duration: Math.random() * 10 + 10,

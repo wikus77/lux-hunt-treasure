@@ -356,7 +356,7 @@ const DisarmBombGame: React.FC = () => {
                   {explosion && (
                     <motion.div
                       initial={{ scale: 0 }}
-                      animate={{ scale: [0, 1.2, 1] }}
+                      animate={{ scale: 1.2 }}
                       className="text-8xl"
                     >
                       💥

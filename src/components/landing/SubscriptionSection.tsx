@@ -77,7 +77,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
 
   return (
     <section className="py-16 px-4 bg-black relative" data-parallax="scroll" data-image-src="/images/grid-pattern.png">
-      <div className="absolute inset-0 bg-[url('/public/images/grid-pattern.png')] opacity-10"></div>
+      <div className="absolute inset-0 bg-[url('/grid-pattern.png')] opacity-10"></div>
       
       <div className="relative z-10 max-w-6xl mx-auto">
         <motion.div

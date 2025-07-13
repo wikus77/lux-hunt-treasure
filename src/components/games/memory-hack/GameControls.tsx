@@ -60,8 +60,8 @@ const GameControls: React.FC<GameControlsProps> = ({
               <motion.div
                 className="absolute -top-2 -right-2"
                 animate={{ 
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 10, -10, 0]
+                  scale: 1.2,
+                  rotate: 10
                 }}
                 transition={{ 
                   duration: 2,
