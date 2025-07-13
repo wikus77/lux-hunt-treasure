@@ -56,10 +56,10 @@ export function UserStatsDashboard() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-gray-700/40" interactive>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-projectx-pink" />
+              <MapPin className="h-5 w-5 text-m1ssion-pink" />
               Aree Esplorate
             </CardTitle>
           </CardHeader>
@@ -79,10 +79,10 @@ export function UserStatsDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-gray-700/40" interactive>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Search className="h-5 w-5 text-projectx-blue" />
+              <Search className="h-5 w-5 text-m1ssion-blue" />
               Indizi Trovati
             </CardTitle>
           </CardHeader>
@@ -102,10 +102,10 @@ export function UserStatsDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-gray-700/40" interactive>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="h-5 w-5 text-projectx-neon-blue" />
+              <Clock className="h-5 w-5 text-m1ssion-blue" />
               Tempo di Gioco
             </CardTitle>
           </CardHeader>
@@ -117,10 +117,10 @@ export function UserStatsDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-gray-700/40" interactive>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Target className="h-5 w-5 text-projectx-gold" />
+              <Target className="h-5 w-5 text-yellow-400" />
               Precisione
             </CardTitle>
           </CardHeader>
@@ -132,7 +132,7 @@ export function UserStatsDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-gray-700/40" interactive>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
               <Star className="h-5 w-5 text-yellow-400" />
@@ -157,10 +157,10 @@ export function UserStatsDashboard() {
           </CardContent>
         </Card>
         
-        <Card className="bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40" interactive>
+        <Card className="bg-black/40 backdrop-blur-sm border-gray-700/40" interactive>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-projectx-gold" />
+              <Trophy className="h-5 w-5 text-yellow-400" />
               Classifica
             </CardTitle>
           </CardHeader>

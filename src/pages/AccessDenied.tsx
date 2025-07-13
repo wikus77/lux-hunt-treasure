@@ -53,7 +53,7 @@ const AccessDenied = () => {
         
         <Button 
           onClick={() => navigate(-1)} 
-          className="bg-projectx-blue flex items-center gap-2"
+          className="bg-m1ssion-blue flex items-center gap-2"
         >
           Torna indietro
         </Button>

@@ -38,7 +38,7 @@ const LanguageSettings = () => {
 
   return (
     <div className="min-h-screen bg-black pb-6 w-full">
-      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-projectx-deep-blue glass-backdrop transition-colors duration-300">
+      <header className="fixed top-0 left-0 right-0 z-40 w-full px-4 py-6 flex items-center border-b border-gray-700 glass-backdrop transition-colors duration-300">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -55,7 +55,7 @@ const LanguageSettings = () => {
           <h2 className="text-lg font-semibold mb-4">Seleziona Lingua</h2>
           <RadioGroup value={selectedLanguage} onValueChange={handleLanguageChange} className="space-y-2">
             {languages.map((language) => (
-              <div key={language.code} className="flex items-center justify-between rounded-md p-4 hover:bg-projectx-deep-blue">
+              <div key={language.code} className="flex items-center justify-between rounded-md p-4 hover:bg-gray-800">
                 <div className="flex items-center">
                   <RadioGroupItem value={language.code} id={`language-${language.code}`} className="mr-4" />
                   <Label htmlFor={`language-${language.code}`} className="flex items-center text-base">
@@ -63,13 +63,13 @@ const LanguageSettings = () => {
                     {language.name}
                   </Label>
                 </div>
-                {selectedLanguage === language.code && <Check className="h-5 w-5 text-projectx-neon-blue" />}
+                {selectedLanguage === language.code && <Check className="h-5 w-5 text-m1ssion-blue" />}
               </div>
             ))}
           </RadioGroup>
           <Button 
             onClick={handleSave}
-            className="w-full mt-6 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+            className="w-full mt-6 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
           >
             Salva Impostazioni
           </Button>

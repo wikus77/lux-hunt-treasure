@@ -44,11 +44,11 @@ const NotificationSection = ({
           </div>
           
           {isSupported === false ? (
-            <div className="text-xs text-projectx-pink">Non supportate</div>
+            <div className="text-xs text-m1ssion-pink">Non supportate</div>
           ) : permission === 'denied' ? (
             <div className="flex items-center gap-2">
-              <span className="text-xs text-projectx-pink">Bloccate</span>
-              <BellOff className="h-4 w-4 text-projectx-pink" />
+              <span className="text-xs text-m1ssion-pink">Bloccate</span>
+              <BellOff className="h-4 w-4 text-m1ssion-pink" />
             </div>
           ) : (
             <Switch 

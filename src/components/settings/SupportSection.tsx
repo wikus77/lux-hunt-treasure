@@ -8,7 +8,7 @@ const SupportSection = () => {
       
       <div className="glass-card flex justify-between items-center p-4">
         <div className="flex items-center">
-          <HelpCircle className="h-5 w-5 mr-3 text-projectx-neon-blue" />
+          <HelpCircle className="h-5 w-5 mr-3 text-m1ssion-blue" />
           <span>Aiuto e FAQ</span>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-foreground" />

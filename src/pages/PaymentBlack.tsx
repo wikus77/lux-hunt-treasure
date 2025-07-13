@@ -106,7 +106,7 @@ const PaymentBlack = () => {
         fadeOut={fadeOutExplosion}
         onFadeOutEnd={() => {}}
       />
-      <header className="px-4 py-6 flex items-center border-b border-projectx-deep-blue">
+      <header className="px-4 py-6 flex items-center border-b border-gray-700">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -125,19 +125,19 @@ const PaymentBlack = () => {
             <p className="text-muted-foreground">Con questo piano avrai accesso a:</p>
             <ul className="space-y-2">
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Tutti i vantaggi Gold</span>
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Accesso VIP ad eventi esclusivi</span>
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Premi misteriosi aggiuntivi</span>
               </li>
               <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-projectx-neon-blue"></div>
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
                 <span>Badge Black nel profilo</span>
               </li>
             </ul>
@@ -145,21 +145,21 @@ const PaymentBlack = () => {
 
           <div className="flex justify-between mb-6">
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'card' ? 'bg-gray-700' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('card')}
             >
               <span className="text-sm">Carta</span>
             </button>
             
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'apple' ? 'bg-gray-700' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('apple')}
             >
               <span className="text-sm">Pagamento Rapido</span>
             </button>
             
             <button 
-              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-projectx-deep-blue' : 'bg-gray-800'}`}
+              className={`flex flex-col items-center justify-center p-4 rounded-md w-1/3 ${paymentMethod === 'google' ? 'bg-gray-700' : 'bg-gray-800'}`}
               onClick={() => setPaymentMethod('google')}
             >
               <span className="text-sm">Altro metodo</span>

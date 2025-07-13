@@ -151,7 +151,7 @@ const Auth = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center">
-        <Spinner className="text-projectx-blue" size="lg" />
+        <Spinner className="text-m1ssion-blue" size="lg" />
         <div className="text-white text-xl mt-4">Caricamento...</div>
       </div>
     );

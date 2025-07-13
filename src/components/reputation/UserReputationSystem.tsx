@@ -61,10 +61,10 @@ export function UserReputationSystem() {
   };
   
   return (
-    <Card className="w-full bg-black/40 backdrop-blur-sm border-projectx-deep-blue/40">
+    <Card className="w-full bg-black/40 backdrop-blur-sm border-gray-700/40">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <UserCheck className="h-6 w-6 text-projectx-blue" />
+          <UserCheck className="h-6 w-6 text-m1ssion-blue" />
           Sistema di Reputazione
         </CardTitle>
         <CardDescription>
@@ -75,7 +75,7 @@ export function UserReputationSystem() {
         {selectedUser ? (
           <div className="space-y-4">
             <div className="flex flex-col items-center p-4 bg-black/30 rounded-lg">
-              <Avatar className="h-16 w-16 mb-2 border-2 border-projectx-deep-blue">
+              <Avatar className="h-16 w-16 mb-2 border-2 border-gray-700">
                 <img
                   src={selectedUser.avatar || `https://avatar.vercel.sh/${selectedUser.name}`}
                   alt={selectedUser.name}
@@ -136,7 +136,7 @@ export function UserReputationSystem() {
                     Annulla
                   </Button>
                   <Button 
-                    className="w-1/2 bg-gradient-to-r from-projectx-blue to-projectx-pink"
+                    className="w-1/2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
                     onClick={handleRateUser}
                   >
                     Invia Valutazione

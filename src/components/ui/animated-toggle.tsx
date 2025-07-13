@@ -11,9 +11,9 @@ const AnimatedToggle = React.forwardRef<
     className={cn(
       "peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full",
       "border-2 border-transparent transition-colors duration-300",
-      "data-[state=checked]:bg-projectx-blue data-[state=unchecked]:bg-white/10",
+      "data-[state=checked]:bg-m1ssion-blue data-[state=unchecked]:bg-white/10",
       "focus-visible:outline-none focus-visible:ring-2",
-      "focus-visible:ring-projectx-blue focus-visible:ring-offset-2",
+      "focus-visible:ring-m1ssion-blue focus-visible:ring-offset-2",
       "disabled:cursor-not-allowed disabled:opacity-50",
       className
     )}
