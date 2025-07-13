@@ -41,15 +41,16 @@ export const AdminEmailSender = () => {
     
     try {
       // Call the Edge Function to send email
-      // Prepare email recipients 
+      // Prepare email recipients and user group
       const emailRecipients = test ? [{ email: testEmail || '' }] : [];
+      const targetUserGroup = test ? undefined : userGroup;
       
       const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
         body: { 
           type: 'marketing',
           subject,
           htmlContent,
-          userGroup: test ? undefined : userGroup,
+          userGroup: targetUserGroup,
           to: emailRecipients,
           trackOpens: true,
           trackClicks: true
