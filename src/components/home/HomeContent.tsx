@@ -8,12 +8,12 @@ import HomeIntroSection from "./HomeIntroSection";
 import DarkZoneTitle from "./DarkZoneTitle";
 import CommandModulesSection from "./CommandModulesSection";
 import CommandCenterWrapper from "./CommandCenterWrapper";
-import LuxuryCarsSection from "./LuxuryCarsSection";
+import { LuxuryCarsSection } from "./LuxuryCarsSection";
 import ExclusivePrizesSection from "./ExclusivePrizesSection";
 import MissionGamesSection from "./MissionGamesSection";
 
 export default function HomeContent() {
-  console.log("[HomeContent] COMPONENT MOUNTED!");
+  console.log("[HomeContent] COMPONENT MOUNTED! - BY JOSEPH MULÈ, CEO NIYVORA KFT™");
   
   const { step, handleIntroEnd } = useIntroStep();
   const { unlockedModules, handleModuleClick, areAllModulesUnlocked } = useModulesUnlock();
@@ -54,3 +54,8 @@ export default function HomeContent() {
     </div>
   );
 }
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Home Content - Risolto conflitto import LuxuryCarsSection
+ */
