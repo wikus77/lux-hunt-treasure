@@ -71,7 +71,7 @@ export const ExpandableDynamicIsland: React.FC<ExpandableDynamicIslandProps> = (
               className="w-full h-full flex items-center justify-center"
             >
               <motion.div
-                animate={hasNewNotification ? { scale: 1.2 } : {}}
+                animate={hasNewNotification ? { scale: 1.2 } : { scale: 1 }}
                 transition={{ 
                   duration: 0.5,
                   repeat: hasNewNotification ? Infinity : 0,

@@ -64,7 +64,7 @@ const PrizeTableDebug = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {})
+            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : { "X-No-Auth": "true" })
           },
           cache: "no-store"
         }
@@ -158,7 +158,7 @@ const PrizeTableDebug = () => {
         {
           method: "POST", // Using POST to indicate we want to create the table
           headers: {
-            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : {}),
+            ...(accessToken ? { "Authorization": `Bearer ${accessToken}` } : { "X-No-Auth": "true" }),
             "Content-Type": "application/json"
           },
           cache: "no-store"
