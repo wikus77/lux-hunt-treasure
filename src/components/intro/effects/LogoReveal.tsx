@@ -18,8 +18,8 @@ const LogoReveal: React.FC<LogoRevealProps> = ({ stage }) => {
             animate={{ 
               opacity: 1, 
               filter: "blur(0px)",
-              y: stage >= 6 ? [0, 10] : 0,
-              scale: stage >= 6 ? [1, 0.95] : 1,
+              y: stage >= 6 ? 10 : 0,
+              scale: stage >= 6 ? 0.95 : 1,
             }}
             transition={{ 
               duration: stage >= 6 ? 1.5 : 1.2, 
@@ -40,8 +40,8 @@ const LogoReveal: React.FC<LogoRevealProps> = ({ stage }) => {
             animate={{ 
               opacity: 1, 
               filter: "blur(0px)",
-              y: stage >= 6 ? [0, 10] : 0,
-              scale: stage >= 6 ? [1, 0.95] : 1,
+              y: stage >= 6 ? 10 : 0,
+              scale: stage >= 6 ? 0.95 : 1,
             }}
             transition={{ 
               duration: stage >= 6 ? 1.5 : 1.2, 
@@ -59,8 +59,8 @@ const LogoReveal: React.FC<LogoRevealProps> = ({ stage }) => {
           className="logo-glow"
           initial={{ opacity: 0 }}
           animate={{ 
-            opacity: stage >= 6 ? [0.8, 0] : [0, 0.8],
-            scale: stage >= 6 ? [1, 1.2] : [0.8, 1]
+            opacity: stage >= 6 ? 0 : 0.8,
+            scale: stage >= 6 ? 1.2 : 1
           }}
           transition={{ 
             duration: stage >= 6 ? 1.5 : 1.2

@@ -15,12 +15,12 @@ const BlackHoleFormation: React.FC<BlackHoleFormationProps> = ({ stage }) => {
         className="accretion-disk"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ 
-          opacity: stage >= 3 ? [0.8, 1, 0] : [0, 0.8, 0.6],
-          scale: stage >= 3 ? [1, 1.2, 0.1] : [0, 1, 1]
+          opacity: stage >= 3 ? 0 : 0.8,
+          scale: stage >= 3 ? 0.1 : 1
         }}
         transition={{ 
           duration: stage >= 3 ? 1.5 : 2,
-          times: stage >= 3 ? [0, 0.4, 1] : [0, 0.5, 1]
+          ease: "easeInOut"
         }}
       />
       
@@ -28,12 +28,12 @@ const BlackHoleFormation: React.FC<BlackHoleFormationProps> = ({ stage }) => {
         className="event-horizon"
         initial={{ opacity: 0, scale: 0 }}
         animate={{ 
-          opacity: stage >= 3 ? [1, 0.5, 0] : [0, 1, 0.8],
-          scale: stage >= 3 ? [0.8, 0.5, 0] : [0, 0.8, 0.7]
+          opacity: stage >= 3 ? 0 : 1,
+          scale: stage >= 3 ? 0 : 0.8
         }}
         transition={{ 
           duration: stage >= 3 ? 1.5 : 2,
-          times: stage >= 3 ? [0, 0.4, 1] : [0, 0.5, 1]
+          ease: "easeInOut"
         }}
       />
     </div>

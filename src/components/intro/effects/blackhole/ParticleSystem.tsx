@@ -228,8 +228,8 @@ const ParticleSystem: React.FC<ParticleSystemProps> = ({ stage, visible }) => {
             filter="url(#gravitational-lens)"
             opacity={0.6}
             animate={{
-              r: stage >= 5 ? [20, 50, 100] : [20, 25, 20],
-              opacity: stage >= 5 ? [0.6, 0.3, 0] : [0.6, 0.7, 0.6]
+              r: stage >= 5 ? 100 : 25,
+              opacity: stage >= 5 ? 0 : 0.7
             }}
             transition={{
               duration: stage >= 5 ? 2 : 4,

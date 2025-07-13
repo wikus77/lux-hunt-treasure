@@ -28,8 +28,8 @@ const BlackHole3DEffect: React.FC<BlackHole3DEffectProps> = ({ stage, visible })
       }}
       initial={{ opacity: 0 }}
       animate={{ 
-        opacity: stage >= 6 ? [1, 0] : 1,
-        scale: stage >= 6 ? [1, 1.1] : 1
+        opacity: stage >= 6 ? 0 : 1,
+        scale: stage >= 6 ? 1.1 : 1
       }}
       transition={{ 
         duration: stage >= 6 ? 2 : 0.5,
