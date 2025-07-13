@@ -1,4 +1,5 @@
 
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 // Firebase Cloud Messaging Service Worker
 
 // Give the service worker access to Firebase Messaging.
@@ -25,8 +26,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title || 'Nuova notifica';
   const notificationOptions = {
     body: payload.notification.body || '',
-    icon: '/lovable-uploads/507c2f6d-4ed0-46dc-b53c-79e1d5b7515e.png', // Your app icon
-    badge: '/lovable-uploads/b79099f5-31ab-44a3-b271-9cde8b7932e1.png', // Optional badge
+    icon: '/assets/m1ssion/icon-192.png', // Your app icon
+    badge: '/assets/m1ssion/icon-192.png', // Optional badge
     data: payload.data,
     actions: payload.notification.actions || []
   };

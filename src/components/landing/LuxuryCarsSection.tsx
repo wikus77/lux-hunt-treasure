@@ -50,7 +50,7 @@ const LuxuryCarsSection = () => {
       engine: car.engine,
       acceleration: car.acceleration,
       prize: car.prize,
-      imageUrl: car.imageUrl || '/lovable-uploads/14f94617-e821-4a59-9b90-32d1dfd615e4.png',
+      imageUrl: car.imageUrl || '/assets/m1ssion/car-placeholder.png',
       color: car.color
     };
     

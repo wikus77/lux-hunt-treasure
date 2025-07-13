@@ -12,7 +12,7 @@ interface InviteFriendDialogProps {
 }
 
 const InviteFriendDialog: React.FC<InviteFriendDialogProps> = ({ isOpen, onClose }) => {
-  const [shareUrl] = useState("https://m1ssion.lovable.app");
+  const [shareUrl] = useState("https://m1ssion.com");
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopyUrl = () => {
