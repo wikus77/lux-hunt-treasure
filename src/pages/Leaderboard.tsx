@@ -24,10 +24,29 @@ const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   rank: i + 1,
   cluesFound: Math.floor(50 - i * 0.3 + Math.random() * 10),
   areasExplored: Math.floor(20 - i * 0.1 + Math.random() * 5),
-  team: i % 5 === 0 ? "Team Alpha" : i % 7 === 0 ? "Team Omega" : i % 3 === 0 ? "Team Gamma" : null,
-  country: i % 4 === 0 ? "🇮🇹" : i % 3 === 0 ? "🇬🇧" : i % 5 === 0 ? "🇺🇸" : "🇪🇺",
-  badges: i < 5 ? ["top10", "explorer"] : i < 15 ? ["explorer"] : i % 7 === 0 ? ["active"] : [],
-  dailyChange: i % 3 === 0 ? Math.floor(Math.random() * 3) + 1 : i % 7 === 0 ? -Math.floor(Math.random() * 3) - 1 : 0,
+  team: (() => {
+    if (i % 5 === 0) return "Team Alpha";
+    if (i % 7 === 0) return "Team Omega";
+    if (i % 3 === 0) return "Team Gamma";
+    return null;
+  })(),
+  country: (() => {
+    if (i % 4 === 0) return "🇮🇹";
+    if (i % 3 === 0) return "🇬🇧";
+    if (i % 5 === 0) return "🇺🇸";
+    return "🇪🇺";
+  })(),
+  badges: (() => {
+    if (i < 5) return ["top10", "explorer"];
+    if (i < 15) return ["explorer"];
+    if (i % 7 === 0) return ["active"];
+    return [];
+  })(),
+  dailyChange: (() => {
+    if (i % 3 === 0) return Math.floor(Math.random() * 3) + 1;
+    if (i % 7 === 0) return -Math.floor(Math.random() * 3) - 1;
+    return 0;
+  })(),
 }));
 
 const sampleTeams = [
