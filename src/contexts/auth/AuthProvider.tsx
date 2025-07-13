@@ -34,7 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     checkSessionWithRetry();
 
-    const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
+    const setupAuthStateChange = async () => {
+      const client = await getSupabaseClient();
+      const { data: { subscription } } = client.auth.onAuthStateChange((event, session) => {
       console.log('🔍 ENHANCED AUTH STATE CHANGE:', event, 'Session exists:', !!session);
       
       if (event === 'SIGNED_IN' && session?.user) {
@@ -59,9 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUserRole(null);
         setIsRoleLoading(false);
       }
-    });
+      });
 
-    return () => subscription.unsubscribe();
+      return () => subscription.unsubscribe();
+    };
+
+    setupAuthStateChange();
   }, [navigate]);
 
   useEffect(() => {
@@ -77,7 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsRoleLoading(true);
         console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
         
-        const { data: roleData } = await supabase
+        const { data: roleData } = await client
           .from('user_roles')
           .select('role')
           .eq('user_id', auth.user.id)
@@ -87,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUserRole(roleData.role);
           console.log("✅ User role found:", roleData.role);
         } else {
-          const { data: profileData } = await supabase
+          const { data: profileData } = await client
             .from('profiles')
             .select('role')
             .eq('id', auth.user.id)
