@@ -42,16 +42,17 @@ export const useCapacitorHardware = () => {
     console.log('🔧 Initializing Capacitor hardware monitoring...');
 
     try {
-      const { Device, Network, StatusBar } = (window as any).Capacitor;
+      // Import plugins properly for iOS compatibility
+      const { Device, Network, StatusBar, Haptics } = (window as any).Capacitor;
 
-      // Get device info
+      // Get device info using new plugin
       let deviceInfo = null;
       if (Device) {
         deviceInfo = await Device.getInfo();
         console.log('📱 Device detected:', deviceInfo.platform, deviceInfo.model);
       }
 
-      // Get network status
+      // Get network status using new plugin
       let networkStatus: 'online' | 'offline' | 'unknown' = 'unknown';
       if (Network) {
         const status = await Network.getStatus();
@@ -73,7 +74,7 @@ export const useCapacitorHardware = () => {
         networkStatus
       }));
 
-      // Setup network listeners
+      // Setup network listeners with improved error handling
       if (Network) {
         const networkListener = Network.addListener('networkStatusChange', (status: any) => {
           const newStatus = status.connected ? 'online' : 'offline';
@@ -84,7 +85,8 @@ export const useCapacitorHardware = () => {
           if (!status.connected) {
             toast({
               title: "Connessione persa",
-              description: "Controlla la tua connessione internet"
+              description: "Controlla la tua connessione internet",
+              variant: "destructive"
             });
           }
         });
@@ -136,6 +138,9 @@ export const useCapacitorHardware = () => {
         } catch (error) {
           console.warn('⚠️ Haptic feedback failed:', error);
         }
+      } else if (!state.isCapacitor && navigator.vibrate) {
+        // Web fallback
+        navigator.vibrate(duration);
       }
     },
 

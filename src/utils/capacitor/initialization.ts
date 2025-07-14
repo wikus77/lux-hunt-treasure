@@ -2,6 +2,9 @@
 import { preserveFunctionName, detectCapacitorEnvironment } from './core';
 import { applySafeAreaStyles } from './styles';
 
+// Unified splash screen timeout
+const SPLASH_TIMEOUT = 3000;
+
 // Initialize Capacitor with explicit function name
 export const initializeCapacitorWithExplicitName = preserveFunctionName(
   async () => {
@@ -31,12 +34,15 @@ export const initializeCapacitorWithExplicitName = preserveFunctionName(
       // Apply safe area styles
       applySafeAreaStyles();
       
-      // Hide splash screen with proper timing
+      // Hide splash screen with unified timing
       if (SplashScreen) {
         console.log('🔄 Hiding Capacitor splash screen...');
         try {
-          await SplashScreen.hide();
-          console.log('✅ Capacitor splash screen hidden successfully');
+          // Wait for the unified timeout before hiding
+          setTimeout(async () => {
+            await SplashScreen.hide();
+            console.log('✅ Capacitor splash screen hidden successfully');
+          }, SPLASH_TIMEOUT);
         } catch (splashError) {
           console.warn('⚠️ Splash screen hide warning:', splashError);
           // Continue even if splash screen hiding fails

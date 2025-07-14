@@ -46,8 +46,8 @@ function App() {
             throw new Error("Capacitor initialization failed");
           }
           
-          // Add a small delay to ensure WebView is fully loaded
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Add unified delay to ensure WebView is fully loaded
+          await new Promise(resolve => setTimeout(resolve, 3000));
         } else {
           console.log("🌐 Web environment detected");
         }
