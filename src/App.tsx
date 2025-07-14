@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
@@ -9,9 +9,76 @@ import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import ProductionSafety from "./components/debug/ProductionSafety";
+import { initializeCapacitorWithExplicitName, detectCapacitorEnvironment } from "./utils/iosCapacitorFunctions";
 
 function App() {
   console.log("🚀 App component rendering...");
+  const [appReady, setAppReady] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        console.log("🔄 Initializing M1SSION™ app...");
+        
+        if (detectCapacitorEnvironment()) {
+          console.log("📱 Capacitor environment detected - initializing...");
+          
+          // Wait for Capacitor to be fully ready
+          await new Promise(resolve => {
+            if ((window as any).Capacitor) {
+              resolve(true);
+            } else {
+              const checkCapacitor = () => {
+                if ((window as any).Capacitor) {
+                  resolve(true);
+                } else {
+                  setTimeout(checkCapacitor, 100);
+                }
+              };
+              checkCapacitor();
+            }
+          });
+
+          // Initialize Capacitor with proper splash screen handling
+          const success = await initializeCapacitorWithExplicitName();
+          if (!success) {
+            throw new Error("Capacitor initialization failed");
+          }
+          
+          // Add a small delay to ensure WebView is fully loaded
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          console.log("🌐 Web environment detected");
+        }
+        
+        setAppReady(true);
+        console.log("✅ M1SSION™ app initialization completed");
+        
+      } catch (error) {
+        console.error("❌ App initialization error:", error);
+        setInitError(error instanceof Error ? error.message : "Unknown initialization error");
+        setAppReady(true); // Still show the app even if init failed
+      }
+    };
+
+    initializeApp();
+  }, []);
+
+  // Show loading screen while app is initializing
+  if (!appReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-m1ssion-blue mx-auto mb-4"></div>
+          <p className="text-lg">Caricamento M1SSION™...</p>
+          {initError && (
+            <p className="text-red-400 text-sm mt-2">Errore: {initError}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
   
   return (
     <ErrorBoundary fallback={

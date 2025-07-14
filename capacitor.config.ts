@@ -44,13 +44,13 @@ const config: CapacitorConfig = {
     },
     
     SplashScreen: {
-      launchShowDuration: 2000,
-      launchAutoHide: true,
-      launchFadeOutDuration: 1000,
+      launchShowDuration: 5000,
+      launchAutoHide: false,
+      launchFadeOutDuration: 500,
       backgroundColor: '#000000',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
-      showSpinner: false,
+      showSpinner: true,
       androidSpinnerStyle: 'large',
       iosSpinnerStyle: 'small',
       spinnerColor: '#00e5ff',

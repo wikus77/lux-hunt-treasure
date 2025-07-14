@@ -282,10 +282,16 @@ export const initializeCapacitorWithExplicitName = preserveFunctionName(
       // Apply safe area styles
       applySafeAreaStyles();
       
-      // Hide splash screen
+      // Hide splash screen with proper timing
       if (SplashScreen) {
-        await SplashScreen.hide();
-        console.log('✅ Splash screen hidden');
+        console.log('🔄 Hiding Capacitor splash screen...');
+        try {
+          await SplashScreen.hide();
+          console.log('✅ Capacitor splash screen hidden successfully');
+        } catch (splashError) {
+          console.warn('⚠️ Splash screen hide warning:', splashError);
+          // Continue even if splash screen hiding fails
+        }
       }
       
       console.log('✅ Capacitor initialization completed');
