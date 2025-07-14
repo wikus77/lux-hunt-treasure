@@ -27,24 +27,40 @@ export default defineConfig(({ mode }) => ({
   // M1SSION™ Capacitor iOS Build Configuration - Custom Output
   base: mode === 'production' ? './' : '/',
   build: {
-    outDir: 'dist', // Fixed: Reverting to standard dist directory for compatibility
+    outDir: 'dist',
     assetsDir: 'assets',
-    // Fixed minification settings for Capacitor iOS
     target: 'es2015',
     minify: mode === 'production' ? 'terser' : false,
     sourcemap: false,
     rollupOptions: {
+      treeshake: {
+        propertyReadSideEffects: false,
+        tryCatchDeoptimization: false,
+        moduleSideEffects: false
+      },
       output: {
-        // Static asset naming for Capacitor compatibility
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]',
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'router-vendor': ['react-router-dom'],
-          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
-          'supabase-vendor': ['@supabase/supabase-js'],
-          'animation-vendor': ['framer-motion', 'lottie-react']
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'react-vendor';
+            }
+            if (id.includes('react-router')) {
+              return 'router-vendor';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui-vendor';
+            }
+            if (id.includes('@supabase')) {
+              return 'supabase-vendor';
+            }
+            if (id.includes('framer-motion') || id.includes('lottie')) {
+              return 'animation-vendor';
+            }
+            return 'vendor';
+          }
         }
       }
     },
@@ -55,33 +71,25 @@ export default defineConfig(({ mode }) => ({
     // Enhanced Terser options for iOS Capacitor compatibility
     terserOptions: {
       compress: {
-        drop_console: false, // Keep console for debugging in production
+        drop_console: false,
         drop_debugger: mode === 'production',
         keep_fnames: true,
         keep_classnames: true,
-        // Prevent unsafe optimizations
         pure_funcs: [],
         unsafe: false,
         unsafe_comps: false,
+        passes: 1,
+        sequences: false,
+        conditionals: false,
+        evaluate: false,
+        hoist_funs: false,
+        hoist_vars: false,
+        join_vars: false,
+        collapse_vars: false,
+        reduce_vars: false,
+        side_effects: false
       },
-      mangle: {
-        keep_fnames: true,
-        keep_classnames: true,
-        reserved: [
-          // Critical React functions
-          'React', 'ReactDOM', 'useState', 'useEffect', 'useCallback', 'useMemo', 'useRef',
-          // Router functions
-          'useNavigate', 'useLocation', 'useParams', 'Link', 'Navigate', 'Routes', 'Route',
-          // Capacitor functions
-          'Capacitor', 'SplashScreen', 'StatusBar', 'Device', 'App',
-          // Supabase functions
-          'supabase', 'createClient', 'from', 'select', 'insert', 'update', 'delete',
-          // Animation functions
-          'motion', 'AnimatePresence', 'useAnimation', 'framer',
-          // Custom components
-          'BottomNavigationComponent', 'explicitNavigationHandler', 'explicitAuthHandler'
-        ]
-      },
+      mangle: false,
       format: {
         comments: false,
         keep_fnames: true,
