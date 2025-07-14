@@ -1,6 +1,7 @@
 // M1SSION™ - Initialization Capacitor Utilities
 import { preserveFunctionName, detectCapacitorEnvironment } from './core';
 import { applySafeAreaStyles } from './styles';
+import { optimizeWebViewPerformance, preventWebViewHangs } from './webViewOptimization';
 
 // Unified splash screen timeout
 const SPLASH_TIMEOUT = 3000;
@@ -33,6 +34,10 @@ export const initializeCapacitorWithExplicitName = preserveFunctionName(
       
       // Apply safe area styles
       applySafeAreaStyles();
+      
+      // Optimize WebView performance for iOS
+      optimizeWebViewPerformance();
+      preventWebViewHangs();
       
       // Hide splash screen with unified timing
       if (SplashScreen) {

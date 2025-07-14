@@ -19,4 +19,7 @@ export { handleHardwareBackButton } from './hardware';
 // Initialization utilities
 export { initializeCapacitorWithExplicitName } from './initialization';
 
+// WebView optimization utilities
+export { optimizeWebViewPerformance, preventWebViewHangs } from './webViewOptimization';
+
 console.log('✅ M1SSION Capacitor utilities suite loaded');
