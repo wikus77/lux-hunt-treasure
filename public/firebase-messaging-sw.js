@@ -9,9 +9,9 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-comp
 // Initialize the Firebase app in the service worker
 firebase.initializeApp({
   apiKey: "AIzaSyC71GUysMmPq8m3ZkUHvBYTDCRUaAo3mio",
-  authDomain: "project-x-mission.firebaseapp.com",
-  projectId: "project-x-mission",
-  storageBucket: "project-x-mission.appspot.com",
+  authDomain: "m1ssion-treasure-hunt.firebaseapp.com",
+  projectId: "m1ssion-treasure-hunt",
+  storageBucket: "m1ssion-treasure-hunt.appspot.com",
   messagingSenderId: "307707487376",
   appId: "1:307707487376:web:29a6c9f3a5ff3caf82cabc"
 });

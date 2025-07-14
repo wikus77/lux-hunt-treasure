@@ -20,7 +20,7 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY is not configured')
     }
 
-    const systemPrompt = `Sei un assistente AI esperto nella caccia al tesoro ProjectX.
+    const systemPrompt = `Sei un assistente AI esperto nella caccia al tesoro M1SSION™.
     L'utente ha attualmente sbloccato ${unlockedClues || 0} indizi.
     Il tuo compito è aiutare l'utente a:
     - Interpretare gli indizi che ha trovato
