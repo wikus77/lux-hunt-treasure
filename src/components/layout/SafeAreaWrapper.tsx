@@ -1,7 +1,7 @@
 
 // M1SSION™ - Safe Area Wrapper for iOS Capacitor
 import React, { useEffect, useState } from 'react';
-import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
+import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/capacitor';
 
 interface SafeAreaWrapperProps {
   children: React.ReactNode;

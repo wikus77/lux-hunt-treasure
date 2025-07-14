@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
-import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
+import { detectCapacitorEnvironment } from "@/utils/capacitor";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;

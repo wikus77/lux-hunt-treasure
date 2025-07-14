@@ -216,7 +216,7 @@ if (typeof window !== 'undefined') {
   
   // Initialize Capacitor if available
   if (window.location.protocol === 'capacitor:' || (window as any).Capacitor) {
-    import('@/utils/iosCapacitorFunctions').then(({ initializeCapacitorWithExplicitName }) => {
+    import('@/utils/capacitor').then(({ initializeCapacitorWithExplicitName }) => {
       initializeCapacitorWithExplicitName();
     });
   }

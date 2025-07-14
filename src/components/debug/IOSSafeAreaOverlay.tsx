@@ -1,7 +1,7 @@
 
 // M1SSION™ - iOS Safe Area Debug Overlay
 import React, { useEffect, useState } from 'react';
-import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
+import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/capacitor';
 
 interface IOSSafeAreaOverlayProps {
   children: React.ReactNode;

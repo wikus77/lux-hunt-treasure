@@ -5,7 +5,7 @@ import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
-import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
+import { detectCapacitorEnvironment } from "@/utils/capacitor";
 
 // Explicit function name for iOS Capacitor compatibility
 const BottomNavigationComponent = () => {

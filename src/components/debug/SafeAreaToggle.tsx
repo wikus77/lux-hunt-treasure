@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
-import { detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
+import { detectCapacitorEnvironment } from '@/utils/capacitor';
 
 interface SafeAreaToggleProps {
   children: React.ReactNode;

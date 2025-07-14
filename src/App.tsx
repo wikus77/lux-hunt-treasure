@@ -9,7 +9,7 @@ import GlobalLayout from "./components/layout/GlobalLayout";
 import AppRoutes from "./routes/AppRoutes";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import ProductionSafety from "./components/debug/ProductionSafety";
-import { initializeCapacitorWithExplicitName, detectCapacitorEnvironment } from "./utils/iosCapacitorFunctions";
+import { initializeCapacitorWithExplicitName, detectCapacitorEnvironment } from "./utils/capacitor";
 
 function App() {
   console.log("🚀 App component rendering...");

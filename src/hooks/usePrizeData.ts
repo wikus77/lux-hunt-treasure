@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { preserveFunctionName } from '@/utils/capacitor';
 import { toast } from 'sonner';
 
 export interface Prize {

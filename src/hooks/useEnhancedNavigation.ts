@@ -2,7 +2,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { useCapacitorHardware } from './useCapacitorHardware';
-import { explicitNavigationHandler, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { explicitNavigationHandler, preserveFunctionName } from '@/utils/capacitor';
 
 export const useEnhancedNavigation = () => {
   const navigate = useNavigate();
