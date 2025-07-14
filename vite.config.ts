@@ -104,10 +104,22 @@ export default defineConfig(({ mode }) => ({
     'process.env.NODE_ENV': JSON.stringify(mode),
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: [
+      'react', 
+      'react-dom', 
+      'react-router-dom',
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-toast'
+    ],
     exclude: ['@capacitor/core'],
     // Force explicit imports to prevent minification issues
     force: true
+  },
+  // SSR and client-side rendering optimizations
+  ssr: {
+    noExternal: ['framer-motion', '@radix-ui/*']
   },
   // Improved asset handling
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
