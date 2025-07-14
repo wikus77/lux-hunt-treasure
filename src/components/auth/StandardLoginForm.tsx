@@ -6,71 +6,65 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useLogin } from '@/hooks/use-login';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
 }
 
 export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  
+  // 🔧 CORREZIONE: Usa il hook di login reale che gestisce Supabase
+  const { formData, errors, formError, isSubmitting, handleChange, handleSubmit } = useLogin();
 
-  // Internal access control
+  // Internal access control per limitare l'accesso
   const isDeveloperEmail = (email: string) => {
     return email.toLowerCase() === 'wikus77@hotmail.it';
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error('Tutti i campi sono obbligatori');
+    // Controllo accesso limitato
+    if (!isDeveloperEmail(formData.email)) {
+      toast.error('Accesso temporaneamente limitato', {
+        description: 'La registrazione è attualmente disabilitata'
+      });
       return;
     }
 
-    setIsLoading(true);
-    
+    // 🔧 CORREZIONE: Usa il vero sistema di login Supabase
     try {
-      // Internal access control
-      if (isDeveloperEmail(email)) {
-        toast.success('Accesso autorizzato', {
-          description: 'Benvenuto in M1SSION™!'
-        });
-        
-        setTimeout(() => {
-          navigate('/home', { replace: true });
-        }, 1000);
-      } else {
-        // Blocco accesso per tutti gli altri utenti
-        toast.error('Accesso temporaneamente limitato', {
-          description: 'La registrazione è attualmente disabilitata'
-        });
-      }
-    } catch (error: any) {
-      toast.error('Errore di sistema', {
-        description: error.message || 'Si è verificato un errore imprevisto'
-      });
-    } finally {
-      setIsLoading(false);
+      await handleSubmit(e);
+      // Il redirect sarà gestito automaticamente dal AuthProvider dopo login success
+    } catch (error) {
+      console.error('Login error:', error);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4">
+      {/* Mostra errori di validazione */}
+      {formError && (
+        <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+          <p className="text-red-400 text-sm">{formError}</p>
+        </div>
+      )}
+
       <FormField
         id="email"
         label="Email"
         type="email"
         placeholder="Inserisci la tua email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
+        value={formData.email}
+        onChange={handleChange}
         icon={<Mail className="h-4 w-4" />}
         required
-        disabled={isLoading}
+        disabled={isSubmitting}
         autoComplete="email"
+        error={errors.email}
       />
 
       <div className="space-y-2">
@@ -79,12 +73,13 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           label="Password"
           type={showPassword ? "text" : "password"}
           placeholder="Inserisci la password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={handleChange}
           icon={<Lock className="h-4 w-4" />}
           required
-          disabled={isLoading}
+          disabled={isSubmitting}
           autoComplete="current-password"
+          error={errors.password}
         />
         
         <button
@@ -102,9 +97,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         <Button
           type="submit"
           className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 font-bold text-lg py-3 rounded-xl neon-button-cyan"
-          disabled={isLoading}
+          disabled={isSubmitting}
         >
-          {isLoading ? 'Caricamento...' : 'Accedi'}
+          {isSubmitting ? 'Autenticazione...' : 'Accedi'}
         </Button>
 
         {/* Pulsante Registrati - DISABILITATO */}
