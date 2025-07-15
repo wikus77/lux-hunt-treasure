@@ -12,7 +12,7 @@ interface StandardLoginFormProps {
   verificationStatus?: string | null;
 }
 
-export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
+function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
