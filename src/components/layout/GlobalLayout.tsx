@@ -1,6 +1,7 @@
-// M1SSION™ - Enhanced Global Layout with Safe Area Integration
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// M1SSION™ - Enhanced Global Layout with Safe Area Integration (Zustand Compatible)
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigationStore } from "@/stores/navigationStore";
 import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
@@ -14,19 +15,8 @@ interface GlobalLayoutProps {
  * Enhanced GlobalLayout with automatic layout detection and safe area handling
  */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
-  const location = useLocation();
+  const { currentPage } = useNavigationStore();
   const isCapacitor = detectCapacitorEnvironment();
-  
-  // Routes that should hide navigation
-  const hideNavigationRoutes = [
-    '/',
-    '/login',
-    '/register',
-    '/auth',
-    '/kyc',
-    '/verification',
-    '/select-mission'
-  ];
   
   // Routes that should use different layouts
   const fullScreenRoutes = [
@@ -35,24 +25,13 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
     '/games'
   ];
   
-  const shouldHideNavigation = hideNavigationRoutes.includes(location.pathname);
-  const isFullScreen = fullScreenRoutes.includes(location.pathname);
+  const isFullScreen = fullScreenRoutes.includes(currentPage);
   
   console.log('🏗️ GlobalLayout:', {
-    path: location.pathname,
-    shouldHideNavigation,
+    path: currentPage,
     isFullScreen,
     isCapacitor
   });
-
-  // Landing and auth pages - minimal layout
-  if (shouldHideNavigation) {
-    return (
-      <SafeAreaWrapper className="min-h-screen bg-gradient-to-br from-black via-[#0B1426] to-[#1a1a2e]">
-        {children}
-      </SafeAreaWrapper>
-    );
-  }
 
   // Full screen pages (map, buzz, games) - no header padding
   if (isFullScreen) {

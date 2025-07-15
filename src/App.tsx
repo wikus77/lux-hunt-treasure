@@ -1,17 +1,22 @@
 
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import GlobalLayout from "./components/layout/GlobalLayout";
-import AppRoutes from "./routes/AppRoutes";
+import PageRenderer from "./components/routing/PageRenderer";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import ProductionSafety from "./components/debug/ProductionSafety";
+import { useNavigationStore } from "./stores/navigationStore";
+import { useAuth } from "./hooks/use-auth";
+import { IOSSafeAreaOverlay } from "./components/debug/IOSSafeAreaOverlay";
 
 function App() {
-  console.log("🚀 App component rendering...");
+  console.log("🚀 App component rendering with Zustand Navigation...");
+  
+  const { currentPage } = useNavigationStore();
+  const { isAuthenticated, isLoading } = useAuth();
   
   return (
     <ErrorBoundary fallback={
@@ -33,18 +38,22 @@ function App() {
         </div>
       </div>
     }>
-    <ProductionSafety>
-      <Router>
+      <ProductionSafety>
         <SoundProvider>
           <AuthProvider>
             <SafeAreaToggle>
-              <AppRoutes />
-              <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
+              <IOSSafeAreaOverlay>
+                <PageRenderer 
+                  currentPage={currentPage}
+                  isAuthenticated={isAuthenticated}
+                  isLoading={isLoading}
+                />
+                <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
+              </IOSSafeAreaOverlay>
             </SafeAreaToggle>
           </AuthProvider>
         </SoundProvider>
-      </Router>
-    </ProductionSafety>
+      </ProductionSafety>
     </ErrorBoundary>
   );
 }

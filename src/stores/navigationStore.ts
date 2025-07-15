@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface NavigationState {
+  currentPage: string;
   currentTab: string;
   history: string[];
   isCapacitor: boolean;
@@ -10,6 +11,7 @@ interface NavigationState {
 }
 
 interface NavigationActions {
+  setCurrentPage: (page: string) => void;
   setCurrentTab: (tab: string) => void;
   addToHistory: (path: string) => void;
   goBack: () => string | null;
@@ -24,12 +26,22 @@ export const useNavigationStore = create<NavigationStore>()(
   persist(
     (set, get) => ({
       // State
+      currentPage: '/',
       currentTab: '/',
       history: ['/'],
       isCapacitor: false,
       lastNavigation: Date.now(),
 
       // Actions
+      setCurrentPage: (page: string) => {
+        console.log('🏪 Navigation Store: Setting current page to:', page);
+        set({ 
+          currentPage: page,
+          currentTab: page, 
+          lastNavigation: Date.now() 
+        });
+      },
+
       setCurrentTab: (tab: string) => {
         console.log('🏪 Navigation Store: Setting current tab to:', tab);
         set({ 
@@ -55,6 +67,7 @@ export const useNavigationStore = create<NavigationStore>()(
           const previousPath = newHistory[newHistory.length - 1];
           set({ 
             history: newHistory, 
+            currentPage: previousPath,
             currentTab: previousPath,
             lastNavigation: Date.now() 
           });
@@ -67,7 +80,8 @@ export const useNavigationStore = create<NavigationStore>()(
       clearHistory: () => {
         console.log('🏪 Navigation Store: Clearing history');
         set({ 
-          history: ['/'], 
+          history: ['/'],
+          currentPage: '/',
           currentTab: '/',
           lastNavigation: Date.now() 
         });
@@ -88,6 +102,7 @@ export const useNavigationStore = create<NavigationStore>()(
     {
       name: 'm1ssion-navigation-store',
       partialize: (state) => ({
+        currentPage: state.currentPage,
         currentTab: state.currentTab,
         history: state.history,
         isCapacitor: state.isCapacitor,
@@ -98,6 +113,12 @@ export const useNavigationStore = create<NavigationStore>()(
 
 // Explicit helper functions for iOS Capacitor compatibility
 export const navigationHelpers = {
+  explicitSetPage: (page: string) => {
+    const store = useNavigationStore.getState();
+    store.setCurrentPage(page);
+    return page;
+  },
+  
   explicitSetTab: (tab: string) => {
     const store = useNavigationStore.getState();
     store.setCurrentTab(tab);

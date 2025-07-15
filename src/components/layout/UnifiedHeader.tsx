@@ -1,12 +1,11 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
+import { useNavigation } from "@/hooks/useNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
 
 interface UnifiedHeaderProps {
@@ -32,9 +31,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   leftComponent,
   onClickMail
 }) => {
-  const location = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
-  const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
+  const { goBack, canGoBack, currentPage, toHome, toSettings } = useNavigation();
   const { profileImage } = useProfileImage();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
@@ -94,12 +92,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
-  const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
-  const isHomePage = location.pathname === '/home';
+  const currentPageTitle = pageTitles[currentPage] || 'M1SSION';
+  const isHomePage = currentPage === '/home';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
-  const isBottomNavPage = bottomNavPages.includes(location.pathname);
+  const isBottomNavPage = bottomNavPages.includes(currentPage);
 
   return (
     <motion.header
@@ -130,22 +128,22 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => goBackWithFeedback()}
+                    onClick={() => goBack()}
                     className="mr-2 rounded-full hover:bg-white/10"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                 )}
                 
-                <Link
-                  to="/home"
-                  className="text-xl sm:text-2xl font-orbitron font-bold"
+                <button
+                  onClick={toHome}
+                  className="text-xl sm:text-2xl font-orbitron font-bold cursor-pointer"
                 >
                   <span className="text-[#00D1FF]" style={{ 
                     textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                   }}>M1</span>
                   <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -183,15 +181,14 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
 
             {/* Settings - Always accessible for authenticated users */}
-            <Link to="/settings">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-white/10"
-              >
-                <Settings className="w-5 h-5" />
-              </Button>
-            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toSettings}
+              className="rounded-full hover:bg-white/10"
+            >
+              <Settings className="w-5 h-5" />
+            </Button>
 
             {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
             <ProfileDropdown
