@@ -4,7 +4,7 @@
 import React from "react";
 import { Route, Switch } from "wouter";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useAuth } from "@/hooks/use-auth";

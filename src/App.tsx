@@ -1,12 +1,11 @@
 
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { Router } from 'wouter';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import GlobalLayout from "./components/layout/GlobalLayout";
-import AppRoutes from "./routes/AppRoutes";
+import WouterRoutes from "./routes/WouterRoutes";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import ProductionSafety from "./components/debug/ProductionSafety";
 
@@ -38,7 +37,7 @@ function App() {
         <SoundProvider>
           <AuthProvider>
             <SafeAreaToggle>
-              <AppRoutes />
+              <WouterRoutes />
               <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
             </SafeAreaToggle>
           </AuthProvider>

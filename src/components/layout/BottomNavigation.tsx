@@ -1,27 +1,20 @@
 // ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "wouter";
 import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
 
 // Explicit function name for iOS Capacitor compatibility
 const BottomNavigationComponent = () => {
-  const location = useLocation();
-  const currentPath = location.pathname;
+  const [currentPath] = useLocation();
   const { unreadCount } = useNotifications();
   const { 
-    navigateWithFeedback, 
-    isCapacitor, 
-    toHome, 
-    toMap, 
-    toBuzz, 
-    toGames, 
-    toNotifications, 
-    toLeaderboard 
-  } = useEnhancedNavigation();
+    navigate, 
+    isCapacitor 
+  } = useWouterNavigation();
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
@@ -35,21 +28,18 @@ const BottomNavigationComponent = () => {
       icon: <Home className="h-6 w-6" />, 
       label: "Home", 
       path: "/home",
-      action: toHome,
       color: "#00D1FF"
     },
     { 
       icon: <Map className="h-6 w-6" />, 
       label: "Mappa", 
       path: "/map",
-      action: toMap,
       color: "#4ADE80"
     },
     {
       icon: <Circle strokeWidth={2} className="h-6 w-6" />,
       label: "Buzz",
       path: "/buzz",
-      action: toBuzz,
       isSpecial: true,
       color: "#F59E0B"
     },
@@ -57,14 +47,12 @@ const BottomNavigationComponent = () => {
       icon: <Gamepad2 className="h-6 w-6" />, 
       label: "Games", 
       path: "/games",
-      action: toGames,
       color: "#8B5CF6"
     },
     {
       icon: <Mail className="h-6 w-6" />,
       label: "Notifiche",
       path: "/notifications",
-      action: toNotifications,
       badge: unreadCount > 0,
       badgeCount: unreadCount,
       color: "#EF4444"
@@ -73,7 +61,6 @@ const BottomNavigationComponent = () => {
       icon: <Award className="h-6 w-6" />, 
       label: "Classifica", 
       path: "/leaderboard",
-      action: toLeaderboard,
       color: "#F59E0B"
     },
   ];
@@ -84,8 +71,8 @@ const BottomNavigationComponent = () => {
     
     console.log('🧭 Navigation clicked:', { path: link.path, isCapacitor });
     
-    // Execute navigation action with haptic feedback
-    await link.action();
+    // Execute Wouter navigation
+    navigate(link.path);
     
     // iOS WebView scroll fix with explicit function
     const applyIOSScrollFix = () => {
