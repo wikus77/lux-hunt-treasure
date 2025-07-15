@@ -13,7 +13,11 @@ export const useNavigateCompat = () => {
   const navigate = (path: string | number, options?: { replace?: boolean }) => {
     if (typeof path === 'string') {
       console.log('🔄 NavigateCompat: Navigating to:', path, options?.replace ? '(replace)' : '');
+      console.log('🔄 NavigateCompat: Current store state before nav:', useNavigationStore.getState().currentTab);
       navigateToPage(path);
+      setTimeout(() => {
+        console.log('🔄 NavigateCompat: Current store state after nav:', useNavigationStore.getState().currentTab);
+      }, 100);
     } else if (typeof path === 'number') {
       // Gestione del back (-1)
       if (path === -1) {

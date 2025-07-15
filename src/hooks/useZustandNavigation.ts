@@ -16,7 +16,7 @@ export const useZustandNavigation = () => {
   const { isAuthenticated } = useAuth();
   const isCapacitor = detectCapacitorEnvironment();
 
-  // Enhanced navigation with auth checks
+  // Enhanced navigation with auth checks - TEMPORANEAMENTE DISABILITATO
   const navigateWithAuth = (path: string) => {
     const protectedRoutes = [
       '/home', '/profile', '/map', '/buzz', '/games', 
@@ -25,13 +25,14 @@ export const useZustandNavigation = () => {
 
     const isProtectedRoute = protectedRoutes.some(route => path.startsWith(route));
     
-    if (isProtectedRoute && !isAuthenticated) {
-      console.log('🔒 Protected route access denied - redirecting to login');
-      navigateToPage('/login');
-      return;
-    }
+    // TEMPORANEAMENTE DISABILITATO PER DEBUGGING
+    // if (isProtectedRoute && !isAuthenticated) {
+    //   console.log('🔒 Protected route access denied - redirecting to login');
+    //   navigateToPage('/login');
+    //   return;
+    // }
 
-    console.log('🧭 Zustand Navigation:', { path, isCapacitor, isAuthenticated });
+    console.log('🧭 Zustand Navigation: NAVIGATING TO:', { path, isCapacitor, isAuthenticated });
     navigateToPage(path);
   };
 

@@ -76,7 +76,9 @@ const NavigationManager: React.FC<NavigationManagerProps> = () => {
   console.log('🧭 NavigationManager render:', {
     currentTab,
     isCapacitor,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    pageRegistry: Object.keys(pageRegistry),
+    currentPageExists: !!pageRegistry[currentTab]
   });
 
   // Initialize Capacitor mode
@@ -93,13 +95,15 @@ const NavigationManager: React.FC<NavigationManagerProps> = () => {
 
   // Get current page component
   const getCurrentPageComponent = (): React.ComponentType => {
+    console.log('🔍 Getting page component for:', currentTab);
     const PageComponent = pageRegistry[currentTab];
     
     if (!PageComponent) {
-      console.warn('🔍 Page not found for:', currentTab);
+      console.warn('🔍 Page not found for:', currentTab, 'Available pages:', Object.keys(pageRegistry));
       return NotFound;
     }
     
+    console.log('✅ Found page component for:', currentTab);
     return PageComponent;
   };
 
