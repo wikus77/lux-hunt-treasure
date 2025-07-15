@@ -1,62 +1,116 @@
+// 🔐 FIRMATO: BY JOSEPH MULÈ – CEO M1SSION KFT™
+// M1SSION™ Enhanced AuthProvider with Custom Navigation
 
-import React, { useState, useEffect } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import AuthContext from './AuthContext';
-import { useAuth } from '@/hooks/use-auth';
-import { AuthContextType } from './types';
 import { useNavigation } from '@/hooks/useNavigation';
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useAuth();
-  const { navigate } = useNavigation();
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [isRoleLoading, setIsRoleLoading] = useState(true);
+interface AuthState {
+  user: User | null;
+  session: Session | null;
+  isLoading: boolean;
+}
 
-  // Enhanced session monitoring
+interface AuthContextType extends AuthState {
+  userRole: string | null;
+  hasRole: (role: string) => boolean;
+  isRoleLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [auth, setAuth] = useState<AuthState>({
+    user: null,
+    session: null,
+    isLoading: true
+  });
+  
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState(false);
+  const { navigate } = useNavigation();
+
+  // SINGLE AUTH STATE LISTENER TO PREVENT INFINITE LOOPS
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
-      
-      // Handle successful authentication
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ User signed in successfully:", session.user.email);
+    let mounted = true;
+    let initialCheckDone = false;
+
+    console.log('🔍 INITIALIZING SESSION (Enhanced Diagnostics)...');
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!mounted) return;
         
-        // Check if user should be redirected to home
-        const currentPath = window.location.pathname;
-        if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
-          console.log("🏠 Redirecting authenticated user to /home");
-          setTimeout(() => {
-            navigate('/home');
-          }, 1000);
+        console.log('🔄 ENHANCED AUTH STATE CHANGE:', {
+          event,
+          hasSession: !!session,
+          userEmail: session?.user?.email || 'No session',
+          timestamp: new Date().toISOString()
+        });
+
+        setAuth({
+          user: session?.user ?? null,
+          session,
+          isLoading: false
+        });
+
+        // Handle navigation ONLY for specific events, not all auth changes
+        if (event === 'SIGNED_IN' && session?.user && !initialCheckDone) {
+          const currentPath = window.location.pathname;
+          if (currentPath === '/login' || currentPath === '/auth') {
+            console.log("🏠 Redirecting authenticated user to /home");
+            setTimeout(() => {
+              navigate('/home');
+            }, 1000);
+          }
+        }
+        
+        if (event === 'SIGNED_OUT') {
+          console.log("🚪 User signed out");
+          setUserRole(null);
+          setIsRoleLoading(false);
         }
       }
+    );
+
+    // Get initial session ONCE
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        console.log("🚪 User signed out");
-        setUserRole(null);
-        setIsRoleLoading(false);
-      }
+      setAuth({
+        user: session?.user ?? null,
+        session,
+        isLoading: false
+      });
+      
+      initialCheckDone = true;
     });
 
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // NO DEPENDENCIES TO PREVENT INFINITE LOOPS
 
-  // Fetch user role when user changes
+  // Fetch user role when user changes (DEBOUNCED)
   useEffect(() => {
-    const fetchUserRole = async () => {
-      if (!auth.user?.id || auth.isLoading) {
-        setUserRole(null);
-        setIsRoleLoading(false);
-        return;
-      }
+    if (!auth.user?.id || auth.isLoading) {
+      setUserRole(null);
+      setIsRoleLoading(false);
+      return;
+    }
 
+    const fetchUserRole = async () => {
       try {
         setIsRoleLoading(true);
-        console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
+        console.log("🔍 Fetching role for user:", auth.user.id);
         
-        // Check user_roles table for developer role
+        // Check user_roles table first
         const { data: roleData } = await supabase
           .from('user_roles')
           .select('role')
@@ -65,9 +119,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (roleData?.role) {
           setUserRole(roleData.role);
-          console.log("✅ User role found:", roleData.role);
         } else {
-          // Check profiles table as fallback
+          // Fallback to profiles table
           const { data: profileData } = await supabase
             .from('profiles')
             .select('role')
@@ -75,24 +128,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .single();
 
           setUserRole(profileData?.role || 'user');
-          console.log("✅ User role from profiles:", profileData?.role || 'user');
         }
       } catch (error) {
         console.error('❌ Error fetching user role:', error);
-        setUserRole('user'); // Default to user role
+        setUserRole('user'); // Default fallback
       } finally {
         setIsRoleLoading(false);
       }
     };
 
-    if (auth.user?.id) {
-      fetchUserRole();
-    } else {
-      setUserRole(null);
-      setIsRoleLoading(false);
-    }
+    // Debounce the role fetch to prevent excessive calls
+    const timer = setTimeout(fetchUserRole, 300);
+    return () => clearTimeout(timer);
     
-  }, [auth.user?.id]);
+  }, [auth.user?.id]); // ONLY depend on user ID
 
   // Check if user has a specific role
   const hasRole = (role: string): boolean => {
@@ -114,4 +163,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
 export default AuthProvider;
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * AuthProvider ottimizzato per evitare loop infiniti e session check multipli
+ * Implementazione Capacitor iOS stabile con custom navigation
+ */

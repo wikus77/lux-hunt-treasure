@@ -62,56 +62,55 @@ const LayoutWrapper: React.FC<{
   }
 };
 
-// Dynamic component loader with lazy loading
-const useDynamicComponent = (componentName: string) => {
-  return useMemo(() => {
-    const componentMap: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
-      // Public routes
-      'Index': lazy(() => import('@/pages/Index')),
-      
-      // Main app routes
-      'AppHome': lazy(() => import('@/pages/AppHome')),
-      'Map': lazy(() => import('@/pages/Map')),
-      'BuzzPage': lazy(() => import('@/pages/BuzzPage').then(module => ({ default: module.BuzzPage }))),
-      'Games': lazy(() => import('@/pages/Games')),
-      'Leaderboard': lazy(() => import('@/pages/Leaderboard')),
-      'Notifications': lazy(() => import('@/pages/Notifications')),
-      'Profile': lazy(() => import('@/pages/Profile')),
-      'SettingsPage': lazy(() => import('@/pages/settings/SettingsPage')),
-      'Subscriptions': lazy(() => import('@/pages/Subscriptions')),
-      
-      // Auth routes
-      'Login': lazy(() => import('@/pages/Login')),
-      'Register': lazy(() => import('@/pages/Register')),
-      'MissionSelection': lazy(() => import('@/pages/MissionSelection')),
-      
-      // Other routes
-      'HowItWorks': lazy(() => import('@/pages/HowItWorks')),
-      'Contacts': lazy(() => import('@/pages/Contacts')),
-      'PrivacyPolicy': lazy(() => import('@/pages/PrivacyPolicy')),
-      'Terms': lazy(() => import('@/pages/Terms')),
-      
-      // Profile subpages - BY JOSEPH MULE
-      'PersonalInfoPage': lazy(() => import('@/pages/profile/PersonalInfoPage')),
-      'SecurityPage': lazy(() => import('@/pages/profile/SecurityPage')),
-      'PaymentsPage': lazy(() => import('@/pages/profile/PaymentsPage')),
-      
-      // Subscription plan pages - BY JOSEPH MULE
-      'SilverPlanPage': lazy(() => import('@/pages/subscriptions/SilverPlanPage')),
-      'GoldPlanPage': lazy(() => import('@/pages/subscriptions/GoldPlanPage')),
-      'BlackPlanPage': lazy(() => import('@/pages/subscriptions/BlackPlanPage')),
-      
-      // Legal Routes - BY JOSEPH MULE
-      'LegalTerms': lazy(() => import('@/pages/legal/Terms')),
-      'Privacy': lazy(() => import('@/pages/legal/Privacy')),
-      'SafeCreative': lazy(() => import('@/pages/legal/SafeCreative')),
-      
-      // 404 fallback
-      'NotFound': lazy(() => import('@/pages/NotFound')),
-    };
+// Static component map to prevent re-creation
+const componentMap: Record<string, React.LazyExoticComponent<React.ComponentType<any>>> = {
+  // Public routes
+  'Index': lazy(() => import('@/pages/Index')),
+  
+  // Main app routes
+  'AppHome': lazy(() => import('@/pages/AppHome')),
+  'Map': lazy(() => import('@/pages/Map')),
+  'BuzzPage': lazy(() => import('@/pages/BuzzPage').then(module => ({ default: module.BuzzPage }))),
+  'Games': lazy(() => import('@/pages/Games')),
+  'Leaderboard': lazy(() => import('@/pages/Leaderboard')),
+  'Notifications': lazy(() => import('@/pages/Notifications')),
+  'Profile': lazy(() => import('@/pages/Profile')),
+  'SettingsPage': lazy(() => import('@/pages/settings/SettingsPage')),
+  'Subscriptions': lazy(() => import('@/pages/Subscriptions')),
+  
+  // Auth routes
+  'Login': lazy(() => import('@/pages/Login')),
+  'Register': lazy(() => import('@/pages/Register')),
+  'MissionSelection': lazy(() => import('@/pages/MissionSelection')),
+  
+  // Other routes
+  'HowItWorks': lazy(() => import('@/pages/HowItWorks')),
+  'Contacts': lazy(() => import('@/pages/Contacts')),
+  'PrivacyPolicy': lazy(() => import('@/pages/PrivacyPolicy')),
+  'Terms': lazy(() => import('@/pages/Terms')),
+  
+  // Profile subpages - BY JOSEPH MULE
+  'PersonalInfoPage': lazy(() => import('@/pages/profile/PersonalInfoPage')),
+  'SecurityPage': lazy(() => import('@/pages/profile/SecurityPage')),
+  'PaymentsPage': lazy(() => import('@/pages/profile/PaymentsPage')),
+  
+  // Subscription plan pages - BY JOSEPH MULE
+  'SilverPlanPage': lazy(() => import('@/pages/subscriptions/SilverPlanPage')),
+  'GoldPlanPage': lazy(() => import('@/pages/subscriptions/GoldPlanPage')),
+  'BlackPlanPage': lazy(() => import('@/pages/subscriptions/BlackPlanPage')),
+  
+  // Legal Routes - BY JOSEPH MULE
+  'LegalTerms': lazy(() => import('@/pages/legal/Terms')),
+  'Privacy': lazy(() => import('@/pages/legal/Privacy')),
+  'SafeCreative': lazy(() => import('@/pages/legal/SafeCreative')),
+  
+  // 404 fallback
+  'NotFound': lazy(() => import('@/pages/NotFound')),
+};
 
-    return componentMap[componentName] || componentMap['NotFound'];
-  }, [componentName]);
+// Dynamic component loader with static map to prevent infinite re-creation
+const useDynamicComponent = (componentName: string) => {
+  return componentMap[componentName] || componentMap['NotFound'];
 };
 
 // Main PageRenderer component
@@ -129,21 +128,9 @@ export const PageRenderer: React.FC = () => {
   const componentName = route?.component || 'NotFound';
   const DynamicComponent = useDynamicComponent(componentName);
   
-  // Handle special case for Capacitor iOS home redirect (memoized)
-  const { isAuthenticated, isLoading } = useAuth();
-  const { navigate } = useRoutingStore();
-  
-  React.useEffect(() => {
-    if (currentPath === '/' && isAuthenticated && !isLoading) {
-      const isCapacitorApp = typeof window !== 'undefined' && 
-        (window.location.protocol === 'capacitor:' || 
-         (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
-      
-      if (isCapacitorApp) {
-        navigate('/home', true);
-      }
-    }
-  }, [currentPath, isAuthenticated, isLoading, navigate]); // Stable dependencies
+  // TEMPORARILY DISABLE CAPACITOR REDIRECT TO FIX LOOP
+  // const { isAuthenticated, isLoading } = useAuth();
+  // const { navigate } = useRoutingStore();
 
   if (!route) {
     console.warn('⚠️ Route not found:', currentPath);
