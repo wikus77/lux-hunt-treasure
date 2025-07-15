@@ -1,7 +1,7 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
@@ -10,20 +10,22 @@ import BackgroundParticles from "@/components/ui/background-particles";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const navigate = useNavigateCompat();
+  // Disabilitato useSearchParams che causa errori
+  // const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const verification = searchParams.get('verification');
-    if (verification === 'pending') {
-      setVerificationStatus('pending');
-    } else if (verification === 'success') {
-      setVerificationStatus('success');
-      toast.success("Email verificata", {
-        description: "La tua email è stata verificata con successo."
-      });
-    }
-  }, [navigate, searchParams]);
+    // Verificazione disabilitata temporaneamente
+    // const verification = searchParams.get('verification');
+    // if (verification === 'pending') {
+    //   setVerificationStatus('pending');
+    // } else if (verification === 'success') {
+    //   setVerificationStatus('success');
+    //   toast.success("Email verificata", {
+    //     description: "La tua email è stata verificata con successo."
+    //   });
+    // }
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
@@ -50,9 +52,9 @@ const Login = () => {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-white/50 mt-2">
-              <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+              <button onClick={() => navigate("/")} className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 ← Torna alla homepage
-              </Link>
+              </button>
             </p>
           </div>
         </div>

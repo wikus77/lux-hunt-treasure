@@ -1,12 +1,12 @@
 
 import { useEffect, useState } from 'react';
 import { useAuthContext } from '@/contexts/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 
 export const useAdminCheck = (redirectOnFail = true) => {
   const { isAuthenticated, hasRole, isRoleLoading } = useAuthContext();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   
   useEffect(() => {
     const checkAdminRole = async () => {

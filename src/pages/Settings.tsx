@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
@@ -17,7 +17,7 @@ import RoleSwitcher from "@/components/auth/RoleSwitcher";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const { logout } = useAuthContext();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   

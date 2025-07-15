@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,8 +15,8 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
   onNotAuthenticated,
   onEmailNotVerified
 }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigateCompat();
+  // const location = useLocation(); // Disabilitato per Zustand
   
   useEffect(() => {
     console.log("AuthenticationManager initialized at path:", location.pathname);

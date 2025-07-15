@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import BackgroundParticles from "@/components/ui/background-particles";
 import RegistrationForm from "@/components/auth/registration-form";
 import RegisterHeader from "@/components/auth/register-header";
@@ -12,7 +12,7 @@ import DebugAuth from "@/components/auth/debug-auth";
 const Register = () => {
   const { preference } = useQueryParams<{ preference?: 'uomo' | 'donna' }>();
   const [missionPreference, setMissionPreference] = useState<'uomo' | 'donna' | null>(null);
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   
   console.log('📍 Register page loaded');
   console.log('🎯 Mission preference from URL:', preference);
@@ -87,9 +87,9 @@ const Register = () => {
           
           <p className="text-sm text-white/70">
             Hai già un account?{" "}
-            <Link to="/login" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+            <button onClick={() => navigate("/login")} className="text-cyan-400 hover:text-cyan-300 transition-colors">
               Accedi
-            </Link>
+            </button>
           </p>
         </div>
       </motion.div>

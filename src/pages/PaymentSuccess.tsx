@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import { useQueryParams } from "@/hooks/useQueryParams";
 
 const PaymentSuccess = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const queryParams = useQueryParams<{ plan?: string }>();
   const [plan, setPlan] = useState<string>("Base");
   const [showExplosion, setShowExplosion] = useState(false);
