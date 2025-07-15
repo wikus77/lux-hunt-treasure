@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 // Static imports for critical pages (no lazy loading for main app)
 import Index from '@/pages/Index';
 import AppHome from '@/pages/AppHome';
+import Login from '@/pages/Login';
 import Map from '@/pages/Map';
 import { BuzzPage } from '@/pages/BuzzPage';
 import Games from '@/pages/Games';
@@ -17,7 +18,6 @@ import Notifications from '@/pages/Notifications';
 import Profile from '@/pages/Profile';
 import SettingsPage from '@/pages/settings/SettingsPage';
 import Subscriptions from '@/pages/Subscriptions';
-import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import MissionSelection from '@/pages/MissionSelection';
 import NotFound from '@/pages/NotFound';
@@ -87,16 +87,24 @@ const PageRenderer: React.FC<PageRendererProps> = ({
 
   // Redirect to login if not authenticated and trying to access protected route
   if (needsAuth && !isAuthenticated) {
-    const { setCurrentPage } = useNavigationStore.getState();
-    setCurrentPage('/login');
-    return <LoadingScreen />;
+    console.log('🔒 Redirecting to login - auth required');
+    return (
+      <ErrorBoundary>
+        <Login />
+      </ErrorBoundary>
+    );
   }
 
   // Redirect to home if authenticated and on landing page (Capacitor only)
   if (isCapacitorApp && isAuthenticated && currentPage === '/') {
-    const { setCurrentPage } = useNavigationStore.getState();
-    setCurrentPage('/home');
-    return <LoadingScreen />;
+    console.log('🏠 Redirecting authenticated user to home');
+    return (
+      <ErrorBoundary>
+        <GlobalLayout>
+          <AppHome />
+        </GlobalLayout>
+      </ErrorBoundary>
+    );
   }
 
   // Render the appropriate page component
