@@ -1,21 +1,22 @@
 
 import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
+import { useWouterNavigation } from './useWouterNavigation';
 
 export const useMapNavigation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [location] = useLocation();
+  const { navigate } = useWouterNavigation();
 
   // Debug navigation for iOS
   useEffect(() => {
-    console.log('🧭 Navigation hook - Current path:', location.pathname);
+    console.log('🧭 Navigation hook - Current path:', location);
     
     // Check if we're in Capacitor environment
     const isCapacitor = !!(window as any).Capacitor;
     console.log('🧭 Capacitor environment:', isCapacitor);
     
     // Log when navigating to map
-    if (location.pathname === '/map') {
+    if (location === '/map') {
       console.log('🗺️ Successfully navigated to map page');
       
       // iOS-specific fixes
@@ -26,7 +27,7 @@ export const useMapNavigation = () => {
         }, 100);
       }
     }
-  }, [location.pathname]);
+  }, [location]);
 
   const forceNavigateToMap = () => {
     console.log('🧭 Force navigate to map');
@@ -35,8 +36,8 @@ export const useMapNavigation = () => {
 
   const debugNavigation = () => {
     return {
-      currentPath: location.pathname,
-      isMapPage: location.pathname === '/map',
+      currentPath: location,
+      isMapPage: location === '/map',
       isCapacitor: !!(window as any).Capacitor,
       canNavigate: !!navigate
     };
@@ -45,7 +46,7 @@ export const useMapNavigation = () => {
   return {
     forceNavigateToMap,
     debugNavigation,
-    currentPath: location.pathname,
-    isMapPage: location.pathname === '/map'
+    currentPath: location,
+    isMapPage: location === '/map'
   };
 };

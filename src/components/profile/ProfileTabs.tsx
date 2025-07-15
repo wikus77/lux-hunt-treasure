@@ -5,7 +5,7 @@ import { Award, Clock, Shield, BadgeAlert, Bell } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 
 interface ProfileTabsProps {
   stats: {

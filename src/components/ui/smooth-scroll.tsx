@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "wouter";
 import LocomotiveScroll from "locomotive-scroll";
 
 interface SmoothScrollProps {
@@ -18,7 +18,7 @@ interface SmoothScrollProps {
 export function SmoothScroll({ children, options = {} }: SmoothScrollProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [locomotiveScroll, setLocomotiveScroll] = useState<any>(null);
-  const location = useLocation();
+  const [location] = useLocation();
 
   // Initialize Locomotive Scroll with options
   useEffect(() => {

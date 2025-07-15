@@ -1,8 +1,9 @@
 
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 export function useQueryParams<T extends Record<string, string>>(): T {
-  const { search } = useLocation();
+  const [location] = useLocation();
+  const search = window.location.search;
   const params = new URLSearchParams(search);
   
   const result = {} as T;

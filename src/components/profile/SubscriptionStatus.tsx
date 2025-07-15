@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useEffect, useState } from "react";
 
 const planMap: Record<string, { label: string; badge: string }> = {
@@ -11,7 +11,7 @@ const planMap: Record<string, { label: string; badge: string }> = {
 };
 
 const SubscriptionStatus = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   // Stato del piano attivo
   const [plan, setPlan] = useState<string>("Base");

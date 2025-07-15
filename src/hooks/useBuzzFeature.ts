@@ -71,7 +71,12 @@ export const useBuzzFeature = () => {
       initializeSound(soundPreference, volume)
     ]).catch(error => console.error("Error during initialization:", error));
     
-    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
+    // Check for payment completion via query parameters instead of state
+    const searchParams = new URLSearchParams(window.location.search);
+    const paymentCompleted = searchParams.get('paymentCompleted') === 'true';
+    const fromRegularBuzz = searchParams.get('fromRegularBuzz') === 'true';
+    
+    if (paymentCompleted && fromRegularBuzz) {
       try {
         savePaymentMethod();
         setShowExplosion(true);
@@ -79,7 +84,7 @@ export const useBuzzFeature = () => {
         console.error("Error handling payment completion:", error);
       }
     }
-  }, [location.state, savePaymentMethod, navigate, initializeSound]);
+  }, [savePaymentMethod, navigate, initializeSound]);
 
   const handleBuzzClick = async () => {
     if (!hasPaymentMethod) {

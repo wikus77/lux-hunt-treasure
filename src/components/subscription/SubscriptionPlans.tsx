@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import SubscriptionCard from "./SubscriptionCard";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,7 +15,7 @@ interface SubscriptionPlansProps {
 
 export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansProps) => {
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   const { subscription, upgradeSubscription } = useProfileSubscription();
 

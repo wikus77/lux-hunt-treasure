@@ -1,6 +1,6 @@
 
 import { useState, FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from './useWouterNavigation';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { validateRegistration } from '@/utils/form-validation';
@@ -23,7 +23,7 @@ export const useRegistration = () => {
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;

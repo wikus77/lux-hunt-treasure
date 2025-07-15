@@ -1,7 +1,7 @@
 
 import { Volume2, Languages } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import SoundSettings from "./SoundSettings";
 import { useSound } from "@/contexts/SoundContext";
 
@@ -16,7 +16,7 @@ const AppSection = ({
   language,
   setSoundEffects,
 }: AppSectionProps) => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const { volume, soundPreference, isEnabled, updateSound, updateVolume, toggleSound } = useSound();
 
   const handleSoundToggle = (checked: boolean) => {

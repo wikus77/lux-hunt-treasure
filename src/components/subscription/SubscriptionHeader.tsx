@@ -1,10 +1,10 @@
 
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Button } from "@/components/ui/button";
 
 export const SubscriptionHeader = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   
   return (
     <section className="w-full py-8">

@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
+import { useWouterNavigation } from './useWouterNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
 export const useCapacitorNavigation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [location] = useLocation();
+  const { navigate } = useWouterNavigation();
   const { setCurrentTab, addToHistory } = useNavigationStore();
 
   // Detect Capacitor environment
@@ -14,14 +15,14 @@ export const useCapacitorNavigation = () => {
   // Log navigation changes for debugging
   useEffect(() => {
     console.log('🧭 CAPACITOR NAVIGATION:', {
-      currentPath: location.pathname,
+      currentPath: location,
       isCapacitor,
       timestamp: new Date().toISOString()
     });
     
     // Update navigation store
-    setCurrentTab(location.pathname);
-    addToHistory(location.pathname);
+    setCurrentTab(location);
+    addToHistory(location);
     
     // iOS-specific optimizations
     if (isCapacitor) {
@@ -34,7 +35,7 @@ export const useCapacitorNavigation = () => {
         window.scrollTo(0, 0);
       }, 100);
     }
-  }, [location.pathname, isCapacitor, setCurrentTab, addToHistory]);
+  }, [location, isCapacitor, setCurrentTab, addToHistory]);
 
   // Capacitor-compatible navigation function
   const navigateCapacitor = (path: string, options?: { replace?: boolean }) => {
@@ -57,7 +58,7 @@ export const useCapacitorNavigation = () => {
 
   // Debug info
   const getNavigationInfo = () => ({
-    currentPath: location.pathname,
+    currentPath: location,
     isCapacitor,
     protocol: window.location.protocol,
     hostname: window.location.hostname,
@@ -68,7 +69,7 @@ export const useCapacitorNavigation = () => {
   return {
     navigateCapacitor,
     isCapacitor,
-    currentPath: location.pathname,
+    currentPath: location,
     getNavigationInfo
   };
 };

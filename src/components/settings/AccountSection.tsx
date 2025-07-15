@@ -1,9 +1,9 @@
 
 import { User, Shield, CreditCard, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 
 const AccountSection = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   return (
     <section className="p-4">
