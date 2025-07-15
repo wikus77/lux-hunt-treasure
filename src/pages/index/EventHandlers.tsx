@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 
 interface EventHandlersResult {
   showAgeVerification: boolean;
@@ -16,7 +16,7 @@ interface EventHandlersResult {
  * Custom hook to handle all event handlers for the Index page
  */
 export const useEventHandlers = (countdownCompleted: boolean): EventHandlersResult => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
 
