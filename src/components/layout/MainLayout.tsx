@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { User, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
@@ -22,8 +22,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 
 const MainLayout = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  // const location = useLocation(); // Disabilitato per Zustand
+  const navigate = useNavigateCompat();
   const isMobile = useIsMobile();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("Utente");

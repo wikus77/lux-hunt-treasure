@@ -1,9 +1,9 @@
 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 
 export function useBuzzNavigation() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = useNavigateCompat();
+  // const location = useLocation(); // Disabilitato per Zustand
 
   const navigateToPaymentMethods = (vagueClueTxt: string, isRegularBuzz: boolean = true) => {
     navigate("/payment-methods", {
