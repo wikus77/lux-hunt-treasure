@@ -43,14 +43,9 @@ const AppHome = () => {
       
       console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
       
-      if (isMobileDevice) {
-        // Mobile users need to login properly now
-        setHasAccess(false);
-      } else if (!isMobileDevice) {
-        // Web users should NOT be redirected to landing page from internal routes
-        // They should see the app home but with limited functionality
-        setHasAccess(true); // Allow access to prevent redirect loop
-      }
+      // Allow access for all users since this is an internal authenticated route
+      // If users reach this page, they're already authenticated
+      setHasAccess(true);
     };
     
     checkAccess();
