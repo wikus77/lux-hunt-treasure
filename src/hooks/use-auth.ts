@@ -1,11 +1,9 @@
 
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 export const useAuth = () => {
   const sessionManager = useAuthSessionManager();
-  const navigate = useNavigate();
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
     console.log('🔐 STANDARD LOGIN STARTING for:', email);
