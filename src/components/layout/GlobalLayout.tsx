@@ -1,6 +1,6 @@
 // M1SSION™ - Enhanced Global Layout with Safe Area Integration
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "wouter";
 import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
@@ -14,7 +14,7 @@ interface GlobalLayoutProps {
  * Enhanced GlobalLayout with automatic layout detection and safe area handling
  */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
-  const location = useLocation();
+  const [location] = useLocation();
   const isCapacitor = detectCapacitorEnvironment();
   
   // Routes that should hide navigation
@@ -35,11 +35,11 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
     '/games'
   ];
   
-  const shouldHideNavigation = hideNavigationRoutes.includes(location.pathname);
-  const isFullScreen = fullScreenRoutes.includes(location.pathname);
+  const shouldHideNavigation = hideNavigationRoutes.includes(location);
+  const isFullScreen = fullScreenRoutes.includes(location);
   
   console.log('🏗️ GlobalLayout:', {
-    path: location.pathname,
+    path: location,
     shouldHideNavigation,
     isFullScreen,
     isCapacitor

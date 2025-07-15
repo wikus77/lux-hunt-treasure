@@ -1,7 +1,7 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import FormField from './form-field';
@@ -17,7 +17,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   // Internal access control
   const isDeveloperEmail = (email: string) => {

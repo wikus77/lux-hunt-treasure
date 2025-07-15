@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "wouter";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -15,11 +16,11 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
   onNotAuthenticated,
   onEmailNotVerified
 }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { navigate } = useWouterNavigation();
+  const [location] = useLocation();
   
   useEffect(() => {
-    console.log("AuthenticationManager initialized at path:", location.pathname);
+    console.log("AuthenticationManager initialized at path:", location);
     
     const checkAuthentication = async () => {
       try {
@@ -82,7 +83,7 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
           
           // Redirect to login page if on a protected route
           const protectedRoutes = ['/home', '/profile', '/events', '/buzz', '/map', '/settings'];
-          if (protectedRoutes.some(route => location.pathname.startsWith(route))) {
+          if (protectedRoutes.some(route => location.startsWith(route))) {
             navigate('/login');
           }
         } else if (event === "USER_UPDATED") {
@@ -103,7 +104,7 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
       console.log("Unsubscribing from auth state changes");
       subscription.unsubscribe();
     };
-  }, [onAuthenticated, onNotAuthenticated, onEmailNotVerified, navigate, location.pathname]);
+  }, [onAuthenticated, onNotAuthenticated, onEmailNotVerified, navigate, location]);
 
   return null; // This is a logic component, it doesn't render anything
 };

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import BottomNavigation from './BottomNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
@@ -8,19 +8,19 @@ interface NavigationWrapperProps {
 }
 
 const NavigationWrapper: React.FC<NavigationWrapperProps> = ({ children }) => {
-  const location = useLocation();
+  const [location] = useLocation();
   const { setCurrentTab, addToHistory } = useNavigationStore();
 
   // Update navigation state when route changes
   useEffect(() => {
-    setCurrentTab(location.pathname);
-    addToHistory(location.pathname);
+    setCurrentTab(location);
+    addToHistory(location);
     
     console.log('🧭 Navigation updated:', {
-      path: location.pathname,
+      path: location,
       timestamp: new Date().toISOString()
     });
-  }, [location.pathname, setCurrentTab, addToHistory]);
+  }, [location, setCurrentTab, addToHistory]);
 
   // iOS Capacitor specific optimizations
   useEffect(() => {

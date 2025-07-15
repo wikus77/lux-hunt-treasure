@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,7 @@ type VerificationStatus = 'idle' | 'verifying' | 'success' | 'error';
  * Hook that handles email verification from redirects
  */
 export const useEmailVerificationHandler = () => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const [status, setStatus] = useState<VerificationStatus>('idle');
 
   useEffect(() => {
@@ -23,9 +22,10 @@ export const useEmailVerificationHandler = () => {
 
   const handleEmailVerification = async () => {
     // Check if the URL contains a verification token from email
-    const access_token = searchParams.get('access_token');
-    const refresh_token = searchParams.get('refresh_token');
-    const type = searchParams.get('type');
+    const urlParams = new URLSearchParams(window.location.search);
+    const access_token = urlParams.get('access_token');
+    const refresh_token = urlParams.get('refresh_token');
+    const type = urlParams.get('type');
 
     if (access_token && refresh_token && type === 'email_confirmation') {
       setStatus('verifying');
@@ -61,7 +61,7 @@ export const useEmailVerificationHandler = () => {
 // Create a standalone component for email verification page
 export const EmailVerificationPage: React.FC = () => {
   const { status } = useEmailVerificationHandler();
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   
   // UI for different verification states
   if (status === 'verifying') {
