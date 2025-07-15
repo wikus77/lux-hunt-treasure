@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowRight } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -28,8 +28,8 @@ interface FormErrors {
 }
 
 const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { navigate } = useWouterNavigation();
+  const searchParams = new URLSearchParams(window.location.search);
   const { login, register, user, isLoading: authLoading } = useAuth();
   const { vibrate } = useCapacitorHardware();
   const { toast } = useToast();
