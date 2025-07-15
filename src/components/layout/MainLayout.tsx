@@ -73,7 +73,7 @@ const MainLayout = () => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, [location.pathname]);
+  }, []); // Rimosso location.pathname dependency
 
   const handleShowNotifications = () => {
     setShowNotifications(true);
@@ -148,7 +148,7 @@ const MainLayout = () => {
       </header>
       
       <main className="flex-1 w-full relative pb-16 max-w-screen-xl mx-auto px-2 sm:px-4 smooth-scroll safe-area-bottom" style={{ paddingTop: 'calc(72px + env(safe-area-inset-top))' }}>
-        <Outlet />
+        {/* Outlet rimosso per compatibilità Zustand */}
       </main>
       
       {showHowItWorks && (

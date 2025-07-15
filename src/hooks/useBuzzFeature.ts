@@ -34,7 +34,7 @@ export const useBuzzFeature = () => {
   const { showDialog, setShowDialog, showExplosion, setShowExplosion, 
           showClueBanner, setShowClueBanner, handleExplosionCompleted } = useBuzzUiState();
   
-  const { navigate, location, navigateToPaymentMethods, navigateToNotifications } = useBuzzNavigation();
+  const { navigate, navigateToPaymentMethods, navigateToNotifications } = useBuzzNavigation(); // Rimosso location
   
   const { hasPaymentMethod, savePaymentMethod } = useHasPaymentMethod();
   const { initializeSound, playSound } = useBuzzSound();
@@ -71,15 +71,17 @@ export const useBuzzFeature = () => {
       initializeSound(soundPreference, volume)
     ]).catch(error => console.error("Error during initialization:", error));
     
-    if (location.state?.paymentCompleted && location.state?.fromRegularBuzz) {
-      try {
-        savePaymentMethod();
-        setShowExplosion(true);
-      } catch (error) {
-        console.error("Error handling payment completion:", error);
-      }
-    }
-  }, [location.state, savePaymentMethod, navigate, initializeSound]);
+    // Disabilitato location.state per compatibilità Zustand
+    // const paymentCompletedState = location.state?.paymentCompleted && location.state?.fromRegularBuzz;
+    // if (paymentCompletedState) {
+    //   try {
+    //     savePaymentMethod();
+    //     setShowExplosion(true);
+    //   } catch (error) {
+    //     console.error("Error handling payment completion:", error);
+    //   }
+    // }
+  }, [savePaymentMethod, navigate, initializeSound]); // Rimosso location.state dependency
 
   const handleBuzzClick = async () => {
     if (!hasPaymentMethod) {

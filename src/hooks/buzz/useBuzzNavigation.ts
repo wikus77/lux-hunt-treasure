@@ -6,14 +6,7 @@ export function useBuzzNavigation() {
   // const location = useLocation(); // Disabilitato per Zustand
 
   const navigateToPaymentMethods = (vagueClueTxt: string, isRegularBuzz: boolean = true) => {
-    navigate("/payment-methods", {
-      state: {
-        fromBuzz: true,
-        fromRegularBuzz: isRegularBuzz,
-        clue: { description: vagueClueTxt },
-        generateMapArea: false
-      }
-    });
+    navigate("/payment-methods");
   };
 
   const navigateToNotifications = () => {
@@ -22,7 +15,7 @@ export function useBuzzNavigation() {
 
   return {
     navigate,
-    location,
+    // location, // Disabilitato per Zustand
     navigateToPaymentMethods,
     navigateToNotifications
   };
