@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
@@ -34,9 +35,25 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     setIsLoading(true);
     
     try {
-      // Internal access control
-      if (isDeveloperEmail(email)) {
-        toast.success('Accesso autorizzato', {
+      console.log('🔐 STANDARD LOGIN ATTEMPT with Supabase for:', email);
+      
+      // Use Supabase for actual authentication
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        console.error('❌ SUPABASE LOGIN ERROR:', error);
+        toast.error('Errore di login', {
+          description: error.message || 'Credenziali non valide'
+        });
+        return;
+      }
+
+      if (data.session && data.user) {
+        console.log('✅ SUPABASE LOGIN SUCCESS for:', data.user.email);
+        toast.success('Login effettuato con successo', {
           description: 'Benvenuto in M1SSION™!'
         });
         
@@ -44,12 +61,13 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           navigate('/home', { replace: true });
         }, 1000);
       } else {
-        // Blocco accesso per tutti gli altri utenti
-        toast.error('Accesso temporaneamente limitato', {
-          description: 'La registrazione è attualmente disabilitata'
+        console.error('❌ LOGIN FAILED - No session created');
+        toast.error('Errore di login', {
+          description: 'Impossibile creare la sessione'
         });
       }
     } catch (error: any) {
+      console.error('💥 LOGIN EXCEPTION:', error);
       toast.error('Errore di sistema', {
         description: error.message || 'Si è verificato un errore imprevisto'
       });
