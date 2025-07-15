@@ -6,10 +6,10 @@ import 'leaflet/dist/leaflet.css';
 import './leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './MapControls';
-import BuzzMapButton from './BuzzMapButton';
+import BuzzMapButton from '@/components/map/BuzzMapButton';
 import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
-import { useBuzzMapLogic } from '@/hooks/map/useBuzzMapLogic';
+import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];

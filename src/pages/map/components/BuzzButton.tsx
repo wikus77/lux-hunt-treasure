@@ -5,7 +5,7 @@ import { Zap, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
-import { useBuzzMapPricing } from '../hooks/useBuzzMapPricing';
+import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/use-auth';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';

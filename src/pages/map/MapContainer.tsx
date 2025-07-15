@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import './components/leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './components/MapControls';
-import BuzzMapButton from './components/BuzzMapButton';
+import BuzzMapButton from '@/components/map/BuzzMapButton';
 import MapZoomControls from './components/MapZoomControls';
 import HelpDialog from './components/HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
