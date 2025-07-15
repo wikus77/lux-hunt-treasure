@@ -1,17 +1,20 @@
 
+// 🔐 FIRMATO: BY JOSEPH MULÈ – CEO M1SSION KFT™
+// M1SSION™ App Root - Custom Routing System (NO react-router-dom)
+// Compatibilità Capacitor iOS al 100%
+
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import GlobalLayout from "./components/layout/GlobalLayout";
-import AppRoutes from "./routes/AppRoutes";
+import { PageRenderer } from "./components/routing/PageRenderer";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import ProductionSafety from "./components/debug/ProductionSafety";
+import { IOSSafeAreaOverlay } from "./components/debug/IOSSafeAreaOverlay";
 
 function App() {
-  console.log("🚀 App component rendering...");
+  console.log("🚀 M1SSION App component rendering with custom routing...");
   
   return (
     <ErrorBoundary fallback={
@@ -34,16 +37,16 @@ function App() {
       </div>
     }>
     <ProductionSafety>
-      <Router>
-        <SoundProvider>
-          <AuthProvider>
-            <SafeAreaToggle>
-              <AppRoutes />
+      <SoundProvider>
+        <AuthProvider>
+          <SafeAreaToggle>
+            <IOSSafeAreaOverlay>
+              <PageRenderer />
               <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
-            </SafeAreaToggle>
-          </AuthProvider>
-        </SoundProvider>
-      </Router>
+            </IOSSafeAreaOverlay>
+          </SafeAreaToggle>
+        </AuthProvider>
+      </SoundProvider>
     </ProductionSafety>
     </ErrorBoundary>
   );

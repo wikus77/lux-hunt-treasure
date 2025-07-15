@@ -1,6 +1,6 @@
 // ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import React from "react";
-import { useLocation } from "react-router-dom";
+import { useNavigation } from "@/hooks/useNavigation";
 import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -9,7 +9,7 @@ import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
 
 // Explicit function name for iOS Capacitor compatibility
 const BottomNavigationComponent = () => {
-  const location = useLocation();
+  const { location } = useNavigation();
   const currentPath = location.pathname;
   const { unreadCount } = useNotifications();
   const { 

@@ -1,5 +1,5 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import { Link, useLocation } from "react-router-dom";
+import { useNavigation, Link } from "@/hooks/useNavigation";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -32,7 +32,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   leftComponent,
   onClickMail
 }) => {
-  const location = useLocation();
+  const { location } = useNavigation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
   const { profileImage } = useProfileImage();

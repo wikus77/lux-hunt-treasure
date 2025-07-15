@@ -1,15 +1,14 @@
+// 🔐 FIRMATO: BY JOSEPH MULÈ – CEO M1SSION KFT™  
+// M1SSION™ Capacitor Navigation Hook - Updated for Custom Routing
+// Compatibilità Capacitor iOS al 100% - NO react-router-dom
+
 import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigation } from '@/hooks/useNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
 export const useCapacitorNavigation = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { location, navigate, isCapacitor } = useNavigation();
   const { setCurrentTab, addToHistory } = useNavigationStore();
-
-  // Detect Capacitor environment
-  const isCapacitor = typeof window !== 'undefined' && 
-    (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
 
   // Log navigation changes for debugging
   useEffect(() => {
@@ -44,15 +43,8 @@ export const useCapacitorNavigation = () => {
     setCurrentTab(path);
     addToHistory(path);
     
-    // Use React Router navigate
+    // Use custom navigation
     navigate(path, { replace: options?.replace || false });
-    
-    // iOS WebView scroll fix
-    if (isCapacitor) {
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
-    }
   };
 
   // Debug info
