@@ -21,7 +21,11 @@ import { AIAssistant } from '@/components/ai/AIAssistant';
 import { useIsMobile } from "@/hooks/use-mobile";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 
-const MainLayout = () => {
+interface MainLayoutProps {
+  children: React.ReactNode;
+}
+
+const MainLayout = ({ children }: MainLayoutProps) => {
   // const location = useLocation(); // Disabilitato per Zustand
   const navigate = useNavigateCompat();
   const isMobile = useIsMobile();
@@ -148,7 +152,7 @@ const MainLayout = () => {
       </header>
       
       <main className="flex-1 w-full relative pb-16 max-w-screen-xl mx-auto px-2 sm:px-4 smooth-scroll safe-area-bottom" style={{ paddingTop: 'calc(72px + env(safe-area-inset-top))' }}>
-        {/* Outlet rimosso per compatibilità Zustand */}
+        {children}
       </main>
       
       {showHowItWorks && (
