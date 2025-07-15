@@ -248,7 +248,7 @@ export const useRoutingStore = create<RoutingStore>()(
         });
 
         // Update browser URL without triggering page reload
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && path !== currentPath) {
           const url = new URL(window.location.href);
           url.pathname = path;
           window.history.pushState({}, '', url.toString());

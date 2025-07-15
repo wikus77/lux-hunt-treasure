@@ -27,16 +27,17 @@ export const useNavigation = (): NavigationHook => {
     setCapacitorMode 
   } = useRoutingStore();
 
-  // Detect Capacitor environment on mount
+  // Detect Capacitor environment on mount (memoized to prevent re-runs)
   useEffect(() => {
     const isCapacitorApp = typeof window !== 'undefined' && 
       (window.location.protocol === 'capacitor:' || 
        (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
     
-    setCapacitorMode(isCapacitorApp);
-    
-    console.log('🧭 NAVIGATION HOOK: Capacitor mode:', isCapacitorApp);
-  }, [setCapacitorMode]);
+    if (isCapacitor !== isCapacitorApp) {
+      setCapacitorMode(isCapacitorApp);
+      console.log('🧭 NAVIGATION HOOK: Capacitor mode:', isCapacitorApp);
+    }
+  }, []); // Empty dependency array to run only once
 
   // Custom navigate function with iOS optimizations
   const navigate = useCallback((path: string, options?: { replace?: boolean }) => {

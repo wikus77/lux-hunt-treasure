@@ -129,19 +129,21 @@ export const PageRenderer: React.FC = () => {
   const componentName = route?.component || 'NotFound';
   const DynamicComponent = useDynamicComponent(componentName);
   
-  // Handle special case for Capacitor iOS home redirect
+  // Handle special case for Capacitor iOS home redirect (memoized)
   const { isAuthenticated, isLoading } = useAuth();
-  const { navigate, isCapacitor } = useRoutingStore();
+  const { navigate } = useRoutingStore();
   
   React.useEffect(() => {
-    const isCapacitorApp = typeof window !== 'undefined' && 
-      (window.location.protocol === 'capacitor:' || 
-       (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
-    
-    if (isCapacitorApp && isAuthenticated && !isLoading && currentPath === '/') {
-      navigate('/home', true);
+    if (currentPath === '/' && isAuthenticated && !isLoading) {
+      const isCapacitorApp = typeof window !== 'undefined' && 
+        (window.location.protocol === 'capacitor:' || 
+         (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
+      
+      if (isCapacitorApp) {
+        navigate('/home', true);
+      }
     }
-  }, [currentPath, isAuthenticated, isLoading, navigate]);
+  }, [currentPath, isAuthenticated, isLoading, navigate]); // Stable dependencies
 
   if (!route) {
     console.warn('⚠️ Route not found:', currentPath);
