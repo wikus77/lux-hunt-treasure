@@ -147,3 +147,6 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     </form>
   );
 }
+
+// 🔐 FIRMATO: BY JOSEPH MULÈ – CEO M1SSION KFT™
+export default StandardLoginForm;
