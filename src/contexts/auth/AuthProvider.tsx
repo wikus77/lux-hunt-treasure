@@ -5,11 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
-import { useNavigate } from 'react-router-dom';
+import { useNavigationStore } from '@/stores/navigationStore';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useAuth();
-  const navigate = useNavigate();
+  const { navigateToPage } = useNavigationStore();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
           console.log("🏠 Redirecting authenticated user to /home");
           setTimeout(() => {
-            navigate('/home');
+            navigateToPage('/home');
           }, 1000);
         }
       }
@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigateToPage]);
 
   // Fetch user role when user changes
   useEffect(() => {
