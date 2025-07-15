@@ -6,8 +6,7 @@ import { useBuzzSound } from '@/hooks/useBuzzSound';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useNotificationsDynamicIsland } from '@/hooks/useNotificationsDynamicIsland';
 import { useNotificationsAutoReload } from '@/hooks/useNotificationsAutoReload';
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+// Headers e Navigation gestiti centralmente da PageRenderer
 import { NotificationsHeader } from '@/components/notifications/NotificationsHeader';
 import { NotificationsList } from '@/components/notifications/NotificationsList';
 
@@ -66,7 +65,7 @@ const Notifications = () => {
           backdropFilter: 'blur(12px)'
         }}
       >
-        <UnifiedHeader />
+        {/* Header gestito da PageRenderer */}
       </header>
       
       {/* Main scrollable content */}
@@ -125,7 +124,7 @@ const Notifications = () => {
         </div>
       </main>
       
-      <BottomNavigation />
+      {/* BottomNavigation gestito da PageRenderer */}
     </motion.div>
   );
 };

@@ -11,7 +11,7 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
-import BottomNavigation from "@/components/layout/BottomNavigation";
+// BottomNavigation gestito centralmente da PageRenderer
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -102,7 +102,7 @@ const Profile = () => {
           onOpenChange={closeNotificationsDrawer}
         />
       </ProfileLayout>
-      <BottomNavigation />
+      {/* BottomNavigation gestito da PageRenderer */}
     </div>
   );
 };

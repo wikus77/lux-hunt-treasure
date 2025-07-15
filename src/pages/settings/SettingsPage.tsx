@@ -3,8 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileImage } from '@/hooks/useProfileImage';
-import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import BottomNavigation from '@/components/layout/BottomNavigation';
+// Headers e Navigation gestiti centralmente da PageRenderer
 import { User, Shield, Target, Bell, CreditCard, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,7 +81,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
+      {/* Header gestito da PageRenderer */}
       
       <div 
         className="px-4 space-y-6"
@@ -136,7 +135,7 @@ const SettingsPage: React.FC = () => {
         </motion.div>
       </div>
 
-      <BottomNavigation />
+      {/* BottomNavigation gestito da PageRenderer */}
     </div>
   );
 };

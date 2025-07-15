@@ -1,12 +1,14 @@
 
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// M1SSION™ App - iOS Capacitor Compatible WITHOUT react-router-dom
+
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
-import GlobalLayout from "./components/layout/GlobalLayout";
-import AppRoutes from "./routes/AppRoutes";
+import NavigationManager from "./router/NavigationManager";
+import PageRenderer from "./router/PageRenderer";
 import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
 import ProductionSafety from "./components/debug/ProductionSafety";
 import { initializeCapacitorWithExplicitName, detectCapacitorEnvironment } from "./utils/capacitor";
@@ -101,16 +103,16 @@ function App() {
       </div>
     }>
     <ProductionSafety>
-      <Router>
-        <SoundProvider>
-          <AuthProvider>
-            <SafeAreaToggle>
-              <AppRoutes />
-              <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
-            </SafeAreaToggle>
-          </AuthProvider>
-        </SoundProvider>
-      </Router>
+      <SoundProvider>
+        <AuthProvider>
+          <SafeAreaToggle>
+            <PageRenderer>
+              <NavigationManager />
+            </PageRenderer>
+            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
+          </SafeAreaToggle>
+        </AuthProvider>
+      </SoundProvider>
     </ProductionSafety>
     </ErrorBoundary>
   );

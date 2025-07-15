@@ -125,7 +125,7 @@ const Settings = () => {
         </div>
       </div>
       
-      <BottomNavigation />
+      {/* BottomNavigation gestito da PageRenderer */}
     </div>
   );
 };

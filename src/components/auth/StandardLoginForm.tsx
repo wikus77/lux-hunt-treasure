@@ -1,7 +1,7 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useZustandNavigation } from '@/hooks/useZustandNavigation';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import FormField from './form-field';
@@ -14,7 +14,7 @@ interface StandardLoginFormProps {
 
 export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
-  const navigate = useNavigate();
+  const { navigate } = useZustandNavigation();
   
   // 🔧 CORREZIONE: Usa il hook di login reale che gestisce Supabase
   const { formData, errors, formError, isSubmitting, handleChange, handleSubmit } = useLogin();

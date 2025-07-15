@@ -16,6 +16,8 @@ interface NavigationActions {
   clearHistory: () => void;
   setCapacitorMode: (isCapacitor: boolean) => void;
   getNavigationInfo: () => NavigationState;
+  navigateToPage: (path: string) => void;
+  canGoBack: () => boolean;
 }
 
 type NavigationStore = NavigationState & NavigationActions;
@@ -84,6 +86,25 @@ export const useNavigationStore = create<NavigationStore>()(
       getNavigationInfo: () => {
         return get();
       },
+
+      navigateToPage: (path: string) => {
+        console.log('🧭 Navigation Store: Navigating to:', path);
+        const { addToHistory, setCurrentTab } = get();
+        addToHistory(path);
+        setCurrentTab(path);
+        
+        // iOS WebView scroll fix
+        if (typeof window !== 'undefined') {
+          setTimeout(() => {
+            window.scrollTo(0, 0);
+          }, 100);
+        }
+      },
+
+      canGoBack: () => {
+        const { history } = get();
+        return history.length > 1;
+      },
     }),
     {
       name: 'm1ssion-navigation-store',
@@ -113,6 +134,12 @@ export const navigationHelpers = {
   explicitGoBack: () => {
     const store = useNavigationStore.getState();
     return store.goBack();
+  },
+
+  explicitNavigate: (path: string) => {
+    const store = useNavigationStore.getState();
+    store.navigateToPage(path);
+    return path;
   },
 
   getExplicitNavigationState: () => {

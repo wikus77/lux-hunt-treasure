@@ -9,8 +9,7 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
-import BottomNavigation from "@/components/layout/BottomNavigation";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
+// Headers e Navigation gestiti centralmente da PageRenderer
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const AppHome = () => {
@@ -107,7 +106,7 @@ const AppHome = () => {
       </Helmet>
       
       {/* Unified Header - same as other pages */}
-      <UnifiedHeader profileImage={profileImage} />
+      {/* Header gestito da PageRenderer */}
       
       <div 
         className="px-4 space-y-6"
@@ -171,7 +170,7 @@ const AppHome = () => {
         </AnimatePresence>
       </div>
       
-      <BottomNavigation />
+      {/* BottomNavigation gestito da PageRenderer */}
     </div>
   );
 };

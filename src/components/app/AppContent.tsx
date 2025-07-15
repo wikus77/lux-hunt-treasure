@@ -6,7 +6,8 @@ import { Spinner } from "../ui/spinner";
 // by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx)
 // import { Toaster } from "sonner";
 import { Toaster as ShadcnToaster } from "../ui/toaster";
-import AppRoutes from "../../routes/AppRoutes";
+import NavigationManager from "../../router/NavigationManager";
+import PageRenderer from "../../router/PageRenderer";
 
 /**
  * The AppContent component separates the App rendering logic from the provider setup
@@ -81,7 +82,9 @@ function AppContent() {
     >
       {hydrated ? (
         <>
-          <AppRoutes />
+          <PageRenderer>
+            <NavigationManager />
+          </PageRenderer>
           {/* by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx) */}
           <ShadcnToaster />
         </>
