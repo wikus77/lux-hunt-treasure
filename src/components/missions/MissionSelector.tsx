@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Check } from "lucide-react";
 
 export interface MissionSelectorProps {
@@ -15,7 +15,7 @@ export default function MissionSelector({
   redirectToRegister = true 
 }: MissionSelectorProps) {
   const [selected, setSelected] = useState<"uomo" | "donna" | null>(null);
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   const handleSelect = (gender: "uomo" | "donna") => {
     setSelected(gender);
@@ -26,7 +26,7 @@ export default function MissionSelector({
     
     if (redirectToRegister) {
       // Navigate to register with the selected preference
-      navigate(`/register?preference=${gender}`);
+      navigate(`/register`);
     }
   };
 

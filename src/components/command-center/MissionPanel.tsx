@@ -3,14 +3,14 @@ import React from "react";
 import { Mission } from "@/data/commandCenterData";
 import { motion } from "framer-motion";
 import { Map, AlertTriangle, Clock, Target } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 
 interface MissionPanelProps {
   mission: Mission;
 }
 
 export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   
   const formatTimeRemaining = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

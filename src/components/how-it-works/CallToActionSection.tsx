@@ -1,12 +1,12 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
 const CallToActionSection: React.FC = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   return (
     <section className="py-20 px-4 relative z-10">

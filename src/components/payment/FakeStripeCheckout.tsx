@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { CreditCard, Lock, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { supabase } from '@/integrations/supabase/client';
 
 interface FakeStripeCheckoutProps {
@@ -30,7 +30,7 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
     name: ''
   });
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   // TASK B — FLUSSO handleUpgrade(tier)
   const handlePayment = async () => {

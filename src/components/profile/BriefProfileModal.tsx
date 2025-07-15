@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ interface BriefProfileModalProps {
 }
 
 const BriefProfileModal = ({ open, onClose, profileImage }: BriefProfileModalProps) => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const [name, setName] = useState("Mario Rossi");
   const [bio, setBio] = useState("");
   

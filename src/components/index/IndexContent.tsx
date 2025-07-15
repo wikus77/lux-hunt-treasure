@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";

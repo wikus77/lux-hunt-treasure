@@ -1,7 +1,7 @@
 
 import React, { ReactNode } from "react";
 import { useAuthContext } from "@/contexts/auth";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import ErrorFallback from "../error/ErrorFallback";
 

@@ -1,7 +1,7 @@
 
 import { Instagram, Facebook, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 
 export const Footer = () => {
   const isMobile = useIsMobile();

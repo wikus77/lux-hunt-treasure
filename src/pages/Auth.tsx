@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import { useQueryParams } from "@/hooks/useQueryParams";
 import Login from "./Login";
 import ProfileQuiz from "@/components/profile/ProfileQuiz";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,11 +18,10 @@ const Auth = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const searchParams = useQueryParams<{ redirect?: string; verification?: string }>();
+  const { navigate, currentPath } = useWouterNavigation();
   
-  console.log("Auth page loaded - current path:", location.pathname);
+  console.log("Auth page loaded - current path:", currentPath);
   
   // Handle email verification from URL params
   const wasEmailVerification = useEmailVerificationHandler();
@@ -38,7 +38,7 @@ const Auth = () => {
     }
     
     // Check URL for redirects
-    const redirect = searchParams.get('redirect');
+    const redirect = searchParams.redirect;
     if (redirect) {
       console.log("Found redirect parameter:", redirect);
     }

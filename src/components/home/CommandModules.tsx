@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { Map, Zap, Gamepad2, Users, Trophy, Bell } from 'lucide-react';
 
 const modules = [
@@ -43,7 +43,7 @@ const modules = [
 ];
 
 export const CommandModules: React.FC = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   return (
     <div className="grid grid-cols-2 gap-4 mb-8">

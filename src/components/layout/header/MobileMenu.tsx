@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { useAuthContext } from "@/contexts/auth";
 import { motion } from "framer-motion";
 

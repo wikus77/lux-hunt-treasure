@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { currentEvent } from "@/data/eventData";
 import CountdownTimer from "./CountdownTimer";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import FuturisticSectionTitle from "@/components/events/FuturisticSectionTitle";
 import { motion } from "framer-motion";
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
@@ -11,7 +11,7 @@ import { upcomingMysteryPrizes } from "@/data/mysteryPrizesData";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 
 export const CurrentEventSection = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   // Animated title sequence variants
   const titleContainerVariants = {

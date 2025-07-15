@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import BuzzPulseAnimation from './BuzzPulseAnimation';
 import BuzzCountDisplay from './BuzzCountDisplay';
@@ -33,7 +33,7 @@ const BuzzMainContent: React.FC<BuzzMainContentProps> = ({
   const [showPulse, setShowPulse] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { playSound } = useSoundEffects();
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
 
   const handleBuzzPress = async () => {
     if (!isAuthenticated) {
