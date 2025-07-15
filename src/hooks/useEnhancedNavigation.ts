@@ -1,12 +1,11 @@
 // M1SSION™ - Enhanced Navigation Hook for iOS Capacitor
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { useCapacitorHardware } from './useCapacitorHardware';
 import { explicitNavigationHandler, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 export const useEnhancedNavigation = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const { navigate, currentPath: location } = useWouterNavigation();
   const { isCapacitor, vibrate } = useCapacitorHardware();
   const { setCurrentTab, addToHistory, goBack } = useNavigationStore();
 
@@ -24,8 +23,8 @@ export const useEnhancedNavigation = () => {
       setCurrentTab(path);
       addToHistory(path);
       
-      // Navigate using explicit handler
-      explicitNavigationHandler(path, navigate);
+      // Navigate using Wouter
+      navigate(path, options);
       
       // iOS scroll fix
       if (isCapacitor) {
@@ -49,7 +48,7 @@ export const useEnhancedNavigation = () => {
       
       const previousPath = goBack();
       if (previousPath) {
-        explicitNavigationHandler(previousPath, navigate);
+        navigate(previousPath);
         
         // iOS scroll fix
         if (isCapacitor) {
@@ -78,7 +77,7 @@ export const useEnhancedNavigation = () => {
 
   // Tab detection with explicit function name
   const getCurrentTab = preserveFunctionName((): string => {
-    const path = location.pathname;
+    const path = location;
     
     // Map complex paths to simple tab names
     if (path.startsWith('/home')) return 'home';
@@ -95,7 +94,7 @@ export const useEnhancedNavigation = () => {
 
   // Navigation state with explicit getters
   const navigationState = {
-    currentPath: location.pathname,
+    currentPath: location,
     currentTab: getCurrentTab(),
     isCapacitor,
     canGoBack: window.history.length > 1,

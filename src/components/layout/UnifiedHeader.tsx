@@ -1,5 +1,6 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -32,7 +33,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   leftComponent,
   onClickMail
 }) => {
-  const location = useLocation();
+  const [location] = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
   const { profileImage } = useProfileImage();
@@ -94,12 +95,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
-  const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
-  const isHomePage = location.pathname === '/home';
+  const currentPageTitle = pageTitles[location] || 'M1SSION';
+  const isHomePage = location === '/home';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
-  const isBottomNavPage = bottomNavPages.includes(location.pathname);
+  const isBottomNavPage = bottomNavPages.includes(location);
 
   return (
     <motion.header
