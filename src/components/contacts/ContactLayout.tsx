@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { NavigationButton } from "@/components/ui/navigation-button";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import BackgroundParticles from "@/components/ui/background-particles";
@@ -25,11 +25,11 @@ const ContactLayout: React.FC<ContactLayoutProps> = ({ isBeforeLaunch }) => {
       <main className="flex-1 py-20 px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Back button */}
-          <Link to="/">
+          <NavigationButton to="/">
             <Button variant="outline" className="mb-8">
               <ArrowLeft className="mr-2 w-4 h-4" /> Torna alla Home
             </Button>
-          </Link>
+          </NavigationButton>
           
           {/* Hero section */}
           <ContactHero />

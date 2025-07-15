@@ -1,7 +1,7 @@
 
 import React, { ReactNode } from "react";
 import { useAuthContext } from "@/contexts/auth";
-import { Link } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { Button } from "@/components/ui/button";
 import ErrorFallback from "../error/ErrorFallback";
 
@@ -10,6 +10,7 @@ interface BuzzFeatureWrapperProps {
 }
 
 const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => {
+  const navigate = useNavigateCompat();
   const { user, isLoading } = useAuthContext();
 
   // Se stiamo caricando, mostra un indicatore di caricamento
@@ -29,11 +30,12 @@ const BuzzFeatureWrapper: React.FC<BuzzFeatureWrapperProps> = ({ children }) => 
         <p className="text-muted-foreground mb-4">
           Devi effettuare l'accesso per utilizzare questa funzionalità e sbloccare indizi.
         </p>
-        <Link to="/login">
-          <Button className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink">
-            Accedi
-          </Button>
-        </Link>
+        <Button 
+          onClick={() => navigate("/login")}
+          className="bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
+        >
+          Accedi
+        </Button>
       </div>
     );
   }
