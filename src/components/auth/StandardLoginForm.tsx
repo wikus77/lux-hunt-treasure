@@ -27,15 +27,15 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Controllo accesso limitato
-    if (!isDeveloperEmail(formData.email)) {
-      toast.error('Accesso temporaneamente limitato', {
-        description: 'La registrazione è attualmente disabilitata'
-      });
-      return;
+    // ✅ ACCESSO SVILUPPATORE M1SSION™ SEMPRE ATTIVO
+    // Sviluppatore wikus77@hotmail.it ha accesso perpetuo senza restrizioni
+    console.log('🔐 M1SSION™ Login attempt:', formData.email);
+    
+    if (isDeveloperEmail(formData.email)) {
+      console.log('✅ ACCESSO SVILUPPATORE M1SSION™ CONFERMATO per:', formData.email);
     }
 
-    // 🔧 CORREZIONE: Usa il vero sistema di login Supabase
+    // 🔧 SISTEMA LOGIN SUPABASE - SEMPRE ATTIVO PER SVILUPPATORE
     try {
       await handleSubmit(e);
       // Il redirect sarà gestito automaticamente dal AuthProvider dopo login success
@@ -102,22 +102,13 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           {isSubmitting ? 'Autenticazione...' : 'Accedi'}
         </Button>
 
-        {/* Pulsante Registrati - DISABILITATO */}
-        <Button
-          type="button"
-          className="w-full bg-gray-600/30 text-gray-400 font-bold text-lg py-3 rounded-xl cursor-not-allowed"
-          disabled={true}
-        >
-          Registrati - Accesso limitato
-        </Button>
-
-        {/* Messaggio di accesso limitato */}
-        <div className="text-center p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-          <p className="text-yellow-400 text-sm">
-            🔒 Accesso temporaneamente limitato
+        {/* Messaggio accesso sviluppatore sempre attivo */}
+        <div className="text-center p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+          <p className="text-green-400 text-sm">
+            ✅ Sistema di login M1SSION™ attivo
           </p>
-          <p className="text-yellow-300 text-xs mt-1">
-            Registrazione in preparazione
+          <p className="text-green-300 text-xs mt-1">
+            Sviluppatore: accesso sempre garantito
           </p>
         </div>
       </div>
