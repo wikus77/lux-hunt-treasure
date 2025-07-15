@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { LockKeyholeIcon, Brain, Bomb, Fingerprint, MapPin, Satellite, MessageSquare } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { useAuthContext } from "@/contexts/auth";
 import type { GameKey } from "@/types/minigames";
 
@@ -16,7 +16,7 @@ interface GameCardProps {
 }
 
 const GameCard = ({ title, description, icon, gameKey }: GameCardProps) => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const { getCurrentUser } = useAuthContext();
   
   const currentUser = getCurrentUser();

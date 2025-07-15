@@ -1,9 +1,9 @@
 
 import { User, Shield, CreditCard, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 
 const AccountSection = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
 
   return (
     <section className="p-4">

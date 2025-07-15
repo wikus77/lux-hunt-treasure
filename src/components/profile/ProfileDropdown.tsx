@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { Settings, LogOut, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,7 +20,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const { toast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
 

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { useAuthContext } from "@/contexts/auth";
 
 interface UserMenuProps {
@@ -19,7 +19,7 @@ interface UserMenuProps {
 }
 
 const UserMenu = ({ onClickMail, enableAvatarUpload }: UserMenuProps) => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const { logout, getCurrentUser } = useAuthContext();
 
   const handleSignOut = () => {

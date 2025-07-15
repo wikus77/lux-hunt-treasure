@@ -10,9 +10,9 @@ import { useNavigationStore } from '@/stores/navigationStore';
 export const useNavigateCompat = () => {
   const { navigateToPage } = useNavigationStore();
 
-  const navigate = (path: string | number) => {
+  const navigate = (path: string | number, options?: { replace?: boolean }) => {
     if (typeof path === 'string') {
-      console.log('🔄 NavigateCompat: Navigating to:', path);
+      console.log('🔄 NavigateCompat: Navigating to:', path, options?.replace ? '(replace)' : '');
       navigateToPage(path);
     } else if (typeof path === 'number') {
       // Gestione del back (-1)

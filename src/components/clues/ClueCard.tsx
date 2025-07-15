@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 
 interface ClueCardProps {
   title: string;
@@ -12,7 +12,7 @@ interface ClueCardProps {
 }
 
 export const ClueCard = ({ title, description, week, isLocked, subscriptionType = "Base" }: ClueCardProps) => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
 
   // Determina il colore del bordo in base al tipo di abbonamento
   const getBorderClass = () => {
@@ -31,11 +31,7 @@ export const ClueCard = ({ title, description, week, isLocked, subscriptionType 
 
   const handleUnlockClick = () => {
     // Trasmetti informazioni sull’indizio per il post-pagamento
-    navigate("/payment-methods", {
-      state: {
-        clue: { title, description, week, subscriptionType }
-      }
-    });
+    navigate("/payment-methods");
   };
 
   return (

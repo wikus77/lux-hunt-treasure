@@ -1,13 +1,13 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from "@/hooks/useNavigateCompat";
 import { Button } from "@/components/ui/button";
 import { useAuthContext } from "@/contexts/auth";
 import { toast } from "sonner";
 import { Loader2, Mail, RefreshCw } from "lucide-react";
 
 const VerificationPendingView: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   const { getCurrentUser, resendVerificationEmail } = useAuthContext();
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
