@@ -1,7 +1,8 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
@@ -10,8 +11,8 @@ import BackgroundParticles from "@/components/ui/background-particles";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const { navigate } = useWouterNavigation();
+  const searchParams = new URLSearchParams(window.location.search);
 
   useEffect(() => {
     const verification = searchParams.get('verification');
@@ -23,7 +24,7 @@ const Login = () => {
         description: "La tua email è stata verificata con successo."
       });
     }
-  }, [navigate, searchParams]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black px-4 py-12 relative overflow-hidden">
