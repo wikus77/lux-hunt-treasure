@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
-import StandardLoginForm from "@/components/auth/StandardLoginForm";
+import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 
 const Login = () => {
