@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from "react-router-dom";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -11,10 +11,10 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
-// BottomNavigation gestito centralmente da PageRenderer
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Profile = () => {
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
@@ -102,7 +102,7 @@ const Profile = () => {
           onOpenChange={closeNotificationsDrawer}
         />
       </ProfileLayout>
-      {/* BottomNavigation gestito da PageRenderer */}
+      <BottomNavigation />
     </div>
   );
 };

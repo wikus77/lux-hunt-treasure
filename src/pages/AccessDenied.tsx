@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from 'react-router-dom';
 import { ShieldAlert, RefreshCw, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 const AccessDenied = () => {
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const { logout, userRole, getCurrentUser } = useAuthContext();
   
   const handleLogout = async () => {

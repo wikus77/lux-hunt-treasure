@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from "react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { User, Mail, MoreVertical } from "lucide-react";
 import Footer from "./Footer";
 import BottomNavigation from "./BottomNavigation";
@@ -21,13 +21,9 @@ import { AIAssistant } from '@/components/ai/AIAssistant';
 import { useIsMobile } from "@/hooks/use-mobile";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
-
-const MainLayout = ({ children }: MainLayoutProps) => {
-  // const location = useLocation(); // Disabilitato per Zustand
-  const navigate = useNavigateCompat();
+const MainLayout = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string>("Utente");
@@ -77,7 +73,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       clearInterval(interval);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []); // Rimosso location.pathname dependency
+  }, [location.pathname]);
 
   const handleShowNotifications = () => {
     setShowNotifications(true);
@@ -152,7 +148,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       </header>
       
       <main className="flex-1 w-full relative pb-16 max-w-screen-xl mx-auto px-2 sm:px-4 smooth-scroll safe-area-bottom" style={{ paddingTop: 'calc(72px + env(safe-area-inset-top))' }}>
-        {children}
+        <Outlet />
       </main>
       
       {showHowItWorks && (

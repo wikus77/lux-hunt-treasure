@@ -22,7 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/capacitor';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';

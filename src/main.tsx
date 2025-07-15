@@ -70,24 +70,26 @@ const renderApp = () => {
     console.log("✅ Creating React root with enhanced configuration");
     const root = ReactDOM.createRoot(rootElement);
     
-    // Enhanced app rendering WITHOUT StrictMode to prevent double rendering loops
+    // Enhanced app rendering with better error boundaries
     root.render(
-      <QueryClientProvider client={queryClient}>
-        <App />
-        <Toaster 
-          position="top-right" 
-          richColors 
-          closeButton 
-          duration={4000}
-          toastOptions={{
-            style: {
-              background: 'rgba(0, 0, 0, 0.8)',
-              color: 'white',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            },
-          }}
-        />
-      </QueryClientProvider>
+      <React.StrictMode>
+        <QueryClientProvider client={queryClient}>
+          <App />
+          <Toaster 
+            position="top-right" 
+            richColors 
+            closeButton 
+            duration={4000}
+            toastOptions={{
+              style: {
+                background: 'rgba(0, 0, 0, 0.8)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          />
+        </QueryClientProvider>
+      </React.StrictMode>
     );
     
     console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
@@ -214,7 +216,7 @@ if (typeof window !== 'undefined') {
   
   // Initialize Capacitor if available
   if (window.location.protocol === 'capacitor:' || (window as any).Capacitor) {
-    import('@/utils/capacitor').then(({ initializeCapacitorWithExplicitName }) => {
+    import('@/utils/iosCapacitorFunctions').then(({ initializeCapacitorWithExplicitName }) => {
       initializeCapacitorWithExplicitName();
     });
   }

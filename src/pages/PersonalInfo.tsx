@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const PersonalInfo = () => {
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [originalInfo, setOriginalInfo] = useState({

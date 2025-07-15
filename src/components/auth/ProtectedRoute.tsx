@@ -1,26 +1,26 @@
 
 import React, { useEffect } from 'react';
-import { useZustandNavigation } from '@/hooks/useZustandNavigation';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/auth';
 import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
   redirectTo?: string;
   requireEmailVerification?: boolean;
+  children?: React.ReactNode;
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children,
   redirectTo = '/login',
-  requireEmailVerification = true
+  requireEmailVerification = true,
+  children
 }) => {
   const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useAuthContext();
-  const { currentPath, navigate } = useZustandNavigation();
+  const location = useLocation();
   
   useEffect(() => {
     console.log("🛡️ PROTECTED ROUTE CHECK:", {
-      path: currentPath,
+      path: location.pathname,
       isAuthenticated,
       isLoading,
       isEmailVerified,
@@ -29,7 +29,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       userRole,
       isDeveloper: hasRole('developer')
     });
-  }, [currentPath, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole]);
+  }, [location.pathname, isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole]);
   
   // Show loading during authentication check
   if (isLoading) {
@@ -44,8 +44,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Check authentication
   if (!isAuthenticated) {
     console.log("❌ AUTH CHECK FAILED - User not authenticated, redirecting to:", redirectTo);
-    navigate(redirectTo);
-    return null;
+    return <Navigate to={redirectTo} replace state={{ from: location }} />;
   }
   
   console.log("✅ AUTH CHECK PASSED - User authenticated");
@@ -56,12 +55,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   
   if (requireEmailVerification && !isEmailVerified && !isDeveloper) {
     console.log("📧 EMAIL VERIFICATION CHECK - Not verified, redirecting");
-    navigate('/login?verification=pending');
-    return null;
+    return <Navigate to="/login?verification=pending" replace />;
   }
   
   console.log("🎯 PROTECTED ROUTE SUCCESS - Rendering protected content for:", currentUser?.email);
-  return <>{children}</>;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;

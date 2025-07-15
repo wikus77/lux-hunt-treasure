@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
@@ -17,7 +17,7 @@ import RoleSwitcher from "@/components/auth/RoleSwitcher";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const { logout } = useAuthContext();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
@@ -125,7 +125,7 @@ const Settings = () => {
         </div>
       </div>
       
-      {/* BottomNavigation gestito da PageRenderer */}
+      <BottomNavigation />
     </div>
   );
 };

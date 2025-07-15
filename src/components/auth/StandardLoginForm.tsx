@@ -1,70 +1,76 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState } from 'react';
-import { useZustandNavigation } from '@/hooks/useZustandNavigation';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useLogin } from '@/hooks/use-login';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
 }
 
 export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { navigate } = useZustandNavigation();
-  
-  // 🔧 CORREZIONE: Usa il hook di login reale che gestisce Supabase
-  const { formData, errors, formError, isSubmitting, handleChange, handleSubmit } = useLogin();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // Internal access control per limitare l'accesso
+  // Internal access control
   const isDeveloperEmail = (email: string) => {
     return email.toLowerCase() === 'wikus77@hotmail.it';
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // ✅ ACCESSO SVILUPPATORE M1SSION™ SEMPRE ATTIVO
-    // Sviluppatore wikus77@hotmail.it ha accesso perpetuo senza restrizioni
-    console.log('🔐 M1SSION™ Login attempt:', formData.email);
-    
-    if (isDeveloperEmail(formData.email)) {
-      console.log('✅ ACCESSO SVILUPPATORE M1SSION™ CONFERMATO per:', formData.email);
+    if (!email || !password) {
+      toast.error('Tutti i campi sono obbligatori');
+      return;
     }
 
-    // 🔧 SISTEMA LOGIN SUPABASE - SEMPRE ATTIVO PER SVILUPPATORE
+    setIsLoading(true);
+    
     try {
-      await handleSubmit(e);
-      // Il redirect sarà gestito automaticamente dal AuthProvider dopo login success
-    } catch (error) {
-      console.error('Login error:', error);
+      // Internal access control
+      if (isDeveloperEmail(email)) {
+        toast.success('Accesso autorizzato', {
+          description: 'Benvenuto in M1SSION™!'
+        });
+        
+        setTimeout(() => {
+          navigate('/home', { replace: true });
+        }, 1000);
+      } else {
+        // Blocco accesso per tutti gli altri utenti
+        toast.error('Accesso temporaneamente limitato', {
+          description: 'La registrazione è attualmente disabilitata'
+        });
+      }
+    } catch (error: any) {
+      toast.error('Errore di sistema', {
+        description: error.message || 'Si è verificato un errore imprevisto'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
-      {/* Mostra errori di validazione */}
-      {formError && (
-        <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
-          <p className="text-red-400 text-sm">{formError}</p>
-        </div>
-      )}
-
+    <form onSubmit={handleSubmit} className="space-y-4">
       <FormField
         id="email"
         label="Email"
         type="email"
         placeholder="Inserisci la tua email"
-        value={formData.email}
-        onChange={handleChange}
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
         icon={<Mail className="h-4 w-4" />}
         required
-        disabled={isSubmitting}
+        disabled={isLoading}
         autoComplete="email"
-        error={errors.email}
       />
 
       <div className="space-y-2">
@@ -73,13 +79,12 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           label="Password"
           type={showPassword ? "text" : "password"}
           placeholder="Inserisci la password"
-          value={formData.password}
-          onChange={handleChange}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
           icon={<Lock className="h-4 w-4" />}
           required
-          disabled={isSubmitting}
+          disabled={isLoading}
           autoComplete="current-password"
-          error={errors.password}
         />
         
         <button
@@ -97,18 +102,27 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         <Button
           type="submit"
           className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 font-bold text-lg py-3 rounded-xl neon-button-cyan"
-          disabled={isSubmitting}
+          disabled={isLoading}
         >
-          {isSubmitting ? 'Autenticazione...' : 'Accedi'}
+          {isLoading ? 'Caricamento...' : 'Accedi'}
         </Button>
 
-        {/* Messaggio accesso sviluppatore sempre attivo */}
-        <div className="text-center p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
-          <p className="text-green-400 text-sm">
-            ✅ Sistema di login M1SSION™ attivo
+        {/* Pulsante Registrati - DISABILITATO */}
+        <Button
+          type="button"
+          className="w-full bg-gray-600/30 text-gray-400 font-bold text-lg py-3 rounded-xl cursor-not-allowed"
+          disabled={true}
+        >
+          Registrati - Accesso limitato
+        </Button>
+
+        {/* Messaggio di accesso limitato */}
+        <div className="text-center p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+          <p className="text-yellow-400 text-sm">
+            🔒 Accesso temporaneamente limitato
           </p>
-          <p className="text-green-300 text-xs mt-1">
-            Sviluppatore: accesso sempre garantito
+          <p className="text-yellow-300 text-xs mt-1">
+            Registrazione in preparazione
           </p>
         </div>
       </div>

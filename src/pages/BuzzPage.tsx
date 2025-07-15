@@ -5,7 +5,8 @@ import { motion } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { BuzzInstructions } from '@/components/buzz/BuzzInstructions';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
-// Headers e Navigation gestiti centralmente da PageRenderer
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
@@ -69,7 +70,7 @@ export const BuzzPage: React.FC = () => {
           backdropFilter: 'blur(12px)'
         }}
       >
-        {/* Header gestito da PageRenderer */}
+        <UnifiedHeader />
       </div>
       
       {/* Main scrollable content */}
@@ -121,7 +122,7 @@ export const BuzzPage: React.FC = () => {
         </div>
       </main>
       
-      {/* BottomNavigation gestito da PageRenderer */}
+      <BottomNavigation />
     </motion.div>
   );
 };

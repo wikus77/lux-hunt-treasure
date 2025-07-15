@@ -13,7 +13,8 @@ import { LeaderboardProgress } from '@/components/leaderboard/LeaderboardProgres
 import { LeaderboardTabs } from '@/components/leaderboard/LeaderboardTabs';
 import { useLeaderboardData } from '@/hooks/useLeaderboardData';
 import { useIsMobile } from '@/hooks/use-mobile';
-// Headers e Navigation gestiti centralmente da PageRenderer
+import BottomNavigation from '@/components/layout/BottomNavigation';
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 
 const samplePlayers = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
@@ -127,7 +128,7 @@ const Leaderboard = () => {
           backdropFilter: 'blur(12px)'
         }}
       >
-        {/* Header gestito da PageRenderer */}
+        <UnifiedHeader />
       </header>
       
       {/* Main scrollable content */}
@@ -235,7 +236,7 @@ const Leaderboard = () => {
         player={selectedPlayer}
       />
       
-      {/* BottomNavigation gestito da PageRenderer */}
+      <BottomNavigation />
     </motion.div>
   );
 };

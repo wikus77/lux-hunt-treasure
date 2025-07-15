@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
-import { preserveFunctionName } from '@/utils/capacitor';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 interface ConsoleMessage {
   id: string;

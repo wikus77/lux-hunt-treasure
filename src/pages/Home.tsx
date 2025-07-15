@@ -12,7 +12,8 @@ import { useMissionManager } from "@/hooks/useMissionManager";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
-// Headers e Navigation gestiti centralmente da PageRenderer
+import BottomNavigation from "@/components/layout/BottomNavigation";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 
 const Home = () => {
@@ -150,7 +151,7 @@ const Home = () => {
         <title>M1SSION™ - Home</title>
       </Helmet>
       
-      {/* Header gestito da PageRenderer */}
+      <UnifiedHeader profileImage={profileImage} />
       <div 
         className={getContentPaddingClass()}
         style={getContentPaddingStyle()}
@@ -209,7 +210,7 @@ const Home = () => {
         )}
       </AnimatePresence>
       
-      {/* BottomNavigation gestito da PageRenderer */}
+      <BottomNavigation />
     </div>
   );
 };

@@ -2,7 +2,7 @@
 // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
 import { useState, useEffect } from "react";
 import { Bell, Menu } from "lucide-react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from "react-router-dom";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ interface HomeHeaderProps {
 
 const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHeaderProps) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const { isConnected } = useRealTimeNotifications();
   
   return (

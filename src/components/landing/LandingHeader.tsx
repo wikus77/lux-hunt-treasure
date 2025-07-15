@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { useNavigateCompat } from '@/hooks/useNavigateCompat';
+import { useNavigate } from "react-router-dom";
 import { AnimatedCountdown } from "@/components/ui/animated-countdown";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
@@ -9,7 +9,7 @@ interface LandingHeaderProps {
 }
 
 const LandingHeader = ({ countdownCompleted = false }: LandingHeaderProps) => {
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
 
   const handleJoinHunt = () => {
     // Reindirizza sempre alla registrazione, indipendentemente dal countdown

@@ -56,13 +56,7 @@ const Index = () => {
     return <DeveloperAccess />;
   }
 
-  console.log("Index render state:", { 
-    introCompleted, 
-    pageLoaded, 
-    renderContent, 
-    countdownCompleted,
-    showDeveloperAccess 
-  });
+  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">

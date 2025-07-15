@@ -20,7 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/capacitor';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 

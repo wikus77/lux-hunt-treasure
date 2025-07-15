@@ -16,13 +16,13 @@ interface NavigationActions {
   clearHistory: () => void;
   setCapacitorMode: (isCapacitor: boolean) => void;
   getNavigationInfo: () => NavigationState;
-  navigateToPage: (path: string) => void;
-  canGoBack: () => boolean;
 }
 
 type NavigationStore = NavigationState & NavigationActions;
 
-export const useNavigationStore = create<NavigationStore>()((set, get) => ({
+export const useNavigationStore = create<NavigationStore>()(
+  persist(
+    (set, get) => ({
       // State
       currentTab: '/',
       history: ['/'],
@@ -84,26 +84,17 @@ export const useNavigationStore = create<NavigationStore>()((set, get) => ({
       getNavigationInfo: () => {
         return get();
       },
-
-      navigateToPage: (path: string) => {
-        console.log('🧭 Navigation Store: Navigating to:', path);
-        const { addToHistory, setCurrentTab } = get();
-        addToHistory(path);
-        setCurrentTab(path);
-        
-        // iOS WebView scroll fix
-        if (typeof window !== 'undefined') {
-          setTimeout(() => {
-            window.scrollTo(0, 0);
-          }, 100);
-        }
-      },
-
-      canGoBack: () => {
-        const { history } = get();
-        return history.length > 1;
-      },
-    }));
+    }),
+    {
+      name: 'm1ssion-navigation-store',
+      partialize: (state) => ({
+        currentTab: state.currentTab,
+        history: state.history,
+        isCapacitor: state.isCapacitor,
+      }),
+    }
+  )
+);
 
 // Explicit helper functions for iOS Capacitor compatibility
 export const navigationHelpers = {
@@ -122,12 +113,6 @@ export const navigationHelpers = {
   explicitGoBack: () => {
     const store = useNavigationStore.getState();
     return store.goBack();
-  },
-
-  explicitNavigate: (path: string) => {
-    const store = useNavigationStore.getState();
-    store.navigateToPage(path);
-    return path;
   },
 
   getExplicitNavigationState: () => {

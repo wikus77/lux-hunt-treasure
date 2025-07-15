@@ -1,6 +1,6 @@
 
 import { useState, FormEvent } from 'react';
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -26,7 +26,7 @@ export const useLogin = () => {
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const { login } = useAuthContext();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,39 +70,34 @@ export const useLogin = () => {
     const { email, password } = formData;
 
     try {
-      console.log(`🔐 LOGIN ATTEMPT STARTING for email: ${email}`);
-      console.log(`🔍 Login path check - isDevPath: ${isDevPath}, pathname: ${window.location.pathname}`);
+      console.log(`Login attempt for email: ${email}`);
       
       // Special handling for development paths
       if (isDevPath) {
-        console.log('✅ Development path detected, bypassing Turnstile verification for login');
+        console.log('Development path detected, bypassing Turnstile verification for login');
         turnstileToken = 'BYPASS_FOR_DEVELOPMENT';
       }
       
       // First verify the turnstile token - skip for dev paths
       if (!isDevPath && turnstileToken && !turnstileToken.startsWith('BYPASS_')) {
-        console.log('🔄 Verifying Turnstile token...');
         const verifyResponse = await supabase.functions.invoke('verify-turnstile', {
           body: { token: turnstileToken, action: 'login' }
         });
         
         if (!verifyResponse.data?.success) {
-          console.warn('⚠️ Security verification warning, but allowing login to proceed:', verifyResponse.error);
+          console.warn('Security verification warning, but allowing login to proceed:', verifyResponse.error);
           // Continue anyway to prevent blocking login functionality
         }
       }
       
-      // Now proceed with standard login
-      console.log(`🚀 Proceeding with standard login for: ${email}`);
+      // Now proceed with standard login - CORRECTED: using 2 arguments as expected
+      console.log(`Proceeding with standard login for: ${email}`);
       
       const result = await login(email, password);
-      
-      console.log(`🔍 LOGIN RESULT:`, { success: result.success, hasSession: !!result.session });
       
       if (!result.success) {
         // Handle specific error cases
         const errorMessage = result.error?.message || 'Errore durante il login';
-        console.error(`❌ LOGIN FAILED: ${errorMessage}`);
         
         if (errorMessage.includes('Invalid login credentials')) {
           setFormError('Credenziali non valide. Verifica email e password.');
@@ -116,14 +111,13 @@ export const useLogin = () => {
       }
 
       // Show success toast and redirect (handled by the auth context)
-      console.log('✅ LOGIN SUCCESS - showing toast and waiting for redirect');
       toast.success('Accesso effettuato', {
         description: 'Benvenuto!',
         duration: 3000
       });
       
     } catch (error: any) {
-      console.error('💥 LOGIN EXCEPTION:', error);
+      console.error('Errore login:', error);
       // Form error is already set for specific cases above
       if (!formError) {
         setFormError(error.message || 'Errore imprevisto durante il login.');

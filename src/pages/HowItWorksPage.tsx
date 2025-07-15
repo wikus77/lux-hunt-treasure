@@ -19,7 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
-import { preserveFunctionName } from '@/utils/capacitor';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 
 interface HowItWorksStep {

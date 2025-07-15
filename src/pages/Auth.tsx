@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import Login from "./Login";
 import ProfileQuiz from "@/components/profile/ProfileQuiz";
 import { Spinner } from "@/components/ui/spinner";
@@ -17,12 +17,11 @@ const Auth = () => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
-  // Rimuovo useSearchParams e useLocation che causano errori
-  // const [searchParams] = useSearchParams();
-  const navigate = useNavigateCompat();
-  // const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  console.log("Auth page loaded");
+  console.log("Auth page loaded - current path:", location.pathname);
   
   // Handle email verification from URL params
   const wasEmailVerification = useEmailVerificationHandler();
@@ -38,12 +37,12 @@ const Auth = () => {
       }, 2000);
     }
     
-    // Check URL for redirects - disabled for now
-    // const redirect = searchParams.get('redirect');
-    // if (redirect) {
-    //   console.log("Found redirect parameter:", redirect);
-    // }
-  }, [wasEmailVerification, navigate]);
+    // Check URL for redirects
+    const redirect = searchParams.get('redirect');
+    if (redirect) {
+      console.log("Found redirect parameter:", redirect);
+    }
+  }, [wasEmailVerification, navigate, searchParams]);
 
   const handleAuthenticationComplete = (userId: string) => {
     console.log("Authentication complete for user:", userId);

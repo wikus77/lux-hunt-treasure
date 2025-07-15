@@ -1,9 +1,9 @@
 
 import React, { useState, useCallback } from 'react';
-import { useNavigateCompat } from '@/hooks/useNavigateCompat';
+import { useNavigate } from 'react-router-dom';
 
 const M1ssionText = () => {
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const [tapCount, setTapCount] = useState(0);
   const [tapTimer, setTapTimer] = useState<NodeJS.Timeout | null>(null);
 

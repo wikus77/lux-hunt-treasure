@@ -16,7 +16,8 @@ import FlashInterrogationGame from '@/components/games/FlashInterrogationGame';
 import CrackTheCombinationGame from '@/components/games/CrackTheCombinationGame';
 import SatelliteTrackingGame from '@/components/games/SatelliteTrackingGame';
 import FindMapPointGame from '@/components/games/FindMapPointGame';
-// Headers e Navigation gestiti centralmente da PageRenderer
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Games = () => {
   const [selectedGame, setSelectedGame] = useState<GameType | null>(null);
@@ -138,7 +139,7 @@ const Games = () => {
             backdropFilter: 'blur(12px)'
           }}
         >
-          {/* Header gestito da PageRenderer */}
+          <UnifiedHeader />
         </header>
         
         {/* Main scrollable content */}
@@ -162,7 +163,7 @@ const Games = () => {
             {renderGame()}
           </div>
         </main>
-        {/* BottomNavigation gestito da PageRenderer */}
+        <BottomNavigation />
       </div>
     );
   }
@@ -189,7 +190,7 @@ const Games = () => {
           backdropFilter: 'blur(12px)'
         }}
       >
-        {/* Header gestito da PageRenderer */}
+        <UnifiedHeader />
       </header>
       
       {/* Main scrollable content */}
@@ -271,7 +272,7 @@ const Games = () => {
         </div>
       </main>
       
-      {/* BottomNavigation gestito da PageRenderer */}
+      <BottomNavigation />
     </motion.div>
   );
 };

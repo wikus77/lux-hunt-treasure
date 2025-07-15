@@ -1,12 +1,19 @@
 
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export function useBuzzNavigation() {
-  const navigate = useNavigateCompat();
-  // const location = useLocation(); // Disabilitato per Zustand
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navigateToPaymentMethods = (vagueClueTxt: string, isRegularBuzz: boolean = true) => {
-    navigate("/payment-methods");
+    navigate("/payment-methods", {
+      state: {
+        fromBuzz: true,
+        fromRegularBuzz: isRegularBuzz,
+        clue: { description: vagueClueTxt },
+        generateMapArea: false
+      }
+    });
   };
 
   const navigateToNotifications = () => {
@@ -15,7 +22,7 @@ export function useBuzzNavigation() {
 
   return {
     navigate,
-    // location, // Disabilitato per Zustand
+    location,
     navigateToPaymentMethods,
     navigateToNotifications
   };

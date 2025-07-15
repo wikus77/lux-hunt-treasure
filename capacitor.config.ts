@@ -3,7 +3,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.niyvora.m1ssion',
+  appId: 'app.lovable.2716f91b957c47ba91e06f572f3ce00d',
   appName: 'M1SSION',
   webDir: 'dist',
   bundledWebRuntime: false,
@@ -44,13 +44,13 @@ const config: CapacitorConfig = {
     },
     
     SplashScreen: {
-      launchShowDuration: 3000,
-      launchAutoHide: false,
-      launchFadeOutDuration: 500,
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      launchFadeOutDuration: 1000,
       backgroundColor: '#000000',
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
-      showSpinner: true,
+      showSpinner: false,
       androidSpinnerStyle: 'large',
       iosSpinnerStyle: 'small',
       spinnerColor: '#00e5ff',

@@ -1,13 +1,12 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ UnifiedHeader - Zustand iOS Capacitor Compatible
-
+import { Link, useLocation } from "react-router-dom";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { useZustandNavigation } from "@/hooks/useZustandNavigation";
+import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
 
 interface UnifiedHeaderProps {
@@ -33,8 +32,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   leftComponent,
   onClickMail
 }) => {
+  const location = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
-  const { currentPath, goBack, canGoBack, toHome, toSettings } = useZustandNavigation();
+  const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
   const { profileImage } = useProfileImage();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
@@ -94,12 +94,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     }
   };
 
-  const currentPageTitle = pageTitles[currentPath] || 'M1SSION';
-  const isHomePage = currentPath === '/home';
+  const currentPageTitle = pageTitles[location.pathname] || 'M1SSION';
+  const isHomePage = location.pathname === '/home';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
-  const isBottomNavPage = bottomNavPages.includes(currentPath);
+  const isBottomNavPage = bottomNavPages.includes(location.pathname);
 
   return (
     <motion.header
@@ -130,22 +130,22 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => goBack()}
+                    onClick={() => goBackWithFeedback()}
                     className="mr-2 rounded-full hover:bg-white/10"
                   >
                     <ArrowLeft className="w-5 h-5" />
                   </Button>
                 )}
                 
-                <button
-                  onClick={() => toHome()}
-                  className="text-xl sm:text-2xl font-orbitron font-bold bg-transparent border-none outline-none cursor-pointer"
+                <Link
+                  to="/home"
+                  className="text-xl sm:text-2xl font-orbitron font-bold"
                 >
                   <span className="text-[#00D1FF]" style={{ 
                     textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                   }}>M1</span>
                   <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-                </button>
+                </Link>
               </div>
             )}
           </div>
@@ -183,14 +183,15 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </Button>
 
             {/* Settings - Always accessible for authenticated users */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toSettings()}
-              className="rounded-full hover:bg-white/10"
-            >
-              <Settings className="w-5 h-5" />
-            </Button>
+            <Link to="/settings">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full hover:bg-white/10"
+              >
+                <Settings className="w-5 h-5" />
+              </Button>
+            </Link>
 
             {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
             <ProfileDropdown

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from "react-router-dom";
 import { LoginModal } from "./LoginModal";
 
 interface AgeVerificationProps {
@@ -11,7 +11,7 @@ const AgeVerification: React.FC<AgeVerificationProps> = ({ onVerified }) => {
   const [loginOpen, setLoginOpen] = useState(false);
   const [birthdate, setBirthdate] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
 
   const handleVerification = () => {
     if (!birthdate) {

@@ -1,18 +1,19 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ BottomNavigation - Zustand iOS Capacitor Compatible
-
+// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import React from "react";
+import { useLocation } from "react-router-dom";
 import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useZustandNavigation } from "@/hooks/useZustandNavigation";
-import { detectCapacitorEnvironment } from "@/utils/capacitor";
+import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
+import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
 
 // Explicit function name for iOS Capacitor compatibility
 const BottomNavigationComponent = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
   const { unreadCount } = useNotifications();
   const { 
-    currentPath,
+    navigateWithFeedback, 
     isCapacitor, 
     toHome, 
     toMap, 
@@ -20,9 +21,9 @@ const BottomNavigationComponent = () => {
     toGames, 
     toNotifications, 
     toLeaderboard 
-  } = useZustandNavigation();
+  } = useEnhancedNavigation();
 
-  console.log('🧭 BottomNavigation Zustand render:', {
+  console.log('🧭 BottomNavigation render:', {
     currentPath,
     isCapacitor,
     unreadCount

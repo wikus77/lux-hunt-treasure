@@ -1,7 +1,7 @@
 
 // M1SSION™ - Status Bar Simulator for Development
 import React, { useEffect, useState } from 'react';
-import { detectCapacitorEnvironment, getDeviceOrientation } from '@/utils/capacitor';
+import { detectCapacitorEnvironment, getDeviceOrientation } from '@/utils/iosCapacitorFunctions';
 
 interface StatusBarSimulatorProps {
   visible?: boolean;

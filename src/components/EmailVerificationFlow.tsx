@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/capacitor';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 

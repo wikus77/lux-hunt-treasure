@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { Link } from "react-router-dom";
 import LandingHeader from "@/components/landing/LandingHeader";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import PresentationSection from "@/components/presentation/PresentationSection";
@@ -29,7 +29,6 @@ const IndexContent = ({
   onRegisterClick, 
   openInviteFriend 
 }: IndexContentProps) => {
-  const navigate = useNavigateCompat();
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
   const [contentLoaded, setContentLoaded] = useState(false);
 
@@ -157,12 +156,11 @@ const IndexContent = ({
             è necessario completare la verifica dell'identità prima di ricevere premi.
           </p>
           
-          <Button 
-            onClick={() => navigate("/kyc")}
-            className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600"
-          >
-            Vai alla verifica identità
-          </Button>
+          <Link to="/kyc">
+            <Button className="bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600">
+              Vai alla verifica identità
+            </Button>
+          </Link>
         </div>
       </div>
       

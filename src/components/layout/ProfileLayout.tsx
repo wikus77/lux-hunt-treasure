@@ -2,7 +2,7 @@
 import { ReactNode } from "react";
 import UnifiedHeader from "./UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import BottomNavigation from "./BottomNavigation";
 import { motion } from "framer-motion";
@@ -14,7 +14,7 @@ interface ProfileLayoutProps {
 
 const ProfileLayout = ({ children, showBottomNav = true }: ProfileLayoutProps) => {
   const { profileImage } = useProfileImage();
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
 
   return (

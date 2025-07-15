@@ -1,7 +1,7 @@
 // M1SSION™ - Post Login Redirect Logic for iOS Capacitor
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { detectCapacitorEnvironment, preserveFunctionName } from '@/utils/capacitor';
+import { detectCapacitorEnvironment, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 export interface PostLoginOptions {
   navigate: NavigateFunction;

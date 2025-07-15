@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, Map, Search, Info, Clock } from "lucide-react";
 import { IntelFeed as IntelFeedType } from "@/data/commandCenterData";
-import { useNavigateCompat } from '@/hooks/useNavigateCompat';
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -12,7 +12,7 @@ interface IntelFeedProps {
 }
 
 export const IntelFeed: React.FC<IntelFeedProps> = ({ intel }) => {
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
   const [displayedIntel, setDisplayedIntel] = useState<IntelFeedType[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   

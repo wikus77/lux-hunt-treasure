@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigateCompat } from "@/hooks/useNavigateCompat";
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -17,7 +17,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
-  const navigate = useNavigateCompat();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
