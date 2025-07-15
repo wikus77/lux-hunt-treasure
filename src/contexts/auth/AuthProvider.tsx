@@ -1,16 +1,15 @@
 
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { useAuth } from '@/hooks/use-auth';
 import { AuthContextType } from './types';
-import { useNavigation } from '@/hooks/useNavigation';
+import { useNavigate } from 'react-router-dom';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useAuth();
-  const { navigateTo } = useNavigation();
+  const navigate = useNavigate();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
@@ -28,7 +27,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
           console.log("🏠 Redirecting authenticated user to /home");
           setTimeout(() => {
-            navigateTo('/home');
+            navigate('/home');
           }, 1000);
         }
       }
@@ -42,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, [navigateTo]);
+  }, [navigate]);
 
   // Fetch user role when user changes
   useEffect(() => {

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigation } from "@/hooks/useNavigation";
+import { useNavigate } from "react-router-dom";
 
 interface EventHandlersResult {
   showAgeVerification: boolean;
@@ -16,7 +16,7 @@ interface EventHandlersResult {
  * Custom hook to handle all event handlers for the Index page
  */
 export const useEventHandlers = (countdownCompleted: boolean): EventHandlersResult => {
-  const { toRegister } = useNavigation();
+  const navigate = useNavigate();
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
 
@@ -36,7 +36,7 @@ export const useEventHandlers = (countdownCompleted: boolean): EventHandlersResu
 
   const handleAgeVerified = () => {
     setShowAgeVerification(false);
-    toRegister();
+    navigate("/register");
   };
 
   // Function to handle invite friend button click

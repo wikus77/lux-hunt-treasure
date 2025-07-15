@@ -1,28 +1,30 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import React from "react";
+import { useLocation } from "react-router-dom";
 import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
-import { useNavigation } from "@/hooks/useNavigation";
+import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
 
 // Explicit function name for iOS Capacitor compatibility
 const BottomNavigationComponent = () => {
+  const location = useLocation();
+  const currentPath = location.pathname;
   const { unreadCount } = useNotifications();
   const { 
-    navigateTo,
-    currentPage,
-    isCapacitor,
+    navigateWithFeedback, 
+    isCapacitor, 
     toHome, 
     toMap, 
     toBuzz, 
     toGames, 
     toNotifications, 
     toLeaderboard 
-  } = useNavigation();
+  } = useEnhancedNavigation();
 
   console.log('🧭 BottomNavigation render:', {
-    currentPage,
+    currentPath,
     isCapacitor,
     unreadCount
   });
@@ -137,7 +139,7 @@ const BottomNavigationComponent = () => {
       >
         <div className="flex items-center justify-around h-full max-w-lg mx-auto w-full">
           {links.map((link) => {
-            const isActive = currentPage === link.path;
+            const isActive = currentPath === link.path;
             
             return (
               <motion.button
