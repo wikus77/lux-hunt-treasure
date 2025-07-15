@@ -13,7 +13,9 @@ interface PageRendererProps {
 }
 
 const PageRenderer: React.FC<PageRendererProps> = ({ children }) => {
-  const { currentTab } = useNavigationStore();
+  const { currentTab } = useNavigationStore((state) => ({
+    currentTab: state.currentTab
+  }));
   const { isAuthenticated } = useAuth();
   const isCapacitor = detectCapacitorEnvironment();
 

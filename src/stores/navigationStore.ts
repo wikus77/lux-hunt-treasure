@@ -22,9 +22,7 @@ interface NavigationActions {
 
 type NavigationStore = NavigationState & NavigationActions;
 
-export const useNavigationStore = create<NavigationStore>()(
-  persist(
-    (set, get) => ({
+export const useNavigationStore = create<NavigationStore>()((set, get) => ({
       // State
       currentTab: '/',
       history: ['/'],
@@ -105,17 +103,7 @@ export const useNavigationStore = create<NavigationStore>()(
         const { history } = get();
         return history.length > 1;
       },
-    }),
-    {
-      name: 'm1ssion-navigation-store',
-      partialize: (state) => ({
-        currentTab: state.currentTab,
-        history: state.history,
-        isCapacitor: state.isCapacitor,
-      }),
-    }
-  )
-);
+    }));
 
 // Explicit helper functions for iOS Capacitor compatibility
 export const navigationHelpers = {

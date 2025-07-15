@@ -70,7 +70,10 @@ const pageRegistry: Record<string, React.ComponentType> = {
 };
 
 const NavigationManager: React.FC<NavigationManagerProps> = () => {
-  const { currentTab, setCapacitorMode } = useNavigationStore();
+  const { currentTab, setCapacitorMode } = useNavigationStore((state) => ({
+    currentTab: state.currentTab,
+    setCapacitorMode: state.setCapacitorMode
+  }));
   const isCapacitor = detectCapacitorEnvironment();
 
   console.log('🧭 NavigationManager render:', {
