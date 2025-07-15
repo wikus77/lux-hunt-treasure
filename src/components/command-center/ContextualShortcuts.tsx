@@ -1,7 +1,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigateCompat } from '@/hooks/useNavigateCompat';
 import { Map, Search, Award, Bell, Zap } from "lucide-react";
 
 interface Shortcut {
@@ -24,7 +24,7 @@ export const ContextualShortcuts: React.FC<ContextualShortcutsProps> = ({
   mapActivity = false,
   leaderboardChange = false
 }) => {
-  const navigate = useNavigate();
+  const navigate = useNavigateCompat();
   
   const shortcuts: Shortcut[] = [
     {
