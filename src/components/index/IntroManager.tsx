@@ -37,9 +37,14 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     try {
       // Solo lato client dopo montaggio del componente
       if (typeof window !== 'undefined') {
+        // TEMPORANEAMENTE disabilitiamo l'intro per risolvere il loop
         // Force the intro to show every time for now (for testing)
         try {
-          localStorage.removeItem("hasSeenIntro");
+          const hasSeenIntro = localStorage.getItem("hasSeenIntro");
+          if (hasSeenIntro === "true") {
+            console.log("User has already seen the intro, skipping...");
+            handleIntroComplete();
+          }
         } catch (e) {
           console.warn("Non è stato possibile accedere a localStorage, ignoriamo:", e);
         }
