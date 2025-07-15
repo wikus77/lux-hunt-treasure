@@ -25,13 +25,10 @@ export const useDeveloperAccess = () => {
       
       console.log('Index access check:', { isMobile, isCapacitorApp });
       
-      if (isMobile) {
-        // Mobile users without access need to login
-        setShowDeveloperAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setShowDeveloperAccess(false);
-      }
+      // CORREZIONE CRITICA: Non mostrare developer access per mobile
+      // L'app funziona sia su mobile che web
+      console.log('🔄 Developer access redirecting to standard login');
+      setShowDeveloperAccess(false);
     };
     
     checkAccess();
