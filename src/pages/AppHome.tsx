@@ -1,24 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  Pressable, 
-  Platform,
-  Alert,
-  SafeAreaView,
-  StatusBar
-} from "react-native";
-import { MotiView } from "moti";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
+// © Joseph Mule – M1SSION™ App. All rights reserved.
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
+import { Helmet } from "react-helmet";
+import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
@@ -30,7 +20,6 @@ const AppHome = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
-  const insets = useSafeAreaInsets();
   
   const {
     notifications,
@@ -44,14 +33,20 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // Check for developer access and mobile environment
+  // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
-      // Always allow access for React Native app
-      setHasAccess(true);
-      setIsCapacitor(false);
+      const isCapacitorApp = !!(window as any).Capacitor;
+      setIsCapacitor(isCapacitorApp);
       
-      console.log('AppHome access check:', { isMobile: true, isCapacitor: false });
+      const userAgent = navigator.userAgent;
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      
+      console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
+      
+      // Allow access for all users since this is an internal authenticated route
+      // If users reach this page, they're already authenticated
+      setHasAccess(true);
     };
     
     checkAccess();
@@ -70,7 +65,10 @@ const AppHome = () => {
 
   useEffect(() => {
     if (error) {
-      Alert.alert("Errore", error, [{ text: "OK" }]);
+      toast.error("Si è verificato un errore", {
+        description: error,
+        position: "bottom-center"
+      });
     }
   }, [error]);
 
@@ -81,208 +79,98 @@ const AppHome = () => {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.errorContainer}>
-        <StatusBar barStyle="light-content" backgroundColor="#070818" />
-        <View style={styles.errorContent}>
-          <Text style={styles.errorTitle}>Errore</Text>
-          <Text style={styles.errorMessage}>{error}</Text>
-          <Pressable 
-            style={styles.retryButton}
-            onPress={() => {
-              setError(null);
-              // Restart the app or reset state
-            }}
+      <div className="flex min-h-screen items-center justify-center bg-[#070818] px-4">
+        <div className="p-8 bg-red-800/30 rounded-xl text-center w-full max-w-sm glass-card">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-red-300">Errore</h2>
+          <p className="text-white/80">{error}</p>
+          <motion.button 
+            onClick={() => window.location.reload()}
+            className="mt-6 px-6 py-2 bg-gradient-to-r from-red-600 to-red-700 rounded-full text-white btn-hover-effect"
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
           >
-            <LinearGradient
-              colors={['#dc2626', '#b91c1c']}
-              style={styles.retryButtonGradient}
-            >
-              <Text style={styles.retryButtonText}>Riprova</Text>
-            </LinearGradient>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+            Riprova
+          </motion.button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#070818" />
+    <div className="min-h-screen">
+      <Helmet>
+        <title>M1SSION™ - Home App</title>
+      </Helmet>
       
       {/* Unified Header - same as other pages */}
       <UnifiedHeader profileImage={profileImage} />
       
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.contentContainer,
-          { paddingTop: insets.top + 119, paddingBottom: insets.bottom + 80 }
-        ]}
-        showsVerticalScrollIndicator={false}
+      <div 
+        className="px-4 space-y-6"
+        style={{ 
+          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+        }}
       >
-        {isLoaded && (
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', duration: 500 }}
-            style={styles.mainContent}
-          >
-            {notificationsBannerOpen && (
-              <MotiView
-                from={{ opacity: 0, translateY: -20 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                exit={{ opacity: 0, translateY: -20 }}
-                transition={{ type: 'timing', duration: 300 }}
-                style={[
-                  styles.notificationBanner,
-                  { top: insets.top + 119 }
-                ]}
-              >
-                <NotificationsBanner
-                  notifications={notifications}
-                  open={notificationsBannerOpen}
-                  unreadCount={unreadCount}
-                  onClose={closeNotificationsBanner}
-                  onMarkAllAsRead={markAllAsRead}
-                  onDeleteNotification={deleteNotification}
-                />
-              </MotiView>
-            )}
+        <AnimatePresence>
+          {isLoaded && (
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              {notificationsBannerOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="fixed inset-x-0 z-40 px-2 md:px-4"
+                  style={{ 
+                    top: 'calc(72px + 47px + env(safe-area-inset-top, 0px))'
+                  }}
+                >
+                  <NotificationsBanner
+                    notifications={notifications}
+                    open={notificationsBannerOpen}
+                    unreadCount={unreadCount}
+                    onClose={closeNotificationsBanner}
+                    onMarkAllAsRead={markAllAsRead}
+                    onDeleteNotification={deleteNotification}
+                  />
+                </motion.div>
+              )}
 
-            <View style={styles.headerContainer}>
-              <MotiView
-                from={{ opacity: 0, translateY: -10 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                transition={{ type: 'timing', duration: 500, delay: 200 }}
-                style={styles.titleContainer}
-              >
-                <View style={styles.titleRow}>
-                  <Text style={styles.titleM1}>M1</Text>
-                  <Text style={styles.titleSSION}>SSION</Text>
-                  <Text style={styles.trademark}>™</Text>
-                </View>
-                <Text style={styles.subtitle}>Centro di Comando Agente</Text>
-              </MotiView>
-            </View>
+              <div className="container mx-auto px-3">
+                <motion.div
+                  className="text-center my-6"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <h1 className="text-4xl font-orbitron font-bold">
+                    <span className="text-[#00D1FF]" style={{ 
+                      textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                    }}>M1</span>
+                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                  </h1>
+                  <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
+                </motion.div>
 
-            <View style={styles.mainContainer}>
-              <CommandCenterHome />
-            </View>
-          </MotiView>
-        )}
-      </ScrollView>
+                <main className="max-w-screen-xl mx-auto pb-20">
+                  <CommandCenterHome />
+                </main>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
       
       <BottomNavigation />
-    </SafeAreaView>
+    </div>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#070818',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-    paddingHorizontal: 16,
-  },
-  mainContent: {
-    flex: 1,
-    position: 'relative',
-  },
-  notificationBanner: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    zIndex: 40,
-    paddingHorizontal: 16,
-  },
-  headerContainer: {
-    marginVertical: 24,
-  },
-  titleContainer: {
-    alignItems: 'center',
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-  titleM1: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#00D1FF',
-    textShadowColor: 'rgba(0, 209, 255, 0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 10,
-  },
-  titleSSION: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  trademark: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    alignSelf: 'flex-start',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#9CA3AF',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  mainContainer: {
-    flex: 1,
-    paddingBottom: 80,
-  },
-  // Error screen styles
-  errorContainer: {
-    flex: 1,
-    backgroundColor: '#070818',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-  },
-  errorContent: {
-    padding: 32,
-    backgroundColor: 'rgba(153, 27, 27, 0.3)',
-    borderRadius: 12,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 320,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FCA5A5',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: 'rgba(255, 255, 255, 0.8)',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  retryButton: {
-    borderRadius: 24,
-    overflow: 'hidden',
-  },
-  retryButtonGradient: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 24,
-  },
-  retryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-});
 
 export default AppHome;
 
