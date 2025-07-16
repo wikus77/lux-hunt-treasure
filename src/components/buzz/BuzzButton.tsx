@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – BUZZ Button UI Component
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Button UI Component
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';

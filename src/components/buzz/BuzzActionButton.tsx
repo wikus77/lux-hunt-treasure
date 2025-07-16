@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – BUZZ Action Button Container Component
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Action Button Container Component
 import React from 'react';
 import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { BuzzButton } from './BuzzButton';

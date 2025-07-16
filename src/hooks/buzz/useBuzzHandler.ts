@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – BUZZ Handler Hook
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Handler Hook
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
