@@ -20,7 +20,7 @@ const Tabs = ({ value, onValueChange, children, className, ...props }: TabsProps
     <div className={cn("w-full", className)} {...props}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, {
+          return React.cloneElement(child as React.ReactElement<any>, {
             activeTab,
             onTabChange: handleTabChange,
           });
@@ -47,7 +47,7 @@ const TabsList = ({ className, activeTab, onTabChange, children, ...props }: Tab
   >
     {React.Children.map(children, (child) => {
       if (React.isValidElement(child)) {
-        return React.cloneElement(child, {
+        return React.cloneElement(child as React.ReactElement<any>, {
           activeTab,
           onTabChange,
         });

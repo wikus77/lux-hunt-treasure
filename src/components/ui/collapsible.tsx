@@ -26,7 +26,7 @@ const Collapsible = ({ open, onOpenChange, children, className, ...props }: Coll
     <div className={cn("w-full", className)} {...props}>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, {
+          return React.cloneElement(child as React.ReactElement<any>, {
             isOpen,
             onToggle: handleToggle,
           });
@@ -44,14 +44,17 @@ interface CollapsibleTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonE
   asChild?: boolean;
 }
 
-const CollapsibleTrigger = ({ isOpen, onToggle, children, ...props }: CollapsibleTriggerProps) => (
-  <button
-    onClick={() => onToggle?.(!isOpen)}
-    {...props}
-  >
-    {children}
-  </button>
-);
+const CollapsibleTrigger = ({ isOpen, onToggle, children, asChild, ...props }: CollapsibleTriggerProps) => {
+  const Comp = asChild ? "span" : "button";
+  return (
+    <Comp
+      onClick={() => onToggle?.(!isOpen)}
+      {...props}
+    >
+      {children}
+    </Comp>
+  );
+};
 
 interface CollapsibleContentProps extends React.HTMLAttributes<HTMLDivElement> {
   isOpen?: boolean;

@@ -5,6 +5,7 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from 'vite-plugin-pwa';
 import path from "path";
 
 // https://vitejs.dev/config/
@@ -18,6 +19,61 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'supabase-api-cache',
+              networkTimeoutSeconds: 10,
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+        ],
+      },
+      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/m1ssion/*.png'],
+      manifest: {
+        name: 'M1SSION™',
+        short_name: 'M1SSION',
+        description: 'Un\'esperienza di gioco rivoluzionaria che unisce caccia al tesoro, enigmi e premi esclusivi',
+        theme_color: '#00D1FF',
+        background_color: '#000C18',
+        display: 'standalone',
+        orientation: 'portrait',
+        start_url: '/',
+        icons: [
+          {
+            src: '/assets/m1ssion/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/assets/m1ssion/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/assets/m1ssion/icon-192.png',
+            sizes: '180x180',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
   ].filter(Boolean),
   resolve: {
     alias: {

@@ -26,7 +26,7 @@ const Dialog = ({ open, onOpenChange, children }: DialogProps) => {
     <div>
       {React.Children.map(children, (child) => {
         if (React.isValidElement(child)) {
-          return React.cloneElement(child, {
+          return React.cloneElement(child as React.ReactElement<any>, {
             isOpen,
             onOpenChange: handleOpenChange,
           });
@@ -110,16 +110,25 @@ const DialogTitle = React.forwardRef<
 ));
 DialogTitle.displayName = "DialogTitle";
 
+interface DialogDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {
+  asChild?: boolean;
+}
+
 const DialogDescription = React.forwardRef<
   HTMLParagraphElement,
-  React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn("text-sm text-white/70", className)}
-    {...props}
-  />
-));
+  DialogDescriptionProps
+>(({ className, asChild, children, ...props }, ref) => {
+  const Comp = asChild ? "div" : "p";
+  return (
+    <Comp
+      ref={ref}
+      className={cn("text-sm text-white/70", className)}
+      {...props}
+    >
+      {children}
+    </Comp>
+  );
+});
 DialogDescription.displayName = "DialogDescription";
 
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (

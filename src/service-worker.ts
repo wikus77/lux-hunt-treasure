@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 // © 2025 Joseph MULÉ – M1SSION™
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
