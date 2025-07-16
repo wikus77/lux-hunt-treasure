@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – Abuse Protection Hook
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - Abuse Protection Hook
 import { supabase } from '@/integrations/supabase/client';
 
 export interface AbuseProtectionResult {

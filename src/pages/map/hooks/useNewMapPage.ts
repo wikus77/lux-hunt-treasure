@@ -1,5 +1,5 @@
-// ✅ Fix by Joseph Mulé — M1SSION™
-// ✅ Compatibile Capacitor iOS
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - Map Page Hook - Compatibile Capacitor iOS
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';

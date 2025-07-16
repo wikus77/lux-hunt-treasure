@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ - Fixed Buzz route cache issue
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - App Routes - Fixed Buzz route cache issue
 import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";

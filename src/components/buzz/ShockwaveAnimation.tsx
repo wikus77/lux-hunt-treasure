@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – Shockwave Animation Component
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - Shockwave Animation Component
 import React from 'react';
 import { motion } from 'framer-motion';
 

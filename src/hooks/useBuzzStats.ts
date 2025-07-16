@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – BUZZ Stats Hook
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Stats Hook
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';

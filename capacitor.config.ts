@@ -1,4 +1,5 @@
 
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - Capacitor Configuration for iOS/Android Build
 import { CapacitorConfig } from '@capacitor/cli';
 

@@ -1,4 +1,5 @@
-// by Joseph Mulé – M1SSION™ – BUZZ Instructions Component
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Instructions Component
 import React from 'react';
 
 interface BuzzStats {
