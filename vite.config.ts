@@ -1,5 +1,4 @@
-
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ Treasure Hunt App - Custom Vite Configuration
 // Optimized for Capacitor iOS/Android deployment with enhanced build settings
 
@@ -9,7 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   server: {
     host: "::",
     port: 8080,
@@ -22,19 +21,14 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        // Increase limit for necessary assets but exclude very large images
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB
-        
-        // Exclude large uploaded images from precaching
         globIgnores: [
           '**/lovable-uploads/**',
           '**/*.{png,jpg,jpeg}' // Exclude all images from precaching
         ],
-        
         globPatterns: [
           '**/*.{js,css,html,ico,svg}' // Only cache essential files
         ],
-        
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co/,
@@ -45,7 +39,6 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            // Runtime cache for large uploaded images
             urlPattern: /\/lovable-uploads\/.*\.(?:png|jpg|jpeg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {
@@ -57,7 +50,6 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            // Runtime cache for other images
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {
@@ -66,14 +58,6 @@ export default defineConfig(({ mode }) => ({
                 maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
-            },
-          },
-          {
-            // CSS and JS files
-            urlPattern: /\.(?:css|js)$/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'static-resources',
             },
           },
         ],
@@ -97,24 +81,21 @@ export default defineConfig(({ mode }) => ({
         ]
       }
     })
-  ].filter(Boolean),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // M1SSION™ Capacitor iOS Build Configuration - Custom Output
-  base: mode === 'production' ? './' : '/',
+  base: '/',
   build: {
-    outDir: 'dist', // Fixed: Reverting to standard dist directory for compatibility
+    outDir: 'dist',
     assetsDir: 'assets',
-    // Fixed minification settings for Capacitor iOS
     target: 'es2015',
-    minify: mode === 'production' ? 'terser' : false,
+    minify: 'terser',
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Static asset naming for Capacitor compatibility
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
         assetFileNames: 'assets/[name].[hash].[ext]',
@@ -127,59 +108,29 @@ export default defineConfig(({ mode }) => ({
         }
       }
     },
-    // Enhanced Capacitor iOS optimizations
     emptyOutDir: true,
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1000,
-    // Enhanced Terser options for iOS Capacitor compatibility
     terserOptions: {
       compress: {
-        drop_console: false, // Keep console for debugging in production
-        drop_debugger: mode === 'production',
-        keep_fnames: true,
-        keep_classnames: true,
-        // Prevent unsafe optimizations
-        pure_funcs: [],
-        unsafe: false,
-        unsafe_comps: false,
+        drop_console: false,
+        drop_debugger: true,
       },
       mangle: {
         keep_fnames: true,
-        keep_classnames: true,
-        reserved: [
-          // Critical React functions
-          'React', 'ReactDOM', 'useState', 'useEffect', 'useCallback', 'useMemo', 'useRef',
-          // Router functions
-          'useNavigate', 'useLocation', 'useParams', 'Link', 'Navigate', 'Routes', 'Route',
-          // Capacitor functions
-          'Capacitor', 'SplashScreen', 'StatusBar', 'Device', 'App',
-          // Supabase functions
-          'supabase', 'createClient', 'from', 'select', 'insert', 'update', 'delete',
-          // Animation functions
-          'motion', 'AnimatePresence', 'useAnimation', 'framer',
-          // Custom components
-          'BottomNavigationComponent', 'explicitNavigationHandler', 'explicitAuthHandler'
-        ]
       },
       format: {
         comments: false,
-        keep_fnames: true,
-        preserve_annotations: true,
       },
     },
   },
-  // iOS Safari compatibility - EXPLICIT GLOBALS
   define: {
     global: 'globalThis',
-    // Prevent minification of critical React functions
-    'process.env.NODE_ENV': JSON.stringify(mode),
+    'process.env.NODE_ENV': '"production"',
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['@capacitor/core'],
-    // Force explicit imports to prevent minification issues
-    force: true
   },
-  // Improved asset handling
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
-}));
+});

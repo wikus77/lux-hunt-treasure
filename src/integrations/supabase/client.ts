@@ -1,5 +1,5 @@
 
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - Custom Supabase Client Configuration
 // Specialized for M1SSION game mechanics, user management, and real-time features
 
