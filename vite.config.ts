@@ -22,7 +22,20 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Increase limit for necessary assets but exclude very large images
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB
+        
+        // Exclude large uploaded images from precaching
+        globIgnores: [
+          '**/lovable-uploads/**',
+          '**/*.{png,jpg,jpeg}' // Exclude all images from precaching
+        ],
+        
+        globPatterns: [
+          '**/*.{js,css,html,ico,svg}', // Only cache essential files
+          '**/assets/m1ssion/*.png' // Keep M1SSION icons for PWA
+        ],
+        
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co/,
@@ -33,7 +46,20 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif)$/,
+            // Runtime cache for large uploaded images
+            urlPattern: /\/lovable-uploads\/.*\.(?:png|jpg|jpeg|gif|webp)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'large-images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+            },
+          },
+          {
+            // Runtime cache for other images
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
@@ -43,9 +69,17 @@ export default defineConfig(({ mode }) => ({
               },
             },
           },
+          {
+            // CSS and JS files
+            urlPattern: /\.(?:css|js)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources',
+            },
+          },
         ],
       },
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'assets/m1ssion/*.png'],
+      includeAssets: ['favicon.ico', 'assets/m1ssion/*.png'],
       manifest: {
         name: 'M1SSION™',
         short_name: 'M1SSION',
