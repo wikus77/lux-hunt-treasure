@@ -1,9 +1,74 @@
-import * as CollapsiblePrimitive from "@radix-ui/react-collapsible"
+// © 2025 Joseph MULÉ – M1SSION™
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
-const Collapsible = CollapsiblePrimitive.Root
+interface CollapsibleProps extends React.HTMLAttributes<HTMLDivElement> {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  children: React.ReactNode;
+}
 
-const CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger
+const Collapsible = ({ open, onOpenChange, children, className, ...props }: CollapsibleProps) => {
+  const [isOpen, setIsOpen] = React.useState(open || false);
 
-const CollapsibleContent = CollapsiblePrimitive.CollapsibleContent
+  React.useEffect(() => {
+    if (open !== undefined) {
+      setIsOpen(open);
+    }
+  }, [open]);
 
-export { Collapsible, CollapsibleTrigger, CollapsibleContent }
+  const handleToggle = (newOpen: boolean) => {
+    setIsOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
+
+  return (
+    <div className={cn("w-full", className)} {...props}>
+      {React.Children.map(children, (child) => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child, {
+            isOpen,
+            onToggle: handleToggle,
+          });
+        }
+        return child;
+      })}
+    </div>
+  );
+};
+
+interface CollapsibleTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  isOpen?: boolean;
+  onToggle?: (open: boolean) => void;
+  children: React.ReactNode;
+  asChild?: boolean;
+}
+
+const CollapsibleTrigger = ({ isOpen, onToggle, children, ...props }: CollapsibleTriggerProps) => (
+  <button
+    onClick={() => onToggle?.(!isOpen)}
+    {...props}
+  >
+    {children}
+  </button>
+);
+
+interface CollapsibleContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  isOpen?: boolean;
+  children: React.ReactNode;
+}
+
+const CollapsibleContent = ({ isOpen, children, className, ...props }: CollapsibleContentProps) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className={cn("overflow-hidden transition-all duration-200", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+export { Collapsible, CollapsibleTrigger, CollapsibleContent };

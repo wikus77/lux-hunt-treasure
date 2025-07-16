@@ -1,3 +1,4 @@
+// © 2025 Joseph MULÉ – M1SSION™
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 

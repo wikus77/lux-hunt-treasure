@@ -1,11 +1,11 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™
 {
   "name": "M1SSION™",
   "short_name": "M1SSION",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#0ff",
+  "background_color": "#000C18",
+  "theme_color": "#00D1FF",
   "orientation": "portrait",
   "icons": [
     {
@@ -16,6 +16,11 @@
     {
       "src": "/assets/m1ssion/icon-512.png",
       "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/m1ssion/icon-192.png",
+      "sizes": "180x180",
       "type": "image/png"
     }
   ]
