@@ -32,8 +32,7 @@ export default defineConfig(({ mode }) => ({
         ],
         
         globPatterns: [
-          '**/*.{js,css,html,ico,svg}', // Only cache essential files
-          '**/assets/m1ssion/*.png' // Keep M1SSION icons for PWA
+          '**/*.{js,css,html,ico,svg}' // Only cache essential files
         ],
         
         runtimeCaching: [
@@ -79,7 +78,7 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      includeAssets: ['favicon.ico', 'assets/m1ssion/*.png'],
+      includeAssets: ['favicon.ico'],
       manifest: {
         name: 'M1SSION™',
         short_name: 'M1SSION',
@@ -91,19 +90,9 @@ export default defineConfig(({ mode }) => ({
         start_url: '/',
         icons: [
           {
-            src: '/assets/m1ssion/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png'
-          },
-          {
-            src: '/assets/m1ssion/icon-512.png',
-            sizes: '512x512',
-            type: 'image/png'
-          },
-          {
-            src: '/assets/m1ssion/icon-192.png',
-            sizes: '180x180',
-            type: 'image/png'
+            src: '/favicon.ico',
+            sizes: '48x48',
+            type: 'image/x-icon'
           }
         ]
       }
