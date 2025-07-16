@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ Service Worker - PWA Caching Strategy
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, CacheFirst } from 'workbox-strategies';
