@@ -1,5 +1,5 @@
 
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © Joseph Mule – M1SSION™ App. All rights reserved.
 import { useState, useEffect } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Link } from "wouter";
@@ -64,3 +64,5 @@ const Login = () => {
 };
 
 export default Login;
+
+// Copyright © 2025 Joseph M1SSION KFT
