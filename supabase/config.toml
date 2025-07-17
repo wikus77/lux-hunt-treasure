@@ -35,6 +35,9 @@ verify_jwt = false
 [functions.handle-buzz-press]
 verify_jwt = true
 
+[functions.process-buzz-purchase]
+verify_jwt = true
+
 # Additional security bypass for testing
 [auth.security]
 captcha_enabled = false
