@@ -1,6 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - BUZZ Page Component
+// M1SSION™ - BUZZ Page Component - RESET COMPLETO 17/07/2025
 
 import React from 'react';
 import { motion } from 'framer-motion';
@@ -30,7 +30,7 @@ export const BuzzPage: React.FC = () => {
     // Force immediate stats reload - © 2025 Joseph MULÉ – M1SSION™
     setTimeout(async () => {
       await loadBuzzStats();
-      console.log('🔄 Stats aggiornate post-BUZZ');
+      console.log('🔄 Stats aggiornate post-BUZZ - RESET COMPLETO 17/07/2025');
     }, 100);
   };
 
@@ -109,15 +109,16 @@ export const BuzzPage: React.FC = () => {
               />
             </div>
 
-            {/* Container con descrizione - Sistema 200 indizi */}
+            {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}
             <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
               <div className="text-center space-y-4">
-                {/* Descrizione BUZZ - SISTEMA 200 INDIZI */}
+                {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
                 <div className="text-white/80 space-y-2">
                   <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 200 indizi totali.</p>
-                  <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50</p>
+                  <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50 (massimo giornaliero)</p>
+                  <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/200 (target finale)</p>
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
-                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ</p>
+                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ - RESET COMPLETO 17/07/2025</p>
                 </div>
               </div>
             </div>

@@ -1,6 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - Countdown Date Utilities
+// M1SSION™ - Countdown Date Utilities - RESET COMPLETO 17/07/2025
 
 export const getMissionDeadline = (): Date => {
   // MISSION START: 17 July 2025 - 30 days duration

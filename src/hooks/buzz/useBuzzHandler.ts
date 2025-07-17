@@ -1,6 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - BUZZ Handler Hook
+// M1SSION™ - BUZZ Handler Hook - RESET COMPLETO 17/07/2025
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
@@ -24,7 +24,11 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
 
   const handleBuzz = async () => {
-    console.log('🚀 BUZZ PRESSED - Start handleBuzz', { user: !!user, currentPrice });
+    console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
+      user: !!user, 
+      currentPrice,
+      timestamp: new Date().toISOString()
+    });
     
     if (!user) {
       console.log('❌ BUZZ FAILED - Missing user');
@@ -37,7 +41,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       setShowShockwave(true);
       await vibrate(100);
       
-      console.log('💰 BUZZ PRICE CHECK', { currentPrice });
+      console.log('💰 BUZZ PRICE CHECK - RESET COMPLETO 17/07/2025', { currentPrice });
       
       // Check if blocked
       if (currentPrice === 0) {
@@ -53,7 +57,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       }
 
       // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
-      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL');
+      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
       const paymentSuccess = await processBuzzPurchase(false, currentPrice);
@@ -67,7 +71,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
       
-      console.log('✅ BUZZ: Stripe payment completed successfully - proceeding to API');
+      console.log('✅ BUZZ: Stripe payment completed successfully - proceeding to API - RESET COMPLETO 17/07/2025');
 
       // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
       console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');
@@ -81,7 +85,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         sessionId: `buzz_${Date.now()}`
       });
       
-      console.log('✅ BUZZ API CALL COMPLETED');
+      console.log('✅ BUZZ API CALL COMPLETED - RESET COMPLETO 17/07/2025');
       console.log('🚨 POST-BUZZ API CALL:', {
         success: buzzResult?.success,
         error: buzzResult?.error,
@@ -91,7 +95,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       });
       
       if (buzzResult.error) {
-        console.error('BUZZ API Error:', buzzResult.errorMessage);
+        console.error('❌ BUZZ API Error:', buzzResult.errorMessage);
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
         return;
@@ -103,7 +107,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
       
-      console.log('📝 BUZZ RESULT M1SSION™:', { 
+      console.log('📝 BUZZ RESULT M1SSION™ - RESET COMPLETO 17/07/2025:', { 
         clue_text: buzzResult.clue_text,
         success: buzzResult.success,
         full_response: buzzResult
@@ -145,7 +149,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       }, 1500);
       
     } catch (err) {
-      console.error('Error in handleBuzz:', err);
+      console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
       toast.error('Errore imprevisto durante BUZZ');
     } finally {
       setBuzzing(false);

@@ -1,6 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - Command Center Home Component
+// M1SSION™ - Command Center Home Component - RESET COMPLETO 17/07/2025
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,14 +16,14 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function CommandCenterHome() {
-  // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI FORZATO
+  // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
   
   // Get real user data from Supabase
   const { user } = useAuth();
   const { userClues, loading: prizeLoading } = usePrizeData();
   const { userCluesCount } = useBuzzPricing(user?.id);
   
-  // 🧹 FORCE CLEAR ALL CACHE - MANDATORY RESET 17/07/2025
+  // 🧹 FORCE CLEAR ALL CACHE - RESET COMPLETO 17/07/2025
   useEffect(() => {
     // Clear ALL localStorage cache to force fresh data
     localStorage.removeItem("mission-progress");
@@ -32,7 +32,10 @@ export default function CommandCenterHome() {
     localStorage.removeItem("user-credits");
     localStorage.removeItem("mission-data");
     localStorage.removeItem("clue-data");
-    console.log("🧹 FULL CACHE CLEARED - forcing database sync 17/07/2025");
+    localStorage.removeItem("mission-08-06-2025"); // RIMUOVI MISSIONE PRECEDENTE
+    localStorage.removeItem("timeline-08-06");
+    localStorage.removeItem("old-mission-data");
+    console.log("🧹 FULL CACHE CLEARED - RESET COMPLETO 17/07/2025");
   }, []);
   
   // Track the user's progress (FORCED TO REAL DATA)
@@ -50,38 +53,41 @@ export default function CommandCenterHome() {
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
-  // 🔥 REAL DATABASE MISSION DATA - SISTEMA 200 INDIZI - DATA 17/07/2025
+  // 🔥 REAL DATABASE MISSION DATA - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
   const [activeMission, setActiveMission] = useState({
     id: "M001",
     title: "Caccia al Tesoro Urbano",
     totalClues: 200, // 🔥 SISTEMA 200 INDIZI FISSO
     foundClues: 0, // 🔥 FORCED TO REAL DATA
     timeLimit: "48:00:00",
-    startTime: "2025-07-17T00:00:00.000Z", // 🔥 DATA CORRETTA 17/07/2025
+    startTime: "2025-07-17T00:00:00.000Z", // 🔥 RESET COMPLETO 17/07/2025
     remainingDays: 30, // 🔥 30 GIORNI DALLA DATA ATTUALE
-    totalDays: 30
+    totalDays: 30,
+    dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
   });
 
-  // 🔥 REAL-TIME DATABASE SYNC - SISTEMA 200 INDIZI
+  // 🔥 REAL-TIME DATABASE SYNC - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
   useEffect(() => {
     const currentRemainingDays = calculateRemainingDays();
     const realFoundClues = userCluesCount || 0;
     
-    console.log("🔥 MISSION SYNC (200 INDIZI - 17/07/2025):", {
+    console.log("🔥 MISSION SYNC (200 INDIZI - RESET COMPLETO 17/07/2025):", {
       foundClues: realFoundClues,
       totalClues: 200,
       remainingDays: currentRemainingDays,
       startDate: "2025-07-17T00:00:00.000Z",
-      userCluesFromDB: userClues?.length || 0
+      userCluesFromDB: userClues?.length || 0,
+      dailyLimit: 50
     });
     
-    // FORCE CORRECT VALUES WITH 200 CLUES SYSTEM
+    // FORCE CORRECT VALUES WITH 200 CLUES SYSTEM - RESET COMPLETO 17/07/2025
     setActiveMission(prev => ({
       ...prev,
       totalClues: 200, // 🔥 SISTEMA 200 INDIZI
       foundClues: realFoundClues, // 🔥 REAL DATA FROM SUPABASE
       remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION  
-      startTime: "2025-07-17T00:00:00.000Z" // 🔥 DATA MISSIONE 17/07/2025
+      startTime: "2025-07-17T00:00:00.000Z", // 🔥 RESET COMPLETO 17/07/2025
+      dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
     }));
     
     // FORCE PROGRESS TO MATCH REAL DATA (200 CLUES BASE)
@@ -97,7 +103,7 @@ export default function CommandCenterHome() {
     const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
     const userScore = progress;
     
-    console.log("🎯 PRIZE STATUS CALCULATION (200 INDIZI):", {
+    console.log("🎯 PRIZE STATUS CALCULATION (200 INDIZI - RESET 17/07/2025):", {
       daysRemaining,
       objectivesPercentage,
       userScore,

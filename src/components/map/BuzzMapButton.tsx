@@ -1,6 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - BUZZ Map Button Component
+// M1SSION™ - BUZZ Map Button Component - RESET COMPLETO 17/07/2025
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,14 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleBuzzMapPress = async () => {
+    console.log('🎯 BUZZ MAPPA PRESSED - RESET COMPLETO 17/07/2025', {
+      isAuthenticated,
+      buzzMapPrice,
+      radiusKm,
+      mapCenter,
+      timestamp: new Date().toISOString()
+    });
+
     if (!isAuthenticated) {
       toast.error('Devi essere loggato per usare BUZZ MAPPA!');
       return;
@@ -40,7 +48,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
 
     try {
       // 🚨 MANDATORY: Process Stripe payment first - ALWAYS FORCED
-      console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL');
+      console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO EXCEPTIONS
       const result = await processBuzzPurchase(true, buzzMapPrice);
@@ -52,7 +60,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         return;
       }
       
-      console.log('✅ BUZZ MAPPA: Stripe payment completed successfully');
+      console.log('✅ BUZZ MAPPA: Stripe payment completed successfully - RESET COMPLETO 17/07/2025');
       
       // Generate area after payment
       const currentRadius = incrementGeneration();
@@ -64,10 +72,10 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         onAreaGenerated(lat, lng, currentRadius);
       }
       
-      toast.success(`Area BUZZ generata! Raggio: ${currentRadius}km`);
+      toast.success(`Area BUZZ generata! Raggio: ${currentRadius}km - RESET COMPLETO 17/07/2025`);
       
     } catch (error) {
-      console.error('BUZZ Map error:', error);
+      console.error('❌ BUZZ Map error - RESET COMPLETO 17/07/2025:', error);
       toast.error('Errore durante la generazione dell\'area BUZZ');
     } finally {
       setIsProcessing(false);

@@ -1,5 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
+// M1SSION™ - Stripe Payment Hook - RESET COMPLETO 17/07/2025
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,7 +14,7 @@ interface PaymentResult {
 
 /*
  * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Stripe Payment Hook - Live Mode Ready
+ * M1SSION™ Stripe Payment Hook - RESET COMPLETO 17/07/2025
  */
 export const useStripePayment = () => {
   const [loading, setLoading] = useState(false);
@@ -33,6 +34,14 @@ export const useStripePayment = () => {
     setLoading(true);
     
     try {
+      console.log('💳 STRIPE PAYMENT START - RESET COMPLETO 17/07/2025:', {
+        user_id: user.id,
+        amount,
+        is_buzz_map: isBuzzMap,
+        redirect_url: redirectUrl,
+        session_id: sessionId
+      });
+
       const { data, error } = await supabase.functions.invoke('process-buzz-purchase', {
         body: {
           user_id: user.id,
@@ -46,21 +55,38 @@ export const useStripePayment = () => {
       });
 
       if (error) {
-        console.error('Error processing payment:', error);
-        toast.error('Errore nel processare il pagamento');
+        console.error('❌ STRIPE Error processing payment:', error);
+        toast.error('Errore nel processare il pagamento: ' + error.message);
         return false;
+      }
+
+      console.log('✅ STRIPE Response:', data);
+
+      // Check if we received a checkout URL
+      if (data?.url) {
+        console.log('💳 STRIPE: Redirecting to checkout:', data.url);
+        
+        // Open Stripe checkout in new tab for live payments
+        window.open(data.url, '_blank');
+        
+        // Show live payment notification
+        toast.success('Pagamento Live', {
+          description: 'Verrai reindirizzato al checkout sicuro di Stripe',
+        });
+        
+        return true;
       }
 
       if (data?.success) {
         toast.success('Pagamento completato con successo!');
         return true;
       } else {
-        toast.error('Pagamento fallito');
+        toast.error('Pagamento fallito: ' + (data?.error || 'Errore sconosciuto'));
         return false;
       }
     } catch (error) {
-      console.error('Payment processing error:', error);
-      toast.error('Errore nel processare il pagamento');
+      console.error('❌ STRIPE Payment processing error:', error);
+      toast.error('Errore nel processare il pagamento: ' + error);
       return false;
     } finally {
       setLoading(false);
@@ -86,7 +112,7 @@ export const useStripePayment = () => {
       });
 
       if (error) {
-        console.error('Error creating checkout session:', error);
+        console.error('❌ STRIPE Error creating checkout session:', error);
         toast.error('Errore nel creare la sessione di pagamento');
         return;
       }
@@ -103,7 +129,7 @@ export const useStripePayment = () => {
         toast.error('Errore nel creare la sessione di pagamento');
       }
     } catch (error) {
-      console.error('Subscription processing error:', error);
+      console.error('❌ STRIPE Subscription processing error:', error);
       toast.error('Errore nel processare l\'abbonamento');
     } finally {
       setLoading(false);
@@ -135,4 +161,5 @@ export const useStripePayment = () => {
 
 /*
  * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ - RESET COMPLETO 17/07/2025
  */

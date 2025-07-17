@@ -1,6 +1,6 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
-// M1SSION™ - Countdown Banner Component
+// M1SSION™ - Countdown Banner Component - RESET COMPLETO 17/07/2025
 
 import { useEffect, useState } from "react";
 import { getMissionDeadline, calculateRemainingDays } from "@/utils/countdownDate";
