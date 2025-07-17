@@ -62,3 +62,62 @@ self.addEventListener('activate', (event) => {
   console.log('M1SSION™ Service Worker activated');
   event.waitUntil(self.clients.claim());
 });
+
+// Push notification handler
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  
+  try {
+    const data = event.data.json();
+    const options = {
+      body: data.body || 'Nuova notifica da M1SSION™',
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      vibrate: [100, 50, 100],
+      data: data.data || {},
+      actions: data.actions || [],
+      tag: data.tag || 'default',
+      silent: false,
+      requireInteraction: false
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'M1SSION™', options)
+    );
+  } catch (error) {
+    console.error('Push notification error:', error);
+    // Fallback notification
+    event.waitUntil(
+      self.registration.showNotification('M1SSION™', {
+        body: 'Nuova notifica disponibile',
+        icon: '/icons/icon-192x192.png'
+      })
+    );
+  }
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    self.clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then((clientList) => {
+      // Check if app is already open
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.navigate(urlToOpen);
+          return client.focus();
+        }
+      }
+      // Open new window if app not open
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

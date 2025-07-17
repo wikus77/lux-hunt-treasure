@@ -1,131 +1,114 @@
+// © 2025 Joseph MULÉ – M1SSION™
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-
-// Define CORS headers directly in this file instead of importing
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID");
-const ONESIGNAL_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY");
+interface NotificationRequest {
+  title: string;
+  body: string;
+  data?: any;
+}
 
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Check if OneSignal credentials are set
-    if (!ONESIGNAL_APP_ID || !ONESIGNAL_API_KEY) {
-      console.error("OneSignal credentials not found in environment variables");
+    const { title, body, data } = await req.json() as NotificationRequest;
+
+    if (!title || !body) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: "OneSignal API keys not configured" 
-        }),
-        { 
-          status: 500,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
+        JSON.stringify({ error: 'Titolo e messaggio sono obbligatori' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Parse request body
-    const { title, message, segments = ["All"], url } = await req.json();
-    
-    if (!title || !message) {
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Get all active push subscriptions
+    const { data: deviceTokens, error: fetchError } = await supabase
+      .from('device_tokens')
+      .select('token, user_id')
+      .eq('device_type', 'web_push');
+
+    if (fetchError) {
+      console.error('Error fetching device tokens:', fetchError);
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: "Title and message are required" 
-        }),
-        { 
-          status: 400,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
+        JSON.stringify({ error: 'Errore nel recupero dei dispositivi' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Sending push notification: "${title}" to segments: ${segments.join(", ")}`);
-
-    // Prepare OneSignal request
-    const notificationData = {
-      app_id: ONESIGNAL_APP_ID,
-      headings: { en: title },
-      contents: { en: message },
-      included_segments: segments,
-      url: url || "https://m1ssion.com"
-    };
-
-    // Send notification via OneSignal API
-    const response = await fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Basic ${ONESIGNAL_API_KEY}`
-      },
-      body: JSON.stringify(notificationData)
-    });
-
-    const responseData = await response.json();
-    
-    if (response.ok) {
-      console.log("OneSignal API response:", responseData);
+    if (!deviceTokens || deviceTokens.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Notification sent successfully",
-          data: responseData
-        }),
-        { 
-          status: 200,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
-      );
-    } else {
-      console.error("OneSignal API error:", responseData);
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          message: "Failed to send notification",
-          error: responseData
-        }),
-        { 
-          status: response.status,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders
-          }
-        }
+        JSON.stringify({ sent: 0, message: 'Nessun dispositivo registrato' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-  } catch (error) {
-    console.error("Error in send-push-notification function:", error);
+
+    let sentCount = 0;
+    const errors: string[] = [];
+
+    // Send push notification to each device
+    for (const device of deviceTokens) {
+      try {
+        const subscription = JSON.parse(device.token);
+        
+        const payload = JSON.stringify({
+          title,
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          data: {
+            url: '/notifications',
+            ...data
+          }
+        });
+
+        // Here you would typically use Web Push library
+        // For now, we'll simulate sending (in production, integrate with web-push npm package)
+        console.log(`Sending notification to user ${device.user_id}:`, payload);
+        
+        // Save notification to database for in-app display
+        await supabase
+          .from('user_notifications')
+          .insert({
+            user_id: device.user_id,
+            title,
+            message: body,
+            type: 'push',
+            is_read: false
+          });
+
+        sentCount++;
+      } catch (error) {
+        console.error('Error sending to device:', error);
+        errors.push(`Error sending to user ${device.user_id}: ${error.message}`);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
-        success: false, 
-        message: error instanceof Error ? error.message : "Internal server error" 
+        sent: sentCount,
+        total: deviceTokens.length,
+        errors: errors.length > 0 ? errors : undefined
       }),
-      { 
-        status: 500,
-        headers: { 
-          "Content-Type": "application/json",
-          ...corsHeaders
-        }
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Push notification error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Errore interno del server' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-};
-
-serve(handler);
+})

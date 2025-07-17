@@ -115,7 +115,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         top: '0px',
         paddingTop: 'env(safe-area-inset-top, 0px)',
         marginTop: '0px',
-        height: 'calc(72px + env(safe-area-inset-top, 0px))'
+        height: 'calc(72px + env(safe-area-inset-top, 0px))',
+        // Safe area background matches header
+        backgroundImage: 'linear-gradient(rgba(19, 21, 33, 0.85) 0%, rgba(19, 21, 33, 0.85) 100%)'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">

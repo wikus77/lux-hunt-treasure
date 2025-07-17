@@ -22,6 +22,7 @@ import SettingsPage from "@/pages/settings/SettingsPage";
 import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
+import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -100,6 +101,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/subscriptions">
             <ProtectedRoute>
               <GlobalLayout><Subscriptions /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Admin routes */}
+          <Route path="/admin/send-notification">
+            <ProtectedRoute>
+              <SendNotificationPage />
             </ProtectedRoute>
           </Route>
 

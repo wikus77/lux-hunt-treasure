@@ -9,6 +9,7 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
+import PushSetup from "./components/pwa/PushSetup";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -39,6 +40,7 @@ function App() {
           <AuthProvider>
             <WouterRoutes />
             <InstallPrompt />
+            <PushSetup />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
