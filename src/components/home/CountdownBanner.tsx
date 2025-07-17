@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { getMissionDeadline, getRemainingDays } from "@/utils/countdownDate";
+import { getMissionDeadline, calculateRemainingDays } from "@/utils/countdownDate";
 
 function getTimeLeft() {
   const targetDate = getMissionDeadline();
@@ -9,7 +9,7 @@ function getTimeLeft() {
 
   if (diff <= 0) return { days: 0, hours: 0, minutes: 0 };
 
-  const days = getRemainingDays();
+  const days = calculateRemainingDays();
   const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((diff / (1000 * 60)) % 60);
   return { days, hours, minutes };

@@ -3,7 +3,7 @@ import React, { useMemo, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { getMissionDeadline, getRemainingDays } from "@/utils/countdownDate";
+import { getMissionDeadline, calculateRemainingDays } from "@/utils/countdownDate";
 
 interface LaunchProgressBarProps {
   targetDate: Date;
@@ -29,7 +29,7 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCou
   
   // Format days remaining using the consistent utility function
   const daysRemaining = useMemo(() => {
-    return getRemainingDays();
+    return calculateRemainingDays();
   }, []);
 
   // Format target date to display in Italian
