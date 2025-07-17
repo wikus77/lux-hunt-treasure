@@ -1,4 +1,4 @@
-// FILE CREATO O MODIFICATO — BY JOSEPH MULE
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 import React from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './MapPageHeader';
@@ -21,7 +21,7 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
         style={{
           height: '72px',
-          paddingTop: 'env(safe-area-inset-top, 47px)',
+          paddingTop: 'env(safe-area-inset-top, 0px)',
           background: "rgba(19, 21, 33, 0.55)",
           backdropFilter: "blur(12px)"
         }}
@@ -31,8 +31,8 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
       
       <main
         style={{
-          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 0px) + 60px)', // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
           height: '100dvh',
           overflowY: 'auto',
           position: 'relative',
@@ -40,7 +40,7 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
         }}
       >
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
-          {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+          {/* © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ */}
           {/* ✅ Compatibile Capacitor iOS */}
           
           {children}

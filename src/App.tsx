@@ -6,7 +6,7 @@ import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import WouterRoutes from "./routes/WouterRoutes";
-import { SafeAreaToggle } from "./components/debug/SafeAreaToggle";
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 import ProductionSafety from "./components/debug/ProductionSafety";
 
 function App() {
@@ -36,10 +36,8 @@ function App() {
       <Router>
         <SoundProvider>
           <AuthProvider>
-            <SafeAreaToggle>
-              <WouterRoutes />
-              <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
-            </SafeAreaToggle>
+            <WouterRoutes />
+            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
       </Router>

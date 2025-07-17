@@ -1,5 +1,5 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import React, { useState, useRef, useEffect } from 'react';
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import { useToast } from '@/hooks/use-toast';
+import { usePerformanceMonitor } from '@/utils/performanceOptimization';
 
 interface ProfileDropdownProps {
   profileImage?: string | null;
   className?: string;
 }
 
-const ProfileDropdown: React.FC<ProfileDropdownProps> = ({ 
+const ProfileDropdown: React.FC<ProfileDropdownProps> = memo(({ 
   profileImage, 
   className = "" 
 }) => {
@@ -23,8 +24,12 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const { navigate } = useWouterNavigation();
   const { toast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { markRenderStart } = usePerformanceMonitor('ProfileDropdown');
+  
+  // Performance optimization
+  markRenderStart();
 
-  // Close dropdown on outside click
+  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -32,12 +37,25 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
 
-  const handleLogout = async () => {
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
+    }
+  }, [isOpen]);
+
+  const handleLogout = useCallback(async () => {
     try {
+      setIsOpen(false);
       await logout();
       toast({
         title: "✅ Logout completato",
@@ -51,12 +69,16 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         variant: "destructive"
       });
     }
-  };
+  }, [logout, toast, navigate]);
 
-  const handleSettingsClick = () => {
+  const handleSettingsClick = useCallback(() => {
     setIsOpen(false);
     navigate('/settings');
-  };
+  }, [navigate]);
+
+  const handleToggleDropdown = useCallback(() => {
+    setIsOpen(prev => !prev);
+  }, []);
 
   // Get user display name and email
   const displayName = user?.user_metadata?.full_name || 
@@ -84,15 +106,25 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+      {/* Profile Avatar Button - © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ */}
       <Button
         variant="ghost"
-        className="p-1 rounded-full hover:bg-white/10 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
+        className="p-1 rounded-full hover:bg-white/10 transition-all duration-200"
+        onClick={handleToggleDropdown}
+        onBlur={(e) => {
+          // Don't close if clicking within the dropdown
+          if (!dropdownRef.current?.contains(e.relatedTarget as Node)) {
+            setTimeout(() => setIsOpen(false), 150);
+          }
+        }}
       >
         <ProfileAvatar
           profileImage={profileImage}
-          className="w-10 h-10 border-2 border-[#00D1FF]/30 hover:border-[#00D1FF] transition-colors"
+          className={`w-10 h-10 border-2 transition-all duration-200 ${
+            isOpen 
+              ? 'border-[#00D1FF] scale-105' 
+              : 'border-[#00D1FF]/30 hover:border-[#00D1FF]'
+          }`}
         />
       </Button>
 
@@ -108,8 +140,8 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             style={{
               top: 'calc(100% + 8px)',
               maxWidth: 'calc(100vw - 32px)',
-              position: 'fixed',
-              right: '16px'
+              position: 'absolute',
+              right: '0px'
             }}
           >
             <Card className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl shadow-2xl border-2">
@@ -164,6 +196,8 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       </AnimatePresence>
     </div>
   );
-};
+});
+
+ProfileDropdown.displayName = 'ProfileDropdown';
 
 export default ProfileDropdown;

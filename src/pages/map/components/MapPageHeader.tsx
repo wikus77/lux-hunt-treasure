@@ -1,5 +1,5 @@
 
-// FILE CREATO O MODIFICATO — BY JOSEPH MULE
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 import React from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
