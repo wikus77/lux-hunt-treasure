@@ -24,7 +24,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const { toast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - Close dropdown on outside click
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -32,16 +32,9 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('touchstart', handleClickOutside);
-    }
-    
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
-    };
-  }, [isOpen]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -91,15 +84,11 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Profile Avatar Button - © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ */}
+      {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
       <Button
         variant="ghost"
-        className="p-2 rounded-full hover:bg-white/10 transition-all duration-200 active:scale-95"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setIsOpen(!isOpen);
-        }}
+        className="p-1 rounded-full hover:bg-white/10 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
       >
         <ProfileAvatar
           profileImage={profileImage}
@@ -115,16 +104,15 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 mt-2 w-80 z-[99999] pointer-events-auto"
+            className="absolute right-0 mt-2 w-80 z-[99999]"
             style={{
               top: 'calc(100% + 8px)',
-              maxWidth: 'calc(100vw - 16px)',
-              position: 'fixed',
-              right: '8px',
+              maxWidth: 'calc(100vw - 32px)',
+              position: 'absolute',
+              right: '0px',
               left: 'auto',
               transform: 'none'
             }}
-            onClick={(e) => e.stopPropagation()}
           >
             <Card className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl shadow-2xl border-2">
               <CardContent className="p-4 space-y-4">
