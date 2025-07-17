@@ -16,65 +16,77 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function CommandCenterHome() {
-  // 🔐 FIXED: REAL DATABASE SYNC - Joseph MULÉ CEO NIYVORA KFT™
+  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - REAL DATABASE SYNC FORCED
   
   // Get real user data from Supabase
   const { user } = useAuth();
   const { userClues, loading: prizeLoading } = usePrizeData();
   const { userCluesCount } = useBuzzPricing(user?.id);
   
-  // 🧹 CLEAR CACHE ON COMPONENT MOUNT - Force fresh data
+  // 🧹 FORCE CLEAR ALL CACHE - MANDATORY RESET
   useEffect(() => {
-    // Clear localStorage cache to force fresh data after reset
+    // Clear ALL localStorage cache to force fresh data
     localStorage.removeItem("mission-progress");
     localStorage.removeItem("purchased-clues");
     localStorage.removeItem("diary-entries");
-    console.log("🧹 Cache cleared - forcing database sync");
+    localStorage.removeItem("user-credits");
+    localStorage.removeItem("mission-data");
+    localStorage.removeItem("clue-data");
+    console.log("🧹 FULL CACHE CLEARED - forcing database sync");
   }, []);
   
-  // Track the user's progress (from 0 to 100)
+  // Track the user's progress (FORCED TO 0)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
-  // Track user's credits
+  // Track user's credits (RESET)
   const [credits, setCredits] = useLocalStorage<number>("user-credits", 1000);
   
-  // Track purchased clues
+  // Track purchased clues (RESET)
   const [purchasedClues, setPurchasedClues] = useLocalStorage<any[]>("purchased-clues", []);
   
-  // Track diary entries
+  // Track diary entries (RESET)
   const [diaryEntries, setDiaryEntries] = useLocalStorage<any[]>("diary-entries", []);
 
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
-  // 🔥 REAL DATABASE MISSION DATA - CORRECTED TODAY 17/07/2025
+  // 🔥 REAL DATABASE MISSION DATA - CORRECTED TODAY 17/07/2025 - FORCED SYNC
   const [activeMission, setActiveMission] = useState({
     id: "M001",
     title: "Caccia al Tesoro Urbano",
     totalClues: 12,
-    foundClues: userCluesCount || 0, // 🔥 REAL DATA FROM SUPABASE
+    foundClues: 0, // 🔥 FORCED TO 0 - REAL RESET
     timeLimit: "48:00:00",
-    startTime: "2025-07-17T00:00:00.000Z", // 🔥 MISSION START DATE CORRECTED
-    remainingDays: calculateRemainingDays(), // 🔥 REAL CALCULATION
+    startTime: "2025-07-17T00:00:00.000Z", // 🔥 FORCED CORRECT DATE
+    remainingDays: 30, // 🔥 FORCED TO 30 DAYS
     totalDays: 30
   });
 
-  // 🔥 REAL-TIME DATABASE SYNC - Update mission data when userClues changes
+  // 🔥 REAL-TIME DATABASE SYNC - FORCED CORRECTION
   useEffect(() => {
     const currentRemainingDays = calculateRemainingDays();
-    console.log("🔥 MISSION SYNC - Updating mission data:", {
-      foundClues: userCluesCount || 0,
+    const realFoundClues = userCluesCount || 0;
+    
+    console.log("🔥 MISSION FORCED SYNC:", {
+      foundClues: realFoundClues,
       remainingDays: currentRemainingDays,
-      startDate: "2025-07-17T00:00:00.000Z"
+      startDate: "2025-07-17T00:00:00.000Z",
+      userCluesFromDB: userClues?.length || 0
     });
     
+    // FORCE CORRECT VALUES
     setActiveMission(prev => ({
       ...prev,
-      foundClues: userCluesCount || 0, // 🔥 SYNC FROM SUPABASE
-      remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION
-      startTime: "2025-07-17T00:00:00.000Z" // 🔥 FORCE CORRECT DATE
+      foundClues: realFoundClues, // 🔥 REAL DATA FROM SUPABASE
+      remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION  
+      startTime: "2025-07-17T00:00:00.000Z" // 🔥 FORCE TODAY START
     }));
-  }, [userCluesCount]);
+    
+    // FORCE PROGRESS TO MATCH REAL DATA
+    const realProgress = (realFoundClues / 12) * 100;
+    setProgress(realProgress);
+    
+  }, [userCluesCount, userClues]);
 
   // Update prize status based on progress and days remaining
   useEffect(() => {

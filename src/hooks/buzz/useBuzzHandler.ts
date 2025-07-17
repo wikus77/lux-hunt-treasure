@@ -28,7 +28,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
     
     if (!user) {
       console.log('❌ BUZZ FAILED - Missing user');
-      toast.error('Dati utente non caricati. Riprova.');
+      toast.error('Devi essere loggato per utilizzare BUZZ!');
       return;
     }
     
@@ -52,8 +52,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
 
-      // 🚨 CRITICAL: FORCE STRIPE PAYMENT BEFORE BUZZ API
-      console.log('💳 BUZZ: Processing mandatory Stripe payment first');
+      // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API
+      console.log('💳 BUZZ: Processing MANDATORY Stripe payment');
       
       // Check for active subscription
       const { data: subscription, error: subError } = await supabase
@@ -69,31 +69,29 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       if (!isDeveloper && (subError || !subscription)) {
         console.log('💳 BUZZ: Payment REQUIRED - no active subscription found');
         
-        // MANDATORY: Process payment before allowing BUZZ
+        // 🚨 MANDATORY: Process Stripe payment before BUZZ
         const paymentSuccess = await processBuzzPurchase(false, currentPrice);
         
         if (!paymentSuccess) {
-          toast.error("Pagamento necessario", {
-            description: "Il pagamento è obbligatorio per utilizzare BUZZ."
+          toast.error("Pagamento obbligatorio", {
+            description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
           });
+          setBuzzing(false);
+          setShowShockwave(false);
           return;
         }
         
-        console.log('✅ BUZZ: Payment completed successfully');
+        console.log('✅ BUZZ: Stripe payment completed successfully');
       } else if (isDeveloper) {
         console.log('🔓 BUZZ: Developer bypass activated for wikus77@hotmail.it');
       } else {
         console.log('✅ BUZZ: Active subscription verified, proceeding');
       }
 
-      // ✅ CHIAMATA API CORRETTA USANDO HOOK - by Joseph Mulé - M1SSION™
-      console.log('🚨 GETTING useBuzzApi HOOK...');
+      // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
+      console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');
       const { callBuzzApi } = useBuzzApi();
-      console.log('✅ useBuzzApi HOOK INITIALIZED:', !!callBuzzApi);
       
-      console.log('🚨 CALLING BUZZ API...');
-      
-      // Call the buzz API with correct hook implementation
       const buzzResult = await callBuzzApi({
         userId: user.id,
         generateMap: false, // Regular BUZZ, not map
@@ -130,14 +128,14 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         full_response: buzzResult
       });
       
-      // ✅ VERIFICA CLUE_TEXT VALIDO - LOGICA M1SSION™ - by Joseph Mulé
+      // ✅ VERIFICA CLUE_TEXT VALIDO
       if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
         console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
         toast.error('❌ Indizio non ricevuto dal server');
         return;
       }
       
-      // Log the buzz action (mantenere per statistiche UI)
+      // Log the buzz action
       await supabase.from('buzz_map_actions').insert({
         user_id: user.id,
         cost_eur: currentPrice,
@@ -145,7 +143,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         radius_generated: 0 // Regular BUZZ has no radius
       });
       
-      // ✅ TOAST SUCCESS CON CLUE_TEXT REALE - CONFORME M1SSION™ - by Joseph Mulé
+      // ✅ TOAST SUCCESS CON CLUE_TEXT REALE
       toast.success(buzzResult.clue_text, {
         duration: 4000,
         position: 'top-center',

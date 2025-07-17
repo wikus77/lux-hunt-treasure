@@ -1,4 +1,7 @@
 
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Map Button Component
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Zap, MapPin } from 'lucide-react';
@@ -36,22 +39,31 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // Process payment
+      // 🚨 MANDATORY: Process Stripe payment first
+      console.log('💳 BUZZ MAPPA: Processing mandatory Stripe payment');
       const result = await processBuzzPurchase(true, buzzMapPrice);
       
-      if (result) {
-        // Generate area
-        const currentRadius = incrementGeneration();
-        const lat = mapCenter?.[0] || 41.9028;
-        const lng = mapCenter?.[1] || 12.4964;
-        
-        // Call callback
-        if (onAreaGenerated) {
-          onAreaGenerated(lat, lng, currentRadius);
-        }
-        
-        toast.success(`Area BUZZ generata! Raggio: ${currentRadius}km`);
+      if (!result) {
+        toast.error("Pagamento obbligatorio", {
+          description: "Il pagamento tramite Stripe è necessario per BUZZ MAPPA."
+        });
+        return;
       }
+      
+      console.log('✅ BUZZ MAPPA: Stripe payment completed successfully');
+      
+      // Generate area after payment
+      const currentRadius = incrementGeneration();
+      const lat = mapCenter?.[0] || 41.9028;
+      const lng = mapCenter?.[1] || 12.4964;
+      
+      // Call callback
+      if (onAreaGenerated) {
+        onAreaGenerated(lat, lng, currentRadius);
+      }
+      
+      toast.success(`Area BUZZ generata! Raggio: ${currentRadius}km`);
+      
     } catch (error) {
       console.error('BUZZ Map error:', error);
       toast.error('Errore durante la generazione dell\'area BUZZ');

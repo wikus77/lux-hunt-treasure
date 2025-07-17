@@ -22,3 +22,6 @@ export const calculateRemainingDays = (): number => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return Math.max(0, diffDays);
 };
+
+// Legacy support - redirect to correct function
+export const getRemainingDays = calculateRemainingDays;

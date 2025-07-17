@@ -1,5 +1,7 @@
 
-// 🔧 FILE CREATO O MODIFICATO — BY JOSEPH MULE
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Page Component
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
@@ -25,7 +27,7 @@ export const BuzzPage: React.FC = () => {
   const isBlocked = currentPrice === 0;
 
   const handleBuzzSuccess = async () => {
-    // Force immediate stats reload - by Joseph Mulé - M1SSION™
+    // Force immediate stats reload - © 2025 Joseph MULÉ – M1SSION™
     setTimeout(async () => {
       await loadBuzzStats();
       console.log('🔄 Stats aggiornate post-BUZZ');
@@ -60,7 +62,7 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      {/* 🔧 HEADER UNIFICATA — BY JOSEPH MULE */}
+      {/* © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - HEADER UNIFICATA */}
       <div 
         className="fixed left-0 right-0 z-50 backdrop-blur-xl"
         style={{
@@ -85,7 +87,7 @@ export const BuzzPage: React.FC = () => {
         }}
       >
         <div className="container mx-auto px-4">
-          {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+          {/* © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ */}
           
           {/* Titolo BUZZ - Spostato 10% più in basso */}
           <div className="text-center mt-[10%] mb-8">
@@ -115,6 +117,7 @@ export const BuzzPage: React.FC = () => {
                   <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti.</p>
                   <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50</p>
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
+                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ</p>
                 </div>
               </div>
             </div>

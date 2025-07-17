@@ -35,11 +35,11 @@ export const useBuzzMapLogic = () => {
       return;
     }
     
-    console.log('🔄 useBuzzMapLogic: Fetching areas for user:', user.id);
+    console.log('🔄 useBuzzMapLogic: Checking authorization for user:', user.id);
     setLoading(true);
     
     try {
-      // CRITICAL: Only fetch areas if user has active subscription or payment
+      // 🚨 CRITICAL: MANDATORY PAYMENT VERIFICATION BEFORE SHOWING AREAS
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('status, tier')
@@ -47,17 +47,25 @@ export const useBuzzMapLogic = () => {
         .eq('status', 'active')
         .single();
 
-      // Block if no subscription (except for developer)
+      // Check for payment transactions
+      const { data: payments } = await supabase
+        .from('payment_transactions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .limit(1);
+
+      // Block if no subscription AND no payments (except for developer)
       const isDeveloper = user.email === 'wikus77@hotmail.it';
       
-      if (!isDeveloper && !subscription) {
-        console.log('❌ useBuzzMapLogic: No active subscription, blocking area display');
+      if (!isDeveloper && !subscription && (!payments || payments.length === 0)) {
+        console.log('❌ useBuzzMapLogic: NO PAYMENT VERIFICATION - blocking area display');
         setCurrentWeekAreas([]); // NO AREAS WITHOUT PAYMENT
         setLoading(false);
         return;
       }
 
-      // Fetch user map areas only if authorized
+      // 🚨 ONLY fetch areas if payment verified or developer
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')
