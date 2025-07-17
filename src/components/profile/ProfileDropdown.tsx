@@ -1,5 +1,5 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
@@ -24,7 +24,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   const { toast } = useToast();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
+  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -32,12 +32,15 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
+      setIsOpen(false);
       await logout();
       toast({
         title: "✅ Logout completato",
@@ -51,12 +54,18 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
         variant: "destructive"
       });
     }
-  };
+  }, [logout, toast, navigate]);
 
-  const handleSettingsClick = () => {
+  const handleSettingsClick = useCallback(() => {
     setIsOpen(false);
     navigate('/settings');
-  };
+  }, [navigate]);
+
+  const handleToggleDropdown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(prev => !prev);
+  }, []);
 
   // Get user display name and email
   const displayName = user?.user_metadata?.full_name || 
@@ -87,8 +96,9 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
       {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
       <Button
         variant="ghost"
-        className="p-1 rounded-full hover:bg-white/10 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
+        className="p-1 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#00D1FF]/50"
+        onClick={handleToggleDropdown}
+        onMouseDown={(e) => e.preventDefault()}
       >
         <ProfileAvatar
           profileImage={profileImage}
@@ -108,8 +118,8 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             style={{
               top: 'calc(100% + 8px)',
               maxWidth: 'calc(100vw - 32px)',
-              position: 'fixed',
-              right: '16px'
+              position: 'absolute',
+              right: '0'
             }}
           >
             <Card className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl shadow-2xl border-2">
