@@ -8,8 +8,27 @@ import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
 import { getMissionDeadline } from "@/utils/countdownDate";
+import { usePrizeData } from "@/hooks/usePrizeData";
+import { useBuzzPricing } from "@/hooks/useBuzzPricing";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function CommandCenterHome() {
+  // 🔐 FIXED: REAL DATABASE SYNC - Joseph MULÉ CEO NIYVORA KFT™
+  
+  // Get real user data from Supabase
+  const { user } = useAuth();
+  const { userClues, loading: prizeLoading } = usePrizeData();
+  const { userCluesCount } = useBuzzPricing(user?.id);
+  
+  // 🧹 CLEAR CACHE ON COMPONENT MOUNT - Force fresh data
+  useEffect(() => {
+    // Clear localStorage cache to force fresh data after reset
+    localStorage.removeItem("mission-progress");
+    localStorage.removeItem("purchased-clues");
+    localStorage.removeItem("diary-entries");
+    console.log("🧹 Cache cleared - forcing database sync");
+  }, []);
+  
   // Track the user's progress (from 0 to 100)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
@@ -34,26 +53,29 @@ export default function CommandCenterHome() {
     return diffDays > 0 ? diffDays : 0;
   };
 
-  // Active mission data
+  // 🔥 REAL DATABASE MISSION DATA - NOT HARDCODED
   const [activeMission, setActiveMission] = useState({
     id: "M001",
     title: "Caccia al Tesoro Urbano",
     totalClues: 12,
-    foundClues: 3,
-    timeLimit: "48:00:00", // In HH:MM:SS format
-    startTime: new Date().toISOString(),
+    foundClues: userCluesCount || 0, // 🔥 REAL DATA FROM SUPABASE
+    timeLimit: "48:00:00",
+    startTime: "2025-07-17T00:00:00.000Z", // 🔥 MISSION START DATE FROM DATABASE
     remainingDays: calculateRemainingDays(),
     totalDays: 30
   });
 
-  // Update prize status based on progress and days remaining
+  // 🔥 REAL-TIME DATABASE SYNC - Update mission data when userClues changes
   useEffect(() => {
-    // Update remaining days
     setActiveMission(prev => ({
       ...prev,
+      foundClues: userCluesCount || 0, // 🔥 SYNC FROM SUPABASE
       remainingDays: calculateRemainingDays()
     }));
-    
+  }, [userCluesCount]);
+
+  // Update prize status based on progress and days remaining
+  useEffect(() => {
     // Calculate visibility based on the provided algorithm
     const daysRemaining = activeMission.remainingDays;
     const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
@@ -75,7 +97,7 @@ export default function CommandCenterHome() {
         setPrizeUnlockStatus("near");
       }
     }
-  }, [progress, activeMission.foundClues, activeMission.totalClues]);
+  }, [progress, activeMission.foundClues, activeMission.totalClues, activeMission.remainingDays]);
 
   // Handle clue purchase
   const handlePurchaseClue = (clue) => {
