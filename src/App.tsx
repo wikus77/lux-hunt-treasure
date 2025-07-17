@@ -8,17 +8,9 @@ import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import WouterRoutes from "./routes/WouterRoutes";
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 import ProductionSafety from "./components/debug/ProductionSafety";
-import { enableMobileOptimizations, enableInstantPageLoading } from "./utils/performanceOptimization";
 
 function App() {
   console.log("🚀 App component rendering...");
-  
-  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
-  // Ottimizzazioni mobile e performance al 100%
-  React.useEffect(() => {
-    enableMobileOptimizations();
-    enableInstantPageLoading();
-  }, []);
   
   return (
     <ErrorBoundary fallback={

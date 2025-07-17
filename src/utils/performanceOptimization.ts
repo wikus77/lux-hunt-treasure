@@ -45,52 +45,6 @@ export const preloadCriticalAssets = (urls: string[]): void => {
   });
 };
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
-// Ottimizzazione Mobile Avanzata
-export const enableMobileOptimizations = (): void => {
-  // Disabilita zoom su double tap
-  const metaViewport = document.querySelector('meta[name="viewport"]');
-  if (metaViewport) {
-    metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
-  }
-  
-  // Ottimizza scrolling su iOS
-  (document.body.style as any).webkitOverflowScrolling = 'touch';
-  (document.body.style as any).overflowScrolling = 'touch';
-  
-  // Disabilita selezione testo non necessaria
-  document.body.style.webkitUserSelect = 'none';
-  document.body.style.userSelect = 'none';
-  
-  // Ottimizza rendering
-  document.body.style.webkitTransform = 'translateZ(0)';
-  document.body.style.transform = 'translateZ(0)';
-  
-  console.log('📱 Ottimizzazioni mobile abilitate al 100%');
-};
-
-// Gestione caricamento istantaneo pagine
-export const enableInstantPageLoading = (): void => {
-  // Preload dei componenti critici
-  const criticalRoutes = ['/dashboard', '/map', '/profile', '/leaderboard', '/notifications'];
-  
-  criticalRoutes.forEach(route => {
-    const link = document.createElement('link');
-    link.rel = 'prefetch';
-    link.href = route;
-    document.head.appendChild(link);
-  });
-  
-  // Cache aggressive per assets
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      console.log('📦 Service Worker non disponibile');
-    });
-  }
-  
-  console.log('⚡ Caricamento istantaneo pagine attivato');
-};
-
 export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number

@@ -19,7 +19,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
   return (
     <div className="glass-card p-4 sm:p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-white whitespace-nowrap flex-shrink-0">Le tue notifiche</h2>
+        <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={onManualReload}>
             <Bell className="w-4 h-4 mr-2" />
