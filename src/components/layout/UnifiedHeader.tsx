@@ -9,7 +9,6 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
-import m1Logo from "@/assets/m1-logo.png";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -112,7 +111,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       style={{
         background: "rgba(19, 21, 33, 0.55)",
         backdropFilter: "blur(12px)",
-        top: 'env(safe-area-inset-top, 0px)',
+        top: 'calc(47px + env(safe-area-inset-top, 0px))',
         paddingTop: '0px',
         marginTop: '0px',
         height: '72px'
@@ -141,13 +140,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 
                 <Link
                   to="/home"
-                  className="flex items-center"
+                  className="text-xl sm:text-2xl font-orbitron font-bold"
                 >
-                  <img 
-                    src={m1Logo} 
-                    alt="M1SSION" 
-                    className="w-8 h-8 sm:w-10 sm:h-10"
-                  />
+                  <span className="text-[#00D1FF]" style={{ 
+                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                  }}>M1</span>
+                  <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
                 </Link>
               </div>
             )}
