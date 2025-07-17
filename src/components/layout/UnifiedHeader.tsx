@@ -111,7 +111,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       style={{
         background: "rgba(19, 21, 33, 0.55)",
         backdropFilter: "blur(12px)",
-        top: 'calc(47px + env(safe-area-inset-top, 0px))',
+        top: 'env(safe-area-inset-top, 0px)',
         paddingTop: '0px',
         marginTop: '0px',
         height: '72px'

@@ -108,8 +108,10 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
             style={{
               top: 'calc(100% + 8px)',
               maxWidth: 'calc(100vw - 32px)',
-              position: 'fixed',
-              right: '16px'
+              position: 'absolute',
+              right: '0px',
+              left: 'auto',
+              transform: 'none'
             }}
           >
             <Card className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-xl shadow-2xl border-2">
