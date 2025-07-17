@@ -6,6 +6,7 @@ import HomeHeader from "@/components/home/HomeHeader";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import BottomNavigation from "@/components/layout/BottomNavigation";
+import TutorialOverlay from "@/components/tutorial/TutorialOverlay";
 
 type HomeLayoutProps = {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
   return (
     <div className="min-h-screen bg-black text-white relative overflow-x-hidden pb-16">
       <CookiebotInit />
+      <TutorialOverlay />
       <div className="relative z-20">
         {notificationsBannerOpen && (
           <motion.div
