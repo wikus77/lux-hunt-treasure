@@ -1,5 +1,5 @@
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Map Button Component
 
 import React, { useState } from 'react';

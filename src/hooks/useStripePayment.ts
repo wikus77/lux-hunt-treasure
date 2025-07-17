@@ -1,4 +1,6 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
+
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';

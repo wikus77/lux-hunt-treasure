@@ -1,9 +1,9 @@
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Countdown Date Utilities
 
 export const getMissionDeadline = (): Date => {
-  // MISSION START: 17 July 2025 (TODAY) - 30 days duration
+  // MISSION START: 17 July 2025 - 30 days duration
   const missionStart = new Date('2025-07-17T00:00:00.000Z');
   const missionEnd = new Date(missionStart);
   missionEnd.setDate(missionStart.getDate() + 30); // 30 days total

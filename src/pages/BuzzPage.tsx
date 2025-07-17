@@ -1,5 +1,5 @@
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Page Component
 
 import React from 'react';
@@ -62,7 +62,7 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      {/* © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - HEADER UNIFICATA */}
+      {/* © 2025 Joseph MULÉ – M1SSION™ - HEADER UNIFICATA */}
       <div 
         className="fixed left-0 right-0 z-50 backdrop-blur-xl"
         style={{
@@ -87,7 +87,7 @@ export const BuzzPage: React.FC = () => {
         }}
       >
         <div className="container mx-auto px-4">
-          {/* © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ */}
+          {/* © 2025 Joseph MULÉ – M1SSION™ */}
           
           {/* Titolo BUZZ - Spostato 10% più in basso */}
           <div className="text-center mt-[10%] mb-8">
@@ -109,10 +109,10 @@ export const BuzzPage: React.FC = () => {
               />
             </div>
 
-            {/* Container con descrizione - Spostato sotto il pulsante */}
+            {/* Container con descrizione - Sistema 200 indizi */}
             <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
               <div className="text-center space-y-4">
-                {/* Descrizione BUZZ nel container - AGGIORNATA PER 200 INDIZI */}
+                {/* Descrizione BUZZ - SISTEMA 200 INDIZI */}
                 <div className="text-white/80 space-y-2">
                   <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 200 indizi totali.</p>
                   <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50</p>

@@ -1,5 +1,5 @@
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Command Center Home Component
 
 import React, { useState, useEffect } from "react";
@@ -16,14 +16,14 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function CommandCenterHome() {
-  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ - REAL DATABASE SYNC FORCED
+  // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI FORZATO
   
   // Get real user data from Supabase
   const { user } = useAuth();
   const { userClues, loading: prizeLoading } = usePrizeData();
   const { userCluesCount } = useBuzzPricing(user?.id);
   
-  // 🧹 FORCE CLEAR ALL CACHE - MANDATORY RESET
+  // 🧹 FORCE CLEAR ALL CACHE - MANDATORY RESET 17/07/2025
   useEffect(() => {
     // Clear ALL localStorage cache to force fresh data
     localStorage.removeItem("mission-progress");
@@ -32,10 +32,10 @@ export default function CommandCenterHome() {
     localStorage.removeItem("user-credits");
     localStorage.removeItem("mission-data");
     localStorage.removeItem("clue-data");
-    console.log("🧹 FULL CACHE CLEARED - forcing database sync");
+    console.log("🧹 FULL CACHE CLEARED - forcing database sync 17/07/2025");
   }, []);
   
-  // Track the user's progress (FORCED TO 0)
+  // Track the user's progress (FORCED TO REAL DATA)
   const [progress, setProgress] = useLocalStorage<number>("mission-progress", 0);
   
   // Track user's credits (RESET)
@@ -50,24 +50,24 @@ export default function CommandCenterHome() {
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
-  // 🔥 REAL DATABASE MISSION DATA - CORRECTED TODAY 17/07/2025 - FORCED SYNC - INDIZI 200
+  // 🔥 REAL DATABASE MISSION DATA - SISTEMA 200 INDIZI - DATA 17/07/2025
   const [activeMission, setActiveMission] = useState({
     id: "M001",
     title: "Caccia al Tesoro Urbano",
-    totalClues: 200, // 🔥 FORCED TO 200 CLUES TOTAL
-    foundClues: 0, // 🔥 FORCED TO 0 - REAL RESET
+    totalClues: 200, // 🔥 SISTEMA 200 INDIZI FISSO
+    foundClues: 0, // 🔥 FORCED TO REAL DATA
     timeLimit: "48:00:00",
-    startTime: "2025-07-17T00:00:00.000Z", // 🔥 FORCED CORRECT DATE
-    remainingDays: 30, // 🔥 FORCED TO 30 DAYS
+    startTime: "2025-07-17T00:00:00.000Z", // 🔥 DATA CORRETTA 17/07/2025
+    remainingDays: 30, // 🔥 30 GIORNI DALLA DATA ATTUALE
     totalDays: 30
   });
 
-  // 🔥 REAL-TIME DATABASE SYNC - FORCED CORRECTION
+  // 🔥 REAL-TIME DATABASE SYNC - SISTEMA 200 INDIZI
   useEffect(() => {
     const currentRemainingDays = calculateRemainingDays();
     const realFoundClues = userCluesCount || 0;
     
-    console.log("🔥 MISSION FORCED SYNC (200 CLUES):", {
+    console.log("🔥 MISSION SYNC (200 INDIZI - 17/07/2025):", {
       foundClues: realFoundClues,
       totalClues: 200,
       remainingDays: currentRemainingDays,
@@ -78,10 +78,10 @@ export default function CommandCenterHome() {
     // FORCE CORRECT VALUES WITH 200 CLUES SYSTEM
     setActiveMission(prev => ({
       ...prev,
-      totalClues: 200, // 🔥 FORCED TO 200
+      totalClues: 200, // 🔥 SISTEMA 200 INDIZI
       foundClues: realFoundClues, // 🔥 REAL DATA FROM SUPABASE
       remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION  
-      startTime: "2025-07-17T00:00:00.000Z" // 🔥 FORCE TODAY START
+      startTime: "2025-07-17T00:00:00.000Z" // 🔥 DATA MISSIONE 17/07/2025
     }));
     
     // FORCE PROGRESS TO MATCH REAL DATA (200 CLUES BASE)
@@ -97,7 +97,7 @@ export default function CommandCenterHome() {
     const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
     const userScore = progress;
     
-    console.log("🎯 PRIZE STATUS CALCULATION (200 CLUES):", {
+    console.log("🎯 PRIZE STATUS CALCULATION (200 INDIZI):", {
       daysRemaining,
       objectivesPercentage,
       userScore,

@@ -1,4 +1,6 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
+
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";

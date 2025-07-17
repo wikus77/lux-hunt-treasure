@@ -1,5 +1,5 @@
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Handler Hook
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -37,7 +37,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       setShowShockwave(true);
       await vibrate(100);
       
-      console.log('💰 BUZZ PRICE CHECK', { todayCount: currentPrice });
+      console.log('💰 BUZZ PRICE CHECK', { currentPrice });
       
       // Check if blocked
       if (currentPrice === 0) {
@@ -53,12 +53,9 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       }
 
       // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
-      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED TRIGGER');
+      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL');
       
-      // 🚨 CRITICAL: ALWAYS FORCE PAYMENT - NO BYPASS LOGIC
-      console.log('💳 BUZZ: Payment REQUIRED - forcing Stripe checkout for ALL users');
-      
-      // 🚨 MANDATORY: Process Stripe payment before BUZZ - ALWAYS
+      // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
       const paymentSuccess = await processBuzzPurchase(false, currentPrice);
       
       if (!paymentSuccess) {
