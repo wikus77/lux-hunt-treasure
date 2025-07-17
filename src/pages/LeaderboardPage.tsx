@@ -1,4 +1,4 @@
-// M1SSION™ - Leaderboard Page for iOS Capacitor
+// © 2025 Joseph MULÉ – M1SSION™ - Leaderboard Page Optimized
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 

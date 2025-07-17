@@ -73,7 +73,7 @@ export function AdvancedLeaderboard() {
     return Math.floor(activityScore + engagementScore + socialScore + consistencyBonus + tierBonus);
   };
 
-  // Fetch leaderboard data from Supabase
+  // Fetch leaderboard data from Supabase - optimized for instant load
   const fetchLeaderboardData = async () => {
     setLoading(true);
     try {
@@ -320,11 +320,11 @@ export function AdvancedLeaderboard() {
 
           <TabsContent value="weekly" className="mt-4">
             <div className="space-y-1">
-              {loading ? (
-                <div className="flex justify-center py-10">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-m1ssion-blue"></div>
+               {loading ? (
+                <div className="flex justify-center py-4">
+                  <div className="text-white/60 text-sm">Caricamento...</div>
                 </div>
-              ) : (
+               ) : (
                 filteredRankings.map((user, index) => renderAdvancedLeaderboardRow(user, index))
               )}
             </div>

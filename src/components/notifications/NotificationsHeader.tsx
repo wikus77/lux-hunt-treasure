@@ -40,7 +40,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
           className="flex-shrink-0 flex-1 sm:flex-none"
         >
           <Bell className="w-4 h-4 mr-2" />
-          Tutte
+          Generali
         </Button>
         <Button
           variant={filter === 'unread' ? 'default' : 'outline'}
@@ -49,7 +49,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
           className="flex-shrink-0 flex-1 sm:flex-none"
         >
           <Bell className="w-4 h-4 mr-2" />
-          Non lette
+          Buzz
         </Button>
         <Button
           variant={filter === 'important' ? 'default' : 'outline'}
@@ -58,7 +58,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
           className="flex-shrink-0 flex-1 sm:flex-none"
         >
           <AlertCircle className="w-4 h-4 mr-2" />
-          Importanti
+          Classifica
         </Button>
       </div>
     </div>

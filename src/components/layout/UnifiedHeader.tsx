@@ -1,4 +1,4 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™
 import { Link } from "wouter";
 import { useLocation } from "wouter";
 import { Bell, Settings, ArrowLeft } from "lucide-react";
@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
+import AgentCodeDisplay from "@/components/layout/header/AgentCodeDisplay";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -109,12 +110,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl"
       style={{
-        background: "rgba(19, 21, 33, 0.55)",
+        background: "rgba(19, 21, 33, 0.85)",
         backdropFilter: "blur(12px)",
-        top: 'env(safe-area-inset-top, 0px)',
-        paddingTop: '0px',
+        top: '0px',
+        paddingTop: 'env(safe-area-inset-top, 0px)',
         marginTop: '0px',
-        height: '72px'
+        height: 'calc(72px + env(safe-area-inset-top, 0px))'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
@@ -151,17 +152,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
 
-          {/* Center section - MISSION text white only - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
-          <div className="flex items-center justify-center">
-            <motion.h1 
-              className="text-lg font-semibold text-white"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              {currentPageTitle}
-            </motion.h1>
-          </div>
+          {/* Center section - Agent Code Display - © 2025 Joseph MULÉ – M1SSION™ */}
+          <AgentCodeDisplay />
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
