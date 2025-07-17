@@ -1,3 +1,4 @@
+
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - BUZZ Handler Hook
 import { useState } from 'react';
@@ -7,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { useAbuseProtection } from './useAbuseProtection';
+import { useStripePayment } from '@/hooks/useStripePayment';
 
 interface UseBuzzHandlerProps {
   currentPrice: number;
@@ -19,6 +21,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { user } = useAuth();
   const { vibrate } = useCapacitorHardware();
   const { checkAbuseAndLog } = useAbuseProtection();
+  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz', { user: !!user, currentPrice });
@@ -49,16 +52,41 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
 
-      // ✅ CHIAMATA API CORRETTA USANDO HOOK - by Joseph Mulé - M1SSION™
-      // 🚨 DEBUG: Log pre-chiamata edge function
-      console.log('🚨 PRE-BUZZ API CALL:', {
-        userId: user.id,
-        generateMap: true,
-        targetExists: true,
-        timestamp: new Date().toISOString()
-      });
+      // 🚨 CRITICAL: FORCE STRIPE PAYMENT BEFORE BUZZ API
+      console.log('💳 BUZZ: Processing mandatory Stripe payment first');
       
-      // by Joseph Mulé – M1SSION™ – FIXED: Proper hook usage outside component
+      // Check for active subscription
+      const { data: subscription, error: subError } = await supabase
+        .from('subscriptions')
+        .select('status, tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      const isDeveloper = user.email === 'wikus77@hotmail.it';
+      
+      // MANDATORY: Force payment if no subscription and not developer
+      if (!isDeveloper && (subError || !subscription)) {
+        console.log('💳 BUZZ: Payment REQUIRED - no active subscription found');
+        
+        // MANDATORY: Process payment before allowing BUZZ
+        const paymentSuccess = await processBuzzPurchase(false, currentPrice);
+        
+        if (!paymentSuccess) {
+          toast.error("Pagamento necessario", {
+            description: "Il pagamento è obbligatorio per utilizzare BUZZ."
+          });
+          return;
+        }
+        
+        console.log('✅ BUZZ: Payment completed successfully');
+      } else if (isDeveloper) {
+        console.log('🔓 BUZZ: Developer bypass activated for wikus77@hotmail.it');
+      } else {
+        console.log('✅ BUZZ: Active subscription verified, proceeding');
+      }
+
+      // ✅ CHIAMATA API CORRETTA USANDO HOOK - by Joseph Mulé - M1SSION™
       console.log('🚨 GETTING useBuzzApi HOOK...');
       const { callBuzzApi } = useBuzzApi();
       console.log('✅ useBuzzApi HOOK INITIALIZED:', !!callBuzzApi);
@@ -68,15 +96,13 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       // Call the buzz API with correct hook implementation
       const buzzResult = await callBuzzApi({
         userId: user.id,
-        generateMap: true,
-        coordinates: null, // Fix: null instead of undefined
-        prizeId: null, // Fix: null instead of undefined
+        generateMap: false, // Regular BUZZ, not map
+        coordinates: null,
+        prizeId: null,
         sessionId: `buzz_${Date.now()}`
       });
       
       console.log('✅ BUZZ API CALL COMPLETED');
-      
-      // 🚨 DEBUG: Log post-chiamata edge function
       console.log('🚨 POST-BUZZ API CALL:', {
         success: buzzResult?.success,
         error: buzzResult?.error,
@@ -87,20 +113,17 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       if (buzzResult.error) {
         console.error('BUZZ API Error:', buzzResult.errorMessage);
-        // by Joseph Mulé – M1SSION™ – FIXED: Prevent duplicate toasts with proper state check
-        toast.dismiss(); // Clear any existing toasts
+        toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
         return;
       }
       
       if (!buzzResult.success) {
-        // by Joseph Mulé – M1SSION™ – FIXED: Prevent duplicate toasts with proper state check
-        toast.dismiss(); // Clear any existing toasts
+        toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
         return;
       }
       
-      // 🧪 DEBUG COMPLETO DEL FLUSSO BUZZ - by Joseph Mulé
       console.log('📝 BUZZ RESULT M1SSION™:', { 
         clue_text: buzzResult.clue_text,
         success: buzzResult.success,
@@ -114,15 +137,12 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
       
-      // ✅ NOTIFICA GIÀ SALVATA DALL'EDGE FUNCTION - NON DUPLICARE
-      // ✅ CONTATORE GIÀ INCREMENTATO DALL'EDGE FUNCTION - NON DUPLICARE
-      
       // Log the buzz action (mantenere per statistiche UI)
       await supabase.from('buzz_map_actions').insert({
         user_id: user.id,
         cost_eur: currentPrice,
         clue_count: 1,
-        radius_generated: buzzResult.radius_km || 1000
+        radius_generated: 0 // Regular BUZZ has no radius
       });
       
       // ✅ TOAST SUCCESS CON CLUE_TEXT REALE - CONFORME M1SSION™ - by Joseph Mulé

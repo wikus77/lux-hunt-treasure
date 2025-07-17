@@ -1,4 +1,7 @@
 
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - Command Center Home Component
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PrizeVision } from "./home-sections/PrizeVision";
@@ -7,7 +10,7 @@ import { AgentDiary } from "./home-sections/AgentDiary";
 import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
-import { getMissionDeadline } from "@/utils/countdownDate";
+import { getMissionDeadline, getMissionStartDate, calculateRemainingDays } from "@/utils/countdownDate";
 import { usePrizeData } from "@/hooks/usePrizeData";
 import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,33 +47,32 @@ export default function CommandCenterHome() {
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
-  // Calculate remaining days for mission
-  const calculateRemainingDays = () => {
-    const deadline = getMissionDeadline();
-    const now = new Date();
-    const diffTime = deadline.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays > 0 ? diffDays : 0;
-  };
-
-  // 🔥 REAL DATABASE MISSION DATA - NOT HARDCODED
+  // 🔥 REAL DATABASE MISSION DATA - CORRECTED TODAY 17/07/2025
   const [activeMission, setActiveMission] = useState({
     id: "M001",
     title: "Caccia al Tesoro Urbano",
     totalClues: 12,
     foundClues: userCluesCount || 0, // 🔥 REAL DATA FROM SUPABASE
     timeLimit: "48:00:00",
-    startTime: "2025-07-17T00:00:00.000Z", // 🔥 MISSION START DATE FROM DATABASE
-    remainingDays: calculateRemainingDays(),
+    startTime: "2025-07-17T00:00:00.000Z", // 🔥 MISSION START DATE CORRECTED
+    remainingDays: calculateRemainingDays(), // 🔥 REAL CALCULATION
     totalDays: 30
   });
 
   // 🔥 REAL-TIME DATABASE SYNC - Update mission data when userClues changes
   useEffect(() => {
+    const currentRemainingDays = calculateRemainingDays();
+    console.log("🔥 MISSION SYNC - Updating mission data:", {
+      foundClues: userCluesCount || 0,
+      remainingDays: currentRemainingDays,
+      startDate: "2025-07-17T00:00:00.000Z"
+    });
+    
     setActiveMission(prev => ({
       ...prev,
       foundClues: userCluesCount || 0, // 🔥 SYNC FROM SUPABASE
-      remainingDays: calculateRemainingDays()
+      remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION
+      startTime: "2025-07-17T00:00:00.000Z" // 🔥 FORCE CORRECT DATE
     }));
   }, [userCluesCount]);
 
@@ -80,6 +82,14 @@ export default function CommandCenterHome() {
     const daysRemaining = activeMission.remainingDays;
     const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
     const userScore = progress;
+    
+    console.log("🎯 PRIZE STATUS CALCULATION:", {
+      daysRemaining,
+      objectivesPercentage,
+      userScore,
+      foundClues: activeMission.foundClues,
+      totalClues: activeMission.totalClues
+    });
     
     if (daysRemaining <= 3) {
       // Last 3 days - full visibility

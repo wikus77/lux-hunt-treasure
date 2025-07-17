@@ -1,4 +1,7 @@
 
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Map Logic Hook
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
@@ -27,7 +30,8 @@ export const useBuzzMapLogic = () => {
 
   const fetchCurrentWeekAreas = async () => {
     if (!user?.id) {
-      console.log('❌ useBuzzMapLogic: No user ID, skipping fetch');
+      console.log('❌ useBuzzMapLogic: No user ID, clearing areas');
+      setCurrentWeekAreas([]); // CLEAR ILLEGAL AREAS
       return;
     }
     
@@ -35,7 +39,25 @@ export const useBuzzMapLogic = () => {
     setLoading(true);
     
     try {
-      // CRITICAL: Use 'user_map_areas' table and fetch ALL areas for this user
+      // CRITICAL: Only fetch areas if user has active subscription or payment
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('status, tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      // Block if no subscription (except for developer)
+      const isDeveloper = user.email === 'wikus77@hotmail.it';
+      
+      if (!isDeveloper && !subscription) {
+        console.log('❌ useBuzzMapLogic: No active subscription, blocking area display');
+        setCurrentWeekAreas([]); // NO AREAS WITHOUT PAYMENT
+        setLoading(false);
+        return;
+      }
+
+      // Fetch user map areas only if authorized
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -45,40 +67,37 @@ export const useBuzzMapLogic = () => {
       if (fetchError) {
         console.error('❌ useBuzzMapLogic: Error fetching areas:', fetchError);
         setError(fetchError);
+        setCurrentWeekAreas([]);
         return;
       }
 
       console.log('✅ useBuzzMapLogic: Raw data from user_map_areas:', data);
 
-      // Transform to BuzzMapArea format with ALL required properties
-      const transformedAreas: BuzzMapArea[] = (data || []).map((area, index) => {
-        const transformedArea = {
-          id: area.id,
-          lat: area.lat,
-          lng: area.lng,
-          radius_km: area.radius_km,
-          coordinates: { lat: area.lat, lng: area.lng },
-          radius: area.radius_km * 1000, // Convert to meters
-          color: '#00FFFF', // Cyan color for BUZZ areas
-          colorName: 'cyan',
-          week: area.week || 1,
-          generation: index + 1,
-          isActive: true,
-          user_id: area.user_id,
-          created_at: area.created_at || new Date().toISOString()
-        };
-        
-        console.log(`🔄 useBuzzMapLogic: Transformed area ${index + 1}:`, transformedArea);
-        return transformedArea;
-      });
+      // Transform ONLY if data exists and payment verified
+      const transformedAreas: BuzzMapArea[] = (data || []).map((area, index) => ({
+        id: area.id,
+        lat: area.lat,
+        lng: area.lng,
+        radius_km: area.radius_km,
+        coordinates: { lat: area.lat, lng: area.lng },
+        radius: area.radius_km * 1000,
+        color: '#00FFFF',
+        colorName: 'cyan',
+        week: area.week || 1,
+        generation: index + 1,
+        isActive: true,
+        user_id: area.user_id,
+        created_at: area.created_at || new Date().toISOString()
+      }));
 
-      console.log('✅ useBuzzMapLogic: Setting transformed areas:', transformedAreas.length);
+      console.log('✅ useBuzzMapLogic: Setting authorized areas:', transformedAreas.length);
       setCurrentWeekAreas(transformedAreas);
       setError(null);
       
     } catch (err) {
       console.error('❌ useBuzzMapLogic: Exception fetching areas:', err);
       setError(err as Error);
+      setCurrentWeekAreas([]); // CLEAR ON ERROR
     } finally {
       setLoading(false);
     }
@@ -89,7 +108,7 @@ export const useBuzzMapLogic = () => {
     fetchCurrentWeekAreas();
   };
 
-  // CRITICAL: Auto-fetch on user change and setup real-time subscription
+  // CRITICAL: Auto-fetch on user change but respect payment requirements
   useEffect(() => {
     fetchCurrentWeekAreas();
     
@@ -109,20 +128,7 @@ export const useBuzzMapLogic = () => {
           },
           (payload) => {
             console.log('🔔 useBuzzMapLogic: New area inserted via real-time:', payload);
-            fetchCurrentWeekAreas(); // Refresh the list
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'user_map_areas',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('🔔 useBuzzMapLogic: Area updated via real-time:', payload);
-            fetchCurrentWeekAreas(); // Refresh the list
+            fetchCurrentWeekAreas(); // Refresh with payment verification
           }
         )
         .subscribe();
