@@ -27,6 +27,7 @@ export const useStripePayment = () => {
     sessionId?: string
   ): Promise<boolean> => {
     if (!user) {
+      console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
       return false;
     }
@@ -34,12 +35,11 @@ export const useStripePayment = () => {
     setLoading(true);
     
     try {
-      console.log('💳 STRIPE PAYMENT START - RESET COMPLETO 17/07/2025:', {
+      console.warn('🔥 STRIPE CHAIN START:', {
         user_id: user.id,
         amount,
         is_buzz_map: isBuzzMap,
-        redirect_url: redirectUrl,
-        session_id: sessionId
+        timestamp: new Date().toISOString()
       });
 
       const { data, error } = await supabase.functions.invoke('process-buzz-purchase', {
@@ -50,50 +50,44 @@ export const useStripePayment = () => {
           currency: 'EUR',
           redirect_url: redirectUrl,
           session_id: sessionId,
-          mode: 'live' // Force live mode for production
+          mode: 'live'
         }
       });
 
+      console.warn('📦 STRIPE EDGE RESPONSE:', { 
+        hasData: !!data, 
+        dataUrl: data?.url, 
+        dataSuccess: data?.success,
+        error: error,
+        fullResponse: data 
+      });
+
       if (error) {
-        console.error('❌ STRIPE Error processing payment:', error);
-        toast.error('Errore nel processare il pagamento: ' + error.message);
+        console.error('❌ STRIPE EDGE ERROR:', error);
+        toast.error(`Errore Stripe: ${error.message || 'Edge Function error'}`);
         return false;
       }
 
-      console.log('✅ STRIPE Response:', data);
-
-      // 🚨 FIX CRITICO: Check esplicito per data.url
-      if (!data?.url) {
-        console.error('❌ STRIPE CRITICAL ERROR: Missing checkout URL in response', data);
-        toast.error('Errore critico Stripe: URL checkout mancante');
+      if (!data) {
+        console.error('❌ STRIPE: No data from Edge Function');
+        toast.error("Nessuna risposta dal server Stripe");
         return false;
       }
 
-      if (data?.url) {
-        console.log('💳 STRIPE: Redirecting to checkout:', data.url);
-        
-        // Open Stripe checkout in new tab for live payments
-        window.open(data.url, '_blank');
-        
-        // Show live payment notification
-        toast.success('Pagamento Live', {
-          description: 'Verrai reindirizzato al checkout sicuro di Stripe',
-        });
-        
-        return true;
-      }
-
-      if (data?.success) {
-        toast.success('Pagamento completato con successo!');
-        return true;
-      } else {
-        console.error('❌ STRIPE Payment failed:', data?.error);
-        toast.error('Pagamento fallito: ' + (data?.error || 'Errore sconosciuto'));
+      if (!data.url) {
+        console.error('❌ STRIPE: Missing checkout URL', { receivedData: data });
+        toast.error("URL checkout mancante - verificare configurazione");
         return false;
       }
+
+      console.warn('✅ STRIPE SUCCESS: Opening checkout URL', { url: data.url });
+      window.open(data.url, '_blank');
+      toast.success('Apertura checkout Stripe...');
+      return true;
+
     } catch (error) {
-      console.error('❌ STRIPE Payment processing error:', error);
-      toast.error('Errore nel processare il pagamento: ' + error);
+      console.error('💥 STRIPE FATAL ERROR:', { error, stack: error instanceof Error ? error.stack : 'No stack' });
+      toast.error(`Errore critico: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     } finally {
       setLoading(false);

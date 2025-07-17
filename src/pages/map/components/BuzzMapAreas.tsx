@@ -31,9 +31,9 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     console.log('🔄 BuzzMapAreas - Areas updated, forcing re-render:', areas.length);
   }, [areas]);
 
-  // 🚨 FORCE BLOCK: No areas without active prizes
+  // 🚨 ABSOLUTE BLOCK: No rendering without areas
   if (areas.length === 0) {
-    console.log('⚠️ BuzzMapAreas - NO AREAS TO DISPLAY - FORCE BLOCKING RENDER');
+    console.warn('🚨 BuzzMapAreas BLOCK: NO AREAS - PREVENTING ALL RENDERS');
     return null;
   }
 

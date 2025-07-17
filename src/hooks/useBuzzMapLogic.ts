@@ -44,16 +44,17 @@ export const useBuzzMapLogic = () => {
         .select('id, is_active')
         .eq('is_active', true);
 
-      console.log('🎯 useBuzzMapLogic: Active prizes check - FORCED BLOCK:', { 
+      console.warn('🎯 BUZZ MAP CHECK: Active prizes verification:', { 
         activePrizes: activePrizes?.length || 0,
         hasActivePrizes: activePrizes && activePrizes.length > 0,
-        user_email: user.email
+        user_email: user.email,
+        timestamp: new Date().toISOString()
       });
 
-      // 🚨 FIX CRITICO: FORCE BLOCK if no active prizes exist - NO EXCEPTIONS
+      // 🚨 IMMEDIATE BLOCK: Force return if no active prizes exist
       if (!activePrizes || activePrizes.length === 0) {
-        console.log('❌ useBuzzMapLogic: NO ACTIVE PRIZES - FORCE BLOCKING ALL AREA DISPLAY');
-        setCurrentWeekAreas([]); // NO AREAS WITHOUT ACTIVE PRIZES
+        console.warn('🚨 BUZZ MAP BLOCK: NO ACTIVE PRIZES - FORCED EMPTY AREAS');
+        setCurrentWeekAreas([]);
         setError(null);
         setLoading(false);
         return;
