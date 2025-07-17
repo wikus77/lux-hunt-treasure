@@ -5,10 +5,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from 'vite-plugin-pwa';
+import { componentTagger } from "lovable-tagger";
 import path from "path";
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
@@ -18,6 +19,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
@@ -81,7 +83,7 @@ export default defineConfig({
         ]
       }
     })
-  ],
+  ].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -133,4 +135,4 @@ export default defineConfig({
     exclude: ['@capacitor/core'],
   },
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
-});
+}));
