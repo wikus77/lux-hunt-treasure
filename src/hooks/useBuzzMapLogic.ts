@@ -1,4 +1,3 @@
-
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Map Logic Hook - RESET COMPLETO 17/07/2025
 
@@ -45,50 +44,49 @@ export const useBuzzMapLogic = () => {
         .select('id, is_active')
         .eq('is_active', true);
 
-      console.log('🎯 useBuzzMapLogic: Active prizes check:', { 
+      console.log('🎯 useBuzzMapLogic: Active prizes check - FORCED BLOCK:', { 
         activePrizes: activePrizes?.length || 0,
-        hasActivePrizes: activePrizes && activePrizes.length > 0 
+        hasActivePrizes: activePrizes && activePrizes.length > 0,
+        user_email: user.email
       });
 
-      // 🚨 FIX CRITICO: Block if no active prizes exist
+      // 🚨 FIX CRITICO: FORCE BLOCK if no active prizes exist - NO EXCEPTIONS
       if (!activePrizes || activePrizes.length === 0) {
-        console.log('❌ useBuzzMapLogic: NO ACTIVE PRIZES - blocking all area display');
+        console.log('❌ useBuzzMapLogic: NO ACTIVE PRIZES - FORCE BLOCKING ALL AREA DISPLAY');
         setCurrentWeekAreas([]); // NO AREAS WITHOUT ACTIVE PRIZES
+        setError(null);
         setLoading(false);
         return;
       }
 
-      // 🚨 CRITICAL: MANDATORY PAYMENT VERIFICATION BEFORE SHOWING AREAS
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('status, tier')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
+      // Log active prizes found
+      console.log('✅ useBuzzMapLogic: Active prizes found:', activePrizes.map(p => p.id));
 
-      // Check for payment transactions
-      const { data: payments } = await supabase
-        .from('payment_transactions')
-        .select('status')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .limit(1);
-
-      // Block if no subscription AND no payments (except for developer)
+      // Check for payment transactions (skip for developer only)
       const isDeveloper = user.email === 'wikus77@hotmail.it';
       
-      if (!isDeveloper && !subscription && (!payments || payments.length === 0)) {
-        console.log('❌ useBuzzMapLogic: NO PAYMENT VERIFICATION - blocking area display');
-        setCurrentWeekAreas([]); // NO AREAS WITHOUT PAYMENT
-        setLoading(false);
-        return;
+      if (!isDeveloper) {
+        const { data: payments } = await supabase
+          .from('payment_transactions')
+          .select('status')
+          .eq('user_id', user.id)
+          .eq('status', 'completed')
+          .limit(1);
+
+        if (!payments || payments.length === 0) {
+          console.log('❌ useBuzzMapLogic: NO PAYMENT VERIFICATION - blocking area display for non-developer');
+          setCurrentWeekAreas([]); // NO AREAS WITHOUT PAYMENT
+          setLoading(false);
+          return;
+        }
       }
 
-      // 🚨 ONLY fetch areas if payment verified or developer AND active prizes exist
+      // 🚨 ONLY fetch areas if active prizes exist AND payment verified
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
+        .gte('created_at', '2025-07-17T00:00:00.000Z') // Only show areas from current mission
         .order('created_at', { ascending: false });
 
       if (fetchError) {
@@ -98,11 +96,11 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      console.log('✅ useBuzzMapLogic: Raw data from user_map_areas:', data);
+      console.log('✅ useBuzzMapLogic: Raw data from user_map_areas (post 2025-07-17):', data);
 
       // 🚨 FIX CRITICO: Only transform if data exists and all checks passed
       if (!data || data.length === 0) {
-        console.log('✅ useBuzzMapLogic: No user areas found - displaying empty map');
+        console.log('✅ useBuzzMapLogic: No valid user areas found - displaying empty map');
         setCurrentWeekAreas([]);
         setError(null);
         setLoading(false);

@@ -12,7 +12,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
   const currentColor = getCurrentColor();
   const currentColorName = getCurrentColorName();
   
-  console.log('🗺️ BuzzMapAreas - Rendering areas:', {
+  console.log('🗺️ BuzzMapAreas - FORCE CHECK areas rendering:', {
     areasCount: areas.length,
     areas: areas.map(area => ({
       id: area.id,
@@ -31,8 +31,9 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     console.log('🔄 BuzzMapAreas - Areas updated, forcing re-render:', areas.length);
   }, [areas]);
 
+  // 🚨 FORCE BLOCK: No areas without active prizes
   if (areas.length === 0) {
-    console.log('⚠️ BuzzMapAreas - No areas to display');
+    console.log('⚠️ BuzzMapAreas - NO AREAS TO DISPLAY - FORCE BLOCKING RENDER');
     return null;
   }
 
@@ -43,7 +44,7 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     return currentTime > latestTime ? current : latest;
   });
 
-  console.log('🎯 BuzzMapAreas - Showing ONLY latest area:', {
+  console.log('🎯 BuzzMapAreas - Showing ONLY latest area (FORCE CHECK):', {
     id: latestArea.id,
     lat: latestArea.lat,
     lng: latestArea.lng,
