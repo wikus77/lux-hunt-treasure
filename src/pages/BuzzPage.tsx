@@ -112,9 +112,9 @@ export const BuzzPage: React.FC = () => {
             {/* Container con descrizione - Spostato sotto il pulsante */}
             <div className="m1ssion-glass-card p-4 sm:p-6 mb-6">
               <div className="text-center space-y-4">
-                {/* Descrizione BUZZ nel container */}
+                {/* Descrizione BUZZ nel container - AGGIORNATA PER 200 INDIZI */}
                 <div className="text-white/80 space-y-2">
-                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti.</p>
+                  <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 200 indizi totali.</p>
                   <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50</p>
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
                   <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ</p>

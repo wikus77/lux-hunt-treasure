@@ -52,41 +52,25 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
 
-      // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API
-      console.log('💳 BUZZ: Processing MANDATORY Stripe payment');
+      // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
+      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED TRIGGER');
       
-      // Check for active subscription
-      const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('status, tier')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .single();
-
-      const isDeveloper = user.email === 'wikus77@hotmail.it';
+      // 🚨 CRITICAL: ALWAYS FORCE PAYMENT - NO BYPASS LOGIC
+      console.log('💳 BUZZ: Payment REQUIRED - forcing Stripe checkout for ALL users');
       
-      // MANDATORY: Force payment if no subscription and not developer
-      if (!isDeveloper && (subError || !subscription)) {
-        console.log('💳 BUZZ: Payment REQUIRED - no active subscription found');
-        
-        // 🚨 MANDATORY: Process Stripe payment before BUZZ
-        const paymentSuccess = await processBuzzPurchase(false, currentPrice);
-        
-        if (!paymentSuccess) {
-          toast.error("Pagamento obbligatorio", {
-            description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
-          });
-          setBuzzing(false);
-          setShowShockwave(false);
-          return;
-        }
-        
-        console.log('✅ BUZZ: Stripe payment completed successfully');
-      } else if (isDeveloper) {
-        console.log('🔓 BUZZ: Developer bypass activated for wikus77@hotmail.it');
-      } else {
-        console.log('✅ BUZZ: Active subscription verified, proceeding');
+      // 🚨 MANDATORY: Process Stripe payment before BUZZ - ALWAYS
+      const paymentSuccess = await processBuzzPurchase(false, currentPrice);
+      
+      if (!paymentSuccess) {
+        toast.error("Pagamento obbligatorio", {
+          description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
+        });
+        setBuzzing(false);
+        setShowShockwave(false);
+        return;
       }
+      
+      console.log('✅ BUZZ: Stripe payment completed successfully - proceeding to API');
 
       // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
       console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');

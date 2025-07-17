@@ -1,4 +1,7 @@
 
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
+// M1SSION™ - Countdown Banner Component
+
 import { useEffect, useState } from "react";
 import { getMissionDeadline, calculateRemainingDays } from "@/utils/countdownDate";
 

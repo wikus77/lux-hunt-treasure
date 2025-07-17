@@ -39,6 +39,20 @@ export const useBuzzMapLogic = () => {
     setLoading(true);
     
     try {
+      // 🚨 CRITICAL: VERIFY ACTIVE PRIZES FIRST - NO AREAS WITHOUT PRIZES
+      const { data: activePrizes } = await supabase
+        .from('prizes')
+        .select('id, is_active')
+        .eq('is_active', true);
+
+      // Block if no active prizes exist
+      if (!activePrizes || activePrizes.length === 0) {
+        console.log('❌ useBuzzMapLogic: NO ACTIVE PRIZES - blocking all area display');
+        setCurrentWeekAreas([]); // NO AREAS WITHOUT ACTIVE PRIZES
+        setLoading(false);
+        return;
+      }
+
       // 🚨 CRITICAL: MANDATORY PAYMENT VERIFICATION BEFORE SHOWING AREAS
       const { data: subscription } = await supabase
         .from('subscriptions')
@@ -65,7 +79,7 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      // 🚨 ONLY fetch areas if payment verified or developer
+      // 🚨 ONLY fetch areas if payment verified or developer AND active prizes exist
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')
@@ -81,7 +95,7 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ useBuzzMapLogic: Raw data from user_map_areas:', data);
 
-      // Transform ONLY if data exists and payment verified
+      // Transform ONLY if data exists and payment verified AND active prizes exist
       const transformedAreas: BuzzMapArea[] = (data || []).map((area, index) => ({
         id: area.id,
         lat: area.lat,
@@ -116,7 +130,7 @@ export const useBuzzMapLogic = () => {
     fetchCurrentWeekAreas();
   };
 
-  // CRITICAL: Auto-fetch on user change but respect payment requirements
+  // CRITICAL: Auto-fetch on user change but respect payment requirements AND active prizes
   useEffect(() => {
     fetchCurrentWeekAreas();
     

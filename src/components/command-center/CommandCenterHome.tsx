@@ -50,11 +50,11 @@ export default function CommandCenterHome() {
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
-  // 🔥 REAL DATABASE MISSION DATA - CORRECTED TODAY 17/07/2025 - FORCED SYNC
+  // 🔥 REAL DATABASE MISSION DATA - CORRECTED TODAY 17/07/2025 - FORCED SYNC - INDIZI 200
   const [activeMission, setActiveMission] = useState({
     id: "M001",
     title: "Caccia al Tesoro Urbano",
-    totalClues: 12,
+    totalClues: 200, // 🔥 FORCED TO 200 CLUES TOTAL
     foundClues: 0, // 🔥 FORCED TO 0 - REAL RESET
     timeLimit: "48:00:00",
     startTime: "2025-07-17T00:00:00.000Z", // 🔥 FORCED CORRECT DATE
@@ -67,23 +67,25 @@ export default function CommandCenterHome() {
     const currentRemainingDays = calculateRemainingDays();
     const realFoundClues = userCluesCount || 0;
     
-    console.log("🔥 MISSION FORCED SYNC:", {
+    console.log("🔥 MISSION FORCED SYNC (200 CLUES):", {
       foundClues: realFoundClues,
+      totalClues: 200,
       remainingDays: currentRemainingDays,
       startDate: "2025-07-17T00:00:00.000Z",
       userCluesFromDB: userClues?.length || 0
     });
     
-    // FORCE CORRECT VALUES
+    // FORCE CORRECT VALUES WITH 200 CLUES SYSTEM
     setActiveMission(prev => ({
       ...prev,
+      totalClues: 200, // 🔥 FORCED TO 200
       foundClues: realFoundClues, // 🔥 REAL DATA FROM SUPABASE
       remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION  
       startTime: "2025-07-17T00:00:00.000Z" // 🔥 FORCE TODAY START
     }));
     
-    // FORCE PROGRESS TO MATCH REAL DATA
-    const realProgress = (realFoundClues / 12) * 100;
+    // FORCE PROGRESS TO MATCH REAL DATA (200 CLUES BASE)
+    const realProgress = (realFoundClues / 200) * 100;
     setProgress(realProgress);
     
   }, [userCluesCount, userClues]);
@@ -95,7 +97,7 @@ export default function CommandCenterHome() {
     const objectivesPercentage = (activeMission.foundClues / activeMission.totalClues) * 100;
     const userScore = progress;
     
-    console.log("🎯 PRIZE STATUS CALCULATION:", {
+    console.log("🎯 PRIZE STATUS CALCULATION (200 CLUES):", {
       daysRemaining,
       objectivesPercentage,
       userScore,

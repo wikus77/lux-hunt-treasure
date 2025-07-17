@@ -39,8 +39,10 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // 🚨 MANDATORY: Process Stripe payment first
-      console.log('💳 BUZZ MAPPA: Processing mandatory Stripe payment');
+      // 🚨 MANDATORY: Process Stripe payment first - ALWAYS FORCED
+      console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL');
+      
+      // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO EXCEPTIONS
       const result = await processBuzzPurchase(true, buzzMapPrice);
       
       if (!result) {
