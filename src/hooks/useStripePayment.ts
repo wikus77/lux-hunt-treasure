@@ -62,7 +62,13 @@ export const useStripePayment = () => {
 
       console.log('✅ STRIPE Response:', data);
 
-      // Check if we received a checkout URL
+      // 🚨 FIX CRITICO: Check esplicito per data.url
+      if (!data?.url) {
+        console.error('❌ STRIPE CRITICAL ERROR: Missing checkout URL in response', data);
+        toast.error('Errore critico Stripe: URL checkout mancante');
+        return false;
+      }
+
       if (data?.url) {
         console.log('💳 STRIPE: Redirecting to checkout:', data.url);
         
@@ -81,6 +87,7 @@ export const useStripePayment = () => {
         toast.success('Pagamento completato con successo!');
         return true;
       } else {
+        console.error('❌ STRIPE Payment failed:', data?.error);
         toast.error('Pagamento fallito: ' + (data?.error || 'Errore sconosciuto'));
         return false;
       }

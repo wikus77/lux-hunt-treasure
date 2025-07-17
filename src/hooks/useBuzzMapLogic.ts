@@ -45,7 +45,12 @@ export const useBuzzMapLogic = () => {
         .select('id, is_active')
         .eq('is_active', true);
 
-      // Block if no active prizes exist
+      console.log('🎯 useBuzzMapLogic: Active prizes check:', { 
+        activePrizes: activePrizes?.length || 0,
+        hasActivePrizes: activePrizes && activePrizes.length > 0 
+      });
+
+      // 🚨 FIX CRITICO: Block if no active prizes exist
       if (!activePrizes || activePrizes.length === 0) {
         console.log('❌ useBuzzMapLogic: NO ACTIVE PRIZES - blocking all area display');
         setCurrentWeekAreas([]); // NO AREAS WITHOUT ACTIVE PRIZES
@@ -95,8 +100,17 @@ export const useBuzzMapLogic = () => {
 
       console.log('✅ useBuzzMapLogic: Raw data from user_map_areas:', data);
 
-      // Transform ONLY if data exists and payment verified AND active prizes exist
-      const transformedAreas: BuzzMapArea[] = (data || []).map((area, index) => ({
+      // 🚨 FIX CRITICO: Only transform if data exists and all checks passed
+      if (!data || data.length === 0) {
+        console.log('✅ useBuzzMapLogic: No user areas found - displaying empty map');
+        setCurrentWeekAreas([]);
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
+      // Transform ONLY if data exists and all verifications passed
+      const transformedAreas: BuzzMapArea[] = data.map((area, index) => ({
         id: area.id,
         lat: area.lat,
         lng: area.lng,
