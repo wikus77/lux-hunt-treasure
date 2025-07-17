@@ -1,4 +1,4 @@
-// FILE CREATO — BY JOSEPH MULE
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ – M1SSION™
 import React from 'react';
 import { Bell, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,26 +18,26 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
 }) => {
   return (
     <div className="glass-card p-4 sm:p-6 mb-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
         <h2 className="text-xl font-semibold text-white">Le tue notifiche</h2>
-        <div className="flex gap-2">
-          <Button variant="ghost" size="sm" onClick={onManualReload}>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="ghost" size="sm" onClick={onManualReload} className="flex-1 sm:flex-none">
             <Bell className="w-4 h-4 mr-2" />
             Aggiorna
           </Button>
-          <Button variant="ghost" size="sm" onClick={onMarkAllAsRead}>
+          <Button variant="ghost" size="sm" onClick={onMarkAllAsRead} className="flex-1 sm:flex-none">
             <CheckCircle2 className="w-4 h-4 mr-2" />
             Segna tutto come letto
           </Button>
         </div>
       </div>
       
-      <div className="flex items-center space-x-3 overflow-x-auto mb-6">
+      <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3 overflow-x-auto mb-6">
         <Button
           variant={filter === 'all' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onFilterChange('all')}
-          className="flex-shrink-0"
+          className="flex-shrink-0 flex-1 sm:flex-none"
         >
           <Bell className="w-4 h-4 mr-2" />
           Tutte
@@ -46,7 +46,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
           variant={filter === 'unread' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onFilterChange('unread')}
-          className="flex-shrink-0"
+          className="flex-shrink-0 flex-1 sm:flex-none"
         >
           <Bell className="w-4 h-4 mr-2" />
           Non lette
@@ -55,7 +55,7 @@ export const NotificationsHeader: React.FC<NotificationsHeaderProps> = ({
           variant={filter === 'important' ? 'default' : 'outline'}
           size="sm"
           onClick={() => onFilterChange('important')}
-          className="flex-shrink-0"
+          className="flex-shrink-0 flex-1 sm:flex-none"
         >
           <AlertCircle className="w-4 h-4 mr-2" />
           Importanti

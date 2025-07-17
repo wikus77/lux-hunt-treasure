@@ -1,4 +1,5 @@
 
+// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ – M1SSION™
 import React from 'react';
 import { Router } from 'wouter';
 import { Toaster } from "sonner";
@@ -6,8 +7,8 @@ import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import WouterRoutes from "./routes/WouterRoutes";
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 import ProductionSafety from "./components/debug/ProductionSafety";
+import { InstallPrompt } from "./components/pwa/InstallPrompt";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -36,8 +37,8 @@ function App() {
       <Router>
         <SoundProvider>
           <AuthProvider>
-            {/* © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ */}
             <WouterRoutes />
+            <InstallPrompt />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
