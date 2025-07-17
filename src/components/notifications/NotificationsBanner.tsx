@@ -93,19 +93,15 @@ const NotificationsBanner: React.FC<NotificationsBannerProps> = ({
     setSelectedNotification(notification);
   };
 
-  // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
   return (
     <div
       ref={bannerRef}
-      className={`fixed left-0 right-0 z-[9999] flex justify-center transition-all duration-500 cursor-grab select-none ${
+      className={`fixed left-0 right-0 top-0 z-[9999] flex justify-center transition-all duration-500 cursor-grab select-none ${
         open ? "translate-y-0 opacity-100" : "-translate-y-32 opacity-0 pointer-events-none"
       }`}
-      style={{ 
-        transitionProperty: "transform, opacity",
-        top: 'calc(env(safe-area-inset-top, 0px) + 72px)'
-      }}
+      style={{ transitionProperty: "transform, opacity" }}
     >
-      <div className="relative w-full max-w-lg mx-auto bg-black/95 border border-m1ssion-blue rounded-b-2xl shadow-2xl mt-2 px-4 py-4 animate-fade-in backdrop-blur-xl">
+      <div className="relative w-full max-w-lg mx-auto bg-black border border-m1ssion-blue rounded-b-2xl shadow-2xl mt-2 px-4 py-4 animate-fade-in">
         <div className="flex items-center mb-2">
           <Bell className="w-5 h-5 text-m1ssion-blue mr-2" />
           <span className="font-bold text-lg flex-1">Notifiche</span>

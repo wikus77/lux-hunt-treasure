@@ -1,5 +1,4 @@
 
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 import React from "react";
 import { motion } from "framer-motion";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
@@ -36,8 +35,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="fixed inset-x-0 z-[60] px-2 md:px-4"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 72px)' }}
+            className="fixed inset-x-0 top-0 z-[60] px-2 md:px-4 mt-16"
           >
             <NotificationsBanner
               notifications={notifications}
