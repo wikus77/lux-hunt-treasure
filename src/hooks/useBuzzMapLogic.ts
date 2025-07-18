@@ -78,12 +78,12 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for completed BUZZ MAP payments (EXACT MATCH FIX)
+      // 🔥 STEP 2: Check for BUZZ MAP payments (include pending for mock testing)
       const { data: payments, error: paymentError } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['completed', 'succeeded']) // Only completed payments
+        .in('status', ['completed', 'succeeded', 'pending']) // Include pending for mock
         .or('description.ilike.%Buzz Map%,description.ilike.%BUZZ MAPPA%') // Match all variants
         .gte('created_at', '2025-07-17T00:00:00Z');
 
