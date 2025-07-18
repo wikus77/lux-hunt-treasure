@@ -38,76 +38,78 @@ export const useBuzzMapLogic = () => {
     setLoading(true);
     
     try {
-      // 🚨 CRITICAL: VERIFY ACTIVE PRIZES WITH VALID LOCATION FIRST - NO AREAS WITHOUT PRIZES
-      const { data: activePrizes } = await supabase
-        .from('prizes')
-        .select('id, is_active, lat, lng')
-        .eq('is_active', true)
-        .not('lat', 'is', null)
-        .not('lng', 'is', null);
+      // 🔥 STEP 1: Check for active BUZZ game targets (not regular prizes)
+      const { data: gameTargets, error: targetError } = await supabase
+        .from('buzz_game_targets')
+        .select('*')
+        .eq('is_active', true);
 
-      // 🚨 ADDITIONAL CHECK: Filter out prizes without valid coordinates
-      const validPrizes = activePrizes?.filter(prize => 
-        prize.lat !== null && prize.lng !== null && 
-        prize.lat !== 0 && prize.lng !== 0
-      ) || [];
-
-      console.warn('🎯 BUZZ MAP CHECK: Active prizes verification:', { 
-        totalActivePrizes: activePrizes?.length || 0,
-        validLocationPrizes: validPrizes.length,
-        hasValidPrizes: validPrizes.length > 0,
-        user_email: user.email,
-        timestamp: new Date().toISOString()
+      console.log('🎯 BUZZ GAME TARGETS CHECK:', { 
+        count: gameTargets?.length || 0, 
+        targets: gameTargets,
+        error: targetError 
       });
 
-      // 🚨 TRIPLE VALIDATION: Force clear areas if no valid prizes
-      if (!validPrizes.length) {
-        console.warn("🛑 MAPPA FORZATA VUOTA: nessun premio attivo con coordinate valide");
-        setCurrentWeekAreas([]); // FORCE CLEAR ALL AREAS
-        setError(null);
+      if (targetError) {
+        console.error('❌ GAME TARGETS ERROR:', targetError);
+        setError(targetError);
+        setCurrentWeekAreas([]);
+        setLoading(false);
+        return;
+      }
+
+      // Validate that targets have proper coordinates
+      const validTargets = gameTargets?.filter(target => 
+        target.lat && target.lon && 
+        target.lat !== 0 && target.lon !== 0 &&
+        Math.abs(target.lat) <= 90 && Math.abs(target.lon) <= 180
+      ) || [];
+
+      console.log('🧭 VALID TARGETS CHECK:', { 
+        total: gameTargets?.length || 0,
+        valid: validTargets.length,
+        validTargets: validTargets.map(t => ({ id: t.id, lat: t.lat, lon: t.lon, city: t.city }))
+      });
+
+      if (validTargets.length === 0) {
+        console.warn('🚨 NO VALID BUZZ GAME TARGETS - CLEARING ALL AREAS');
+        setCurrentWeekAreas([]);
         setLoading(false);
         return;
       }
       
-      // 🚨 ADDITIONAL CHECK: Verify payment exists for current user
-      const { data: payments } = await supabase
+      // 🔥 STEP 2: Check for completed BUZZ MAP payments
+      const { data: payments, error: paymentError } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'completed')
-        .gte('created_at', '2025-07-17');
-        
-      if (!payments || payments.length === 0) {
-        console.warn("🛑 MAPPA BLOCCATA: nessun pagamento BUZZ completato");
+        .ilike('description', '%Buzz Map%')
+        .gte('created_at', '2025-07-17T00:00:00Z');
+
+      console.log('💳 BUZZ MAP PAYMENTS CHECK:', { 
+        count: payments?.length || 0, 
+        payments: payments,
+        error: paymentError 
+      });
+
+      if (paymentError) {
+        console.error('❌ PAYMENTS ERROR:', paymentError);
+        setError(paymentError);
         setCurrentWeekAreas([]);
-        setError(null);
         setLoading(false);
         return;
       }
 
-      // Log valid prizes found
-      console.log('✅ useBuzzMapLogic: Valid prizes with location found:', validPrizes.map(p => p.id));
-
-      // Check for payment transactions (skip for developer only)
-      const isDeveloper = user.email === 'wikus77@hotmail.it';
-      
-      if (!isDeveloper) {
-        const { data: payments } = await supabase
-          .from('payment_transactions')
-          .select('status')
-          .eq('user_id', user.id)
-          .eq('status', 'completed')
-          .limit(1);
-
-        if (!payments || payments.length === 0) {
-          console.log('❌ useBuzzMapLogic: NO PAYMENT VERIFICATION - blocking area display for non-developer');
-          setCurrentWeekAreas([]); // NO AREAS WITHOUT PAYMENT
-          setLoading(false);
-          return;
-        }
+      // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas
+      if (!payments || payments.length === 0) {
+        console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - CLEARING ALL AREAS');
+        setCurrentWeekAreas([]);
+        setLoading(false);
+        return;
       }
 
-      // 🚨 ONLY fetch areas if active prizes exist AND payment verified
+      // 🔥 STEP 3: Fetch user map areas (only after validations passed)
       const { data, error: fetchError } = await supabase
         .from('user_map_areas')
         .select('*')

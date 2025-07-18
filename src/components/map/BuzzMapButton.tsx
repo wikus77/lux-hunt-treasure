@@ -51,28 +51,30 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO EXCEPTIONS
+      console.log('🔥 CALLING processBuzzPurchase(true, buzzMapPrice) - FORCE DEBUG');
       const result = await processBuzzPurchase(true, buzzMapPrice);
+      console.log('📊 processBuzzPurchase RESULT:', { result, type: typeof result });
       
-      if (!result) {
-        toast.error("Pagamento obbligatorio", {
-          description: "Il pagamento tramite Stripe è necessario per BUZZ MAPPA."
+      // ✅ FIXED: processBuzzPurchase opens Stripe automatically, no blocking toast needed
+      if (result) {
+        console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully');
+        toast.success('Checkout Stripe aperto!', {
+          description: "Completa il pagamento per generare l'area BUZZ."
+        });
+      } else {
+        console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
+        toast.error("Errore Stripe", {
+          description: "Impossibile aprire il checkout Stripe. Riprova."
         });
         return;
       }
       
-      console.log('✅ BUZZ MAPPA: Stripe payment completed successfully - RESET COMPLETO 17/07/2025');
+      // 🎯 NOTE: After successful Stripe redirect, user will complete payment externally
+      // Area generation will happen via webhook or manual refresh
+      console.log('🎯 BUZZ MAPPA: Stripe redirect successful, user will complete payment externally');
       
-      // Generate area after payment
-      const currentRadius = incrementGeneration();
-      const lat = mapCenter?.[0] || 41.9028;
-      const lng = mapCenter?.[1] || 12.4964;
-      
-      // Call callback
-      if (onAreaGenerated) {
-        onAreaGenerated(lat, lng, currentRadius);
-      }
-      
-      toast.success(`Area BUZZ generata! Raggio: ${currentRadius}km - RESET COMPLETO 17/07/2025`);
+      // Call the onBuzzPress callback to trigger any UI updates
+      onBuzzPress();
       
     } catch (error) {
       console.error('❌ BUZZ Map error - RESET COMPLETO 17/07/2025:', error);
