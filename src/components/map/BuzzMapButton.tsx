@@ -21,7 +21,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   mapCenter,
   onAreaGenerated
 }) => {
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
   const { buzzMapPrice, radiusKm, incrementGeneration } = useBuzzMapPricing();
   const { processBuzzPurchase, loading } = useStripePayment();
   const [isProcessing, setIsProcessing] = useState(false);
@@ -57,8 +57,57 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           description: "Completa il pagamento per generare l'area BUZZ MAPPA"
         });
         
-        // 🚨 REMOVED: No mock area creation - Stripe webhook will handle success
-        onBuzzPress();
+        // Wait for payment confirmation, then create area
+        const pollForPayment = async (sessionId: string) => {
+          let attempts = 0;
+          const maxAttempts = 30; // 5 minutes max
+          
+          const checkPayment = async () => {
+            attempts++;
+            console.log(`🔍 Checking payment status, attempt ${attempts}/${maxAttempts}`);
+            
+            try {
+              const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
+                body: { session_id: sessionId }
+              });
+              
+              if (!error && data?.success) {
+                console.log('✅ BUZZ MAPPA: Area created successfully!', data);
+                toast.success(`✅ BUZZ MAPPA creata!`, {
+                  description: `Centro: (${data.area.lat.toFixed(3)}, ${data.area.lng.toFixed(3)}) · Radius: ${data.area.radius_km}km`
+                });
+                
+                // Trigger area generation callback
+                if (onAreaGenerated && data.area) {
+                  onAreaGenerated(data.area.lat, data.area.lng, data.area.radius_km);
+                }
+                
+                onBuzzPress();
+                return true;
+              } else if (attempts < maxAttempts) {
+                setTimeout(checkPayment, 10000); // Check every 10 seconds
+              } else {
+                console.warn('❌ Payment timeout - area not created');
+                toast.error("Timeout pagamento", {
+                  description: "Controlla il pagamento e riprova se necessario"
+                });
+              }
+            } catch (checkError) {
+              console.error('Error checking payment:', checkError);
+              if (attempts < maxAttempts) {
+                setTimeout(checkPayment, 10000);
+              }
+            }
+            return false;
+          };
+          
+          setTimeout(checkPayment, 5000); // Start checking after 5 seconds
+        };
+        
+        // Extract session ID and start polling (mock for now - real webhook should handle this)
+        const mockSessionId = `mock_${Date.now()}_${user?.id}`;
+        pollForPayment(mockSessionId);
+        
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
         toast.error("Errore Stripe", {
