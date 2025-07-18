@@ -149,8 +149,23 @@ serve(async (req) => {
     const areaLat = lat2Rad * 180 / Math.PI;
     const areaLon = lon2Rad * 180 / Math.PI;
     
-    // 🔥 CALCULATE PROPER AREA RADIUS (covering distance + buffer)
-    const areaRadiusKm = Math.ceil(centerDistanceKm + 5); // Center distance + 5km buffer
+    // 🎯 USE PRICING HOOK RADIUS (sync with UI) - Get user's generation count first
+    const { data: existingAreas } = await supabaseClient
+      .from('user_map_areas')
+      .select('id')
+      .eq('user_id', user.id);
+    
+    const generationCount = existingAreas?.length || 0;
+    // Apply same formula as useBuzzMapPricing: radius = 500 * (0.7^generation_count), min 5km
+    const uiCalculatedRadius = Math.max(15, 500 * Math.pow(0.7, generationCount));
+    const areaRadiusKm = Math.round(uiCalculatedRadius);
+    
+    logStep("🎯 RADIUS SYNC WITH UI", {
+      generationCount,
+      uiCalculatedRadius,
+      finalRadiusKm: areaRadiusKm,
+      centerDistanceFromTarget: centerDistanceKm
+    });
     
     // Verify the distance (for debugging)
     const actualDistance = Math.sqrt(
@@ -164,8 +179,20 @@ serve(async (req) => {
       center_distance_from_target_km: centerDistanceKm,
       actual_distance_calculated: actualDistance,
       area_radius_km: areaRadiusKm,
-      total_coverage_km: centerDistanceKm + areaRadiusKm
+      total_coverage_km: centerDistanceKm + areaRadiusKm,
+      will_cover_target: areaRadiusKm >= centerDistanceKm ? "✅ YES" : "❌ NO - WILL EXTEND RADIUS"
     });
+    
+    // 🚨 CRITICAL FIX: Ensure target is ALWAYS covered by extending radius if needed
+    if (areaRadiusKm < centerDistanceKm + 2) {
+      const extendedRadius = Math.ceil(centerDistanceKm + 5); // Guarantee coverage + 5km buffer
+      logStep("🚨 EXTENDING RADIUS TO COVER TARGET", {
+        originalRadius: areaRadiusKm,
+        extendedRadius: extendedRadius,
+        reason: "Target not covered by original radius"
+      });
+      areaRadiusKm = extendedRadius;
+    }
 
     // Create the area with DYNAMIC radius
     const { data: newArea, error: areaError } = await supabaseClient

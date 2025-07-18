@@ -72,8 +72,8 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
               toast.error('Errore nella generazione dell\'area');
             } else {
               console.log('✅ MOCK: Area creation successful:', data);
-              toast.success('Area BUZZ MAPPA generata!', {
-                description: `Radius: ${data.area?.radius_km || 'N/A'}km vicino a ${data.target?.city || 'target'}`
+              toast.success('✅ BUZZ MAPPA creata', {
+                description: `Centro: (${data.area.lat?.toFixed(3)}, ${data.area.lng?.toFixed(3)}) · Radius: ${data.area.radius_km}km · Target: ${data.target?.city}`
               });
             }
           } catch (mockError) {

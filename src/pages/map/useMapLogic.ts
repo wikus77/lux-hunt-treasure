@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useBuzzMapPricing } from './hooks/useBuzzMapPricing';
+import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
 
 export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 

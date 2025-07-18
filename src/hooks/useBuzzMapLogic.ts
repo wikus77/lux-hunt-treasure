@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 export interface BuzzMapArea {
   id: string;
@@ -148,6 +149,13 @@ export const useBuzzMapLogic = () => {
       // Transform user areas for display with PROPER RADIUS LOGGING
       const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => {
         console.log(`🗺️ BUZZ AREA DEBUG: Area ${area.id} - radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
+        
+        // 🎯 VISUAL DEBUG: Force toast with exact coordinates
+        if (index === 0) { // Show for latest area only
+          toast.success('✅ BUZZ MAPPA loaded', {
+            description: `Centro: (${area.lat.toFixed(3)}, ${area.lng.toFixed(3)}) · Radius: ${area.radius_km}km`
+          });
+        }
         
         return {
           id: area.id,
