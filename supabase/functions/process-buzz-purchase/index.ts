@@ -32,7 +32,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // 🚨 FORCE CHECK: Validate Stripe Secret Key
+    // 🚨 CRITICAL FORCE CHECK: Validate Stripe Secret Key for BOTH BUZZ types
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     logStep("🔍 STRIPE KEY VERIFICATION", { 
       hasKey: !!stripeKey, 
@@ -103,6 +103,7 @@ serve(async (req) => {
     const successUrl = redirect_url || `${origin}/buzz?payment=success&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/buzz?payment=cancelled`;
 
+    // 🚨 FORCE IDENTICAL BEHAVIOR: Both BUZZ types must work identically
     const sessionData = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [
@@ -110,8 +111,8 @@ serve(async (req) => {
           price_data: {
             currency: currency.toLowerCase(),
             product_data: {
-              name: is_buzz_map ? 'M1SSION™ Buzz Map' : 'M1SSION™ Buzz',
-              description: is_buzz_map ? 'Unlock exclusive map area' : 'Unlock exclusive clue',
+              name: is_buzz_map ? 'M1SSION™ BUZZ MAPPA' : 'M1SSION™ BUZZ Clue',
+              description: is_buzz_map ? 'Generazione Area BUZZ personalizzata' : 'Acquisto indizio BUZZ premium',
               metadata: { 
                 mission: 'M1SSION', 
                 type: is_buzz_map ? 'buzz_map' : 'buzz_clue',
@@ -132,11 +133,29 @@ serve(async (req) => {
         type: is_buzz_map ? 'buzz_map' : 'buzz_clue',
         amount: amount.toString(),
         session_id: session_id || 'none',
-        reset_date: '2025-07-17'
+        reset_date: '2025-07-17',
+        timestamp: new Date().toISOString()
       }
     });
 
-    logStep("💳 Stripe session created - RESET COMPLETO 17/07/2025", { sessionId: sessionData.id, url: sessionData.url });
+    logStep("💳 STRIPE SESSION CREATED SUCCESSFULLY", { 
+      sessionId: sessionData.id, 
+      url: sessionData.url,
+      customer: customerId,
+      amount: amount,
+      is_buzz_map: is_buzz_map,
+      type: is_buzz_map ? 'buzz_map' : 'buzz_clue'
+    });
+
+    // 🚨 CRITICAL VALIDATION: Ensure session URL exists before proceeding
+    if (!sessionData.url) {
+      logStep("❌ CRITICAL: Stripe session.url is undefined", { 
+        sessionId: sessionData.id,
+        customerId: customerId,
+        amount: amount
+      });
+      throw new Error("Stripe checkout session URL is undefined - configuration error");
+    }
 
     // Record transaction in database
     const { error: transactionError } = await supabaseClient

@@ -25,14 +25,15 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
     return null;
   }
 
-  // 🚨 ADDITIONAL CHECK: Validate area data
+  // 🚨 TRIPLE VALIDATION: Validate area data + recent date filter
   const validAreas = areas.filter(area => 
     area.lat && area.lng && area.radius_km && 
-    area.lat !== 0 && area.lng !== 0
+    area.lat !== 0 && area.lng !== 0 &&
+    area.created_at && new Date(area.created_at) >= new Date('2025-07-17')
   );
 
   if (validAreas.length === 0) {
-    console.log('🛑 UserMapAreas: No valid areas found - returning null');
+    console.log('🛑 UserMapAreas: No valid recent areas found - returning null');
     return null;
   }
 

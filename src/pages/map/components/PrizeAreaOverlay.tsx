@@ -20,21 +20,32 @@ const PrizeAreaOverlay: React.FC = () => {
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
+        // 🚨 FORCE VALIDATION: Only show prizes with valid coordinates AND location_set
         const { data, error } = await supabase
           .from('prizes')
           .select('*')
           .eq('is_active', true)
           .not('lat', 'is', null)
-          .not('lng', 'is', null);
+          .not('lng', 'is', null)
+          .gte('created_at', '2025-07-17'); // Force filter recent prizes only
 
         if (error) {
-          console.error('Error fetching prizes:', error);
+          console.error('❌ Error fetching prizes:', error);
           return;
         }
 
-        setPrizes(data || []);
+        // 🚨 ADDITIONAL VALIDATION: Filter out invalid coordinates
+        const validPrizes = (data || []).filter(prize => 
+          prize.lat && prize.lng && 
+          prize.lat !== 0 && prize.lng !== 0 &&
+          Math.abs(prize.lat) <= 90 && Math.abs(prize.lng) <= 180
+        );
+
+        console.log('🗺️ PrizeAreaOverlay: Valid prizes found:', validPrizes.length);
+        setPrizes(validPrizes);
       } catch (err) {
-        console.error('Exception fetching prizes:', err);
+        console.error('❌ Exception fetching prizes:', err);
+        setPrizes([]); // Force empty on error
       } finally {
         setLoading(false);
       }

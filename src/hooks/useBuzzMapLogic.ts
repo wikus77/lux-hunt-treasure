@@ -60,10 +60,26 @@ export const useBuzzMapLogic = () => {
         timestamp: new Date().toISOString()
       });
 
-      // 🚨 IMMEDIATE BLOCK: Force return if no valid prizes with location exist
+      // 🚨 TRIPLE VALIDATION: Force clear areas if no valid prizes
       if (!validPrizes.length) {
-        console.warn("🛑 MAPPA BLOCCATA: nessun premio attivo con coordinate valide");
+        console.warn("🛑 MAPPA FORZATA VUOTA: nessun premio attivo con coordinate valide");
         setCurrentWeekAreas([]); // FORCE CLEAR ALL AREAS
+        setError(null);
+        setLoading(false);
+        return;
+      }
+      
+      // 🚨 ADDITIONAL CHECK: Verify payment exists for current user
+      const { data: payments } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .gte('created_at', '2025-07-17');
+        
+      if (!payments || payments.length === 0) {
+        console.warn("🛑 MAPPA BLOCCATA: nessun pagamento BUZZ completato");
+        setCurrentWeekAreas([]);
         setError(null);
         setLoading(false);
         return;
