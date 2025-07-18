@@ -52,8 +52,8 @@ export const useBuzzMapLogic = () => {
       });
 
       // 🚨 IMMEDIATE BLOCK: Force return if no active prizes exist
-      if (!activePrizes || activePrizes.length === 0) {
-        console.warn('🚨 BUZZ MAP BLOCK: NO ACTIVE PRIZES - FORCED EMPTY AREAS');
+      if (!activePrizes?.length) {
+        console.warn("🛑 Mappa bloccata: nessun premio attivo");
         setCurrentWeekAreas([]);
         setError(null);
         setLoading(false);
@@ -170,7 +170,7 @@ export const useBuzzMapLogic = () => {
 
       return () => {
         console.log('🔔 useBuzzMapLogic: Unsubscribing from real-time');
-        supabase.removeChannel(channel);
+        channel.unsubscribe();
       };
     }
   }, [user?.id]);

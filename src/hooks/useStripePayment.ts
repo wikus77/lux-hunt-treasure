@@ -74,11 +74,13 @@ export const useStripePayment = () => {
         return false;
       }
 
-      if (!data.url) {
-        console.error('❌ STRIPE: Missing checkout URL', { receivedData: data });
-        toast.error("URL checkout mancante - verificare configurazione");
-        return false;
+      if (!data?.url || typeof data.url !== "string") {
+        console.error("❌ STRIPE: Checkout URL non ricevuta", data);
+        toast.error("URL checkout mancante o errata - verificare STRIPE_SECRET_KEY");
+        throw new Error("Checkout URL mancante o errata");
       }
+      
+      console.log("✅ Stripe checkout URL ricevuta:", data.url);
 
       console.warn('✅ STRIPE SUCCESS: Opening checkout URL', { url: data.url });
       window.open(data.url, '_blank');

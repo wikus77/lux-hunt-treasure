@@ -33,9 +33,10 @@ serve(async (req) => {
     );
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY not configured");
+    if (!stripeKey || !stripeKey.startsWith("sk_")) {
+      throw new Error("STRIPE_SECRET_KEY non configurata correttamente - deve iniziare con sk_");
     }
+    logStep("🔑 STRIPE_SECRET_KEY verificata", { keyPrefix: stripeKey.substring(0, 7) });
 
     // Authenticate user
     const authHeader = req.headers.get("Authorization");
