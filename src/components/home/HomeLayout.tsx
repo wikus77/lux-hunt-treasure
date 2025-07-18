@@ -29,7 +29,7 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
   return (
     <div className="min-h-screen bg-black text-white relative overflow-x-hidden pb-16">
       <CookiebotInit />
-      <TutorialOverlay />
+      
       <div className="relative z-20">
         {notificationsBannerOpen && (
           <motion.div

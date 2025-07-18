@@ -66,10 +66,28 @@ export const useAuth = () => {
   };
 
   const logout = async (): Promise<void> => {
-    console.log('🚪 LOGOUT STARTING');
+    console.log('🚪 LOGOUT STARTING - RESET COMPLETO 17/07/2025');
+    
+    // 🧹 LOGOUT CACHE CLEANUP - Clear all storage and reset state
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    // Reset any existing state stores
+    try {
+      // Dynamically reset any map store if it exists 
+      const mapStoreModule = await import("@/stores/mapStore").catch(() => null);
+      if (mapStoreModule?.useMapStore) {
+        // Get the store instance and reset it
+        const store = mapStoreModule.useMapStore.getState();
+        store.resetMapState?.();
+      }
+    } catch (e) {
+      console.log("⚠️ Map store not found, skipping reset");
+    }
+    
     await supabase.auth.signOut();
     await sessionManager.clearSession();
-    console.log('✅ LOGOUT COMPLETE');
+    console.log('✅ LOGOUT COMPLETED WITH CACHE RESET');
   };
 
   const resetPassword = async (email: string): Promise<{ success: boolean; error?: string }> => {
