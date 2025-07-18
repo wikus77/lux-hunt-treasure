@@ -51,33 +51,28 @@ serve(async (req) => {
 
     logStep("📦 Processing session", { session_id });
 
-    // 🔥 MOCK MODE: Skip payment validation if mock session
-    let payment = null;
-    if (session_id.startsWith('mock_session_')) {
-      logStep("🎭 MOCK MODE: Bypassing payment validation", { session_id });
-      payment = { id: 'mock', amount: 29.99, description: 'MOCK BUZZ MAP' };
-    } else {
-      // Check if this is a BUZZ MAP payment (accept pending for mock testing)
-      const { data: paymentData, error: paymentError } = await supabaseClient
-        .from('payment_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('provider_transaction_id', session_id)
-        .ilike('description', '%Buzz Map%')
-        .single();
+    // 🔥 STRICT PAYMENT VALIDATION: Only succeed status allowed
+    const { data: paymentData, error: paymentError } = await supabaseClient
+      .from('payment_transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('provider_transaction_id', session_id)
+      .eq('status', 'succeeded') // ONLY succeeded payments
+      .ilike('description', '%Buzz Map%')
+      .single();
 
-      if (paymentError || !paymentData) {
-        logStep("❌ No successful BUZZ MAP payment found", { session_id, error: paymentError?.message });
-        return new Response(JSON.stringify({ 
-          success: false, 
-          error: "No successful BUZZ MAP payment found" 
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 404,
-        });
-      }
-      payment = paymentData;
+    if (paymentError || !paymentData) {
+      logStep("❌ No successful BUZZ MAP payment found", { session_id, error: paymentError?.message });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "No successful BUZZ MAP payment found for this session" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
     }
+    
+    const payment = paymentData;
 
     logStep("💳 BUZZ MAP payment found", { payment_id: payment.id, amount: payment.amount });
 
@@ -157,8 +152,8 @@ serve(async (req) => {
     
     const generationCount = existingAreas?.length || 0;
     // Apply same formula as useBuzzMapPricing: radius = 500 * (0.7^generation_count), min 5km
-    const uiCalculatedRadius = Math.max(15, 500 * Math.pow(0.7, generationCount));
-    const areaRadiusKm = Math.round(uiCalculatedRadius);
+    const uiCalculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
+    let areaRadiusKm = Math.round(uiCalculatedRadius);
     
     logStep("🎯 RADIUS SYNC WITH UI", {
       generationCount,
@@ -185,14 +180,27 @@ serve(async (req) => {
     
     // 🚨 CRITICAL FIX: Ensure target is ALWAYS covered by extending radius if needed
     if (areaRadiusKm < centerDistanceKm + 2) {
-      const extendedRadius = Math.ceil(centerDistanceKm + 5); // Guarantee coverage + 5km buffer
+      areaRadiusKm = Math.ceil(centerDistanceKm + 5); // Guarantee coverage + 5km buffer
       logStep("🚨 EXTENDING RADIUS TO COVER TARGET", {
-        originalRadius: areaRadiusKm,
-        extendedRadius: extendedRadius,
+        originalRadius: uiCalculatedRadius,
+        extendedRadius: areaRadiusKm,
         reason: "Target not covered by original radius"
       });
-      areaRadiusKm = extendedRadius;
     }
+    
+    // Log to admin_logs for debugging
+    await supabaseClient.from('admin_logs').insert({
+      event_type: 'buzz_map_created',
+      user_id: user.id,
+      context: JSON.stringify({
+        session_id,
+        target_city: activeTarget.city,
+        area_center: { lat: areaLat, lng: areaLon },
+        radius_km: areaRadiusKm,
+        generation_count: generationCount
+      }),
+      note: `BUZZ MAP area created for ${activeTarget.city}`
+    });
 
     // Create the area with DYNAMIC radius
     const { data: newArea, error: areaError } = await supabaseClient

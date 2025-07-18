@@ -27,7 +27,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleBuzzMapPress = async () => {
-    console.log('🎯 BUZZ MAPPA PRESSED - MOCK MODE', {
+    console.log('🎯 BUZZ MAPPA PRESSED - REAL PAYMENT MODE', {
       isAuthenticated,
       buzzMapPrice,
       radiusKm,
@@ -47,48 +47,23 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // 🔥 MOCK STRIPE: Open Stripe checkout and immediately trigger area creation
-      console.log('💳 BUZZ MAPPA: Opening Stripe checkout in MOCK mode');
+      // 🔥 REAL STRIPE: Open Stripe checkout - NO area creation until payment succeeds
+      console.log('💳 BUZZ MAPPA: Opening Stripe checkout - REAL PAYMENT REQUIRED');
       const result = await processBuzzPurchase(true, buzzMapPrice);
       
       if (result) {
         console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully');
         toast.success("Checkout Stripe aperto", {
-          description: "Area BUZZ MAPPA in generazione..."
+          description: "Completa il pagamento per generare l'area BUZZ MAPPA"
         });
         
-        // 🚨 MOCK: Simulate payment success after 3 seconds
-        setTimeout(async () => {
-          try {
-            console.log('🔥 MOCK: Triggering area creation after 3s delay');
-            
-            // Call handle-buzz-payment-success with mock session
-            const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
-              body: { session_id: 'mock_session_' + Date.now() }
-            });
-            
-            if (error) {
-              console.error('❌ MOCK: Area creation failed:', error);
-              toast.error('Errore nella generazione dell\'area');
-            } else {
-              console.log('✅ MOCK: Area creation successful:', data);
-              toast.success('✅ BUZZ MAPPA creata', {
-                description: `Centro: (${data.area.lat?.toFixed(3)}, ${data.area.lng?.toFixed(3)}) · Radius: ${data.area.radius_km}km · Target: ${data.target?.city}`
-              });
-            }
-          } catch (mockError) {
-            console.error('❌ MOCK: Exception:', mockError);
-            toast.error('Errore nella simulazione pagamento');
-          }
-        }, 3000);
-        
+        // 🚨 REMOVED: No mock area creation - Stripe webhook will handle success
         onBuzzPress();
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
         toast.error("Errore Stripe", {
           description: "Impossibile aprire il checkout Stripe. Riprova."
         });
-        return;
       }
       
     } catch (error) {

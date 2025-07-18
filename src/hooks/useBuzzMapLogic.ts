@@ -79,12 +79,12 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for BUZZ MAP payments (include pending for mock testing)
+      // 🔥 STEP 2: Check for BUZZ MAP payments (ONLY succeeded)
       const { data: payments, error: paymentError } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['completed', 'succeeded', 'pending']) // Include pending for mock
+        .eq('status', 'succeeded') // ONLY succeeded payments
         .or('description.ilike.%Buzz Map%,description.ilike.%BUZZ MAPPA%') // Match all variants
         .gte('created_at', '2025-07-17T00:00:00Z');
 
@@ -150,12 +150,7 @@ export const useBuzzMapLogic = () => {
       const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => {
         console.log(`🗺️ BUZZ AREA DEBUG: Area ${area.id} - radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
         
-        // 🎯 VISUAL DEBUG: Force toast with exact coordinates
-        if (index === 0) { // Show for latest area only
-          toast.success('✅ BUZZ MAPPA loaded', {
-            description: `Centro: (${area.lat.toFixed(3)}, ${area.lng.toFixed(3)}) · Radius: ${area.radius_km}km`
-          });
-        }
+        // 🚨 REMOVED: No duplicate toast here - only from edge function after payment
         
         return {
           id: area.id,
