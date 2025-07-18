@@ -81,9 +81,15 @@ export const useStripePayment = () => {
       }
       
       console.log("✅ Stripe checkout URL ricevuta:", data.url);
+      console.log('[DEBUG] sessionUrl:', data.url, 'opening window...');
 
       console.warn('✅ STRIPE SUCCESS: Opening checkout URL', { url: data.url });
-      window.open(data.url, '_blank');
+      
+      // 🚨 CRITICO: Force window.open con logging dettagliato
+      console.log('[DEBUG] About to call window.open with URL:', data.url);
+      const newWindow = window.open(data.url, '_blank');
+      console.log('[DEBUG] window.open result:', !!newWindow);
+      
       toast.success('Apertura checkout Stripe...');
       return true;
 

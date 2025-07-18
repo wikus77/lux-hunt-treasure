@@ -52,7 +52,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO EXCEPTIONS
       console.log('🔥 CALLING processBuzzPurchase(true, buzzMapPrice) - FORCE DEBUG');
+      console.log('[DEBUG] buzzMapPrice:', buzzMapPrice, 'type:', typeof buzzMapPrice);
       const result = await processBuzzPurchase(true, buzzMapPrice);
+      console.log('[DEBUG] processBuzzPurchase RESULT:', { result, type: typeof result });
       console.log('📊 processBuzzPurchase RESULT:', { result, type: typeof result });
       
       // ✅ FIXED: processBuzzPurchase opens Stripe automatically, no toast until payment confirmed
@@ -70,6 +72,13 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       // 🎯 NOTE: After successful Stripe redirect, user will complete payment externally
       // Area generation will happen via webhook or manual refresh
       console.log('🎯 BUZZ MAPPA: Stripe redirect successful, user will complete payment externally');
+      
+      // 🎯 CALLBACK: Trigger area generation callback for map zoom
+      if (onAreaGenerated) {
+        // Use default coordinates for now, will be updated after payment
+        onAreaGenerated(37.3156, 13.5839, 15000); // AGRIGENTO coordinates + 15km radius
+        console.log('🗺️ BUZZ MAPPA: onAreaGenerated callback triggered for map zoom');
+      }
       
       // Call the onBuzzPress callback to trigger any UI updates
       onBuzzPress();

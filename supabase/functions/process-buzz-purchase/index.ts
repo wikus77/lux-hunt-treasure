@@ -166,7 +166,7 @@ serve(async (req) => {
         currency,
         provider: 'stripe',
         provider_transaction_id: sessionData.id,
-        status: 'pending',
+        status: 'pending', // Will be updated by webhook to 'succeeded'
         description: is_buzz_map ? 'M1SSION™ Buzz Map Purchase - RESET COMPLETO 17/07/2025' : 'M1SSION™ Buzz Purchase - RESET COMPLETO 17/07/2025'
       });
 
@@ -202,14 +202,27 @@ serve(async (req) => {
       logStep("🗺️ BUZZ MAP: Creating user_map_areas entry - RESET COMPLETO 17/07/2025");
       
       // Prendi il primo target attivo per le coordinate
-      const { data: activeTarget } = await supabaseClient
+      const { data: activeTarget, error: targetError } = await supabaseClient
         .from('buzz_game_targets')
-        .select('lat, lon')
+        .select('lat, lon, city, address')
         .eq('is_active', true)
         .limit(1)
         .single();
 
-      if (activeTarget) {
+      logStep("🎯 ACTIVE TARGET QUERY RESULT", { 
+        found: !!activeTarget, 
+        target: activeTarget,
+        error: targetError?.message || null
+      });
+
+      if (activeTarget && !targetError) {
+        logStep("🗺️ INSERTING USER_MAP_AREAS ENTRY", { 
+          user_id, 
+          lat: activeTarget.lat, 
+          lng: activeTarget.lon, 
+          radius_km: 15 
+        });
+        
         const { error: areaError } = await supabaseClient
           .from('user_map_areas')
           .insert({
@@ -232,6 +245,8 @@ serve(async (req) => {
       } else {
         logStep("⚠️ No active target found for BUZZ MAP area creation - RESET COMPLETO 17/07/2025");
       }
+    } else {
+      logStep("ℹ️ Regular BUZZ purchase - no map area creation needed - RESET COMPLETO 17/07/2025");
     }
 
     // 🚨 CRITICAL: Verify sessionData.url exists before returning

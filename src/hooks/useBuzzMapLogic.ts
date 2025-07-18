@@ -89,8 +89,9 @@ export const useBuzzMapLogic = () => {
 
       console.log('💳 BUZZ MAP PAYMENTS CHECK:', { 
         count: payments?.length || 0, 
-        payments: payments,
-        error: paymentError 
+        payments: payments?.map(p => ({ id: p.id, status: p.status, amount: p.amount, description: p.description })),
+        error: paymentError,
+        query: "Looking for ['completed', 'succeeded', 'pending'] with 'Buzz Map' description since 2025-07-17"
       });
 
       if (paymentError) {
@@ -104,6 +105,7 @@ export const useBuzzMapLogic = () => {
       // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas
       if (!payments || payments.length === 0) {
         console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - CLEARING ALL AREAS');
+        console.warn('[DEBUG] Payment requirement failed - no areas will be shown until payment is completed');
         setCurrentWeekAreas([]);
         setLoading(false);
         return;
