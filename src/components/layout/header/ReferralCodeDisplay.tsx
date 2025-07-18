@@ -10,7 +10,7 @@ const ReferralCodeDisplay: React.FC = () => {
     return (
       <div className="flex items-center space-x-2">
         <div className="w-2 h-2 bg-slate-600 rounded-full animate-pulse"></div>
-        <span className="text-sm text-slate-500 font-mono">Loading...</span>
+        <span className="text-sm text-slate-500 font-orbitron">Loading...</span>
       </div>
     );
   }
@@ -23,7 +23,7 @@ const ReferralCodeDisplay: React.FC = () => {
       className="flex items-center space-x-2 cursor-pointer"
       onClick={copyReferralCode}
     >
-      {/* Pallino azzurro lampeggiante */}
+      {/* Pallino azzurro lampeggiante neon */}
       <motion.div
         className="w-2 h-2 bg-[#00D1FF] rounded-full"
         animate={{
@@ -40,11 +40,11 @@ const ReferralCodeDisplay: React.FC = () => {
         }}
       />
       
-      {/* Referral Code */}
+      {/* Referral Code - Stesso font della scritta M1SSION™ */}
       <span 
-        className="text-sm font-mono text-white/90 hover:text-[#00D1FF] transition-colors duration-200"
+        className="text-sm font-orbitron font-bold text-white hover:text-[#00D1FF] transition-colors duration-200"
         style={{
-          textShadow: "0 0 5px rgba(0, 209, 255, 0.3)"
+          textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
         }}
       >
         {referralCode}
