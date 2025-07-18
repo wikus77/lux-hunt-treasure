@@ -1616,6 +1616,10 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: undefined
       }
+      reset_user_mission_full: {
+        Args: { user_id_input: string }
+        Returns: undefined
+      }
       setup_developer_user: {
         Args: { uid: string }
         Returns: undefined
