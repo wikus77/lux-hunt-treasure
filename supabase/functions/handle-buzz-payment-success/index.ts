@@ -147,6 +147,17 @@ serve(async (req) => {
     
     logStep("🗺️ Target coordinates", { targetLat, targetLon, city: activeTarget.city });
     
+    // 🎯 CRITICAL FIX: UNIFIED radius formula - exactly same as UI
+    const { data: existingAreas } = await supabaseClient
+      .from('user_map_areas')
+      .select('id')
+      .eq('user_id', user.id);
+    
+    const generationCount = existingAreas?.length || 0;
+    // IDENTICAL formula to useBuzzMapPricing hook: radius = max(5, 500 * (0.7^generation_count))
+    const uiCalculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
+    let areaRadiusKm = Math.round(uiCalculatedRadius);
+    
     // 🎯 CRITICAL FIX: Generate area center ensuring GUARANTEED Agrigento coverage
     const centerDistanceKm = Math.min(areaRadiusKm * 0.6, 15); // Center within 60% of radius, max 15km
     const bearingRad = Math.random() * 2 * Math.PI;
@@ -169,17 +180,6 @@ serve(async (req) => {
     
     const areaLat = lat2Rad * 180 / Math.PI;
     const areaLon = lon2Rad * 180 / Math.PI;
-    
-    // 🎯 CRITICAL FIX: UNIFIED radius formula - exactly same as UI
-    const { data: existingAreas } = await supabaseClient
-      .from('user_map_areas')
-      .select('id')
-      .eq('user_id', user.id);
-    
-    const generationCount = existingAreas?.length || 0;
-    // IDENTICAL formula to useBuzzMapPricing hook: radius = max(5, 500 * (0.7^generation_count))
-    const uiCalculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
-    let areaRadiusKm = Math.round(uiCalculatedRadius);
     
     logStep("🎯 RADIUS SYNC WITH UI", {
       generationCount,
