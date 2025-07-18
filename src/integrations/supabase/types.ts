@@ -1259,6 +1259,63 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mission_status: {
+        Row: {
+          buzz_counter: number | null
+          clues_found: number | null
+          map_area_generated: boolean | null
+          map_radius_km: number | null
+          mission_days_remaining: number | null
+          mission_days_total: number | null
+          mission_progress_percent: number | null
+          mission_started_at: string | null
+          mission_status: string | null
+          prize_city: string | null
+          prize_coordinates: Json | null
+          prize_name: string | null
+          prize_street: string | null
+          total_clues: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          buzz_counter?: number | null
+          clues_found?: number | null
+          map_area_generated?: boolean | null
+          map_radius_km?: number | null
+          mission_days_remaining?: number | null
+          mission_days_total?: number | null
+          mission_progress_percent?: number | null
+          mission_started_at?: string | null
+          mission_status?: string | null
+          prize_city?: string | null
+          prize_coordinates?: Json | null
+          prize_name?: string | null
+          prize_street?: string | null
+          total_clues?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          buzz_counter?: number | null
+          clues_found?: number | null
+          map_area_generated?: boolean | null
+          map_radius_km?: number | null
+          mission_days_remaining?: number | null
+          mission_days_total?: number | null
+          mission_progress_percent?: number | null
+          mission_started_at?: string | null
+          mission_status?: string | null
+          prize_city?: string | null
+          prize_coordinates?: Json | null
+          prize_name?: string | null
+          prize_street?: string | null
+          total_clues?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_notifications: {
         Row: {
           created_at: string | null
@@ -1554,6 +1611,10 @@ export type Database = {
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
+      }
+      reset_user_mission: {
+        Args: { user_id_input: string }
+        Returns: undefined
       }
       setup_developer_user: {
         Args: { uid: string }
