@@ -73,12 +73,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       // Area generation will happen via webhook or manual refresh
       console.log('🎯 BUZZ MAPPA: Stripe redirect successful, user will complete payment externally');
       
-      // 🎯 CALLBACK: Trigger area generation callback for map zoom
-      if (onAreaGenerated) {
-        // Use default coordinates for now, will be updated after payment
-        onAreaGenerated(37.3156, 13.5839, 15000); // AGRIGENTO coordinates + 15km radius
-        console.log('🗺️ BUZZ MAPPA: onAreaGenerated callback triggered for map zoom');
-      }
+      // 🎯 NO IMMEDIATE CALLBACK: Area will be generated only after successful payment
+      // onAreaGenerated will be called automatically by useBuzzMapLogic after payment completion
+      console.log('🎯 BUZZ MAPPA: Stripe redirect successful, area will be generated after payment completion');
       
       // Call the onBuzzPress callback to trigger any UI updates
       onBuzzPress();

@@ -78,20 +78,52 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for valid user areas (CRITICAL FIX: Skip payment check temporarily for testing)
+      // 🔥 STEP 2: Check for completed BUZZ MAP payments (RESTORED PAYMENT CHECKS)
+      const { data: payments, error: paymentError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('status', ['completed', 'succeeded']) // ONLY completed payments
+        .ilike('description', '%M1SSION™ Buzz Map%') // EXACT match for new description format
+        .gte('created_at', '2025-07-17T00:00:00Z');
+
+      console.log('💳 BUZZ MAP PAYMENTS CHECK (RESTORED):', { 
+        count: payments?.length || 0, 
+        payments: payments?.map(p => ({ id: p.id, status: p.status, amount: p.amount, description: p.description })),
+        error: paymentError,
+        query: "Looking for completed 'M1SSION™ Buzz Map' payments since 2025-07-17"
+      });
+
+      if (paymentError) {
+        console.error('❌ PAYMENTS ERROR:', paymentError);
+        setError(paymentError);
+        setCurrentWeekAreas([]);
+        setLoading(false);
+        return;
+      }
+
+      // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas
+      if (!payments || payments.length === 0) {
+        console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - CLEARING ALL AREAS');
+        console.warn('[PAYMENT VALIDATION] No valid payments found - areas blocked until payment completed');
+        setCurrentWeekAreas([]);
+        setLoading(false);
+        return;
+      }
+
+      // 🔥 STEP 3: Fetch user map areas (only after payment validation passed)
       const { data: userAreas, error: userAreasError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
         .gte('created_at', '2025-07-17T00:00:00.000Z')
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .order('created_at', { ascending: false });
 
-      console.log('🗺️ USER MAP AREAS CHECK:', { 
+      console.log('🗺️ USER MAP AREAS CHECK (POST-PAYMENT):', { 
         count: userAreas?.length || 0, 
         areas: userAreas?.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius_km: a.radius_km, created_at: a.created_at })),
         error: userAreasError,
-        query: "Looking for user_map_areas since 2025-07-17"
+        query: "Post-payment validation - fetching user_map_areas"
       });
 
       if (userAreasError) {
@@ -102,9 +134,9 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      // 🚨 CRITICAL: Check if user has map areas - if yes, show them regardless of payment status (testing mode)
+      // 🚨 CRITICAL: Check if user has map areas after payment validation
       if (!userAreas || userAreas.length === 0) {
-        console.warn('🚨 NO USER MAP AREAS FOUND');
+        console.warn('🚨 NO USER MAP AREAS FOUND (POST-PAYMENT VALIDATION)');
         setCurrentWeekAreas([]);
         setLoading(false);
         return;

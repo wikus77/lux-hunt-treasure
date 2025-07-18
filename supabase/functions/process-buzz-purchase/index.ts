@@ -197,11 +197,11 @@ serve(async (req) => {
       logStep("⚠️ Buzz log error - RESET COMPLETO 17/07/2025", { error: buzzLogError.message });
     }
 
-    // 🚨 CRITICO: Se è BUZZ MAP, crea automaticamente l'area user_map_areas
+    // 🚨 CRITICO: Se è BUZZ MAP, crea area con COORDINATE CORRETTE dal target attivo
     if (is_buzz_map) {
-      logStep("🗺️ BUZZ MAP: Creating user_map_areas entry - RESET COMPLETO 17/07/2025");
+      logStep("🗺️ BUZZ MAP: Creating user_map_areas with CORRECT coordinates - RESET COMPLETO 17/07/2025");
       
-      // Prendi il primo target attivo per le coordinate
+      // Prendi il primo target attivo per le coordinate CORRETTE
       const { data: activeTarget, error: targetError } = await supabaseClient
         .from('buzz_game_targets')
         .select('lat, lon, city, address')
@@ -216,10 +216,30 @@ serve(async (req) => {
       });
 
       if (activeTarget && !targetError) {
-        logStep("🗺️ INSERTING USER_MAP_AREAS ENTRY", { 
+        // 🎯 LOGICA M1SSION™: Area attorno al target, NON CENTRATA su di esso
+        // Genera coordinate casuali in un raggio di 5-15km dal target per nascondere la posizione esatta
+        const targetLat = parseFloat(activeTarget.lat.toString());
+        const targetLon = parseFloat(activeTarget.lon.toString());
+        
+        // Distanza casuale dal target (5-15 km)
+        const distanceKm = 5 + Math.random() * 10;
+        // Angolo casuale in radianti
+        const bearingRad = Math.random() * 2 * Math.PI;
+        
+        // Calcolo coordinate offset usando formula haversine approssimata
+        const deltaLat = (distanceKm / 111.32) * Math.cos(bearingRad);
+        const deltaLon = (distanceKm / (111.32 * Math.cos(targetLat * Math.PI / 180))) * Math.sin(bearingRad);
+        
+        const areaLat = targetLat + deltaLat;
+        const areaLon = targetLon + deltaLon;
+        
+        logStep("🗺️ INSERTING USER_MAP_AREAS WITH CORRECT COORDINATES", { 
           user_id, 
-          lat: activeTarget.lat, 
-          lng: activeTarget.lon, 
+          target_lat: targetLat,
+          target_lon: targetLon,
+          area_lat: areaLat, 
+          area_lon: areaLon, 
+          distance_from_target_km: distanceKm,
           radius_km: 15 
         });
         
@@ -227,8 +247,8 @@ serve(async (req) => {
           .from('user_map_areas')
           .insert({
             user_id,
-            lat: activeTarget.lat,
-            lng: activeTarget.lon,
+            lat: areaLat, // ✅ COORDINATE CORRETTE: Agrigento area, non Roma
+            lng: areaLon, // ✅ COORDINATE CORRETTE: Agrigento area, non Roma
             radius_km: 15, // Raggio standard BUZZ MAP
             week: 1
           });
@@ -236,9 +256,12 @@ serve(async (req) => {
         if (areaError) {
           logStep("⚠️ Area creation error - RESET COMPLETO 17/07/2025", { error: areaError.message });
         } else {
-          logStep("✅ BUZZ MAP area created successfully - RESET COMPLETO 17/07/2025", { 
-            lat: activeTarget.lat, 
-            lng: activeTarget.lon,
+          logStep("✅ BUZZ MAP area created successfully with CORRECT COORDINATES - RESET COMPLETO 17/07/2025", { 
+            target_city: activeTarget.city,
+            target_lat: targetLat, 
+            target_lon: targetLon,
+            area_lat: areaLat,
+            area_lon: areaLon,
             radius_km: 15
           });
         }
