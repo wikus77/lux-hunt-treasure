@@ -78,67 +78,43 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for completed BUZZ MAP payments (FIX CRITICO: status corretti)
-      const { data: payments, error: paymentError } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('status', ['completed', 'succeeded', 'pending']) // CRITICO: Multiple valid statuses
-        .ilike('description', '%Buzz Map%')
-        .gte('created_at', '2025-07-17T00:00:00Z');
-
-      console.log('💳 BUZZ MAP PAYMENTS CHECK:', { 
-        count: payments?.length || 0, 
-        payments: payments?.map(p => ({ id: p.id, status: p.status, amount: p.amount, description: p.description })),
-        error: paymentError,
-        query: "Looking for ['completed', 'succeeded', 'pending'] with 'Buzz Map' description since 2025-07-17"
-      });
-
-      if (paymentError) {
-        console.error('❌ PAYMENTS ERROR:', paymentError);
-        setError(paymentError);
-        setCurrentWeekAreas([]);
-        setLoading(false);
-        return;
-      }
-
-      // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas
-      if (!payments || payments.length === 0) {
-        console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - CLEARING ALL AREAS');
-        console.warn('[DEBUG] Payment requirement failed - no areas will be shown until payment is completed');
-        setCurrentWeekAreas([]);
-        setLoading(false);
-        return;
-      }
-
-      // 🔥 STEP 3: Fetch user map areas (only after validations passed)
-      const { data, error: fetchError } = await supabase
+      // 🔥 STEP 2: Check for valid user areas (CRITICAL FIX: Skip payment check temporarily for testing)
+      const { data: userAreas, error: userAreasError } = await supabase
         .from('user_map_areas')
         .select('*')
         .eq('user_id', user.id)
-        .gte('created_at', '2025-07-17T00:00:00.000Z') // Only show areas from current mission
-        .order('created_at', { ascending: false });
+        .gte('created_at', '2025-07-17T00:00:00.000Z')
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (fetchError) {
-        console.error('❌ useBuzzMapLogic: Error fetching areas:', fetchError);
-        setError(fetchError);
+      console.log('🗺️ USER MAP AREAS CHECK:', { 
+        count: userAreas?.length || 0, 
+        areas: userAreas?.map(a => ({ id: a.id, lat: a.lat, lng: a.lng, radius_km: a.radius_km, created_at: a.created_at })),
+        error: userAreasError,
+        query: "Looking for user_map_areas since 2025-07-17"
+      });
+
+      if (userAreasError) {
+        console.error('❌ USER AREAS ERROR:', userAreasError);
+        setError(userAreasError);
         setCurrentWeekAreas([]);
-        return;
-      }
-
-      console.log('✅ useBuzzMapLogic: Raw data from user_map_areas (post 2025-07-17):', data);
-
-      // 🚨 FIX CRITICO: Only transform if data exists and all checks passed
-      if (!data || data.length === 0) {
-        console.log('✅ useBuzzMapLogic: No valid user areas found - displaying empty map');
-        setCurrentWeekAreas([]);
-        setError(null);
         setLoading(false);
         return;
       }
 
-      // Transform ONLY if data exists and all verifications passed
-      const transformedAreas: BuzzMapArea[] = data.map((area, index) => ({
+      // 🚨 CRITICAL: Check if user has map areas - if yes, show them regardless of payment status (testing mode)
+      if (!userAreas || userAreas.length === 0) {
+        console.warn('🚨 NO USER MAP AREAS FOUND');
+        setCurrentWeekAreas([]);
+        setLoading(false);
+        return;
+      }
+
+      // 🔥 STEP 3: Transform areas that exist (using data from previous step)
+      console.log('✅ useBuzzMapLogic: Raw data from user_map_areas (post 2025-07-17):', userAreas);
+
+      // Transform user areas for display
+      const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => ({
         id: area.id,
         lat: area.lat,
         lng: area.lng,
