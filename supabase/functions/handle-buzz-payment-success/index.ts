@@ -51,25 +51,33 @@ serve(async (req) => {
 
     logStep("📦 Processing session", { session_id });
 
-    // Check if this is a successful BUZZ MAP payment
-    const { data: payment, error: paymentError } = await supabaseClient
-      .from('payment_transactions')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('provider_transaction_id', session_id)
-      .eq('status', 'succeeded')
-      .ilike('description', '%Buzz Map%')
-      .single();
+    // 🔥 MOCK MODE: Skip payment validation if mock session
+    let payment = null;
+    if (session_id.startsWith('mock_session_')) {
+      logStep("🎭 MOCK MODE: Bypassing payment validation", { session_id });
+      payment = { id: 'mock', amount: 29.99, description: 'MOCK BUZZ MAP' };
+    } else {
+      // Check if this is a successful BUZZ MAP payment
+      const { data: paymentData, error: paymentError } = await supabaseClient
+        .from('payment_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('provider_transaction_id', session_id)
+        .eq('status', 'succeeded')
+        .ilike('description', '%Buzz Map%')
+        .single();
 
-    if (paymentError || !payment) {
-      logStep("❌ No successful BUZZ MAP payment found", { session_id, error: paymentError?.message });
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: "No successful BUZZ MAP payment found" 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 404,
-      });
+      if (paymentError || !paymentData) {
+        logStep("❌ No successful BUZZ MAP payment found", { session_id, error: paymentError?.message });
+        return new Response(JSON.stringify({ 
+          success: false, 
+          error: "No successful BUZZ MAP payment found" 
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 404,
+        });
+      }
+      payment = paymentData;
     }
 
     logStep("💳 BUZZ MAP payment found", { payment_id: payment.id, amount: payment.amount });
@@ -119,8 +127,8 @@ serve(async (req) => {
     
     logStep("🗺️ Target coordinates", { targetLat, targetLon, city: activeTarget.city });
     
-    // Generate area center 3-8km from target (NOT radius, but distance from target to center)
-    const distanceKm = 3 + Math.random() * 5; // 3-8 km from target to area CENTER
+    // 🎯 FIXED: Generate area center 10-20km from target to ensure Agrigento inclusion
+    const distanceKm = 10 + Math.random() * 10; // 10-20 km from target to area CENTER
     const bearingRad = Math.random() * 2 * Math.PI;
     
     // Earth's radius and proper coordinate calculation

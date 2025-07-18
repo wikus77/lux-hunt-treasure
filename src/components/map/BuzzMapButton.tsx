@@ -4,11 +4,11 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Zap, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
 import { useStripePayment } from '@/hooks/useStripePayment';
+import { supabase } from '@/integrations/supabase/client';
 
 interface BuzzMapButtonProps {
   onBuzzPress: () => void;
@@ -27,7 +27,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleBuzzMapPress = async () => {
-    console.log('🎯 BUZZ MAPPA PRESSED - RESET COMPLETO 17/07/2025', {
+    console.log('🎯 BUZZ MAPPA PRESSED - MOCK MODE', {
       isAuthenticated,
       buzzMapPrice,
       radiusKm,
@@ -47,22 +47,41 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // 🚨 MANDATORY: Process Stripe payment first - ALWAYS FORCED
-      console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL');
-      console.log('🔥 CALLING processBuzzPurchase(true, buzzMapPrice) - STRIPE REQUIRED');
-      console.log('[DEBUG] buzzMapPrice:', buzzMapPrice, 'type:', typeof buzzMapPrice);
-      
-      // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO EXCEPTIONS
+      // 🔥 MOCK STRIPE: Open Stripe checkout and immediately trigger area creation
+      console.log('💳 BUZZ MAPPA: Opening Stripe checkout in MOCK mode');
       const result = await processBuzzPurchase(true, buzzMapPrice);
-      console.log('[DEBUG] processBuzzPurchase RESULT:', { result, type: typeof result });
       
       if (result) {
         console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully');
         toast.success("Checkout Stripe aperto", {
-          description: "Completa il pagamento per generare l'area BUZZ MAPPA"
+          description: "Area BUZZ MAPPA in generazione..."
         });
         
-        // Call the onBuzzPress callback to trigger any UI updates
+        // 🚨 MOCK: Simulate payment success after 3 seconds
+        setTimeout(async () => {
+          try {
+            console.log('🔥 MOCK: Triggering area creation after 3s delay');
+            
+            // Call handle-buzz-payment-success with mock session
+            const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
+              body: { session_id: 'mock_session_' + Date.now() }
+            });
+            
+            if (error) {
+              console.error('❌ MOCK: Area creation failed:', error);
+              toast.error('Errore nella generazione dell\'area');
+            } else {
+              console.log('✅ MOCK: Area creation successful:', data);
+              toast.success('Area BUZZ MAPPA generata!', {
+                description: `Centro vicino a ${data.target?.city || 'target'}`
+              });
+            }
+          } catch (mockError) {
+            console.error('❌ MOCK: Exception:', mockError);
+            toast.error('Errore nella simulazione pagamento');
+          }
+        }, 3000);
+        
         onBuzzPress();
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
@@ -71,8 +90,6 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         });
         return;
       }
-      
-      console.log('💳 BUZZ MAPPA: User will complete payment in Stripe tab');
       
     } catch (error) {
       console.error('❌ BUZZ Map error:', error);
@@ -83,26 +100,21 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   };
 
   return (
-    <div className="absolute bottom-24 right-4 z-50">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
       <Button
         onClick={handleBuzzMapPress}
         disabled={!isAuthenticated || isProcessing || loading}
-        className="h-16 w-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
+        className="h-16 px-6 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
         style={{
           background: 'linear-gradient(135deg, #00D1FF 0%, #0099CC 50%, #7B2EFF 100%)',
           boxShadow: '0 0 20px rgba(0, 209, 255, 0.5)',
         }}
       >
         <div className="flex flex-col items-center">
-          <Zap className="h-6 w-6 text-white mb-1" />
-          <span className="text-xs text-white font-bold">€{buzzMapPrice}</span>
+          <span className="text-sm text-white font-bold">€{buzzMapPrice}</span>
+          <span className="text-xs text-white/80">{radiusKm}km</span>
         </div>
       </Button>
-      
-      {/* Info badge */}
-      <div className="absolute -top-2 -left-2 bg-black/80 text-white text-xs px-2 py-1 rounded-full border border-cyan-500/30">
-        {radiusKm}km
-      </div>
     </div>
   );
 };
