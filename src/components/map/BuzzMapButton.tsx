@@ -73,7 +73,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
             } else {
               console.log('✅ MOCK: Area creation successful:', data);
               toast.success('Area BUZZ MAPPA generata!', {
-                description: `Centro vicino a ${data.target?.city || 'target'}`
+                description: `Radius: ${data.area?.radius_km || 'N/A'}km vicino a ${data.target?.city || 'target'}`
               });
             }
           } catch (mockError) {
@@ -112,7 +112,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       >
         <div className="flex flex-col items-center">
           <span className="text-sm text-white font-bold">€{buzzMapPrice}</span>
-          <span className="text-xs text-white/80">{radiusKm}km</span>
+          <span className="text-xs text-white/80">BUZZ MAPPA</span>
         </div>
       </Button>
     </div>

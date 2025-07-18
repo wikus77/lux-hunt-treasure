@@ -145,22 +145,26 @@ export const useBuzzMapLogic = () => {
       // 🔥 STEP 3: Transform areas that exist (using data from previous step)
       console.log('✅ useBuzzMapLogic: Raw data from user_map_areas (post 2025-07-17):', userAreas);
 
-      // Transform user areas for display
-      const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => ({
-        id: area.id,
-        lat: area.lat,
-        lng: area.lng,
-        radius_km: area.radius_km,
-        coordinates: { lat: area.lat, lng: area.lng },
-        radius: area.radius_km * 1000,
-        color: '#00FFFF',
-        colorName: 'cyan',
-        week: area.week || 1,
-        generation: index + 1,
-        isActive: true,
-        user_id: area.user_id,
-        created_at: area.created_at || new Date().toISOString()
-      }));
+      // Transform user areas for display with PROPER RADIUS LOGGING
+      const transformedAreas: BuzzMapArea[] = userAreas.map((area, index) => {
+        console.log(`🗺️ BUZZ AREA DEBUG: Area ${area.id} - radius_km: ${area.radius_km}, lat: ${area.lat}, lng: ${area.lng}`);
+        
+        return {
+          id: area.id,
+          lat: area.lat,
+          lng: area.lng,
+          radius_km: area.radius_km,
+          coordinates: { lat: area.lat, lng: area.lng },
+          radius: area.radius_km * 1000, // Convert to meters for map display
+          color: '#00FFFF',
+          colorName: 'cyan',
+          week: area.week || 1,
+          generation: index + 1,
+          isActive: true,
+          user_id: area.user_id,
+          created_at: area.created_at || new Date().toISOString()
+        };
+      });
 
       console.log('✅ useBuzzMapLogic: Setting authorized areas:', transformedAreas.length);
       setCurrentWeekAreas(transformedAreas);

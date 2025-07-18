@@ -127,7 +127,7 @@ serve(async (req) => {
     logStep("🗺️ Target coordinates", { targetLat, targetLon, city: activeTarget.city });
     
     // 🎯 FIXED: Generate area center 10-20km from target to ensure Agrigento inclusion
-    const distanceKm = 10 + Math.random() * 10; // 10-20 km from target to area CENTER
+    const centerDistanceKm = 10 + Math.random() * 10; // 10-20 km from target to area CENTER
     const bearingRad = Math.random() * 2 * Math.PI;
     
     // Earth's radius and proper coordinate calculation
@@ -137,17 +137,20 @@ serve(async (req) => {
     
     // Calculate new coordinates using spherical trigonometry
     const lat2Rad = Math.asin(
-      Math.sin(lat1Rad) * Math.cos(distanceKm / R) +
-      Math.cos(lat1Rad) * Math.sin(distanceKm / R) * Math.cos(bearingRad)
+      Math.sin(lat1Rad) * Math.cos(centerDistanceKm / R) +
+      Math.cos(lat1Rad) * Math.sin(centerDistanceKm / R) * Math.cos(bearingRad)
     );
     
     const lon2Rad = lon1Rad + Math.atan2(
-      Math.sin(bearingRad) * Math.sin(distanceKm / R) * Math.cos(lat1Rad),
-      Math.cos(distanceKm / R) - Math.sin(lat1Rad) * Math.sin(lat2Rad)
+      Math.sin(bearingRad) * Math.sin(centerDistanceKm / R) * Math.cos(lat1Rad),
+      Math.cos(centerDistanceKm / R) - Math.sin(lat1Rad) * Math.sin(lat2Rad)
     );
     
     const areaLat = lat2Rad * 180 / Math.PI;
     const areaLon = lon2Rad * 180 / Math.PI;
+    
+    // 🔥 CALCULATE PROPER AREA RADIUS (covering distance + buffer)
+    const areaRadiusKm = Math.ceil(centerDistanceKm + 5); // Center distance + 5km buffer
     
     // Verify the distance (for debugging)
     const actualDistance = Math.sqrt(
@@ -155,22 +158,23 @@ serve(async (req) => {
       Math.pow((areaLon - targetLon) * 111.32 * Math.cos(targetLat * Math.PI / 180), 2)
     );
     
-    logStep("🎯 FIXED: BUZZ MAP area coordinates", {
+    logStep("🎯 CRITICAL DEBUG: BUZZ MAP area coordinates", {
       target: { lat: targetLat, lon: targetLon, city: activeTarget.city },
       area_center: { lat: areaLat, lon: areaLon },
-      distance_from_target_km: distanceKm,
+      center_distance_from_target_km: centerDistanceKm,
       actual_distance_calculated: actualDistance,
-      area_radius_km: 8
+      area_radius_km: areaRadiusKm,
+      total_coverage_km: centerDistanceKm + areaRadiusKm
     });
 
-    // Create the area
+    // Create the area with DYNAMIC radius
     const { data: newArea, error: areaError } = await supabaseClient
       .from('user_map_areas')
       .insert({
         user_id: user.id,
         lat: areaLat,
         lng: areaLon,
-        radius_km: 8,
+        radius_km: areaRadiusKm, // FIXED: Use calculated radius
         week: 1
       })
       .select()
@@ -185,7 +189,9 @@ serve(async (req) => {
       area_id: newArea.id,
       target_city: activeTarget.city,
       coordinates: { lat: areaLat, lng: areaLon },
-      radius_km: 8
+      radius_km: areaRadiusKm,
+      distance_from_target: centerDistanceKm,
+      total_coverage: centerDistanceKm + areaRadiusKm
     });
 
     return new Response(JSON.stringify({
