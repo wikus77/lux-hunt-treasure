@@ -87,7 +87,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       >
         <div className="flex flex-col items-center">
           <span className="text-sm text-white font-bold">€{buzzMapPrice}</span>
-          <span className="text-xs text-white/80">BUZZ MAPPA</span>
+          <span className="text-xs text-white/80">BUZZ MAPPA · {radiusKm}km</span>
         </div>
       </Button>
     </div>
