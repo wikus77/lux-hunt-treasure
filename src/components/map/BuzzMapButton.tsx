@@ -48,21 +48,22 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
 
     try {
       // 🚨 MANDATORY: Process Stripe payment first - ALWAYS FORCED
-      console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
+      console.log('💳 BUZZ MAPPA: Processing MANDATORY Stripe payment - FORCED FOR ALL');
+      console.log('🔥 CALLING processBuzzPurchase(true, buzzMapPrice) - STRIPE REQUIRED');
+      console.log('[DEBUG] buzzMapPrice:', buzzMapPrice, 'type:', typeof buzzMapPrice);
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO EXCEPTIONS
-      console.log('🔥 CALLING processBuzzPurchase(true, buzzMapPrice) - FORCE DEBUG');
-      console.log('[DEBUG] buzzMapPrice:', buzzMapPrice, 'type:', typeof buzzMapPrice);
       const result = await processBuzzPurchase(true, buzzMapPrice);
       console.log('[DEBUG] processBuzzPurchase RESULT:', { result, type: typeof result });
-      console.log('📊 processBuzzPurchase RESULT:', { result, type: typeof result });
       
-      // ✅ STRIPE OPENS: processBuzzPurchase opens Stripe automatically
       if (result) {
-        console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully - AWAITING PAYMENT');
+        console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully');
         toast.success("Checkout Stripe aperto", {
           description: "Completa il pagamento per generare l'area BUZZ MAPPA"
         });
+        
+        // Call the onBuzzPress callback to trigger any UI updates
+        onBuzzPress();
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
         toast.error("Errore Stripe", {
@@ -73,12 +74,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       
       console.log('💳 BUZZ MAPPA: User will complete payment in Stripe tab');
       
-      // Call the onBuzzPress callback to trigger any UI updates
-      onBuzzPress();
-      
     } catch (error) {
-      console.error('❌ BUZZ Map error - RESET COMPLETO 17/07/2025:', error);
-      toast.error('Errore durante la generazione dell\'area BUZZ');
+      console.error('❌ BUZZ Map error:', error);
+      toast.error('Errore durante l\'apertura del checkout Stripe');
     } finally {
       setIsProcessing(false);
     }

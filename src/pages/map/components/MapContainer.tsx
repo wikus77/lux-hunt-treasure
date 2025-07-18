@@ -7,7 +7,7 @@ import MapController from './MapController';
 import MapPopupManager from './MapPopupManager';
 import SearchAreaMapLayer from '../SearchAreaMapLayer';
 import MapEventHandler from './MapEventHandler';
-import BuzzButton from './BuzzButton';
+import BuzzMapButton from '@/components/map/BuzzMapButton';
 import LocationButton from './LocationButton';
 import MapInstructionsOverlay from './MapInstructionsOverlay';
 import SearchAreaButton from './SearchAreaButton';
@@ -231,9 +231,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* CRITICAL: Use the BuzzButton component with enhanced area generation callback */}
-      <BuzzButton 
-        handleBuzz={handleBuzz} 
+      {/* CRITICAL: Use BuzzMapButton component that ALWAYS requires Stripe payment */}
+      <BuzzMapButton 
+        onBuzzPress={handleBuzz} 
         mapCenter={mapCenter}
         onAreaGenerated={handleAreaGeneratedCallback}
       />

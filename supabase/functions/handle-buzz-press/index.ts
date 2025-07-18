@@ -274,77 +274,19 @@ serve(async (req) => {
     console.log(`🔍 CLUE PROPAGATION DEBUG - Generated text: "${clueEngineResult.clue_text}"`);
     console.log(`🔍 CLUE PROPAGATION DEBUG - Response text: "${response.clue_text}"`);
 
-    // CRITICAL: Map generation with CORRECTED PROGRESSIVE radius
+    // CRITICAL FIX: BUZZ MAP areas are ONLY created after payment confirmation
+    // NO IMMEDIATE AREA CREATION - Payment must be completed first
     if (generateMap) {
-      console.log(`🗺️ CORRECTED PROGRESSIVE RADIUS MAP GENERATION START for user ${userId}`);
+      console.log(`🚨 BUZZ MAP: Area creation BLOCKED - payment verification required`);
+      console.log(`💳 User must complete Stripe checkout before area generation`);
+      console.log(`📍 IMPORTANT: Areas will be created by handle-buzz-payment-success edge function`);
       
-      // STEP 1: Get or set fixed center coordinates for this user
-      let fixedCenter = { lat: 41.9028, lng: 12.4964 }; // Default Rome
-      
-      // Check if user has existing fixed center
-      const { data: existingCenter, error: centerError } = await supabase
-        .from('user_map_areas')
-        .select('lat, lng')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-        
-      if (!centerError && existingCenter) {
-        // Use existing fixed center
-        fixedCenter = { lat: existingCenter.lat, lng: existingCenter.lng };
-        console.log(`📍 Using existing fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
-      } else if (coordinates) {
-        // Use provided coordinates as new fixed center
-        fixedCenter = { lat: coordinates.lat, lng: coordinates.lng };
-        console.log(`📍 Setting new fixed center: ${fixedCenter.lat}, ${fixedCenter.lng}`);
-      }
-      
-      // STEP 2: Count existing map areas for this user to determine generation
-      const { data: existingAreas, error: countError } = await supabase
-        .from('user_map_areas')
-        .select('*')
-        .eq('user_id', userId);
-        
-      const currentGeneration = (existingAreas?.length || 0) + 1;
-      console.log(`📍 Current generation count: ${currentGeneration}`);
-      
-      // STEP 3: Calculate CORRECTED PROGRESSIVE radius: 500km → 5km
-      // CRITICAL FORMULA: radius = max(5, 500 * (0.95^(generation-1)))
-      let radius_km = Math.max(5, 500 * Math.pow(0.95, currentGeneration - 1));
-      
-      console.log(`📏 CORRECTED PROGRESSIVE RADIUS - Calculated radius: ${radius_km.toFixed(2)}km (generation: ${currentGeneration})`);
-      console.log(`📍 FIXED CENTER - Using coordinates: lat=${fixedCenter.lat}, lng=${fixedCenter.lng}`);
-      
-      // STEP 4: Save area to database with CORRECTED PROGRESSIVE RADIUS
-      const { error: mapError, data: savedArea } = await supabase
-        .from('user_map_areas')
-        .insert({
-          user_id: userId,
-          lat: fixedCenter.lat,
-          lng: fixedCenter.lng,
-          radius_km: radius_km,
-          week: currentWeek,
-          clue_id: clueData.clue_id
-        })
-        .select()
-        .single();
-        
-      if (mapError) {
-        console.error("❌ Error saving map area:", mapError);
-        response.error = true;
-        response.errorMessage = "Errore salvataggio area mappa";
-      } else {
-        console.log("✅ Map area saved successfully with CORRECTED PROGRESSIVE RADIUS:", savedArea.id);
-        
-        // Add map data to response with CORRECTED PROGRESSIVE RADIUS
-        response.radius_km = radius_km;
-        response.lat = fixedCenter.lat;
-        response.lng = fixedCenter.lng;
-        response.generation_number = currentGeneration;
-        
-        console.log(`🎉 MAP GENERATION COMPLETE (CORRECTED PROGRESSIVE RADIUS): radius=${radius_km.toFixed(2)}km, generation=${currentGeneration}, center=${fixedCenter.lat},${fixedCenter.lng}`);
-      }
+      // Do NOT create area here - wait for payment confirmation
+      response.message = "Area will be generated after payment confirmation";
+      response.radius_km = 15; // Expected radius for display
+      response.lat = 0;        // Placeholder - real coordinates set after payment
+      response.lng = 0;        // Placeholder - real coordinates set after payment  
+      response.generation_number = 1; // Will be calculated correctly after payment
     }
 
     // ✅ INSERIRE NOTIFICA PER L'UTENTE CON CLUE_TEXT VALIDO
