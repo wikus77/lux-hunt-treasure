@@ -20,6 +20,8 @@ const PrizeAreaOverlay: React.FC = () => {
   useEffect(() => {
     const fetchPrizes = async () => {
       try {
+        console.log('🏆 PrizeAreaOverlay: Fetching prizes with location verification');
+        
         const { data, error } = await supabase
           .from('prizes')
           .select('*')
@@ -28,11 +30,30 @@ const PrizeAreaOverlay: React.FC = () => {
           .not('lng', 'is', null);
 
         if (error) {
-          console.error('Error fetching prizes:', error);
+          console.error('❌ PrizeAreaOverlay: Error fetching prizes:', error);
+          setPrizes([]);
           return;
         }
 
-        setPrizes(data || []);
+        // 🚨 CRITICAL: Filter out prizes without proper location coordinates
+        const validPrizes = (data || []).filter(prize => {
+          const hasValidCoords = prize.lat !== null && prize.lng !== null && 
+                                prize.lat !== 0 && prize.lng !== 0;
+          
+          if (!hasValidCoords) {
+            console.warn('🚨 PrizeAreaOverlay: Prize without valid coordinates filtered out:', prize.id);
+          }
+          
+          return hasValidCoords;
+        });
+
+        console.log('✅ PrizeAreaOverlay: Valid prizes found:', {
+          total: data?.length || 0,
+          valid: validPrizes.length,
+          validPrizeIds: validPrizes.map(p => p.id)
+        });
+
+        setPrizes(validPrizes);
       } catch (err) {
         console.error('Exception fetching prizes:', err);
       } finally {

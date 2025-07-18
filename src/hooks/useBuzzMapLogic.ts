@@ -38,30 +38,39 @@ export const useBuzzMapLogic = () => {
     setLoading(true);
     
     try {
-      // 🚨 CRITICAL: VERIFY ACTIVE PRIZES FIRST - NO AREAS WITHOUT PRIZES
+      // 🚨 CRITICAL: VERIFY ACTIVE PRIZES WITH VALID LOCATION FIRST - NO AREAS WITHOUT PRIZES
       const { data: activePrizes } = await supabase
         .from('prizes')
-        .select('id, is_active')
-        .eq('is_active', true);
+        .select('id, is_active, lat, lng')
+        .eq('is_active', true)
+        .not('lat', 'is', null)
+        .not('lng', 'is', null);
+
+      // 🚨 ADDITIONAL CHECK: Filter out prizes without valid coordinates
+      const validPrizes = activePrizes?.filter(prize => 
+        prize.lat !== null && prize.lng !== null && 
+        prize.lat !== 0 && prize.lng !== 0
+      ) || [];
 
       console.warn('🎯 BUZZ MAP CHECK: Active prizes verification:', { 
-        activePrizes: activePrizes?.length || 0,
-        hasActivePrizes: activePrizes && activePrizes.length > 0,
+        totalActivePrizes: activePrizes?.length || 0,
+        validLocationPrizes: validPrizes.length,
+        hasValidPrizes: validPrizes.length > 0,
         user_email: user.email,
         timestamp: new Date().toISOString()
       });
 
-      // 🚨 IMMEDIATE BLOCK: Force return if no active prizes exist
-      if (!activePrizes?.length) {
-        console.warn("🛑 Mappa bloccata: nessun premio attivo");
+      // 🚨 IMMEDIATE BLOCK: Force return if no valid prizes with location exist
+      if (!validPrizes.length) {
+        console.warn("🛑 Mappa bloccata: nessun premio attivo con location_set = true");
         setCurrentWeekAreas([]);
         setError(null);
         setLoading(false);
         return;
       }
 
-      // Log active prizes found
-      console.log('✅ useBuzzMapLogic: Active prizes found:', activePrizes.map(p => p.id));
+      // Log valid prizes found
+      console.log('✅ useBuzzMapLogic: Valid prizes with location found:', validPrizes.map(p => p.id));
 
       // Check for payment transactions (skip for developer only)
       const isDeveloper = user.email === 'wikus77@hotmail.it';

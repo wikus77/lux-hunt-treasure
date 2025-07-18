@@ -164,7 +164,16 @@ serve(async (req) => {
       logStep("⚠️ Buzz log error - RESET COMPLETO 17/07/2025", { error: buzzLogError.message });
     }
 
-    logStep("🎯 M1SSION™ Buzz Purchase Session Created Successfully - RESET COMPLETO 17/07/2025");
+    // 🚨 CRITICAL: Verify sessionData.url exists before returning
+    if (!sessionData.url) {
+      logStep("❌ STRIPE CRITICAL ERROR: sessionData.url is undefined - RESET COMPLETO 17/07/2025", { sessionData });
+      throw new Error("Stripe checkout session URL is undefined - configuration error");
+    }
+
+    logStep("🎯 M1SSION™ Buzz Purchase Session Created Successfully - RESET COMPLETO 17/07/2025", { 
+      url: sessionData.url,
+      sessionId: sessionData.id 
+    });
 
     return new Response(JSON.stringify({
       success: true,
