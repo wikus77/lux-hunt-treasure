@@ -57,10 +57,12 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       console.log('[DEBUG] processBuzzPurchase RESULT:', { result, type: typeof result });
       console.log('📊 processBuzzPurchase RESULT:', { result, type: typeof result });
       
-      // ✅ FIXED: processBuzzPurchase opens Stripe automatically, no toast until payment confirmed
+      // ✅ STRIPE OPENS: processBuzzPurchase opens Stripe automatically
       if (result) {
         console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully - AWAITING PAYMENT');
-        // ✅ NO IMMEDIATE SUCCESS TOAST - Wait for actual payment completion
+        toast.success("Checkout Stripe aperto", {
+          description: "Completa il pagamento per generare l'area BUZZ MAPPA"
+        });
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
         toast.error("Errore Stripe", {
@@ -69,13 +71,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         return;
       }
       
-      // 🎯 NOTE: After successful Stripe redirect, user will complete payment externally
-      // Area generation will happen via webhook or manual refresh
-      console.log('🎯 BUZZ MAPPA: Stripe redirect successful, user will complete payment externally');
-      
-      // 🎯 NO IMMEDIATE CALLBACK: Area will be generated only after successful payment
-      // onAreaGenerated will be called automatically by useBuzzMapLogic after payment completion
-      console.log('🎯 BUZZ MAPPA: Stripe redirect successful, area will be generated after payment completion');
+      console.log('💳 BUZZ MAPPA: User will complete payment in Stripe tab');
       
       // Call the onBuzzPress callback to trigger any UI updates
       onBuzzPress();

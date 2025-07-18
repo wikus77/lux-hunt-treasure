@@ -167,7 +167,7 @@ serve(async (req) => {
         provider: 'stripe',
         provider_transaction_id: sessionData.id,
         status: 'pending', // Will be updated by webhook to 'succeeded'
-        description: is_buzz_map ? 'M1SSION™ Buzz Map Purchase - RESET COMPLETO 17/07/2025' : 'M1SSION™ Buzz Purchase - RESET COMPLETO 17/07/2025'
+        description: is_buzz_map ? 'Buzz Map' : 'Buzz Purchase'
       });
 
     if (transactionError) {
@@ -197,79 +197,13 @@ serve(async (req) => {
       logStep("⚠️ Buzz log error - RESET COMPLETO 17/07/2025", { error: buzzLogError.message });
     }
 
-    // 🚨 CRITICO: Se è BUZZ MAP, crea area con COORDINATE CORRETTE dal target attivo
+    // 🚨 CRITICAL FIX: BUZZ MAP areas are created ONLY after payment completion
+    // NO IMMEDIATE AREA CREATION - Stripe must complete first
     if (is_buzz_map) {
-      logStep("🗺️ BUZZ MAP: Creating user_map_areas with CORRECT coordinates - RESET COMPLETO 17/07/2025");
-      
-      // Prendi il primo target attivo per le coordinate CORRETTE
-      const { data: activeTarget, error: targetError } = await supabaseClient
-        .from('buzz_game_targets')
-        .select('lat, lon, city, address')
-        .eq('is_active', true)
-        .limit(1)
-        .single();
-
-      logStep("🎯 ACTIVE TARGET QUERY RESULT", { 
-        found: !!activeTarget, 
-        target: activeTarget,
-        error: targetError?.message || null
-      });
-
-      if (activeTarget && !targetError) {
-        // 🎯 LOGICA M1SSION™: Area attorno al target, NON CENTRATA su di esso
-        // Genera coordinate casuali in un raggio di 2-5km dal target per GARANTIRE che Agrigento sia SEMPRE INCLUSA
-        const targetLat = parseFloat(activeTarget.lat.toString());
-        const targetLon = parseFloat(activeTarget.lon.toString());
-        
-        // 🎯 FIXED: Generate center that ALWAYS includes Agrigento (max 10km from target)
-        const distanceKm = 1 + Math.random() * 9; // 1-10 km from target
-        // Angolo casuale in radianti
-        const bearingRad = Math.random() * 2 * Math.PI;
-        
-        // ✅ FIXED COORDINATE CALCULATION
-        const deltaLat = (distanceKm / 111.32) * Math.cos(bearingRad);
-        const deltaLon = (distanceKm / (111.32 * Math.cos(targetLat * Math.PI / 180))) * Math.sin(bearingRad);
-        
-        const areaLat = targetLat + deltaLat;
-        const areaLon = targetLon + deltaLon;
-        
-        logStep("🗺️ INSERTING USER_MAP_AREAS WITH CORRECT COORDINATES", { 
-          user_id, 
-          target_lat: targetLat,
-          target_lon: targetLon,
-          area_lat: areaLat, 
-          area_lon: areaLon, 
-          distance_from_target_km: distanceKm,
-          radius_km: 15 
-        });
-        
-        const { error: areaError } = await supabaseClient
-          .from('user_map_areas')
-          .insert({
-            user_id,
-            lat: areaLat, // ✅ COORDINATE CORRETTE: Agrigento area, non Roma
-            lng: areaLon, // ✅ COORDINATE CORRETTE: Agrigento area, non Roma
-            radius_km: 15, // Raggio standard BUZZ MAP
-            week: 1
-          });
-
-        if (areaError) {
-          logStep("⚠️ Area creation error - RESET COMPLETO 17/07/2025", { error: areaError.message });
-        } else {
-          logStep("✅ BUZZ MAP area created successfully with CORRECT COORDINATES - RESET COMPLETO 17/07/2025", { 
-            target_city: activeTarget.city,
-            target_lat: targetLat, 
-            target_lon: targetLon,
-            area_lat: areaLat,
-            area_lon: areaLon,
-            radius_km: 15
-          });
-        }
-      } else {
-        logStep("⚠️ No active target found for BUZZ MAP area creation - RESET COMPLETO 17/07/2025");
-      }
+      logStep("🚨 BUZZ MAP: Area creation DISABLED - waiting for Stripe payment completion");
+      logStep("💳 User must complete Stripe checkout before area generation");
     } else {
-      logStep("ℹ️ Regular BUZZ purchase - no map area creation needed - RESET COMPLETO 17/07/2025");
+      logStep("ℹ️ Regular BUZZ purchase - no map area creation needed");
     }
 
     // 🚨 CRITICAL: Verify sessionData.url exists before returning

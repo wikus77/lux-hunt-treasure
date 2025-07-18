@@ -84,7 +84,7 @@ export const useBuzzMapLogic = () => {
         .select('*')
         .eq('user_id', user.id)
         .in('status', ['completed', 'succeeded']) // Only completed payments
-        .ilike('description', '%Buzz Map%') // Match any "Buzz Map" variant
+        .or('description.ilike.%Buzz Map%,description.ilike.%BUZZ MAPPA%') // Match all variants
         .gte('created_at', '2025-07-17T00:00:00Z');
 
       console.log('💳 BUZZ MAP PAYMENTS CHECK (RESTORED):', { 
