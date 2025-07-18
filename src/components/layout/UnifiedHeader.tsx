@@ -9,7 +9,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
-import AgentCodeDisplay from "@/components/layout/header/AgentCodeDisplay";
+import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -154,8 +154,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
 
-          {/* Center section - Agent Code Display - © 2025 Joseph MULÉ – M1SSION™ */}
-          <AgentCodeDisplay />
+          {/* Center section - Referral Code Display - © 2025 Joseph MULÉ – M1SSION™ */}
+          <ReferralCodeDisplay />
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">

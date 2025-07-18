@@ -1,4 +1,4 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import ProfileAvatar from '@/components/profile/ProfileAvatar';
 import { useToast } from '@/hooks/use-toast';
+import ProfileToast from './ProfileToast';
 
 interface ProfileDropdownProps {
   profileImage?: string | null;
@@ -19,6 +20,7 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
   className = "" 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [showProfileToast, setShowProfileToast] = useState(false);
   const { user, logout } = useAuth();
   const { navigate } = useWouterNavigation();
   const { toast } = useToast();
@@ -58,6 +60,11 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
     navigate('/settings');
   };
 
+  const handleAvatarClick = () => {
+    setShowProfileToast(true);
+    setIsOpen(false);
+  };
+
   // Get user display name and email
   const displayName = user?.user_metadata?.full_name || 
                      `${user?.user_metadata?.first_name || ''} ${user?.user_metadata?.last_name || ''}`.trim() ||
@@ -84,11 +91,11 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
-      {/* Profile Avatar Button - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+      {/* Profile Avatar Button - © 2025 Joseph MULÉ – M1SSION™ */}
       <Button
         variant="ghost"
         className="p-1 rounded-full hover:bg-white/10 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleAvatarClick}
       >
         <ProfileAvatar
           profileImage={profileImage}
@@ -164,6 +171,12 @@ const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Profile Toast */}
+      <ProfileToast 
+        isOpen={showProfileToast} 
+        onClose={() => setShowProfileToast(false)} 
+      />
     </div>
   );
 };

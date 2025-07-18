@@ -813,6 +813,7 @@ export type Database = {
           preferred_language: string | null
           preferred_rewards: string[] | null
           recovery_key: string | null
+          referral_code: string | null
           role: string
           stripe_customer_id: string | null
           subscription_end: string | null
@@ -846,6 +847,7 @@ export type Database = {
           preferred_language?: string | null
           preferred_rewards?: string[] | null
           recovery_key?: string | null
+          referral_code?: string | null
           role?: string
           stripe_customer_id?: string | null
           subscription_end?: string | null
@@ -879,6 +881,7 @@ export type Database = {
           preferred_language?: string | null
           preferred_rewards?: string[] | null
           recovery_key?: string | null
+          referral_code?: string | null
           role?: string
           stripe_customer_id?: string | null
           subscription_end?: string | null
@@ -1552,6 +1555,10 @@ export type Database = {
       execute_sql: {
         Args: { sql: string }
         Returns: undefined
+      }
+      generate_referral_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
