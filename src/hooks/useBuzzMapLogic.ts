@@ -78,12 +78,12 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for completed BUZZ MAP payments
+      // 🔥 STEP 2: Check for completed BUZZ MAP payments (FIX CRITICO: status corretti)
       const { data: payments, error: paymentError } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'completed')
+        .in('status', ['completed', 'succeeded', 'pending']) // CRITICO: Multiple valid statuses
         .ilike('description', '%Buzz Map%')
         .gte('created_at', '2025-07-17T00:00:00Z');
 

@@ -197,6 +197,43 @@ serve(async (req) => {
       logStep("⚠️ Buzz log error - RESET COMPLETO 17/07/2025", { error: buzzLogError.message });
     }
 
+    // 🚨 CRITICO: Se è BUZZ MAP, crea automaticamente l'area user_map_areas
+    if (is_buzz_map) {
+      logStep("🗺️ BUZZ MAP: Creating user_map_areas entry - RESET COMPLETO 17/07/2025");
+      
+      // Prendi il primo target attivo per le coordinate
+      const { data: activeTarget } = await supabaseClient
+        .from('buzz_game_targets')
+        .select('lat, lon')
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (activeTarget) {
+        const { error: areaError } = await supabaseClient
+          .from('user_map_areas')
+          .insert({
+            user_id,
+            lat: activeTarget.lat,
+            lng: activeTarget.lon,
+            radius_km: 15, // Raggio standard BUZZ MAP
+            week: 1
+          });
+
+        if (areaError) {
+          logStep("⚠️ Area creation error - RESET COMPLETO 17/07/2025", { error: areaError.message });
+        } else {
+          logStep("✅ BUZZ MAP area created successfully - RESET COMPLETO 17/07/2025", { 
+            lat: activeTarget.lat, 
+            lng: activeTarget.lon,
+            radius_km: 15
+          });
+        }
+      } else {
+        logStep("⚠️ No active target found for BUZZ MAP area creation - RESET COMPLETO 17/07/2025");
+      }
+    }
+
     // 🚨 CRITICAL: Verify sessionData.url exists before returning
     if (!sessionData.url) {
       logStep("❌ STRIPE CRITICAL ERROR: sessionData.url is undefined - RESET COMPLETO 17/07/2025", { sessionData });

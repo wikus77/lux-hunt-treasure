@@ -55,12 +55,10 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       const result = await processBuzzPurchase(true, buzzMapPrice);
       console.log('📊 processBuzzPurchase RESULT:', { result, type: typeof result });
       
-      // ✅ FIXED: processBuzzPurchase opens Stripe automatically, no blocking toast needed
+      // ✅ FIXED: processBuzzPurchase opens Stripe automatically, no toast until payment confirmed
       if (result) {
-        console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully');
-        toast.success('Checkout Stripe aperto!', {
-          description: "Completa il pagamento per generare l'area BUZZ."
-        });
+        console.log('✅ BUZZ MAPPA: Stripe checkout opened successfully - AWAITING PAYMENT');
+        // ✅ NO IMMEDIATE SUCCESS TOAST - Wait for actual payment completion
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');
         toast.error("Errore Stripe", {
