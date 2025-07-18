@@ -19,12 +19,25 @@ interface UserMapAreasProps {
 const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
   console.log('🗺️ UserMapAreas - Rendering areas:', areas.length);
 
-  if (areas.length === 0) {
+  // 🚨 FORCE CHECK: Never render if no areas or invalid areas
+  if (!areas || areas.length === 0) {
+    console.log('🛑 UserMapAreas: No areas to render - returning null');
     return null;
   }
 
-  // Show only the latest area
-  const latestArea = areas.reduce((latest, current) => {
+  // 🚨 ADDITIONAL CHECK: Validate area data
+  const validAreas = areas.filter(area => 
+    area.lat && area.lng && area.radius_km && 
+    area.lat !== 0 && area.lng !== 0
+  );
+
+  if (validAreas.length === 0) {
+    console.log('🛑 UserMapAreas: No valid areas found - returning null');
+    return null;
+  }
+
+  // Show only the latest valid area
+  const latestArea = validAreas.reduce((latest, current) => {
     const latestTime = new Date(latest.created_at).getTime();
     const currentTime = new Date(current.created_at).getTime();
     return currentTime > latestTime ? current : latest;

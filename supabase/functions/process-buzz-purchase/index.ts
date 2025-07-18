@@ -32,11 +32,25 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
+    // 🚨 FORCE CHECK: Validate Stripe Secret Key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey || !stripeKey.startsWith("sk_")) {
-      throw new Error("STRIPE_SECRET_KEY non configurata correttamente - deve iniziare con sk_");
+    logStep("🔍 STRIPE KEY VERIFICATION", { 
+      hasKey: !!stripeKey, 
+      keyLength: stripeKey?.length || 0,
+      keyStart: stripeKey?.substring(0, 8) || 'NONE'
+    });
+    
+    if (!stripeKey) {
+      logStep("❌ CRITICAL: STRIPE_SECRET_KEY is null or undefined");
+      throw new Error("STRIPE_SECRET_KEY non configurata - controllare Supabase Edge Functions Secrets");
     }
-    logStep("🔑 STRIPE_SECRET_KEY verificata", { keyPrefix: stripeKey.substring(0, 7) });
+    
+    if (!stripeKey.startsWith("sk_")) {
+      logStep("❌ CRITICAL: STRIPE_SECRET_KEY invalid format", { received: stripeKey.substring(0, 10) });
+      throw new Error("STRIPE_SECRET_KEY deve iniziare con sk_test_ o sk_live_");
+    }
+    
+    logStep("✅ STRIPE_SECRET_KEY verificata correttamente", { keyPrefix: stripeKey.substring(0, 12) });
 
     // Authenticate user
     const authHeader = req.headers.get("Authorization");

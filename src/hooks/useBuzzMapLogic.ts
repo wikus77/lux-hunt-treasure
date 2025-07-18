@@ -62,8 +62,8 @@ export const useBuzzMapLogic = () => {
 
       // 🚨 IMMEDIATE BLOCK: Force return if no valid prizes with location exist
       if (!validPrizes.length) {
-        console.warn("🛑 Mappa bloccata: nessun premio attivo con location_set = true");
-        setCurrentWeekAreas([]);
+        console.warn("🛑 MAPPA BLOCCATA: nessun premio attivo con coordinate valide");
+        setCurrentWeekAreas([]); // FORCE CLEAR ALL AREAS
         setError(null);
         setLoading(false);
         return;
