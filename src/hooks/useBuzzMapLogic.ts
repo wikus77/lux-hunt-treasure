@@ -78,13 +78,13 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for completed BUZZ MAP payments (RESTORED PAYMENT CHECKS)
+      // 🔥 STEP 2: Check for completed BUZZ MAP payments (RELAXED MATCHING)
       const { data: payments, error: paymentError } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('user_id', user.id)
-        .in('status', ['completed', 'succeeded']) // ONLY completed payments
-        .ilike('description', '%M1SSION™ Buzz Map%') // EXACT match for new description format
+        .in('status', ['completed', 'succeeded', 'pending']) // Include pending for immediate display
+        .or('description.ilike.%Buzz Map%,description.ilike.%BUZZ MAPPA%') // Multiple variants
         .gte('created_at', '2025-07-17T00:00:00Z');
 
       console.log('💳 BUZZ MAP PAYMENTS CHECK (RESTORED):', { 

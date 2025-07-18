@@ -217,12 +217,12 @@ serve(async (req) => {
 
       if (activeTarget && !targetError) {
         // 🎯 LOGICA M1SSION™: Area attorno al target, NON CENTRATA su di esso
-        // Genera coordinate casuali in un raggio di 5-15km dal target per nascondere la posizione esatta
+        // Genera coordinate casuali in un raggio di 2-5km dal target per GARANTIRE che Agrigento sia SEMPRE INCLUSA
         const targetLat = parseFloat(activeTarget.lat.toString());
         const targetLon = parseFloat(activeTarget.lon.toString());
         
-        // Distanza casuale dal target (5-15 km)
-        const distanceKm = 5 + Math.random() * 10;
+        // ✅ DISTANZA RIDOTTA: max 5km per garantire che la città target sia sempre nell'area
+        const distanceKm = 2 + Math.random() * 3; // 2-5 km max
         // Angolo casuale in radianti
         const bearingRad = Math.random() * 2 * Math.PI;
         
