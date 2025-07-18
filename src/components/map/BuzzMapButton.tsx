@@ -27,7 +27,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleBuzzMapPress = async () => {
-    console.log('🎯 BUZZ MAPPA PRESSED - REAL PAYMENT MODE', {
+    console.log('🎯 BUZZ MAPPA PRESSED - FIXED REAL PAYMENT MODE', {
       isAuthenticated,
       buzzMapPrice,
       radiusKm,
@@ -47,7 +47,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // 🔥 REAL STRIPE: Open Stripe checkout - NO area creation until payment succeeds
+      // 🔥 CRITICAL FIX: Real Stripe checkout with proper session ID extraction
       console.log('💳 BUZZ MAPPA: Opening Stripe checkout - REAL PAYMENT REQUIRED');
       const result = await processBuzzPurchase(true, buzzMapPrice);
       
@@ -57,34 +57,56 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           description: "Completa il pagamento per generare l'area BUZZ MAPPA"
         });
         
-        // Wait for payment confirmation, then create area
-        const pollForPayment = async (sessionId: string) => {
+        // 🚨 CRITICAL FIX: Poll for real payment with actual Stripe session ID
+        // Note: This will be replaced by webhook in production
+        const pollForPayment = async () => {
           let attempts = 0;
-          const maxAttempts = 30; // 5 minutes max
+          const maxAttempts = 60; // 10 minutes max
           
           const checkPayment = async () => {
             attempts++;
             console.log(`🔍 Checking payment status, attempt ${attempts}/${maxAttempts}`);
             
             try {
-              const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
-                body: { session_id: sessionId }
-              });
+              // Check for successful payments in the last 5 minutes
+              const { data: payments, error: paymentError } = await supabase
+                .from('payment_transactions')
+                .select('*')
+                .eq('user_id', user?.id)
+                .eq('status', 'succeeded')
+                .ilike('description', '%Buzz Map%')
+                .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
+                .order('created_at', { ascending: false })
+                .limit(1);
               
-              if (!error && data?.success) {
-                console.log('✅ BUZZ MAPPA: Area created successfully!', data);
-                toast.success(`✅ BUZZ MAPPA creata!`, {
-                  description: `Centro: (${data.area.lat.toFixed(3)}, ${data.area.lng.toFixed(3)}) · Radius: ${data.area.radius_km}km`
+              if (!paymentError && payments && payments.length > 0) {
+                const payment = payments[0];
+                console.log('💳 Found successful payment, creating area...', payment);
+                
+                // Use the real session ID from the payment
+                const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
+                  body: { session_id: payment.provider_transaction_id }
                 });
                 
-                // Trigger area generation callback
-                if (onAreaGenerated && data.area) {
-                  onAreaGenerated(data.area.lat, data.area.lng, data.area.radius_km);
+                if (!error && data?.success) {
+                  console.log('✅ BUZZ MAPPA: Area created successfully!', data);
+                  
+                  // 🎯 UNIFIED TOAST: Single toast with DB values
+                  toast.success(`✅ BUZZ MAPPA creata!`, {
+                    description: `Centro: ${data.target.city} · Radius: ${data.area.radius_km}km`
+                  });
+                  
+                  // Trigger area generation callback
+                  if (onAreaGenerated && data.area) {
+                    onAreaGenerated(data.area.lat, data.area.lng, data.area.radius_km);
+                  }
+                  
+                  onBuzzPress();
+                  return true;
                 }
-                
-                onBuzzPress();
-                return true;
-              } else if (attempts < maxAttempts) {
+              }
+              
+              if (attempts < maxAttempts) {
                 setTimeout(checkPayment, 10000); // Check every 10 seconds
               } else {
                 console.warn('❌ Payment timeout - area not created');
@@ -92,6 +114,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
                   description: "Controlla il pagamento e riprova se necessario"
                 });
               }
+              
             } catch (checkError) {
               console.error('Error checking payment:', checkError);
               if (attempts < maxAttempts) {
@@ -104,9 +127,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           setTimeout(checkPayment, 5000); // Start checking after 5 seconds
         };
         
-        // Extract session ID and start polling (mock for now - real webhook should handle this)
-        const mockSessionId = `mock_${Date.now()}_${user?.id}`;
-        pollForPayment(mockSessionId);
+        pollForPayment();
         
       } else {
         console.error('❌ BUZZ MAPPA: processBuzzPurchase failed');

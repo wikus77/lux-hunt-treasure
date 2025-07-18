@@ -51,76 +51,71 @@ serve(async (req) => {
 
     logStep("📦 Processing session", { session_id });
 
-    // 🔥 MOCK MODE: Accept mock session_id for testing (remove in production)
-    let paymentData = null;
-    if (session_id.startsWith('mock_')) {
-      logStep("🧪 MOCK MODE: Creating mock payment for testing", { session_id });
-      
-      // Create mock payment entry
-      const { data: mockPayment, error: mockError } = await supabaseClient
-        .from('payment_transactions')
-        .insert({
-          user_id: user.id,
-          provider_transaction_id: session_id,
-          amount: 2999, // €29.99
-          currency: 'EUR',
-          status: 'succeeded',
-          description: 'M1SSION™ Buzz Map Area Generation',
-          provider: 'stripe'
-        })
-        .select()
-        .single();
-        
-      if (mockError) {
-        logStep("❌ Failed to create mock payment", { error: mockError.message });
-        throw new Error(`Failed to create mock payment: ${mockError.message}`);
-      }
-      
-      paymentData = mockPayment;
-      logStep("✅ Mock payment created", { payment_id: paymentData.id });
-    } else {
-      // Real payment validation
-      const { data: realPayment, error: paymentError } = await supabaseClient
-        .from('payment_transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('provider_transaction_id', session_id)
-        .eq('status', 'succeeded')
-        .ilike('description', '%Buzz Map%')
-        .single();
+    // 🚨 CRITICAL FIX: STRICT payment validation - NO MOCK MODE
+    const { data: realPayment, error: paymentError } = await supabaseClient
+      .from('payment_transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('provider_transaction_id', session_id)
+      .eq('status', 'succeeded')
+      .ilike('description', '%Buzz Map%')
+      .gte('created_at', '2025-07-17T00:00:00Z') // Only payments after reset
+      .single();
 
-      if (paymentError || !realPayment) {
-        logStep("❌ No successful BUZZ MAP payment found", { session_id, error: paymentError?.message });
-        return new Response(JSON.stringify({ 
-          success: false, 
-          error: "No successful BUZZ MAP payment found for this session" 
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 404,
-        });
-      }
-      
-      paymentData = realPayment;
+    if (paymentError || !realPayment) {
+      logStep("❌ No successful BUZZ MAP payment found", { 
+        session_id, 
+        error: paymentError?.message,
+        required_status: 'succeeded',
+        required_description: 'Buzz Map',
+        min_date: '2025-07-17T00:00:00Z'
+      });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: "No successful BUZZ MAP payment found for this session" 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+      });
     }
+
+    const paymentData = realPayment;
     
     const payment = paymentData;
 
     logStep("💳 BUZZ MAP payment found", { payment_id: payment.id, amount: payment.amount });
 
-    // Check if area already exists for this payment
+    // Check if area already exists for this specific payment
     const { data: existingArea } = await supabaseClient
       .from('user_map_areas')
       .select('*')
       .eq('user_id', user.id)
-      .gte('created_at', '2025-07-17T00:00:00Z')
+      .gte('created_at', payment.created_at) // After this payment was made
       .limit(1);
 
     if (existingArea && existingArea.length > 0) {
-      logStep("✅ Area already exists for this payment", { area_id: existingArea[0].id });
+      logStep("✅ Area already exists for this payment", { 
+        area_id: existingArea[0].id,
+        payment_id: payment.id,
+        area_created: existingArea[0].created_at
+      });
+      
+      // Get target info for response
+      const { data: activeTarget } = await supabaseClient
+        .from('buzz_game_targets')
+        .select('city, lat, lon')
+        .eq('is_active', true)
+        .single();
+      
       return new Response(JSON.stringify({
         success: true,
         area: existingArea[0],
-        message: "Area already created"
+        target: activeTarget ? {
+          city: activeTarget.city,
+          lat: activeTarget.lat,
+          lon: activeTarget.lon
+        } : null,
+        message: "Area already created for this payment"
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -152,8 +147,8 @@ serve(async (req) => {
     
     logStep("🗺️ Target coordinates", { targetLat, targetLon, city: activeTarget.city });
     
-    // 🎯 FIXED: Generate area center 10-20km from target to ensure Agrigento inclusion
-    const centerDistanceKm = 10 + Math.random() * 10; // 10-20 km from target to area CENTER
+    // 🎯 CRITICAL FIX: Generate area center ensuring GUARANTEED Agrigento coverage
+    const centerDistanceKm = Math.min(areaRadiusKm * 0.6, 15); // Center within 60% of radius, max 15km
     const bearingRad = Math.random() * 2 * Math.PI;
     
     // Earth's radius and proper coordinate calculation
@@ -175,14 +170,14 @@ serve(async (req) => {
     const areaLat = lat2Rad * 180 / Math.PI;
     const areaLon = lon2Rad * 180 / Math.PI;
     
-    // 🎯 USE PRICING HOOK RADIUS (sync with UI) - Get user's generation count first
+    // 🎯 CRITICAL FIX: UNIFIED radius formula - exactly same as UI
     const { data: existingAreas } = await supabaseClient
       .from('user_map_areas')
       .select('id')
       .eq('user_id', user.id);
     
     const generationCount = existingAreas?.length || 0;
-    // Apply same formula as useBuzzMapPricing: radius = 500 * (0.7^generation_count), min 5km
+    // IDENTICAL formula to useBuzzMapPricing hook: radius = max(5, 500 * (0.7^generation_count))
     const uiCalculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
     let areaRadiusKm = Math.round(uiCalculatedRadius);
     
