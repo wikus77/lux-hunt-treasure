@@ -221,12 +221,12 @@ serve(async (req) => {
         const targetLat = parseFloat(activeTarget.lat.toString());
         const targetLon = parseFloat(activeTarget.lon.toString());
         
-        // ✅ DISTANZA RIDOTTA: max 5km per garantire che la città target sia sempre nell'area
-        const distanceKm = 2 + Math.random() * 3; // 2-5 km max
+        // 🎯 FIXED: Generate center that ALWAYS includes Agrigento (max 10km from target)
+        const distanceKm = 1 + Math.random() * 9; // 1-10 km from target
         // Angolo casuale in radianti
         const bearingRad = Math.random() * 2 * Math.PI;
         
-        // Calcolo coordinate offset usando formula haversine approssimata
+        // ✅ FIXED COORDINATE CALCULATION
         const deltaLat = (distanceKm / 111.32) * Math.cos(bearingRad);
         const deltaLon = (distanceKm / (111.32 * Math.cos(targetLat * Math.PI / 180))) * Math.sin(bearingRad);
         
