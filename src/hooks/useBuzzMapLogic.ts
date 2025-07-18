@@ -201,6 +201,18 @@ export const useBuzzMapLogic = () => {
           (payload) => {
             console.log('🔔 useBuzzMapLogic: New area inserted via real-time:', payload);
             fetchCurrentWeekAreas(); // Refresh with payment verification
+            
+            // Trigger map auto-center via custom event
+            if (payload.new) {
+              console.log('📍 useBuzzMapLogic: Broadcasting area creation event');
+              window.dispatchEvent(new CustomEvent('buzzAreaCreated', {
+                detail: {
+                  lat: payload.new.lat,
+                  lng: payload.new.lng,
+                  radius_km: payload.new.radius_km
+                }
+              }));
+            }
           }
         )
         .subscribe();

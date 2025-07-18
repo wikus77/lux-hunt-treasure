@@ -104,35 +104,56 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     });
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
+  // Listen for BUZZ area creation events and auto-center map
+  React.useEffect(() => {
+    const handleBuzzAreaCreated = (event: CustomEvent) => {
+      console.log('📍 MapContainer - Received BUZZ area creation event:', event.detail);
+      if (event.detail && mapRef.current) {
+        const { lat, lng, radius_km } = event.detail;
+        handleAreaGeneratedCallback(lat, lng, radius_km);
+      }
+    };
+
+    window.addEventListener('buzzAreaCreated', handleBuzzAreaCreated as EventListener);
+    return () => {
+      window.removeEventListener('buzzAreaCreated', handleBuzzAreaCreated as EventListener);
+    };
+  }, []);
+
   // Create utility functions using the extracted helpers
   const handleMapMoveCallback = handleMapMove(mapRef, setMapCenter);
   const handleMapReadyCallback = handleMapReady(mapRef, handleMapMoveCallback);
   const handleAddNewPointCallback = handleAddNewPoint(isAddingPoint, addNewPoint, setIsAddingPoint);
   
-  // CRITICAL: Enhanced area generation callback with reload
+  // CRITICAL: Enhanced area generation callback with auto-zoom
   const handleAreaGeneratedCallback = (lat: number, lng: number, radiusKm: number) => {
-    console.log('🎯 MapContainer - Area generated, updating map and reloading areas:', { lat, lng, radiusKm });
+    console.log('🎯 MapContainer - Area generated, auto-centering map:', { lat, lng, radiusKm });
     
-    // Update map center and zoom
-    if (mapRef.current) {
-      mapRef.current.setView([lat, lng], 13);
-      
-      // Calculate appropriate zoom for radius
-      const radiusMeters = radiusKm * 1000;
-      const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2);
-      
-      setTimeout(() => {
-        if (mapRef.current) {
-          mapRef.current.fitBounds(bounds, { padding: [50, 50] });
-        }
-      }, 100);
-    }
+    // FORCE reload areas first
+    reloadAreas();
     
-    // CRITICAL: Force reload areas to show new area immediately
+    // Auto-center and zoom map to show the new area after a short delay
     setTimeout(() => {
-      console.log('🔄 MapContainer - Forcing areas reload after generation');
-      reloadAreas();
-    }, 500);
+      if (mapRef.current) {
+        console.log('📍 MapContainer - Auto-centering map on new area');
+        
+        // Calculate appropriate zoom level for 8km radius
+        const zoom = radiusKm <= 5 ? 12 : radiusKm <= 10 ? 11 : 10;
+        
+        // Set view to area center with appropriate zoom
+        mapRef.current.setView([lat, lng], zoom);
+        
+        // Also create bounds to ensure the entire area is visible
+        const radiusMeters = radiusKm * 1000;
+        const bounds = L.latLng(lat, lng).toBounds(radiusMeters * 2);
+        
+        setTimeout(() => {
+          if (mapRef.current) {
+            mapRef.current.fitBounds(bounds, { padding: [20, 20] });
+          }
+        }, 200);
+      }
+    }, 1000);
   };
 
   return (

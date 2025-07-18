@@ -113,28 +113,47 @@ serve(async (req) => {
       lon: activeTarget.lon 
     });
 
-    // 🎯 CORRECTED COORDINATE GENERATION: Ensure target city is ALWAYS included
+    // 🎯 FIXED: Generate area center 3-8km from Agrigento ensuring city inclusion
     const targetLat = parseFloat(activeTarget.lat.toString());
     const targetLon = parseFloat(activeTarget.lon.toString());
     
-    // Generate coordinates 3-8km from target to GUARANTEE city inclusion
-    const distanceKm = 3 + Math.random() * 5; // 3-8 km from target
+    logStep("🗺️ Target coordinates", { targetLat, targetLon, city: activeTarget.city });
+    
+    // Generate area center 3-8km from target (NOT radius, but distance from target to center)
+    const distanceKm = 3 + Math.random() * 5; // 3-8 km from target to area CENTER
     const bearingRad = Math.random() * 2 * Math.PI;
     
-    // Correct coordinate calculation with proper Earth curvature
-    const deltaLat = (distanceKm / 111.32) * Math.cos(bearingRad);
-    const deltaLon = (distanceKm / (111.32 * Math.cos(targetLat * Math.PI / 180))) * Math.sin(bearingRad);
+    // Earth's radius and proper coordinate calculation
+    const R = 6371; // Earth's radius in km
+    const lat1Rad = targetLat * Math.PI / 180;
+    const lon1Rad = targetLon * Math.PI / 180;
     
-    const areaLat = targetLat + deltaLat;
-    const areaLon = targetLon + deltaLon;
+    // Calculate new coordinates using spherical trigonometry
+    const lat2Rad = Math.asin(
+      Math.sin(lat1Rad) * Math.cos(distanceKm / R) +
+      Math.cos(lat1Rad) * Math.sin(distanceKm / R) * Math.cos(bearingRad)
+    );
     
-    logStep("🗺️ Generating BUZZ MAP area", {
-      target_lat: targetLat,
-      target_lon: targetLon,
-      area_lat: areaLat,
-      area_lon: areaLon,
+    const lon2Rad = lon1Rad + Math.atan2(
+      Math.sin(bearingRad) * Math.sin(distanceKm / R) * Math.cos(lat1Rad),
+      Math.cos(distanceKm / R) - Math.sin(lat1Rad) * Math.sin(lat2Rad)
+    );
+    
+    const areaLat = lat2Rad * 180 / Math.PI;
+    const areaLon = lon2Rad * 180 / Math.PI;
+    
+    // Verify the distance (for debugging)
+    const actualDistance = Math.sqrt(
+      Math.pow((areaLat - targetLat) * 111.32, 2) + 
+      Math.pow((areaLon - targetLon) * 111.32 * Math.cos(targetLat * Math.PI / 180), 2)
+    );
+    
+    logStep("🎯 FIXED: BUZZ MAP area coordinates", {
+      target: { lat: targetLat, lon: targetLon, city: activeTarget.city },
+      area_center: { lat: areaLat, lon: areaLon },
       distance_from_target_km: distanceKm,
-      radius_km: 15
+      actual_distance_calculated: actualDistance,
+      area_radius_km: 8
     });
 
     // Create the area
@@ -144,7 +163,7 @@ serve(async (req) => {
         user_id: user.id,
         lat: areaLat,
         lng: areaLon,
-        radius_km: 15,
+        radius_km: 8,
         week: 1
       })
       .select()
@@ -159,7 +178,7 @@ serve(async (req) => {
       area_id: newArea.id,
       target_city: activeTarget.city,
       coordinates: { lat: areaLat, lng: areaLon },
-      radius_km: 15
+      radius_km: 8
     });
 
     return new Response(JSON.stringify({
