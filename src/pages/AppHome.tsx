@@ -81,6 +81,14 @@ const AppHome = () => {
   const isAdmin = hasRole('admin');
   const isDeveloper = hasRole('developer');
   const showPanelButton = isAdmin || isDeveloper;
+  
+  // Debug log for panel button visibility
+  console.log('🔍 Panel Button Debug:', { 
+    isAdmin, 
+    isDeveloper, 
+    showPanelButton,
+    hasRoleFunction: typeof hasRole 
+  });
 
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
