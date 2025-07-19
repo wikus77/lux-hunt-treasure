@@ -69,8 +69,13 @@ export type Database = {
           device: string | null
           event_type: string
           id: string
+          ip_address: unknown | null
           note: string | null
+          reason: string | null
+          route: string | null
+          status_code: number | null
           timestamp: string
+          user_agent: string | null
           user_id: string | null
         }
         Insert: {
@@ -79,8 +84,13 @@ export type Database = {
           device?: string | null
           event_type: string
           id?: string
+          ip_address?: unknown | null
           note?: string | null
+          reason?: string | null
+          route?: string | null
+          status_code?: number | null
           timestamp?: string
+          user_agent?: string | null
           user_id?: string | null
         }
         Update: {
@@ -89,8 +99,13 @@ export type Database = {
           device?: string | null
           event_type?: string
           id?: string
+          ip_address?: unknown | null
           note?: string | null
+          reason?: string | null
+          route?: string | null
+          status_code?: number | null
           timestamp?: string
+          user_agent?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -170,6 +185,36 @@ export type Database = {
         }
         Relationships: []
       }
+      api_rate_limits: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: unknown
+          last_request: string
+          request_count: number
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address: unknown
+          last_request?: string
+          request_count?: number
+          window_start?: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: unknown
+          last_request?: string
+          request_count?: number
+          window_start?: string
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string
@@ -242,6 +287,36 @@ export type Database = {
           id?: string
           status?: string
           storage_path?: string | null
+        }
+        Relationships: []
+      }
+      blocked_ips: {
+        Row: {
+          attempts: number
+          blocked_at: string
+          created_at: string
+          id: string
+          ip_address: unknown
+          reason: string
+          unblock_at: string
+        }
+        Insert: {
+          attempts?: number
+          blocked_at?: string
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          reason?: string
+          unblock_at: string
+        }
+        Update: {
+          attempts?: number
+          blocked_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          reason?: string
+          unblock_at?: string
         }
         Relationships: []
       }
@@ -1741,6 +1816,14 @@ export type Database = {
         Args: { p_mission_id: string }
         Returns: number
       }
+      block_ip: {
+        Args: {
+          ip_addr: unknown
+          block_duration_minutes?: number
+          block_reason?: string
+        }
+        Returns: undefined
+      }
       calculate_buzz_price: {
         Args: { daily_count: number }
         Returns: number
@@ -1753,7 +1836,20 @@ export type Database = {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          ip_addr: unknown
+          api_endpoint: string
+          max_requests?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       cleanup_old_abuse_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_security_tables: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -1823,6 +1919,10 @@ export type Database = {
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
+      }
+      is_ip_blocked: {
+        Args: { ip_addr: unknown }
+        Returns: boolean
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }

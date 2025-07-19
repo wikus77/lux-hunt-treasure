@@ -1,11 +1,92 @@
+// © 2025 Joseph MULÉ – M1SSION™- ALL RIGHTS RESERVED - NIYVORA KFT
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-m1ssion-sig',
 };
+
+const AUTHORIZED_EMAIL_HASH = '9e0aefd8ff5e2879549f1bfddb3975372f9f4281ea9f9120ef90278763653c52'
+
+// Utility function to get client IP
+function getClientIP(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for')
+  const realIP = req.headers.get('x-real-ip')
+  const cfConnectingIP = req.headers.get('cf-connecting-ip')
+  
+  if (forwarded) return forwarded.split(',')[0].trim()
+  if (realIP) return realIP
+  if (cfConnectingIP) return cfConnectingIP
+  return '0.0.0.0'
+}
+
+// Utility function to calculate SHA-256
+async function calculateSHA256(text: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(text)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
+
+// Security validation function
+async function validateSecurity(req: Request, supabase: any): Promise<{ success: boolean, error?: string, user?: any, ipAddress: string }> {
+  const ipAddress = getClientIP(req)
+  const authHeader = req.headers.get('authorization')
+
+  console.log(`🔒 Security validation for AI generator from IP: ${ipAddress}`)
+
+  // Check if IP is blocked
+  const { data: isBlocked } = await supabase.rpc('is_ip_blocked', { ip_addr: ipAddress })
+  if (isBlocked) {
+    console.log(`🚫 IP ${ipAddress} is blocked`)
+    return { success: false, error: 'IP_BLOCKED', ipAddress }
+  }
+
+  // Check rate limit
+  const { data: rateLimitOk } = await supabase.rpc('check_rate_limit', {
+    ip_addr: ipAddress,
+    api_endpoint: 'ai-content-generator',
+    max_requests: 3,
+    window_minutes: 1
+  })
+
+  if (!rateLimitOk) {
+    console.log(`⏱️ Rate limit exceeded for IP ${ipAddress}`)
+    await supabase.rpc('block_ip', {
+      ip_addr: ipAddress,
+      block_duration_minutes: 30,
+      block_reason: 'rate_limit_exceeded_ai_generator'
+    })
+    return { success: false, error: 'RATE_LIMIT_EXCEEDED', ipAddress }
+  }
+
+  // Verify JWT token
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('🔐 Missing or invalid authorization header')
+    return { success: false, error: 'MISSING_AUTH_TOKEN', ipAddress }
+  }
+
+  const token = authHeader.split(' ')[1]
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+
+  if (authError || !user || !user.email) {
+    console.log('🔐 Invalid JWT token or no email:', authError?.message)
+    return { success: false, error: 'INVALID_TOKEN', ipAddress }
+  }
+
+  // Verify email hash
+  const emailHash = await calculateSHA256(user.email)
+  if (emailHash !== AUTHORIZED_EMAIL_HASH) {
+    console.log(`🔐 Unauthorized email hash. Expected: ${AUTHORIZED_EMAIL_HASH}, Got: ${emailHash}`)
+    return { success: false, error: 'UNAUTHORIZED_EMAIL', ipAddress }
+  }
+
+  console.log(`✅ Security validation passed for user ${user.email}`)
+  return { success: true, user, ipAddress }
+}
 
 // Helper function to split text into semantic lines for dynamic clue release
 function splitIntoClueLines(text: string): string[] {
@@ -43,6 +124,42 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase for security validation
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Perform security validation first
+    const validation = await validateSecurity(req, supabase)
+    const userAgent = req.headers.get('user-agent') || 'unknown'
+
+    // Log access attempt
+    await supabase.from('admin_logs').insert({
+      event_type: validation.success ? 'ai_generator_access_granted' : 'ai_generator_access_denied',
+      user_id: validation.user?.id || null,
+      context: 'AI Content Generator access',
+      note: validation.error || 'success',
+      device: userAgent,
+      ip_address: validation.ipAddress,
+      route: 'ai-content-generator',
+      status_code: validation.success ? 200 : 403,
+      reason: validation.error || 'authorized_access'
+    })
+
+    if (!validation.success) {
+      console.log(`🚫 Access denied: ${validation.error}`)
+      return new Response(
+        JSON.stringify({ 
+          error: validation.error,
+          message: 'Access denied'
+        }),
+        { 
+          status: validation.error === 'RATE_LIMIT_EXCEEDED' ? 429 : 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
     const { prompt, contentType, missionId } = await req.json();
     
     if (!prompt?.trim()) {
@@ -158,24 +275,8 @@ serve(async (req) => {
     const data = await response.json();
     const generatedContent = data.choices[0].message.content;
 
-    // Inizializza Supabase per salvare il contenuto
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Ottieni l'ID utente dal token JWT
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('Token di autorizzazione mancante');
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      throw new Error('Utente non autenticato');
-    }
+    // Use the already validated user from security check
+    const user = validation.user;
 
     // Ottieni il piano utente e la settimana corrente per il sistema dinamico
     const { data: profileData } = await supabase

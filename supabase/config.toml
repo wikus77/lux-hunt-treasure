@@ -41,6 +41,15 @@ verify_jwt = true
 [functions.handle-buzz-payment-success]
 verify_jwt = true
 
+[functions.ai-content-generator]
+verify_jwt = true
+
+[functions.secure-api-protection]
+verify_jwt = false
+
+[functions.panel-security-status]
+verify_jwt = true
+
 # Additional security bypass for testing
 [auth.security]
 captcha_enabled = false
