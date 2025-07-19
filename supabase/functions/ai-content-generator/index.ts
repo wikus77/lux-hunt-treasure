@@ -133,9 +133,37 @@ serve(async (req) => {
     console.log(`🔧 Request method: ${req.method}`);
     console.log(`📋 Request headers:`, Object.fromEntries(req.headers.entries()));
     
-    // Parse request body first and log it
-    const requestBody = await req.json();
-    console.log(`⏱️ REQUEST BODY:`, requestBody);
+    // Parse request body with error handling and logging
+    let requestBody: any = null;
+    
+    try {
+      const bodyText = await req.text();
+      console.log(`📦 Raw request body text: "${bodyText}"`);
+      console.log(`📦 Body length: ${bodyText.length}`);
+      
+      if (!bodyText || bodyText.trim() === '') {
+        console.log('❌ Empty request body received');
+        return new Response(
+          JSON.stringify({ error: 'Request body is empty. Expected JSON with prompt, contentType, and missionId.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      requestBody = JSON.parse(bodyText);
+      console.log(`✅ Parsed request body:`, requestBody);
+      
+    } catch (parseError) {
+      console.log('❌ JSON parse error:', parseError.message);
+      console.log('❌ Parse error details:', parseError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid JSON in request body', 
+          details: parseError.message,
+          receivedContent: await req.text().catch(() => 'Could not read body')
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Initialize Supabase for security validation
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

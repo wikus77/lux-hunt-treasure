@@ -45,11 +45,7 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
       console.log('🔐 Frontend: Using JWT token:', session.access_token.substring(0, 20) + '...');
 
       const { data, error } = await supabase.functions.invoke('ai-content-generator', {
-        body: requestPayload,
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
-        }
+        body: requestPayload
       });
 
       console.log('📥 Frontend: Raw response data:', data);
