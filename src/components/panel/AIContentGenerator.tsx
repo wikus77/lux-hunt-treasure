@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AIContentGeneratorProps {
   onBack: () => void;
@@ -24,15 +25,33 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
 
     setIsGenerating(true);
     try {
-      // Simulazione chiamata API AI
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const { data, error } = await supabase.functions.invoke('ai-content-generator', {
+        body: {
+          prompt: prompt.trim(),
+          contentType,
+          missionId: null // Per ora null, in futuro si potrà selezionare una missione
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setGeneratedContent(data.content);
       
-      const mockContent = `Contenuto generato per tipo "${contentType}":\n\n${prompt}\n\nRisposta AI: Questo è un contenuto di esempio generato automaticamente dal sistema M1SSION™ AI Generator. Il contenuto verrebbe personalizzato in base al tipo selezionato e al prompt fornito.`;
-      
-      setGeneratedContent(mockContent);
-      toast.success('Contenuto generato con successo!');
+      if (data.saved) {
+        toast.success('Contenuto generato e salvato con successo!');
+      } else {
+        toast.success('Contenuto generato!');
+        toast.error('Attenzione: contenuto non salvato nel database');
+      }
     } catch (error) {
-      toast.error('Errore durante la generazione del contenuto');
+      console.error('Errore durante la generazione:', error);
+      toast.error(error.message || 'Errore durante la generazione del contenuto');
     } finally {
       setIsGenerating(false);
     }

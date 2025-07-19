@@ -131,6 +131,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_generated_clues: {
+        Row: {
+          content: string
+          content_type: string
+          created_at: string
+          id: string
+          language: string | null
+          mission_id: string | null
+          prompt_used: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          content_type: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          mission_id?: string | null
+          prompt_used: string
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          language?: string | null
+          mission_id?: string | null
+          prompt_used?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string
