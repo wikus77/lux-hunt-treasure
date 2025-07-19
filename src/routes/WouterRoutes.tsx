@@ -23,6 +23,7 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
+import PanelAccessPage from "@/pages/PanelAccessPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -108,6 +109,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/admin/send-notification">
             <ProtectedRoute>
               <SendNotificationPage />
+            </ProtectedRoute>
+          </Route>
+
+          {/* Panel Access route */}
+          <Route path="/panel-access">
+            <ProtectedRoute>
+              <GlobalLayout><PanelAccessPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

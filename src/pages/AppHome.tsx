@@ -12,6 +12,9 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
+import { useAuthContext } from "@/contexts/auth";
+import { useLocation } from "wouter";
+import { Cpu } from "lucide-react";
 
 const AppHome = () => {
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +23,8 @@ const AppHome = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+  const { hasRole } = useAuthContext();
+  const [, navigate] = useLocation();
   
   const {
     notifications,
@@ -71,6 +76,11 @@ const AppHome = () => {
       });
     }
   }, [error]);
+
+  // Check admin/developer access for Panel button
+  const isAdmin = hasRole('admin');
+  const isDeveloper = hasRole('developer');
+  const showPanelButton = isAdmin || isDeveloper;
 
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
@@ -160,6 +170,53 @@ const AppHome = () => {
 
                 <main className="max-w-screen-xl mx-auto pb-20">
                   <CommandCenterHome />
+                  
+                  {/* M1SSION PANEL™ Button - Only for Admin/Developer */}
+                  {showPanelButton && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8, duration: 0.6 }}
+                      className="mt-8"
+                    >
+                      <motion.button
+                        onClick={() => navigate('/panel-access')}
+                        className="w-full glass-card p-4 border border-[#4361ee]/30 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 rounded-xl group relative overflow-hidden"
+                        whileHover={{ 
+                          scale: 1.02,
+                          borderColor: 'rgba(67, 97, 238, 0.6)'
+                        }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        {/* Animated border pulse */}
+                        <div className="absolute inset-0 rounded-xl border border-[#4361ee]/50 animate-pulse group-hover:border-[#4361ee]/80 transition-colors" />
+                        
+                        <div className="relative flex items-center justify-center gap-3">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Cpu className="w-5 h-5 text-white" />
+                          </div>
+                          
+                          <div className="text-left">
+                            <h3 className="text-lg font-orbitron font-bold">
+                              <span className="text-[#4361ee]">M1SSION</span>
+                              <span className="text-white"> PANEL</span>
+                              <span className="text-xs align-top text-[#7209b7]">™</span>
+                            </h3>
+                            <p className="text-gray-400 text-sm">
+                              Centro AI Generativo - Accesso Test
+                            </p>
+                          </div>
+                          
+                          <div className="ml-auto">
+                            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                          </div>
+                        </div>
+                        
+                        {/* Neon glow effect on hover */}
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#4361ee]/0 via-[#4361ee]/5 to-[#7209b7]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </motion.button>
+                    </motion.div>
+                  )}
                 </main>
               </div>
             </motion.div>
