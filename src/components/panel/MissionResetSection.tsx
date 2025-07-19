@@ -1,0 +1,140 @@
+// © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
+
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, RotateCcw, Shield } from "lucide-react";
+import { toast } from "sonner";
+
+export const MissionResetSection: React.FC = () => {
+  const [isResetting, setIsResetting] = useState(false);
+  const [confirmationCode, setConfirmationCode] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
+
+  const handleReset = async () => {
+    if (confirmationCode !== 'RESET_M1SSION_CONFIRM') {
+      toast.error('Codice di conferma non valido');
+      return;
+    }
+
+    setIsResetting(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sessione non trovata');
+      }
+
+      const response = await supabase.functions.invoke('reset-mission', {
+        body: { confirmationCode },
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Errore durante il reset');
+      }
+
+      const result = response.data;
+      
+      if (result.success) {
+        toast.success('✅ RESET MISSIONE COMPLETATO', {
+          description: `Operazioni completate: ${result.operationsCompleted}, Fallite: ${result.operationsFailed}`
+        });
+        setShowConfirmation(false);
+        setConfirmationCode('');
+      } else {
+        throw new Error(result.error || 'Reset fallito');
+      }
+
+    } catch (error) {
+      console.error('❌ Reset mission error:', error);
+      toast.error('❌ ERRORE RESET MISSIONE', {
+        description: error.message || 'Errore sconosciuto durante il reset'
+      });
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  return (
+    <Card className="border-destructive/20 bg-destructive/5">
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <RotateCcw className="h-5 w-5 text-destructive" />
+          <CardTitle className="text-destructive">RESET MISSIONE™</CardTitle>
+        </div>
+        <CardDescription>
+          Riavvia completamente la missione corrente - AZIONE IRREVERSIBILE
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            <strong>ATTENZIONE:</strong> Questa operazione eliminerà:
+            <ul className="list-disc ml-4 mt-2 space-y-1">
+              <li>Tutti gli indizi generati</li>
+              <li>Stato utente missione</li>
+              <li>Contatori BUZZ</li>
+              <li>Aree mappa generate</li>
+              <li>Notifiche utente</li>
+            </ul>
+          </AlertDescription>
+        </Alert>
+
+        {!showConfirmation ? (
+          <Button 
+            variant="destructive" 
+            onClick={() => setShowConfirmation(true)}
+            className="w-full"
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            AVVIA RESET MISSIONE
+          </Button>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
+                Inserisci il codice di conferma: <code className="bg-muted px-1 rounded">RESET_M1SSION_CONFIRM</code>
+              </label>
+              <Input
+                type="text"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                placeholder="Inserisci il codice di conferma"
+                className="font-mono"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="destructive" 
+                onClick={handleReset}
+                disabled={isResetting || confirmationCode !== 'RESET_M1SSION_CONFIRM'}
+                className="flex-1"
+              >
+                {isResetting ? 'RESETTING...' : 'CONFERMA RESET'}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setShowConfirmation(false);
+                  setConfirmationCode('');
+                }}
+                disabled={isResetting}
+              >
+                Annulla
+              </Button>
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};

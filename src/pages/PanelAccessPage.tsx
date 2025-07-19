@@ -3,13 +3,15 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap, AlertTriangle } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { Helmet } from 'react-helmet';
 import AIContentGenerator from '@/components/panel/AIContentGenerator';
 import MissionControlPanel from '@/components/panel/MissionControlPanel';
+import { MissionResetSection } from '@/components/panel/MissionResetSection';
+import { MissionConfigSection } from '@/components/panel/MissionConfigSection';
 import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -19,7 +21,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   const currentUser = getCurrentUser();
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -61,6 +63,62 @@ const PanelAccessPage = () => {
   
   if (currentView === 'mission-control' && hasAccess) {
     return <MissionControlPanel onBack={() => setCurrentView('home')} />;
+  }
+
+  if (currentView === 'mission-reset' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">Reset Missione</h1>
+            </div>
+            <MissionResetSection />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'mission-config' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">Configura Missione</h1>
+            </div>
+            <MissionConfigSection />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -170,6 +228,40 @@ const PanelAccessPage = () => {
                     <div>
                       <h3 className="font-semibold text-white">Mission Control</h3>
                       <p className="text-gray-400 text-sm">Controllo avanzato delle missioni attive</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('mission-reset')}
+                  className="glass-card p-4 border border-red-500/30 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-red-600 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <RotateCcw className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Reset Missione™</h3>
+                      <p className="text-gray-400 text-sm">Riavvia completamente la missione corrente</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('mission-config')}
+                  className="glass-card p-4 border border-emerald-500/30 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <MapPin className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">Imposta Missione™</h3>
+                      <p className="text-gray-400 text-sm">Configura manualmente i parametri missione</p>
                     </div>
                   </div>
                 </motion.div>

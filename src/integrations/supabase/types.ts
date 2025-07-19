@@ -517,6 +517,54 @@ export type Database = {
         }
         Relationships: []
       }
+      current_mission_data: {
+        Row: {
+          city: string
+          country: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          prize_category: string
+          prize_color: string
+          prize_material: string
+          prize_type: string
+          street: string
+          street_number: string
+          updated_at: string | null
+        }
+        Insert: {
+          city: string
+          country: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          prize_category: string
+          prize_color: string
+          prize_material: string
+          prize_type: string
+          street: string
+          street_number: string
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          prize_category?: string
+          prize_color?: string
+          prize_material?: string
+          prize_type?: string
+          street?: string
+          street_number?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       device_tokens: {
         Row: {
           created_at: string

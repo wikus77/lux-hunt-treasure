@@ -50,6 +50,12 @@ verify_jwt = false
 [functions.panel-security-status]
 verify_jwt = true
 
+[functions.reset-mission]
+verify_jwt = false
+
+[functions.update-mission]
+verify_jwt = false
+
 # Additional security bypass for testing
 [auth.security]
 captcha_enabled = false
