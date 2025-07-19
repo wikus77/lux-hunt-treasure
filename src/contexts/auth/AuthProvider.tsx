@@ -46,7 +46,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Fetch user roles when user changes
   useEffect(() => {
     const fetchUserRoles = async () => {
+      console.log("🔍 Fetch user roles called:", { 
+        userId: auth.user?.id, 
+        userEmail: auth.user?.email,
+        isLoading: auth.isLoading,
+        authObj: auth 
+      });
+
       if (!auth.user?.id || auth.isLoading) {
+        console.log("⚠️ No user or still loading, setting empty roles");
         setUserRoles([]);
         setIsRoleLoading(false);
         return;
@@ -57,22 +65,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log("🔍 Fetching roles for user:", auth.user.id, auth.user.email);
         
         // Check user_roles table for all roles - FIXED: remove .single()
-        const { data: rolesData } = await supabase
+        const { data: rolesData, error: rolesError } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', auth.user.id);
+
+        console.log("🔍 Roles query result:", { rolesData, rolesError });
+
+        if (rolesError) {
+          console.error("❌ Error fetching from user_roles:", rolesError);
+          throw rolesError;
+        }
 
         if (rolesData && rolesData.length > 0) {
           const roles = rolesData.map(r => r.role);
           setUserRoles(roles);
           console.log("✅ User roles found:", roles);
         } else {
+          console.log("⚠️ No roles found in user_roles, checking profiles as fallback");
           // Check profiles table as fallback
-          const { data: profileData } = await supabase
+          const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', auth.user.id)
             .single();
+
+          console.log("🔍 Profile query result:", { profileData, profileError });
+
+          if (profileError && profileError.code !== 'PGRST116') {
+            console.error("❌ Error fetching from profiles:", profileError);
+          }
 
           setUserRoles(profileData?.role ? [profileData.role] : ['user']);
           console.log("✅ User role from profiles:", [profileData?.role || 'user']);
@@ -88,6 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (auth.user?.id) {
       fetchUserRoles();
     } else {
+      console.log("⚠️ No auth.user, setting empty roles");
       setUserRoles([]);
       setIsRoleLoading(false);
     }

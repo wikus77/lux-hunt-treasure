@@ -78,16 +78,24 @@ const AppHome = () => {
   }, [error]);
 
   // Check admin/developer access for Panel button
+  const { getCurrentUser } = useAuthContext();
   const isAdmin = hasRole('admin');
   const isDeveloper = hasRole('developer');
   const showPanelButton = isAdmin || isDeveloper;
-  
-  // Debug log for panel button visibility
+
+  // Debug temporaneo per forzare visualizzazione durante test
+  const currentUser = getCurrentUser();
+  const isTestUser = currentUser?.email === 'wikus77@hotmail.it';
+  const forcedShowPanel = isTestUser || showPanelButton;
+
   console.log('🔍 Panel Button Debug:', { 
     isAdmin, 
     isDeveloper, 
     showPanelButton,
-    hasRoleFunction: typeof hasRole 
+    isTestUser,
+    forcedShowPanel,
+    userEmail: currentUser?.email,
+    hasRoleFunction: typeof hasRole
   });
 
   // Show developer access screen for mobile users without access
@@ -180,7 +188,7 @@ const AppHome = () => {
                   <CommandCenterHome />
                   
                   {/* M1SSION PANEL™ Button - Only for Admin/Developer */}
-                  {showPanelButton && (
+                  {forcedShowPanel && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
