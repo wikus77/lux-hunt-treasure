@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { detectInitialLanguage } from './lang-detection';
+import { supabase } from '@/integrations/supabase/client';
 
 type SupportedLanguage = 'en' | 'it' | 'fr' | 'es' | 'de' | 'pt' | 'zh' | 'ar';
 
@@ -75,15 +76,58 @@ export function useI18n(): UseI18nReturn {
     const initializeLanguage = async () => {
       setIsLoading(true);
       
-      // Verifica se c'è una lingua salvata
-      const savedLang = localStorage.getItem(STORAGE_KEY) as SupportedLanguage;
       let initialLang: SupportedLanguage;
       
-      if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
-        initialLang = savedLang;
-      } else {
-        initialLang = detectInitialLanguage();
-        localStorage.setItem(STORAGE_KEY, initialLang);
+      try {
+        // 1. Prova a caricare la lingua dal profilo Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('language')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile?.language && SUPPORTED_LANGUAGES.includes(profile.language as SupportedLanguage)) {
+            initialLang = profile.language as SupportedLanguage;
+            localStorage.setItem(STORAGE_KEY, initialLang);
+          } else {
+            // 2. Fallback su localStorage
+            const savedLang = localStorage.getItem(STORAGE_KEY) as SupportedLanguage;
+            if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
+              initialLang = savedLang;
+            } else {
+              // 3. Rileva la lingua del browser
+              initialLang = detectInitialLanguage();
+              localStorage.setItem(STORAGE_KEY, initialLang);
+              
+              // Salva la lingua rilevata nel profilo
+              await supabase
+                .from('profiles')
+                .update({ language: initialLang })
+                .eq('id', user.id);
+            }
+          }
+        } else {
+          // Utente non autenticato: usa localStorage o rileva dal browser
+          const savedLang = localStorage.getItem(STORAGE_KEY) as SupportedLanguage;
+          if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
+            initialLang = savedLang;
+          } else {
+            initialLang = detectInitialLanguage();
+            localStorage.setItem(STORAGE_KEY, initialLang);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing language:', error);
+        // Fallback in caso di errore
+        const savedLang = localStorage.getItem(STORAGE_KEY) as SupportedLanguage;
+        if (savedLang && SUPPORTED_LANGUAGES.includes(savedLang)) {
+          initialLang = savedLang;
+        } else {
+          initialLang = detectInitialLanguage();
+          localStorage.setItem(STORAGE_KEY, initialLang);
+        }
       }
       
       setCurrentLangState(initialLang);
@@ -112,6 +156,19 @@ export function useI18n(): UseI18nReturn {
     setIsLoading(true);
     setCurrentLangState(lang);
     localStorage.setItem(STORAGE_KEY, lang);
+    
+    // Salva la lingua anche nel profilo Supabase se l'utente è autenticato
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ language: lang })
+          .eq('id', user.id);
+      }
+    } catch (error) {
+      console.warn('Could not save language to profile:', error);
+    }
     
     try {
       const loadedTranslations = await loadTranslations(lang);

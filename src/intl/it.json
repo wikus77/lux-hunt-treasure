@@ -32,7 +32,11 @@
     "status": "Stato",
     "active": "Attivo",
     "completed": "Completato",
-    "locked": "Bloccato"
+    "locked": "Bloccato",
+    "agent": "Agente",
+    "code": "Codice",
+    "week": "Settimana",
+    "investigation": "Investigazione"
   },
   "plans": {
     "base": "Piano Base",

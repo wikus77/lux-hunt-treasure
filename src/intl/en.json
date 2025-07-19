@@ -32,7 +32,11 @@
     "status": "Status",
     "active": "Active",
     "completed": "Completed",
-    "locked": "Locked"
+    "locked": "Locked",
+    "agent": "Agent",
+    "code": "Code",
+    "week": "Week",
+    "investigation": "Investigation"
   },
   "plans": {
     "base": "Base Plan",

@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "save": "Sauvegarder",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "retry": "Réessayer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "welcome": "Bienvenue"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "map": "Carte",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "about": "À propos"
+  },
+  "mission": {
+    "title": "M1SSION™",
+    "subtitle": "Le Défi Ultime",
+    "panel": "M1SSION PANEL™",
+    "buzz": "BUZZ",
+    "clues": "Indices",
+    "progress": "Progrès",
+    "status": "Statut",
+    "active": "Actif",
+    "completed": "Terminé",
+    "locked": "Verrouillé",
+    "agent": "Agent",
+    "code": "Code",
+    "week": "Semaine",
+    "investigation": "Enquête"
+  },
+  "plans": {
+    "base": "Plan de Base",
+    "silver": "Plan Silver",
+    "gold": "Plan Gold",
+    "black": "Plan Black",
+    "titanium": "Plan Titanium",
+    "upgrade": "Améliorer le Plan",
+    "features": "Fonctionnalités",
+    "cluesPerWeek": "Indices par semaine",
+    "earlyAccess": "Accès anticipé",
+    "support": "Support"
+  },
+  "clues": {
+    "title": "Indices",
+    "week": "Semaine",
+    "type": "Type",
+    "difficulty": "Difficulté",
+    "location": "Emplacement",
+    "hint": "Indice",
+    "revealed": "Révélé",
+    "hidden": "Caché",
+    "decoy": "Leurre",
+    "certified": "Certifié"
+  },
+  "map": {
+    "title": "Carte de Mission",
+    "zoom": "Zoom",
+    "reset": "Réinitialiser la Vue",
+    "location": "Emplacement",
+    "region": "Région",
+    "area": "Zone"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "register": "S'inscrire",
+    "email": "Email",
+    "password": "Mot de passe",
+    "forgotPassword": "Mot de passe oublié ?",
+    "rememberMe": "Se souvenir de moi"
+  },
+  "errors": {
+    "general": "Quelque chose s'est mal passé",
+    "network": "Erreur réseau",
+    "notFound": "Non trouvé",
+    "unauthorized": "Accès non autorisé",
+    "forbidden": "Accès interdit",
+    "validation": "Erreur de validation"
+  },
+  "messages": {
+    "welcome": "Bienvenue dans M1SSION™",
+    "newClue": "Nouvel indice disponible !",
+    "missionComplete": "Mission terminée !",
+    "weeklyUpdate": "Mise à jour hebdomadaire disponible",
+    "planUpgraded": "Plan mis à niveau avec succès"
+  }
+}

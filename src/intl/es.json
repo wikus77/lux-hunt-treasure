@@ -1,0 +1,97 @@
+{
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "close": "Cerrar",
+    "save": "Guardar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "retry": "Reintentar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "welcome": "Bienvenido"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "map": "Mapa",
+    "profile": "Perfil",
+    "settings": "Configuración",
+    "about": "Acerca de"
+  },
+  "mission": {
+    "title": "M1SSION™",
+    "subtitle": "El Desafío Definitivo",
+    "panel": "M1SSION PANEL™",
+    "buzz": "BUZZ",
+    "clues": "Pistas",
+    "progress": "Progreso",
+    "status": "Estado",
+    "active": "Activo",
+    "completed": "Completado",
+    "locked": "Bloqueado",
+    "agent": "Agente",
+    "code": "Código",
+    "week": "Semana",
+    "investigation": "Investigación"
+  },
+  "plans": {
+    "base": "Plan Básico",
+    "silver": "Plan Silver",
+    "gold": "Plan Gold",
+    "black": "Plan Black",
+    "titanium": "Plan Titanium",
+    "upgrade": "Actualizar Plan",
+    "features": "Características",
+    "cluesPerWeek": "Pistas por semana",
+    "earlyAccess": "Acceso anticipado",
+    "support": "Soporte"
+  },
+  "clues": {
+    "title": "Pistas",
+    "week": "Semana",
+    "type": "Tipo",
+    "difficulty": "Dificultad",
+    "location": "Ubicación",
+    "hint": "Pista",
+    "revealed": "Revelado",
+    "hidden": "Oculto",
+    "decoy": "Señuelo",
+    "certified": "Certificado"
+  },
+  "map": {
+    "title": "Mapa de Misión",
+    "zoom": "Zoom",
+    "reset": "Restablecer Vista",
+    "location": "Ubicación",
+    "region": "Región",
+    "area": "Área"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "register": "Registrarse",
+    "email": "Email",
+    "password": "Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "rememberMe": "Recordarme"
+  },
+  "errors": {
+    "general": "Algo salió mal",
+    "network": "Error de red",
+    "notFound": "No encontrado",
+    "unauthorized": "Acceso no autorizado",
+    "forbidden": "Acceso prohibido",
+    "validation": "Error de validación"
+  },
+  "messages": {
+    "welcome": "Bienvenido a M1SSION™",
+    "newClue": "¡Nueva pista disponible!",
+    "missionComplete": "¡Misión completada!",
+    "weeklyUpdate": "Actualización semanal disponible",
+    "planUpgraded": "Plan actualizado exitosamente"
+  }
+}
