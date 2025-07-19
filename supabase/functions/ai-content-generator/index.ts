@@ -286,7 +286,7 @@ serve(async (req) => {
       .single();
     
     const userPlan = profileData?.subscription_tier || 'free';
-    const currentWeek = getCurrentWeekNumber();
+    const currentWeekNum = getCurrentWeekNumber();
 
     // Salva il contenuto generato nel database (testo completo)
     const { data: savedContent, error: saveError } = await supabase
@@ -314,7 +314,7 @@ serve(async (req) => {
     const clueLineInserts = clueLines.map((line, index) => ({
       user_id: user.id,
       prompt_id: savedContent?.id || null,
-      week_number: currentWeek,
+      week_number: currentWeekNum,
       plan_level: userPlan,
       clue_index: index + 1,
       clue_line: line,
@@ -337,7 +337,7 @@ serve(async (req) => {
         const { data: releasedCount } = await supabase.rpc('release_clue_lines', {
           p_user_id: user.id,
           p_plan_level: userPlan,
-          p_week_number: currentWeek
+          p_week_number: currentWeekNum
         });
         
         console.log(`🚀 Rilasciate ${releasedCount || 0} righe per piano ${userPlan}`);
@@ -354,7 +354,7 @@ serve(async (req) => {
         linesCreated: clueLines.length,
         linesSaved: savedLines?.length || 0,
         userPlan: userPlan,
-        weekNumber: currentWeek
+        weekNumber: currentWeekNum
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
