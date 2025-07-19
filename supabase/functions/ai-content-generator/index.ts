@@ -133,6 +133,10 @@ serve(async (req) => {
     console.log(`🔧 Request method: ${req.method}`);
     console.log(`📋 Request headers:`, Object.fromEntries(req.headers.entries()));
     
+    // Parse request body first and log it
+    const requestBody = await req.json();
+    console.log(`⏱️ REQUEST BODY:`, requestBody);
+    
     // Initialize Supabase for security validation
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -374,20 +378,41 @@ serve(async (req) => {
     console.error(`🕐 Duration: ${duration}ms`);
     console.error(`📡 IP: ${ipAddress}`);
     
-    // Log dell'errore nel database per debugging
+    // Log dell'errore dettagliato nel database per debugging
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
       
+      // Determina il tipo di errore
+      let statusCode = 500;
+      let reason = 'runtime_error';
+      
+      if (error.message?.includes('JWT')) {
+        statusCode = 401;
+        reason = 'jwt_invalid';
+      } else if (error.message?.includes('JSON')) {
+        statusCode = 400;
+        reason = 'invalid_json';
+      } else if (error.message?.includes('unauthorized')) {
+        statusCode = 403;
+        reason = 'unauthorized_access';
+      }
+      
       await supabase.from('admin_logs').insert({
-        event_type: 'ai_generator_error',
-        context: 'AI Content Generator error',
+        event_type: 'ai_generator_failure',
+        context: 'AI Content Generator detailed error',
         note: error.message || 'Unknown error',
         ip_address: ipAddress,
         route: 'ai-content-generator',
-        status_code: 500,
-        reason: 'runtime_error'
+        status_code: statusCode,
+        reason: reason,
+        user_agent: req.headers.get('user-agent') || 'unknown',
+        payload: JSON.stringify({
+          error_type: error.name,
+          error_stack: error.stack,
+          timestamp: new Date().toISOString()
+        })
       });
     } catch (logError) {
       console.error('Failed to log error:', logError);

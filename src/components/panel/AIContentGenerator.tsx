@@ -48,6 +48,7 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
       }
 
       if (data?.error) {
+        console.error('Edge Function Error Details:', data);
         throw new Error(data.error);
       }
 
@@ -61,7 +62,21 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
       }
     } catch (error) {
       console.error('Errore durante la generazione:', error);
-      toast.error(error.message || 'Errore durante la generazione del contenuto');
+      
+      // Debug logging completo per identificare il problema
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Mostra errore più dettagliato all'utente
+      const errorMessage = error.message?.includes('non-2xx') 
+        ? 'Errore del server AI. Controllare i log per dettagli.'
+        : error.message || 'Errore durante la generazione del contenuto';
+        
+      toast.error(errorMessage);
     } finally {
       setIsGenerating(false);
     }
