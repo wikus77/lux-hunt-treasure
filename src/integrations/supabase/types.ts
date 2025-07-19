@@ -571,6 +571,51 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_missions: {
+        Row: {
+          area_radius_km: number | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          prize_description: string | null
+          scope: string
+          start_date: string | null
+          status: string
+          target_location: Json | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          area_radius_km?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          prize_description?: string | null
+          scope?: string
+          start_date?: string | null
+          status?: string
+          target_location?: Json | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          area_radius_km?: number | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          prize_description?: string | null
+          scope?: string
+          start_date?: string | null
+          status?: string
+          target_location?: Json | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           campaign: string | null
@@ -603,6 +648,44 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      panel_logs: {
+        Row: {
+          area_radius_assigned: number | null
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+          mission_id: string | null
+          user_count: number | null
+        }
+        Insert: {
+          area_radius_assigned?: number | null
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+          mission_id?: string | null
+          user_count?: number | null
+        }
+        Update: {
+          area_radius_assigned?: number | null
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+          mission_id?: string | null
+          user_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "panel_logs_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_missions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_transactions: {
         Row: {
@@ -1262,6 +1345,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mission_registrations: {
+        Row: {
+          created_at: string
+          id: string
+          mission_id: string
+          registered_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mission_id: string
+          registered_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mission_id?: string
+          registered_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mission_registrations_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_mission_status: {
         Row: {
           buzz_counter: number | null
@@ -1532,6 +1650,10 @@ export type Database = {
         Args: { user_email: string; credits_to_add: number }
         Returns: undefined
       }
+      assign_area_radius: {
+        Args: { p_mission_id: string }
+        Returns: number
+      }
       calculate_buzz_price: {
         Args: { daily_count: number }
         Returns: number
@@ -1617,6 +1739,10 @@ export type Database = {
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      register_user_to_active_mission: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
       reset_user_mission: {
