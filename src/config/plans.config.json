@@ -1,0 +1,37 @@
+[
+  {
+    "plan": "base",
+    "cluesPerWeek": 1,
+    "accessoAnticipato": 0,
+    "supporto": "email",
+    "note": "Accesso limitato, nessun privilegio. Solo indizi tier base."
+  },
+  {
+    "plan": "silver",
+    "cluesPerWeek": 3,
+    "accessoAnticipato": 2,
+    "supporto": "chat",
+    "note": "Piano base con tracciamento. Accesso indizi base + silver."
+  },
+  {
+    "plan": "gold",
+    "cluesPerWeek": 5,
+    "accessoAnticipato": 6,
+    "supporto": "prioritario",
+    "note": "Accesso avanzato con indizi complessi. Tier base, silver e gold disponibili."
+  },
+  {
+    "plan": "black",
+    "cluesPerWeek": 7,
+    "accessoAnticipato": 12,
+    "supporto": "vip",
+    "note": "Piano premium con supporto VIP. Accesso a tutti i tier eccetto titanium."
+  },
+  {
+    "plan": "titanium",
+    "cluesPerWeek": 9,
+    "accessoAnticipato": 24,
+    "supporto": "ultra",
+    "note": "Piano elite con accesso totale. Include indizi decoy certificati e accesso anticipato massimo."
+  }
+]
