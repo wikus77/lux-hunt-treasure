@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Caricamento...",
+    "error": "Errore",
+    "success": "Successo",
+    "cancel": "Annulla",
+    "confirm": "Conferma",
+    "close": "Chiudi",
+    "save": "Salva",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "retry": "Riprova",
+    "back": "Indietro",
+    "next": "Avanti",
+    "previous": "Precedente",
+    "welcome": "Benvenuto"
+  },
+  "navigation": {
+    "home": "Home",
+    "map": "Mappa",
+    "profile": "Profilo",
+    "settings": "Impostazioni",
+    "about": "Info"
+  },
+  "mission": {
+    "title": "M1SSION™",
+    "subtitle": "La Sfida Definitiva",
+    "panel": "M1SSION PANEL™",
+    "buzz": "BUZZ",
+    "clues": "Indizi",
+    "progress": "Progresso",
+    "status": "Stato",
+    "active": "Attivo",
+    "completed": "Completato",
+    "locked": "Bloccato"
+  },
+  "plans": {
+    "base": "Piano Base",
+    "silver": "Piano Silver",
+    "gold": "Piano Gold",
+    "black": "Piano Black",
+    "titanium": "Piano Titanium",
+    "upgrade": "Aggiorna Piano",
+    "features": "Funzionalità",
+    "cluesPerWeek": "Indizi per settimana",
+    "earlyAccess": "Accesso anticipato",
+    "support": "Supporto"
+  },
+  "clues": {
+    "title": "Indizi",
+    "week": "Settimana",
+    "type": "Tipo",
+    "difficulty": "Difficoltà",
+    "location": "Posizione",
+    "hint": "Suggerimento",
+    "revealed": "Rivelato",
+    "hidden": "Nascosto",
+    "decoy": "Esca",
+    "certified": "Certificato"
+  },
+  "map": {
+    "title": "Mappa Missione",
+    "zoom": "Zoom",
+    "reset": "Reimposta Vista",
+    "location": "Posizione",
+    "region": "Regione",
+    "area": "Area"
+  },
+  "auth": {
+    "login": "Accedi",
+    "logout": "Esci",
+    "register": "Registrati",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Password dimenticata?",
+    "rememberMe": "Ricordami"
+  },
+  "errors": {
+    "general": "Qualcosa è andato storto",
+    "network": "Errore di rete",
+    "notFound": "Non trovato",
+    "unauthorized": "Accesso non autorizzato",
+    "forbidden": "Accesso vietato",
+    "validation": "Errore di validazione"
+  },
+  "messages": {
+    "welcome": "Benvenuto in M1SSION™",
+    "newClue": "Nuovo indizio disponibile!",
+    "missionComplete": "Missione completata!",
+    "weeklyUpdate": "Aggiornamento settimanale disponibile",
+    "planUpgraded": "Piano aggiornato con successo"
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "save": "Save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "welcome": "Welcome"
+  },
+  "navigation": {
+    "home": "Home",
+    "map": "Map",
+    "profile": "Profile",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "mission": {
+    "title": "M1SSION™",
+    "subtitle": "The Ultimate Challenge",
+    "panel": "M1SSION PANEL™",
+    "buzz": "BUZZ",
+    "clues": "Clues",
+    "progress": "Progress",
+    "status": "Status",
+    "active": "Active",
+    "completed": "Completed",
+    "locked": "Locked"
+  },
+  "plans": {
+    "base": "Base Plan",
+    "silver": "Silver Plan",
+    "gold": "Gold Plan",
+    "black": "Black Plan",
+    "titanium": "Titanium Plan",
+    "upgrade": "Upgrade Plan",
+    "features": "Features",
+    "cluesPerWeek": "Clues per week",
+    "earlyAccess": "Early access",
+    "support": "Support"
+  },
+  "clues": {
+    "title": "Clues",
+    "week": "Week",
+    "type": "Type",
+    "difficulty": "Difficulty",
+    "location": "Location",
+    "hint": "Hint",
+    "revealed": "Revealed",
+    "hidden": "Hidden",
+    "decoy": "Decoy",
+    "certified": "Certified"
+  },
+  "map": {
+    "title": "Mission Map",
+    "zoom": "Zoom",
+    "reset": "Reset View",
+    "location": "Location",
+    "region": "Region",
+    "area": "Area"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?",
+    "rememberMe": "Remember me"
+  },
+  "errors": {
+    "general": "Something went wrong",
+    "network": "Network error",
+    "notFound": "Not found",
+    "unauthorized": "Unauthorized access",
+    "forbidden": "Access forbidden",
+    "validation": "Validation error"
+  },
+  "messages": {
+    "welcome": "Welcome to M1SSION™",
+    "newClue": "New clue available!",
+    "missionComplete": "Mission completed!",
+    "weeklyUpdate": "Weekly update available",
+    "planUpgraded": "Plan successfully upgraded"
+  }
+}
