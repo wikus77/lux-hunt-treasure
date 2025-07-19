@@ -25,33 +25,52 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
 
     setIsGenerating(true);
     try {
+      console.log('🚀 Frontend: Starting AI content generation...');
+      
       // Verifica autenticazione richiesta per funzioni sicure
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('📱 Frontend: Session check:', session ? 'SESSION_FOUND' : 'NO_SESSION');
+      
       if (!session) {
         throw new Error('Sessione non trovata - accesso negato');
       }
 
+      const requestPayload = {
+        prompt: prompt.trim(),
+        contentType,
+        missionId: null // Per ora null, in futuro si potrà selezionare una missione
+      };
+      
+      console.log('📤 Frontend: Sending request payload:', requestPayload);
+      console.log('🔐 Frontend: Using JWT token:', session.access_token.substring(0, 20) + '...');
+
       const { data, error } = await supabase.functions.invoke('ai-content-generator', {
-        body: {
-          prompt: prompt.trim(),
-          contentType,
-          missionId: null // Per ora null, in futuro si potrà selezionare una missione
-        },
+        body: requestPayload,
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json'
         }
       });
 
+      console.log('📥 Frontend: Raw response data:', data);
+      console.log('📥 Frontend: Raw response error:', error);
+
       if (error) {
-        throw error;
+        console.error('🚨 Frontend: Supabase functions error:', error);
+        throw new Error(`Edge Function Error: ${error.message || 'Unknown Supabase error'}`);
       }
 
       if (data?.error) {
-        console.error('Edge Function Error Details:', data);
-        throw new Error(data.error);
+        console.error('🚨 Frontend: Edge Function returned error:', data);
+        throw new Error(`AI Generator Error: ${data.error}`);
       }
 
+      if (!data?.content) {
+        console.error('🚨 Frontend: No content in response:', data);
+        throw new Error('Nessun contenuto generato dall\'AI');
+      }
+
+      console.log('✅ Frontend: Successfully generated content:', data.content);
       setGeneratedContent(data.content);
       
       if (data.saved) {
@@ -61,22 +80,29 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
         toast.error('Attenzione: contenuto non salvato nel database');
       }
     } catch (error) {
-      console.error('Errore durante la generazione:', error);
-      
-      // Debug logging completo per identificare il problema
-      console.error('Error details:', {
+      console.error('🚨 Frontend: Complete error details:', {
         message: error.message,
         name: error.name,
         stack: error.stack,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        prompt: prompt.trim(),
+        contentType: contentType
       });
       
-      // Mostra errore più dettagliato all'utente
-      const errorMessage = error.message?.includes('non-2xx') 
-        ? 'Errore del server AI. Controllare i log per dettagli.'
-        : error.message || 'Errore durante la generazione del contenuto';
-        
-      toast.error(errorMessage);
+      // Mostra errore specifico all'utente invece di messaggio generico
+      let userErrorMessage = 'Errore durante la generazione del contenuto';
+      
+      if (error.message?.includes('Sessione non trovata')) {
+        userErrorMessage = 'Sessione scaduta. Riloggati per continuare.';
+      } else if (error.message?.includes('Edge Function Error')) {
+        userErrorMessage = 'Errore del server AI. Riprova tra qualche secondo.';
+      } else if (error.message?.includes('AI Generator Error')) {
+        userErrorMessage = `Errore AI: ${error.message.replace('AI Generator Error: ', '')}`;
+      } else if (error.message) {
+        userErrorMessage = error.message;
+      }
+      
+      toast.error(userErrorMessage);
     } finally {
       setIsGenerating(false);
     }

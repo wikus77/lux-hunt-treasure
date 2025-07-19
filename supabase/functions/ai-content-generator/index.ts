@@ -173,9 +173,15 @@ serve(async (req) => {
       );
     }
 
-    const { prompt, contentType, missionId } = await req.json();
+    console.log('✅ Security validation passed for user', validation.user?.email)
+
+    // Parse della richiesta (già fatto sopra per logging)
+    const { prompt, contentType, missionId } = requestBody;
+    
+    console.log(`🔍 Processing request - Prompt: "${prompt?.substring(0, 50)}...", Type: ${contentType}`);
     
     if (!prompt?.trim()) {
+      console.log('❌ Missing prompt in request');
       return new Response(
         JSON.stringify({ error: 'Prompt è richiesto' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
