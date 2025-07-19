@@ -305,7 +305,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `${prompt}\n\n🔍 REMINDER: Settimana ${weekNumber} - Livello "${currentWeek.level}" - Protezione anti-AI attiva. L'indizio deve essere criptico e non identificabile da sistemi AI esterni.` }
