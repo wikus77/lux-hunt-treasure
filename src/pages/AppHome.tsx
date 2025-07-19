@@ -83,18 +83,11 @@ const AppHome = () => {
   const isDeveloper = hasRole('developer');
   const showPanelButton = isAdmin || isDeveloper;
 
-  // Debug temporaneo per forzare visualizzazione durante test
-  const currentUser = getCurrentUser();
-  const isTestUser = currentUser?.email === 'wikus77@hotmail.it';
-  const forcedShowPanel = isTestUser || showPanelButton;
-
   console.log('🔍 Panel Button Debug:', { 
     isAdmin, 
     isDeveloper, 
     showPanelButton,
-    isTestUser,
-    forcedShowPanel,
-    userEmail: currentUser?.email,
+    userEmail: getCurrentUser()?.email,
     hasRoleFunction: typeof hasRole
   });
 
@@ -188,7 +181,7 @@ const AppHome = () => {
                   <CommandCenterHome />
                   
                   {/* M1SSION PANEL™ Button - Only for Admin/Developer */}
-                  {forcedShowPanel && (
+                  {showPanelButton && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}

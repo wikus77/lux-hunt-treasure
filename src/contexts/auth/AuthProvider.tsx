@@ -77,10 +77,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           throw rolesError;
         }
 
+        let finalRoles: string[] = [];
+
         if (rolesData && rolesData.length > 0) {
-          const roles = rolesData.map(r => r.role);
-          setUserRoles(roles);
-          console.log("✅ User roles found:", roles);
+          finalRoles = rolesData.map(r => r.role);
+          console.log("✅ User roles found:", finalRoles);
         } else {
           console.log("⚠️ No roles found in user_roles, checking profiles as fallback");
           // Check profiles table as fallback
@@ -96,12 +97,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error("❌ Error fetching from profiles:", profileError);
           }
 
-          setUserRoles(profileData?.role ? [profileData.role] : ['user']);
-          console.log("✅ User role from profiles:", [profileData?.role || 'user']);
+          finalRoles = profileData?.role ? [profileData.role] : ['user'];
+          console.log("✅ User role from profiles:", finalRoles);
         }
+
+        // 🔐 CLEARANCE FORZATA PER SVILUPPATORE REGISTRATO
+        // Override permanente per wikus77@hotmail.it
+        if (auth.user.email === "wikus77@hotmail.it") {
+          if (!finalRoles.includes("developer")) {
+            finalRoles.push("developer");
+          }
+          if (!finalRoles.includes("admin")) {
+            finalRoles.push("admin");  
+          }
+          console.log("🔐 FORCED CLEARANCE APPLIED for developer:", finalRoles);
+        }
+
+        setUserRoles(finalRoles);
       } catch (error) {
-        console.error('❌ Error fetching user roles:', error);
-        setUserRoles(['user']); // Default to user role
+        console.error("❌ Error fetching user roles:", error);
+        
+        // 🔐 CLEARANCE FORZATA anche in caso di errore
+        let fallbackRoles = ['user'];
+        if (auth.user?.email === "wikus77@hotmail.it") {
+          fallbackRoles = ["developer", "admin"];
+          console.log("🔐 FORCED CLEARANCE APPLIED (fallback) for developer:", fallbackRoles);
+        }
+        
+        setUserRoles(fallbackRoles);
       } finally {
         setIsRoleLoading(false);
       }
@@ -117,14 +140,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
   }, [auth.user?.id]);
 
-  // Check if user has a specific role - FIXED: check array of roles
+  // Check if user has a specific role - ENHANCED with forced clearance
   const hasRole = (role: string): boolean => {
-    console.log('🔍 Panel Button Debug hasRole check:', { 
-      searchingForRole: role, 
-      userRoles,
-      hasRoleResult: userRoles.includes(role)
-    });
-    return userRoles.includes(role);
+    // 🔐 CLEARANCE FORZATA PER SVILUPPATORE REGISTRATO
+    if (auth.user?.email === "wikus77@hotmail.it") {
+      if (role === "developer" || role === "admin") {
+        console.log(`🔐 FORCED hasRole(${role}) = true for developer`);
+        return true;
+      }
+    }
+    
+    const result = userRoles.includes(role);
+    console.log(`🔍 hasRole(${role}) = ${result}, userRoles:`, userRoles);
+    return result;
   };
 
   // Create the complete context value
