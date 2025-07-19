@@ -1248,6 +1248,48 @@ export type Database = {
         }
         Relationships: []
       }
+      user_clue_lines: {
+        Row: {
+          clue_index: number
+          clue_line: string
+          created_at: string
+          id: string
+          is_released: boolean
+          language_code: string
+          plan_level: string
+          prompt_id: string
+          updated_at: string
+          user_id: string
+          week_number: number
+        }
+        Insert: {
+          clue_index: number
+          clue_line: string
+          created_at?: string
+          id?: string
+          is_released?: boolean
+          language_code?: string
+          plan_level?: string
+          prompt_id: string
+          updated_at?: string
+          user_id: string
+          week_number: number
+        }
+        Update: {
+          clue_index?: number
+          clue_line?: string
+          created_at?: string
+          id?: string
+          is_released?: boolean
+          language_code?: string
+          plan_level?: string
+          prompt_id?: string
+          updated_at?: string
+          user_id?: string
+          week_number?: number
+        }
+        Relationships: []
+      }
       user_clues: {
         Row: {
           buzz_cost: number
@@ -1789,6 +1831,10 @@ export type Database = {
       register_user_to_active_mission: {
         Args: { p_user_id: string }
         Returns: boolean
+      }
+      release_clue_lines: {
+        Args: { p_user_id: string; p_plan_level: string; p_week_number: number }
+        Returns: number
       }
       reset_user_mission: {
         Args: { user_id_input: string }

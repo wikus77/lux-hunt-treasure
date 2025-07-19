@@ -7,6 +7,36 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper function to split text into semantic lines for dynamic clue release
+function splitIntoClueLines(text: string): string[] {
+  // Remove extra whitespace and split by line breaks
+  const lines = text.split(/\n+/)
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+  
+  // If no natural line breaks, split by punctuation marks for meaningful phrases
+  if (lines.length === 1) {
+    const singleLine = lines[0];
+    const splitByPunctuation = singleLine.split(/[.!?;]+/)
+      .map(phrase => phrase.trim())
+      .filter(phrase => phrase.length > 10); // Only meaningful phrases
+    
+    return splitByPunctuation.length > 1 ? splitByPunctuation : [singleLine];
+  }
+  
+  return lines;
+}
+
+// Helper function to get current week number (placeholder logic)
+function getCurrentWeekNumber(): number {
+  // Simple week calculation - can be enhanced with mission-specific logic
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const diff = now.getTime() - start.getTime();
+  const oneWeek = 1000 * 60 * 60 * 24 * 7;
+  return Math.ceil(diff / oneWeek);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -80,7 +110,17 @@ serve(async (req) => {
       throw new Error('Utente non autenticato');
     }
 
-    // Salva il contenuto generato nel database
+    // Ottieni il piano utente e la settimana corrente per il sistema dinamico
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('subscription_tier')
+      .eq('id', user.id)
+      .single();
+    
+    const userPlan = profileData?.subscription_tier || 'free';
+    const currentWeek = getCurrentWeekNumber();
+
+    // Salva il contenuto generato nel database (testo completo)
     const { data: savedContent, error: saveError } = await supabase
       .from('ai_generated_clues')
       .insert({
@@ -95,15 +135,58 @@ serve(async (req) => {
       .single();
 
     if (saveError) {
-      console.error('Errore nel salvataggio:', saveError);
-      // Restituisci comunque il contenuto generato anche se il salvataggio fallisce
+      console.error('Errore nel salvataggio del contenuto completo:', saveError);
+    }
+
+    // Split del contenuto in righe semantiche per rilascio dinamico
+    const clueLines = splitIntoClueLines(generatedContent);
+    console.log(`📝 Contenuto diviso in ${clueLines.length} righe per rilascio dinamico`);
+
+    // Salva ogni riga come clue_line separata
+    const clueLineInserts = clueLines.map((line, index) => ({
+      user_id: user.id,
+      prompt_id: savedContent?.id || null,
+      week_number: currentWeek,
+      plan_level: userPlan,
+      clue_index: index + 1,
+      clue_line: line,
+      is_released: false, // Inizialmente non rilasciata
+      language_code: 'it'
+    }));
+
+    const { data: savedLines, error: linesError } = await supabase
+      .from('user_clue_lines')
+      .insert(clueLineInserts)
+      .select();
+
+    if (linesError) {
+      console.error('Errore nel salvataggio delle righe:', linesError);
+    } else {
+      console.log(`✅ Salvate ${savedLines?.length || 0} righe per rilascio dinamico`);
+      
+      // Rilascia automaticamente le prime righe in base al piano
+      try {
+        const { data: releasedCount } = await supabase.rpc('release_clue_lines', {
+          p_user_id: user.id,
+          p_plan_level: userPlan,
+          p_week_number: currentWeek
+        });
+        
+        console.log(`🚀 Rilasciate ${releasedCount || 0} righe per piano ${userPlan}`);
+      } catch (releaseError) {
+        console.error('Errore nel rilascio automatico:', releaseError);
+      }
     }
 
     return new Response(
       JSON.stringify({ 
         content: generatedContent,
         saved: !saveError,
-        id: savedContent?.id
+        id: savedContent?.id,
+        linesCreated: clueLines.length,
+        linesSaved: savedLines?.length || 0,
+        userPlan: userPlan,
+        weekNumber: currentWeek
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
