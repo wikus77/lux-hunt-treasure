@@ -10,7 +10,7 @@ import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const auth = useAuth();
   const { navigate } = useWouterNavigation();
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
   // Enhanced session monitoring
@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Handle sign out
       if (event === 'SIGNED_OUT') {
         console.log("🚪 User signed out");
-        setUserRole(null);
+        setUserRoles([]);
         setIsRoleLoading(false);
       }
     });
@@ -43,29 +43,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []); // Rimuovo navigate dalle dipendenze
 
-  // Fetch user role when user changes
+  // Fetch user roles when user changes
   useEffect(() => {
-    const fetchUserRole = async () => {
+    const fetchUserRoles = async () => {
       if (!auth.user?.id || auth.isLoading) {
-        setUserRole(null);
+        setUserRoles([]);
         setIsRoleLoading(false);
         return;
       }
 
       try {
         setIsRoleLoading(true);
-        console.log("🔍 Fetching role for user:", auth.user.id, auth.user.email);
+        console.log("🔍 Fetching roles for user:", auth.user.id, auth.user.email);
         
-        // Check user_roles table for developer role
-        const { data: roleData } = await supabase
+        // Check user_roles table for all roles - FIXED: remove .single()
+        const { data: rolesData } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', auth.user.id)
-          .single();
+          .eq('user_id', auth.user.id);
 
-        if (roleData?.role) {
-          setUserRole(roleData.role);
-          console.log("✅ User role found:", roleData.role);
+        if (rolesData && rolesData.length > 0) {
+          const roles = rolesData.map(r => r.role);
+          setUserRoles(roles);
+          console.log("✅ User roles found:", roles);
         } else {
           // Check profiles table as fallback
           const { data: profileData } = await supabase
@@ -74,35 +74,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .eq('id', auth.user.id)
             .single();
 
-          setUserRole(profileData?.role || 'user');
-          console.log("✅ User role from profiles:", profileData?.role || 'user');
+          setUserRoles(profileData?.role ? [profileData.role] : ['user']);
+          console.log("✅ User role from profiles:", [profileData?.role || 'user']);
         }
       } catch (error) {
-        console.error('❌ Error fetching user role:', error);
-        setUserRole('user'); // Default to user role
+        console.error('❌ Error fetching user roles:', error);
+        setUserRoles(['user']); // Default to user role
       } finally {
         setIsRoleLoading(false);
       }
     };
 
     if (auth.user?.id) {
-      fetchUserRole();
+      fetchUserRoles();
     } else {
-      setUserRole(null);
+      setUserRoles([]);
       setIsRoleLoading(false);
     }
     
   }, [auth.user?.id]);
 
-  // Check if user has a specific role
+  // Check if user has a specific role - FIXED: check array of roles
   const hasRole = (role: string): boolean => {
-    return userRole === role;
+    console.log('🔍 Panel Button Debug hasRole check:', { 
+      searchingForRole: role, 
+      userRoles,
+      hasRoleResult: userRoles.includes(role)
+    });
+    return userRoles.includes(role);
   };
 
   // Create the complete context value
   const authContextValue: AuthContextType = {
     ...auth,
-    userRole,
+    userRole: userRoles.length > 0 ? userRoles[0] : null, // Per compatibilità
     hasRole,
     isRoleLoading
   };
