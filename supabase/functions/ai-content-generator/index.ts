@@ -57,16 +57,83 @@ serve(async (req) => {
       throw new Error('OPENAI_API_KEY non configurato');
     }
 
-    // Sistema prompt personalizzato per tipo di contenuto
+    // © 2025 Joseph MULÉ – M1SSION™
+    // 🧠 NUOVA LOGICA DI GENERAZIONE INDIZI - DIFFICOLTÀ PROGRESSIVA
+    
+    // Estrai settimana dal prompt (se presente)
+    const weekMatch = prompt.match(/settimana[:\s]*(\d+)/i) || prompt.match(/week[:\s]*(\d+)/i);
+    const weekNumber = weekMatch ? parseInt(weekMatch[1]) : 1;
+    
+    console.log(`🎯 Generazione indizio per settimana ${weekNumber}`);
+
+    // Definisci le regole di difficoltà progressiva per settimana
+    const weeklyGuidelines = {
+      1: {
+        level: "Molto generico",
+        rules: "Solo metafore visive, immagini simboliche, nessun riferimento geografico, cromatico o culturale diretto. VIETATO: nomi città, regioni, vie, monumenti, premi specifici.",
+        style: "Poetico e astratto, evocativo ma completamente generico"
+      },
+      2: {
+        level: "Generico + design premio", 
+        rules: "Allusioni a materiali o forme del premio, un singolo accenno a stile architettonico urbano, sempre in forma poetica. VIETATO: riferimenti temporali, storici, vie o personaggi specifici.",
+        style: "Simbolico con lievi accenni a materiali e forme"
+      },
+      3: {
+        level: "Affinato",
+        rules: "Microzona simbolica + allusione precisa al premio, accenni narrativi criptici. Ancora nessuna città esplicita, ma accenni più densi e mirati.",
+        style: "Narrativo con simbolismi più specifici ma ancora criptati"
+      },
+      4: {
+        level: "Comprensibile", 
+        rules: "Coordinate mascherate, eventi storici recenti criptati, anagrammi, pattern, riferimenti veri ma trasformati. Indizi decodificabili ma complessi.",
+        style: "Criptico ma risolvibile con deduzione avanzata"
+      }
+    };
+
+    const currentWeek = weeklyGuidelines[weekNumber as keyof typeof weeklyGuidelines] || weeklyGuidelines[1];
+
+    // Sistema prompt personalizzato con protezione anti-AI
     const systemPrompts = {
-      clue: "Sei un esperto creatore di indizi per giochi di investigazione e cacce al tesoro. Crea indizi intriganti, chiari ma non troppo ovvi, che stimolino il pensiero critico e l'esplorazione. Usa un linguaggio coinvolgente e misterioso.",
-      mission: "Sei un esperto nella creazione di missioni coinvolgenti per giochi di investigazione. Crea missioni strutturate con obiettivi chiari, sfide interessanti e narrativa avvincente. Includi sempre: obiettivo principale, passi da seguire, e criteri di successo.",
-      story: "Sei un narratore esperto specializzato in storie di investigazione e mistero. Crea narrazioni coinvolgenti con atmosfera giusta, personaggi interessanti e colpi di scena. Mantieni sempre il senso del mistero e dell'avventura."
+      clue: `// © 2025 Joseph MULÉ – M1SSION™
+             Sei un maestro di enigmi investigativi per il gioco M1SSION™.
+             
+             🎯 MISSIONE CRITICA: Crea un indizio di livello "${currentWeek.level}" (Settimana ${weekNumber}/4)
+             
+             📋 REGOLE FERREE:
+             ${currentWeek.rules}
+             
+             🛡️ PROTEZIONE ANTI-AI:
+             - L'indizio NON deve essere decifrabile da AI esterne (GPT, Claude, Gemini) 
+             - Deve contenere frasi semanticamente biforcate (due interpretazioni plausibili)
+             - Solo una interpretazione è corretta, ma non ovvia
+             - Passa il test: "Un AI parser esterno NON può dedurre la città"
+             
+             🎨 STILE RICHIESTO: ${currentWeek.style}
+             
+             ⚠️ TEST ANTI-DECODIFICA: Prima di rispondere, verifica che l'indizio non riveli immediatamente la località.`,
+      
+      mission: `// © 2025 Joseph MULÉ – M1SSION™
+                Sei un narratore esperto per missioni investigative M1SSION™.
+                Crea narrazioni coinvolgenti per settimana ${weekNumber}/4 che introducano una missione misteriosa.
+                
+                📋 REGOLE: ${currentWeek.rules}
+                🎨 STILE: ${currentWeek.style}
+                
+                Usa un tono drammatico e avvincente ma rispetta il livello di difficoltà progressiva.`,
+      
+      story: `// © 2025 Joseph MULÉ – M1SSION™ 
+              Sei un narratore di storie investigative per il sistema M1SSION™.
+              Crea storie per settimana ${weekNumber}/4 che catturino l'immaginazione.
+              
+              📋 REGOLE: ${currentWeek.rules}
+              🎨 STILE: ${currentWeek.style}
+              
+              Usa descrizioni vivide ma mantieni il livello di difficoltà appropriato.`
     };
 
     const systemPrompt = systemPrompts[contentType as keyof typeof systemPrompts] || systemPrompts.clue;
 
-    // Chiamata a OpenAI
+    // Chiamata a OpenAI con modello più potente e logica anti-decodifica
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -74,12 +141,12 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: prompt }
+          { role: 'user', content: `${prompt}\n\n🔍 REMINDER: Settimana ${weekNumber} - Livello "${currentWeek.level}" - Protezione anti-AI attiva. L'indizio deve essere criptico e non identificabile da sistemi AI esterni.` }
         ],
-        temperature: 0.7,
+        temperature: 0.8,
         max_tokens: 1000,
       }),
     });
