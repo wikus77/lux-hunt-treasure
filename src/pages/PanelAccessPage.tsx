@@ -1,19 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Lock, Cpu, Zap } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { Helmet } from 'react-helmet';
+import AIContentGenerator from '@/components/panel/AIContentGenerator';
+import MissionControlPanel from '@/components/panel/MissionControlPanel';
 
 const PanelAccessPage = () => {
   const { hasRole, getCurrentUser } = useAuthContext();
   const { profileImage } = useProfileImage();
   const currentUser = getCurrentUser();
   
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control'>('home');
+  
   const isAdmin = hasRole('admin');
   const isDeveloper = hasRole('developer');
   const hasAccess = isAdmin || isDeveloper;
+
+  // Render different views based on current state
+  if (currentView === 'ai-generator' && hasAccess) {
+    return <AIContentGenerator onBack={() => setCurrentView('home')} />;
+  }
+  
+  if (currentView === 'mission-control' && hasAccess) {
+    return <MissionControlPanel onBack={() => setCurrentView('home')} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
@@ -93,6 +106,8 @@ const PanelAccessPage = () => {
               <div className="grid gap-4">
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('ai-generator')}
                   className="glass-card p-4 border border-[#4361ee]/30 cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
@@ -108,6 +123,8 @@ const PanelAccessPage = () => {
 
                 <motion.div 
                   whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('mission-control')}
                   className="glass-card p-4 border border-[#7209b7]/30 cursor-pointer group"
                 >
                   <div className="flex items-center gap-3">
