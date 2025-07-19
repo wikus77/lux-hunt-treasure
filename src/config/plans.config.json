@@ -1,37 +1,137 @@
 [
   {
-    "plan": "base",
+    "id": "base",
+    "label": {
+      "en": "Base Plan",
+      "it": "Piano Base",
+      "fr": "Plan Base",
+      "es": "Plan Base",
+      "de": "Basis-Plan",
+      "pt": "Plano Base",
+      "zh": "基础计划",
+      "ar": "الخطة الأساسية"
+    },
+    "price": 0,
     "cluesPerWeek": 1,
-    "accessoAnticipato": 0,
+    "accessoAnticipatoOre": 0,
     "supporto": "email",
-    "note": "Accesso limitato, nessun privilegio. Solo indizi tier base."
+    "note": {
+      "en": "Limited access with basic tier clues only. Perfect for curious minds starting their M1SSION™ journey.",
+      "it": "Accesso limitato con solo indizi di livello base. Perfetto per menti curiose che iniziano il loro viaggio M1SSION™.",
+      "fr": "Accès limité avec uniquement des indices de niveau de base. Parfait pour les esprits curieux qui commencent leur voyage M1SSION™.",
+      "es": "Acceso limitado con solo pistas de nivel básico. Perfecto para mentes curiosas que inician su viaje M1SSION™.",
+      "de": "Begrenzter Zugang mit nur grundlegenden Hinweisen. Perfekt für neugierige Köpfe, die ihre M1SSION™-Reise beginnen.",
+      "pt": "Acesso limitado com apenas pistas de nível básico. Perfeito para mentes curiosas iniciando sua jornada M1SSION™.",
+      "zh": "仅限基础级线索的有限访问。适合开始M1SSION™之旅的好奇心灵。",
+      "ar": "وصول محدود مع أدلة المستوى الأساسي فقط. مثالي للعقول الفضولية التي تبدأ رحلة M1SSION™."
+    }
   },
   {
-    "plan": "silver",
+    "id": "silver",
+    "label": {
+      "en": "Silver Plan",
+      "it": "Piano Silver",
+      "fr": "Plan Argent",
+      "es": "Plan Plata",
+      "de": "Silber-Plan",
+      "pt": "Plano Prata",
+      "zh": "白银计划",
+      "ar": "الخطة الفضية"
+    },
+    "price": 6.99,
     "cluesPerWeek": 3,
-    "accessoAnticipato": 2,
+    "accessoAnticipatoOre": 2,
     "supporto": "chat",
-    "note": "Piano base con tracciamento. Accesso indizi base + silver."
+    "note": {
+      "en": "Enhanced access with tracking capabilities. Unlock base and silver tier clues for deeper investigation.",
+      "it": "Accesso potenziato con capacità di tracciamento. Sblocca indizi di livello base e silver per indagini più approfondite.",
+      "fr": "Accès amélioré avec capacités de suivi. Débloquez les indices de niveau de base et argent pour une enquête plus approfondie.",
+      "es": "Acceso mejorado con capacidades de seguimiento. Desbloquea pistas de nivel básico y plata para investigaciones más profundas.",
+      "de": "Erweiterten Zugang mit Tracking-Funktionen. Schalten Sie grundlegende und silberne Hinweise für tiefere Ermittlungen frei.",
+      "pt": "Acesso aprimorado com capacidades de rastreamento. Desbloqueie pistas de nível básico e prata para investigações mais profundas.",
+      "zh": "增强访问与跟踪功能。解锁基础和白银级线索进行深度调查。",
+      "ar": "وصول محسن مع قدرات التتبع. فتح أدلة المستوى الأساسي والفضي للتحقيق الأعمق."
+    }
   },
   {
-    "plan": "gold",
+    "id": "gold",
+    "label": {
+      "en": "Gold Plan",
+      "it": "Piano Gold",
+      "fr": "Plan Or",
+      "es": "Plan Oro",
+      "de": "Gold-Plan",
+      "pt": "Plano Ouro",
+      "zh": "黄金计划",
+      "ar": "الخطة الذهبية"
+    },
+    "price": 9.99,
     "cluesPerWeek": 5,
-    "accessoAnticipato": 6,
+    "accessoAnticipatoOre": 6,
     "supporto": "prioritario",
-    "note": "Accesso avanzato con indizi complessi. Tier base, silver e gold disponibili."
+    "note": {
+      "en": "Advanced access with complex clues. Access base, silver, and gold tiers for elite investigators.",
+      "it": "Accesso avanzato con indizi complessi. Accesso ai livelli base, silver e gold per investigatori d'élite.",
+      "fr": "Accès avancé avec des indices complexes. Accès aux niveaux de base, argent et or pour les enquêteurs d'élite.",
+      "es": "Acceso avanzado con pistas complejas. Acceso a niveles básico, plata y oro para investigadores de élite.",
+      "de": "Erweiterten Zugang mit komplexen Hinweisen. Zugang zu grundlegenden, silbernen und goldenen Ebenen für Elite-Ermittler.",
+      "pt": "Acesso avançado com pistas complexas. Acesso aos níveis básico, prata e ouro para investigadores de elite.",
+      "zh": "高级访问与复杂线索。为精英调查员提供基础、白银和黄金级访问。",
+      "ar": "وصول متقدم مع أدلة معقدة. الوصول إلى المستويات الأساسية والفضية والذهبية للمحققين النخبة."
+    }
   },
   {
-    "plan": "black",
+    "id": "black",
+    "label": {
+      "en": "Black Plan",
+      "it": "Piano Black",
+      "fr": "Plan Noir",
+      "es": "Plan Negro",
+      "de": "Schwarz-Plan",
+      "pt": "Plano Preto",
+      "zh": "黑钻计划",
+      "ar": "الخطة السوداء"
+    },
+    "price": 13.99,
     "cluesPerWeek": 7,
-    "accessoAnticipato": 12,
+    "accessoAnticipatoOre": 12,
     "supporto": "vip",
-    "note": "Piano premium con supporto VIP. Accesso a tutti i tier eccetto titanium."
+    "note": {
+      "en": "Premium plan with VIP support. Access all tiers except titanium for the ultimate M1SSION™ experience.",
+      "it": "Piano premium con supporto VIP. Accesso a tutti i livelli eccetto titanium per l'esperienza M1SSION™ definitiva.",
+      "fr": "Plan premium avec support VIP. Accès à tous les niveaux sauf titane pour l'expérience M1SSION™ ultime.",
+      "es": "Plan premium con soporte VIP. Acceso a todos los niveles excepto titanio para la experiencia M1SSION™ definitiva.",
+      "de": "Premium-Plan mit VIP-Support. Zugang zu allen Ebenen außer Titan für das ultimative M1SSION™-Erlebnis.",
+      "pt": "Plano premium com suporte VIP. Acesso a todos os níveis exceto titânio para a experiência M1SSION™ definitiva.",
+      "zh": "VIP支持的高级计划。除钛金级外的所有级别访问，享受终极M1SSION™体验。",
+      "ar": "خطة ممتازة مع دعم كبار الشخصيات. الوصول إلى جميع المستويات باستثناء التيتانيوم لتجربة M1SSION™ النهائية."
+    }
   },
   {
-    "plan": "titanium",
+    "id": "titanium",
+    "label": {
+      "en": "Titanium Plan",
+      "it": "Piano Titanium",
+      "fr": "Plan Titane",
+      "es": "Plan Titanio",
+      "de": "Titan-Plan",
+      "pt": "Plano Titânio",
+      "zh": "钛金计划",
+      "ar": "خطة التيتانيوم"
+    },
+    "price": 49.00,
     "cluesPerWeek": 9,
-    "accessoAnticipato": 24,
+    "accessoAnticipatoOre": 24,
     "supporto": "ultra",
-    "note": "Piano elite con accesso totale. Include indizi decoy certificati e accesso anticipato massimo."
+    "note": {
+      "en": "Elite plan with total access. Includes certified decoy clues and maximum early access for true M1SSION™ masters.",
+      "it": "Piano elite con accesso totale. Include indizi decoy certificati e accesso anticipato massimo per i veri maestri M1SSION™.",
+      "fr": "Plan d'élite avec accès total. Comprend des indices de leurre certifiés et un accès anticipé maximal pour les vrais maîtres M1SSION™.",
+      "es": "Plan de élite con acceso total. Incluye pistas señuelo certificadas y acceso anticipado máximo para verdaderos maestros M1SSION™.",
+      "de": "Elite-Plan mit totalem Zugang. Enthält zertifizierte Köder-Hinweise und maximalen frühen Zugang für wahre M1SSION™-Meister.",
+      "pt": "Plano elite com acesso total. Inclui pistas iscas certificadas e acesso antecipado máximo para verdadeiros mestres M1SSION™.",
+      "zh": "精英计划，全面访问。包括认证诱饵线索和最大提前访问，专为真正的M1SSION™大师设计。",
+      "ar": "خطة النخبة مع الوصول الكامل. تشمل أدلة الطعم المعتمدة والحد الأقصى للوصول المبكر لأساتذة M1SSION™ الحقيقيين."
+    }
   }
 ]
