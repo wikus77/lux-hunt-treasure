@@ -1,23 +1,58 @@
+// © 2025 Joseph MULÉ – M1SSION™
+// Pannello M1SSION PANEL™ con blindatura di sicurezza avanzata
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { Helmet } from 'react-helmet';
 import AIContentGenerator from '@/components/panel/AIContentGenerator';
 import MissionControlPanel from '@/components/panel/MissionControlPanel';
+import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
+import { Spinner } from '@/components/ui/spinner';
 
 const PanelAccessPage = () => {
-  const { hasRole, getCurrentUser } = useAuthContext();
+  const { getCurrentUser } = useAuthContext();
   const { profileImage } = useProfileImage();
+  const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   const currentUser = getCurrentUser();
   
   const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control'>('home');
-  
-  const isAdmin = hasRole('admin');
-  const isDeveloper = hasRole('developer');
-  const hasAccess = isAdmin || isDeveloper;
+
+  // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
+  if (!isWhitelisted) {
+    // Durante la validazione, mostra loader
+    if (isValidating) {
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818] flex items-center justify-center">
+          <div className="text-center">
+            <Spinner className="h-12 w-12 text-[#4361ee] mx-auto mb-4" />
+            <p className="text-white text-lg font-semibold">Validazione Accesso M1SSION PANEL™</p>
+            <p className="text-gray-400 text-sm mt-2">Verifica clearance in corso...</p>
+          </div>
+        </div>
+      );
+    }
+    
+    // Se validazione completata e accesso negato, mostra messaggio minimal
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818] flex items-center justify-center">
+        <div className="text-center">
+          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-red-500 mb-2">⛔ Accesso Negato</h1>
+          <p className="text-gray-400">Clearance insufficiente per M1SSION PANEL™</p>
+          {accessDeniedReason && (
+            <p className="text-xs text-gray-600 mt-4">Codice: {accessDeniedReason}</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ ACCESSO AUTORIZZATO - Procedi con il rendering normale
+  const hasAccess = true; // L'utente è già whitelisted a questo punto
 
   // Render different views based on current state
   if (currentView === 'ai-generator' && hasAccess) {
@@ -70,38 +105,39 @@ const PanelAccessPage = () => {
             </p>
           </motion.div>
 
-          {hasAccess ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="space-y-6"
-            >
-              <div className="glass-card p-6 border border-green-500/30">
-                <div className="flex items-center gap-3 mb-4">
-                  <Shield className="w-6 h-6 text-green-400" />
-                  <h2 className="text-xl font-semibold text-green-400">
-                    Accesso Autorizzato
-                  </h2>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="space-y-6"
+          >
+            <div className="glass-card p-6 border border-green-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <Shield className="w-6 h-6 text-green-400" />
+                <h2 className="text-xl font-semibold text-green-400">
+                  🔐 Accesso Autorizzato - Blindatura Attiva
+                </h2>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Utente Autorizzato:</span>
+                  <span className="text-green-400 font-mono">{currentUser?.email}</span>
                 </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Utente:</span>
-                    <span className="text-white font-mono">{currentUser?.email}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Ruolo:</span>
-                    <span className="text-[#4361ee] font-semibold">
-                      {isAdmin ? 'Amministratore' : isDeveloper ? 'Sviluppatore' : 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-gray-400">Livello:</span>
-                    <span className="text-green-400 font-semibold">CLEARANCE LEVEL α</span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Clearance:</span>
+                  <span className="text-[#4361ee] font-semibold">MAXIMUM SECURITY</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Protezione:</span>
+                  <span className="text-green-400 font-semibold">SHA-256 VERIFIED ✓</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-400">Sessione:</span>
+                  <span className="text-green-400 font-semibold">TRACKING ATTIVO</span>
                 </div>
               </div>
+            </div>
 
               <div className="grid gap-4">
                 <motion.div 
@@ -139,32 +175,15 @@ const PanelAccessPage = () => {
                 </motion.div>
               </div>
 
-              <div className="text-center pt-4">
-                <p className="text-xs text-gray-500">
-                  M1SSION PANEL™ - Versione Beta Interna v2.1.0
-                </p>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-              className="glass-card p-8 border border-red-500/30 text-center"
-            >
-              <Lock className="w-16 h-16 text-red-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-semibold text-red-400 mb-3">
-                Accesso Negato
-              </h2>
-              <p className="text-gray-400 mb-6">
-                L'accesso al M1SSION PANEL™ è riservato esclusivamente a utenti con privilegi di amministratore o sviluppatore.
+            <div className="text-center pt-4">
+              <p className="text-xs text-gray-500">
+                M1SSION PANEL™ - Versione Blindata v3.0.0 - © 2025 Joseph MULÉ
               </p>
-              <div className="text-sm text-gray-500">
-                <p>Utente corrente: {currentUser?.email || 'Non autenticato'}</p>
-                <p>Livello di clearance: INSUFFICIENTE</p>
-              </div>
-            </motion.div>
-          )}
+              <p className="text-xs text-green-600 mt-1">
+                🔐 Sistema Anti-Infiltrazione Attivo
+              </p>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
