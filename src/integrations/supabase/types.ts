@@ -893,6 +893,7 @@ export type Database = {
           last_name: string | null
           notifications_enabled: boolean | null
           phone: string | null
+          plan: string | null
           postal_code: string | null
           preferred_language: string | null
           preferred_rewards: string[] | null
@@ -928,6 +929,7 @@ export type Database = {
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
+          plan?: string | null
           postal_code?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
@@ -963,6 +965,7 @@ export type Database = {
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
+          plan?: string | null
           postal_code?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
