@@ -889,6 +889,7 @@ export type Database = {
           full_name: string | null
           id: string
           investigative_style: string | null
+          language: string | null
           last_name: string | null
           notifications_enabled: boolean | null
           phone: string | null
@@ -923,6 +924,7 @@ export type Database = {
           full_name?: string | null
           id: string
           investigative_style?: string | null
+          language?: string | null
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
@@ -957,6 +959,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           investigative_style?: string | null
+          language?: string | null
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
