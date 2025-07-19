@@ -123,7 +123,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let ipAddress = '0.0.0.0';
+  
   try {
+    console.log('🚀 AI Content Generator started');
+    ipAddress = getClientIP(req);
+    console.log(`📡 Request from IP: ${ipAddress}`);
+    console.log(`🔧 Request method: ${req.method}`);
+    console.log(`📋 Request headers:`, Object.fromEntries(req.headers.entries()));
+    
     // Initialize Supabase for security validation
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -360,9 +369,36 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Errore in ai-content-generator:', error);
+    const duration = Date.now() - startTime;
+    console.error('❌ Errore in ai-content-generator:', error);
+    console.error(`🕐 Duration: ${duration}ms`);
+    console.error(`📡 IP: ${ipAddress}`);
+    
+    // Log dell'errore nel database per debugging
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      await supabase.from('admin_logs').insert({
+        event_type: 'ai_generator_error',
+        context: 'AI Content Generator error',
+        note: error.message || 'Unknown error',
+        ip_address: ipAddress,
+        route: 'ai-content-generator',
+        status_code: 500,
+        reason: 'runtime_error'
+      });
+    } catch (logError) {
+      console.error('Failed to log error:', logError);
+    }
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message || 'Unknown error',
+        timestamp: new Date().toISOString(),
+        duration: Date.now() - startTime
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

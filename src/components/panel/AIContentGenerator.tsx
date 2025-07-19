@@ -25,11 +25,21 @@ const AIContentGenerator: React.FC<AIContentGeneratorProps> = ({ onBack }) => {
 
     setIsGenerating(true);
     try {
+      // Verifica autenticazione richiesta per funzioni sicure
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Sessione non trovata - accesso negato');
+      }
+
       const { data, error } = await supabase.functions.invoke('ai-content-generator', {
         body: {
           prompt: prompt.trim(),
           contentType,
           missionId: null // Per ora null, in futuro si potrà selezionare una missione
+        },
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       });
 
