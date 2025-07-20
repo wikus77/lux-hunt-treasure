@@ -592,6 +592,33 @@ export type Database = {
         }
         Relationships: []
       }
+      intelligence_tool_usage: {
+        Row: {
+          created_at: string
+          id: string
+          mission_id: string | null
+          tool_name: string
+          used_on: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mission_id?: string | null
+          tool_name: string
+          used_on?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mission_id?: string | null
+          tool_name?: string
+          used_on?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       live_activity_state: {
         Row: {
           created_at: string
@@ -1876,6 +1903,10 @@ export type Database = {
         Args: { daily_count: number }
         Returns: number
       }
+      can_use_intelligence_tool: {
+        Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
+        Returns: boolean
+      }
       can_user_use_buzz: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -1974,6 +2005,10 @@ export type Database = {
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      record_intelligence_tool_usage: {
+        Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
         Returns: boolean
       }
       register_user_to_active_mission: {
