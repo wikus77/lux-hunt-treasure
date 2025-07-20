@@ -101,9 +101,9 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
         </DialogHeader>
 
         <div className="flex flex-col h-full overflow-hidden">
-          {/* Map Section - Expanded Priority */}
-          <div className="flex-1 min-h-[70vh] max-h-[75vh] relative">
-            <div className="absolute inset-0 z-10">
+          {/* Map Section - Full Width Priority */}
+          <div className="flex-1 min-h-[60vh] max-h-[70vh] relative w-full">
+            <div className="absolute inset-0 z-10 w-full">
               {renderActiveTool()}
             </div>
             
@@ -114,7 +114,7 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
                   🛰️ Satellite
                 </button>
                 <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all">
-                  🌑 Dark
+                  🌑 Dark Military
                 </button>
                 <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all">
                   🏔️ Terrain
@@ -123,65 +123,60 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
                   🗺️ Standard
                 </button>
               </div>
+              
+              {/* FINAL SHOT Button Overlay */}
+              <div className="bg-black/60 backdrop-blur-sm rounded-full p-1">
+                <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold">
+                  🎯 FINAL SHOT
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Intelligence Modules Grid - Below Map */}
-          <div className="mt-8 overflow-y-auto overflow-x-hidden" style={{ paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-8">
-              {tools.map((tool) => (
-                <div
-                  key={tool.id}
-                  className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white 
-                    shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 
-                    transition-all duration-300 max-h-[160px] overflow-y-auto ${
-                    activeTool === tool.id 
-                      ? 'ring-2 ring-primary/50 bg-black/80 scale-[1.02]' 
-                      : 'hover:bg-black/75 hover:border-white/20 hover:shadow-[0_0_16px_rgba(255,255,255,0.15)]'
-                  } ${
-                    !tool.available 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'cursor-pointer hover:scale-[1.02]'
-                  }`}
-                  onClick={() => tool.available && setActiveTool(tool.id)}
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <tool.icon className="w-4 h-4 text-primary flex-shrink-0" />
-                    <span className="text-sm font-semibold text-white uppercase tracking-wider truncate">
-                      {tool.name}
-                    </span>
-                    {!tool.available && (
-                      <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
-                        Week {tool.weekRequired}+
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="text-xs text-white/80 leading-relaxed mb-2">
-                    {tool.id === 'coordinates' && 'Select target coordinates for tactical operations'}
-                    {tool.id === 'journal' && 'Document and analyze discovered clues'}
-                    {tool.id === 'radar' && 'Advanced geo-radar scanning capabilities'}
-                    {tool.id === 'interceptor' && 'BUZZ signal interception and analysis'}
-                    {tool.id === 'precision' && 'High-precision targeting results'}
-                  </div>
-                  
-                  {activeTool === tool.id && (
-                    <div className="pt-2 border-t border-white/10">
-                      <span className="text-xs text-primary font-medium uppercase tracking-wide">
-                        ● ACTIVE MODULE
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Additional Intelligence Sections */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-              {/* Archivio Indizi */}
-              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[160px] overflow-y-auto">
+          {/* All Intelligence Modules Grid - Below Map */}
+          <div className="mt-8 overflow-y-auto overflow-x-hidden w-full" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-screen-xl mx-auto px-4">
+              
+              {/* Coordinate Selector */}
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
+                activeTool === 'coordinates' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20'
+              } cursor-pointer hover:scale-[1.02]`} onClick={() => setActiveTool('coordinates')}>
                 <div className="flex items-center gap-2 mb-3">
-                  <BookOpen className="w-4 h-4 text-primary" />
+                  <Target className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">Coordinate Selector</span>
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed mb-2">
+                  Select target coordinates for tactical operations
+                </div>
+                {activeTool === 'coordinates' && (
+                  <div className="pt-2 border-t border-white/10">
+                    <span className="text-xs text-primary font-medium uppercase tracking-wide">● ACTIVE MODULE</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Clue Journal */}
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
+                activeTool === 'journal' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20'
+              } cursor-pointer hover:scale-[1.02]`} onClick={() => setActiveTool('journal')}>
+                <div className="flex items-center gap-2 mb-3">
+                  <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">Clue Journal</span>
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed mb-2">
+                  Document and analyze discovered clues
+                </div>
+                {activeTool === 'journal' && (
+                  <div className="pt-2 border-t border-white/10">
+                    <span className="text-xs text-primary font-medium uppercase tracking-wide">● ACTIVE MODULE</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Archivio Indizi */}
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Archivio Indizi</span>
                 </div>
                 <div className="text-xs text-white/80 leading-relaxed">
@@ -190,9 +185,9 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               </div>
 
               {/* Indizi Settimanali */}
-              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[160px] overflow-y-auto">
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
                 <div className="flex items-center gap-2 mb-3">
-                  <Target className="w-4 h-4 text-primary" />
+                  <Target className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Indizi Settimanali</span>
                 </div>
                 <div className="text-xs text-white/80 leading-relaxed">
@@ -200,18 +195,107 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
                 </div>
               </div>
 
+              {/* Geo Radar */}
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
+                !tools.find(t => t.id === 'radar')?.available ? 'opacity-50 cursor-not-allowed' : 
+                (activeTool === 'radar' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20 cursor-pointer hover:scale-[1.02]')
+              }`} onClick={() => tools.find(t => t.id === 'radar')?.available && setActiveTool('radar')}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Radar className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">Geo Radar</span>
+                  {!tools.find(t => t.id === 'radar')?.available && (
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">Week 3+</span>
+                  )}
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed mb-2">
+                  Advanced geo-radar scanning capabilities
+                </div>
+                {activeTool === 'radar' && tools.find(t => t.id === 'radar')?.available && (
+                  <div className="pt-2 border-t border-white/10">
+                    <span className="text-xs text-primary font-medium uppercase tracking-wide">● ACTIVE MODULE</span>
+                  </div>
+                )}
+              </div>
+
+              {/* BUZZ Interceptor */}
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
+                !tools.find(t => t.id === 'interceptor')?.available ? 'opacity-50 cursor-not-allowed' : 
+                (activeTool === 'interceptor' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20 cursor-pointer hover:scale-[1.02]')
+              }`} onClick={() => tools.find(t => t.id === 'interceptor')?.available && setActiveTool('interceptor')}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">BUZZ Interceptor</span>
+                  {!tools.find(t => t.id === 'interceptor')?.available && (
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">Week 4+</span>
+                  )}
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed mb-2">
+                  BUZZ signal interception and analysis
+                </div>
+                {activeTool === 'interceptor' && tools.find(t => t.id === 'interceptor')?.available && (
+                  <div className="pt-2 border-t border-white/10">
+                    <span className="text-xs text-primary font-medium uppercase tracking-wide">● ACTIVE MODULE</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Final Shot */}
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <Crosshair className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">Final Shot</span>
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed">
+                  Execute the final tactical shot when ready
+                </div>
+              </div>
+
+              {/* Final Shot Mappa */}
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">Final Shot Mappa</span>
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed">
+                  Interactive map for final shot coordinate selection
+                </div>
+              </div>
+
+              {/* Precision Result */}
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
+                !finalShotFailed ? 'opacity-50 cursor-not-allowed' : 
+                (activeTool === 'precision' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20 cursor-pointer hover:scale-[1.02]')
+              }`} onClick={() => finalShotFailed && setActiveTool('precision')}>
+                <div className="flex items-center gap-2 mb-3">
+                  <Crosshair className="w-4 h-4 text-primary flex-shrink-0" />
+                  <span className="text-sm font-semibold text-white uppercase tracking-wider">Precision Result</span>
+                  {!finalShotFailed && (
+                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">After Failed Shot</span>
+                  )}
+                </div>
+                <div className="text-xs text-white/80 leading-relaxed mb-2">
+                  High-precision targeting results and analysis
+                </div>
+                {activeTool === 'precision' && finalShotFailed && (
+                  <div className="pt-2 border-t border-white/10">
+                    <span className="text-xs text-primary font-medium uppercase tracking-wide">● ACTIVE MODULE</span>
+                  </div>
+                )}
+              </div>
+
               {/* Week 5 Unlocks */}
-              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[160px] overflow-y-auto ${
-                currentWeek >= 5 ? 'ring-2 ring-primary/50' : 'opacity-50'
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto transition-all duration-300 ${
+                currentWeek >= 5 ? 'ring-2 ring-primary/50 hover:bg-black/75 hover:border-white/20' : 'opacity-50'
               }`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <Crosshair className="w-4 h-4 text-primary" />
+                  <Crosshair className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Week 5 Unlocks</span>
                 </div>
                 <div className="text-xs text-white/80 leading-relaxed">
                   {currentWeek >= 5 ? 'Advanced tactical systems now available' : 'Unlocks at Week 5'}
                 </div>
               </div>
+              
             </div>
           </div>
         </div>
