@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 
 import React, { useEffect, useState } from 'react';
-import { Brain, Target, BookOpen, Radar, Zap, Crosshair } from 'lucide-react';
+import { Brain, Target, BookOpen, Radar, Zap, Crosshair, Archive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import CoordinateSelector from '@/components/intelligence/CoordinateSelector';
@@ -9,8 +9,10 @@ import ClueJournal from '@/components/intelligence/ClueJournal';
 import GeoRadarTool from '@/components/intelligence/GeoRadarTool';
 import BuzzInterceptor from '@/components/intelligence/BuzzInterceptor';
 import PrecisionResult from '@/components/intelligence/PrecisionResult';
+import ClueArchive from '@/components/intelligence/ClueArchive';
+import FinalShotManager from '@/components/intelligence/FinalShotManager';
 
-type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision';
+type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot';
 
 const IntelligencePage: React.FC = () => {
   const [activeTool, setActiveTool] = useState<ToolType>('coordinates');
@@ -35,6 +37,13 @@ const IntelligencePage: React.FC = () => {
       weekRequired: 1
     },
     {
+      id: 'archive' as ToolType,
+      name: 'Archivio Indizi',
+      icon: Archive,
+      available: true, // Always available
+      weekRequired: 1
+    },
+    {
       id: 'radar' as ToolType,
       name: 'Geo Radar',
       icon: Radar,
@@ -49,10 +58,17 @@ const IntelligencePage: React.FC = () => {
       weekRequired: 4
     },
     {
+      id: 'finalshot' as ToolType,
+      name: 'Final Shot',
+      icon: Target,
+      available: true, // Available in final week
+      weekRequired: 5
+    },
+    {
       id: 'precision' as ToolType,
       name: 'Precision Result',
       icon: Crosshair,
-      available: true, // Temporarily unlocked for testing
+      available: finalShotFailed, // Only after failed final shot
       weekRequired: 5
     }
   ];
@@ -63,10 +79,14 @@ const IntelligencePage: React.FC = () => {
         return <CoordinateSelector />;
       case 'journal':
         return <ClueJournal />;
+      case 'archive':
+        return <ClueArchive />;
       case 'radar':
         return <GeoRadarTool />;
       case 'interceptor':
         return <BuzzInterceptor />;
+      case 'finalshot':
+        return <FinalShotManager />;
       case 'precision':
         return <PrecisionResult />;
       default:

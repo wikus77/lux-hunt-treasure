@@ -592,6 +592,81 @@ export type Database = {
         }
         Relationships: []
       }
+      final_shot_rules: {
+        Row: {
+          cooldown_hours: number | null
+          created_at: string
+          id: string
+          max_attempts: number | null
+          mission_id: string
+          tolerance_meters: number | null
+          unlock_days_before_end: number | null
+        }
+        Insert: {
+          cooldown_hours?: number | null
+          created_at?: string
+          id?: string
+          max_attempts?: number | null
+          mission_id: string
+          tolerance_meters?: number | null
+          unlock_days_before_end?: number | null
+        }
+        Update: {
+          cooldown_hours?: number | null
+          created_at?: string
+          id?: string
+          max_attempts?: number | null
+          mission_id?: string
+          tolerance_meters?: number | null
+          unlock_days_before_end?: number | null
+        }
+        Relationships: []
+      }
+      final_shots: {
+        Row: {
+          attempt_number: number | null
+          created_at: string
+          distance_meters: number | null
+          feedback_direction: string | null
+          feedback_distance: number | null
+          id: string
+          is_winner: boolean | null
+          latitude: number
+          longitude: number
+          mission_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_number?: number | null
+          created_at?: string
+          distance_meters?: number | null
+          feedback_direction?: string | null
+          feedback_distance?: number | null
+          id?: string
+          is_winner?: boolean | null
+          latitude: number
+          longitude: number
+          mission_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_number?: number | null
+          created_at?: string
+          distance_meters?: number | null
+          feedback_direction?: string | null
+          feedback_distance?: number | null
+          id?: string
+          is_winner?: boolean | null
+          latitude?: number
+          longitude?: number
+          mission_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       geo_radar_coordinates: {
         Row: {
           created_at: string | null
@@ -763,6 +838,36 @@ export type Database = {
           note?: string | null
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      mission_targets: {
+        Row: {
+          created_at: string
+          id: string
+          is_revealed: boolean | null
+          latitude: number
+          longitude: number
+          mission_id: string
+          target_hash: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_revealed?: boolean | null
+          latitude: number
+          longitude: number
+          mission_id: string
+          target_hash: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_revealed?: boolean | null
+          latitude?: number
+          longitude?: number
+          mission_id?: string
+          target_hash?: string
         }
         Relationships: []
       }
@@ -1939,6 +2044,14 @@ export type Database = {
         Args: { daily_count: number }
         Returns: number
       }
+      calculate_direction: {
+        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Returns: string
+      }
+      calculate_distance_meters: {
+        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Returns: number
+      }
       can_use_intelligence_tool: {
         Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
         Returns: boolean
@@ -2066,6 +2179,10 @@ export type Database = {
       setup_developer_user: {
         Args: { uid: string }
         Returns: undefined
+      }
+      submit_final_shot: {
+        Args: { p_mission_id: string; p_latitude: number; p_longitude: number }
+        Returns: Json
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
