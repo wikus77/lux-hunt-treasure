@@ -565,6 +565,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_final_shot_limits: {
+        Row: {
+          attempt_date: string
+          attempts_count: number
+          created_at: string
+          id: string
+          mission_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_date?: string
+          attempts_count?: number
+          created_at?: string
+          id?: string
+          mission_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_date?: string
+          attempts_count?: number
+          created_at?: string
+          id?: string
+          mission_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_tokens: {
         Row: {
           created_at: string
@@ -2064,6 +2094,10 @@ export type Database = {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
       }
+      check_daily_final_shot_limit: {
+        Args: { p_user_id: string; p_mission_id: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           ip_addr: unknown
@@ -2143,6 +2177,10 @@ export type Database = {
       increment_buzz_map_counter: {
         Args: { p_user_id: string }
         Returns: number
+      }
+      increment_daily_final_shot_counter: {
+        Args: { p_user_id: string; p_mission_id: string }
+        Returns: undefined
       }
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
