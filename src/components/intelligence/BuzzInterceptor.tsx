@@ -106,20 +106,24 @@ const BuzzInterceptor: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Zap className="w-6 h-6 text-primary" />
-        <h3 className="text-xl font-bold text-foreground">BUZZ Interceptor</h3>
-        <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
+            <Zap className="w-6 h-6 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-foreground">BUZZ Interceptor</h3>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <AlertTriangle className="w-4 h-4" />
           <span>Disponibile dalla Settimana 4</span>
         </div>
       </div>
 
       {/* Control Panel */}
-      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between">
+      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+        <CardHeader className="border-b-0">
+          <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-between">
             <span>Pannello di Controllo</span>
             <div className="flex items-center gap-2">
               <div className={`w-3 h-3 rounded-full ${isIntercepting ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`} />
@@ -135,7 +139,7 @@ const BuzzInterceptor: React.FC = () => {
                 type="number"
                 value={frequencyRange.min}
                 onChange={(e) => setFrequencyRange({...frequencyRange, min: parseInt(e.target.value)})}
-                className="w-full h-10 px-3 rounded-lg bg-muted/50 border border-border text-foreground backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="w-full h-12 px-4 rounded-xl bg-muted/60 border-2 border-border/50 text-foreground backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300"
                 disabled={isIntercepting}
               />
             </div>
@@ -145,7 +149,7 @@ const BuzzInterceptor: React.FC = () => {
                 type="number"
                 value={frequencyRange.max}
                 onChange={(e) => setFrequencyRange({...frequencyRange, max: parseInt(e.target.value)})}
-                className="w-full h-10 px-3 rounded-lg bg-muted/50 border border-border text-foreground backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="w-full h-12 px-4 rounded-xl bg-muted/60 border-2 border-border/50 text-foreground backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300"
                 disabled={isIntercepting}
               />
             </div>
@@ -164,8 +168,8 @@ const BuzzInterceptor: React.FC = () => {
           <Button 
             onClick={handleToggleInterception}
             variant={isIntercepting ? "destructive" : "default"}
-            className={`w-full rounded-lg py-3 shadow-md hover:shadow-lg transition-all ${
-              !isIntercepting ? 'bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70' : ''
+            className={`w-full rounded-xl py-4 shadow-2xl hover:shadow-2xl transition-all duration-300 ${
+              !isIntercepting ? 'bg-gradient-to-r from-cyan-500 via-primary to-primary/80 hover:from-cyan-400 hover:to-primary/90 shadow-cyan-500/30 hover:shadow-cyan-500/50' : ''
             }`}
           >
             <Radio className="w-4 h-4 mr-2" />
@@ -175,9 +179,9 @@ const BuzzInterceptor: React.FC = () => {
       </Card>
 
       {/* Signal Feed */}
-      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center justify-between">
+      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+        <CardHeader className="border-b-0">
+          <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-between">
             <span>Feed Segnali BUZZ</span>
             <Badge variant="secondary">{signals.length} segnali</Badge>
           </CardTitle>
@@ -191,7 +195,7 @@ const BuzzInterceptor: React.FC = () => {
               </div>
             ) : (
               signals.map((signal) => (
-                <div key={signal.id} className="p-4 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
+                <div key={signal.id} className="p-4 bg-muted/60 rounded-2xl border-2 border-border/50 backdrop-blur-md hover:border-cyan-400/30 transition-all duration-300">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${signal.decoded ? 'bg-green-500' : 'bg-yellow-500'}`} />

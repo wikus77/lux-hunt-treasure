@@ -169,20 +169,26 @@ const GeoRadarTool: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Radar className="w-6 h-6 text-primary" />
-        <h3 className="text-xl font-bold text-foreground">Geo Radar Tool</h3>
-        <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
+            <Radar className="w-6 h-6 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-foreground">Geo Radar Tool</h3>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <AlertTriangle className="w-4 h-4" />
           <span>Disponibile dalla Settimana 3</span>
         </div>
       </div>
 
       {/* Scan Parameters */}
-      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg">Parametri Scansione</CardTitle>
+      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+        <CardHeader className="border-b-0">
+          <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">
+            Parametri Scansione
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -192,10 +198,10 @@ const GeoRadarTool: React.FC = () => {
                 id="centerLat"
                 type="number"
                 step="any"
-                placeholder="45.4642"
+                placeholder="45.4642 [COORD-LAT]"
                 value={scanParams.centerLat}
                 onChange={(e) => setScanParams({...scanParams, centerLat: e.target.value})}
-                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
                 disabled={isScanning}
               />
             </div>
@@ -205,10 +211,10 @@ const GeoRadarTool: React.FC = () => {
                 id="centerLng"
                 type="number"
                 step="any"
-                placeholder="9.1900"
+                placeholder="9.1900 [COORD-LNG]"
                 value={scanParams.centerLng}
                 onChange={(e) => setScanParams({...scanParams, centerLng: e.target.value})}
-                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
                 disabled={isScanning}
               />
             </div>
@@ -224,7 +230,7 @@ const GeoRadarTool: React.FC = () => {
                 max="5000"
                 value={scanParams.radius}
                 onChange={(e) => setScanParams({...scanParams, radius: e.target.value})}
-                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
                 disabled={isScanning}
               />
             </div>
@@ -232,10 +238,10 @@ const GeoRadarTool: React.FC = () => {
               <Label htmlFor="label">Etichetta</Label>
               <Input
                 id="label"
-                placeholder="Nome scansione"
+                placeholder="SCAN-ID [Nome scansione]"
                 value={scanParams.label}
                 onChange={(e) => setScanParams({...scanParams, label: e.target.value})}
-                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
                 disabled={isScanning}
               />
             </div>
@@ -256,7 +262,7 @@ const GeoRadarTool: React.FC = () => {
               onClick={handleSaveCoordinates} 
               disabled={isScanning}
               variant="outline"
-              className="rounded-lg"
+              className="rounded-xl border-2 border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10 transition-all duration-300"
             >
               <Save className="w-4 h-4 mr-2" />
               Salva Coordinate
@@ -264,7 +270,7 @@ const GeoRadarTool: React.FC = () => {
             <Button 
               onClick={handleStartScan} 
               disabled={isScanning}
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-lg shadow-md hover:shadow-lg transition-all"
+              className="bg-gradient-to-r from-cyan-500 via-primary to-primary/80 hover:from-cyan-400 hover:to-primary/90 rounded-xl shadow-2xl shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300"
             >
               <Search className="w-4 h-4 mr-2" />
               {isScanning ? 'Scansione...' : 'Avvia Scansione'}
@@ -275,31 +281,44 @@ const GeoRadarTool: React.FC = () => {
 
       {/* Interactive Map */}
       {scanParams.centerLat && scanParams.centerLng && (
-        <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg">Mappa Interattiva</CardTitle>
+        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+          <CardHeader className="border-b-0">
+            <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">
+              🗺 Mappa Tattica Interattiva
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-64 rounded-lg overflow-hidden">
+            <div className="h-80 rounded-2xl overflow-hidden border-2 border-cyan-500/20 shadow-inner">
               <MapContainer
                 center={[parseFloat(scanParams.centerLat), parseFloat(scanParams.centerLng)]}
-                zoom={13}
+                zoom={15}
                 style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  attribution='&copy; OpenStreetMap contributors'
+                  attribution='&copy; M1SSION™ Tactical Map'
                 />
                 <Marker position={[parseFloat(scanParams.centerLat), parseFloat(scanParams.centerLng)]}>
                   <Popup>
-                    Centro Scansione<br />
-                    {scanParams.label || 'Punto di scansione'}
+                    <div className="text-center">
+                      <strong>Centro Scansione M1SSION™</strong><br />
+                      {scanParams.label || 'Punto di scansione'}<br />
+                      <span className="text-xs font-mono">
+                        {parseFloat(scanParams.centerLat).toFixed(6)}, {parseFloat(scanParams.centerLng).toFixed(6)}
+                      </span>
+                    </div>
                   </Popup>
                 </Marker>
                 <Circle
                   center={[parseFloat(scanParams.centerLat), parseFloat(scanParams.centerLng)]}
                   radius={parseFloat(scanParams.radius)}
-                  pathOptions={{ color: 'blue', fillColor: 'blue', fillOpacity: 0.1 }}
+                  pathOptions={{ 
+                    color: '#00FFFF', 
+                    fillColor: '#00FFFF', 
+                    fillOpacity: 0.1,
+                    weight: 3,
+                    dashArray: '10, 5'
+                  }}
                 />
               </MapContainer>
             </div>
@@ -312,15 +331,15 @@ const GeoRadarTool: React.FC = () => {
         <h4 className="text-lg font-semibold text-foreground">Risultati Scansioni</h4>
         
         {scans.length === 0 ? (
-          <Card className="border-border rounded-xl bg-card/30 backdrop-blur-sm">
-            <CardContent className="py-8 text-center text-muted-foreground">
-              <Radar className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              Nessuna scansione effettuata
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/40 backdrop-blur-md">
+            <CardContent className="py-12 text-center text-muted-foreground">
+              <Radar className="w-16 h-16 mx-auto mb-6 opacity-50" />
+              <p className="text-lg">Nessuna scansione effettuata</p>
             </CardContent>
           </Card>
         ) : (
           scans.map((scan) => (
-            <Card key={scan.id} className="border-border rounded-xl bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+            <Card key={scan.id} className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center justify-between">
                   <span>Scansione {scan.timestamp.toLocaleTimeString()}</span>
@@ -337,7 +356,7 @@ const GeoRadarTool: React.FC = () => {
                 
                 <div className="space-y-3">
                   {scan.scanResults.map((result, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
+                    <div key={index} className="flex items-center justify-between p-4 bg-muted/60 rounded-2xl border-2 border-border/50 backdrop-blur-md hover:border-cyan-400/30 transition-all duration-300">
                       <div className="flex items-center gap-3">
                         <MapPin className="w-4 h-4 text-primary" />
                         <div>

@@ -96,32 +96,33 @@ const IntelligencePage: React.FC = () => {
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
       }}>
         {/* Header */}
-        <div className="border-b border-border p-6 bg-background/95 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-              <Brain className="w-5 h-5 text-white" />
+        <div className="p-6 bg-gradient-to-r from-background/95 via-background/90 to-background/95 backdrop-blur-sm">
+          <div className="flex flex-col items-center text-center">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 via-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-cyan-500/20 mb-4">
+              <Brain className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">
-              M1SSION INTELLIGENCE PANEL™
+            <h1 className="text-4xl font-bold">
+              <span className="text-cyan-400 glow-text">M1</span>
+              <span className="text-white">SSION INTELLIGENCE PANEL™</span>
             </h1>
+            <p className="text-muted-foreground mt-3 text-lg">
+              Advanced tactical tools for mission analysis and coordination
+            </p>
           </div>
-          <p className="text-muted-foreground mt-2">
-            Advanced tactical tools for mission analysis and coordination
-          </p>
         </div>
 
         <div className="flex h-full">
         {/* Tool Selector Sidebar */}
-        <div className="w-80 border-r border-border p-6 bg-background/50 backdrop-blur-sm">
-          <div className="space-y-3">
+        <div className="w-80 p-6 bg-gradient-to-b from-background/60 via-background/50 to-background/60 backdrop-blur-md">
+          <div className="space-y-4">
             {tools.map((tool) => (
               <Button
                 key={tool.id}
                 variant={activeTool === tool.id ? "default" : "ghost"}
-                className={`w-full justify-start h-16 text-left rounded-xl transition-all duration-200 ${
+                className={`w-full justify-start h-16 text-left rounded-2xl border-2 transition-all duration-300 ${
                   activeTool === tool.id 
-                    ? 'bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20' 
-                    : 'hover:bg-muted/80 hover:shadow-md'
+                    ? 'bg-gradient-to-r from-cyan-500 via-primary to-primary/80 border-cyan-400/50 shadow-2xl shadow-cyan-500/30 text-white' 
+                    : 'bg-card/40 border-border/50 hover:bg-card/70 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 backdrop-blur-sm'
                 } ${
                   !tool.available 
                     ? 'opacity-50 cursor-not-allowed' 
@@ -136,7 +137,7 @@ const IntelligencePage: React.FC = () => {
                     {tool.name}
                   </span>
                   {!tool.available && (
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-sm opacity-70">
                       Unlocks Week {tool.weekRequired}
                     </span>
                   )}
@@ -148,7 +149,7 @@ const IntelligencePage: React.FC = () => {
 
         {/* Tool Content Area */}
         <div className="flex-1 min-h-0">
-          <div className="h-full overflow-auto p-6 bg-gradient-to-br from-background via-background/95 to-background/90">
+          <div className="h-full overflow-auto p-6 bg-gradient-to-br from-background/90 via-background/85 to-background/90">
             <div className="max-w-4xl mx-auto">
               {renderActiveTool()}
             </div>

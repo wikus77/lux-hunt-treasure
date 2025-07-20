@@ -142,20 +142,26 @@ const PrecisionResult: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 mb-6">
-        <Crosshair className="w-6 h-6 text-primary" />
-        <h3 className="text-xl font-bold text-foreground">Precision Result</h3>
-        <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
+            <Crosshair className="w-6 h-6 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-foreground">Precision Result</h3>
+        </div>
+        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <AlertCircle className="w-4 h-4" />
           <span>Disponibile dopo Final Shot fallito</span>
         </div>
       </div>
 
       {/* Input Final Shot Coordinates */}
-      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg">Analisi di Precisione</CardTitle>
+      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+        <CardHeader className="border-b-0">
+          <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">
+            Analisi di Precisione
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -165,10 +171,10 @@ const PrecisionResult: React.FC = () => {
                   id="finalShotLat"
                   type="number"
                   step="any"
-                  placeholder="45.4642"
+                  placeholder="45.4642 [FINAL-LAT]"
                   value={finalShotCoords.lat}
                   onChange={(e) => setFinalShotCoords({...finalShotCoords, lat: e.target.value})}
-                  className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
                   disabled={isAnalyzing}
                 />
             </div>
@@ -178,10 +184,10 @@ const PrecisionResult: React.FC = () => {
                 id="finalShotLng"
                 type="number"
                 step="any"
-                placeholder="9.1900"
+                placeholder="9.1900 [FINAL-LNG]"
                 value={finalShotCoords.lng}
                 onChange={(e) => setFinalShotCoords({...finalShotCoords, lng: e.target.value})}
-                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
                 disabled={isAnalyzing}
               />
             </div>
@@ -200,7 +206,7 @@ const PrecisionResult: React.FC = () => {
           <Button 
             onClick={handleAnalyzePrecision} 
             disabled={isAnalyzing}
-            className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-lg py-3 shadow-md hover:shadow-lg transition-all"
+            className="w-full bg-gradient-to-r from-cyan-500 via-primary to-primary/80 hover:from-cyan-400 hover:to-primary/90 rounded-xl py-4 shadow-2xl shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300 text-lg"
           >
             <Target className="w-4 h-4 mr-2" />
             {isAnalyzing ? 'Analizzando...' : 'Analizza Precisione'}
@@ -213,10 +219,10 @@ const PrecisionResult: React.FC = () => {
         <h4 className="text-lg font-semibold text-foreground">Risultati Analisi</h4>
         
         {analyses.length === 0 ? (
-          <Card className="border-border rounded-xl bg-card/30 backdrop-blur-sm">
-            <CardContent className="py-8 text-center text-muted-foreground">
-              <Crosshair className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              Nessuna analisi di precisione effettuata
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/40 backdrop-blur-md">
+            <CardContent className="py-12 text-center text-muted-foreground">
+              <Crosshair className="w-16 h-16 mx-auto mb-6 opacity-50" />
+              <p className="text-lg">Nessuna analisi di precisione effettuata</p>
             </CardContent>
           </Card>
         ) : (
@@ -224,7 +230,7 @@ const PrecisionResult: React.FC = () => {
             const accuracyBadge = getAccuracyBadge(analysis.accuracy);
             
             return (
-              <Card key={analysis.id} className="border-border rounded-xl bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
+              <Card key={analysis.id} className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-xl hover:shadow-2xl transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center justify-between">
                     <span>Analisi {analysis.timestamp.toLocaleString()}</span>

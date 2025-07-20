@@ -70,13 +70,15 @@ const ClueJournal: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <BookOpen className="w-6 h-6 text-primary" />
-          <h3 className="text-xl font-bold text-foreground">Clue Journal</h3>
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
+            <BookOpen className="w-6 h-6 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-foreground">Clue Journal</h3>
         </div>
-        <Button onClick={() => setShowAddForm(!showAddForm)} className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-lg shadow-md hover:shadow-lg transition-all">
+        <Button onClick={() => setShowAddForm(!showAddForm)} className="bg-gradient-to-r from-cyan-500 via-primary to-primary/80 hover:from-cyan-400 hover:to-primary/90 rounded-xl py-3 px-6 shadow-2xl shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-all duration-300">
           <Plus className="w-4 h-4 mr-2" />
           Nuova Voce
         </Button>
@@ -86,18 +88,20 @@ const ClueJournal: React.FC = () => {
       <div className="relative">
         <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Cerca nel diario..."
+          placeholder="SEARCH [Cerca nel diario...]"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+          className="pl-10 bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
         />
       </div>
 
       {/* Add New Entry Form */}
       {showAddForm && (
-        <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg">Nuova Voce del Diario</CardTitle>
+        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+          <CardHeader className="border-b-0">
+            <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">
+              Nuova Voce del Diario
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
