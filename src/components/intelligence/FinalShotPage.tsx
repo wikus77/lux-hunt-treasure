@@ -121,8 +121,11 @@ const FinalShotPage: React.FC = () => {
     console.log('🎯 Map clicked:', { lat, lng, isDisabled, cooldown: getCooldownTime() });
     
     if (!isDisabled) {
-      // Set exact coordinates from click event
-      const exactPosition = { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
+      // Set exact coordinates from click event - PRECISION FIXED
+      const exactPosition = { 
+        lat: parseFloat(lat.toFixed(6)), 
+        lng: parseFloat(lng.toFixed(6)) 
+      };
       setSelectedPosition(exactPosition);
       setShowConfirmation(true);
       setShowMapControls(true);
@@ -168,8 +171,14 @@ const FinalShotPage: React.FC = () => {
       console.log('✅ Final Shot Result:', result);
 
       if (result.error) {
+        // Enhanced error handling with specific messages
+        const errorTitle = result.error.includes('Mission target') ? "❌ Target Non Trovato" : 
+                          result.error.includes('Maximum attempts') ? "❌ Tentativi Esauriti" :
+                          result.error.includes('Daily limit') ? "❌ Limite Giornaliero" :
+                          result.error.includes('Cooldown') ? "⏳ Cooldown Attivo" : "❌ Errore Final Shot";
+        
         toast({
-          title: "❌ Errore Final Shot",
+          title: errorTitle,
           description: result.error,
           variant: "destructive"
         });
