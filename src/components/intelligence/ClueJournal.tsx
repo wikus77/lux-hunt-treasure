@@ -76,7 +76,7 @@ const ClueJournal: React.FC = () => {
           <BookOpen className="w-6 h-6 text-primary" />
           <h3 className="text-xl font-bold text-foreground">Clue Journal</h3>
         </div>
-        <Button onClick={() => setShowAddForm(!showAddForm)}>
+        <Button onClick={() => setShowAddForm(!showAddForm)} className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-lg shadow-md hover:shadow-lg transition-all">
           <Plus className="w-4 h-4 mr-2" />
           Nuova Voce
         </Button>
@@ -89,13 +89,13 @@ const ClueJournal: React.FC = () => {
           placeholder="Cerca nel diario..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 bg-muted border-border"
+          className="pl-10 bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
         />
       </div>
 
       {/* Add New Entry Form */}
       {showAddForm && (
-        <Card className="border-border">
+        <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
           <CardHeader>
             <CardTitle className="text-lg">Nuova Voce del Diario</CardTitle>
           </CardHeader>
@@ -177,7 +177,7 @@ const ClueJournal: React.FC = () => {
       {/* Entries List */}
       <div className="space-y-4">
         {filteredEntries.length === 0 ? (
-          <Card className="border-border">
+          <Card className="border-border rounded-xl bg-card/30 backdrop-blur-sm">
             <CardContent className="py-8 text-center text-muted-foreground">
               <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
               {searchTerm ? 'Nessun risultato trovato' : 'Nessuna voce nel diario'}
@@ -185,7 +185,7 @@ const ClueJournal: React.FC = () => {
           </Card>
         ) : (
           filteredEntries.map((entry) => (
-            <Card key={entry.id} className="border-border">
+            <Card key={entry.id} className="border-border rounded-xl bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
               <CardContent className="py-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">

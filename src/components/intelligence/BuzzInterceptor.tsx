@@ -117,7 +117,7 @@ const BuzzInterceptor: React.FC = () => {
       </div>
 
       {/* Control Panel */}
-      <Card className="border-border">
+      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
         <CardHeader>
           <CardTitle className="text-lg flex items-center justify-between">
             <span>Pannello di Controllo</span>
@@ -164,7 +164,9 @@ const BuzzInterceptor: React.FC = () => {
           <Button 
             onClick={handleToggleInterception}
             variant={isIntercepting ? "destructive" : "default"}
-            className="w-full"
+            className={`w-full rounded-lg py-3 shadow-md hover:shadow-lg transition-all ${
+              !isIntercepting ? 'bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70' : ''
+            }`}
           >
             <Radio className="w-4 h-4 mr-2" />
             {isIntercepting ? 'Arresta Intercettazione' : 'Avvia Intercettazione'}
@@ -173,7 +175,7 @@ const BuzzInterceptor: React.FC = () => {
       </Card>
 
       {/* Signal Feed */}
-      <Card className="border-border">
+      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
         <CardHeader>
           <CardTitle className="text-lg flex items-center justify-between">
             <span>Feed Segnali BUZZ</span>
@@ -189,7 +191,7 @@ const BuzzInterceptor: React.FC = () => {
               </div>
             ) : (
               signals.map((signal) => (
-                <div key={signal.id} className="p-4 bg-muted rounded-lg border border-border">
+                <div key={signal.id} className="p-4 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-3">
                       <div className={`w-2 h-2 rounded-full ${signal.decoded ? 'bg-green-500' : 'bg-yellow-500'}`} />

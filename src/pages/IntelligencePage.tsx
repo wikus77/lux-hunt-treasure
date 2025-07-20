@@ -24,35 +24,35 @@ const IntelligencePage: React.FC = () => {
       id: 'coordinates' as ToolType,
       name: 'Coordinate Selector',
       icon: Target,
-      available: true,
+      available: true, // Always available
       weekRequired: 1
     },
     {
       id: 'journal' as ToolType,
       name: 'Clue Journal',
       icon: BookOpen,
-      available: true,
+      available: true, // Always available
       weekRequired: 1
     },
     {
       id: 'radar' as ToolType,
       name: 'Geo Radar',
       icon: Radar,
-      available: currentWeek >= 3,
+      available: true, // Temporarily unlocked for testing
       weekRequired: 3
     },
     {
       id: 'interceptor' as ToolType,
       name: 'BUZZ Interceptor',
       icon: Zap,
-      available: currentWeek >= 4,
+      available: true, // Temporarily unlocked for testing
       weekRequired: 4
     },
     {
       id: 'precision' as ToolType,
       name: 'Precision Result',
       icon: Crosshair,
-      available: finalShotFailed,
+      available: true, // Temporarily unlocked for testing
       weekRequired: 5
     }
   ];
@@ -109,43 +109,49 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         <div className="flex h-full">
-          {/* Tool Selector Sidebar */}
-          <div className="w-80 border-r border-border p-6 bg-background/50">
-            <div className="space-y-3">
-              {tools.map((tool) => (
-                <Button
-                  key={tool.id}
-                  variant={activeTool === tool.id ? "default" : "ghost"}
-                  className={`w-full justify-start h-16 text-left ${
-                    !tool.available 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : 'hover:bg-muted'
-                  }`}
-                  onClick={() => tool.available && setActiveTool(tool.id)}
-                  disabled={!tool.available}
-                >
-                  <tool.icon className="w-6 h-6 mr-4 flex-shrink-0" />
-                  <div className="flex flex-col items-start min-w-0">
-                    <span className="text-base font-medium truncate w-full">
-                      {tool.name}
+        {/* Tool Selector Sidebar */}
+        <div className="w-80 border-r border-border p-6 bg-background/50 backdrop-blur-sm">
+          <div className="space-y-3">
+            {tools.map((tool) => (
+              <Button
+                key={tool.id}
+                variant={activeTool === tool.id ? "default" : "ghost"}
+                className={`w-full justify-start h-16 text-left rounded-xl transition-all duration-200 ${
+                  activeTool === tool.id 
+                    ? 'bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20' 
+                    : 'hover:bg-muted/80 hover:shadow-md'
+                } ${
+                  !tool.available 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : ''
+                }`}
+                onClick={() => tool.available && setActiveTool(tool.id)}
+                disabled={!tool.available}
+              >
+                <tool.icon className="w-6 h-6 mr-4 flex-shrink-0" />
+                <div className="flex flex-col items-start min-w-0">
+                  <span className="text-base font-medium truncate w-full">
+                    {tool.name}
+                  </span>
+                  {!tool.available && (
+                    <span className="text-sm text-muted-foreground">
+                      Unlocks Week {tool.weekRequired}
                     </span>
-                    {!tool.available && (
-                      <span className="text-sm text-muted-foreground">
-                        Unlocks Week {tool.weekRequired}
-                      </span>
-                    )}
-                  </div>
-                </Button>
-              ))}
-            </div>
+                  )}
+                </div>
+              </Button>
+            ))}
           </div>
+        </div>
 
-          {/* Tool Content Area */}
-          <div className="flex-1 min-h-0">
-            <div className="h-full overflow-auto p-6">
+        {/* Tool Content Area */}
+        <div className="flex-1 min-h-0">
+          <div className="h-full overflow-auto p-6 bg-gradient-to-br from-background via-background/95 to-background/90">
+            <div className="max-w-4xl mx-auto">
               {renderActiveTool()}
             </div>
           </div>
+        </div>
         </div>
       </div>
     </SafeAreaWrapper>

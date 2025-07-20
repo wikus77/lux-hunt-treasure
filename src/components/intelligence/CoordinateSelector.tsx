@@ -61,7 +61,7 @@ const CoordinateSelector: React.FC = () => {
       </div>
 
       {/* Add New Coordinate */}
-      <Card className="border-border">
+      <Card className="border-border rounded-xl bg-card/50 backdrop-blur-sm shadow-lg">
         <CardHeader>
           <CardTitle className="text-lg">Aggiungi Nuova Coordinata</CardTitle>
         </CardHeader>
@@ -69,27 +69,27 @@ const CoordinateSelector: React.FC = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="lat">Latitudine</Label>
-              <Input
-                id="lat"
-                type="number"
-                step="any"
-                placeholder="45.4642"
-                value={newCoord.lat}
-                onChange={(e) => setNewCoord({...newCoord, lat: e.target.value})}
-                className="bg-muted border-border"
-              />
+                <Input
+                  id="lat"
+                  type="number"
+                  step="any"
+                  placeholder="45.4642"
+                  value={newCoord.lat}
+                  onChange={(e) => setNewCoord({...newCoord, lat: e.target.value})}
+                  className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
             </div>
             <div>
               <Label htmlFor="lng">Longitudine</Label>
-              <Input
-                id="lng"
-                type="number"
-                step="any"
-                placeholder="9.1900"
-                value={newCoord.lng}
-                onChange={(e) => setNewCoord({...newCoord, lng: e.target.value})}
-                className="bg-muted border-border"
-              />
+                <Input
+                  id="lng"
+                  type="number"
+                  step="any"
+                  placeholder="9.1900"
+                  value={newCoord.lng}
+                  onChange={(e) => setNewCoord({...newCoord, lng: e.target.value})}
+                  className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                />
             </div>
           </div>
           
@@ -100,7 +100,7 @@ const CoordinateSelector: React.FC = () => {
               placeholder="Punto di interesse"
               value={newCoord.label}
               onChange={(e) => setNewCoord({...newCoord, label: e.target.value})}
-              className="bg-muted border-border"
+              className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
 
@@ -111,12 +111,12 @@ const CoordinateSelector: React.FC = () => {
               placeholder="Descrizione dettagliata..."
               value={newCoord.notes}
               onChange={(e) => setNewCoord({...newCoord, notes: e.target.value})}
-              className="bg-muted border-border"
+              className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               rows={3}
             />
           </div>
 
-          <Button onClick={handleSaveCoordinate} className="w-full">
+          <Button onClick={handleSaveCoordinate} className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-lg py-3 shadow-md hover:shadow-lg transition-all">
             <Save className="w-4 h-4 mr-2" />
             Salva Coordinata
           </Button>
@@ -128,7 +128,7 @@ const CoordinateSelector: React.FC = () => {
         <h4 className="text-lg font-semibold text-foreground">Coordinate Salvate</h4>
         
         {coordinates.length === 0 ? (
-          <Card className="border-border">
+          <Card className="border-border rounded-xl bg-card/30 backdrop-blur-sm">
             <CardContent className="py-8 text-center text-muted-foreground">
               <MapPin className="w-12 h-12 mx-auto mb-4 opacity-50" />
               Nessuna coordinata salvata
@@ -136,7 +136,7 @@ const CoordinateSelector: React.FC = () => {
           </Card>
         ) : (
           coordinates.map((coord) => (
-            <Card key={coord.id} className="border-border">
+            <Card key={coord.id} className="border-border rounded-xl bg-card/40 backdrop-blur-sm shadow-sm hover:shadow-md transition-all">
               <CardContent className="py-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
