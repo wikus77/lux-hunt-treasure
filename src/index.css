@@ -123,6 +123,37 @@
     opacity: 0.4;
   }
 
+  /* Pulse animation for Final Shot marker */
+  @keyframes heartbeat {
+    0% { transform: scale(1); opacity: 1; }
+    25% { transform: scale(1.1); opacity: 0.9; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    75% { transform: scale(1.1); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .pulsing-red-marker {
+    animation: heartbeat 2s ease-in-out infinite;
+  }
+
+  /* Intelligence panel scrolling fixes */
+  .intelligence-scroll-container {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  .intelligence-scroll-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* iOS Safari viewport fixes */
+  @supports (height: 100dvh) {
+    .full-height-container {
+      height: 100dvh;
+    }
+  }
+
   .dynamic-island {
     position: relative;
     overflow: visible;

@@ -44,13 +44,12 @@ const BottomNavigationComponent = () => {
       color: "#F59E0B"
     },
     { 
-      icon: <div className="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-white">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-          <circle cx="12" cy="7" r="2"/>
-          <path d="M9 13h6v2H9z"/>
-        </svg>
-      </div>, 
+      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+        <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/>
+        <path d="M12 22V12"/>
+        <path d="M7 9l5-3 5 3"/>
+        <circle cx="12" cy="12" r="2"/>
+      </svg>, 
       label: "Intelligence", 
       path: "/intelligence",
       color: "#8B5CF6"
@@ -64,9 +63,11 @@ const BottomNavigationComponent = () => {
       color: "#EF4444"
     },
     { 
-      icon: <div className="w-6 h-6 rounded-full bg-yellow-600 border-2 border-yellow-400 flex items-center justify-center">
-        <span className="text-yellow-200 font-bold text-sm">1</span>
-      </div>, 
+      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+        <circle cx="12" cy="8" r="6"/>
+        <path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/>
+        <path d="M12 2v6"/>
+      </svg>, 
       label: "Hall of Winners", 
       path: "/leaderboard",
       color: "#F59E0B"

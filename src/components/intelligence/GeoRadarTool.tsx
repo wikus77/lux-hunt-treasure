@@ -123,14 +123,35 @@ const GeoRadarTool: React.FC = () => {
     }, 300);
   };
 
+  const checkTargetProximity = (lat: number, lng: number) => {
+    // Simulated target coordinates - in real app would come from mission data
+    const targetLat = 45.4642; // Example: Milan
+    const targetLng = 9.1900;
+    
+    // Calculate distance in meters
+    const R = 6371000; // Earth radius in meters
+    const dLat = (targetLat - lat) * Math.PI / 180;
+    const dLng = (targetLng - lng) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat * Math.PI / 180) * Math.cos(targetLat * Math.PI / 180) * 
+              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    
+    return distance <= 3000; // 3km radius check
+  };
+
   const generateScanResults = () => {
     const centerLat = parseFloat(scanParams.centerLat);
     const centerLng = parseFloat(scanParams.centerLng);
     const radius = parseInt(scanParams.radius);
 
-    // Genera risultati simulati
+    // Check if coordinates are within 3km of target
+    const isNearTarget = checkTargetProximity(centerLat, centerLng);
+
+    // Generate results based on proximity to target
     const results: ScanResult[] = [];
-    const numResults = Math.floor(Math.random() * 5) + 1;
+    const numResults = isNearTarget ? Math.floor(Math.random() * 3) + 2 : Math.floor(Math.random() * 2) + 1;
 
     for (let i = 0; i < numResults; i++) {
       const angle = (Math.random() * 360) * (Math.PI / 180);
@@ -139,13 +160,26 @@ const GeoRadarTool: React.FC = () => {
       const lat = centerLat + (distance / 111000) * Math.cos(angle);
       const lng = centerLng + (distance / (111000 * Math.cos(centerLat * Math.PI / 180))) * Math.sin(angle);
 
+      // Higher signal strength if near target
+      const baseSignal = isNearTarget ? 60 + Math.random() * 40 : Math.random() * 60;
+      const baseConfidence = isNearTarget ? 70 + Math.random() * 30 : Math.random() * 70;
+
       results.push({
         lat,
         lng,
-        signal: Math.random() * 100,
-        confidence: Math.random() * 100,
-        description: `Anomalia rilevata - Settore ${String.fromCharCode(65 + i)}`
+        signal: baseSignal,
+        confidence: baseConfidence,
+        description: isNearTarget 
+          ? `⚠️ SIGNAL FORTE - Settore ${String.fromCharCode(65 + i)}` 
+          : `Anomalia rilevata - Settore ${String.fromCharCode(65 + i)}`
       });
+    }
+
+    // Add proximity feedback
+    if (isNearTarget) {
+      toast.success('⚠️ RADAR: Segnali anomali rilevati! Possibile obiettivo nelle vicinanze!');
+    } else {
+      toast.success('✅ RADAR: Scansione completata - Area sicura');
     }
 
     const scan: RadarScan = {

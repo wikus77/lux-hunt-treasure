@@ -79,6 +79,8 @@ const FinalShotPage: React.FC = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [attempts, setAttempts] = useState<any[]>([]);
   const [cooldownEnd, setCooldownEnd] = useState<Date | null>(null);
+  const [mapStyle, setMapStyle] = useState('satellite');
+  const [showMapControls, setShowMapControls] = useState(false);
   const { toast } = useToast();
   const mapRef = useRef<any>(null);
 
@@ -198,6 +200,32 @@ const FinalShotPage: React.FC = () => {
 
   const isDisabled = getRemainingAttempts() === 0 || !!getCooldownTime();
 
+  const getMapTileUrl = () => {
+    switch (mapStyle) {
+      case 'satellite':
+        return "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
+      case 'dark':
+        return "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+      case 'terrain':
+        return "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png";
+      default:
+        return "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    }
+  };
+
+  const getMapAttribution = () => {
+    switch (mapStyle) {
+      case 'satellite':
+        return '&copy; M1SSION™ Tactical Intelligence | Esri';
+      case 'dark':
+        return '&copy; M1SSION™ Dark Ops | CartoDB';
+      case 'terrain':
+        return '&copy; M1SSION™ Terrain | OpenTopoMap';
+      default:
+        return '&copy; M1SSION™ Standard | OpenStreetMap';
+    }
+  };
+
   return (
     <div className="h-full overflow-y-auto pb-20" style={{
       height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px)',
@@ -246,49 +274,103 @@ const FinalShotPage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Interactive Map */}
+        {/* Interactive Map with Map Style Selector */}
         <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
           <CardHeader>
             <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
               <MapPin className="w-6 h-6 text-cyan-400" />
-              Mappa Final Shot
+              🗺️ Mappa Tattica M1SSION™
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-96 rounded-xl overflow-hidden border-2 border-cyan-500/20">
-              <MapContainer
-                center={[50.8503, 4.3517]} // Europe center (Brussels)
-                zoom={5}
-                minZoom={3}
-                maxZoom={20}
-                style={{ height: '100%', width: '100%' }}
-                ref={mapRef}
-              >
-                <TileLayer
-                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                  attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
-                />
-                
-                {!isDisabled && (
-                  <MapClickHandler onMapClick={handleMapClick} />
-                )}
-                
-                {selectedPosition && (
-                  <Marker 
-                    position={[selectedPosition.lat, selectedPosition.lng]}
-                    icon={PulsingRedIcon}
+            <div className="space-y-4">
+              {/* Map Style Controls */}
+              <div className="flex flex-wrap gap-2 justify-center mb-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
+                  onClick={() => setMapStyle('satellite')}
+                >
+                  🛰️ Satellite
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
+                  onClick={() => setMapStyle('dark')}
+                >
+                  🌑 Dark Military
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
+                  onClick={() => setMapStyle('terrain')}
+                >
+                  🏔️ Terrain
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
+                  onClick={() => setMapStyle('osm')}
+                >
+                  🗺️ Standard
+                </Button>
+              </div>
+
+              {/* Insert Final Shot Button */}
+              {!selectedPosition && !isDisabled && (
+                <div className="text-center mb-4">
+                  <Button
+                    onClick={() => setShowMapControls(!showMapControls)}
+                    className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl"
                   >
-                    <Popup>
-                      <div className="text-center">
-                        <div className="font-bold text-red-600">🎯 Final Shot</div>
-                        <div className="text-sm">
-                          {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
+                    🎯 INSERISCI FINAL SHOT
+                  </Button>
+                </div>
+              )}
+              
+              <div className="h-96 rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-inner">
+                <MapContainer
+                  center={[50.8503, 4.3517]} // Europe center (Brussels)
+                  zoom={4}
+                  minZoom={2}
+                  maxZoom={20}
+                  style={{ height: '100%', width: '100%' }}
+                  ref={mapRef}
+                  scrollWheelZoom={true}
+                  doubleClickZoom={true}
+                  dragging={true}
+                  touchZoom={true}
+                >
+                  <TileLayer
+                    url={getMapTileUrl()}
+                    attribution={getMapAttribution()}
+                  />
+                  
+                  {!isDisabled && showMapControls && (
+                    <MapClickHandler onMapClick={handleMapClick} />
+                  )}
+                  
+                  {selectedPosition && (
+                    <Marker 
+                      position={[selectedPosition.lat, selectedPosition.lng]}
+                      icon={PulsingRedIcon}
+                    >
+                      <Popup>
+                        <div className="text-center">
+                          <div className="font-bold text-red-600">🎯 Final Shot</div>
+                          <div className="text-sm">
+                            {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
+                          </div>
                         </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                )}
-              </MapContainer>
+                      </Popup>
+                    </Marker>
+                  )}
+                </MapContainer>
+              </div>
             </div>
 
             {isDisabled && (

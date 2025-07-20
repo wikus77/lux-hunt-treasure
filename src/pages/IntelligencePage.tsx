@@ -12,8 +12,9 @@ import PrecisionResult from '@/components/intelligence/PrecisionResult';
 import ClueArchive from '@/components/intelligence/ClueArchive';
 import FinalShotManager from '@/components/intelligence/FinalShotManager';
 import FinalShotPage from '@/components/intelligence/FinalShotPage';
+import WeeklyCluesIntegration from '@/components/intelligence/WeeklyCluesIntegration';
 
-type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot' | 'finalshotpage';
+type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot' | 'finalshotpage' | 'weeklyClues';
 
 const IntelligencePage: React.FC = () => {
   const [activeTool, setActiveTool] = useState<ToolType>('coordinates');
@@ -41,6 +42,13 @@ const IntelligencePage: React.FC = () => {
       id: 'archive' as ToolType,
       name: 'Archivio Indizi',
       icon: Archive,
+      available: true, // Always available
+      weekRequired: 1
+    },
+    {
+      id: 'weeklyClues' as ToolType,
+      name: 'Indizi Settimanali',
+      icon: BookOpen,
       available: true, // Always available
       weekRequired: 1
     },
@@ -97,6 +105,8 @@ const IntelligencePage: React.FC = () => {
         return <FinalShotManager />;
       case 'finalshotpage':
         return <FinalShotPage />;
+      case 'weeklyClues':
+        return <WeeklyCluesIntegration />;
       case 'precision':
         return <PrecisionResult />;
       default:
@@ -143,8 +153,8 @@ const IntelligencePage: React.FC = () => {
 
         <div className="flex h-full">
         {/* Tool Selector Sidebar */}
-        <div className="w-80 p-6 bg-gradient-to-b from-background/60 via-background/50 to-background/60 backdrop-blur-md">
-          <div className="space-y-4">
+        <div className="w-80 p-6 bg-gradient-to-b from-background/60 via-background/50 to-background/60 backdrop-blur-md overflow-y-auto intelligence-scroll-container">
+          <div className="space-y-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
             {tools.map((tool) => (
               <Button
                 key={tool.id}
@@ -179,7 +189,7 @@ const IntelligencePage: React.FC = () => {
 
         {/* Tool Content Area */}
         <div className="flex-1 min-h-0">
-          <div className="h-full overflow-auto p-6 bg-gradient-to-br from-background/90 via-background/85 to-background/90">
+          <div className="h-full overflow-auto p-6 bg-gradient-to-br from-background/90 via-background/85 to-background/90 intelligence-scroll-container" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }}>
             <div className="max-w-4xl mx-auto">
               {renderActiveTool()}
             </div>
