@@ -141,10 +141,19 @@
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 160px);
   }
 
   .intelligence-scroll-container::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Ensure all content is scrollable on iOS */
+  .full-scroll-viewport {
+    min-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 80px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 100px);
   }
 
   /* iOS Safari viewport fixes */

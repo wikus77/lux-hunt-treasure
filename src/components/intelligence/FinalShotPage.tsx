@@ -320,12 +320,21 @@ const FinalShotPage: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Insert Final Shot Button */}
-              {!selectedPosition && !isDisabled && (
+              {/* Insert Final Shot Button - Always visible when enabled */}
+              {!isDisabled && (
                 <div className="text-center mb-4">
                   <Button
-                    onClick={() => setShowMapControls(!showMapControls)}
-                    className="bg-gradient-to-r from-pink-600 to-fuchsia-800 hover:from-fuchsia-700 hover:to-fuchsia-900 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-pulse hover:animate-none"
+                    onClick={() => {
+                      setShowMapControls(true);
+                      if (!selectedPosition) {
+                        toast({
+                          title: "🎯 Modalità Final Shot Attiva",
+                          description: "Clicca sulla mappa per selezionare la posizione del premio",
+                          variant: "default"
+                        });
+                      }
+                    }}
+                    className="bg-gradient-to-r from-pink-600 to-fuchsia-800 hover:from-fuchsia-700 hover:to-fuchsia-900 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-pulse hover:animate-none transition-all duration-300 transform hover:scale-105"
                   >
                     🎯 INSERISCI FINAL SHOT
                   </Button>
