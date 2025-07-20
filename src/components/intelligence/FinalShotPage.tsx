@@ -349,7 +349,7 @@ const FinalShotPage: React.FC = () => {
                     }}
                     className="bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-none hover:animate-pulse transition-all duration-300 transform hover:scale-105 border-2 border-fuchsia-400/30"
                   >
-                    🎯 INSERISCI FINAL SHOT
+                    🎯 FINAL SHOT
                   </Button>
                 </div>
               )}
