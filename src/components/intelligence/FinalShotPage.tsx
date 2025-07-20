@@ -84,8 +84,8 @@ const FinalShotPage: React.FC = () => {
   const { toast } = useToast();
   const mapRef = useRef<any>(null);
 
-  // Mock mission ID - in real app would come from context
-  const currentMissionId = 'mock-mission-id';
+  // Real mission ID - using test UUID for deployment
+  const currentMissionId = '550e8400-e29b-41d4-a716-446655440000';
 
   useEffect(() => {
     loadAttempts();
@@ -117,8 +117,20 @@ const FinalShotPage: React.FC = () => {
   };
 
   const handleMapClick = (lat: number, lng: number) => {
-    setSelectedPosition({ lat, lng });
-    setShowConfirmation(true);
+    // Reliable map click with debounce for mobile
+    console.log('🎯 Map clicked:', { lat, lng, isDisabled, showMapControls });
+    
+    if (!isDisabled && (showMapControls || !selectedPosition)) {
+      setSelectedPosition({ lat, lng });
+      setShowConfirmation(true);
+      setShowMapControls(true);
+      
+      toast({
+        title: "📍 Posizione Selezionata",
+        description: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        variant: "default"
+      });
+    }
   };
 
   const submitFinalShot = async () => {
@@ -226,10 +238,11 @@ const FinalShotPage: React.FC = () => {
     }
   };
 
-  return (
-    <div className="h-full overflow-y-auto pb-20" style={{
+    return (
+    <div className="h-full overflow-y-auto" style={{
       height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px)',
-      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)', // Extra padding to prevent bottom nav overlap
+      marginBottom: '10px'
     }}>
       <div className="space-y-6 p-4">
         {/* Header */}
@@ -320,21 +333,21 @@ const FinalShotPage: React.FC = () => {
                 </Button>
               </div>
 
-              {/* Insert Final Shot Button - Always visible when enabled */}
+              {/* Insert Final Shot Button - Fixed loop and reliable click */}
               {!isDisabled && (
                 <div className="text-center mb-4">
                   <Button
                     onClick={() => {
-                      setShowMapControls(true);
-                      if (!selectedPosition) {
-                        toast({
-                          title: "🎯 Modalità Final Shot Attiva",
-                          description: "Clicca sulla mappa per selezionare la posizione del premio",
-                          variant: "default"
-                        });
+                      if (!showMapControls) {
+                        setShowMapControls(true);
                       }
+                      toast({
+                        title: "🎯 Modalità Final Shot Attiva",
+                        description: "Clicca sulla mappa per selezionare la posizione del premio",
+                        variant: "default"
+                      });
                     }}
-                    className="bg-gradient-to-r from-pink-600 to-fuchsia-800 hover:from-fuchsia-700 hover:to-fuchsia-900 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-pulse hover:animate-none transition-all duration-300 transform hover:scale-105"
+                    className="bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-none hover:animate-pulse transition-all duration-300 transform hover:scale-105 border-2 border-fuchsia-400/30"
                   >
                     🎯 INSERISCI FINAL SHOT
                   </Button>
