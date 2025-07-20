@@ -275,175 +275,173 @@ const FinalShotPage: React.FC = () => {
     }
   };
 
-    return (
+  return (
     <div className="h-full overflow-y-auto" style={{
       height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px)',
-      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)', // Extra padding to prevent bottom nav overlap
-      marginBottom: '10px'
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+      paddingTop: 'env(safe-area-inset-top, 0px)'
     }}>
-      <div className="space-y-6 p-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
-              <Target className="w-7 h-7 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold">
-              <span className="text-cyan-400 glow-text">FINAL</span>
-              <span className="text-white"> SHOT</span>
-            </h1>
+      {/* Compact Header */}
+      <div className="text-center mb-4 px-4 pt-2">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center">
+            <Target className="w-5 h-5 text-white" />
           </div>
-          <p className="text-muted-foreground text-lg">
-            Clicca sulla mappa per dichiarare la posizione finale del premio
-          </p>
+          <h1 className="text-xl font-bold">
+            <span className="text-cyan-400">FINAL</span>
+            <span className="text-white"> SHOT</span>
+          </h1>
         </div>
+      </div>
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-cyan-400">{getRemainingAttempts()}</div>
-              <div className="text-sm text-muted-foreground">Tentativi Rimasti</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-400">
-                {getCooldownTime() || "Pronto"}
-              </div>
-              <div className="text-sm text-muted-foreground">Cooldown</div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-400">{attempts.length}</div>
-              <div className="text-sm text-muted-foreground">Shot Effettuati</div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Interactive Map with Map Style Selector */}
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
-          <CardHeader>
-            <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
-              <MapPin className="w-6 h-6 text-cyan-400" />
-              🗺️ Mappa Tattica M1SSION™
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Map Style Controls */}
-              <div className="flex flex-wrap gap-2 justify-center mb-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
-                  onClick={() => setMapStyle('satellite')}
-                >
-                  🛰️ Satellite
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
-                  onClick={() => setMapStyle('dark')}
-                >
-                  🌑 Dark Military
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
-                  onClick={() => setMapStyle('terrain')}
-                >
-                  🏔️ Terrain
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs border-cyan-400/30 hover:border-cyan-400 hover:bg-cyan-400/10"
-                  onClick={() => setMapStyle('osm')}
-                >
-                  🗺️ Standard
-                </Button>
-              </div>
-
-              {/* Insert Final Shot Button - Fixed loop and reliable click */}
-              {!isDisabled && (
-                <div className="text-center mb-4">
-                  <Button
-                    onClick={() => {
-                      if (!showMapControls) {
-                        setShowMapControls(true);
-                      }
-                      toast({
-                        title: "🎯 Modalità Final Shot Attiva",
-                        description: "Clicca sulla mappa per selezionare la posizione del premio",
-                        variant: "default"
-                      });
-                    }}
-                    className="bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-none hover:animate-pulse transition-all duration-300 transform hover:scale-105 border-2 border-fuchsia-400/30"
-                  >
-                    🎯 FINAL SHOT
-                  </Button>
-                </div>
-              )}
-              
-              <div className="h-96 rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-inner">
-                <MapContainer
-                  center={[50.8503, 4.3517]} // Europe center (Brussels)
-                  zoom={4}
-                  minZoom={2}
-                  maxZoom={20}
-                  style={{ height: '100%', width: '100%' }}
-                  ref={mapRef}
-                  scrollWheelZoom={true}
-                  doubleClickZoom={true}
-                  dragging={true}
-                  touchZoom={true}
-                >
-                  <TileLayer
-                    url={getMapTileUrl()}
-                    attribution={getMapAttribution()}
-                  />
-                  
-                  {!isDisabled && (
-                    <MapClickHandler onMapClick={handleMapClick} />
-                  )}
-                  
-                  {selectedPosition && (
-                    <Marker 
-                      position={[selectedPosition.lat, selectedPosition.lng]}
-                      icon={PulsingRedIcon}
-                    >
-                      <Popup>
-                        <div className="text-center">
-                          <div className="font-bold text-red-600">🎯 Final Shot</div>
-                          <div className="text-sm">
-                            {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
-                          </div>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  )}
-                </MapContainer>
-              </div>
-            </div>
-
-            {isDisabled && (
-              <div className="mt-4 text-center text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl">
-                {getRemainingAttempts() === 0 && "Hai esaurito tutti i tentativi disponibili"}
-                {getCooldownTime() && `Prossimo tentativo disponibile tra: ${getCooldownTime()}`}
-              </div>
-            )}
+      {/* Compact Status Cards - Mobile Optimized */}
+      <div className="grid grid-cols-3 gap-2 mb-4 px-4">
+        <Card className="border border-cyan-500/20 rounded-lg bg-card/60 backdrop-blur-sm">
+          <CardContent className="p-2 text-center">
+            <div className="text-lg font-bold text-cyan-400">{getRemainingAttempts()}</div>
+            <div className="text-xs text-muted-foreground">Tentativi</div>
           </CardContent>
         </Card>
 
-        {/* Confirmation Dialog */}
-        {showConfirmation && selectedPosition && (
-          <Card className="border-2 border-red-500/50 rounded-2xl bg-red-500/10 backdrop-blur-md">
+        <Card className="border border-cyan-500/20 rounded-lg bg-card/60 backdrop-blur-sm">
+          <CardContent className="p-2 text-center">
+            <div className="text-lg font-bold text-yellow-400">
+              {getCooldownTime() || "✓"}
+            </div>
+            <div className="text-xs text-muted-foreground">Cooldown</div>
+          </CardContent>
+        </Card>
+
+        <Card className="border border-cyan-500/20 rounded-lg bg-card/60 backdrop-blur-sm">
+          <CardContent className="p-2 text-center">
+            <div className="text-lg font-bold text-green-400">{attempts.length}</div>
+            <div className="text-xs text-muted-foreground">Effettuati</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Expanded Tactical Map - Dominant Element */}
+      <div className="flex-1 relative px-4 pb-4">
+        <div className="relative h-full min-h-[70vh] max-h-[80vh] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20">
+          
+          {/* Map Style Controls - Overlay on Map */}
+          <div className="absolute top-4 right-4 z-50 flex flex-wrap gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              onClick={() => setMapStyle('satellite')}
+            >
+              🛰️
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              onClick={() => setMapStyle('dark')}
+            >
+              🌑
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              onClick={() => setMapStyle('terrain')}
+            >
+              🏔️
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              onClick={() => setMapStyle('osm')}
+            >
+              🗺️
+            </Button>
+          </div>
+
+          {/* Final Shot Button - Fixed Position Over Map */}
+          {!isDisabled && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+              <Button
+                onClick={() => {
+                  if (!showMapControls) {
+                    setShowMapControls(true);
+                  }
+                  toast({
+                    title: "🎯 Modalità Final Shot Attiva",
+                    description: "Clicca sulla mappa per selezionare la posizione del premio",
+                    variant: "default"
+                  });
+                }}
+                className="bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 text-white shadow-xl px-6 py-3 text-sm font-bold rounded-full border-2 border-fuchsia-400/30 backdrop-blur-sm"
+              >
+                🎯 FINAL SHOT
+              </Button>
+            </div>
+          )}
+          
+          {/* Interactive Leaflet Map - Full Container */}
+          <MapContainer
+            center={[50.8503, 4.3517]} // Europe center (Brussels)
+            zoom={4}
+            minZoom={2}
+            maxZoom={20}
+            style={{ height: '100%', width: '100%' }}
+            ref={mapRef}
+            scrollWheelZoom={true}
+            doubleClickZoom={true}
+            dragging={true}
+            touchZoom={true}
+            attributionControl={false}
+          >
+            <TileLayer
+              url={getMapTileUrl()}
+              attribution={getMapAttribution()}
+            />
+            
+            {/* Enhanced Map Click Handler - Always Active */}
+            {!isDisabled && (
+              <MapClickHandler onMapClick={handleMapClick} />
+            )}
+            
+            {/* Red Pulsing Marker for Selected Position */}
+            {selectedPosition && (
+              <Marker 
+                position={[selectedPosition.lat, selectedPosition.lng]}
+                icon={PulsingRedIcon}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <div className="font-bold text-red-600">🎯 Final Shot</div>
+                    <div className="text-sm bg-yellow-200 px-2 py-1 rounded text-black font-mono">
+                      {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
+          </MapContainer>
+
+          {/* Disabled State Overlay */}
+          {isDisabled && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-40 backdrop-blur-sm">
+              <div className="text-center text-white p-4 bg-black/60 rounded-xl border border-red-500/30">
+                <div className="text-lg font-bold mb-2">❌ Final Shot Non Disponibile</div>
+                <div className="text-sm">
+                  {getRemainingAttempts() === 0 && "Tentativi esauriti"}
+                  {getCooldownTime() && `Cooldown: ${getCooldownTime()}`}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Confirmation Dialog */}
+      {showConfirmation && selectedPosition && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="border-2 border-red-500/50 rounded-2xl bg-red-500/10 backdrop-blur-md max-w-md w-full">
             <CardContent className="p-6">
               <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-2">
@@ -455,7 +453,7 @@ const FinalShotPage: React.FC = () => {
                   Stai dichiarando che il premio si trova in questo punto.
                 </p>
                 
-                <div className="text-sm text-gray-400 font-mono bg-black/20 p-3 rounded-lg">
+                <div className="text-sm text-gray-400 font-mono bg-yellow-200 p-3 rounded-lg text-black font-bold">
                   📍 {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
                 </div>
                 
@@ -478,7 +476,7 @@ const FinalShotPage: React.FC = () => {
                   <Button
                     onClick={submitFinalShot}
                     disabled={isSubmitting}
-                    className="px-8 bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 text-white shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
+                    className="px-8 bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 text-white shadow-xl"
                   >
                     {isSubmitting ? (
                       <div className="flex items-center gap-2">
@@ -496,8 +494,8 @@ const FinalShotPage: React.FC = () => {
               </div>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -152,17 +152,17 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         <div className="flex h-full">
-        {/* Tool Selector Sidebar */}
-        <div className="w-80 p-6 bg-gradient-to-b from-background/60 via-background/50 to-background/60 backdrop-blur-md overflow-y-auto intelligence-scroll-container">
-          <div className="space-y-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
+        {/* Tool Selector Sidebar - Mobile Optimized */}
+        <div className="w-64 sm:w-80 p-2 sm:p-6 bg-gradient-to-b from-background/60 via-background/50 to-background/60 backdrop-blur-md overflow-y-auto intelligence-scroll-container">
+          <div className="space-y-2 sm:space-y-4" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
             {tools.map((tool) => (
               <Button
                 key={tool.id}
                 variant={activeTool === tool.id ? "default" : "ghost"}
-                className={`w-full justify-start h-16 text-left rounded-2xl border-2 transition-all duration-300 ${
+                className={`w-full justify-start h-12 sm:h-16 text-left rounded-lg sm:rounded-2xl border transition-all duration-300 ${
                   activeTool === tool.id 
-                    ? 'bg-gradient-to-r from-cyan-500 via-primary to-primary/80 border-cyan-400/50 shadow-2xl shadow-cyan-500/30 text-white' 
-                    : 'bg-card/40 border-border/50 hover:bg-card/70 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 backdrop-blur-sm'
+                    ? 'bg-gradient-to-r from-cyan-500 via-primary to-primary/80 border-cyan-400/50 shadow-lg shadow-cyan-500/20 text-white' 
+                    : 'bg-card/40 border-border/50 hover:bg-card/70 hover:border-primary/30 hover:shadow-md backdrop-blur-sm'
                 } ${
                   !tool.available 
                     ? 'opacity-50 cursor-not-allowed' 
@@ -171,14 +171,14 @@ const IntelligencePage: React.FC = () => {
                 onClick={() => tool.available && setActiveTool(tool.id)}
                 disabled={!tool.available}
               >
-                <tool.icon className="w-6 h-6 mr-4 flex-shrink-0" />
+                <tool.icon className="w-4 h-4 sm:w-6 sm:h-6 mr-2 sm:mr-4 flex-shrink-0" />
                 <div className="flex flex-col items-start min-w-0">
-                  <span className="text-base font-medium truncate w-full">
+                  <span className="text-xs sm:text-base font-medium truncate w-full">
                     {tool.name}
                   </span>
                   {!tool.available && (
-                    <span className="text-sm opacity-70">
-                      Unlocks Week {tool.weekRequired}
+                    <span className="text-xs opacity-70">
+                      Week {tool.weekRequired}
                     </span>
                   )}
                 </div>
@@ -187,9 +187,9 @@ const IntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tool Content Area */}
+        {/* Tool Content Area - Mobile Optimized */}
         <div className="flex-1 min-h-0">
-          <div className="h-full overflow-auto p-6 bg-gradient-to-br from-background/90 via-background/85 to-background/90 intelligence-scroll-container" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }}>
+          <div className="h-full overflow-auto p-2 sm:p-6 bg-gradient-to-br from-background/90 via-background/85 to-background/90 intelligence-scroll-container" style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)' }}>
             <div className="max-w-4xl mx-auto">
               {renderActiveTool()}
             </div>
