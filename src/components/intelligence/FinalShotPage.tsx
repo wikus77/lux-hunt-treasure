@@ -16,6 +16,28 @@ import L from 'leaflet';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// Create custom red pulsing marker
+const PulsingRedIcon = L.divIcon({
+  className: 'pulsing-red-marker',
+  html: `<div style="
+    width: 20px;
+    height: 20px;
+    background: #ff0000;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  "></div>
+  <style>
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>`,
+  iconSize: [20, 20],
+  iconAnchor: [10, 10]
+});
+
 const DefaultIcon = L.icon({
   iconUrl: markerIcon,
   shadowUrl: markerShadow,
@@ -177,156 +199,164 @@ const FinalShotPage: React.FC = () => {
   const isDisabled = getRemainingAttempts() === 0 || !!getCooldownTime();
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
-            <Target className="w-7 h-7 text-white" />
+    <div className="h-full overflow-y-auto pb-20" style={{
+      height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px)',
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+    }}>
+      <div className="space-y-6 p-4">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
+              <Target className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold">
+              <span className="text-cyan-400 glow-text">FINAL</span>
+              <span className="text-white"> SHOT</span>
+            </h1>
           </div>
-          <h1 className="text-3xl font-bold">
-            <span className="text-cyan-400 glow-text">FINAL</span>
-            <span className="text-white"> SHOT</span>
-          </h1>
+          <p className="text-muted-foreground text-lg">
+            Clicca sulla mappa per dichiarare la posizione finale del premio
+          </p>
         </div>
-        <p className="text-muted-foreground text-lg">
-          Clicca sulla mappa per dichiarare la posizione finale del premio
-        </p>
-      </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">{getRemainingAttempts()}</div>
-            <div className="text-sm text-muted-foreground">Tentativi Rimasti</div>
-          </CardContent>
-        </Card>
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-cyan-400">{getRemainingAttempts()}</div>
+              <div className="text-sm text-muted-foreground">Tentativi Rimasti</div>
+            </CardContent>
+          </Card>
 
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-400">
-              {getCooldownTime() || "Pronto"}
-            </div>
-            <div className="text-sm text-muted-foreground">Cooldown</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">{attempts.length}</div>
-            <div className="text-sm text-muted-foreground">Shot Effettuati</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Interactive Map */}
-      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
-        <CardHeader>
-          <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
-            <MapPin className="w-6 h-6 text-cyan-400" />
-            Mappa Final Shot
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="h-96 rounded-xl overflow-hidden border-2 border-cyan-500/20">
-            <MapContainer
-              center={[45.4642, 9.1900]} // Milan coordinates as default
-              zoom={18}
-              minZoom={18}
-              maxZoom={20}
-              style={{ height: '100%', width: '100%' }}
-              ref={mapRef}
-            >
-              <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              />
-              
-              {!isDisabled && (
-                <MapClickHandler onMapClick={handleMapClick} />
-              )}
-              
-              {selectedPosition && (
-                <Marker position={[selectedPosition.lat, selectedPosition.lng]}>
-                  <Popup>
-                    <div className="text-center">
-                      <div className="font-bold text-cyan-600">Posizione Selezionata</div>
-                      <div className="text-sm">
-                        {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
-                      </div>
-                    </div>
-                  </Popup>
-                </Marker>
-              )}
-            </MapContainer>
-          </div>
-
-          {isDisabled && (
-            <div className="mt-4 text-center text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl">
-              {getRemainingAttempts() === 0 && "Hai esaurito tutti i tentativi disponibili"}
-              {getCooldownTime() && `Prossimo tentativo disponibile tra: ${getCooldownTime()}`}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Confirmation Dialog */}
-      {showConfirmation && selectedPosition && (
-        <Card className="border-2 border-red-500/50 rounded-2xl bg-red-500/10 backdrop-blur-md">
-          <CardContent className="p-6">
-            <div className="text-center space-y-4">
-              <div className="flex items-center justify-center gap-2">
-                <AlertTriangle className="w-6 h-6 text-red-400" />
-                <h3 className="text-xl font-bold text-white">Conferma Final Shot</h3>
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-yellow-400">
+                {getCooldownTime() || "Pronto"}
               </div>
-              
-              <p className="text-gray-300">
-                Stai dichiarando che il premio si trova in questo punto.
-              </p>
-              
-              <div className="text-sm text-gray-400 font-mono bg-black/20 p-3 rounded-lg">
-                📍 {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
-              </div>
-              
-              <p className="text-yellow-400 font-medium">
-                Hai solo {getRemainingAttempts()} tentativi totali per questa missione. Confermi?
-              </p>
-              
-              <div className="flex gap-4 justify-center">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowConfirmation(false);
-                    setSelectedPosition(null);
-                  }}
-                  className="px-6"
-                >
-                  Annulla
-                </Button>
+              <div className="text-sm text-muted-foreground">Cooldown</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-400">{attempts.length}</div>
+              <div className="text-sm text-muted-foreground">Shot Effettuati</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Interactive Map */}
+        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+          <CardHeader>
+            <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent flex items-center justify-center gap-2">
+              <MapPin className="w-6 h-6 text-cyan-400" />
+              Mappa Final Shot
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-96 rounded-xl overflow-hidden border-2 border-cyan-500/20">
+              <MapContainer
+                center={[50.8503, 4.3517]} // Europe center (Brussels)
+                zoom={5}
+                minZoom={3}
+                maxZoom={20}
+                style={{ height: '100%', width: '100%' }}
+                ref={mapRef}
+              >
+                <TileLayer
+                  url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                  attribution='&copy; <a href="https://www.esri.com/">Esri</a>'
+                />
                 
-                <Button
-                  onClick={submitFinalShot}
-                  disabled={isSubmitting}
-                  className="px-8 bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 text-white shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Invio...
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <Target className="w-5 h-5" />
-                      🎯 LANCIA IL TUO FINAL SHOT
-                    </div>
-                  )}
-                </Button>
-              </div>
+                {!isDisabled && (
+                  <MapClickHandler onMapClick={handleMapClick} />
+                )}
+                
+                {selectedPosition && (
+                  <Marker 
+                    position={[selectedPosition.lat, selectedPosition.lng]}
+                    icon={PulsingRedIcon}
+                  >
+                    <Popup>
+                      <div className="text-center">
+                        <div className="font-bold text-red-600">🎯 Final Shot</div>
+                        <div className="text-sm">
+                          {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )}
+              </MapContainer>
             </div>
+
+            {isDisabled && (
+              <div className="mt-4 text-center text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl">
+                {getRemainingAttempts() === 0 && "Hai esaurito tutti i tentativi disponibili"}
+                {getCooldownTime() && `Prossimo tentativo disponibile tra: ${getCooldownTime()}`}
+              </div>
+            )}
           </CardContent>
         </Card>
-      )}
+
+        {/* Confirmation Dialog */}
+        {showConfirmation && selectedPosition && (
+          <Card className="border-2 border-red-500/50 rounded-2xl bg-red-500/10 backdrop-blur-md">
+            <CardContent className="p-6">
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-2">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                  <h3 className="text-xl font-bold text-white">Conferma Final Shot</h3>
+                </div>
+                
+                <p className="text-gray-300">
+                  Stai dichiarando che il premio si trova in questo punto.
+                </p>
+                
+                <div className="text-sm text-gray-400 font-mono bg-black/20 p-3 rounded-lg">
+                  📍 {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
+                </div>
+                
+                <p className="text-yellow-400 font-medium">
+                  Hai solo {getRemainingAttempts()} tentativi totali per questa missione. Confermi?
+                </p>
+                
+                <div className="flex gap-4 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowConfirmation(false);
+                      setSelectedPosition(null);
+                    }}
+                    className="px-6"
+                  >
+                    Annulla
+                  </Button>
+                  
+                  <Button
+                    onClick={submitFinalShot}
+                    disabled={isSubmitting}
+                    className="px-8 bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 text-white shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Invio...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Target className="w-5 h-5" />
+                        🎯 LANCIA IL TUO FINAL SHOT
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 };

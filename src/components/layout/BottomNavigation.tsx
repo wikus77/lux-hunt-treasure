@@ -44,11 +44,13 @@ const BottomNavigationComponent = () => {
       color: "#F59E0B"
     },
     { 
-      icon: (
-        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
-          <span className="text-white text-xs font-bold">🧠</span>
-        </div>
-      ), 
+      icon: <div className="w-6 h-6 rounded-full bg-slate-600 flex items-center justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-white">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <circle cx="12" cy="7" r="2"/>
+          <path d="M9 13h6v2H9z"/>
+        </svg>
+      </div>, 
       label: "Intelligence", 
       path: "/intelligence",
       color: "#8B5CF6"
@@ -62,7 +64,9 @@ const BottomNavigationComponent = () => {
       color: "#EF4444"
     },
     { 
-      icon: <div className="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-sm">1</div>, 
+      icon: <div className="w-6 h-6 rounded-full bg-yellow-600 border-2 border-yellow-400 flex items-center justify-center">
+        <span className="text-yellow-200 font-bold text-sm">1</span>
+      </div>, 
       label: "Hall of Winners", 
       path: "/leaderboard",
       color: "#F59E0B"

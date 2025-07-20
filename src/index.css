@@ -213,6 +213,16 @@
     animation: glow 0.6s ease-in-out forwards;
   }
 
+  .glow-text {
+    text-shadow: 0 0 10px rgba(0, 209, 255, 0.6);
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { text-shadow: 0 0 10px rgba(0, 209, 255, 0.6); }
+    50% { text-shadow: 0 0 20px rgba(0, 209, 255, 0.8), 0 0 30px rgba(0, 209, 255, 0.4); }
+  }
+
   .safe-padding-x {
     padding-left: max(1rem, env(safe-area-inset-left));
     padding-right: max(1rem, env(safe-area-inset-right));

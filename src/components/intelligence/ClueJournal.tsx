@@ -70,7 +70,10 @@ const ClueJournal: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="h-full overflow-y-auto pb-20 space-y-8" style={{
+      height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px)',
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+    }}>
       <div className="text-center mb-8">
         <div className="flex items-center justify-center gap-4 mb-4">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
