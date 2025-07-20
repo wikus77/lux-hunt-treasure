@@ -107,7 +107,7 @@ const ClueJournal: React.FC = () => {
                 placeholder="Titolo dell'indizio..."
                 value={newEntry.title}
                 onChange={(e) => setNewEntry({...newEntry, title: e.target.value})}
-                className="bg-muted border-border"
+                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
@@ -121,7 +121,7 @@ const ClueJournal: React.FC = () => {
                   max="4"
                   value={newEntry.week}
                   onChange={(e) => setNewEntry({...newEntry, week: parseInt(e.target.value)})}
-                  className="bg-muted border-border"
+                  className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 />
               </div>
               <div>
@@ -130,7 +130,7 @@ const ClueJournal: React.FC = () => {
                   id="importance"
                   value={newEntry.importance}
                   onChange={(e) => setNewEntry({...newEntry, importance: e.target.value as any})}
-                  className="w-full h-10 px-3 rounded-md bg-muted border border-border text-foreground"
+                  className="w-full h-10 px-3 rounded-lg bg-muted/50 border border-border text-foreground backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 >
                   <option value="low">Bassa</option>
                   <option value="medium">Media</option>
@@ -146,7 +146,7 @@ const ClueJournal: React.FC = () => {
                 placeholder="geografia, simbolo, numero..."
                 value={newEntry.tags}
                 onChange={(e) => setNewEntry({...newEntry, tags: e.target.value})}
-                className="bg-muted border-border"
+                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
@@ -157,16 +157,16 @@ const ClueJournal: React.FC = () => {
                 placeholder="Descrizione dettagliata dell'indizio..."
                 value={newEntry.content}
                 onChange={(e) => setNewEntry({...newEntry, content: e.target.value})}
-                className="bg-muted border-border"
+                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 rows={4}
               />
             </div>
 
             <div className="flex gap-2">
-              <Button onClick={handleSaveEntry} className="flex-1">
+              <Button onClick={handleSaveEntry} className="flex-1 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-lg shadow-md hover:shadow-lg transition-all">
                 Salva Voce
               </Button>
-              <Button variant="outline" onClick={() => setShowAddForm(false)}>
+              <Button variant="outline" onClick={() => setShowAddForm(false)} className="rounded-lg">
                 Annulla
               </Button>
             </div>

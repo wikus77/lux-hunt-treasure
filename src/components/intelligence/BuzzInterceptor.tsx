@@ -135,7 +135,7 @@ const BuzzInterceptor: React.FC = () => {
                 type="number"
                 value={frequencyRange.min}
                 onChange={(e) => setFrequencyRange({...frequencyRange, min: parseInt(e.target.value)})}
-                className="w-full h-10 px-3 rounded-md bg-muted border border-border text-foreground"
+                className="w-full h-10 px-3 rounded-lg bg-muted/50 border border-border text-foreground backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 disabled={isIntercepting}
               />
             </div>
@@ -145,7 +145,7 @@ const BuzzInterceptor: React.FC = () => {
                 type="number"
                 value={frequencyRange.max}
                 onChange={(e) => setFrequencyRange({...frequencyRange, max: parseInt(e.target.value)})}
-                className="w-full h-10 px-3 rounded-md bg-muted border border-border text-foreground"
+                className="w-full h-10 px-3 rounded-lg bg-muted/50 border border-border text-foreground backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 disabled={isIntercepting}
               />
             </div>

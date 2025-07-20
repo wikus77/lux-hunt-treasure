@@ -181,7 +181,7 @@ const PrecisionResult: React.FC = () => {
                 placeholder="9.1900"
                 value={finalShotCoords.lng}
                 onChange={(e) => setFinalShotCoords({...finalShotCoords, lng: e.target.value})}
-                className="bg-muted border-border"
+                className="bg-muted/50 border-border rounded-lg px-4 py-3 backdrop-blur-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                 disabled={isAnalyzing}
               />
             </div>

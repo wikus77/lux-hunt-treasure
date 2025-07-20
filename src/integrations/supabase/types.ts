@@ -592,6 +592,42 @@ export type Database = {
         }
         Relationships: []
       }
+      geo_radar_coordinates: {
+        Row: {
+          created_at: string | null
+          id: string
+          label: string | null
+          lat: number | null
+          lng: number | null
+          mission_id: string | null
+          radius: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          mission_id?: string | null
+          radius?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          mission_id?: string | null
+          radius?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       intelligence_tool_usage: {
         Row: {
           created_at: string
