@@ -11,8 +11,9 @@ import BuzzInterceptor from '@/components/intelligence/BuzzInterceptor';
 import PrecisionResult from '@/components/intelligence/PrecisionResult';
 import ClueArchive from '@/components/intelligence/ClueArchive';
 import FinalShotManager from '@/components/intelligence/FinalShotManager';
+import FinalShotPage from '@/components/intelligence/FinalShotPage';
 
-type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot';
+type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot' | 'finalshotpage';
 
 const IntelligencePage: React.FC = () => {
   const [activeTool, setActiveTool] = useState<ToolType>('coordinates');
@@ -65,6 +66,13 @@ const IntelligencePage: React.FC = () => {
       weekRequired: 5
     },
     {
+      id: 'finalshotpage' as ToolType,
+      name: 'Final Shot Mappa',
+      icon: Crosshair,
+      available: true, // Available in final week
+      weekRequired: 5
+    },
+    {
       id: 'precision' as ToolType,
       name: 'Precision Result',
       icon: Crosshair,
@@ -87,6 +95,8 @@ const IntelligencePage: React.FC = () => {
         return <BuzzInterceptor />;
       case 'finalshot':
         return <FinalShotManager />;
+      case 'finalshotpage':
+        return <FinalShotPage />;
       case 'precision':
         return <PrecisionResult />;
       default:

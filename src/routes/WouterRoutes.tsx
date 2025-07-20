@@ -15,7 +15,7 @@ import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
 import IntelligencePage from "@/pages/IntelligencePage";
-import { LeaderboardPage } from "@/pages/LeaderboardPage";
+import HallOfWinnersPage from "@/pages/HallOfWinnersPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import SettingsPage from "@/pages/settings/SettingsPage";
@@ -79,7 +79,7 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/leaderboard">
             <ProtectedRoute>
-              <GlobalLayout><LeaderboardPage /></GlobalLayout>
+              <GlobalLayout><HallOfWinnersPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

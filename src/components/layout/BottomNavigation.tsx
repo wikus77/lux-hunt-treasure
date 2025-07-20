@@ -62,8 +62,8 @@ const BottomNavigationComponent = () => {
       color: "#EF4444"
     },
     { 
-      icon: <Award className="h-6 w-6" />, 
-      label: "Classifica", 
+      icon: <div className="w-6 h-6 rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center text-black font-bold text-sm">1</div>, 
+      label: "Hall of Winners", 
       path: "/leaderboard",
       color: "#F59E0B"
     },
