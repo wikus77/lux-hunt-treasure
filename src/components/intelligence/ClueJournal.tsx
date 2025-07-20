@@ -1,0 +1,227 @@
+// © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
+
+import React, { useState } from 'react';
+import { BookOpen, Plus, Search, Calendar, Tag } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+
+interface ClueEntry {
+  id: string;
+  title: string;
+  content: string;
+  week: number;
+  tags: string[];
+  createdAt: Date;
+  importance: 'low' | 'medium' | 'high';
+}
+
+const ClueJournal: React.FC = () => {
+  const [entries, setEntries] = useState<ClueEntry[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEntry, setNewEntry] = useState({
+    title: '',
+    content: '',
+    week: 1,
+    tags: '',
+    importance: 'medium' as const
+  });
+
+  const handleSaveEntry = () => {
+    if (!newEntry.title || !newEntry.content) {
+      toast.error('Titolo e contenuto sono obbligatori');
+      return;
+    }
+
+    const entry: ClueEntry = {
+      id: crypto.randomUUID(),
+      title: newEntry.title,
+      content: newEntry.content,
+      week: newEntry.week,
+      tags: newEntry.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      createdAt: new Date(),
+      importance: newEntry.importance
+    };
+
+    setEntries([entry, ...entries]);
+    setNewEntry({ title: '', content: '', week: 1, tags: '', importance: 'medium' });
+    setShowAddForm(false);
+    toast.success('Voce del diario salvata');
+  };
+
+  const filteredEntries = entries.filter(entry =>
+    entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    entry.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const getImportanceColor = (importance: string) => {
+    switch (importance) {
+      case 'high': return 'bg-red-500';
+      case 'medium': return 'bg-yellow-500';
+      case 'low': return 'bg-green-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <BookOpen className="w-6 h-6 text-primary" />
+          <h3 className="text-xl font-bold text-foreground">Clue Journal</h3>
+        </div>
+        <Button onClick={() => setShowAddForm(!showAddForm)}>
+          <Plus className="w-4 h-4 mr-2" />
+          Nuova Voce
+        </Button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Cerca nel diario..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 bg-muted border-border"
+        />
+      </div>
+
+      {/* Add New Entry Form */}
+      {showAddForm && (
+        <Card className="border-border">
+          <CardHeader>
+            <CardTitle className="text-lg">Nuova Voce del Diario</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="title">Titolo</Label>
+              <Input
+                id="title"
+                placeholder="Titolo dell'indizio..."
+                value={newEntry.title}
+                onChange={(e) => setNewEntry({...newEntry, title: e.target.value})}
+                className="bg-muted border-border"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="week">Settimana</Label>
+                <Input
+                  id="week"
+                  type="number"
+                  min="1"
+                  max="4"
+                  value={newEntry.week}
+                  onChange={(e) => setNewEntry({...newEntry, week: parseInt(e.target.value)})}
+                  className="bg-muted border-border"
+                />
+              </div>
+              <div>
+                <Label htmlFor="importance">Importanza</Label>
+                <select
+                  id="importance"
+                  value={newEntry.importance}
+                  onChange={(e) => setNewEntry({...newEntry, importance: e.target.value as any})}
+                  className="w-full h-10 px-3 rounded-md bg-muted border border-border text-foreground"
+                >
+                  <option value="low">Bassa</option>
+                  <option value="medium">Media</option>
+                  <option value="high">Alta</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="tags">Tags (separati da virgole)</Label>
+              <Input
+                id="tags"
+                placeholder="geografia, simbolo, numero..."
+                value={newEntry.tags}
+                onChange={(e) => setNewEntry({...newEntry, tags: e.target.value})}
+                className="bg-muted border-border"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="content">Contenuto</Label>
+              <Textarea
+                id="content"
+                placeholder="Descrizione dettagliata dell'indizio..."
+                value={newEntry.content}
+                onChange={(e) => setNewEntry({...newEntry, content: e.target.value})}
+                className="bg-muted border-border"
+                rows={4}
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button onClick={handleSaveEntry} className="flex-1">
+                Salva Voce
+              </Button>
+              <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                Annulla
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Entries List */}
+      <div className="space-y-4">
+        {filteredEntries.length === 0 ? (
+          <Card className="border-border">
+            <CardContent className="py-8 text-center text-muted-foreground">
+              <BookOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              {searchTerm ? 'Nessun risultato trovato' : 'Nessuna voce nel diario'}
+            </CardContent>
+          </Card>
+        ) : (
+          filteredEntries.map((entry) => (
+            <Card key={entry.id} className="border-border">
+              <CardContent className="py-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${getImportanceColor(entry.importance)}`} />
+                    <h5 className="font-semibold text-foreground">{entry.title}</h5>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4" />
+                    <span>Settimana {entry.week}</span>
+                  </div>
+                </div>
+                
+                <p className="text-sm text-muted-foreground mb-3 whitespace-pre-wrap">
+                  {entry.content}
+                </p>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap gap-1">
+                    {entry.tags.map((tag, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        <Tag className="w-3 h-3 mr-1" />
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {entry.createdAt.toLocaleDateString()}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default ClueJournal;
