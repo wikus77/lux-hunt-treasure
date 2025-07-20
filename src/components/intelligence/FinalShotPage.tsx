@@ -117,18 +117,26 @@ const FinalShotPage: React.FC = () => {
   };
 
   const handleMapClick = (lat: number, lng: number) => {
-    // Reliable map click with debounce for mobile
-    console.log('🎯 Map clicked:', { lat, lng, isDisabled, showMapControls });
+    // Precise map click handler - ensures exact positioning
+    console.log('🎯 Map clicked:', { lat, lng, isDisabled, cooldown: getCooldownTime() });
     
-    if (!isDisabled && (showMapControls || !selectedPosition)) {
-      setSelectedPosition({ lat, lng });
+    if (!isDisabled) {
+      // Set exact coordinates from click event
+      const exactPosition = { lat: parseFloat(lat.toFixed(6)), lng: parseFloat(lng.toFixed(6)) };
+      setSelectedPosition(exactPosition);
       setShowConfirmation(true);
       setShowMapControls(true);
       
       toast({
-        title: "📍 Posizione Selezionata",
-        description: `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        title: "🎯 Posizione Final Shot Selezionata",
+        description: `Coordinate: ${exactPosition.lat}, ${exactPosition.lng}`,
         variant: "default"
+      });
+    } else {
+      toast({
+        title: "❌ Final Shot Non Disponibile",
+        description: getCooldownTime() ? `Cooldown attivo: ${getCooldownTime()}` : "Tentativi esauriti",
+        variant: "destructive"
       });
     }
   };
@@ -139,54 +147,74 @@ const FinalShotPage: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      console.log('🎯 Submitting Final Shot:', { 
+        mission_id: currentMissionId, 
+        lat: selectedPosition.lat, 
+        lng: selectedPosition.lng 
+      });
+
       const { data, error } = await supabase.rpc('submit_final_shot', {
         p_mission_id: currentMissionId,
         p_latitude: selectedPosition.lat,
         p_longitude: selectedPosition.lng
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ RPC Error:', error);
+        throw error;
+      }
 
       const result = data as unknown as FinalShotResult;
+      console.log('✅ Final Shot Result:', result);
 
       if (result.error) {
         toast({
-          title: "Errore",
+          title: "❌ Errore Final Shot",
           description: result.error,
           variant: "destructive"
         });
         return;
       }
 
-      if (result.is_winner) {
-        toast({
-          title: "🎯 VINCITORE!",
-          description: "Complimenti! Hai trovato il premio!",
-          variant: "default"
-        });
+      if (result.success) {
+        if (result.is_winner) {
+          toast({
+            title: "🏆 VINCITORE!",
+            description: "Complimenti! Hai trovato il premio esatto!",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "🎯 Final Shot Registrato",
+            description: `Distanza: ${(result.distance_meters / 1000).toFixed(2)} km | Direzione: ${result.direction}`,
+            variant: "default"
+          });
+        }
+
+        // Set cooldown
+        setCooldownEnd(new Date(Date.now() + 12 * 60 * 60 * 1000));
+        
+        // Reload attempts
+        await loadAttempts();
+        
+        // Clear selection and hide confirmation
+        setSelectedPosition(null);
+        setShowConfirmation(false);
+        setShowMapControls(false);
+
       } else {
         toast({
-          title: "Final Shot Registrato",
-          description: `Distanza: ${(result.distance_meters / 1000).toFixed(2)} km | Direzione: ${result.direction}`,
-          variant: "default"
+          title: "❌ Final Shot Fallito",
+          description: "Impossibile registrare il tentativo",
+          variant: "destructive"
         });
       }
 
-      // Set cooldown
-      setCooldownEnd(new Date(Date.now() + 12 * 60 * 60 * 1000));
-      
-      // Reload attempts
-      await loadAttempts();
-      
-      // Clear selection and hide confirmation
-      setSelectedPosition(null);
-      setShowConfirmation(false);
-
     } catch (error) {
-      console.error('Error submitting final shot:', error);
+      console.error('💥 Critical error submitting final shot:', error);
       toast({
-        title: "Errore",
-        description: "Errore durante l'invio del Final Shot",
+        title: "❌ Errore Sistema",
+        description: "Errore critico durante l'invio. Riprova.",
         variant: "destructive"
       });
     } finally {
