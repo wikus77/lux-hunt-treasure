@@ -1,0 +1,17 @@
+{
+  "intelligencePanelGrid": "ENABLED",
+  "componentsBelowMap": true,
+  "mobileOptimization": "VERIFIED",
+  "mappaOverlayButtons": "ACTIVE",
+  "componentiResponsive": true,
+  "testSafariiOS": "OK",
+  "finalShotLogic": "UNCHANGED",
+  "buzzInterceptor": "UNCHANGED",
+  "mapExpanded": "70vh-75vh",
+  "gridLayout": "1_md:2_lg:3_columns",
+  "additionalSections": ["Archivio Indizi", "Indizi Settimanali", "Week 5 Unlocks"],
+  "overlayControls": "Satellite_Dark_Terrain_Standard",
+  "safeAreaSupport": "calc(80px + env(safe-area-inset-bottom, 0px))",
+  "allSystemsSynced": true,
+  "signature": "© 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT"
+}
