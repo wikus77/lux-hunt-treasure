@@ -325,7 +325,7 @@ const FinalShotPage: React.FC = () => {
                 <div className="text-center mb-4">
                   <Button
                     onClick={() => setShowMapControls(!showMapControls)}
-                    className="bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl"
+                    className="bg-gradient-to-r from-pink-600 to-fuchsia-800 hover:from-fuchsia-700 hover:to-fuchsia-900 text-white shadow-lg px-8 py-3 text-lg font-bold rounded-xl animate-pulse hover:animate-none"
                   >
                     🎯 INSERISCI FINAL SHOT
                   </Button>
@@ -350,7 +350,7 @@ const FinalShotPage: React.FC = () => {
                     attribution={getMapAttribution()}
                   />
                   
-                  {!isDisabled && showMapControls && (
+                  {!isDisabled && (
                     <MapClickHandler onMapClick={handleMapClick} />
                   )}
                   
