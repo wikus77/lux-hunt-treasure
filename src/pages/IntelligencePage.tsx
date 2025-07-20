@@ -98,7 +98,9 @@ const IntelligencePage: React.FC = () => {
         {/* Header */}
         <div className="border-b border-border p-6 bg-background/95 backdrop-blur-sm">
           <div className="flex items-center gap-3">
-            <Brain className="w-8 h-8 text-primary" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+              <Brain className="w-5 h-5 text-white" />
+            </div>
             <h1 className="text-3xl font-bold text-foreground">
               M1SSION INTELLIGENCE PANEL™
             </h1>

@@ -236,13 +236,13 @@ const PrecisionResult: React.FC = () => {
                 <CardContent className="space-y-4">
                   {/* Distance and Accuracy */}
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-muted rounded-lg">
+                    <div className="text-center p-4 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
                       <div className="text-2xl font-bold text-foreground">
                         {analysis.distance.toFixed(1)}m
                       </div>
                       <div className="text-sm text-muted-foreground">Distanza</div>
                     </div>
-                    <div className="text-center p-4 bg-muted rounded-lg">
+                    <div className="text-center p-4 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
                       <div className={`text-2xl font-bold ${getAccuracyColor(analysis.accuracy)}`}>
                         {analysis.accuracy.toFixed(1)}%
                       </div>
@@ -252,7 +252,7 @@ const PrecisionResult: React.FC = () => {
 
                   {/* Coordinates Comparison */}
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
                       <MapPin className="w-4 h-4 text-red-500" />
                       <div>
                         <div className="font-medium">Final Shot</div>
@@ -262,7 +262,7 @@ const PrecisionResult: React.FC = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-3 p-3 bg-muted/40 rounded-xl border border-border backdrop-blur-sm">
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <div>
                         <div className="font-medium">Target Reale</div>
@@ -278,7 +278,7 @@ const PrecisionResult: React.FC = () => {
                     <h5 className="font-medium mb-2">Suggerimenti per Migliorare</h5>
                     <div className="space-y-2">
                       {analysis.suggestions.map((suggestion, index) => (
-                        <div key={index} className="text-sm text-muted-foreground p-2 bg-muted rounded border-l-4 border-primary">
+                        <div key={index} className="text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl border border-border backdrop-blur-sm border-l-4 border-l-primary">
                           {suggestion}
                         </div>
                       ))}

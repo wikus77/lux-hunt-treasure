@@ -44,7 +44,11 @@ const BottomNavigationComponent = () => {
       color: "#F59E0B"
     },
     { 
-      icon: <span className="text-xl">🧠</span>, 
+      icon: (
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
+          <span className="text-white text-xs font-bold">🧠</span>
+        </div>
+      ), 
       label: "Intelligence", 
       path: "/intelligence",
       color: "#8B5CF6"
