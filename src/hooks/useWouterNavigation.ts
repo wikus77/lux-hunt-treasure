@@ -36,7 +36,7 @@ export const useWouterNavigation = () => {
   const toHome = useCallback(() => navigate('/home'), [navigate]);
   const toMap = useCallback(() => navigate('/map'), [navigate]);
   const toBuzz = useCallback(() => navigate('/buzz'), [navigate]);
-  const toGames = useCallback(() => navigate('/games'), [navigate]);
+  const toIntelligence = useCallback(() => navigate('/intelligence'), [navigate]);
   const toNotifications = useCallback(() => navigate('/notifications'), [navigate]);
   const toLeaderboard = useCallback(() => navigate('/leaderboard'), [navigate]);
   const toProfile = useCallback(() => navigate('/profile'), [navigate]);
@@ -51,7 +51,7 @@ export const useWouterNavigation = () => {
     toHome,
     toMap,
     toBuzz,
-    toGames,
+    toIntelligence,
     toNotifications,
     toLeaderboard,
     toProfile,

@@ -14,7 +14,7 @@ import Index from "@/pages/Index";
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
-import Games from "@/pages/Games";
+import IntelligencePage from "@/pages/IntelligencePage";
 import { LeaderboardPage } from "@/pages/LeaderboardPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
@@ -71,9 +71,9 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          <Route path="/games">
+          <Route path="/intelligence">
             <ProtectedRoute>
-              <GlobalLayout><Games /></GlobalLayout>
+              <GlobalLayout><IntelligencePage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

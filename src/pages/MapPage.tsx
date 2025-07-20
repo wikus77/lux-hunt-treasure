@@ -4,13 +4,9 @@ import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import MapContainer from './map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import MapDebugger from './map/components/MapDebugger';
-import IntelligencePanel from '@/components/intelligence/IntelligencePanel';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
-import { Button } from '@/components/ui/button';
-import { Brain } from 'lucide-react';
 
 const MapPage: React.FC = () => {
-  const [showIntelligencePanel, setShowIntelligencePanel] = React.useState(false);
   
   const {
     isAddingPoint,
@@ -107,23 +103,6 @@ const MapPage: React.FC = () => {
           />
         </div>
       </div>
-      
-      {/* M1SSION Intelligence Panel Button */}
-      <Button
-        onClick={() => setShowIntelligencePanel(true)}
-        className="fixed bottom-20 right-4 z-50 rounded-full w-14 h-14 shadow-lg"
-        style={{ marginBottom: 'env(safe-area-inset-bottom, 0px)' }}
-      >
-        <Brain className="w-6 h-6" />
-      </Button>
-
-      {/* Intelligence Panel */}
-      <IntelligencePanel
-        isOpen={showIntelligencePanel}
-        onClose={() => setShowIntelligencePanel(false)}
-        currentWeek={1} // TODO: Get current week from mission state
-        finalShotFailed={false} // TODO: Get from final shot state
-      />
 
       {/* Debug component for development */}
       <MapDebugger />

@@ -1,7 +1,7 @@
 // ✅ Fix UI eseguito da JOSEPH MULE — M1SSION™
 import React from "react";
 import { useLocation } from "wouter";
-import { Mail, Map, Home, Award, User, Circle, Gamepad2 } from "lucide-react";
+import { Mail, Map, Home, Award, User, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
@@ -44,9 +44,9 @@ const BottomNavigationComponent = () => {
       color: "#F59E0B"
     },
     { 
-      icon: <Gamepad2 className="h-6 w-6" />, 
-      label: "Games", 
-      path: "/games",
+      icon: <span className="text-xl">🧠</span>, 
+      label: "Intelligence", 
+      path: "/intelligence",
       color: "#8B5CF6"
     },
     {
