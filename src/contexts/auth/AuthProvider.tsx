@@ -13,14 +13,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // MAIN AUTH STATE HANDLER - Handle login success here
+  // CENTRALIZED AUTH STATE HANDLER - Single source of truth
   useEffect(() => {
+    console.log("🔧 AuthProvider: Setting up CENTRALIZED auth state listener");
+    
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 AuthProvider - Auth state change:', event, 'Session exists:', !!session);
+      console.log('🔍 DEBUG POST LOGIN:', {
+        event,
+        pathname: window.location.pathname,
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        userEmail: session?.user?.email,
+        visibility: document.visibilityState,
+        timestamp: new Date().toISOString()
+      });
       
-      // Handle successful authentication and redirect immediately
+      // Handle successful authentication
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ AuthProvider - User signed in successfully:", session.user.email);
+        console.log("✅ AuthProvider - SIGNED_IN event received:", session.user.email);
         
         // Check if email is verified
         if (!session.user.email_confirmed_at) {
@@ -28,11 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
         
-        // IMMEDIATE REDIRECT after successful login to prevent white screen
-        setTimeout(() => {
-          console.log("🏠 AuthProvider - Redirecting to root after login success");
+        // CONDITIONAL REDIRECT - only if not already on root
+        const currentPath = window.location.pathname;
+        if (currentPath !== "/") {
+          console.log(`🏠 AuthProvider - Redirecting from ${currentPath} to / after login success`);
           navigate('/', { replace: true });
-        }, 50);
+        } else {
+          console.log("🏠 AuthProvider - Already on root path, no redirect needed");
+        }
       }
       
       // Handle sign out
@@ -43,7 +56,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("🧹 AuthProvider: Cleaning up auth state listener");
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   // Fetch user roles when user changes

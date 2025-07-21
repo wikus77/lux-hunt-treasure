@@ -9,10 +9,15 @@ const BuzzPaymentMonitor: React.FC = () => {
   const { user, isAuthenticated } = useAuthContext();
   const [, navigate] = useLocation();
 
+  
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    // SAFETY CHECK: Only activate monitor if user is authenticated
+    if (!isAuthenticated || !user?.id) {
+      console.log('🎯 BuzzPaymentMonitor: Waiting for user authentication...');
+      return;
+    }
 
-    console.log('🎯 BuzzPaymentMonitor: Starting payment monitoring');
+    console.log('🎯 BuzzPaymentMonitor: Starting payment monitoring for user:', user.id);
 
     const subscription = supabase
       .channel('payment_monitor')

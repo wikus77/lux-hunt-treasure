@@ -32,10 +32,12 @@ const WouterRoutes: React.FC = () => {
     (window.location.protocol === 'capacitor:' || 
      (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
 
-  console.log('🔍 WOUTER ROUTING STATE:', {
+  console.log('🔍 WOUTER ROUTING STATE DEBUG:', {
     isAuthenticated,
     isLoading,
     isCapacitorApp,
+    currentPath: window.location.pathname,
+    userExists: !!isAuthenticated,
     timestamp: new Date().toISOString()
   });
 
@@ -46,9 +48,15 @@ const WouterRoutes: React.FC = () => {
           {/* Landing page */}
           <Route path="/">
             {isAuthenticated && !isLoading ? (
-              <GlobalLayout><AppHome /></GlobalLayout>
+              <>
+                {console.log('🏠 WouterRoutes: Rendering AppHome for authenticated user')}
+                <GlobalLayout><AppHome /></GlobalLayout>
+              </>
             ) : (
-              <Index />
+              <>
+                {console.log('🔍 WouterRoutes: Rendering Index page - not authenticated')}
+                <Index />
+              </>
             )}
           </Route>
 

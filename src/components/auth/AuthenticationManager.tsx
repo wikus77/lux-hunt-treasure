@@ -60,29 +60,13 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
     
     checkAuthentication();
     
-    // SIMPLIFIED AUTH LISTENER - Remove redundant auth state handling
-    // Let AuthProvider handle the auth state changes to prevent conflicts
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log("🔄 AuthManager - Auth state:", event, !!session);
-        
-        // Only handle sign out event here
-        if (event === "SIGNED_OUT") {
-          console.log("👋 User signed out - redirecting if needed");
-          onNotAuthenticated();
-          
-          // Redirect to login page if on a protected route
-          const protectedRoutes = ['/home', '/profile', '/events', '/buzz', '/map', '/settings'];
-          if (protectedRoutes.some(route => location.startsWith(route))) {
-            navigate('/login');
-          }
-        }
-      }
-    );
+    // REMOVE ALL AUTH STATE LISTENERS FROM HERE
+    // AuthProvider will handle ALL auth state changes
+    console.log("🔧 AuthenticationManager: Delegating all auth state management to AuthProvider");
     
+    // No subscription to clean up since we removed the listener
     return () => {
-      console.log("Unsubscribing from auth state changes");
-      subscription.unsubscribe();
+      console.log("AuthenticationManager cleanup - no auth listeners to remove");
     };
   }, [onAuthenticated, onNotAuthenticated, onEmailNotVerified, navigate, location]);
 
