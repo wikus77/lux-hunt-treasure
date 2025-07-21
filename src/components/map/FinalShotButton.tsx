@@ -22,19 +22,43 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
   // Show button only if user has BUZZ areas (indicating paid access)
   const hasActiveBuzzAreas = currentWeekAreas && currentWeekAreas.length > 0;
   
+  // 🚨 EMERGENCY BYPASS FOR TESTING - Remove after debug
+  const EMERGENCY_TESTING_MODE = true;
+  const hasActiveBuzzAreasOverride = EMERGENCY_TESTING_MODE || hasActiveBuzzAreas;
+  
   React.useEffect(() => {
-    console.log('💣 Final Shot button mounted!', {
+    console.log('💣 Final Shot button mounted! FORCE DEBUG', {
       hasActiveBuzzAreas,
       areasCount: currentWeekAreas?.length || 0,
       mapCenter,
-      currentWeekAreas
+      currentWeekAreas,
+      buzzLogicLoaded: !!currentWeekAreas,
+      timestamp: new Date().toISOString()
     });
   }, [hasActiveBuzzAreas, currentWeekAreas?.length, mapCenter, currentWeekAreas]);
 
-  if (!hasActiveBuzzAreas) {
-    console.log('❌ Final Shot button hidden - no active BUZZ areas');
+  // FORCE DEBUGGING: Always log component state
+  console.log('🔥 FinalShotButton RENDER STATE:', {
+    hasActiveBuzzAreas,
+    currentWeekAreasLength: currentWeekAreas?.length || 0,
+    timestamp: new Date().toISOString()
+  });
+
+  if (!hasActiveBuzzAreasOverride) {
+    console.log('❌ Final Shot button hidden - no active BUZZ areas', {
+      currentWeekAreas,
+      hasActiveBuzzAreas,
+      hasActiveBuzzAreasOverride,
+      EMERGENCY_TESTING_MODE,
+      areasLength: currentWeekAreas?.length
+    });
     return null;
   }
+
+  console.log('✅ Final Shot button will render - areas found!', {
+    areasCount: currentWeekAreas.length,
+    areas: currentWeekAreas
+  });
 
   const handleFinalShot = () => {
     console.log('🎯 Final Shot button pressed - navigating to Intelligence');

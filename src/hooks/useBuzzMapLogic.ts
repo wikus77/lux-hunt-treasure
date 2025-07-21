@@ -29,6 +29,8 @@ export const useBuzzMapLogic = () => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchCurrentWeekAreas = async () => {
+    console.log('🔄 useBuzzMapLogic: fetchCurrentWeekAreas called', { userId: user?.id });
+    
     if (!user?.id) {
       console.log('❌ useBuzzMapLogic: No user ID, clearing areas');
       setCurrentWeekAreas([]); // CLEAR ILLEGAL AREAS
@@ -189,6 +191,7 @@ export const useBuzzMapLogic = () => {
 
   // CRITICAL: Auto-fetch on user change but respect payment requirements AND active prizes
   useEffect(() => {
+    console.log('🔄 useBuzzMapLogic: useEffect triggered, fetching areas');
     fetchCurrentWeekAreas();
     
     // Set up real-time subscription for new areas
