@@ -323,7 +323,7 @@ const FinalShotPage: React.FC = () => {
         <div className="relative h-[400px] sm:h-[500px] md:h-[600px] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20" style={{ zIndex: 1 }}>
           
           {/* Map Style Controls - Overlay on Map - ALWAYS VISIBLE */}
-          <div className="absolute top-4 right-4 z-50 flex flex-wrap gap-1" style={{ 
+          <div className="!visible !opacity-100 !flex absolute top-4 right-4 z-[999] flex-wrap gap-1" style={{ 
             visibility: 'visible', 
             opacity: 1,
             display: 'flex'
@@ -331,7 +331,7 @@ const FinalShotPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
+              className="!visible !opacity-100 !block !relative !z-[100] text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('satellite')}
               style={{ 
                 visibility: 'visible', 
@@ -344,7 +344,7 @@ const FinalShotPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
+              className="!visible !opacity-100 !block !relative !z-[100] text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('dark')}
               style={{ 
                 visibility: 'visible', 
@@ -357,7 +357,7 @@ const FinalShotPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
+              className="!visible !opacity-100 !block !relative !z-[100] text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('terrain')}
               style={{ 
                 visibility: 'visible', 
@@ -370,7 +370,7 @@ const FinalShotPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
+              className="!visible !opacity-100 !block !relative !z-[100] text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('osm')}
               style={{ 
                 visibility: 'visible', 

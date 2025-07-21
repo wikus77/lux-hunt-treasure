@@ -287,13 +287,12 @@ const FinalShotManager: React.FC = () => {
           <Button
             onClick={submitFinalShot}
             disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
-            className="w-full py-4 text-lg rounded-xl bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
+            className="!visible !opacity-100 !flex !relative !z-50 w-full py-4 text-lg rounded-xl bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
             style={{ 
-              visibility: 'visible', 
-              opacity: 1,
+              minHeight: '60px',
               display: 'flex',
-              position: 'relative',
-              zIndex: 1
+              visibility: 'visible',
+              opacity: 1
             }}
           >
             {isSubmitting ? (
