@@ -204,151 +204,144 @@ const FinalShotManager: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-4 mb-4">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
-            <Target className="w-6 h-6 text-white" />
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-primary flex items-center justify-center shadow-xl shadow-cyan-500/20">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold text-foreground">Final Shot</h3>
           </div>
-          <h3 className="text-2xl font-bold text-foreground">Final Shot</h3>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4" />
+            <span>Coordinate finali per la cattura del premio</span>
+          </div>
         </div>
-        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-          <MapPin className="w-4 h-4" />
-          <span>Coordinate finali per la cattura del premio</span>
+
+        {/* Status Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-cyan-400">{getRemainingAttempts()}</div>
+              <div className="text-sm text-muted-foreground">Tentativi Rimasti</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-yellow-400">
+                {getCooldownTime() || "Pronto"}
+              </div>
+              <div className="text-sm text-muted-foreground">Cooldown</div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+            <CardContent className="p-4 text-center">
+              <div className="text-2xl font-bold text-green-400">{attempts.length}</div>
+              <div className="text-sm text-muted-foreground">Shots Effettuati</div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Final Shot Form */}
+        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
+          <CardHeader>
+            <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">
+              Invia Final Shot
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Latitudine Final Shot
+                </label>
+                <Input
+                  type="number"
+                  step="any"
+                  placeholder="45.4642 [FINAL-LAT]"
+                  value={coordinates.lat}
+                  onChange={(e) => setCoordinates({...coordinates, lat: e.target.value})}
+                  className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
+                  disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime()}
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  Longitudine Final Shot
+                </label>
+                <Input
+                  type="number"
+                  step="any"
+                  placeholder="9.1900 [FINAL-LNG]"
+                  value={coordinates.lng}
+                  onChange={(e) => setCoordinates({...coordinates, lng: e.target.value})}
+                  className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
+                  disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime()}
+                />
+              </div>
+            </div>
+
+            {(getRemainingAttempts() === 0 || getCooldownTime()) && (
+              <div className="text-center text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl">
+                {getRemainingAttempts() === 0 && "Hai esaurito tutti i tentativi disponibili"}
+                {getCooldownTime() && `Prossimo tentativo disponibile tra: ${getCooldownTime()}`}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-cyan-400">{getRemainingAttempts()}</div>
-            <div className="text-sm text-muted-foreground">Tentativi Rimasti</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-400">
-              {getCooldownTime() || "Pronto"}
-            </div>
-            <div className="text-sm text-muted-foreground">Cooldown</div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-400">{attempts.length}</div>
-            <div className="text-sm text-muted-foreground">Shots Effettuati</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Final Shot Form */}
-      <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md shadow-2xl shadow-cyan-500/10">
-        <CardHeader>
-          <CardTitle className="text-xl text-center bg-gradient-to-r from-cyan-400 to-primary bg-clip-text text-transparent">
-            Invia Final Shot
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Latitudine Final Shot
-              </label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="45.4642 [FINAL-LAT]"
-                value={coordinates.lat}
-                onChange={(e) => setCoordinates({...coordinates, lat: e.target.value})}
-                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
-                disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime()}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Longitudine Final Shot
-              </label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="9.1900 [FINAL-LNG]"
-                value={coordinates.lng}
-                onChange={(e) => setCoordinates({...coordinates, lng: e.target.value})}
-                className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
-                disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime()}
-              />
-            </div>
-          </div>
-
-          {/* ✅ FINAL SHOT BUTTON - MOBILE SAFARI FIX DEFINITIVO */}
-          <div 
-            className="w-full mt-6 mb-4 px-2" 
+      {/* ✅ FINAL SHOT BUTTON - FUORI DALLA MAPPA - SEMPRE VISIBILE - FIX DEFINITIVO SAFARI iOS */}
+      {coordinates.lat && coordinates.lng && (
+        <div 
+          className="w-full flex justify-center mt-4 px-4" 
+          style={{ 
+            position: 'relative',
+            zIndex: 99999,
+            display: 'block',
+            marginBottom: '120px'
+          }}
+        >
+          <Button
+            onClick={submitFinalShot}
+            disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
+            className="w-full max-w-md py-6 text-xl font-bold rounded-2xl bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-2xl text-white border-4 border-red-300/50"
             style={{ 
-              minHeight: '80px',
-              display: 'block !important',
-              position: 'fixed',
-              bottom: '140px',
-              left: '16px',
-              right: '16px',
-              zIndex: 99999,
-              overflow: 'visible',
-              maxWidth: 'calc(100vw - 32px)'
+              minHeight: '70px',
+              display: 'flex',
+              visibility: 'visible',
+              opacity: 1,
+              backgroundColor: '#dc2626',
+              color: 'white',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 10px 30px rgba(220, 38, 38, 0.4)'
             }}
           >
-            <Button
-              onClick={submitFinalShot}
-              disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
-              className="w-full py-6 text-xl font-bold rounded-2xl bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-2xl text-white border-4 border-red-300/50"
-              style={{ 
-                minHeight: '70px',
-                display: 'flex !important',
-                visibility: 'visible',
-                opacity: '1 !important',
-                position: 'relative',
-                zIndex: 99999,
-                backgroundColor: '#dc2626 !important',
-                color: 'white !important',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 10px 30px rgba(220, 38, 38, 0.4)',
-                transform: 'none !important',
-                width: '100%',
-                margin: 0,
-                WebkitTransform: 'translateZ(0)'
-              }}
-            >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center gap-3">
-                  <div className="animate-spin rounded-full h-6 w-6 border-4 border-white border-t-transparent"></div>
-                  <span className="font-bold">Invio Final Shot...</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-3">
-                  <Target className="w-6 h-6" />
-                  <span className="font-bold">🎯 INVIA FINAL SHOT</span>
-                </div>
-              )}
-            </Button>
-          </div>
-
-          {(getRemainingAttempts() === 0 || getCooldownTime()) && (
-            <div className="text-center text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl">
-              {getRemainingAttempts() === 0 && "Hai esaurito tutti i tentativi disponibili"}
-              {getCooldownTime() && `Prossimo tentativo disponibile tra: ${getCooldownTime()}`}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
+            {isSubmitting ? (
+              <div className="flex items-center justify-center gap-3">
+                <div className="animate-spin rounded-full h-6 w-6 border-4 border-white border-t-transparent"></div>
+                <span className="font-bold">Invio Final Shot...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                <Target className="w-6 h-6" />
+                <span className="font-bold">🎯 INVIA FINAL SHOT</span>
+              </div>
+            )}
+          </Button>
+        </div>
+      )}
+      
       {/* Recent Attempts */}
       {attempts.length > 0 && (
-        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md">
+        <Card className="border-2 border-cyan-500/20 rounded-2xl bg-card/60 backdrop-blur-md mt-6">
           <CardHeader>
             <CardTitle className="text-lg">Storico Final Shot</CardTitle>
           </CardHeader>
@@ -405,7 +398,7 @@ const FinalShotManager: React.FC = () => {
           </CardContent>
         </Card>
       )}
-    </div>
+    </>
   );
 };
 
