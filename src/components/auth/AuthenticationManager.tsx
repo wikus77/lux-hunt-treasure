@@ -79,10 +79,10 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
           console.log("✅ Authenticated user with verified email");
           onAuthenticated(session.user.id);
           
-          // Navigation with delay to prevent conflicts
+          // Navigation with delay to prevent conflicts  
           setTimeout(() => {
-            console.log("🏠 NAVIGATING TO HOME after auth success");
-            navigate('/home', { replace: true });
+            console.log("🏠 NAVIGATING TO ROOT (/) after auth success - FIXED ROUTE");
+            navigate('/', { replace: true });
           }, 500);
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
