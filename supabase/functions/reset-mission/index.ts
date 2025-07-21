@@ -143,27 +143,31 @@ serve(async (req) => {
     console.log(`✅ MISSION RESET: Complete mission reset successful for user ${user.id}`);
 
     console.log('🔄 MISSION RESET: Preparing success response...');
-    const successResponse = {
-      status: "OK",
-      success: true,
-      message: 'Mission reset completed successfully',
-      userId: user.id,
-      reset_success: true,
-      timestamp: new Date().toISOString(),
-      logs: [
-        'Authorization validated',
-        'Rate limit passed',
-        'Confirmation code verified',
-        'Database reset executed',
-        'Action logged'
-      ]
-    };
-
+    
     console.log('✅ MISSION RESET: Returning success response');
-    return new Response(JSON.stringify(successResponse), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    return new Response(
+      JSON.stringify({
+        status: "ok",
+        success: true,
+        message: "Mission reset completed successfully",
+        userid: user.id,
+        timestamp: new Date().toISOString(),
+        logs: [
+          "Authorization validated",
+          "Rate limit passed",
+          "Confirmation code verified",
+          "Database reset executed",
+          "Action logged"
+        ]
+      }),
+      {
+        status: 200,
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json" 
+        }
+      }
+    );
 
   } catch (error) {
     console.error('❌ RESET MISSION ERROR:', error);
