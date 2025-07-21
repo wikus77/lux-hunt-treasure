@@ -29,16 +29,22 @@ export const MissionResetSection: React.FC = () => {
       }
 
       console.log('🔄 Chiamata reset-mission con codice:', confirmationCode);
+      console.log('👤 User session:', session.user.email);
       
       const response = await supabase.functions.invoke('reset-mission', {
         body: { confirmationCode },
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-m1ssion-sig': 'official-client'
         }
       });
       
       console.log('📡 Risposta reset-mission:', response);
+      console.log('🔧 Response details:', { 
+        data: response.data, 
+        error: response.error
+      });
 
       if (response.error) {
         throw new Error(response.error.message || 'Errore durante il reset');

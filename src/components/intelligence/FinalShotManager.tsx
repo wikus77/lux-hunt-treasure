@@ -284,35 +284,50 @@ const FinalShotManager: React.FC = () => {
             </div>
           </div>
 
-          {/* DEBUG: FINAL SHOT BUTTON - FORCED VISIBILITY */}
-          <div className="w-full py-4" style={{ minHeight: '80px', display: 'block', position: 'relative', zIndex: 999 }}>
+          {/* ✅ FINAL SHOT BUTTON - FIXED DEFINITIVO */}
+          <div 
+            className="w-full mt-6 mb-4 px-2" 
+            style={{ 
+              minHeight: '80px',
+              display: 'block !important',
+              position: 'static',
+              zIndex: 9999,
+              overflow: 'visible'
+            }}
+          >
             <Button
               onClick={submitFinalShot}
               disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
-              className="w-full py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30 text-white"
-               style={{ 
-                minHeight: '60px',
+              className="w-full py-6 text-xl font-bold rounded-2xl bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-2xl text-white border-4 border-red-300/50"
+              style={{ 
+                minHeight: '70px',
                 display: 'flex',
                 visibility: 'visible',
                 opacity: 1,
-                position: 'relative',
-                zIndex: 999,
-                backgroundColor: '#06b6d4',
-                color: 'white'
+                position: 'static',
+                zIndex: 9999,
+                backgroundColor: '#dc2626',
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 10px 30px rgba(220, 38, 38, 0.4)',
+                transform: 'none'
               }}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Invio in corso...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Target className="w-5 h-5" />
-                Invia Final Shot
-              </div>
-            )}
-           </Button>
+            >
+              {isSubmitting ? (
+                <div className="flex items-center justify-center gap-3">
+                  <div className="animate-spin rounded-full h-6 w-6 border-4 border-white border-t-transparent"></div>
+                  <span className="font-bold">Invio Final Shot...</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-3">
+                  <Target className="w-6 h-6" />
+                  <span className="font-bold">🎯 INVIA FINAL SHOT</span>
+                </div>
+              )}
+            </Button>
           </div>
 
           {(getRemainingAttempts() === 0 || getCooldownTime()) && (
