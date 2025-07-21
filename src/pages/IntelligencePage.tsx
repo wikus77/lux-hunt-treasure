@@ -16,7 +16,6 @@ import WeeklyCluesIntegration from '@/components/intelligence/WeeklyCluesIntegra
 
 const IntelligencePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<string | null>(null);
-  const [mapStyle, setMapStyle] = useState('satellite');
   const [modulesExpanded, setModulesExpanded] = useState(false);
   
   // TODO: Get these from actual mission state
@@ -137,92 +136,45 @@ const IntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Main Content Area - Shows selected module content or placeholder */}
-        <div className="flex-1 min-h-[50vh] max-h-[70vh] relative w-full bg-black/20 border-b-2 border-cyan-500/20">
-          
-          {/* Map Overlay Controls - Top Right */}
-          <div className="absolute top-4 right-4 z-40 flex flex-wrap gap-2">
-            <div className="flex gap-1 bg-black/60 backdrop-blur-sm rounded-full p-1">
-              <button 
-                className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all"
-                onClick={() => setMapStyle('satellite')}
-              >
-                🛰️ Satellite
-              </button>
-              <button 
-                className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all"
-                onClick={() => setMapStyle('dark')}
-              >
-                🌑 Dark Military
-              </button>
-              <button 
-                className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all"
-                onClick={() => setMapStyle('terrain')}
-              >
-                🏔️ Terrain
-              </button>
-              <button 
-                className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all"
-                onClick={() => setMapStyle('standard')}
-              >
-                🗺️ Standard
-              </button>
-            </div>
-            
-            {/* FINAL SHOT Button Overlay */}
-            <div className="bg-black/60 backdrop-blur-sm rounded-full p-1">
-              <button 
-                className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold"
+        {/* FULLSCREEN MODULE AREA - SINGLE RENDERING ONLY */}
+        <div className="flex-1 w-full relative bg-black/20 border-b-2 border-cyan-500/20 overflow-hidden">
+          {activeModule ? (
+            <div className="absolute inset-0 w-full h-full">
+              {/* Close Module Button */}
+              <button
                 onClick={() => {
-                  setActiveModule('finalshotmap');
-                  setModulesExpanded(false);
+                  setActiveModule(null);
+                  setModulesExpanded(true);
                 }}
+                className="absolute top-4 left-4 z-50 bg-black/80 backdrop-blur-sm text-white/70 hover:text-white text-lg p-2 hover:bg-white/10 rounded-full transition-all shadow-lg"
               >
-                🎯 FINAL SHOT
+                ✕
               </button>
+              
+              {/* Module Content Container - ONLY ONE MODULE AT A TIME */}
+              <div className="w-full h-full">
+                {modules.find(m => m.id === activeModule)?.component}
+              </div>
             </div>
-          </div>
-
-          {/* Dynamic Content Area - SINGLE RENDERING ONLY */}
-          <div className="absolute inset-0 w-full h-full">
-            {activeModule ? (
-              // Module content in main area - ONLY HERE, NO DUPLICATES
-              <div className="w-full h-full relative">
-                {/* Close button for active module */}
-                <button
-                  onClick={() => {
-                    setActiveModule(null);
-                    setModulesExpanded(true);
-                  }}
-                  className="absolute top-4 left-4 z-50 bg-black/80 backdrop-blur-sm text-white/70 hover:text-white text-lg p-2 hover:bg-white/10 rounded-full transition-all"
-                >
-                  ✕
-                </button>
-                
-                <div className="absolute inset-0 w-full h-full">
-                  {modules.find(m => m.id === activeModule)?.component}
-                </div>
+          ) : (
+            // Default Placeholder - When no module selected
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black/30 to-black/60 backdrop-blur-sm">
+              <div className="text-center text-white p-6">
+                <MapPin className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
+                <h3 className="text-xl font-bold mb-2">Mappa Tattica M1SSION™</h3>
+                <p className="text-sm text-white/80 mb-4">Seleziona un modulo di intelligence dal pannello sottostante</p>
+                <p className="text-xs text-white/60">Moduli disponibili: Final Shot Mappa, Geo Radar, Clue Journal e altri</p>
               </div>
-            ) : (
-              // Placeholder when no module selected
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black/30 to-black/60 backdrop-blur-sm">
-                <div className="text-center text-white p-6">
-                  <MapPin className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
-                  <h3 className="text-xl font-bold mb-2">Mappa Tattica M1SSION™</h3>
-                  <p className="text-sm text-white/80 mb-4">Seleziona un modulo di intelligence dal pannello sottostante</p>
-                  <p className="text-xs text-white/60">Mappa interattiva disponibile nei moduli Final Shot</p>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Intelligence Modules Stack - Mobile-First Collapsible */}
-        <div className="relative" style={{ 
+        {/* COLLAPSIBLE MODULES MENU - BOTTOM SECTION */}
+        <div className="sticky bottom-0 z-40" style={{ 
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}>
-          {/* Modules Toggle Button */}
-          <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">
+          {/* Module Selection Button */}
+          <div className="bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">
             <button
               onClick={() => setModulesExpanded(!modulesExpanded)}
               className="w-full bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 hover:bg-black/80 hover:border-white/20 transition-all duration-300"
@@ -247,13 +199,12 @@ const IntelligencePage: React.FC = () => {
             </button>
           </div>
 
-          {/* Collapsible Modules Grid */}
+          {/* MODULES GRID - SELECTOR ONLY, NO CONTENT */}
           <div className={`transition-all duration-500 overflow-hidden ${
             modulesExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
           }`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-4 bg-black/90 backdrop-blur-xl">
               {modules.map((module) => {
-                // Skip rendering module if it's currently active (avoid duplicates)
                 const isCurrentlyActive = activeModule === module.id;
                 
                 return (
@@ -261,7 +212,7 @@ const IntelligencePage: React.FC = () => {
                     key={module.id}
                     className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border transition-all duration-300 ${
                       isCurrentlyActive 
-                        ? 'border-cyan-500/50 bg-cyan-500/10' 
+                        ? 'border-cyan-500/80 bg-cyan-500/20' 
                         : 'border-white/10'
                     } ${
                       module.available 
@@ -270,19 +221,21 @@ const IntelligencePage: React.FC = () => {
                     }`}
                     onClick={() => {
                       if (module.available) {
+                        console.log('🧠 Module selected:', module.id, module.name);
                         setActiveModule(module.id);
                         setModulesExpanded(false);
                       }
                     }}
                   >
+                    {/* Module Header - SELECTORS ONLY */}
                     <div className="flex items-center gap-2 mb-3">
                       <module.icon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
                       <span className="text-sm font-semibold text-white uppercase tracking-wider">
                         {module.name}
                       </span>
                       {isCurrentlyActive && (
-                        <span className="text-xs text-cyan-400 ml-auto flex-shrink-0">
-                          ATTIVO
+                        <span className="text-xs text-cyan-400 ml-auto flex-shrink-0 font-bold">
+                          ● ATTIVO
                         </span>
                       )}
                       {!module.available && (
@@ -292,6 +245,7 @@ const IntelligencePage: React.FC = () => {
                       )}
                     </div>
                     
+                    {/* Module Description */}
                     <div className="text-xs text-white/80 leading-relaxed mb-3">
                       {module.id === 'coordinates' && 'Select target coordinates for tactical operations'}
                       {module.id === 'journal' && 'Document and analyze discovered clues'}
@@ -304,6 +258,7 @@ const IntelligencePage: React.FC = () => {
                       {module.id === 'precision' && 'High-precision targeting results and analysis'}
                     </div>
                     
+                    {/* Module Status */}
                     {module.available && (
                       <div className="flex items-center justify-between pt-2 border-t border-white/10">
                         <span className={`text-xs font-medium uppercase tracking-wide ${
