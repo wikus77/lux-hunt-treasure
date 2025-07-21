@@ -189,10 +189,12 @@ const IntelligencePage: React.FC = () => {
 
           {/* Dynamic Content Area - Shows selected module content or placeholder */}
           <div className="absolute inset-0 w-full h-full">
-            {activeModule && !fullScreenModule ? (
-              // Module content in main area
-              <div className="w-full h-full">
-                {modules.find(m => m.id === activeModule)?.component}
+            {activeModule ? (
+              // Module content in main area - FULL SCREEN RENDERING
+              <div className="w-full h-full relative">
+                <div className="absolute inset-0 w-full h-full">
+                  {modules.find(m => m.id === activeModule)?.component}
+                </div>
               </div>
             ) : (
               // Placeholder when no module selected
