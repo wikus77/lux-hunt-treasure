@@ -13,18 +13,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState(true);
 
-  // Enhanced session monitoring
+  // MAIN AUTH STATE HANDLER - Handle login success here
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 Auth state change:', event, 'Session exists:', !!session);
+      console.log('🔍 AuthProvider - Auth state change:', event, 'Session exists:', !!session);
       
-      // Handle successful authentication
+      // Handle successful authentication and redirect immediately
       if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ User signed in successfully:", session.user.email);
-        console.log("🔍 AuthProvider - NOT handling navigation, leaving to AuthenticationManager");
+        console.log("✅ AuthProvider - User signed in successfully:", session.user.email);
         
-        // NO NAVIGATION HERE - Let AuthenticationManager handle the redirect
-        // This prevents double redirect loops that cause white screen issues
+        // Check if email is verified
+        if (!session.user.email_confirmed_at) {
+          console.log("📧 Email not verified - user needs verification");
+          return;
+        }
+        
+        // IMMEDIATE REDIRECT after successful login to prevent white screen
+        setTimeout(() => {
+          console.log("🏠 AuthProvider - Redirecting to root after login success");
+          navigate('/', { replace: true });
+        }, 50);
       }
       
       // Handle sign out
@@ -36,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, []); // Rimuovo navigate dalle dipendenze
+  }, [navigate]);
 
   // Fetch user roles when user changes
   useEffect(() => {

@@ -60,51 +60,21 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
     
     checkAuthentication();
     
-    // Set up auth state change listener
+    // SIMPLIFIED AUTH LISTENER - Remove redundant auth state handling
+    // Let AuthProvider handle the auth state changes to prevent conflicts
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log("Auth state changed:", event);
+      (event, session) => {
+        console.log("🔄 AuthManager - Auth state:", event, !!session);
         
-        if (event === "SIGNED_IN" && session) {
-          console.log("✅ User signed in:", session.user.id);
-          console.log("🏠 Redirecting authenticated user to /home");
-          
-          // Check if email is verified
-          if (!session.user.email_confirmed_at) {
-            console.log("Email not verified after sign in");
-            onEmailNotVerified();
-            return;
-          }
-          
-          console.log("✅ Authenticated user with verified email");
-          onAuthenticated(session.user.id);
-          
-          // Check if user is on login/register page and redirect to root
-          const currentPath = location;
-          if (currentPath === '/login' || currentPath === '/register') {
-            setTimeout(() => {
-              console.log("🏠 NAVIGATING TO ROOT (/) after auth success from login page");
-              navigate('/', { replace: true });
-            }, 100);
-          }
-        } else if (event === "SIGNED_OUT") {
-          console.log("User signed out");
+        // Only handle sign out event here
+        if (event === "SIGNED_OUT") {
+          console.log("👋 User signed out - redirecting if needed");
           onNotAuthenticated();
           
           // Redirect to login page if on a protected route
           const protectedRoutes = ['/home', '/profile', '/events', '/buzz', '/map', '/settings'];
           if (protectedRoutes.some(route => location.startsWith(route))) {
             navigate('/login');
-          }
-        } else if (event === "USER_UPDATED") {
-          console.log("User updated");
-          
-          // If email was just verified
-          if (session?.user.email_confirmed_at) {
-            toast.success("Email verificata con successo", {
-              description: "Ora puoi accedere a tutte le funzionalità"
-            });
-            onAuthenticated(session.user.id);
           }
         }
       }
