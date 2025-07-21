@@ -12,7 +12,6 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useAuth } from "./hooks/use-auth";
-import { BuzzPaymentMonitor } from "./components/payment/BuzzPaymentMonitor";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -54,17 +53,15 @@ function App() {
       <Router>
         <SoundProvider>
           <AuthProvider>
-            <BuzzPaymentMonitor>
-              <AuthenticationManager 
-                onAuthenticated={handleAuthenticated}
-                onNotAuthenticated={handleNotAuthenticated}
-                onEmailNotVerified={handleEmailNotVerified}
-              />
-              <WouterRoutes />
-              <InstallPrompt />
-              <PushSetup />
-              <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
-            </BuzzPaymentMonitor>
+            <AuthenticationManager 
+              onAuthenticated={handleAuthenticated}
+              onNotAuthenticated={handleNotAuthenticated}
+              onEmailNotVerified={handleEmailNotVerified}
+            />
+            <WouterRoutes />
+            <InstallPrompt />
+            <PushSetup />
+            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
       </Router>

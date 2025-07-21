@@ -22,18 +22,43 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
   // Show button only if user has BUZZ areas (indicating paid access)
   const hasActiveBuzzAreas = currentWeekAreas && currentWeekAreas.length > 0;
   
+  // 🚨 EMERGENCY BYPASS FOR TESTING - Remove after debug
+  const EMERGENCY_TESTING_MODE = true;
+  const hasActiveBuzzAreasOverride = EMERGENCY_TESTING_MODE || hasActiveBuzzAreas;
+  
   React.useEffect(() => {
-    console.log('💣 Final Shot button mounted!', {
+    console.log('💣 Final Shot button mounted! FORCE DEBUG', {
       hasActiveBuzzAreas,
       areasCount: currentWeekAreas?.length || 0,
-      mapCenter
+      mapCenter,
+      currentWeekAreas,
+      buzzLogicLoaded: !!currentWeekAreas,
+      timestamp: new Date().toISOString()
     });
-  }, [hasActiveBuzzAreas, currentWeekAreas?.length, mapCenter]);
+  }, [hasActiveBuzzAreas, currentWeekAreas?.length, mapCenter, currentWeekAreas]);
 
-  if (!hasActiveBuzzAreas) {
-    console.log('❌ Final Shot button hidden - no active BUZZ areas');
+  // FORCE DEBUGGING: Always log component state
+  console.log('🔥 FinalShotButton RENDER STATE:', {
+    hasActiveBuzzAreas,
+    currentWeekAreasLength: currentWeekAreas?.length || 0,
+    timestamp: new Date().toISOString()
+  });
+
+  if (!hasActiveBuzzAreasOverride) {
+    console.log('❌ Final Shot button hidden - no active BUZZ areas', {
+      currentWeekAreas,
+      hasActiveBuzzAreas,
+      hasActiveBuzzAreasOverride,
+      EMERGENCY_TESTING_MODE,
+      areasLength: currentWeekAreas?.length
+    });
     return null;
   }
+
+  console.log('✅ Final Shot button will render - areas found!', {
+    areasCount: currentWeekAreas.length,
+    areas: currentWeekAreas
+  });
 
   const handleFinalShot = () => {
     console.log('🎯 Final Shot button pressed - navigating to Intelligence');
@@ -42,11 +67,12 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
 
   return (
     <div 
-      className={`fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 ${className || ''}`}
+      className={`fixed left-1/2 transform -translate-x-1/2 ${className || ''}`}
       style={{
-        // Ensure proper positioning above bottom navigation
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
-        zIndex: 9999
+        // Ensure proper positioning above bottom navigation and Leaflet map
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)',
+        zIndex: 99999,
+        pointerEvents: 'auto'
       }}
     >
       <Button
