@@ -17,6 +17,8 @@ import WeeklyCluesIntegration from '@/components/intelligence/WeeklyCluesIntegra
 const IntelligencePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [mapStyle, setMapStyle] = useState('satellite');
+  const [modulesExpanded, setModulesExpanded] = useState(false);
+  const [fullScreenModule, setFullScreenModule] = useState<string | null>(null);
   
   // TODO: Get these from actual mission state
   const currentWeek = 1;
@@ -137,7 +139,9 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         {/* Full Width Tactical Map */}
-        <div className="flex-1 relative min-h-[40vh] max-h-[60vh] w-full bg-black/20 border-b-2 border-cyan-500/20">
+        <div className={`relative w-full bg-black/20 border-b-2 border-cyan-500/20 transition-all duration-300 ${
+          fullScreenModule ? 'h-[20vh]' : 'flex-1 min-h-[50vh] max-h-[70vh]'
+        }`}>
           
           {/* Map Overlay Controls - Top Right */}
           <div className="absolute top-4 right-4 z-40 flex flex-wrap gap-2">
@@ -172,100 +176,149 @@ const IntelligencePage: React.FC = () => {
             <div className="bg-black/60 backdrop-blur-sm rounded-full p-1">
               <button 
                 className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold"
-                onClick={() => setActiveModule('finalshotmap')}
+                onClick={() => {
+                  setActiveModule('finalshotmap');
+                  setFullScreenModule('finalshotmap');
+                  setModulesExpanded(false);
+                }}
               >
                 🎯 FINAL SHOT
               </button>
             </div>
           </div>
 
-          {/* Map Content or Active Module */}
+          {/* Map Content - Always Show Background Map */}
           <div className="absolute inset-0 w-full h-full">
-            {activeModule ? (
-              <div className="w-full h-full p-4 overflow-y-auto">
-                {modules.find(m => m.id === activeModule)?.component}
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black/30 to-black/60 backdrop-blur-sm">
+              <div className="text-center text-white p-6">
+                <MapPin className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
+                <h3 className="text-xl font-bold mb-2">Mappa Tattica M1SSION™</h3>
+                <p className="text-sm text-white/80 mb-4">Seleziona un modulo di intelligence dal pannello sottostante</p>
+                <p className="text-xs text-white/60">Mappa interattiva disponibile nei moduli Final Shot</p>
               </div>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black/30 to-black/60 backdrop-blur-sm">
-                <div className="text-center text-white p-6">
-                  <MapPin className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
-                  <h3 className="text-xl font-bold mb-2">Mappa Tattica M1SSION™</h3>
-                  <p className="text-sm text-white/80 mb-4">Seleziona un modulo di intelligence dal pannello sottostante</p>
-                  <p className="text-xs text-white/60">Mappa interattiva disponibile nei moduli Final Shot</p>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Intelligence Modules Grid - Below Map */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden w-full" style={{ 
-          paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))',
-          marginTop: '2rem'
-        }}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-screen-xl mx-auto px-4">
-            
-            {modules.map((module) => (
-              <div
-                key={module.id}
-                className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
-                  activeModule === module.id 
-                    ? 'ring-2 ring-primary/50 bg-black/80' 
-                    : 'hover:bg-black/75 hover:border-white/20'
-                } ${
-                  module.available 
-                    ? 'cursor-pointer hover:scale-[1.02]' 
-                    : 'opacity-50 cursor-not-allowed'
-                }`}
-                onClick={() => module.available && setActiveModule(activeModule === module.id ? null : module.id)}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <module.icon className="w-4 h-4 text-primary flex-shrink-0" />
-                  <span className="text-sm font-semibold text-white uppercase tracking-wider">
-                    {module.name}
-                  </span>
-                  {!module.available && (
-                    <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
-                      Week {module.weekRequired}+
-                    </span>
+        {/* Full Screen Module Container */}
+        {fullScreenModule && (
+          <div className="flex-1 relative bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20">
+            {/* Full Screen Module Header */}
+            <div className="absolute top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-cyan-500/20 p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {modules.find(m => m.id === fullScreenModule)?.icon && (
+                    <div className="w-6 h-6 text-cyan-400">
+                      {React.createElement(modules.find(m => m.id === fullScreenModule)!.icon, { className: "w-6 h-6" })}
+                    </div>
                   )}
+                  <span className="text-white font-semibold uppercase tracking-wider text-sm">
+                    {modules.find(m => m.id === fullScreenModule)?.name}
+                  </span>
                 </div>
-                
-                <div className="text-xs text-white/80 leading-relaxed mb-2">
-                  {module.id === 'coordinates' && 'Select target coordinates for tactical operations'}
-                  {module.id === 'journal' && 'Document and analyze discovered clues'}
-                  {module.id === 'archive' && 'Archive of all collected clues and evidence from previous missions'}
-                  {module.id === 'weeklyClues' && 'Weekly intelligence briefings and strategic updates'}
-                  {module.id === 'radar' && 'Advanced geo-radar scanning capabilities'}
-                  {module.id === 'interceptor' && 'BUZZ signal interception and analysis'}
-                  {module.id === 'finalshot' && 'Execute the final tactical shot when ready'}
-                  {module.id === 'finalshotmap' && 'Interactive map for final shot coordinate selection'}
-                  {module.id === 'precision' && 'High-precision targeting results and analysis'}
-                </div>
-                
-                {activeModule === module.id && module.available && (
-                  <div className="pt-2 border-t border-white/10">
-                    <span className="text-xs text-primary font-medium uppercase tracking-wide">● ACTIVE MODULE</span>
-                  </div>
-                )}
-              </div>
-            ))}
-            
-            {/* Week 5 Unlocks */}
-            <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto transition-all duration-300 ${
-              currentWeek >= 5 ? 'ring-2 ring-primary/50 hover:bg-black/75 hover:border-white/20' : 'opacity-50'
-            }`}>
-              <div className="flex items-center gap-2 mb-3">
-                <Crosshair className="w-4 h-4 text-primary flex-shrink-0" />
-                <span className="text-sm font-semibold text-white uppercase tracking-wider">Week 5 Unlocks</span>
-              </div>
-              <div className="text-xs text-white/80 leading-relaxed">
-                {currentWeek >= 5 ? 'Advanced tactical systems now available' : 'Unlocks at Week 5'}
+                <button
+                  onClick={() => {
+                    setFullScreenModule(null);
+                    setActiveModule(null);
+                    setModulesExpanded(true);
+                  }}
+                  className="text-white/70 hover:text-white text-lg p-1 hover:bg-white/10 rounded"
+                >
+                  ✕
+                </button>
               </div>
             </div>
             
+            {/* Full Screen Module Content */}
+            <div className="absolute inset-0 pt-16 pb-4 px-4 overflow-y-auto">
+              {modules.find(m => m.id === fullScreenModule)?.component}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Intelligence Modules Stack - Mobile-First Collapsible */}
+        {!fullScreenModule && (
+          <div className="relative" style={{ 
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}>
+            {/* Modules Toggle Button */}
+            <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">
+              <button
+                onClick={() => setModulesExpanded(!modulesExpanded)}
+                className="w-full bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 hover:bg-black/80 hover:border-white/20 transition-all duration-300"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Brain className="w-5 h-5 text-cyan-400" />
+                    <span className="font-semibold uppercase tracking-wider">Moduli Intelligence</span>
+                  </div>
+                  <div className={`transition-transform duration-300 ${modulesExpanded ? 'rotate-180' : ''}`}>
+                    ▼
+                  </div>
+                </div>
+                <div className="text-xs text-white/60 mt-2 text-left">
+                  {modulesExpanded ? 'Tocca per chiudere i moduli' : 'Tocca per aprire i moduli di intelligence'}
+                </div>
+              </button>
+            </div>
+
+            {/* Collapsible Modules Grid */}
+            <div className={`transition-all duration-500 overflow-hidden ${
+              modulesExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+            }`}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-4">
+                {modules.map((module) => (
+                  <div
+                    key={module.id}
+                    className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 ${
+                      module.available 
+                        ? 'cursor-pointer hover:scale-[1.02] hover:bg-black/80 hover:border-cyan-500/30' 
+                        : 'opacity-50 cursor-not-allowed'
+                    }`}
+                    onClick={() => {
+                      if (module.available) {
+                        setActiveModule(module.id);
+                        setFullScreenModule(module.id);
+                        setModulesExpanded(false);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <module.icon className="w-5 h-5 text-cyan-400 flex-shrink-0" />
+                      <span className="text-sm font-semibold text-white uppercase tracking-wider">
+                        {module.name}
+                      </span>
+                      {!module.available && (
+                        <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
+                          Week {module.weekRequired}+
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="text-xs text-white/80 leading-relaxed mb-3">
+                      {module.id === 'coordinates' && 'Select target coordinates for tactical operations'}
+                      {module.id === 'journal' && 'Document and analyze discovered clues'}
+                      {module.id === 'archive' && 'Archive of all collected clues and evidence from previous missions'}
+                      {module.id === 'weeklyClues' && 'Weekly intelligence briefings and strategic updates'}
+                      {module.id === 'radar' && 'Advanced geo-radar scanning capabilities'}
+                      {module.id === 'interceptor' && 'BUZZ signal interception and analysis'}
+                      {module.id === 'finalshot' && 'Execute the final tactical shot when ready'}
+                      {module.id === 'finalshotmap' && 'Interactive map for final shot coordinate selection'}
+                      {module.id === 'precision' && 'High-precision targeting results and analysis'}
+                    </div>
+                    
+                    {module.available && (
+                      <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                        <span className="text-xs text-cyan-400 font-medium uppercase tracking-wide">● DISPONIBILE</span>
+                        <span className="text-xs text-white/60">Tocca per aprire</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </SafeAreaWrapper>
   );
