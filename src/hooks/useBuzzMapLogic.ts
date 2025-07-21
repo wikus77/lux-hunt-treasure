@@ -29,8 +29,6 @@ export const useBuzzMapLogic = () => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchCurrentWeekAreas = async () => {
-    console.log('🔄 useBuzzMapLogic: fetchCurrentWeekAreas called', { userId: user?.id });
-    
     if (!user?.id) {
       console.log('❌ useBuzzMapLogic: No user ID, clearing areas');
       setCurrentWeekAreas([]); // CLEAR ILLEGAL AREAS
@@ -81,19 +79,14 @@ export const useBuzzMapLogic = () => {
         return;
       }
       
-      // 🔥 STEP 2: Check for BUZZ MAP payments (ONLY succeeded) - EMERGENCY FIX
+      // 🔥 STEP 2: Check for BUZZ MAP payments (ONLY succeeded)
       const { data: payments, error: paymentError } = await supabase
         .from('payment_transactions')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'succeeded') // ONLY succeeded payments
+        .or('description.ilike.%Buzz Map%,description.ilike.%BUZZ MAPPA%') // Match all variants
         .gte('created_at', '2025-07-17T00:00:00Z');
-      
-      console.log('🔥 EMERGENCY PAYMENT CHECK - ALL SUCCEEDED PAYMENTS:', {
-        allPayments: payments,
-        userIdChecked: user.id,
-        paymentCount: payments?.length || 0
-      });
 
       console.log('💳 BUZZ MAP PAYMENTS CHECK (RESTORED):', { 
         count: payments?.length || 0, 
@@ -110,30 +103,13 @@ export const useBuzzMapLogic = () => {
         return;
       }
 
-      // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas - EMERGENCY BYPASS FOR EXISTING PAYMENTS
-      const buzzPayments = payments?.filter(p => 
-        p.description && (
-          p.description.toLowerCase().includes('buzz') || 
-          p.description.toLowerCase().includes('map')
-        )
-      );
-      
-      console.log('🔥 BUZZ PAYMENT FILTER RESULT:', {
-        totalPayments: payments?.length || 0,
-        buzzPayments: buzzPayments?.length || 0,
-        buzzPaymentDetails: buzzPayments?.map(p => ({ id: p.id, description: p.description, amount: p.amount }))
-      });
-      
-      if (!buzzPayments || buzzPayments.length === 0) {
-        console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - but we have succeeded payments, checking areas anyway for emergency fix');
-        // EMERGENCY: If user has any succeeded payments, allow them to see areas for debug
-        if (payments && payments.length > 0) {
-          console.log('🔧 EMERGENCY DEBUG: User has succeeded payments, allowing area fetch for debug');
-        } else {
-          setCurrentWeekAreas([]);
-          setLoading(false);
-          return;
-        }
+      // 🚨 CRITICAL: Must have completed BUZZ MAP payments to show areas
+      if (!payments || payments.length === 0) {
+        console.warn('🚨 NO COMPLETED BUZZ MAP PAYMENTS - CLEARING ALL AREAS');
+        console.warn('[PAYMENT VALIDATION] No valid payments found - areas blocked until payment completed');
+        setCurrentWeekAreas([]);
+        setLoading(false);
+        return;
       }
 
       // 🔥 STEP 3: Fetch user map areas (only after payment validation passed)
@@ -213,7 +189,6 @@ export const useBuzzMapLogic = () => {
 
   // CRITICAL: Auto-fetch on user change but respect payment requirements AND active prizes
   useEffect(() => {
-    console.log('🔄 useBuzzMapLogic: useEffect triggered, fetching areas');
     fetchCurrentWeekAreas();
     
     // Set up real-time subscription for new areas
