@@ -26,9 +26,10 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
     console.log('💣 Final Shot button mounted!', {
       hasActiveBuzzAreas,
       areasCount: currentWeekAreas?.length || 0,
-      mapCenter
+      mapCenter,
+      currentWeekAreas
     });
-  }, [hasActiveBuzzAreas, currentWeekAreas?.length, mapCenter]);
+  }, [hasActiveBuzzAreas, currentWeekAreas?.length, mapCenter, currentWeekAreas]);
 
   if (!hasActiveBuzzAreas) {
     console.log('❌ Final Shot button hidden - no active BUZZ areas');
@@ -42,11 +43,12 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
 
   return (
     <div 
-      className={`fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 ${className || ''}`}
+      className={`fixed left-1/2 transform -translate-x-1/2 ${className || ''}`}
       style={{
-        // Ensure proper positioning above bottom navigation
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
-        zIndex: 9999
+        // Ensure proper positioning above bottom navigation and Leaflet map
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)',
+        zIndex: 99999,
+        pointerEvents: 'auto'
       }}
     >
       <Button
