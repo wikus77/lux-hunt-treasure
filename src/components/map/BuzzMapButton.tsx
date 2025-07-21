@@ -96,9 +96,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
             if (!error && data?.success) {
               console.log('✅ BUZZ MAPPA: Area created successfully!', data);
               
-              // 🎯 UNIFIED TOAST: Single toast with DB values
+              // 🎯 UNIFIED TOAST: Single toast with DB values - NO CITY NAME REVEALED
               toast.success(`✅ BUZZ MAPPA creata!`, {
-                description: `Centro: ${data.target.city} · Radius: ${data.area.radius_km}km`
+                description: "Una nuova zona è stata creata sulla mappa. Inizia a indagare!"
               });
               
               // Trigger area generation callback
