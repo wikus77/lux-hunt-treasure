@@ -81,8 +81,8 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
           
           // Navigation with delay to prevent conflicts  
           setTimeout(() => {
-            console.log("🏠 NAVIGATING TO ROOT (/) after auth success - FIXED ROUTE");
-            navigate('/', { replace: true });
+            console.log("🏠 NAVIGATING TO HOME (/home) after auth success - FIXED ROUTE");
+            navigate('/home', { replace: true });
           }, 500);
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
@@ -117,3 +117,5 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
 };
 
 export default AuthenticationManager;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
