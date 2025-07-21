@@ -382,28 +382,50 @@ const FinalShotPage: React.FC = () => {
             </Button>
           </div>
 
-          {/* Final Shot Button - Fixed Position Over Map */}
-          {!isDisabled && (
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-              <Button
-                onClick={() => {
-                  if (!showMapControls) {
-                    setShowMapControls(true);
-                  }
+          {/* Final Shot Button - Always Visible Under Map */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
+            <Button
+              onClick={() => {
+                if (isDisabled) {
                   toast({
-                    title: "🎯 Modalità Final Shot Attiva",
-                    description: "Clicca sulla mappa per selezionare la posizione del premio",
-                    variant: "default"
+                    title: getCooldownTime() ? "⏳ Cooldown Attivo" : "❌ Tentativi Esauriti",
+                    description: getCooldownTime() ? `Riprova tra: ${getCooldownTime()}` : "Hai raggiunto il limite massimo di tentativi",
+                    variant: "destructive"
                   });
-                }}
-                className="bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 text-white shadow-xl px-6 py-3 text-sm font-bold rounded-full border-2 border-fuchsia-400/30 backdrop-blur-sm"
-              >
-                🎯 FINAL SHOT
-              </Button>
-            </div>
-          )}
+                  return;
+                }
+                
+                if (!showMapControls) {
+                  setShowMapControls(true);
+                }
+                toast({
+                  title: "🎯 Modalità Final Shot Attiva",
+                  description: "Clicca sulla mappa per selezionare la posizione del premio",
+                  variant: "default"
+                });
+              }}
+              disabled={isDisabled}
+              className={`
+                ${isDisabled 
+                  ? 'bg-gray-600/50 hover:bg-gray-600/50 cursor-not-allowed border-gray-500/30' 
+                  : 'bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 border-fuchsia-400/30'
+                } 
+                text-white shadow-xl px-6 py-3 text-sm font-bold rounded-full border-2 backdrop-blur-sm
+                transition-all duration-300
+              `}
+            >
+              {isDisabled ? (
+                <>
+                  ❌ FINAL SHOT 
+                  {getCooldownTime() ? ` (${getCooldownTime()})` : ' (ESAURITO)'}
+                </>
+              ) : (
+                '🎯 FINAL SHOT'
+              )}
+            </Button>
+          </div>
           
-          {/* Interactive Leaflet Map - Full Container */}
+          {/* Interactive Leaflet Map - Enhanced for PWA iOS */}
           <MapContainer
             center={[50.8503, 4.3517]} // Europe center (Brussels)
             zoom={4}
@@ -414,13 +436,15 @@ const FinalShotPage: React.FC = () => {
               width: '100%',
               position: 'absolute',
               top: 0,
-              left: 0
+              left: 0,
+              touchAction: 'manipulation'
             }}
             ref={mapRef}
             scrollWheelZoom={true}
             doubleClickZoom={true}
             dragging={true}
             touchZoom={true}
+            zoomControl={true}
             attributionControl={false}
           >
             <TileLayer
