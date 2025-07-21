@@ -190,9 +190,18 @@ serve(async (req) => {
                       error.message.includes('confirmation') ? 400 : 500;
     
     console.log(`❌ RESET MISSION: Returning error response with status ${statusCode}`);
+    
+    // FORCE 200 FOR PWA COMPATIBILITY IF NEEDED
+    const finalStatusCode = statusCode >= 500 ? 200 : statusCode;
+    
     return new Response(JSON.stringify(errorResponse), {
-      status: statusCode,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: finalStatusCode,
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'application/json',
+        'X-Supabase-Edge-Function': 'reset-mission',
+        'X-PWA-Compatible': 'true'
+      }
     });
   }
 });
