@@ -38,11 +38,30 @@ export const useBuzzPaymentRedirect = () => {
           ) {
             console.log('✅ BUZZ MAP payment succeeded! Auto-redirecting to map...');
             
+            // FIXED: Check if PWA is visible before navigating
+            const handleRedirect = () => {
+              if (document.visibilityState === "visible") {
+                console.log('🧭 Navigating to /map after BUZZ payment success');
+                navigate('/map', { replace: true });
+              } else {
+                console.log('🧭 PWA not visible, waiting for visibility change');
+                const handleVisibilityChange = () => {
+                  if (document.visibilityState === "visible") {
+                    console.log('🧭 PWA now visible, navigating to /map');
+                    navigate('/map', { replace: true });
+                    document.removeEventListener("visibilitychange", handleVisibilityChange);
+                  }
+                };
+                document.addEventListener("visibilitychange", handleVisibilityChange);
+                // Cleanup after 30 seconds if visibility never changes
+                setTimeout(() => {
+                  document.removeEventListener("visibilitychange", handleVisibilityChange);
+                }, 30000);
+              }
+            };
+            
             // Wait a moment for the area generation to complete
-            setTimeout(() => {
-              console.log('🧭 Navigating to /map after BUZZ payment success');
-              navigate('/map', { replace: true });
-            }, 2000);
+            setTimeout(handleRedirect, 2000);
           }
         }
       )

@@ -67,7 +67,7 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
         
         if (event === "SIGNED_IN" && session) {
           console.log("✅ User signed in:", session.user.id);
-          console.log("🏠 Redirecting authenticated user to /home");
+          console.log("🏠 Redirecting authenticated user to /");
           
           // Check if email is verified
           if (!session.user.email_confirmed_at) {
@@ -79,11 +79,13 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
           console.log("✅ Authenticated user with verified email");
           onAuthenticated(session.user.id);
           
-          // Navigation with delay to prevent conflicts  
-          setTimeout(() => {
-            console.log("🏠 NAVIGATING TO ROOT (/) after auth success - FIXED ROUTE");
+          // FIXED: Only navigate if not already on root and PWA is visible
+          if (location !== "/" && document.visibilityState === "visible") {
+            console.log("🏠 NAVIGATING TO ROOT (/) after auth success - CONDITIONAL");
             navigate('/', { replace: true });
-          }, 500);
+          } else {
+            console.log("🏠 Already on root or PWA not visible, skipping navigation");
+          }
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
           onNotAuthenticated();
