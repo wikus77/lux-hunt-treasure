@@ -28,6 +28,15 @@ const AppHome = () => {
   const [isCapacitor, setIsCapacitor] = useState(false);
   const { hasRole, user, isAuthenticated, isLoading } = useAuthContext();
   const [, navigate] = useLocation();
+
+  // CRITICAL DEBUG: Log received user state
+  console.log("🔍 AppHome received user state:", { 
+    userId: user?.id, 
+    userEmail: user?.email, 
+    isAuthenticated, 
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
   
   // MOVED ALL HOOKS BEFORE CONDITIONAL RETURNS
   const {

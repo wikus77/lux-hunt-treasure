@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/auth';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
@@ -18,6 +18,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { navigate } = useWouterNavigation();
+  const { login } = useAuthContext();
 
   // Internal access control
   const isDeveloperEmail = (email: string) => {
@@ -35,37 +36,25 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
     setIsLoading(true);
     
     try {
-      console.log('🔐 STANDARD LOGIN ATTEMPT with Supabase for:', email);
+      console.log('🔐 STANDARD LOGIN ATTEMPT - Using DIRECT AuthContext for:', email);
       
-      // Use Supabase for actual authentication
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Use DIRECT AuthContext login method
+      const result = await login(email, password);
 
-      if (error) {
-        console.error('❌ SUPABASE LOGIN ERROR:', error);
+      if (!result.success) {
+        console.error('❌ LOGIN ERROR via DIRECT AuthContext:', result.error);
         toast.error('Errore di login', {
-          description: error.message || 'Credenziali non valide'
+          description: result.error?.message || 'Credenziali non valide'
         });
         return;
       }
 
-      if (data.session && data.user) {
-        console.log('✅ SUPABASE LOGIN SUCCESS for:', data.user.email);
-        console.log('🔍 LOGIN SUCCESS - NO REDIRECT, letting AuthManager handle navigation');
-        toast.success('Login effettuato con successo', {
-          description: 'Benvenuto in M1SSION™!'
-        });
-        
-        // Don't navigate here - let the AuthenticationManager handle the redirect
-        // This prevents double redirect conflicts that cause white screen
-      } else {
-        console.error('❌ LOGIN FAILED - No session created');
-        toast.error('Errore di login', {
-          description: 'Impossibile creare la sessione'
-        });
-      }
+      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - AuthProvider will handle state & redirect');
+      toast.success('Login effettuato con successo', {
+        description: 'Benvenuto in M1SSION™!'
+      });
+      
+      // AuthProvider handles ALL state updates and redirects automatically
     } catch (error: any) {
       console.error('💥 LOGIN EXCEPTION:', error);
       toast.error('Errore di sistema', {
