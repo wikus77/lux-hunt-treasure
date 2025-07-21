@@ -12,6 +12,7 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useAuth } from "./hooks/use-auth";
+import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -58,6 +59,7 @@ function App() {
               onNotAuthenticated={handleNotAuthenticated}
               onEmailNotVerified={handleEmailNotVerified}
             />
+            <BuzzPaymentMonitor />
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />

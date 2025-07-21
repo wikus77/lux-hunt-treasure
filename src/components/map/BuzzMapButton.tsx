@@ -44,6 +44,17 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       return;
     }
 
+    // 🧠 SAVE MAP STATE BEFORE PAYMENT
+    if (mapCenter && mapCenter.length === 2) {
+      sessionStorage.setItem("m1ssion_last_map_center", JSON.stringify({ lat: mapCenter[0], lng: mapCenter[1] }));
+      const mapElement = document.querySelector('.leaflet-container');
+      if (mapElement && (window as any).leafletMap) {
+        const zoom = (window as any).leafletMap.getZoom();
+        sessionStorage.setItem("m1ssion_last_map_zoom", zoom.toString());
+        console.log('💾 Map state saved:', { center: mapCenter, zoom });
+      }
+    }
+
     setIsProcessing(true);
 
     try {

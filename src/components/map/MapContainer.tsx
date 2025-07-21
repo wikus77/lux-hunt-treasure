@@ -70,7 +70,20 @@ const MapContainer: React.FC<MapContainerProps> = ({
   // Handle map ready
   const handleMapReady = (map: L.Map) => {
     mapRef.current = map;
+    (window as any).leafletMap = map; // Store map reference globally for restoration
     setMapReady(true);
+    
+    // 🗺️ RESTORE MAP POSITION FROM PAYMENT
+    const restoreCenter = JSON.parse(sessionStorage.getItem("m1ssion_last_map_center") || "{}");
+    const restoreZoom = parseInt(sessionStorage.getItem("m1ssion_last_map_zoom") || "13", 10);
+    
+    if (restoreCenter?.lat && restoreCenter?.lng) {
+      console.log('🎯 Restoring map state on load:', { restoreCenter, restoreZoom });
+      map.setView([restoreCenter.lat, restoreCenter.lng], restoreZoom);
+      // Clear the stored state after restoration
+      sessionStorage.removeItem("m1ssion_last_map_center");
+      sessionStorage.removeItem("m1ssion_last_map_zoom");
+    }
     
     // iOS Capacitor fixes
     setTimeout(() => {
@@ -84,7 +97,9 @@ const MapContainer: React.FC<MapContainerProps> = ({
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
-        map.setView(mapCenter, map.getZoom());
+        if (!restoreCenter?.lat) {
+          map.setView(mapCenter, map.getZoom());
+        }
         console.log('🗺️ Map re-centered for iOS');
       }
     }, 500);
