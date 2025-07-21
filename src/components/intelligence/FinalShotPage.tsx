@@ -320,39 +320,63 @@ const FinalShotPage: React.FC = () => {
 
       {/* Expanded Tactical Map - Dominant Element */}
       <div className="flex-1 relative px-4 pb-4">
-        <div className="relative h-[400px] sm:h-[500px] md:h-[600px] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20">
+        <div className="relative h-[400px] sm:h-[500px] md:h-[600px] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20" style={{ zIndex: 1 }}>
           
-          {/* Map Style Controls - Overlay on Map */}
-          <div className="absolute top-4 right-4 z-50 flex flex-wrap gap-1">
+          {/* Map Style Controls - Overlay on Map - ALWAYS VISIBLE */}
+          <div className="absolute top-4 right-4 z-50 flex flex-wrap gap-1" style={{ 
+            visibility: 'visible', 
+            opacity: 1,
+            display: 'flex'
+          }}>
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('satellite')}
+              style={{ 
+                visibility: 'visible', 
+                opacity: 1,
+                display: 'block'
+              }}
             >
               🛰️
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('dark')}
+              style={{ 
+                visibility: 'visible', 
+                opacity: 1,
+                display: 'block'
+              }}
             >
               🌑
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('terrain')}
+              style={{ 
+                visibility: 'visible', 
+                opacity: 1,
+                display: 'block'
+              }}
             >
               🏔️
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs bg-black/60 text-white border border-white/20 rounded-full backdrop-blur-sm hover:bg-black/80 px-2 py-1"
+              className="text-xs bg-black/80 text-white border border-white/30 rounded-full backdrop-blur-sm hover:bg-cyan-500/80 px-2 py-1"
               onClick={() => setMapStyle('osm')}
+              style={{ 
+                visibility: 'visible', 
+                opacity: 1,
+                display: 'block'
+              }}
             >
               🗺️
             </Button>

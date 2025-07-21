@@ -170,8 +170,9 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         {/* COLLAPSIBLE MODULES MENU - FIXED BOTTOM SECTION */}
-        <div className="fixed bottom-0 left-0 right-0 z-40" style={{ 
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+        <div className="fixed bottom-0 left-0 right-0 z-[9999]" style={{ 
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))',
+          zIndex: 9999999
         }}>
           {/* Module Selection Button */}
           <div className="bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">

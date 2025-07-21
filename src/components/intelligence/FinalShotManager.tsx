@@ -288,6 +288,13 @@ const FinalShotManager: React.FC = () => {
             onClick={submitFinalShot}
             disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
             className="w-full py-4 text-lg rounded-xl bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
+            style={{ 
+              visibility: 'visible', 
+              opacity: 1,
+              display: 'flex',
+              position: 'relative',
+              zIndex: 1
+            }}
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
