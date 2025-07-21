@@ -18,7 +18,6 @@ const IntelligencePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [mapStyle, setMapStyle] = useState('satellite');
   const [modulesExpanded, setModulesExpanded] = useState(false);
-  const [fullScreenModule, setFullScreenModule] = useState<string | null>(null);
   
   // TODO: Get these from actual mission state
   const currentWeek = 1;
@@ -138,10 +137,8 @@ const IntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Full Width Tactical Map */}
-        <div className={`relative w-full bg-black/20 border-b-2 border-cyan-500/20 transition-all duration-300 ${
-          fullScreenModule ? 'h-[20vh]' : 'flex-1 min-h-[50vh] max-h-[70vh]'
-        }`}>
+        {/* Main Content Area - Shows selected module content or placeholder */}
+        <div className="flex-1 min-h-[50vh] max-h-[70vh] relative w-full bg-black/20 border-b-2 border-cyan-500/20">
           
           {/* Map Overlay Controls - Top Right */}
           <div className="absolute top-4 right-4 z-40 flex flex-wrap gap-2">
@@ -178,7 +175,6 @@ const IntelligencePage: React.FC = () => {
                 className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold"
                 onClick={() => {
                   setActiveModule('finalshotmap');
-                  setFullScreenModule('finalshotmap');
                   setModulesExpanded(false);
                 }}
               >
@@ -187,11 +183,22 @@ const IntelligencePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Dynamic Content Area - Shows selected module content or placeholder */}
+          {/* Dynamic Content Area - SINGLE RENDERING ONLY */}
           <div className="absolute inset-0 w-full h-full">
             {activeModule ? (
-              // Module content in main area - FULL SCREEN RENDERING
+              // Module content in main area - ONLY HERE, NO DUPLICATES
               <div className="w-full h-full relative">
+                {/* Close button for active module */}
+                <button
+                  onClick={() => {
+                    setActiveModule(null);
+                    setModulesExpanded(true);
+                  }}
+                  className="absolute top-4 left-4 z-50 bg-black/80 backdrop-blur-sm text-white/70 hover:text-white text-lg p-2 hover:bg-white/10 rounded-full transition-all"
+                >
+                  ✕
+                </button>
+                
                 <div className="absolute inset-0 w-full h-full">
                   {modules.find(m => m.id === activeModule)?.component}
                 </div>
@@ -210,77 +217,53 @@ const IntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Full Screen Module Container */}
-        {fullScreenModule && (
-          <div className="flex-1 relative bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20">
-            {/* Full Screen Module Header */}
-            <div className="absolute top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-sm border-b border-cyan-500/20 p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {modules.find(m => m.id === fullScreenModule)?.icon && (
-                    <div className="w-6 h-6 text-cyan-400">
-                      {React.createElement(modules.find(m => m.id === fullScreenModule)!.icon, { className: "w-6 h-6" })}
-                    </div>
-                  )}
-                  <span className="text-white font-semibold uppercase tracking-wider text-sm">
-                    {modules.find(m => m.id === fullScreenModule)?.name}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    setFullScreenModule(null);
-                    setActiveModule(null);
-                    setModulesExpanded(true);
-                  }}
-                  className="text-white/70 hover:text-white text-lg p-1 hover:bg-white/10 rounded"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-            
-            {/* Full Screen Module Content */}
-            <div className="absolute inset-0 pt-16 pb-4 px-4 overflow-y-auto">
-              {modules.find(m => m.id === fullScreenModule)?.component}
-            </div>
-          </div>
-        )}
-
         {/* Intelligence Modules Stack - Mobile-First Collapsible */}
-        {!fullScreenModule && (
-          <div className="relative" style={{ 
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-          }}>
-            {/* Modules Toggle Button */}
-            <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">
-              <button
-                onClick={() => setModulesExpanded(!modulesExpanded)}
-                className="w-full bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 hover:bg-black/80 hover:border-white/20 transition-all duration-300"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Brain className="w-5 h-5 text-cyan-400" />
-                    <span className="font-semibold uppercase tracking-wider">Moduli Intelligence</span>
-                  </div>
-                  <div className={`transition-transform duration-300 ${modulesExpanded ? 'rotate-180' : ''}`}>
-                    ▼
-                  </div>
+        <div className="relative" style={{ 
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+        }}>
+          {/* Modules Toggle Button */}
+          <div className="sticky top-0 z-40 bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">
+            <button
+              onClick={() => setModulesExpanded(!modulesExpanded)}
+              className="w-full bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 hover:bg-black/80 hover:border-white/20 transition-all duration-300"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Brain className="w-5 h-5 text-cyan-400" />
+                  <span className="font-semibold uppercase tracking-wider">Moduli Intelligence</span>
+                  {activeModule && (
+                    <span className="text-xs text-cyan-400 bg-cyan-400/20 px-2 py-1 rounded-full">
+                      {modules.find(m => m.id === activeModule)?.name} ATTIVO
+                    </span>
+                  )}
                 </div>
-                <div className="text-xs text-white/60 mt-2 text-left">
-                  {modulesExpanded ? 'Tocca per chiudere i moduli' : 'Tocca per aprire i moduli di intelligence'}
+                <div className={`transition-transform duration-300 ${modulesExpanded ? 'rotate-180' : ''}`}>
+                  ▼
                 </div>
-              </button>
-            </div>
+              </div>
+              <div className="text-xs text-white/60 mt-2 text-left">
+                {modulesExpanded ? 'Tocca per chiudere i moduli' : 'Tocca per aprire i moduli di intelligence'}
+              </div>
+            </button>
+          </div>
 
-            {/* Collapsible Modules Grid */}
-            <div className={`transition-all duration-500 overflow-hidden ${
-              modulesExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
-            }`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-4">
-                {modules.map((module) => (
+          {/* Collapsible Modules Grid */}
+          <div className={`transition-all duration-500 overflow-hidden ${
+            modulesExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
+          }`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-4">
+              {modules.map((module) => {
+                // Skip rendering module if it's currently active (avoid duplicates)
+                const isCurrentlyActive = activeModule === module.id;
+                
+                return (
                   <div
                     key={module.id}
-                    className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 ${
+                    className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border transition-all duration-300 ${
+                      isCurrentlyActive 
+                        ? 'border-cyan-500/50 bg-cyan-500/10' 
+                        : 'border-white/10'
+                    } ${
                       module.available 
                         ? 'cursor-pointer hover:scale-[1.02] hover:bg-black/80 hover:border-cyan-500/30' 
                         : 'opacity-50 cursor-not-allowed'
@@ -288,7 +271,6 @@ const IntelligencePage: React.FC = () => {
                     onClick={() => {
                       if (module.available) {
                         setActiveModule(module.id);
-                        setFullScreenModule(module.id);
                         setModulesExpanded(false);
                       }
                     }}
@@ -298,6 +280,11 @@ const IntelligencePage: React.FC = () => {
                       <span className="text-sm font-semibold text-white uppercase tracking-wider">
                         {module.name}
                       </span>
+                      {isCurrentlyActive && (
+                        <span className="text-xs text-cyan-400 ml-auto flex-shrink-0">
+                          ATTIVO
+                        </span>
+                      )}
                       {!module.available && (
                         <span className="text-xs text-muted-foreground ml-auto flex-shrink-0">
                           Week {module.weekRequired}+
@@ -319,16 +306,23 @@ const IntelligencePage: React.FC = () => {
                     
                     {module.available && (
                       <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                        <span className="text-xs text-cyan-400 font-medium uppercase tracking-wide">● DISPONIBILE</span>
-                        <span className="text-xs text-white/60">Tocca per aprire</span>
+                        <span className={`text-xs font-medium uppercase tracking-wide ${
+                          isCurrentlyActive ? 'text-cyan-400' : 'text-cyan-400'
+                        }`}>
+                          {isCurrentlyActive ? '● ATTIVO' : '● DISPONIBILE'}
+                        </span>
+                        <span className="text-xs text-white/60">
+                          {isCurrentlyActive ? 'Visualizzato sopra' : 'Tocca per aprire'}
+                        </span>
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
-        )}
+        </div>
+
       </div>
     </SafeAreaWrapper>
   );
