@@ -9,6 +9,7 @@ import MapControls from './components/MapControls';
 import BuzzMapButton from '@/components/map/BuzzMapButton';
 import MapZoomControls from './components/MapZoomControls';
 import HelpDialog from './components/HelpDialog';
+import FinalShotButton from '@/components/map/FinalShotButton';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 
 // Default location (Rome)
@@ -230,6 +231,9 @@ const MapContainer: React.FC<MapContainerProps> = ({
       
       {/* Help Dialog */}
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
+      
+      {/* Final Shot Button - Fixed positioning outside map container */}
+      <FinalShotButton mapCenter={mapCenter} />
     </div>
   );
 };
