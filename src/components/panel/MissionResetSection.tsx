@@ -31,26 +31,28 @@ export const MissionResetSection: React.FC = () => {
       console.log('🔄 Chiamata reset-mission con codice:', confirmationCode);
       console.log('👤 User session:', session.user.email);
       
-      const response = await supabase.functions.invoke('reset-mission', {
-        body: { confirmationCode },
+      // Fix: Use fetch directly to properly send JSON body
+      const supabaseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+      const response = await fetch(`${supabaseUrl}/functions/v1/reset-mission`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
           'x-m1ssion-sig': 'official-client'
-        }
+        },
+        body: JSON.stringify({ confirmationCode })
       });
       
-      console.log('📡 Risposta reset-mission:', response);
-      console.log('🔧 Response details:', { 
-        data: response.data, 
-        error: response.error
-      });
+      const responseData = await response.json();
+      
+      console.log('📡 Risposta reset-mission:', response.status, responseData);
+      console.log('🔧 Response details:', responseData);
 
-      if (response.error) {
-        throw new Error(response.error.message || 'Errore durante il reset');
+      if (!response.ok) {
+        throw new Error(responseData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const result = response.data;
+      const result = responseData;
       
       if (result.success) {
         toast.success('✅ RESET MISSIONE COMPLETATO', {
