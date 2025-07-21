@@ -35,6 +35,18 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       timestamp: new Date().toISOString()
     });
 
+    // 🗺️ Save map state for restoration after payment
+    if (mapCenter) {
+      const mapRestoreState = {
+        lat: mapCenter[0],
+        lng: mapCenter[1],
+        zoom: 13, // Default zoom, will be updated by map container
+        timestamp: Date.now()
+      };
+      sessionStorage.setItem('m1_map_restore', JSON.stringify(mapRestoreState));
+      console.log('💾 Map state saved for restoration:', mapRestoreState);
+    }
+
     if (!isAuthenticated) {
       toast.error('Devi essere loggato per usare BUZZ MAPPA!');
       return;

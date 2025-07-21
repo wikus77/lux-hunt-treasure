@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
+import { useLocation } from 'wouter';
 import 'leaflet/dist/leaflet.css';
 import { DEFAULT_LOCATION } from '../useMapLogic';
 import MapController from './MapController';
@@ -75,6 +76,17 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const mapRef = useRef<L.Map | null>(null);
+  const [location] = useLocation();
+  
+  // 🗺️ Check for map restoration state
+  const restoreState = React.useMemo(() => {
+    try {
+      const saved = sessionStorage.getItem('m1_map_restore');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  }, []);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
   const { currentWeekAreas, loading: areasLoading, reloadAreas } = useBuzzMapLogic();
@@ -122,7 +134,55 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
   // Create utility functions using the extracted helpers
   const handleMapMoveCallback = handleMapMove(mapRef, setMapCenter);
-  const handleMapReadyCallback = handleMapReady(mapRef, handleMapMoveCallback);
+  const handleMapReadyCallback = (map: L.Map) => {
+    handleMapReady(mapRef, handleMapMoveCallback)(map);
+    
+    // 🗺️ Restore map position if available
+    if (restoreState?.lat && restoreState?.lng) {
+      console.log('🎯 Restoring map position:', restoreState);
+      const zoom = restoreState.zoom || 13;
+      map.setView([restoreState.lat, restoreState.lng], zoom, { animate: false });
+      
+      // Update map center state and save current position
+      setMapCenter([restoreState.lat, restoreState.lng]);
+      
+      // Save current map state for future BUZZ purchases
+      const currentState = {
+        lat: restoreState.lat,
+        lng: restoreState.lng,
+        zoom: map.getZoom(),
+        timestamp: Date.now()
+      };
+      sessionStorage.setItem('m1_map_restore', JSON.stringify(currentState));
+      
+      // Clear the restoration state after use
+      setTimeout(() => {
+        const currentRestoreState = sessionStorage.getItem('m1_map_restore');
+        if (currentRestoreState) {
+          const parsed = JSON.parse(currentRestoreState);
+          if (parsed.timestamp === restoreState.timestamp) {
+            sessionStorage.removeItem('m1_map_restore');
+          }
+        }
+      }, 5000);
+    }
+    
+    // Update map state whenever map moves
+    map.on('moveend', () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      setMapCenter([center.lat, center.lng]);
+      
+      // Always keep current map state saved for potential BUZZ purchases
+      const currentState = {
+        lat: center.lat,
+        lng: center.lng,
+        zoom: zoom,
+        timestamp: Date.now()
+      };
+      sessionStorage.setItem('m1_map_restore', JSON.stringify(currentState));
+    });
+  };
   const handleAddNewPointCallback = handleAddNewPoint(isAddingPoint, addNewPoint, setIsAddingPoint);
   
   // CRITICAL: Enhanced area generation callback with auto-zoom
