@@ -10,10 +10,24 @@ import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
+import { AuthenticationManager } from "./components/auth/AuthenticationManager";
+import { useAuth } from "./hooks/use-auth";
 
 function App() {
   console.log("🚀 App component rendering...");
   console.log("🔍 App mount - checking for potential reload loops");
+  
+  const handleAuthenticated = (userId: string) => {
+    console.log("✅ APP LEVEL - User authenticated:", userId);
+  };
+  
+  const handleNotAuthenticated = () => {
+    console.log("❌ APP LEVEL - User not authenticated");
+  };
+  
+  const handleEmailNotVerified = () => {
+    console.log("📧 APP LEVEL - Email not verified");
+  };
   
   return (
     <ErrorBoundary fallback={
@@ -39,6 +53,11 @@ function App() {
       <Router>
         <SoundProvider>
           <AuthProvider>
+            <AuthenticationManager 
+              onAuthenticated={handleAuthenticated}
+              onNotAuthenticated={handleNotAuthenticated}
+              onEmailNotVerified={handleEmailNotVerified}
+            />
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
