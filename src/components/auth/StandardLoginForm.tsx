@@ -53,13 +53,13 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
 
       if (data.session && data.user) {
         console.log('✅ SUPABASE LOGIN SUCCESS for:', data.user.email);
+        console.log('🔍 LOGIN SUCCESS - NO REDIRECT, letting AuthManager handle navigation');
         toast.success('Login effettuato con successo', {
           description: 'Benvenuto in M1SSION™!'
         });
         
-        setTimeout(() => {
-          navigate('/home', { replace: true });
-        }, 1000);
+        // Don't navigate here - let the AuthenticationManager handle the redirect
+        // This prevents double redirect conflicts that cause white screen
       } else {
         console.error('❌ LOGIN FAILED - No session created');
         toast.error('Errore di login', {

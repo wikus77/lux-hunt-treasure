@@ -21,15 +21,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Handle successful authentication
       if (event === 'SIGNED_IN' && session?.user) {
         console.log("✅ User signed in successfully:", session.user.email);
+        console.log("🔍 AuthProvider - NOT handling navigation, leaving to AuthenticationManager");
         
-        // Check if user should be redirected to home
-        const currentPath = window.location.pathname;
-        if (currentPath === '/login' || currentPath === '/auth' || currentPath === '/') {
-          console.log("🏠 Redirecting authenticated user to /home");
-          setTimeout(() => {
-            navigate('/home');
-          }, 1000);
-        }
+        // NO NAVIGATION HERE - Let AuthenticationManager handle the redirect
+        // This prevents double redirect loops that cause white screen issues
       }
       
       // Handle sign out

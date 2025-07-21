@@ -66,7 +66,8 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
         console.log("Auth state changed:", event);
         
         if (event === "SIGNED_IN" && session) {
-          console.log("User signed in:", session.user.id);
+          console.log("✅ User signed in:", session.user.id);
+          console.log("🏠 Redirecting authenticated user to /home");
           
           // Check if email is verified
           if (!session.user.email_confirmed_at) {
@@ -75,8 +76,14 @@ export const AuthenticationManager: React.FC<AuthenticationManagerProps> = ({
             return;
           }
           
-          console.log("Authenticated user with verified email");
+          console.log("✅ Authenticated user with verified email");
           onAuthenticated(session.user.id);
+          
+          // Navigation with delay to prevent conflicts
+          setTimeout(() => {
+            console.log("🏠 NAVIGATING TO HOME after auth success");
+            navigate('/home', { replace: true });
+          }, 500);
         } else if (event === "SIGNED_OUT") {
           console.log("User signed out");
           onNotAuthenticated();

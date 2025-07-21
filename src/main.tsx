@@ -46,6 +46,7 @@ const queryClient = new QueryClient({
 // Enhanced error handling for better debugging
 const renderApp = () => {
   console.log("🚀 ENHANCED APP INITIALIZATION - Starting render");
+  console.log("🔍 MAIN.TSX - Checking for potential reload causes");
   
   const rootElement = document.getElementById('root');
 

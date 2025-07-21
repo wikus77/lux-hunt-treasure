@@ -13,6 +13,7 @@ import PushSetup from "./components/pwa/PushSetup";
 
 function App() {
   console.log("🚀 App component rendering...");
+  console.log("🔍 App mount - checking for potential reload loops");
   
   return (
     <ErrorBoundary fallback={

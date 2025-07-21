@@ -45,7 +45,7 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* Landing page */}
           <Route path="/">
-            {isCapacitorApp && isAuthenticated && !isLoading ? (
+            {isAuthenticated && !isLoading ? (
               <GlobalLayout><AppHome /></GlobalLayout>
             ) : (
               <Index />

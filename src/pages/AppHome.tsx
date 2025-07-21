@@ -17,14 +17,28 @@ import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 
 const AppHome = () => {
+  console.log("🏠 AppHome component rendering");
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
-  const { hasRole } = useAuthContext();
+  const { hasRole, user, isAuthenticated, isLoading } = useAuthContext();
   const [, navigate] = useLocation();
+  
+  // Safety check to prevent rendering if user is not ready
+  if (!isAuthenticated || isLoading || !user) {
+    console.log("🚨 AppHome: User not ready yet", { isAuthenticated, isLoading, hasUser: !!user });
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/70">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
   
   const {
     notifications,
