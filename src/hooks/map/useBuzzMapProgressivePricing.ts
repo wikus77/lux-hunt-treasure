@@ -72,6 +72,8 @@ export const useBuzzMapProgressivePricing = () => {
     if (!user?.id) return;
     
     try {
+      console.log('🔄 BUZZ MAPPA: Loading user data...');
+      
       // Load map generation count from user_map_areas
       const { data: mapAreas, error: mapError } = await supabase
         .from('user_map_areas')
@@ -85,6 +87,12 @@ export const useBuzzMapProgressivePricing = () => {
       }
 
       const generationCount = mapAreas?.length || 0;
+      
+      console.log('📊 BUZZ MAPPA: Map areas loaded:', {
+        totalAreas: generationCount,
+        areas: mapAreas
+      });
+      
       setMapGenerationCount(generationCount);
 
       // Load daily buzz map counter
@@ -133,8 +141,18 @@ export const useBuzzMapProgressivePricing = () => {
         radius: pricingData.radius,
         segment: pricingData.segment,
         dailyCounter: dailyCounter?.buzz_map_count || 0,
-        isEligible: lastAction ? new Date(lastAction.created_at) < new Date(Date.now() - 3 * 60 * 60 * 1000) : true
+        isEligible: lastAction ? new Date(lastAction.created_at) < new Date(Date.now() - 3 * 60 * 60 * 1000) : true,
+        resetDetected: generationCount === 0 && (mapAreas?.length === 0)
       });
+      
+      // 🚨 POST-RESET SYNC: If generation count is 0 after reset, force sync
+      if (generationCount === 0) {
+        console.log('🔄 BUZZ MAPPA: Reset state detected, forcing price sync...');
+        const entryPricing = getPricingForGeneration(0);
+        setBuzzMapPrice(entryPricing.price);
+        setRadiusKm(entryPricing.radius);
+        setSegment(entryPricing.segment);
+      }
       
     } catch (err) {
       console.error('❌ Exception loading user BUZZ data:', err);

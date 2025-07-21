@@ -67,10 +67,25 @@ export const MissionResetSection: React.FC = () => {
         setShowConfirmation(false);
         setConfirmationCode('');
         
-        // Force page reload after 2 seconds to reflect all changes
+        // 🚨 TRIGGER MISSION RESET EVENT FOR BUZZ SYSTEM SYNC
+        console.log('🔄 TRIGGERING MISSION RESET EVENT FOR BUZZ SYNC...');
+        
+        // Dispatch custom event to notify all components
+        window.dispatchEvent(new CustomEvent('missionReset', {
+          detail: { 
+            resetDate: resetDate, 
+            daysRemaining: daysRemaining,
+            tablesReset: resetTables 
+          }
+        }));
+        
+        // Clear localStorage to trigger storage change event
+        localStorage.clear();
+        
+        // Force page reload after 3 seconds to reflect all changes
         setTimeout(() => {
           window.location.reload();
-        }, 2000);
+        }, 3000);
         
       } else {
         throw new Error(result.error || 'Reset fallito');
