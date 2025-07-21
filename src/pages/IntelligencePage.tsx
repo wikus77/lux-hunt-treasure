@@ -187,16 +187,24 @@ const IntelligencePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Map Content - Always Show Background Map */}
+          {/* Dynamic Content Area - Shows selected module content or placeholder */}
           <div className="absolute inset-0 w-full h-full">
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black/30 to-black/60 backdrop-blur-sm">
-              <div className="text-center text-white p-6">
-                <MapPin className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
-                <h3 className="text-xl font-bold mb-2">Mappa Tattica M1SSION™</h3>
-                <p className="text-sm text-white/80 mb-4">Seleziona un modulo di intelligence dal pannello sottostante</p>
-                <p className="text-xs text-white/60">Mappa interattiva disponibile nei moduli Final Shot</p>
+            {activeModule && !fullScreenModule ? (
+              // Module content in main area
+              <div className="w-full h-full">
+                {modules.find(m => m.id === activeModule)?.component}
               </div>
-            </div>
+            ) : (
+              // Placeholder when no module selected
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-black/30 to-black/60 backdrop-blur-sm">
+                <div className="text-center text-white p-6">
+                  <MapPin className="w-16 h-16 mx-auto mb-4 text-cyan-400" />
+                  <h3 className="text-xl font-bold mb-2">Mappa Tattica M1SSION™</h3>
+                  <p className="text-sm text-white/80 mb-4">Seleziona un modulo di intelligence dal pannello sottostante</p>
+                  <p className="text-xs text-white/60">Mappa interattiva disponibile nei moduli Final Shot</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
