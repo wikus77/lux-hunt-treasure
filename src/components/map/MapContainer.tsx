@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
+import { useLocation } from 'wouter';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './leaflet-fixes.css';
@@ -63,6 +64,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
+  const [location] = useLocation();
   
   // Get BUZZ areas
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
@@ -73,16 +75,15 @@ const MapContainer: React.FC<MapContainerProps> = ({
     (window as any).leafletMap = map; // Store map reference globally for restoration
     setMapReady(true);
     
-    // 🗺️ RESTORE MAP POSITION FROM PAYMENT
-    const restoreCenter = JSON.parse(sessionStorage.getItem("m1ssion_last_map_center") || "{}");
-    const restoreZoom = parseInt(sessionStorage.getItem("m1ssion_last_map_zoom") || "13", 10);
-    
-    if (restoreCenter?.lat && restoreCenter?.lng) {
-      console.log('🎯 Restoring map state on load:', { restoreCenter, restoreZoom });
-      map.setView([restoreCenter.lat, restoreCenter.lng], restoreZoom);
-      // Clear the stored state after restoration
-      sessionStorage.removeItem("m1ssion_last_map_center");
-      sessionStorage.removeItem("m1ssion_last_map_zoom");
+    // 🗺️ RESTORE MAP POSITION AFTER BUZZ PAYMENT
+    if ((location as any)?.state?.restorePreviousMapState) {
+      const saved = localStorage.getItem("map_state_before_buzz");
+      if (saved) {
+        const { center, zoom } = JSON.parse(saved);
+        console.log('🎯 Restoring map state after BUZZ payment:', { center, zoom });
+        map.setView([center?.lat || DEFAULT_LOCATION[0], center?.lng || DEFAULT_LOCATION[1]], zoom || 13);
+        localStorage.removeItem("map_state_before_buzz");
+      }
     }
     
     // iOS Capacitor fixes
@@ -97,7 +98,8 @@ const MapContainer: React.FC<MapContainerProps> = ({
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
-        if (!restoreCenter?.lat) {
+        // Only center map if we're not restoring from BUZZ payment
+        if (!(location as any)?.state?.restorePreviousMapState) {
           map.setView(mapCenter, map.getZoom());
         }
         console.log('🗺️ Map re-centered for iOS');
@@ -198,3 +200,5 @@ const MapContainer: React.FC<MapContainerProps> = ({
 };
 
 export default MapContainer;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

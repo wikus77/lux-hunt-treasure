@@ -44,15 +44,18 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       return;
     }
 
-    // 🧠 SAVE MAP STATE BEFORE PAYMENT
-    if (mapCenter && mapCenter.length === 2) {
-      sessionStorage.setItem("m1ssion_last_map_center", JSON.stringify({ lat: mapCenter[0], lng: mapCenter[1] }));
-      const mapElement = document.querySelector('.leaflet-container');
-      if (mapElement && (window as any).leafletMap) {
-        const zoom = (window as any).leafletMap.getZoom();
-        sessionStorage.setItem("m1ssion_last_map_zoom", zoom.toString());
-        console.log('💾 Map state saved:', { center: mapCenter, zoom });
-      }
+    // 🧠 SAVE MAP STATE BEFORE PAYMENT (CRITICAL FOR RESTORATION)
+    if ((window as any).leafletMap) {
+      const map = (window as any).leafletMap;
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      
+      localStorage.setItem("map_state_before_buzz", JSON.stringify({
+        center: { lat: center.lat, lng: center.lng },
+        zoom: zoom
+      }));
+      
+      console.log('💾 Map state saved before BUZZ payment:', { center, zoom });
     }
 
     setIsProcessing(true);

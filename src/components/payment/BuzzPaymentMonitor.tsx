@@ -34,19 +34,11 @@ const BuzzPaymentMonitor: React.FC = () => {
             console.log('✅ BUZZ MAPPA Payment succeeded - initiating redirect');
             
             const redirectToMap = () => {
-              const center = JSON.parse(sessionStorage.getItem("m1ssion_last_map_center") || "{}");
-              const zoom = parseInt(sessionStorage.getItem("m1ssion_last_map_zoom") || "13", 10);
-              
-              console.log('🗺️ Navigating to map with restored state:', { center, zoom });
-              navigate("/map", { replace: true });
-
-              // Restore map position after navigation
-              setTimeout(() => {
-                if ((window as any).leafletMap && center?.lat) {
-                  console.log('🎯 Restoring map position:', { center, zoom });
-                  (window as any).leafletMap.setView([center.lat, center.lng], zoom);
-                }
-              }, 800);
+              console.log('🗺️ Redirecting to map with state restoration');
+              navigate("/map", {
+                replace: true,
+                state: { restorePreviousMapState: true }
+              });
             };
 
             // Handle PWA visibility state for iOS Safari
