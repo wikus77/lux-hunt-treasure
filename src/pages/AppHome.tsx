@@ -18,6 +18,8 @@ import { Cpu } from "lucide-react";
 
 const AppHome = () => {
   console.log("🏠 AppHome component rendering");
+  
+  // CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
@@ -26,6 +28,19 @@ const AppHome = () => {
   const [isCapacitor, setIsCapacitor] = useState(false);
   const { hasRole, user, isAuthenticated, isLoading } = useAuthContext();
   const [, navigate] = useLocation();
+  
+  // MOVED ALL HOOKS BEFORE CONDITIONAL RETURNS
+  const {
+    notifications,
+    unreadCount,
+    markAllAsRead,
+    deleteNotification,
+    notificationsBannerOpen,
+    openNotificationsBanner,
+    closeNotificationsBanner
+  } = useNotificationManager();
+
+  const { isConnected } = useRealTimeNotifications();
   
   // Safety check to prevent rendering if user is not ready
   if (!isAuthenticated || isLoading || !user) {
@@ -39,18 +54,6 @@ const AppHome = () => {
       </div>
     );
   }
-  
-  const {
-    notifications,
-    unreadCount,
-    markAllAsRead,
-    deleteNotification,
-    notificationsBannerOpen,
-    openNotificationsBanner,
-    closeNotificationsBanner
-  } = useNotificationManager();
-
-  const { isConnected } = useRealTimeNotifications();
 
   // Check for developer access and Capacitor environment
   useEffect(() => {
