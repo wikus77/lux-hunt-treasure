@@ -58,8 +58,9 @@ serve(async (req) => {
     }
     console.log('✅ RESET MISSION: Email authorization verified');
 
-    // Get client info
-    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
+    // Get client info and parse IP properly
+    const rawIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
+    const clientIP = rawIP.split(',')[0].trim(); // Take first IP only
     const userAgent = req.headers.get('user-agent') || 'unknown';
     console.log(`🔄 RESET MISSION: Client info - IP: ${clientIP}, UserAgent: ${userAgent.substring(0, 50)}...`);
 
