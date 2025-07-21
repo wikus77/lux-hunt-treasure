@@ -200,9 +200,36 @@ export const useBuzzMapProgressivePricing = () => {
       return false;
     }
 
-    // Validate price/radius correspondence
-    const expectedPricing = getPricingForGeneration(mapGenerationCount);
+    // 🚨 POST-RESET SYNC: Force reload if mapGenerationCount seems out of sync
+    let currentGeneration = mapGenerationCount;
+    if (mapGenerationCount === 0 && (requestedPrice === 4.99 && requestedRadius === 500)) {
+      console.log('🔄 POST-RESET DETECTED: Accepting entry-level pricing even if sync pending');
+      currentGeneration = 0; // Force entry level validation
+    } else {
+      // For non-entry requests, verify real-time generation count
+      try {
+        const { data: realTimeAreas } = await supabase
+          .from('user_map_areas')
+          .select('id')
+          .eq('user_id', user.id);
+        
+        currentGeneration = realTimeAreas?.length || 0;
+        
+        if (currentGeneration !== mapGenerationCount) {
+          console.log('🔄 SYNC CORRECTION: Real-time count differs from cached', {
+            cached: mapGenerationCount,
+            realTime: currentGeneration
+          });
+        }
+      } catch (error) {
+        console.warn('⚠️ Failed to get real-time generation count, using cached:', error);
+      }
+    }
+
+    // Validate price/radius correspondence with corrected generation
+    const expectedPricing = getPricingForGeneration(currentGeneration);
     console.log('🔍 PRICING VALIDATION DEBUG:', {
+      currentGeneration,
       mapGenerationCount,
       expectedPricing,
       requested: { price: requestedPrice, radius: requestedRadius },
@@ -216,7 +243,9 @@ export const useBuzzMapProgressivePricing = () => {
         requested: { price: requestedPrice, radius: requestedRadius },
         expected: expectedPricing,
         priceDiff: Math.abs(requestedPrice - expectedPricing.price),
-        radiusDiff: Math.abs(requestedRadius - expectedPricing.radius)
+        radiusDiff: Math.abs(requestedRadius - expectedPricing.radius),
+        currentGeneration,
+        mapGenerationCount
       });
       return false;
     }
