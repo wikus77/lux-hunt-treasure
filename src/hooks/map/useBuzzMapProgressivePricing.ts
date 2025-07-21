@@ -149,39 +149,72 @@ export const useBuzzMapProgressivePricing = () => {
 
   // Anti-fraud validation
   const validateBuzzRequest = useCallback(async (requestedPrice: number, requestedRadius: number): Promise<boolean> => {
-    if (!user?.id) return false;
+    if (!user?.id) {
+      console.warn('🚫 ANTI-FRAUD: No user ID');
+      return false;
+    }
+
+    console.log('🔍 VALIDATE BUZZ REQUEST DEBUG:', {
+      userId: user.id,
+      requestedPrice,
+      requestedRadius,
+      mapGenerationCount,
+      dailyBuzzMapCounter,
+      isEligibleForBuzz,
+      timestamp: new Date().toISOString()
+    });
 
     // Check daily limit (max 3 BUZZ per day)
     if (dailyBuzzMapCounter >= 3) {
-      console.warn('🚫 ANTI-FRAUD: Daily BUZZ limit exceeded');
+      console.warn('🚫 ANTI-FRAUD: Daily BUZZ limit exceeded', {
+        dailyBuzzMapCounter,
+        limit: 3
+      });
       return false;
     }
 
     // Check time-based anti-spam (3 hours minimum)
     if (!isEligibleForBuzz) {
-      console.warn('🚫 ANTI-FRAUD: Time-based anti-spam triggered');
+      console.warn('🚫 ANTI-FRAUD: Time-based anti-spam triggered', {
+        isEligibleForBuzz,
+        lastBuzzTime
+      });
       return false;
     }
 
     // Validate price/radius correspondence
     const expectedPricing = getPricingForGeneration(mapGenerationCount);
+    console.log('🔍 PRICING VALIDATION DEBUG:', {
+      mapGenerationCount,
+      expectedPricing,
+      requested: { price: requestedPrice, radius: requestedRadius },
+      priceDiff: Math.abs(requestedPrice - expectedPricing.price),
+      radiusDiff: Math.abs(requestedRadius - expectedPricing.radius)
+    });
+
     if (Math.abs(requestedPrice - expectedPricing.price) > 0.01 || 
         Math.abs(requestedRadius - expectedPricing.radius) > 1) {
       console.warn('🚫 ANTI-FRAUD: Price/radius mismatch detected', {
         requested: { price: requestedPrice, radius: requestedRadius },
-        expected: expectedPricing
+        expected: expectedPricing,
+        priceDiff: Math.abs(requestedPrice - expectedPricing.price),
+        radiusDiff: Math.abs(requestedRadius - expectedPricing.radius)
       });
       return false;
     }
 
     // Check for suspicious large radius with low price
     if (requestedRadius >= 200 && requestedPrice < 13) {
-      console.warn('🚫 ANTI-FRAUD: Suspicious large radius with low price');
+      console.warn('🚫 ANTI-FRAUD: Suspicious large radius with low price', {
+        requestedRadius,
+        requestedPrice
+      });
       return false;
     }
 
+    console.log('✅ ANTI-FRAUD: Validation passed');
     return true;
-  }, [user?.id, dailyBuzzMapCounter, isEligibleForBuzz, mapGenerationCount]);
+  }, [user?.id, dailyBuzzMapCounter, isEligibleForBuzz, mapGenerationCount, lastBuzzTime]);
 
   // Check if user needs cost warning (high-cost alert)
   const needsCostWarning = useCallback((): boolean => {
@@ -264,6 +297,88 @@ export const useBuzzMapProgressivePricing = () => {
     if (user?.id) {
       loadUserData();
     }
+  }, [user?.id, loadUserData]);
+
+  // Listen for mission reset events to reload data
+  useEffect(() => {
+    const handleMissionReset = () => {
+      console.log('🔄 BUZZ MAPPA: Mission reset detected, reloading data...');
+      if (user?.id) {
+        loadUserData();
+      }
+    };
+
+    // Listen for custom reset event
+    window.addEventListener('missionReset', handleMissionReset);
+
+    // Also listen for storage changes (localStorage clear indicates reset)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === null) { // localStorage.clear() was called
+        console.log('🔄 BUZZ MAPPA: Storage cleared, reloading data...');
+        if (user?.id) {
+          loadUserData();
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('missionReset', handleMissionReset);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [user?.id, loadUserData]);
+
+  // Subscribe to real-time changes in relevant tables
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const subscription = supabase
+      .channel('buzz_map_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_buzz_map_counter',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('🔄 BUZZ MAPPA: Database change detected, reloading...');
+          loadUserData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'buzz_map_actions',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('🔄 BUZZ MAPPA: BUZZ action change detected, reloading...');
+          loadUserData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_map_areas',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('🔄 BUZZ MAPPA: Map areas change detected, reloading...');
+          loadUserData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [user?.id, loadUserData]);
 
   return {
