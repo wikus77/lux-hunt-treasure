@@ -246,9 +246,11 @@ export function TreasureHuntExpandableBoxes({
                     {/* Mission Status */}
                     <div className="bg-[#0a0a0a] p-3 rounded-lg">
                       <h4 className="text-white font-medium mb-2">Stato Attuale</h4>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
-                        <span className="text-green-400 text-sm">Missione Attiva</span>
+                       <div className="flex items-center space-x-2">
+                         <div className={`w-3 h-3 rounded-full ${activeMission.remainingDays > 0 ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`} />
+                        <span className={`text-sm ${activeMission.remainingDays > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {activeMission.remainingDays > 0 ? 'Missione Attiva' : 'Missione Scaduta'}
+                        </span>
                       </div>
                       <p className="text-white/60 text-xs mt-2">
                         La missione procede regolarmente. Continua a cercare indizi per aumentare il tuo progresso.

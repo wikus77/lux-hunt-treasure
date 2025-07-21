@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { getMissionDeadline, getMissionStartDate, calculateRemainingDays } from "@/utils/countdownDate";
 import { usePrizeData } from "@/hooks/usePrizeData";
 import { useBuzzPricing } from "@/hooks/useBuzzPricing";
+import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 
 export default function CommandCenterHome() {
@@ -22,6 +23,7 @@ export default function CommandCenterHome() {
   const { user } = useAuth();
   const { userClues, loading: prizeLoading } = usePrizeData();
   const { userCluesCount } = useBuzzPricing(user?.id);
+  const { missionStatus, loading: missionLoading } = useMissionStatus();
   
   // 🧹 FORCE CLEAR ALL CACHE - RESET COMPLETO 17/07/2025
   useEffect(() => {
@@ -53,48 +55,46 @@ export default function CommandCenterHome() {
   // Track prize unlock status
   const [prizeUnlockStatus, setPrizeUnlockStatus] = useState<"locked" | "partial" | "near" | "unlocked">("locked");
 
-  // 🔥 REAL DATABASE MISSION DATA - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
-  const [activeMission, setActiveMission] = useState({
+  // 🔥 NEW: USE REAL DATABASE MISSION STATUS - SISTEMA 200 INDIZI - RESET COMPLETO 21/07/2025
+  const activeMission = missionStatus ? {
+    id: missionStatus.id,
+    title: missionStatus.title,
+    totalClues: missionStatus.totalClues,
+    foundClues: missionStatus.cluesFound,
+    timeLimit: "48:00:00",
+    startTime: missionStatus.startDate.toISOString(),
+    remainingDays: missionStatus.daysRemaining,
+    totalDays: missionStatus.totalDays,
+    dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
+  } : {
     id: "M001",
     title: "Caccia al Tesoro Urbano",
-    totalClues: 200, // 🔥 SISTEMA 200 INDIZI FISSO
-    foundClues: 0, // 🔥 FORCED TO REAL DATA
+    totalClues: 200,
+    foundClues: 0,
     timeLimit: "48:00:00",
-    startTime: "2025-07-17T00:00:00.000Z", // 🔥 RESET COMPLETO 17/07/2025
-    remainingDays: 30, // 🔥 30 GIORNI DALLA DATA ATTUALE
+    startTime: "2025-07-17T00:00:00.000Z",
+    remainingDays: 30,
     totalDays: 30,
-    dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
-  });
+    dailyLimit: 50
+  };
 
-  // 🔥 REAL-TIME DATABASE SYNC - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
+  // 🔥 SYNC PROGRESS WITH REAL DATABASE DATA
   useEffect(() => {
-    const currentRemainingDays = calculateRemainingDays();
-    const realFoundClues = userCluesCount || 0;
-    
-    console.log("🔥 MISSION SYNC (200 INDIZI - RESET COMPLETO 17/07/2025):", {
-      foundClues: realFoundClues,
-      totalClues: 200,
-      remainingDays: currentRemainingDays,
-      startDate: "2025-07-17T00:00:00.000Z",
-      userCluesFromDB: userClues?.length || 0,
-      dailyLimit: 50
-    });
-    
-    // FORCE CORRECT VALUES WITH 200 CLUES SYSTEM - RESET COMPLETO 17/07/2025
-    setActiveMission(prev => ({
-      ...prev,
-      totalClues: 200, // 🔥 SISTEMA 200 INDIZI
-      foundClues: realFoundClues, // 🔥 REAL DATA FROM SUPABASE
-      remainingDays: currentRemainingDays, // 🔥 REAL CALCULATION  
-      startTime: "2025-07-17T00:00:00.000Z", // 🔥 RESET COMPLETO 17/07/2025
-      dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
-    }));
-    
-    // FORCE PROGRESS TO MATCH REAL DATA (200 CLUES BASE)
-    const realProgress = (realFoundClues / 200) * 100;
-    setProgress(realProgress);
-    
-  }, [userCluesCount, userClues]);
+    if (missionStatus) {
+      const realProgress = missionStatus.progressPercent;
+      setProgress(realProgress);
+      
+      console.log("🔥 MISSION SYNC FROM DATABASE (200 INDIZI - RESET 21/07/2025):", {
+        foundClues: missionStatus.cluesFound,
+        totalClues: missionStatus.totalClues,
+        remainingDays: missionStatus.daysRemaining,
+        startDate: missionStatus.startDate.toISOString(),
+        progressPercent: missionStatus.progressPercent,
+        state: missionStatus.state,
+        dailyLimit: 50
+      });
+    }
+  }, [missionStatus, setProgress]);
 
   // Update prize status based on progress and days remaining
   useEffect(() => {

@@ -170,11 +170,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <span className="text-white/80 text-sm">Stato missione</span>
           </div>
           <div className="text-xl font-bold text-[#00D1FF] mb-1">
-            ATTIVA
-          </div>
-          <div className="text-xs text-white/60 mb-2">
-            Iniziata il 08/06/2025
-          </div>
+             {mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA'}
+           </div>
+           <div className="text-xs text-white/60 mb-2">
+             Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
+           </div>
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div 
               className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] h-2 rounded-full transition-all duration-500"
