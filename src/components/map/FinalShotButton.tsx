@@ -77,7 +77,7 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
       className={`fixed left-1/2 transform -translate-x-1/2 ${className || ''}`}
       style={{
         // CRITICAL: Position ABOVE map and bottom navigation for Safari iOS
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)',
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
         zIndex: 99999,
         pointerEvents: 'auto',
         // Ensure visibility above Leaflet map container
