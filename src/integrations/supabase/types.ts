@@ -2230,6 +2230,15 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      validate_progressive_pricing: {
+        Args: {
+          p_user_id: string
+          p_price: number
+          p_radius: number
+          p_generation: number
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
