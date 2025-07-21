@@ -2,12 +2,12 @@
 // BUZZ Payment Redirect Hook - Auto redirect to map after successful BUZZ payment
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthContext } from "@/contexts/auth";
 
 export const useBuzzPaymentRedirect = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const { user } = useAuthContext();
 
   useEffect(() => {
