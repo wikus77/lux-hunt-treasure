@@ -133,8 +133,14 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
             </div>
           </div>
 
-          {/* All Intelligence Modules Grid - Below Map */}
-          <div className="mt-8 overflow-y-auto overflow-x-hidden w-full" style={{ paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))' }}>
+          {/* All Intelligence Modules Grid - Below Map - MOBILE SCROLLABLE FIX */}
+          <div className="mt-8 w-full" style={{ 
+            paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))',
+            maxHeight: '50vh',
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            WebkitOverflowScrolling: 'touch'
+          }}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-screen-xl mx-auto px-4">
               
               {/* Coordinate Selector */}

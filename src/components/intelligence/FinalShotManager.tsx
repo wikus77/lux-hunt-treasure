@@ -284,15 +284,19 @@ const FinalShotManager: React.FC = () => {
             </div>
           </div>
 
-          {/* ✅ FINAL SHOT BUTTON - FIXED DEFINITIVO */}
+          {/* ✅ FINAL SHOT BUTTON - MOBILE SAFARI FIX DEFINITIVO */}
           <div 
             className="w-full mt-6 mb-4 px-2" 
             style={{ 
               minHeight: '80px',
               display: 'block !important',
-              position: 'static',
-              zIndex: 9999,
-              overflow: 'visible'
+              position: 'fixed',
+              bottom: '140px',
+              left: '16px',
+              right: '16px',
+              zIndex: 99999,
+              overflow: 'visible',
+              maxWidth: 'calc(100vw - 32px)'
             }}
           >
             <Button
@@ -301,19 +305,22 @@ const FinalShotManager: React.FC = () => {
               className="w-full py-6 text-xl font-bold rounded-2xl bg-gradient-to-r from-red-500 to-red-700 hover:from-red-600 hover:to-red-800 transition-all duration-300 shadow-2xl text-white border-4 border-red-300/50"
               style={{ 
                 minHeight: '70px',
-                display: 'flex',
+                display: 'flex !important',
                 visibility: 'visible',
-                opacity: 1,
-                position: 'static',
-                zIndex: 9999,
-                backgroundColor: '#dc2626',
-                color: 'white',
+                opacity: '1 !important',
+                position: 'relative',
+                zIndex: 99999,
+                backgroundColor: '#dc2626 !important',
+                color: 'white !important',
                 fontSize: '18px',
                 fontWeight: 'bold',
                 alignItems: 'center',
                 justifyContent: 'center',
                 boxShadow: '0 10px 30px rgba(220, 38, 38, 0.4)',
-                transform: 'none'
+                transform: 'none !important',
+                width: '100%',
+                margin: 0,
+                WebkitTransform: 'translateZ(0)'
               }}
             >
               {isSubmitting ? (
