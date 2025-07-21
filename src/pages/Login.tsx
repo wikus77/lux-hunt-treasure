@@ -8,11 +8,21 @@ import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
   const { navigate } = useWouterNavigation();
+  const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      console.log('🔄 LOGIN PAGE: User already authenticated, redirecting to home');
+      navigate('/');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
     const verification = searchParams.get('verification');

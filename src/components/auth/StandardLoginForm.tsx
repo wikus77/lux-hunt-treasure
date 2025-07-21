@@ -54,7 +54,8 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         description: 'Benvenuto in M1SSION™!'
       });
       
-      // AuthProvider handles ALL state updates and redirects automatically
+      // Redirect dopo login di successo
+      navigate('/');
     } catch (error: any) {
       console.error('💥 LOGIN EXCEPTION:', error);
       toast.error('Errore di sistema', {
