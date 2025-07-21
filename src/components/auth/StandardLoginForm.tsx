@@ -49,13 +49,31 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         return;
       }
 
-      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - AuthProvider will handle state & redirect');
+      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - Emitting auth-success event');
       toast.success('Login effettuato con successo', {
         description: 'Benvenuto in M1SSION™!'
       });
       
-      // Redirect dopo login di successo
+      // Emit custom auth success event for PWA compatibility
+      window.dispatchEvent(new CustomEvent('auth-success', { 
+        detail: { email, timestamp: Date.now() } 
+      }));
+      
+      // Primary redirect attempt
+      console.log('🚀 ATTEMPTING PRIMARY REDIRECT via navigate');
       navigate('/');
+      
+      // PWA iOS Safari fallback
+      if (window.matchMedia('(display-mode: standalone)').matches || 
+          (window.navigator as any).standalone === true) {
+        console.log('📱 PWA DETECTED - Setting up fallback redirect');
+        setTimeout(() => {
+          if (window.location.pathname === '/login') {
+            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href');
+            window.location.href = '/';
+          }
+        }, 800);
+      }
     } catch (error: any) {
       console.error('💥 LOGIN EXCEPTION:', error);
       toast.error('Errore di sistema', {

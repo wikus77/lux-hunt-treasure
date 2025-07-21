@@ -1,6 +1,6 @@
 
 // © Joseph Mule – M1SSION™ App. All rights reserved.
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
@@ -15,14 +15,98 @@ const Login = () => {
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
+  const redirectAttemptedRef = useRef(false);
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Redirect authenticated users
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      console.log('🔄 LOGIN PAGE: User already authenticated, redirecting to home');
-      navigate('/');
+  // 🔍 PWA Detection
+  const isPWAStandalone = () => {
+    return window.matchMedia('(display-mode: standalone)').matches || 
+           (window.navigator as any).standalone === true;
+  };
+
+  // 🚀 FORCE REDIRECT FUNCTION - PWA iOS Safari Optimized
+  const forceRedirectToHome = (reason: string) => {
+    if (redirectAttemptedRef.current) return;
+    
+    console.log(`🏠 FORCE REDIRECT TO HOME: ${reason}`);
+    redirectAttemptedRef.current = true;
+    
+    // Clear any existing fallback timer
+    if (fallbackTimerRef.current) {
+      clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
     }
-  }, [isAuthenticated, isLoading, navigate]);
+    
+    // Strategy 1: Try wouter navigate first
+    try {
+      navigate('/');
+      console.log('✅ WOUTER NAVIGATE EXECUTED');
+    } catch (error) {
+      console.error('❌ WOUTER NAVIGATE FAILED:', error);
+    }
+    
+    // Strategy 2: PWA iOS fallback with window.location.href
+    if (isPWAStandalone()) {
+      console.log('📱 PWA STANDALONE DETECTED - Using window.location.href fallback');
+      setTimeout(() => {
+        if (window.location.pathname === '/login') {
+          console.log('🔄 WOUTER FAILED - Forcing window.location.href');
+          window.location.href = '/';
+        }
+      }, 500);
+    }
+  };
+
+  // 📡 LISTENER FOR AUTH SUCCESS EVENT
+  useEffect(() => {
+    const handleAuthSuccess = () => {
+      console.log('🎉 AUTH SUCCESS EVENT RECEIVED');
+      forceRedirectToHome('AUTH_SUCCESS_EVENT');
+    };
+
+    window.addEventListener('auth-success', handleAuthSuccess);
+    
+    return () => {
+      window.removeEventListener('auth-success', handleAuthSuccess);
+    };
+  }, []);
+
+  // 🔄 REDIRECT AUTHENTICATED USERS - Enhanced
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
+      console.log('🔄 LOGIN PAGE: User already authenticated, initiating redirect');
+      forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // ⏱️ FALLBACK TIMER - PWA iOS Safari Emergency Exit
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && window.location.pathname === '/login') {
+      console.log('⏱️ Setting up PWA fallback timer (2s)');
+      
+      fallbackTimerRef.current = setTimeout(() => {
+        if (window.location.pathname === '/login' && isAuthenticated) {
+          console.log('🚨 FALLBACK TIMER TRIGGERED - User stuck on login page');
+          
+          // Final fallback: Hard reload to home
+          if (isPWAStandalone()) {
+            console.log('📱 PWA HARD REDIRECT TO HOME');
+            window.location.replace('/');
+          } else {
+            console.log('🌐 BROWSER HARD REDIRECT TO HOME');
+            window.location.href = '/';
+          }
+        }
+      }, 2000);
+      
+      return () => {
+        if (fallbackTimerRef.current) {
+          clearTimeout(fallbackTimerRef.current);
+          fallbackTimerRef.current = null;
+        }
+      };
+    }
+  }, [isAuthenticated, isLoading]);
 
   useEffect(() => {
     const verification = searchParams.get('verification');

@@ -17,8 +17,8 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Debug toggle per sviluppo - PRODUZIONE: false
-const DEBUG_UNIFIED_AUTH = false;
+// Debug toggle per sviluppo - ABILITATO per troubleshooting
+const DEBUG_UNIFIED_AUTH = true;
 
 const log = (message: string, data?: any) => {
   if (DEBUG_UNIFIED_AUTH) {
