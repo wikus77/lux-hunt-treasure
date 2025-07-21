@@ -121,7 +121,10 @@ serve(async (req) => {
       throw new Error(`Mission reset failed: ${resetError.message}`);
     }
 
-    console.log(`✅ MISSION RESET: Database reset completed for user ${user.id}`, resetResult);
+    console.log(`✅ MISSION RESET: Complete reset successful for user ${user.id}`, resetResult);
+    console.log(`📊 MISSION RESET: Tables reset: ${resetResult?.tables_reset?.join(', ')}`);
+    console.log(`📅 MISSION RESET: New mission start date: ${resetResult?.reset_date}`);
+    console.log(`⏱️ MISSION RESET: Days remaining reset to: ${resetResult?.mission_days_remaining}`);
 
     // Log the reset action
     console.log('🔄 MISSION RESET: Logging reset action to admin_logs...');
@@ -148,15 +151,25 @@ serve(async (req) => {
     const successResponse = {
       status: "ok",
       success: true,
-      message: "Mission reset completed successfully",
+      message: "Complete mission reset executed successfully",
       userid: user.id,
       reset_success: true,
       timestamp: new Date().toISOString(),
+      reset_details: resetResult || {},
+      mission_status: {
+        state: "ATTIVA",
+        started_at: resetResult?.reset_date,
+        days_remaining: resetResult?.mission_days_remaining || 30,
+        progress_percent: 0,
+        clues_found: 0
+      },
+      tables_reset: resetResult?.tables_reset || [],
       logs: [
         "Authorization validated",
         "Rate limit passed", 
         "Confirmation code verified",
-        "Database reset executed",
+        "Complete database reset executed",
+        `Reset ${resetResult?.tables_reset?.length || 0} tables`,
         "Action logged"
       ]
     };

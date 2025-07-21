@@ -55,11 +55,23 @@ export const MissionResetSection: React.FC = () => {
       const result = responseData;
       
       if (result.success) {
-        toast.success('✅ RESET MISSIONE COMPLETATO', {
-          description: `Operazioni completate: ${result.operationsCompleted}, Fallite: ${result.operationsFailed}`
+        // Show detailed success message with reset information
+        const resetTables = result.tables_reset || [];
+        const resetDate = result.reset_details?.reset_date;
+        const daysRemaining = result.mission_status?.days_remaining || 30;
+        
+        toast.success('✅ RESET MISSIONE™ COMPLETATO', {
+          description: `Missione completamente azzerata! ${resetTables.length} tabelle ripristinate. Giorni rimasti: ${daysRemaining}. La pagina si ricaricherà automaticamente.`
         });
+        
         setShowConfirmation(false);
         setConfirmationCode('');
+        
+        // Force page reload after 2 seconds to reflect all changes
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+        
       } else {
         throw new Error(result.error || 'Reset fallito');
       }
@@ -89,14 +101,20 @@ export const MissionResetSection: React.FC = () => {
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            <strong>ATTENZIONE:</strong> Questa operazione eliminerà:
+            <strong>ATTENZIONE:</strong> Questa operazione eliminerà TUTTO:
             <ul className="list-disc ml-4 mt-2 space-y-1">
-              <li>Tutti gli indizi generati</li>
-              <li>Stato utente missione</li>
-              <li>Contatori BUZZ</li>
-              <li>Aree mappa generate</li>
-              <li>Notifiche utente</li>
+              <li>Stato missione (riportato a 30 giorni, 0% progresso)</li>
+              <li>Tutti gli indizi trovati</li>
+              <li>Tutte le aree mappa generate</li>
+              <li>Contatori BUZZ giornalieri e mappa</li>
+              <li>Tutte le notifiche utente</li>
+              <li>Tentativi Final Shot</li>
+              <li>Coordinate geo-radar</li>
+              <li>Punti mappa salvati</li>
+              <li>Uso strumenti intelligence</li>
+              <li>Stato attività live</li>
             </ul>
+            <p className="mt-2 font-semibold text-destructive">La missione ripartirà da ZERO con data di oggi!</p>
           </AlertDescription>
         </Alert>
 

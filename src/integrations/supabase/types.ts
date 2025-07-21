@@ -2212,7 +2212,7 @@ export type Database = {
       }
       reset_user_mission_full: {
         Args: { user_id_input: string }
-        Returns: undefined
+        Returns: Json
       }
       setup_developer_user: {
         Args: { uid: string }
