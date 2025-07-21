@@ -33,6 +33,10 @@
     @apply m1ssion-glass-card my-4 rounded-xl;
   }
 
+  .glow-pink {
+    box-shadow: 0 0 20px rgba(236, 72, 153, 0.5), 0 0 40px rgba(236, 72, 153, 0.3), 0 0 60px rgba(236, 72, 153, 0.1);
+  }
+
   @media (max-width: 640px) {
     button, a {
       @apply touch-manipulation mobile-touch-target;
