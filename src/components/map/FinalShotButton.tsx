@@ -22,10 +22,6 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
   // Show button only if user has BUZZ areas (indicating paid access)
   const hasActiveBuzzAreas = currentWeekAreas && currentWeekAreas.length > 0;
   
-  // 🚨 EMERGENCY BYPASS FOR TESTING - Remove after debug
-  const EMERGENCY_TESTING_MODE = true;
-  const hasActiveBuzzAreasOverride = EMERGENCY_TESTING_MODE || hasActiveBuzzAreas;
-  
   React.useEffect(() => {
     console.log('💣 Final Shot button mounted! FORCE DEBUG', {
       hasActiveBuzzAreas,
@@ -44,12 +40,10 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
     timestamp: new Date().toISOString()
   });
 
-  if (!hasActiveBuzzAreasOverride) {
+  if (!hasActiveBuzzAreas) {
     console.log('❌ Final Shot button hidden - no active BUZZ areas', {
       currentWeekAreas,
       hasActiveBuzzAreas,
-      hasActiveBuzzAreasOverride,
-      EMERGENCY_TESTING_MODE,
       areasLength: currentWeekAreas?.length
     });
     return null;
@@ -69,10 +63,12 @@ const FinalShotButton: React.FC<FinalShotButtonProps> = ({
     <div 
       className={`fixed left-1/2 transform -translate-x-1/2 ${className || ''}`}
       style={{
-        // Ensure proper positioning above bottom navigation and Leaflet map
+        // CRITICAL: Position ABOVE map and bottom navigation for Safari iOS
         bottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)',
         zIndex: 99999,
-        pointerEvents: 'auto'
+        pointerEvents: 'auto',
+        // Ensure visibility above Leaflet map container
+        position: 'fixed'
       }}
     >
       <Button
