@@ -250,13 +250,25 @@ export const useBuzzMapProgressivePricing = () => {
       return false;
     }
 
-    // Check for suspicious large radius with low price
+    // Check for suspicious large radius with low price (EXCEPTION: Entry-level post-reset)
     if (requestedRadius >= 200 && requestedPrice < 13) {
-      console.warn('🚫 ANTI-FRAUD: Suspicious large radius with low price', {
-        requestedRadius,
-        requestedPrice
-      });
-      return false;
+      // 🚨 POST-RESET EXCEPTION: Allow entry-level BUZZ (500km @ €4.99)
+      if (currentGeneration === 0 && requestedPrice === 4.99 && requestedRadius === 500) {
+        console.log('✅ ANTI-FRAUD: POST-RESET ENTRY-LEVEL ACCEPTED', {
+          currentGeneration,
+          requestedPrice,
+          requestedRadius,
+          reason: 'Entry-level BUZZ allowed after mission reset'
+        });
+      } else {
+        console.warn('🚫 ANTI-FRAUD: Suspicious large radius with low price', {
+          requestedRadius,
+          requestedPrice,
+          currentGeneration,
+          note: 'Blocked suspicious combination (not entry-level)'
+        });
+        return false;
+      }
     }
 
     console.log('✅ ANTI-FRAUD: Validation passed');
