@@ -28,6 +28,8 @@ export const MissionResetSection: React.FC = () => {
         throw new Error('Sessione non trovata');
       }
 
+      console.log('🔄 Chiamata reset-mission con codice:', confirmationCode);
+      
       const response = await supabase.functions.invoke('reset-mission', {
         body: { confirmationCode },
         headers: {
@@ -35,6 +37,8 @@ export const MissionResetSection: React.FC = () => {
           'Content-Type': 'application/json'
         }
       });
+      
+      console.log('📡 Risposta reset-mission:', response);
 
       if (response.error) {
         throw new Error(response.error.message || 'Errore durante il reset');

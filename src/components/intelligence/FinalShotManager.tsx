@@ -284,16 +284,22 @@ const FinalShotManager: React.FC = () => {
             </div>
           </div>
 
-          <Button
-            onClick={submitFinalShot}
-            disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
-            className="!visible !opacity-100 !flex !relative !z-50 w-full py-4 text-lg rounded-xl bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30"
-            style={{ 
-              minHeight: '60px',
-              display: 'flex',
-              visibility: 'visible',
-              opacity: 1
-            }}
+          {/* DEBUG: FINAL SHOT BUTTON - FORCED VISIBILITY */}
+          <div className="w-full py-4" style={{ minHeight: '80px', display: 'block', position: 'relative', zIndex: 999 }}>
+            <Button
+              onClick={submitFinalShot}
+              disabled={isSubmitting || getRemainingAttempts() === 0 || !!getCooldownTime() || !coordinates.lat || !coordinates.lng}
+              className="w-full py-4 text-lg font-semibold rounded-xl bg-gradient-to-r from-cyan-500 to-primary hover:from-cyan-600 hover:to-primary/90 transition-all duration-300 shadow-lg hover:shadow-2xl hover:shadow-cyan-500/30 text-white"
+               style={{ 
+                minHeight: '60px',
+                display: 'flex',
+                visibility: 'visible',
+                opacity: 1,
+                position: 'relative',
+                zIndex: 999,
+                backgroundColor: '#06b6d4',
+                color: 'white'
+              }}
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">
@@ -306,7 +312,8 @@ const FinalShotManager: React.FC = () => {
                 Invia Final Shot
               </div>
             )}
-          </Button>
+           </Button>
+          </div>
 
           {(getRemainingAttempts() === 0 || getCooldownTime()) && (
             <div className="text-center text-sm text-muted-foreground p-3 bg-muted/40 rounded-xl">
