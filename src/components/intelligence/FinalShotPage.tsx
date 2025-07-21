@@ -276,10 +276,8 @@ const FinalShotPage: React.FC = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto" style={{
-      height: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 80px)',
-      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
-      paddingTop: 'env(safe-area-inset-top, 0px)'
+    <div className="w-full h-full overflow-y-auto bg-black/10" style={{
+      minHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 160px)'
     }}>
       {/* Compact Header */}
       <div className="text-center mb-4 px-4 pt-2">
@@ -322,7 +320,7 @@ const FinalShotPage: React.FC = () => {
 
       {/* Expanded Tactical Map - Dominant Element */}
       <div className="flex-1 relative px-4 pb-4">
-        <div className="relative h-full min-h-[70vh] max-h-[80vh] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20">
+        <div className="relative h-[400px] sm:h-[500px] md:h-[600px] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20">
           
           {/* Map Style Controls - Overlay on Map */}
           <div className="absolute top-4 right-4 z-50 flex flex-wrap gap-1">
@@ -387,7 +385,13 @@ const FinalShotPage: React.FC = () => {
             zoom={4}
             minZoom={2}
             maxZoom={20}
-            style={{ height: '100%', width: '100%' }}
+            style={{ 
+              height: '100%', 
+              width: '100%',
+              position: 'absolute',
+              top: 0,
+              left: 0
+            }}
             ref={mapRef}
             scrollWheelZoom={true}
             doubleClickZoom={true}

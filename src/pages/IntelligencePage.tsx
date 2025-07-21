@@ -139,7 +139,7 @@ const IntelligencePage: React.FC = () => {
         {/* FULLSCREEN MODULE AREA - SINGLE RENDERING ONLY */}
         <div className="flex-1 w-full relative bg-black/20 border-b-2 border-cyan-500/20 overflow-hidden">
           {activeModule ? (
-            <div className="absolute inset-0 w-full h-full">
+            <div className="absolute inset-0 w-full h-full overflow-y-auto">
               {/* Close Module Button */}
               <button
                 onClick={() => {
@@ -151,8 +151,8 @@ const IntelligencePage: React.FC = () => {
                 ✕
               </button>
               
-              {/* Module Content Container - ONLY ONE MODULE AT A TIME */}
-              <div className="w-full h-full">
+              {/* Module Content Container - SCROLLABLE AND SIZED CORRECTLY */}
+              <div className="w-full h-full min-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-160px)]">
                 {modules.find(m => m.id === activeModule)?.component}
               </div>
             </div>
@@ -169,8 +169,8 @@ const IntelligencePage: React.FC = () => {
           )}
         </div>
 
-        {/* COLLAPSIBLE MODULES MENU - BOTTOM SECTION */}
-        <div className="sticky bottom-0 z-40" style={{ 
+        {/* COLLAPSIBLE MODULES MENU - FIXED BOTTOM SECTION */}
+        <div className="fixed bottom-0 left-0 right-0 z-40" style={{ 
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}>
           {/* Module Selection Button */}
