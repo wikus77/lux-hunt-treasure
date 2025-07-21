@@ -145,27 +145,30 @@ serve(async (req) => {
 
     console.log('🔄 MISSION RESET: Preparing success response...');
     
-    console.log('✅ MISSION RESET: Returning success response');
+    const successResponse = {
+      status: "ok",
+      success: true,
+      message: "Mission reset completed successfully",
+      userid: user.id,
+      reset_success: true,
+      timestamp: new Date().toISOString(),
+      logs: [
+        "Authorization validated",
+        "Rate limit passed", 
+        "Confirmation code verified",
+        "Database reset executed",
+        "Action logged"
+      ]
+    };
+    
+    console.log('✅ MISSION RESET: Returning success response with explicit HTTP 200');
     return new Response(
-      JSON.stringify({
-        status: "ok",
-        success: true,
-        message: "Mission reset completed successfully",
-        userid: user.id,
-        timestamp: new Date().toISOString(),
-        logs: [
-          "Authorization validated",
-          "Rate limit passed",
-          "Confirmation code verified",
-          "Database reset executed",
-          "Action logged"
-        ]
-      }),
+      JSON.stringify(successResponse),
       {
         status: 200,
         headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json" 
+          ...corsHeaders,
+          "Content-Type": "application/json"
         }
       }
     );
