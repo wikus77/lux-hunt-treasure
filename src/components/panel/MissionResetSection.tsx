@@ -32,7 +32,7 @@ export const MissionResetSection: React.FC = () => {
       console.log('👤 User session:', session.user.email);
       
       const response = await supabase.functions.invoke('reset-mission', {
-        body: JSON.stringify({ confirmationCode }),
+        body: { confirmationCode },
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
