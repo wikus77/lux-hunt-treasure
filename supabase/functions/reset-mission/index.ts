@@ -48,18 +48,19 @@ serve(async (req) => {
     const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
-    // Check rate limiting
+    // Check rate limiting - Allow more resets for admin operations
     const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
       ip_addr: clientIP,
       api_endpoint: '/reset-mission',
-      max_requests: 2,
-      window_minutes: 60
+      max_requests: 10,
+      window_minutes: 30
     });
 
     if (rateLimitError || !rateLimitResult) {
+      console.log(`⚠️ RATE LIMIT: Blocking IP ${clientIP} for reset mission abuse`);
       await supabase.rpc('block_ip', {
         ip_addr: clientIP,
-        block_duration_minutes: 30,
+        block_duration_minutes: 15,
         block_reason: 'rate_limit_exceeded_reset_mission'
       });
       
@@ -74,46 +75,17 @@ serve(async (req) => {
 
     console.log(`🔄 MISSION RESET: Starting complete mission reset for user ${user.id}`);
 
-    // Start mission reset process
-    const resetOperations = [];
+    // Execute the complete reset using the database function
+    const { error: resetError } = await supabase.rpc('reset_user_mission_full', { 
+      user_id_input: user.id 
+    });
 
-    // 1. Delete all user clues
-    resetOperations.push(
-      supabase.from('user_clues').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    );
-
-    // 2. Delete all AI generated clues
-    resetOperations.push(
-      supabase.from('ai_generated_clues').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    );
-
-    // 3. Reset user mission status
-    resetOperations.push(
-      supabase.rpc('reset_user_mission_full', { user_id_input: user.id })
-    );
-
-    // 4. Delete user buzz counters
-    resetOperations.push(
-      supabase.from('user_buzz_counter').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    );
-
-    // 5. Delete user map areas
-    resetOperations.push(
-      supabase.from('user_map_areas').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    );
-
-    // 6. Delete user notifications
-    resetOperations.push(
-      supabase.from('user_notifications').delete().neq('id', '00000000-0000-0000-0000-000000000000')
-    );
-
-    // Execute all reset operations
-    const results = await Promise.allSettled(resetOperations);
-    const failures = results.filter(r => r.status === 'rejected');
-
-    if (failures.length > 0) {
-      console.error('❌ MISSION RESET: Some operations failed:', failures);
+    if (resetError) {
+      console.error('❌ MISSION RESET: Database function failed:', resetError);
+      throw new Error(`Mission reset failed: ${resetError.message}`);
     }
+
+    console.log(`✅ MISSION RESET: Database reset completed for user ${user.id}`);
 
     // Log the reset action
     await supabase.from('admin_logs').insert({
@@ -121,9 +93,9 @@ serve(async (req) => {
       event_type: 'mission_reset',
       ip_address: clientIP,
       user_agent: userAgent,
-      context: 'Complete mission reset executed',
+      context: 'Complete mission reset executed via database function',
       status_code: 200,
-      note: `Mission reset completed. ${failures.length} operations failed out of ${results.length}`
+      note: 'Mission reset completed successfully using reset_user_mission_full()'
     });
 
     console.log(`✅ MISSION RESET: Complete mission reset successful for user ${user.id}`);
@@ -131,8 +103,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       message: 'Mission reset completed successfully',
-      operationsCompleted: results.length - failures.length,
-      operationsFailed: failures.length,
+      userId: user.id,
       timestamp: new Date().toISOString()
     }), {
       status: 200,
