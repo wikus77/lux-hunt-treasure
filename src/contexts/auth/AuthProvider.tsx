@@ -1,270 +1,354 @@
 
-import React, { useState, useEffect } from 'react';
-import { Session, User } from '@supabase/supabase-js';
+/**
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * 
+ * AuthProvider - Sistema unificato di autenticazione per M1SSION™
+ * PWA Safari iOS ottimizzato con persistenza nativa Supabase
+ * UNIFIED SYSTEM - Unica fonte di verità per l'auth
+ */
+
+import React, { useEffect, useState, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
-import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // DIRECT STATE MANAGEMENT - NO EXTERNAL HOOKS
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+// Debug toggle per sviluppo - PRODUZIONE: false
+const DEBUG_UNIFIED_AUTH = false;
+
+const log = (message: string, data?: any) => {
+  if (DEBUG_UNIFIED_AUTH) {
+    console.log(`🔐 [UNIFIED AUTH] ${message}`, data || '');
+  }
+};
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // UNIFIED STATE - Unico stato per tutta l'app
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userRoles, setUserRoles] = useState<string[]>([]);
-  const [isRoleLoading, setIsRoleLoading] = useState(true);
-  const { navigate } = useWouterNavigation();
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
 
-  // INITIAL SESSION CHECK
+  // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized
   useEffect(() => {
+    let isMounted = true;
+
     const initializeAuth = async () => {
-      console.log("🔧 AuthProvider: DIRECT initialization starting...");
-      
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        log("Inizializzazione sistema unified auth");
         
-        console.log('📊 Initial session check:', {
-          hasError: !!error,
-          hasSession: !!session,
-          hasUser: !!session?.user,
-          userEmail: session?.user?.email,
-          timestamp: new Date().toISOString()
-        });
+        // STEP 1: Verifica sessione corrente - nativo Supabase SOLO
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
-        if (!error && session && session.user) {
-          console.log('✅ EXISTING SESSION FOUND:', session.user.email);
-          setSession(session);
-          setUser(session.user);
+        if (error) {
+          log("Errore getSession", error);
+          if (isMounted) {
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        if (currentSession && isMounted) {
+          log("Sessione trovata", currentSession.user.email);
+          setSession(currentSession);
+          setUser(currentSession.user);
+        } else {
+          log("Nessuna sessione attiva");
         }
       } catch (error) {
-        console.error('❌ INIT AUTH ERROR:', error);
+        log("Errore init auth", error);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     initializeAuth();
+
+    // Cleanup
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // CENTRALIZED AUTH STATE HANDLER - DIRECT STATE UPDATES
+  // LISTENER STATO AUTH - Gestione eventi Supabase
   useEffect(() => {
-    console.log("🔧 AuthProvider: Setting up DIRECT auth state listener");
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 DIRECT AUTH EVENT:', {
-        event,
-        pathname: window.location.pathname,
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        userEmail: session?.user?.email,
-        visibility: document.visibilityState,
-        timestamp: new Date().toISOString()
-      });
-      
-      // DIRECT STATE UPDATES
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log("✅ SIGNED_IN event received - UPDATING STATE DIRECTLY:", session.user.email);
-        
-        // PWA VISIBILITY CHECK
-        if (document.visibilityState === 'hidden') {
-          console.log("🔄 PWA is hidden, waiting for visibility...");
-          const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-              console.log("👁️ PWA visible again, processing login...");
-              setSession(session);
-              setUser(session.user);
-              document.removeEventListener("visibilitychange", handleVisibilityChange);
-            }
-          };
-          document.addEventListener("visibilitychange", handleVisibilityChange);
-          return;
-        }
-        
-        // IMMEDIATE STATE UPDATE
-        setSession(session);
-        setUser(session.user);
-        setIsLoading(false);
-        
-        // CONDITIONAL REDIRECT
-        const currentPath = window.location.pathname;
-        if (currentPath === "/login" || currentPath === "/register") {
-          console.log(`🏠 Redirecting from ${currentPath} to / after login success`);
-          setTimeout(() => navigate('/', { replace: true }), 100);
-        }
-      }
-      
-      // Handle sign out
-      if (event === 'SIGNED_OUT') {
-        console.log("🚪 User signed out - CLEARING STATE DIRECTLY");
-        setSession(null);
-        setUser(null);
-        setUserRoles([]);
-        setIsRoleLoading(false);
-      }
-    });
+    log("Setup auth state listener");
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        log(`Auth event: ${event}`, newSession?.user?.email || 'NO USER');
+        
+        // Update stato sincrono
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && newSession) {
+          log("Utente autenticato", newSession.user.email);
+        } else if (event === 'SIGNED_OUT') {
+          log("Utente disconnesso");
+          setUserRoles([]);
+          setIsRoleLoading(false);
+        }
+        
+        // Auth completata
+        setIsLoading(false);
+      }
+    );
+
+    // Cleanup
     return () => {
-      console.log("🧹 AuthProvider: Cleaning up DIRECT auth state listener");
+      log("Cleanup auth listener");
       subscription.unsubscribe();
     };
-  }, [navigate]);
+  }, []);
 
-  // Fetch user roles when user changes
+  // PWA VISIBILITY HANDLER - Safari iOS ottimizzato
   useEffect(() => {
-    const fetchUserRoles = async () => {
-      console.log("🔍 Fetch user roles called:", { 
-        userId: user?.id, 
-        userEmail: user?.email,
-        isLoading 
-      });
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible' && !isLoading) {
+        log("PWA tornata attiva - verifica sessione");
+        
+        try {
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          
+          // Verifica se sessione è cambiata
+          if (currentSession && (!session || session.expires_at !== currentSession.expires_at)) {
+            log("Sessione aggiornata da visibility change");
+            setSession(currentSession);
+            setUser(currentSession.user);
+          }
+        } catch (error) {
+          log("Errore verifica sessione visibility", error);
+        }
+      }
+    };
 
-      if (!user?.id || isLoading) {
-        console.log("⚠️ No user or still loading, setting empty roles");
-        setUserRoles([]);
-        setIsRoleLoading(false);
+    // Solo per PWA installate
+    if (window.matchMedia('(display-mode: standalone)').matches || 
+        (window.navigator as any).standalone === true) {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
+    }
+  }, [session, isLoading]);
+
+  // FETCH USER ROLES - Sistema unificato
+  const fetchUserRoles = async (userId: string) => {
+    if (!userId) return;
+    
+    setIsRoleLoading(true);
+    log("Fetch roles per user", userId);
+    
+    try {
+      // Prima: user_roles table
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (rolesData && rolesData.length > 0) {
+        const roles = rolesData.map(r => r.role);
+        log("Roles da user_roles", roles);
+        setUserRoles(roles);
         return;
       }
 
-      try {
-        setIsRoleLoading(true);
-        console.log("🔍 Fetching roles for user:", user.id, user.email);
-        
-        // Check user_roles table for all roles
-        const { data: rolesData, error: rolesError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id);
+      // Fallback: profiles table
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
 
-        console.log("🔍 Roles query result:", { rolesData, rolesError });
-
-        if (rolesError) {
-          console.error("❌ Error fetching from user_roles:", rolesError);
-          throw rolesError;
-        }
-
-        let finalRoles: string[] = [];
-
-        if (rolesData && rolesData.length > 0) {
-          finalRoles = rolesData.map(r => r.role);
-          console.log("✅ User roles found:", finalRoles);
-        } else {
-          console.log("⚠️ No roles found in user_roles, checking profiles as fallback");
-          // Check profiles table as fallback
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-
-          console.log("🔍 Profile query result:", { profileData, profileError });
-
-          if (profileError && profileError.code !== 'PGRST116') {
-            console.error("❌ Error fetching from profiles:", profileError);
-          }
-
-          finalRoles = profileData?.role ? [profileData.role] : ['user'];
-          console.log("✅ User role from profiles:", finalRoles);
-        }
-
-        // 🔐 CLEARANCE FORZATA PER SVILUPPATORE REGISTRATO
-        // Override permanente per wikus77@hotmail.it
-        if (user.email === "wikus77@hotmail.it") {
-          if (!finalRoles.includes("developer")) {
-            finalRoles.push("developer");
-          }
-          if (!finalRoles.includes("admin")) {
-            finalRoles.push("admin");  
-          }
-          console.log("🔐 FORCED CLEARANCE APPLIED for developer:", finalRoles);
-        }
-
-        setUserRoles(finalRoles);
-      } catch (error) {
-        console.error("❌ Error fetching user roles:", error);
-        
-        // 🔐 CLEARANCE FORZATA anche in caso di errore
-        let fallbackRoles = ['user'];
-        if (user?.email === "wikus77@hotmail.it") {
-          fallbackRoles = ["developer", "admin"];
-          console.log("🔐 FORCED CLEARANCE APPLIED (fallback) for developer:", fallbackRoles);
-        }
-        
-        setUserRoles(fallbackRoles);
-      } finally {
-        setIsRoleLoading(false);
+      if (profileData?.role) {
+        log("Role da profiles", [profileData.role]);
+        setUserRoles([profileData.role]);
+      } else {
+        log("Nessun role trovato");
+        setUserRoles([]);
       }
-    };
+    } catch (error) {
+      log("Errore fetch roles", error);
+      setUserRoles([]);
+    } finally {
+      setIsRoleLoading(false);
+    }
+  };
 
+  // EFFECT: Fetch roles quando cambia user
+  useEffect(() => {
     if (user?.id) {
-      fetchUserRoles();
+      fetchUserRoles(user.id);
     } else {
-      console.log("⚠️ No user, setting empty roles");
       setUserRoles([]);
       setIsRoleLoading(false);
     }
-    
   }, [user?.id]);
 
-  // Check if user has a specific role - ENHANCED with forced clearance
+  // HAS ROLE - Check con developer bypass
   const hasRole = (role: string): boolean => {
-    // 🔐 CLEARANCE FORZATA PER SVILUPPATORE REGISTRATO
-    if (user?.email === "wikus77@hotmail.it") {
-      if (role === "developer" || role === "admin") {
-        console.log(`🔐 FORCED hasRole(${role}) = true for developer`);
-        return true;
-      }
+    // Developer bypass
+    if (user?.email === 'wikus77@hotmail.it') {
+      log(`Forced hasRole(${role}) = true per developer`);
+      return true;
     }
     
     const result = userRoles.includes(role);
-    console.log(`🔍 hasRole(${role}) = ${result}, userRoles:`, userRoles);
+    log(`hasRole(${role}) = ${result}`, { userRoles, userEmail: user?.email });
     return result;
   };
 
-  // AUTH METHODS - Direct Supabase integration
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: any; session?: any }> => {
-    console.log('🔐 DIRECT LOGIN STARTING for:', email);
+  // LOGIN FUNCTION - Unified
+  const login = async (email: string, password: string) => {
+    log("Login attempt", email);
+    
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) {
+        log("Login error", error.message);
         return { success: false, error };
       }
+
+      log("Login success", data.user?.email);
       return { success: true, session: data.session };
     } catch (error) {
+      log("Login exception", error);
       return { success: false, error };
     }
   };
 
-  const logout = async () => {
-    console.log('🚪 DIRECT LOGOUT STARTING');
-    await supabase.auth.signOut();
-    // State will be cleared by onAuthStateChange listener
+  // REGISTER FUNCTION - Unified
+  const register = async (email: string, password: string) => {
+    log("Register attempt", email);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        log("Register error", error.message);
+        return { success: false, error };
+      }
+
+      log("Register success", data.user?.email);
+      return { success: true, data };
+    } catch (error) {
+      log("Register exception", error);
+      return { success: false, error };
+    }
   };
 
-  // Create the complete context value with DIRECT state
+  // RESET PASSWORD FUNCTION - Unified
+  const resetPassword = async (email: string) => {
+    log("Reset password attempt", email);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+
+      if (error) {
+        log("Reset password error", error.message);
+        return { success: false, error: error.message };
+      }
+
+      log("Reset password success");
+      return { success: true };
+    } catch (error: any) {
+      log("Reset password exception", error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  // RESEND VERIFICATION FUNCTION - Unified
+  const resendVerificationEmail = async (email: string) => {
+    log("Resend verification attempt", email);
+    
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+
+      if (error) {
+        log("Resend verification error", error.message);
+        return { success: false, error: error.message };
+      }
+
+      log("Resend verification success");
+      return { success: true };
+    } catch (error: any) {
+      log("Resend verification exception", error);
+      return { success: false, error: error.message };
+    }
+  };
+  const logout = async (): Promise<void> => {
+    log("Logout iniziato");
+    
+    try {
+      // Supabase signOut - NO localStorage cleanup manuale
+      await supabase.auth.signOut();
+      
+      // Cleanup stato locale
+      setUser(null);
+      setSession(null);
+      setUserRoles([]);
+      setIsLoading(false);
+      setIsRoleLoading(false);
+      
+      log("Logout completato");
+    } catch (error) {
+      log("Errore logout", error);
+    }
+  };
+
+  // CONTEXT VALUE - Unified interface
   const authContextValue: AuthContextType = {
     user,
     session,
-    isAuthenticated: !!session && !!user,
+    isAuthenticated: !!user,
     isLoading,
     isEmailVerified: user?.email_confirmed_at ? true : false,
-    userRole: userRoles.length > 0 ? userRoles[0] : null,
-    hasRole,
+    userRole: userRoles[0] || null,
     isRoleLoading,
-    login,
-    logout,
-    register: async () => { throw new Error('Registration disabled'); },
-    resetPassword: async () => { throw new Error('Password reset disabled'); },
-    resendVerificationEmail: async () => { throw new Error('Email verification disabled'); },
     getCurrentUser: () => user,
-    getAccessToken: () => session?.access_token || '',
+    getAccessToken: () => session?.access_token || null,
+    hasRole,
+    login,
+    register,
+    logout,
+    resetPassword,
+    resendVerificationEmail,
   };
 
-  console.log('🔍 AuthProvider rendering with state:', {
-    hasUser: !!user,
-    hasSession: !!session,
-    isAuthenticated: !!session && !!user,
-    isLoading,
-    userEmail: user?.email
+  // Debug context state
+  log("Context value", {
+    isAuthenticated: authContextValue.isAuthenticated,
+    isLoading: authContextValue.isLoading,
+    userEmail: user?.email,
+    rolesCount: userRoles.length,
+    isRoleLoading
   });
 
   return (

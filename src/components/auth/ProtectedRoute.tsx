@@ -2,7 +2,7 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
@@ -16,7 +16,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requireEmailVerification = true,
   children
 }) => {
-  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useAuthContext();
+  const { isAuthenticated, isLoading, isEmailVerified, getCurrentUser, userRole, hasRole } = useUnifiedAuth();
   const [location] = useLocation();
   const { navigate } = useWouterNavigation();
   

@@ -7,7 +7,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
-import { useAuth } from "@/hooks/use-auth";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
@@ -26,7 +26,7 @@ import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 
 const WouterRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useUnifiedAuth();
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
