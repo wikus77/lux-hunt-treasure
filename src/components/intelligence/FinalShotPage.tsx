@@ -319,7 +319,7 @@ const FinalShotPage: React.FC = () => {
       </div>
 
       {/* Expanded Tactical Map - Dominant Element */}
-      <div className="flex-1 relative px-4 pb-4">
+      <div className="flex-1 relative px-4 pb-20">
         <div className="relative h-[400px] sm:h-[500px] md:h-[600px] rounded-xl overflow-hidden border-2 border-cyan-500/20 shadow-2xl bg-black/20" style={{ zIndex: 1 }}>
           
           {/* Map Style Controls - Overlay on Map - ALWAYS VISIBLE */}
@@ -381,49 +381,6 @@ const FinalShotPage: React.FC = () => {
               🗺️
             </Button>
           </div>
-
-          {/* Final Shot Button - Always Visible Under Map */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-50">
-            <Button
-              onClick={() => {
-                if (isDisabled) {
-                  toast({
-                    title: getCooldownTime() ? "⏳ Cooldown Attivo" : "❌ Tentativi Esauriti",
-                    description: getCooldownTime() ? `Riprova tra: ${getCooldownTime()}` : "Hai raggiunto il limite massimo di tentativi",
-                    variant: "destructive"
-                  });
-                  return;
-                }
-                
-                if (!showMapControls) {
-                  setShowMapControls(true);
-                }
-                toast({
-                  title: "🎯 Modalità Final Shot Attiva",
-                  description: "Clicca sulla mappa per selezionare la posizione del premio",
-                  variant: "default"
-                });
-              }}
-              disabled={isDisabled}
-              className={`
-                ${isDisabled 
-                  ? 'bg-gray-600/50 hover:bg-gray-600/50 cursor-not-allowed border-gray-500/30' 
-                  : 'bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 border-fuchsia-400/30'
-                } 
-                text-white shadow-xl px-6 py-3 text-sm font-bold rounded-full border-2 backdrop-blur-sm
-                transition-all duration-300
-              `}
-            >
-              {isDisabled ? (
-                <>
-                  ❌ FINAL SHOT 
-                  {getCooldownTime() ? ` (${getCooldownTime()})` : ' (ESAURITO)'}
-                </>
-              ) : (
-                '🎯 FINAL SHOT'
-              )}
-            </Button>
-          </div>
           
           {/* Interactive Leaflet Map - Enhanced for PWA iOS */}
           <MapContainer
@@ -437,7 +394,10 @@ const FinalShotPage: React.FC = () => {
               position: 'absolute',
               top: 0,
               left: 0,
-              touchAction: 'manipulation'
+              touchAction: 'pan-x pan-y pinch-zoom',
+              WebkitTouchCallout: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none'
             }}
             ref={mapRef}
             scrollWheelZoom={true}
@@ -446,6 +406,24 @@ const FinalShotPage: React.FC = () => {
             touchZoom={true}
             zoomControl={true}
             attributionControl={false}
+            whenReady={() => {
+              // iOS PWA specific optimizations
+              if (typeof window !== 'undefined' && (window.navigator as any)?.standalone) {
+                const mapContainer = mapRef.current?.getContainer();
+                if (mapContainer) {
+                  mapContainer.style.WebkitTransform = 'translateZ(0)';
+                  mapContainer.style.transform = 'translateZ(0)';
+                  mapContainer.style.WebkitBackfaceVisibility = 'hidden';
+                  mapContainer.style.backfaceVisibility = 'hidden';
+                  mapContainer.style.willChange = 'transform';
+                  
+                  // Force hardware acceleration for smooth gestures
+                  mapContainer.addEventListener('touchstart', () => {}, { passive: true });
+                  mapContainer.addEventListener('touchmove', () => {}, { passive: true });
+                  mapContainer.addEventListener('touchend', () => {}, { passive: true });
+                }
+              }
+            }}
           >
             <TileLayer
               url={getMapTileUrl()}
@@ -488,6 +466,76 @@ const FinalShotPage: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Final Shot Button - Fixed Position for iOS PWA - ALWAYS VISIBLE */}
+      <div 
+        className="!visible !opacity-100 !block"
+        style={{
+          position: 'fixed',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: `calc(env(safe-area-inset-bottom, 0px) + 120px)`,
+          zIndex: 99999,
+          pointerEvents: 'auto',
+          visibility: 'visible',
+          opacity: 1,
+          display: 'block'
+        }}
+      >
+        <Button
+          onClick={() => {
+            if (isDisabled) {
+              toast({
+                title: getCooldownTime() ? "⏳ Cooldown Attivo" : "❌ Tentativi Esauriti",
+                description: getCooldownTime() ? `Riprova tra: ${getCooldownTime()}` : "Hai raggiunto il limite massimo di tentativi",
+                variant: "destructive"
+              });
+              return;
+            }
+            
+            if (!showMapControls) {
+              setShowMapControls(true);
+            }
+            toast({
+              title: "🎯 Modalità Final Shot Attiva",
+              description: "Clicca sulla mappa per selezionare la posizione del premio",
+              variant: "default"
+            });
+          }}
+          disabled={isDisabled}
+          className={`
+            !visible !opacity-100 !block !relative !z-[100]
+            ${isDisabled 
+              ? 'bg-gray-600/80 hover:bg-gray-600/80 cursor-not-allowed border-gray-500/50' 
+              : 'bg-gradient-to-r from-fuchsia-600 to-fuchsia-900 hover:from-fuchsia-700 hover:to-fuchsia-950 border-fuchsia-400/50'
+            } 
+            text-white shadow-2xl px-8 py-4 text-lg font-black rounded-full border-3 backdrop-blur-md
+            transition-all duration-300 hover:scale-105 hover:shadow-fuchsia-500/50
+            min-w-[200px] text-center
+            animate-pulse
+          `}
+          style={{
+            visibility: 'visible',
+            opacity: 1,
+            display: 'block',
+            position: 'relative',
+            zIndex: 100,
+            WebkitTapHighlightColor: 'transparent',
+            WebkitTouchCallout: 'none'
+          }}
+        >
+          {isDisabled ? (
+            <>
+              ❌ FINAL SHOT 
+              {getCooldownTime() ? ` (${getCooldownTime()})` : ' (ESAURITO)'}
+            </>
+          ) : (
+            <>
+              🎯 FINAL SHOT
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Confirmation Dialog */}
