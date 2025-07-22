@@ -5,6 +5,7 @@ import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
 import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
+import CookieBanner from "@/components/legal/CookieBanner";
 
 interface GlobalLayoutProps {
   children: React.ReactNode;
@@ -94,6 +95,9 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
         
         {/* Bottom Navigation */}
         <BottomNavigation />
+        
+        {/* Cookie Banner */}
+        <CookieBanner />
       </div>
     </SafeAreaWrapper>
   );

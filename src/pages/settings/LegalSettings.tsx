@@ -34,6 +34,12 @@ const LegalSettings: React.FC = () => {
       icon: Settings
     },
     {
+      title: 'Regolamento M1SSION™',
+      description: 'Modalità di gioco, premi, meccaniche e diritti',
+      url: '/game-rules',
+      icon: FileText
+    },
+    {
       title: 'SafeCreative',
       description: 'Certificazione di proprietà intellettuale',
       url: '/safecreative',

@@ -88,7 +88,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-black/90 border-[#00D1FF]/20 backdrop-blur-sm">
+      <DialogContent className="bg-black/90 border-[#00D1FF]/20 backdrop-blur-sm max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="text-white font-orbitron flex items-center">
             <CreditCard className="w-5 h-5 mr-2" />
