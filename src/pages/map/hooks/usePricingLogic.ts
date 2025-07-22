@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzClues } from '@/hooks/useBuzzClues';
@@ -9,7 +9,7 @@ export const usePricingLogic = () => {
   const [buzzMapPrice, setBuzzMapPrice] = useState(7.99);
   const [clueCount, setClueCount] = useState(0);
   const [buzzRadiusMeters, setBuzzRadiusMeters] = useState(100000); // Initial radius 100km
-  const { processBuzzPurchase, loading } = useStripePayment();
+  const { processBuzzPurchase, loading } = useUniversalStripePayment();
   const { unlockedClues } = useBuzzClues();
   
   // Update price based on unlocked clues

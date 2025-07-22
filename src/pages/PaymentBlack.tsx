@@ -8,7 +8,8 @@ import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
-import { useStripePayment } from "@/hooks/useStripePayment";
+import { useUniversalStripePayment } from "@/hooks/useUniversalStripePayment";
+import UniversalStripeCheckout from "@/components/stripe/UniversalStripeCheckout";
 
 const PaymentBlack = () => {
   const navigate = useNavigate();
@@ -16,7 +17,13 @@ const PaymentBlack = () => {
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { processSubscription, loading } = useStripePayment();
+  const { 
+    processSubscription, 
+    loading,
+    isCheckoutOpen,
+    currentPaymentConfig,
+    closeCheckout
+  } = useUniversalStripePayment();
 
   const handlePaymentCompleted = () => {
     setShowExplosion(true);
@@ -177,6 +184,23 @@ const PaymentBlack = () => {
           )}
         </div>
       </div>
+      
+      {/* Universal Stripe Checkout Modal */}
+      {currentPaymentConfig && (
+        <UniversalStripeCheckout
+          isOpen={isCheckoutOpen}
+          onClose={closeCheckout}
+          paymentType={currentPaymentConfig.paymentType}
+          planName={currentPaymentConfig.planName}
+          amount={currentPaymentConfig.amount}
+          description={currentPaymentConfig.description}
+          isBuzzMap={currentPaymentConfig.isBuzzMap}
+          onSuccess={() => {
+            handlePaymentCompleted();
+            currentPaymentConfig.onSuccess?.();
+          }}
+        />
+      )}
     </div>
   );
 };

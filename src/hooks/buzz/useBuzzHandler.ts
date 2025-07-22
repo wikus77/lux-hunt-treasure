@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { useAbuseProtection } from './useAbuseProtection';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 
 interface UseBuzzHandlerProps {
@@ -22,7 +22,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { user } = useAuth();
   const { vibrate } = useCapacitorHardware();
   const { checkAbuseAndLog } = useAbuseProtection();
-  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
+  const { processBuzzPurchase, loading: paymentLoading } = useUniversalStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
 
   const handleBuzz = async () => {
