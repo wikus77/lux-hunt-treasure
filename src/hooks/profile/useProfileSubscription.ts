@@ -14,17 +14,14 @@ export const useProfileSubscription = () => {
   });
   const [credits, setCredits] = useState(500);
 
-  // TASK 1 — Sincronizzazione Piano Abbonamento
+  // TASK 1 — Sincronizzazione Piano Abbonamento - FIXED SYNC
   useEffect(() => {
     const loadSubscriptionFromSupabase = async () => {
       const currentUser = getCurrentUser();
       if (!currentUser) return;
 
       try {
-        // Check for saved plan in localStorage first
-        const savedPlan = localStorage.getItem('subscription_plan');
-        
-        // Query Supabase for subscription data
+        // Query Supabase for subscription data first (priority source)
         const { data: supabaseSubscription } = await supabase
           .from('subscriptions')
           .select('tier, status, end_date')
@@ -32,7 +29,15 @@ export const useProfileSubscription = () => {
           .eq('status', 'active')
           .single();
 
-        let finalPlan = savedPlan || (supabaseSubscription?.tier) || "Base";
+        // Fallback to profiles table if no active subscription
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', currentUser.id)
+          .single();
+
+        // Priority: Active subscription > Profile tier > Default Base
+        let finalPlan = supabaseSubscription?.tier || profileData?.subscription_tier || "Base";
         
         // Special user handling
         const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';

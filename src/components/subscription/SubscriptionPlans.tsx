@@ -65,10 +65,10 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
     
     try {
-      // TASK B — FLUSSO handleUpgrade(tier)
+      // TASK B — FLUSSO handleUpgrade(tier) - FIXED ROUTING
       if (plan === "Silver" || plan === "Gold" || plan === "Black") {
-        // Redirect to payment page for upgrade
-        navigate(`/subscriptions/${plan.toLowerCase()}`);
+        // Redirect to correct payment page for upgrade
+        navigate(`/payment-${plan.toLowerCase()}`);
       } else if (plan === "Base") {
         // For Base plan (free), update directly via hook
         await upgradeSubscription(plan);
