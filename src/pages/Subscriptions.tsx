@@ -10,6 +10,7 @@ import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { SubscriptionBenefits } from "@/components/subscription/SubscriptionBenefits";
 import { SubscriptionFAQ } from "@/components/subscription/SubscriptionFAQ";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
+import { useStripePayment } from "@/hooks/useStripePayment";
 
 const Subscriptions = () => {
   const [, setLocation] = useLocation();
@@ -17,6 +18,7 @@ const Subscriptions = () => {
   const { subscription } = useProfileSubscription();
   const [selected, setSelected] = useState<string>(subscription.plan);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const { processSubscription, loading: stripeLoading } = useStripePayment();
   
   // Componente React da utilizzare come leftComponent
   const LeftComponent = () => (
@@ -32,12 +34,31 @@ const Subscriptions = () => {
     </div>
   );
 
-  // TASK 1 — Sincronizzazione Piano Attivo da Supabase
+  // TASK 1 — Sincronizzazione Piano Attivo da Supabase + Checkout Handler
   useEffect(() => {
     setProfileImage(localStorage.getItem('profileImage'));
     // Forza sincronizzazione con hook subscription
     setSelected(subscription.plan);
+    
+    // Handle checkout parameter for Stripe payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const checkoutTier = urlParams.get('checkout');
+    const tier = urlParams.get('tier');
+    
+    if (checkoutTier && tier) {
+      console.log(`🚀 M1SSION™ CHECKOUT: Processing ${tier} subscription via Stripe`);
+      handleStripeCheckout(tier);
+    }
   }, [subscription.plan]);
+
+  const handleStripeCheckout = async (tier: string) => {
+    try {
+      console.log(`💳 Initiating Stripe checkout for ${tier} tier`);
+      await processSubscription(tier);
+    } catch (error) {
+      console.error('Stripe checkout error:', error);
+    }
+  };
 
   return (
     <div 

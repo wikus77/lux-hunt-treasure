@@ -98,9 +98,16 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
     switch (tier?.toLowerCase()) {
       case 'silver': return '#C0C0C0';
       case 'gold': return '#FFD700';
-      case 'black': return '#000000';
-      case 'titanium': return '#00FFFF';
+      case 'black': return '#1a1a1a';
+      case 'titanium': return '#a855f7'; // Purple for Titanium
       default: return '#ffffff';
+    }
+  };
+
+  const getTierGlow = (tier: string) => {
+    switch (tier?.toLowerCase()) {
+      case 'titanium': return '0 0 20px rgba(168, 85, 247, 0.5)';
+      default: return 'none';
     }
   };
 
@@ -256,19 +263,20 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
                     <h4 className="text-sm font-semibold text-blue-400 mb-3">Abbonamento</h4>
                     
                     <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-300">Piano attuale:</span>
-                        <span 
-                          className="font-medium text-sm px-2 py-1 rounded"
-                          style={{ 
-                            color: getTierColor(profileData.subscriptionTier),
-                            backgroundColor: `${getTierColor(profileData.subscriptionTier)}20`,
-                            border: `1px solid ${getTierColor(profileData.subscriptionTier)}40`
-                          }}
-                        >
-                          {profileData.subscriptionTier?.toUpperCase() || 'BASE'}
-                        </span>
-                      </div>
+                       <div className="flex items-center justify-between">
+                         <span className="text-sm text-gray-300">Piano attuale:</span>
+                         <span 
+                           className="font-medium text-sm px-2 py-1 rounded transition-all duration-300"
+                           style={{ 
+                             color: getTierColor(profileData.subscriptionTier),
+                             backgroundColor: `${getTierColor(profileData.subscriptionTier)}20`,
+                             border: `1px solid ${getTierColor(profileData.subscriptionTier)}40`,
+                             boxShadow: getTierGlow(profileData.subscriptionTier)
+                           }}
+                         >
+                           {profileData.subscriptionTier?.toUpperCase() || 'BASE'}
+                         </span>
+                       </div>
 
                       <Button
                         onClick={handleUpgrade}

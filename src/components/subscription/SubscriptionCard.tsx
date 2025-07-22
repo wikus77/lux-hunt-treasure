@@ -40,6 +40,8 @@ const SubscriptionCard = ({
         return "from-amber-400 to-amber-600";
       case "Black":
         return "from-gray-900 to-gray-700";
+      case "Titanium":
+        return "from-purple-500 to-cyan-500";
       default:
         return "from-blue-500 to-cyan-600";
     }
@@ -53,6 +55,8 @@ const SubscriptionCard = ({
         return "bg-amber-500";
       case "Black":
         return "bg-gray-900";
+      case "Titanium":
+        return "bg-gradient-to-r from-purple-500 to-cyan-500";
       default:
         return "bg-blue-500";
     }
@@ -60,9 +64,10 @@ const SubscriptionCard = ({
 
   return (
     <div className={cn(
-      "relative glass-card p-6 transition-all",
-      isActive && "ring-2 ring-cyan-500",
-      isPopular && "transform scale-105 z-10"
+      "relative glass-card p-6 transition-all duration-300",
+      isActive && "ring-2 ring-cyan-500 animate-pulse",
+      isPopular && "transform scale-105 z-10",
+      type === "Titanium" && "animate-[pulse_3s_ease-in-out_infinite] shadow-[0_0_30px_rgba(168,85,247,0.4)]"
     )}>
       {isPopular && (
         <Badge className="absolute -top-2 right-6 bg-gradient-to-r from-indigo-500 to-purple-600">
@@ -89,12 +94,13 @@ const SubscriptionCard = ({
 
       <Button
         onClick={onClick}
-        disabled={false}
+        disabled={isActive}
         className={cn(
-          "w-full",
+          "w-full transition-all duration-300",
           isActive 
-            ? "bg-gradient-to-r from-cyan-600 to-cyan-800"
-            : `bg-gradient-to-r ${getGradient()}`
+            ? "bg-gradient-to-r from-cyan-600 to-cyan-800 cursor-not-allowed opacity-75"
+            : `bg-gradient-to-r ${getGradient()} hover:scale-105`,
+          type === "Titanium" && "shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]"
         )}
       >
         {ctaText}

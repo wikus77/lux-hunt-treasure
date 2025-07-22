@@ -48,6 +48,14 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           { text: "Premi misteriosi aggiuntivi" },
           { text: "Badge Black nel profilo" }
         ];
+      case "Titanium":
+        return [
+          { text: "Tutti i vantaggi Black" },
+          { text: "Accesso illimitato a tutto" },
+          { text: "Badge Titanium esclusivo neon" },
+          { text: "Supporto prioritario 24/7" },
+          { text: "Eventi esclusivi Titanium VIP" }
+        ];
       default:
         return [];
     }
@@ -65,10 +73,10 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
     
     try {
-      // TASK B — FLUSSO handleUpgrade(tier) - FIXED ROUTING
-      if (plan === "Silver" || plan === "Gold" || plan === "Black") {
-        // Redirect to correct payment page for upgrade
-        navigate(`/payment-${plan.toLowerCase()}`);
+      // TASK B — FLUSSO handleUpgrade(tier) - UNIFIED CHECKOUT
+      if (plan === "Silver" || plan === "Gold" || plan === "Black" || plan === "Titanium") {
+        // Use unified checkout URL with tier parameter
+        navigate(`/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
       } else if (plan === "Base") {
         // For Base plan (free), update directly via hook
         await upgradeSubscription(plan);
@@ -118,14 +126,14 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
 
   return (
     <section className="w-full px-4 pb-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
         <SubscriptionCard
           title="Base"
           price="Gratis"
           period="mese"
           features={getSubscriptionFeatures("Base")}
           isPopular={false}
-          ctaText="Piano Attuale"
+          ctaText={selected === "Base" ? "Piano Attuale" : "Passa a Base"}
           type="Base"
           onClick={() => handleUpdatePlan("Base")}
           isActive={selected === "Base"}
@@ -162,6 +170,17 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           type="Black"
           onClick={() => handleUpdatePlan("Black")}
           isActive={selected === "Black"}
+        />
+        <SubscriptionCard
+          title="Titanium"
+          price="€14,99"
+          period="mese"
+          features={getSubscriptionFeatures("Titanium")}
+          isPopular={false}
+          ctaText={selected === "Titanium" ? "Piano Attuale" : "Passa a Titanium"}
+          type="Titanium"
+          onClick={() => handleUpdatePlan("Titanium")}
+          isActive={selected === "Titanium"}
         />
       </div>
       
