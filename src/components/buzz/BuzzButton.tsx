@@ -17,7 +17,28 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
   buzzing,
   onClick
 }) => {
-  // 🚨 CRITICAL: Aggressive diagnostic logging
+  // 🚨 CRITICAL: VERIFY onClick FUNCTION ON EVERY RENDER
+  console.log('🔄 BUZZ BUTTON RENDER - CRITICAL CHECK:', {
+    currentPrice,
+    isBlocked,
+    buzzing,
+    onClickType: typeof onClick,
+    onClickExists: !!onClick,
+    onClickName: onClick?.name || 'anonymous',
+    renderTime: new Date().toISOString()
+  });
+
+  // 🚨 TEST onClick FUNCTION IMMEDIATELY ON RENDER
+  React.useEffect(() => {
+    console.log('🚨 TESTING onClick FUNCTION:', {
+      onClickType: typeof onClick,
+      onClickExists: !!onClick,
+      onClickFunction: onClick?.toString?.() || 'no toString',
+      functionName: onClick?.name || 'anonymous'
+    });
+  }, [onClick]);
+
+  // 🚨 CRITICAL: State change tracking
   React.useEffect(() => {
     console.log('🚨 BUZZ BUTTON STATE CHANGE:', {
       currentPrice,
@@ -27,15 +48,6 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
       timestamp: new Date().toISOString()
     });
   }, [currentPrice, isBlocked, buzzing]);
-
-  // 🚨 CRITICAL: Log on every render to track state
-  console.log('🔄 BUZZ BUTTON RENDER:', {
-    currentPrice,
-    isBlocked,
-    buzzing,
-    disabled: isBlocked || buzzing,
-    renderTime: new Date().toISOString()
-  });
 
   // 🚨 CRITICAL: Force enable click if stuck
   React.useEffect(() => {
