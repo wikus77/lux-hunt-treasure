@@ -26,24 +26,60 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
   const { callBuzzApi } = useBuzzApi();
 
-  // FORCE RESET ON MOUNT to clear any stuck state
+  // 🚨 CRITICAL: AGGRESSIVE RESET ON MOUNT - MANDATORY FOR STUCK STATE
   useEffect(() => {
-    console.log('🔄 BUZZ HANDLER INIT: Force clearing any stuck state');
+    console.log('🔄 BUZZ HANDLER INIT: AGGRESSIVE clearing any stuck state - CRITICAL FIX');
     setBuzzing(false);
     setShowShockwave(false);
+    
+    // 🚨 CRITICAL: Double reset after 100ms to ensure state is cleared
+    const doubleReset = setTimeout(() => {
+      console.log('🔄 BUZZ HANDLER: Double reset to ensure clean state');
+      setBuzzing(false);
+      setShowShockwave(false);
+    }, 100);
+    
+    return () => clearTimeout(doubleReset);
   }, []);
 
-  // Auto-reset buzzing state after 10 seconds to prevent permanent lock
+  // 🚨 CRITICAL: Auto-reset buzzing state after 5 seconds (reduced from 10) + window focus reset
   useEffect(() => {
     if (buzzing) {
+      console.log('🚨 BUZZING STATE ACTIVE: Setting 5-second auto-reset');
+      
       const timeout = setTimeout(() => {
-        console.log('🔄 AUTO-RESET: Clearing stuck buzzing state');
+        console.log('🔄 AUTO-RESET: Clearing stuck buzzing state after 5s');
         setBuzzing(false);
         setShowShockwave(false);
-      }, 10000); // 10 seconds timeout
+      }, 5000); // Reduced to 5 seconds
       
       return () => clearTimeout(timeout);
     }
+  }, [buzzing]);
+
+  // 🚨 CRITICAL: Reset on window focus to handle PWA issues
+  useEffect(() => {
+    const handleFocus = () => {
+      if (buzzing) {
+        console.log('🔄 WINDOW FOCUS: Resetting stuck buzzing state');
+        setBuzzing(false);
+        setShowShockwave(false);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && buzzing) {
+        console.log('🔄 VISIBILITY CHANGE: Resetting stuck buzzing state');
+        setBuzzing(false);
+        setShowShockwave(false);
+      }
+    });
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleFocus);
+    };
   }, [buzzing]);
 
   const handleBuzz = async () => {
