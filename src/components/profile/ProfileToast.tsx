@@ -1,11 +1,13 @@
-// © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
+// © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT™
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Calendar, Target, Clock, Copy, X } from 'lucide-react';
+import { User, Calendar, Target, Clock, Copy, X, LogOut, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReferralCode } from '@/hooks/useReferralCode';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthContext } from '@/contexts/auth';
+import { useLocation } from 'wouter';
 
 interface ProfileToastProps {
   isOpen: boolean;
@@ -20,13 +22,17 @@ interface ProfileData {
   totalClues: number;
   daysRemaining: number;
   missionStartDate: string;
+  subscriptionTier: string;
 }
 
 const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className }) => {
   const [profileData, setProfileData] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { referralCode, copyReferralCode } = useReferralCode();
   const { toast } = useToast();
+  const { logout } = useAuthContext();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (isOpen) {
@@ -42,7 +48,7 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
       // Fetch profile data
       const { data: profile } = await supabase
         .from('profiles')
-        .select('username, full_name')
+        .select('username, full_name, subscription_tier')
         .eq('id', user.id)
         .single();
 
@@ -53,13 +59,25 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
         .eq('user_id', user.id)
         .single();
 
+      // Fetch subscription data
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('tier')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .single();
+
+      // Fallback to profile tier or default to Base
+      const userTier = subscription?.tier || profile?.subscription_tier || 'Base';
+
       setProfileData({
         username: profile?.username || profile?.full_name || 'Agente',
         email: user.email || '',
         cluesFound: missionStatus?.clues_found || 0,
         totalClues: 12, // Total clues in the mission
         daysRemaining: missionStatus?.mission_days_remaining || 30,
-        missionStartDate: missionStatus?.mission_started_at || new Date().toISOString()
+        missionStartDate: missionStatus?.mission_started_at || new Date().toISOString(),
+        subscriptionTier: userTier
       });
     } catch (error) {
       console.error('Error fetching profile data:', error);
@@ -74,6 +92,43 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
       month: '2-digit',
       year: 'numeric'
     });
+  };
+
+  const getTierColor = (tier: string) => {
+    switch (tier?.toLowerCase()) {
+      case 'silver': return '#C0C0C0';
+      case 'gold': return '#FFD700';
+      case 'black': return '#000000';
+      case 'titanium': return '#00FFFF';
+      default: return '#ffffff';
+    }
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      onClose();
+      setLocation('/login');
+      toast({
+        title: "Logout effettuato",
+        description: "Sei stato disconnesso con successo"
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      toast({
+        title: "Errore",
+        description: "Errore durante il logout",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const handleUpgrade = () => {
+    onClose();
+    setLocation('/subscriptions');
   };
 
   return (
@@ -194,6 +249,51 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Subscription Section */}
+                  <div className="border-t border-slate-700/50 pt-4">
+                    <h4 className="text-sm font-semibold text-blue-400 mb-3">Abbonamento</h4>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-300">Piano attuale:</span>
+                        <span 
+                          className="font-medium text-sm px-2 py-1 rounded"
+                          style={{ 
+                            color: getTierColor(profileData.subscriptionTier),
+                            backgroundColor: `${getTierColor(profileData.subscriptionTier)}20`,
+                            border: `1px solid ${getTierColor(profileData.subscriptionTier)}40`
+                          }}
+                        >
+                          {profileData.subscriptionTier?.toUpperCase() || 'BASE'}
+                        </span>
+                      </div>
+
+                      <Button
+                        onClick={handleUpgrade}
+                        variant="outline"
+                        size="sm"
+                        className="w-full bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-blue-500/50 text-blue-400 hover:bg-blue-500/30"
+                      >
+                        <Crown className="w-4 h-4 mr-2" />
+                        Upgrade
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Logout Section */}
+                  <div className="border-t border-slate-700/50 pt-4">
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-red-500/50 text-red-400 hover:bg-red-500/20"
+                      disabled={isLoggingOut}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {isLoggingOut ? 'Disconnessione...' : 'Esci'}
+                    </Button>
                   </div>
                 </>
               ) : (
