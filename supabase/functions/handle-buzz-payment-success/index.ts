@@ -147,16 +147,66 @@ serve(async (req) => {
     
     logStep("🗺️ Target coordinates", { targetLat, targetLon, city: activeTarget.city });
     
-    // 🎯 CRITICAL FIX: UNIFIED radius formula - exactly same as UI
+    // 🎯 CRITICAL FIX: UNIFIED radius formula - exactly same as PROGRESSIVE PRICING UI
     const { data: existingAreas } = await supabaseClient
       .from('user_map_areas')
       .select('id')
       .eq('user_id', user.id);
     
     const generationCount = existingAreas?.length || 0;
-    // IDENTICAL formula to useBuzzMapPricing hook: radius = max(5, 500 * (0.7^generation_count))
-    const uiCalculatedRadius = Math.max(5, 500 * Math.pow(0.7, generationCount));
-    let areaRadiusKm = Math.round(uiCalculatedRadius);
+    
+    // 🚨 PROGRESSIVE PRICING TABLE - IDENTICAL to useBuzzMapProgressivePricing.ts
+    const PROGRESSIVE_PRICING_TABLE = [
+      { generation: 0, radius: 500, segment: "Entry", price: 4.99 },
+      { generation: 1, radius: 450, segment: "Entry", price: 6.99 },
+      { generation: 2, radius: 405, segment: "Entry", price: 8.99 },
+      { generation: 3, radius: 365, segment: "Entry", price: 10.99 },
+      { generation: 4, radius: 329, segment: "Entry", price: 12.99 },
+      { generation: 5, radius: 295, segment: "Entry", price: 14.99 },
+      { generation: 6, radius: 265, segment: "Entry", price: 16.99 },
+      { generation: 7, radius: 240, segment: "Entry", price: 19.99 },
+      { generation: 8, radius: 216, segment: "Entry", price: 21.99 },
+      { generation: 9, radius: 195, segment: "Entry", price: 25.99 },
+      { generation: 10, radius: 175, segment: "Entry", price: 29.99 },
+      { generation: 11, radius: 155, segment: "Entry", price: 29.99 },
+      { generation: 12, radius: 140, segment: "Entry", price: 29.99 },
+      { generation: 13, radius: 126, segment: "Entry", price: 29.99 },
+      { generation: 14, radius: 113, segment: "TRANSIZIONE", price: 29.99 },
+      { generation: 15, radius: 102, segment: "Mid High-Spender", price: 29.99 },
+      { generation: 16, radius: 92, segment: "Mid High-Spender", price: 44.99 },
+      { generation: 17, radius: 83, segment: "Mid High-Spender", price: 67.99 },
+      { generation: 18, radius: 75, segment: "Mid High-Spender", price: 101.99 },
+      { generation: 19, radius: 67, segment: "Mid High-Spender", price: 152.99 },
+      { generation: 20, radius: 60, segment: "Mid High-Spender", price: 229.99 },
+      { generation: 21, radius: 54, segment: "Mid High-Spender", price: 344.99 },
+      { generation: 22, radius: 49, segment: "Mid High-Spender", price: 517.99 },
+      { generation: 23, radius: 44, segment: "High-Spender", price: 776.99 },
+      { generation: 24, radius: 39, segment: "High-Spender", price: 1165.99 },
+      { generation: 25, radius: 35, segment: "High-Spender", price: 1748.99 },
+      { generation: 26, radius: 31, segment: "High-Spender", price: 2622.99 },
+      { generation: 27, radius: 28, segment: "High-Spender", price: 2622.99 },
+      { generation: 28, radius: 25, segment: "High-Spender", price: 2622.99 },
+      { generation: 29, radius: 23, segment: "High-Spender", price: 2622.99 },
+      { generation: 30, radius: 20, segment: "High-Spender", price: 2622.99 },
+      { generation: 31, radius: 18, segment: "ELITE", price: 2622.99 },
+      { generation: 32, radius: 16, segment: "ELITE", price: 2622.99 },
+      { generation: 33, radius: 14.5, segment: "ELITE", price: 2622.99 },
+      { generation: 34, radius: 13.1, segment: "ELITE", price: 2622.99 },
+      { generation: 35, radius: 11.8, segment: "ELITE", price: 3933.99 },
+      { generation: 36, radius: 10.6, segment: "ELITE", price: 3933.99 },
+      { generation: 37, radius: 9.5, segment: "ELITE", price: 4999.00 },
+      { generation: 38, radius: 8.6, segment: "ELITE", price: 4999.00 },
+      { generation: 39, radius: 7.7, segment: "ELITE", price: 4999.00 },
+      { generation: 40, radius: 6.9, segment: "ELITE", price: 4999.00 },
+      { generation: 41, radius: 5, segment: "ELITE", price: 4999.00 }
+    ];
+    
+    // Get pricing data for current generation (IDENTICAL to frontend logic)
+    const maxGeneration = Math.min(generationCount, PROGRESSIVE_PRICING_TABLE.length - 1);
+    const currentPricing = PROGRESSIVE_PRICING_TABLE[maxGeneration];
+    
+    const uiCalculatedRadius = currentPricing.radius;
+    let areaRadiusKm = uiCalculatedRadius;
     
     // 🎯 CRITICAL FIX: Generate area center ensuring GUARANTEED Agrigento coverage
     const centerDistanceKm = Math.min(areaRadiusKm * 0.6, 15); // Center within 60% of radius, max 15km
