@@ -532,6 +532,39 @@ export type Database = {
           },
         ]
       }
+      consent_history: {
+        Row: {
+          consent_given: boolean
+          consent_timestamp: string | null
+          consent_type: string
+          consent_version: string | null
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_given: boolean
+          consent_timestamp?: string | null
+          consent_type: string
+          consent_version?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_given?: boolean
+          consent_timestamp?: string | null
+          consent_type?: string
+          consent_version?: string | null
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -832,6 +865,39 @@ export type Database = {
           tool_name?: string
           used_on?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      legal_documents: {
+        Row: {
+          content_md: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          published_at: string | null
+          title: string
+          type: string
+          version: string
+        }
+        Insert: {
+          content_md: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          published_at?: string | null
+          title: string
+          type: string
+          version: string
+        }
+        Update: {
+          content_md?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          published_at?: string | null
+          title?: string
+          type?: string
+          version?: string
         }
         Relationships: []
       }
@@ -1846,6 +1912,75 @@ export type Database = {
           },
         ]
       }
+      user_consents: {
+        Row: {
+          analytics_consent: boolean | null
+          communications_consent: boolean | null
+          cookie_consent: boolean | null
+          created_at: string | null
+          id: string
+          marketing_consent: boolean | null
+          profiling_consent: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          analytics_consent?: boolean | null
+          communications_consent?: boolean | null
+          cookie_consent?: boolean | null
+          created_at?: string | null
+          id?: string
+          marketing_consent?: boolean | null
+          profiling_consent?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          analytics_consent?: boolean | null
+          communications_consent?: boolean | null
+          cookie_consent?: boolean | null
+          created_at?: string | null
+          id?: string
+          marketing_consent?: boolean | null
+          profiling_consent?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_cookie_preferences: {
+        Row: {
+          analytics_cookies: boolean | null
+          created_at: string | null
+          essential_cookies: boolean | null
+          id: string
+          marketing_cookies: boolean | null
+          preferences_cookies: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analytics_cookies?: boolean | null
+          created_at?: string | null
+          essential_cookies?: boolean | null
+          id?: string
+          marketing_cookies?: boolean | null
+          preferences_cookies?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analytics_cookies?: boolean | null
+          created_at?: string | null
+          essential_cookies?: boolean | null
+          id?: string
+          marketing_cookies?: boolean | null
+          preferences_cookies?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_map_areas: {
         Row: {
           clue_id: string | null
@@ -2303,9 +2438,20 @@ export type Database = {
           expires_at: string
         }[]
       }
+      get_authenticated_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      get_current_user_profile_safe: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          role: string
+          email: string
+        }[]
       }
       get_current_week_and_year: {
         Args: Record<PropertyKey, never>
@@ -2331,6 +2477,10 @@ export type Database = {
       get_user_by_email: {
         Args: { email_param: string }
         Returns: unknown[]
+      }
+      get_user_role_safe: {
+        Args: { p_user_id: string }
+        Returns: string
       }
       get_user_roles: {
         Args: { user_id: string }
@@ -2365,6 +2515,10 @@ export type Database = {
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
+      }
+      is_admin_email_safe: {
+        Args: { p_email: string }
+        Returns: boolean
       }
       is_ip_blocked: {
         Args: { ip_addr: unknown }
