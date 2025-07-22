@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useAuthSessionManager } from './use-auth-session-manager';
 import { supabase } from '@/integrations/supabase/client';
 
