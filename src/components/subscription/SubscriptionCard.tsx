@@ -65,9 +65,9 @@ const SubscriptionCard = ({
   return (
     <div className={cn(
       "relative glass-card p-6 transition-all duration-300",
-      isActive && "ring-2 ring-cyan-500 animate-pulse",
+      isActive && "ring-2 ring-cyan-500",
       isPopular && "transform scale-105 z-10",
-      type === "Titanium" && "animate-[pulse_3s_ease-in-out_infinite] shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+      type === "Titanium" && "shadow-[0_0_30px_rgba(168,85,247,0.4)]"
     )}>
       {isPopular && (
         <Badge className="absolute -top-2 right-6 bg-gradient-to-r from-indigo-500 to-purple-600">
@@ -102,7 +102,7 @@ const SubscriptionCard = ({
             console.error(`❌ M1SSION™ No onClick handler for ${type}`);
           }
         }}
-        disabled={isActive}
+        disabled={false}
         className={cn(
           "w-full transition-all duration-200 font-semibold",
           isActive 

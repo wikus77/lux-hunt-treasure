@@ -62,25 +62,21 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
   };
   
-  // M1SSION™ Sistema Upgrade/Downgrade Completo
+  // 🚀 M1SSION™ Sistema Upgrade/Downgrade Completo - FIXED CRITICAL BLOCKING BUG
   const handleUpdatePlan = async (plan: string) => {
     console.log(`🔥 M1SSION™ CLICK DETECTED: ${plan} button clicked`);
     console.log(`🔧 M1SSION™ STATE:`, { selected, plan, equal: plan === selected });
     console.log(`🌐 M1SSION™ Current location before navigate:`, window.location.href);
     
+    // 🚨 CRITICAL FIX: Remove same plan block to allow re-activation and payment retries
+    console.log(`🚀 M1SSION™ PROCESSING: ${selected} → ${plan} (ALWAYS ALLOWED)`);
+    
+    // Special handling for same plan - allow re-checkout for payment issues
     if (plan === selected) {
-      console.log(`⚠️ M1SSION™ SAME PLAN: Already on ${plan}`);
-      toast({
-        title: "✅ Piano già attivo",
-        description: `Sei già abbonato al piano ${plan}`,
-        duration: 3000
-      });
-      return;
+      console.log(`🔄 M1SSION™ RE-CHECKOUT: Allowing re-checkout for ${plan}`);
     }
     
     try {
-      console.log(`🚀 M1SSION™ PROCESSING: ${selected} → ${plan}`);
-      
       if (plan === "Base") {
         console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
         await upgradeSubscription(plan);
@@ -112,11 +108,11 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         });
         
       } else {
-        console.log(`⬆️ M1SSION™ UPGRADE: To ${plan} plan`);
+        console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
         console.log(`🔄 M1SSION™ REDIRECTING: /subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
         
-        // Forza redirect immediato
-        navigate(`/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
+        // 🚨 CRITICAL FIX: Force immediate redirect for ALL plans (upgrade, downgrade, re-checkout)
+        window.location.href = `/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`;
         
         sonnerToast.loading(`🔄 Reindirizzamento a checkout ${plan}...`, {
           duration: 2000
