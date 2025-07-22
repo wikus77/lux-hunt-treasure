@@ -3,7 +3,8 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
-import { isWinningPrize, getPrizeMessage } from '@/utils/dailySpinUtils';
+import { isWinningPrize } from '@/utils/dailySpinUtils';
+import { PRIZE_CONFIG } from '@/utils/dailySpinPrizeMap';
 
 interface DailySpinResultModalProps {
   isOpen: boolean;
@@ -43,61 +44,98 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
   if (!isOpen) return null;
 
   const winning = isWinningPrize(prize);
+  const prizeConfig = PRIZE_CONFIG[prize as keyof typeof PRIZE_CONFIG];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
       
       {/* Modal */}
       <div className={`relative mx-4 p-8 rounded-2xl border-2 max-w-md w-full text-center animate-scale-in ${
         winning 
-          ? 'bg-gradient-to-br from-primary/10 to-accent/10 border-primary/30' 
-          : 'bg-gradient-to-br from-muted/10 to-border/10 border-muted/30'
-      }`}>
+          ? 'bg-gradient-to-br from-cyan-900/40 to-purple-900/40 border-cyan-400/50' 
+          : 'bg-gradient-to-br from-gray-900/40 to-slate-900/40 border-gray-500/50'
+      }`}
+      style={{
+        backdropFilter: 'blur(20px)',
+        boxShadow: winning 
+          ? '0 0 60px rgba(0, 255, 255, 0.3), inset 0 0 30px rgba(0, 255, 255, 0.1)'
+          : '0 0 30px rgba(0, 0, 0, 0.5)'
+      }}
+      >
         
         {/* Icon */}
-        <div className={`mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center text-4xl ${
+        <div className={`mx-auto mb-6 w-24 h-24 rounded-full flex items-center justify-center text-5xl ${
           winning 
-            ? 'bg-gradient-to-br from-primary to-accent text-background' 
-            : 'bg-muted text-muted-foreground'
-        }`}>
-          {winning ? '🎉' : '😞'}
+            ? 'bg-gradient-to-br from-cyan-400 to-purple-500 text-white' 
+            : 'bg-gray-600 text-gray-300'
+        }`}
+        style={{
+          filter: winning 
+            ? 'drop-shadow(0 0 20px rgba(0, 255, 255, 0.6))'
+            : 'none',
+          boxShadow: winning
+            ? 'inset 0 0 20px rgba(255, 255, 255, 0.2)'
+            : 'none'
+        }}
+        >
+          {prizeConfig?.emoji || (winning ? '🎉' : '😞')}
         </div>
 
         {/* Title */}
-        <h2 className={`text-3xl font-bold mb-4 ${
-          winning ? 'text-primary' : 'text-muted-foreground'
-        }`}>
-          {winning ? 'COMPLIMENTI!' : 'RIPROVA DOMANI'}
+        <h2 className={`font-mission text-3xl font-bold mb-4 tracking-wider ${
+          winning ? 'text-cyan-400' : 'text-gray-400'
+        }`}
+        style={{
+          textShadow: winning 
+            ? '0 0 20px rgba(0, 255, 255, 0.8)'
+            : 'none'
+        }}
+        >
+          {winning ? 'CONGRATULAZIONI!' : 'RIPROVA DOMANI'}
         </h2>
 
         {/* Prize */}
-        <div className="mb-4">
-          <p className="text-xl font-semibold text-foreground mb-2">{prize}</p>
-          <p className="text-muted-foreground">{getPrizeMessage(prize)}</p>
+        <div className="mb-6">
+          <p className={`text-2xl font-bold mb-3 font-display ${
+            winning ? 'text-white' : 'text-gray-300'
+          }`}>
+            {prize}
+          </p>
+          <p className={`text-lg ${
+            winning ? 'text-cyan-200' : 'text-gray-400'
+          }`}>
+            {message}
+          </p>
         </div>
 
         {/* Actions */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {winning && reroute_path ? (
             <Button 
               onClick={handleRedirect}
-              className="w-full bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-background font-bold py-3"
+              className="w-full font-mission text-lg py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold rounded-xl border-2 border-cyan-400/50 transition-all duration-300"
+              style={{
+                filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.4))',
+                textShadow: '0 0 10px rgba(255, 255, 255, 0.8)'
+              }}
             >
-              Riscatta Ora
+              🚀 RISCATTA SUBITO
             </Button>
           ) : (
             <Button 
               onClick={() => setLocation('/home')}
               variant="outline"
-              className="w-full"
+              className="w-full py-3 border-gray-500 text-gray-300 hover:bg-gray-800"
             >
               Torna alla Home
             </Button>
           )}
           
-          <p className="text-xs text-muted-foreground">
+          <p className={`text-sm ${
+            winning ? 'text-cyan-300/80' : 'text-gray-500'
+          }`}>
             {winning 
               ? 'Torna domani per un nuovo giro!' 
               : 'Chiusura automatica tra 4 secondi...'

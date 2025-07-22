@@ -193,8 +193,11 @@ const config: Config = {
         'glow': 'glow 0.6s ease-in-out 2s forwards',
       },
       fontFamily: {
-        'inter': ['Inter', 'sans-serif'],
-        'orbitron': ['Orbitron', 'sans-serif'],
+        sans: ["Inter", "sans-serif"],
+        mono: ["VT323", "monospace"],
+        orbitron: ["Orbitron", "sans-serif"],
+        mission: ["Audiowide", "Exo 2", "Orbitron", "sans-serif"],
+        display: ["Exo 2", "sans-serif"],
       },
       backgroundImage: {
         'gradient-landing': 'radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%)',

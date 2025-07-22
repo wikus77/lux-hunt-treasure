@@ -1,21 +1,20 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { useDailySpin } from '@/hooks/useDailySpin';
 import { useLocation } from 'wouter';
-import { 
-  SEGMENTS, 
-  WINNING_SEGMENTS, 
-  getRandomSegment, 
-  isWinningPrize 
-} from '@/utils/dailySpinUtils';
+import { useDailySpin } from '@/hooks/useDailySpin';
+import { DailySpinHeader } from './DailySpinHeader';
+import { DailySpin3DWheel } from './DailySpin3DWheel';
+import { DailySpinButton } from './DailySpinButton';
+import { DailySpinResultModal } from './DailySpinResultModal';
+import { getRandomSegment, SEGMENTS, isWinningPrize } from '@/utils/dailySpinUtils';
 
 export const DailySpinWheel: React.FC = () => {
   const [, setLocation] = useLocation();
   const [rotation, setRotation] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showResult, setShowResult] = useState(false);
+  const [wheelSize, setWheelSize] = useState(380);
   const { spinWheel, isSpinning, spinResult, error } = useDailySpin();
 
   const handleSpin = async () => {
@@ -51,194 +50,113 @@ export const DailySpinWheel: React.FC = () => {
   const handleRedirect = () => {
     if (spinResult?.reroute_path) {
       setLocation(spinResult.reroute_path);
+    } else {
+      setLocation('/home');
     }
   };
 
+  const handleCloseModal = () => {
+    setShowResult(false);
+    setLocation('/home');
+  };
+
+  // Handle responsive wheel size
+  useEffect(() => {
+    const updateSize = () => {
+      setWheelSize(window.innerWidth < 768 ? 320 : 380);
+    };
+    
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
   // Auto-close effect for losing prizes
   useEffect(() => {
-    if (spinResult && showResult) {
-      if (!isWinningPrize(spinResult.prize)) {
-        const timer = setTimeout(() => {
-          setLocation('/home');
-        }, 3000);
-        return () => clearTimeout(timer);
-      }
+    if (spinResult && showResult && !isWinningPrize(spinResult.prize)) {
+      const timer = setTimeout(() => {
+        setLocation('/home');
+      }, 4000); // 4 seconds for auto-close
+      return () => clearTimeout(timer);
     }
   }, [spinResult, showResult, setLocation]);
 
-  const segmentAngle = 360 / 12;
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-background via-primary/5 to-secondary/10 p-4">
-      {/* Titolo */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent mb-2">
-          DAILY SPIN M1SSION™
-        </h1>
-        <p className="text-muted-foreground">Una sola possibilità al giorno!</p>
-      </div>
-
-      {/* Container ruota */}
-      <div className="relative mb-8">
-        {/* Ago fisso */}
-        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2 z-20">
-          <div className="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-accent animate-pulse"></div>
-        </div>
-
-        {/* Ruota */}
-        <div className="relative w-80 h-80">
-          <svg
-            width="320"
-            height="320"
-            viewBox="0 0 320 320"
-            className={`transform transition-transform duration-[4000ms] ease-out ${
-              isAnimating ? 'animate-pulse' : ''
-            }`}
-            style={{ transform: `rotate(${rotation}deg)` }}
-          >
-            {/* Segmenti */}
-            {SEGMENTS.map((segment, index) => {
-              const startAngle = index * segmentAngle - 90; // Start from top (-90 degrees)
-              const endAngle = (index + 1) * segmentAngle - 90;
-              
-              // Calcola le coordinate del settore
-              const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-              const x1 = 160 + 140 * Math.cos((startAngle * Math.PI) / 180);
-              const y1 = 160 + 140 * Math.sin((startAngle * Math.PI) / 180);
-              const x2 = 160 + 140 * Math.cos((endAngle * Math.PI) / 180);
-              const y2 = 160 + 140 * Math.sin((endAngle * Math.PI) / 180);
-
-              const pathData = [
-                `M 160 160`,
-                `L ${x1} ${y1}`,
-                `A 140 140 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                'Z'
-              ].join(' ');
-
-              // Colori alternati con tema neon
-              const isWinning = WINNING_SEGMENTS.includes(index);
-              const colors = isWinning 
-                ? ['hsl(221 83% 53%)', 'hsl(262 80% 50%)', 'hsl(47 96% 53%)'] // Blue, Purple, Yellow
-                : ['hsl(215 27% 32%)', 'hsl(215 20% 25%)', 'hsl(220 14% 20%)']; // Grays
-              
-              const color = colors[index % colors.length];
-
-              return (
-                <g key={index}>
-                  <path
-                    d={pathData}
-                    fill={color}
-                    stroke="hsl(0 0% 100%)"
-                    strokeWidth="2"
-                    className={isWinning ? 'drop-shadow-lg' : ''}
-                  />
-                  
-                  {/* Testo del segmento */}
-                  <text
-                    x={160 + 90 * Math.cos(((startAngle + endAngle) / 2 * Math.PI) / 180)}
-                    y={160 + 90 * Math.sin(((startAngle + endAngle) / 2 * Math.PI) / 180)}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="fill-white text-xs font-bold"
-                    transform={`rotate(${(startAngle + endAngle) / 2} ${
-                      160 + 90 * Math.cos(((startAngle + endAngle) / 2 * Math.PI) / 180)
-                    } ${160 + 90 * Math.sin(((startAngle + endAngle) / 2 * Math.PI) / 180)})`}
-                  >
-                    {segment}
-                  </text>
-                </g>
-              );
-            })}
-            
-            {/* Centro della ruota */}
-            <circle
-              cx="160"
-              cy="160"
-              r="25"
-              fill="hsl(0 0% 100%)"
-              stroke="hsl(221 83% 53%)"
-              strokeWidth="4"
-              className="drop-shadow-lg"
-            />
-            
-            {/* Logo M1SSION al centro */}
-            <text
-              x="160"
-              y="160"
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-blue-600 text-sm font-bold"
-            >
-              M1
-            </text>
-          </svg>
-        </div>
-      </div>
-
-      {/* Pulsante GIRA ORA */}
-      <Button
-        onClick={handleSpin}
-        disabled={isSpinning || isAnimating || !!error}
-        size="lg"
-        className="relative px-8 py-4 text-xl font-bold bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-background shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
-      >
-        {isSpinning || isAnimating ? (
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin"></div>
-            GIRANDO...
-          </div>
-        ) : error ? (
-          'ERRORE - RIPROVA'
-        ) : (
-          'GIRA ORA'
-        )}
-      </Button>
-
-      {/* Errore */}
-      {error && (
-        <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
-          <p className="text-destructive font-medium">{error}</p>
-        </div>
-      )}
-
-      {/* Risultato */}
-      {spinResult && showResult && !isAnimating && (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Animated Background Grid */}
+      <div className="absolute inset-0 opacity-20">
         <div 
-          className="mt-8 p-6 bg-background/80 backdrop-blur-sm rounded-lg border border-primary/20 text-center animate-fade-in"
-        >
-          <h3 className="text-2xl font-bold text-primary mb-2">🎉 RISULTATO 🎉</h3>
-          <p className="text-lg text-foreground mb-4">{spinResult.message}</p>
-          
-          {/* Buttons based on prize type */}
-          {spinResult.reroute_path ? (
-            <div className="space-y-3">
-              <Button 
-                onClick={handleRedirect}
-                className="w-full bg-gradient-to-r from-accent to-secondary hover:from-accent/80 hover:to-secondary/80"
-              >
-                Riscatta Ora
-              </Button>
-              <p className="text-sm text-muted-foreground">
-                Torna domani per un nuovo giro!
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                {!isWinningPrize(spinResult.prize)
-                  ? 'Riprova domani per un nuovo tentativo!'
-                  : 'Torna domani per un nuovo giro!'
-                }
-              </p>
-              {!isWinningPrize(spinResult.prize) && (
-                <p className="text-xs text-muted-foreground/60">
-                  Chiusura automatica tra 3 secondi...
-                </p>
-              )}
-            </div>
-          )}
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px',
+            animation: 'pulse 4s ease-in-out infinite'
+          }}
+        />
+      </div>
+
+      {/* Floating Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 bg-cyan-400 rounded-full opacity-60 animate-float-particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${i * 2}s`,
+              animationDuration: `${10 + i * 2}s`,
+              filter: 'blur(1px)'
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Main Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4">
+        
+        {/* Header */}
+        <DailySpinHeader />
+        
+        {/* Error Display */}
+        {error && (
+          <div className="mb-8 p-6 bg-red-900/20 border border-red-500/30 rounded-xl backdrop-blur-sm text-center max-w-md">
+            <div className="text-red-400 text-lg font-semibold mb-2">⚠️ Errore</div>
+            <p className="text-red-300">{error}</p>
+          </div>
+        )}
+        
+        {/* 3D Wheel */}
+        <div className="mb-8">
+          <DailySpin3DWheel 
+            rotation={rotation}
+            isAnimating={isAnimating}
+            size={wheelSize}
+          />
         </div>
-      )}
+        
+        {/* Spin Button */}
+        <DailySpinButton
+          isSpinning={isSpinning}
+          isAnimating={isAnimating}
+          hasError={!!error}
+          onSpin={handleSpin}
+        />
+        
+        {/* Result Modal */}
+        {spinResult && (
+          <DailySpinResultModal
+            isOpen={showResult}
+            prize={spinResult.prize}
+            message={spinResult.message}
+            reroute_path={spinResult.reroute_path}
+            onClose={handleCloseModal}
+          />
+        )}
+      </div>
     </div>
   );
 };
