@@ -196,7 +196,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         />
         <SubscriptionCard
           title="Titanium"
-          price="€14,99"
+          price="€29,99"
           period="mese"
           features={getSubscriptionFeatures("Titanium")}
           isPopular={false}

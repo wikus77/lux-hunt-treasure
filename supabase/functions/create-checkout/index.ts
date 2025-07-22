@@ -49,7 +49,7 @@ serve(async (req) => {
     if (!plan) throw new Error("Piano mancante nel body");
     logStep("📋 Piano richiesto", { plan });
 
-    // Configurazione prezzi per ogni tier
+    // Configurazione prezzi corretti M1SSION™
     const priceConfig = {
       'Silver': { price: 399, name: 'M1SSION™ Silver' },
       'Gold': { price: 699, name: 'M1SSION™ Gold' },
