@@ -1,7 +1,7 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Handler Hook - RESET COMPLETO 17/07/2025
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,26 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { processBuzzPurchase, loading: paymentLoading } = useUniversalStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
   const { callBuzzApi } = useBuzzApi();
+
+  // FORCE RESET ON MOUNT to clear any stuck state
+  useEffect(() => {
+    console.log('🔄 BUZZ HANDLER INIT: Force clearing any stuck state');
+    setBuzzing(false);
+    setShowShockwave(false);
+  }, []);
+
+  // Auto-reset buzzing state after 10 seconds to prevent permanent lock
+  useEffect(() => {
+    if (buzzing) {
+      const timeout = setTimeout(() => {
+        console.log('🔄 AUTO-RESET: Clearing stuck buzzing state');
+        setBuzzing(false);
+        setShowShockwave(false);
+      }, 10000); // 10 seconds timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [buzzing]);
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
@@ -70,7 +90,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
       // Open checkout modal and wait for payment completion
-      const paymentOpened = await processBuzzPurchase(false, currentPrice);
+      const paymentOpened = processBuzzPurchase(false, currentPrice);
       
       if (!paymentOpened) {
         toast.error("Pagamento obbligatorio", {

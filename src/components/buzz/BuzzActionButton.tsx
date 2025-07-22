@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - BUZZ Action Button Container Component
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
 import { BuzzButton } from './BuzzButton';
@@ -31,6 +31,17 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     closeCheckout 
   } = useUniversalStripePayment();
 
+  // Debug log for checkout state
+  useEffect(() => {
+    if (currentPaymentConfig) {
+      console.log('🔥 BUZZ CHECKOUT MODAL STATE:', { 
+        isCheckoutOpen, 
+        paymentType: currentPaymentConfig.paymentType,
+        amount: currentPaymentConfig.amount 
+      });
+    }
+  }, [isCheckoutOpen, currentPaymentConfig]);
+
   return (
     <div className="relative flex flex-col items-center space-y-6">
       <BuzzButton
@@ -45,16 +56,17 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       {/* Universal Stripe Checkout Modal */}
       {currentPaymentConfig && (
         <UniversalStripeCheckout
-          isOpen={isCheckoutOpen}
-          onClose={() => {
-            handlePaymentCancel();
-            closeCheckout();
-          }}
-          paymentType={currentPaymentConfig.paymentType}
-          planName={currentPaymentConfig.planName}
-          amount={currentPaymentConfig.amount}
-          description={currentPaymentConfig.description}
-          isBuzzMap={currentPaymentConfig.isBuzzMap}
+            isOpen={isCheckoutOpen}
+            onClose={() => {
+              console.log('❌ BUZZ CHECKOUT CLOSED by user');
+              handlePaymentCancel();
+              closeCheckout();
+            }}
+            paymentType={currentPaymentConfig.paymentType}
+            planName={currentPaymentConfig.planName}
+            amount={currentPaymentConfig.amount}
+            description={currentPaymentConfig.description}
+            isBuzzMap={currentPaymentConfig.isBuzzMap}
           onSuccess={handlePaymentSuccess}
         />
       )}
