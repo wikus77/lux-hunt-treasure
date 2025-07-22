@@ -24,6 +24,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { checkAbuseAndLog } = useAbuseProtection();
   const { processBuzzPurchase, loading: paymentLoading } = useUniversalStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
+  const { callBuzzApi } = useBuzzApi();
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
@@ -62,9 +63,10 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
-      const paymentSuccess = await processBuzzPurchase(false, currentPrice);
+      // Open checkout modal and wait for payment completion
+      const paymentOpened = await processBuzzPurchase(false, currentPrice);
       
-      if (!paymentSuccess) {
+      if (!paymentOpened) {
         toast.error("Pagamento obbligatorio", {
           description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
         });
@@ -73,11 +75,33 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
       
-      console.log('✅ BUZZ: Stripe payment completed successfully - proceeding to API - RESET COMPLETO 17/07/2025');
+      console.log('✅ BUZZ: Stripe checkout opened successfully - RESET COMPLETO 17/07/2025');
+      
+      // Stop here - the actual BUZZ API call will be triggered after payment completion
+      // via the onSuccess callback in the UniversalStripeCheckout component
+      setBuzzing(false);
+      setShowShockwave(false);
+      
+    } catch (err) {
+      console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
+      toast.error('Errore imprevisto durante BUZZ');
+      setBuzzing(false);
+      setShowShockwave(false);
+    }
+  };
 
-      // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
-      console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');
-      const { callBuzzApi } = useBuzzApi();
+  // This function will be called after successful payment
+  const handlePaymentSuccess = async () => {
+    console.log('💳 BUZZ: Payment completed successfully - calling API - RESET COMPLETO 17/07/2025');
+    
+    if (!user) {
+      console.error('❌ BUZZ: No user available for API call');
+      return;
+    }
+    
+    try {
+      setBuzzing(true);
+      setShowShockwave(true);
       
       const buzzResult = await callBuzzApi({
         userId: user.id,
@@ -155,7 +179,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       }, 1500);
       
     } catch (err) {
-      console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
+      console.error('❌ Error in handlePaymentSuccess - RESET COMPLETO 17/07/2025:', err);
       toast.error('Errore imprevisto durante BUZZ');
     } finally {
       setBuzzing(false);
@@ -165,6 +189,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   return {
     buzzing,
     showShockwave,
-    handleBuzz
+    handleBuzz,
+    handlePaymentSuccess
   };
 }

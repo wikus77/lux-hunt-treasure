@@ -20,7 +20,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   todayCount,
   onSuccess
 }) => {
-  const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
+  const { buzzing, showShockwave, handleBuzz, handlePaymentSuccess } = useBuzzHandler({
     currentPrice,
     onSuccess
   });
@@ -52,7 +52,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
           amount={currentPaymentConfig.amount}
           description={currentPaymentConfig.description}
           isBuzzMap={currentPaymentConfig.isBuzzMap}
-          onSuccess={currentPaymentConfig.onSuccess}
+          onSuccess={handlePaymentSuccess}
         />
       )}
     </div>
