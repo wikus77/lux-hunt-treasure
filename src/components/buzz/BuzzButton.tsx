@@ -54,47 +54,51 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
   return (
     <div 
       className="relative w-48 h-48"
-      onClick={() => {
-        // 🚨 CRITICAL: Emergency click handler - even if button is disabled
-        console.log('🚨 EMERGENCY CLICK DETECTED - CHECKING STATE:', { 
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // 🚨 CRITICAL: Emergency click handler - FORCE EXECUTION
+        console.log('🚨 DIV EMERGENCY CLICK DETECTED - FORCING EXECUTION:', { 
           isBlocked, 
           buzzing, 
           currentPrice,
           disabled: isBlocked || buzzing,
-          clickTime: new Date().toISOString()
+          clickTime: new Date().toISOString(),
+          target: 'div_wrapper'
         });
         
-        // If buzzing and no real activity, force reset after 3 clicks
-        if (buzzing && !isBlocked) {
-          const clickCount = parseInt(localStorage.getItem('buzzEmergencyClicks') || '0') + 1;
-          localStorage.setItem('buzzEmergencyClicks', clickCount.toString());
-          
-          if (clickCount >= 3) {
-            console.log('🚨 EMERGENCY RESET: 3 clicks detected on stuck buzzing button');
-            localStorage.removeItem('buzzEmergencyClicks');
-            // Force state reset by triggering a page refresh
-            window.location.reload();
-          } else {
-            console.log(`🚨 EMERGENCY: Click ${clickCount}/3 for emergency reset`);
-          }
-        } else {
-          localStorage.removeItem('buzzEmergencyClicks');
+        // FORCE CALL onClick REGARDLESS OF STATE
+        if (onClick && typeof onClick === 'function') {
+          console.log('🚨 FORCE EXECUTING onClick FROM DIV');
+          onClick();
         }
       }}
     >
       <motion.button
         whileTap={{ scale: 0.97 }}
-        disabled={isBlocked || buzzing}
-        onClick={() => {
-          console.log('🔘 BUZZ BUTTON CLICKED - CRITICAL LOG', { 
+        disabled={false} // 🚨 FORCE ENABLE - Never disable this button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('🔘 BUZZ BUTTON CLICKED - FORCED LOGGING', { 
             isBlocked, 
             buzzing, 
             currentPrice,
             disabled: isBlocked || buzzing,
-            clickTime: new Date().toISOString()
+            clickTime: new Date().toISOString(),
+            event: 'click_captured'
           });
+          
+          // Force call onClick even if button appears disabled
+          if (onClick && typeof onClick === 'function') {
+            console.log('🔘 CALLING onClick FUNCTION NOW');
+            onClick();
+          } else {
+            console.error('🔘 ERROR: onClick is not a function!', typeof onClick);
+          }
+          
           localStorage.removeItem('buzzEmergencyClicks'); // Clear emergency clicks on successful click
-          onClick();
         }}
         className="w-full h-full rounded-full text-lg font-semibold text-white tracking-wide shadow-lg z-20"
         style={{
