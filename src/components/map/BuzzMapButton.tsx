@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useBuzzMapProgressivePricing } from '@/hooks/map/useBuzzMapProgressivePricing';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
+import UniversalStripeCheckout from '@/components/stripe/UniversalStripeCheckout';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 import { supabase } from '@/integrations/supabase/client';
 import { BuzzCostWarningModal } from '@/components/buzz/BuzzCostWarningModal';
@@ -35,7 +36,13 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     validateBuzzRequest,
     incrementGeneration 
   } = useBuzzMapProgressivePricing();
-  const { processBuzzPurchase, loading } = useStripePayment();
+  const { 
+    processBuzzPurchase, 
+    isCheckoutOpen, 
+    currentPaymentConfig, 
+    closeCheckout,
+    loading 
+  } = useUniversalStripePayment();
   const { scheduleBuzzMappaNotification } = useBuzzNotificationScheduler();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -275,6 +282,20 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
 
   return (
     <>
+      {/* Universal Stripe Checkout Modal */}
+      {currentPaymentConfig && (
+        <UniversalStripeCheckout
+          isOpen={isCheckoutOpen}
+          onClose={closeCheckout}
+          paymentType={currentPaymentConfig.paymentType}
+          planName={currentPaymentConfig.planName}
+          amount={currentPaymentConfig.amount}
+          description={currentPaymentConfig.description}
+          isBuzzMap={currentPaymentConfig.isBuzzMap}
+          onSuccess={currentPaymentConfig.onSuccess}
+        />
+      )}
+      
       <BuzzCostWarningModal
         isOpen={showWarningModal}
         onConfirm={handleWarningConfirm}
