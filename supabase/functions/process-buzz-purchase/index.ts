@@ -119,7 +119,7 @@ serve(async (req) => {
                 reset_date: '2025-07-17'
               }
             },
-            unit_amount: Math.round(amount * 100), // Convert to cents
+            unit_amount: Math.round(amount), // Amount already in cents from frontend
           },
           quantity: 1,
         },
