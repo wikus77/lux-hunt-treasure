@@ -15,10 +15,17 @@ import { useAuth } from "./hooks/use-auth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import { DailySpinRedirect } from "./components/daily-spin/DailySpinRedirect";
+import { initializeSupabaseWarningFixes } from "./utils/supabaseWarningsFix";
+import { useEffect } from "react";
 
 function App() {
   console.log("🚀 App component rendering...");
   console.log("🔍 App mount - checking for potential reload loops");
+  
+  // WARNING #23-26 GLOBAL FIX: Initialize Supabase warning fixes
+  useEffect(() => {
+    initializeSupabaseWarningFixes();
+  }, []);
   
   // Initialize push notification processor
   usePushNotificationProcessor();
