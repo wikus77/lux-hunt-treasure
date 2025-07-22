@@ -11,22 +11,41 @@ interface SpinResult {
   rotation_deg: number;
   message: string;
   log_id?: string;
+  reroute_path?: string;
 }
+
+// Map prize to redirect paths
+const PRIZE_REDIRECTS: Record<string, string> = {
+  'BUZZ x1': '/buzz',
+  'BUZZ x2': '/buzz', 
+  'BUZZ MAPPA gratis': '/map?autoBuzzMapFree=true',
+  'Clue di Settimana 4': '/clue/week4',
+  'Premio Random': '/prizes',
+  '3h senza blocchi BUZZ': '/home', // Salva timestamp e redirect home
+  'Indizio Extra': '/clues'
+};
 
 export const useDailySpin = () => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinResult, setSpinResult] = useState<SpinResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { user, session } = useUnifiedAuth();
 
   const spinWheel = async (prize: string, rotationDeg: number) => {
     if (!user || !session) {
-      toast.error('Devi essere autenticato per giocare');
+      const errorMsg = 'Devi essere autenticato per giocare';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     }
 
     try {
       setIsSpinning(true);
       setSpinResult(null);
+      setError(null);
+
+      // Add redirect path to the request
+      const reroute_path = PRIZE_REDIRECTS[prize] || null;
 
       const { data, error } = await supabase.functions.invoke('log-daily-spin', {
         body: {
@@ -34,6 +53,7 @@ export const useDailySpin = () => {
           prize,
           rotation_deg: rotationDeg,
           client_ip: null, // Verrà rilevato dal server
+          reroute_path
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -43,35 +63,59 @@ export const useDailySpin = () => {
       if (error) {
         console.error('❌ Errore spin:', error);
         
+        let errorMessage = 'Errore durante il giro della ruota';
         if (error.message?.includes('ALREADY_PLAYED_TODAY')) {
-          toast.error('Hai già giocato oggi! Torna domani per un nuovo giro.');
-        } else {
-          toast.error('Errore durante il giro della ruota');
+          errorMessage = 'Hai già giocato oggi! Torna domani per un nuovo giro.';
+        } else if (error.message?.includes('row-level security')) {
+          errorMessage = 'Errore di sicurezza. Riprova più tardi.';
         }
+        
+        setError(errorMessage);
+        toast.error(errorMessage);
         return null;
       }
 
       console.log('🎰 Risultato spin:', data);
-      setSpinResult(data);
+      
+      // Add redirect path to result
+      const resultWithRedirect = {
+        ...data,
+        reroute_path: PRIZE_REDIRECTS[data.prize] || null
+      };
+      
+      setSpinResult(resultWithRedirect);
+      
+      // Handle special case for 3h buzz cooldown
+      if (prize === '3h senza blocchi BUZZ') {
+        localStorage.setItem('buzzCooldownEnd', (Date.now() + 3 * 60 * 60 * 1000).toString());
+      }
       
       // Toast di successo
       toast.success(data.message || `Hai vinto: ${data.prize}!`);
       
-      return data;
+      return resultWithRedirect;
 
     } catch (err) {
       console.error('❌ Errore critico spin:', err);
-      toast.error('Errore imprevisto durante il giro');
+      const errorMsg = 'Errore imprevisto durante il giro';
+      setError(errorMsg);
+      toast.error(errorMsg);
       return null;
     } finally {
       setIsSpinning(false);
     }
   };
 
+  const getPrizeRedirectPath = (prize: string) => {
+    return PRIZE_REDIRECTS[prize] || null;
+  };
+
   return {
     spinWheel,
     isSpinning,
     spinResult,
+    error,
     setSpinResult,
+    getPrizeRedirectPath,
   };
 };

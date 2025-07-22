@@ -12,6 +12,7 @@ interface DailySpinRequest {
   prize: string;
   rotation_deg: number;
   client_ip?: string;
+  reroute_path?: string;
 }
 
 Deno.serve(async (req) => {
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    const { user_id, prize, rotation_deg, client_ip }: DailySpinRequest = await req.json()
+    const { user_id, prize, rotation_deg, client_ip, reroute_path }: DailySpinRequest = await req.json()
 
     // Verifica che l'utente coincida con quello autenticato
     if (user_id !== user.id) {
@@ -102,13 +103,22 @@ Deno.serve(async (req) => {
 
     console.log(`✅ Daily Spin registrato per utente ${user_id}: ${prize}`)
 
+    // Determina il messaggio personalizzato
+    let message = `Hai vinto: ${prize}!`;
+    if (['Missione Fallita', 'Nessun premio'].includes(prize)) {
+      message = `${prize} - Riprova domani!`;
+    } else if (prize === '3h senza blocchi BUZZ') {
+      message = 'Hai vinto 3 ore senza limitazioni BUZZ!';
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         prize,
         rotation_deg,
-        message: `Complimenti! Hai vinto: ${prize}`,
-        log_id: spinLog.id
+        message,
+        log_id: spinLog.id,
+        reroute_path: reroute_path || null
       }),
       { 
         status: 200, 

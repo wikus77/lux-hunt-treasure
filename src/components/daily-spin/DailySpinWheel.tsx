@@ -1,8 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDailySpin } from '@/hooks/useDailySpin';
+import { useLocation } from 'wouter';
 
 const SEGMENTS = [
   'BUZZ x1',
@@ -24,9 +25,11 @@ const WINNING_SEGMENTS = [0, 1, 2, 6, 8, 9, 11]; // 7 su 12 = 58%, ma con logica
 const LOSING_SEGMENTS = [3, 4, 5, 7, 10]; // Missione Fallita e Nessun premio
 
 export const DailySpinWheel: React.FC = () => {
+  const [, setLocation] = useLocation();
   const [rotation, setRotation] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
-  const { spinWheel, isSpinning, spinResult } = useDailySpin();
+  const [showResult, setShowResult] = useState(false);
+  const { spinWheel, isSpinning, spinResult, error } = useDailySpin();
 
   const getRandomSegment = () => {
     const random = Math.random();
@@ -47,6 +50,7 @@ export const DailySpinWheel: React.FC = () => {
     if (isSpinning || isAnimating) return;
 
     setIsAnimating(true);
+    setShowResult(false);
     
     // Calcola il segmento vincente
     const winningSegment = getRandomSegment();
@@ -61,13 +65,35 @@ export const DailySpinWheel: React.FC = () => {
     
     // Invia il risultato al server
     const prize = SEGMENTS[winningSegment];
-    await spinWheel(prize, finalRotation);
+    const result = await spinWheel(prize, finalRotation);
     
     // Fine animazione dopo 4 secondi
     setTimeout(() => {
       setIsAnimating(false);
+      if (result && result.success) {
+        setShowResult(true);
+      }
     }, 4000);
   };
+
+  const handleRedirect = () => {
+    if (spinResult?.reroute_path) {
+      setLocation(spinResult.reroute_path);
+    }
+  };
+
+  // Auto-close effect for losing prizes
+  useEffect(() => {
+    if (spinResult && showResult) {
+      const losingPrizes = ['Missione Fallita', 'Nessun premio'];
+      if (losingPrizes.includes(spinResult.prize)) {
+        const timer = setTimeout(() => {
+          setLocation('/home');
+        }, 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [spinResult, showResult, setLocation]);
 
   const segmentAngle = 360 / 12;
 
@@ -170,28 +196,65 @@ export const DailySpinWheel: React.FC = () => {
       {/* Pulsante GIRA ORA */}
       <Button
         onClick={handleSpin}
-        disabled={isSpinning || isAnimating}
+        disabled={isSpinning || isAnimating || !!error}
         size="lg"
-        className="relative px-8 py-4 text-xl font-bold bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-background shadow-lg hover:shadow-xl transition-all duration-300"
+        className="relative px-8 py-4 text-xl font-bold bg-gradient-to-r from-primary to-accent hover:from-primary/80 hover:to-accent/80 text-background shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
       >
         {isSpinning || isAnimating ? (
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-background border-t-transparent rounded-full animate-spin"></div>
             GIRANDO...
           </div>
+        ) : error ? (
+          'ERRORE - RIPROVA'
         ) : (
           'GIRA ORA'
         )}
       </Button>
 
+      {/* Errore */}
+      {error && (
+        <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-center">
+          <p className="text-destructive font-medium">{error}</p>
+        </div>
+      )}
+
       {/* Risultato */}
-      {spinResult && !isAnimating && (
-        <div className="mt-8 p-6 bg-background/80 backdrop-blur-sm rounded-lg border border-primary/20 text-center">
+      {spinResult && showResult && !isAnimating && (
+        <div 
+          className="mt-8 p-6 bg-background/80 backdrop-blur-sm rounded-lg border border-primary/20 text-center animate-fade-in"
+        >
           <h3 className="text-2xl font-bold text-primary mb-2">🎉 RISULTATO 🎉</h3>
-          <p className="text-lg text-foreground">{spinResult.message}</p>
-          <div className="mt-4 text-sm text-muted-foreground">
-            Torna domani per un nuovo giro!
-          </div>
+          <p className="text-lg text-foreground mb-4">{spinResult.message}</p>
+          
+          {/* Buttons based on prize type */}
+          {spinResult.reroute_path ? (
+            <div className="space-y-3">
+              <Button 
+                onClick={handleRedirect}
+                className="w-full bg-gradient-to-r from-accent to-secondary hover:from-accent/80 hover:to-secondary/80"
+              >
+                Riscatta Ora
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Torna domani per un nuovo giro!
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {['Missione Fallita', 'Nessun premio'].includes(spinResult.prize) 
+                  ? 'Riprova domani per un nuovo tentativo!'
+                  : 'Torna domani per un nuovo giro!'
+                }
+              </p>
+              {['Missione Fallita', 'Nessun premio'].includes(spinResult.prize) && (
+                <p className="text-xs text-muted-foreground/60">
+                  Chiusura automatica tra 3 secondi...
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
