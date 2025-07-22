@@ -45,9 +45,11 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       console.log('💰 BUZZ PRICE CHECK - RESET COMPLETO 17/07/2025', { currentPrice });
       
-      // Check if blocked
-      if (currentPrice === 0) {
-        toast.error('BUZZ bloccato per oggi! Limite giornaliero raggiunto.');
+      // Progressive pricing - no blocking, price increases with usage
+      console.log('💰 PROGRESSIVE PRICING: Current price €' + currentPrice + ' for usage level');
+      
+      if (currentPrice <= 0) {
+        toast.error('Errore nel calcolo del prezzo BUZZ');
         return;
       }
       
@@ -58,22 +60,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
 
-      // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
-      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
-      
-      // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
-      const paymentSuccess = await processBuzzPurchase(false, currentPrice);
-      
-      if (!paymentSuccess) {
-        toast.error("Pagamento obbligatorio", {
-          description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
-        });
-        setBuzzing(false);
-        setShowShockwave(false);
-        return;
-      }
-      
-      console.log('✅ BUZZ: Stripe payment completed successfully - proceeding to API - RESET COMPLETO 17/07/2025');
+      // 🚨 PAYMENT HANDLED IN BuzzActionButton - PROCEED DIRECTLY TO BUZZ API
+      console.log('💳 BUZZ: Payment already processed by BuzzActionButton - proceeding to API - RESET COMPLETO 17/07/2025');
 
       // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
       console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');
