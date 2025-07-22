@@ -14,7 +14,7 @@ export const DailySpinWheel: React.FC = () => {
   const [rotation, setRotation] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [wheelSize, setWheelSize] = useState(380);
+  const [wheelSize, setWheelSize] = useState(400);
   const { spinWheel, isSpinning, spinResult, error } = useDailySpin();
 
   const handleSpin = async () => {
@@ -63,7 +63,7 @@ export const DailySpinWheel: React.FC = () => {
   // Handle responsive wheel size
   useEffect(() => {
     const updateSize = () => {
-      setWheelSize(window.innerWidth < 768 ? 320 : 380);
+      setWheelSize(window.innerWidth < 768 ? 350 : 400);
     };
     
     updateSize();
@@ -76,13 +76,13 @@ export const DailySpinWheel: React.FC = () => {
     if (spinResult && showResult && !isWinningPrize(spinResult.prize)) {
       const timer = setTimeout(() => {
         setLocation('/home');
-      }, 4000); // 4 seconds for auto-close
+      }, 2500); // 2.5 seconds for auto-close
       return () => clearTimeout(timer);
     }
   }, [spinResult, showResult, setLocation]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Animated Background Grid */}
       <div className="absolute inset-0 opacity-20">
         <div 
@@ -124,7 +124,7 @@ export const DailySpinWheel: React.FC = () => {
         {/* Error Display */}
         {error && (
           <div className="mb-8 p-6 bg-red-900/20 border border-red-500/30 rounded-xl backdrop-blur-sm text-center max-w-md">
-            <div className="text-red-400 text-lg font-semibold mb-2">⚠️ Errore</div>
+            <div className="text-red-400 text-lg font-semibold mb-2">Errore</div>
             <p className="text-red-300">{error}</p>
           </div>
         )}

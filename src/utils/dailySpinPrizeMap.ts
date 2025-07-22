@@ -15,7 +15,7 @@ export const mapRotationToPrize = (rotationDeg: number) => {
   const redirectMap: Record<string, string> = {
     'BUZZ x1': '/buzz',
     'BUZZ x2': '/buzz', 
-    'BUZZ MAPPA gratis': '/map?buzzFree=1',
+    'BUZZ MAPPA Gratis': '/map?buzzFree=1',
     'Clue di Settimana 4': '/clues?week=4',
     'Premio Random': '/prizes',
     '3h senza blocchi BUZZ': '/home',
@@ -35,57 +35,48 @@ export const mapRotationToPrize = (rotationDeg: number) => {
  */
 export const PRIZE_CONFIG = {
   'BUZZ x1': {
-    emoji: '⚡',
-    color: '#FFD700',
-    glow: '#FFD700',
+    color: '#00FFFF',
+    glow: '#00FFFF',
     short: 'BUZZ x1'
   },
   'BUZZ x2': {
-    emoji: '⚡⚡',
-    color: '#FF6B35',
-    glow: '#FF6B35',
+    color: '#00FFFF',
+    glow: '#00FFFF',
     short: 'BUZZ x2'
   },
   'Indizio Extra': {
-    emoji: '🔍',
-    color: '#00BFFF',
-    glow: '#00BFFF',
-    short: 'Indizio+'
+    color: '#8A2BE2',
+    glow: '#8A2BE2',
+    short: 'Indizio Extra'
   },
   'Missione Fallita': {
-    emoji: '💥',
-    color: '#FF4444',
-    glow: '#FF4444',
+    color: '#555555',
+    glow: '#555555',
     short: 'Fallita'
   },
-  'Nessun premio': {
-    emoji: '😞',
-    color: '#666666',
-    glow: '#666666',
-    short: 'Nessuno'
+  'Nessun Premio': {
+    color: '#555555',
+    glow: '#555555',
+    short: 'Nessun Premio'
   },
   'Clue di Settimana 4': {
-    emoji: '🎯',
-    color: '#9D4EDD',
-    glow: '#9D4EDD',
-    short: 'Clue S4'
+    color: '#FFD700',
+    glow: '#FFD700',
+    short: 'Clue W4'
   },
-  'BUZZ MAPPA gratis': {
-    emoji: '🗺️',
-    color: '#00FF88',
-    glow: '#00FF88',
-    short: 'BUZZ MAP'
+  'BUZZ MAPPA Gratis': {
+    color: '#FFD700',
+    glow: '#FFD700',
+    short: 'BUZZ MAPPA'
   },
   '3h senza blocchi BUZZ': {
-    emoji: '⏰',
-    color: '#FF69B4',
-    glow: '#FF69B4',
+    color: '#8A2BE2',
+    glow: '#8A2BE2',
     short: '3h Free'
   },
   'Premio Random': {
-    emoji: '🎁',
-    color: '#FFB347',
-    glow: '#FFB347',
-    short: 'Random'
+    color: '#FFD700',
+    glow: '#FFD700',
+    short: 'Premio Random'
   }
 };

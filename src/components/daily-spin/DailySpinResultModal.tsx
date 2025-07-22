@@ -26,9 +26,9 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
   // Auto-close effect for losing prizes
   useEffect(() => {
     if (isOpen && !isWinningPrize(prize)) {
-      const timer = setTimeout(() => {
-        setLocation('/home');
-      }, 4000);
+        const timer = setTimeout(() => {
+          setLocation('/home');
+        }, 2500);
       return () => clearTimeout(timer);
     }
   }, [isOpen, prize, setLocation]);
@@ -80,7 +80,7 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
             : 'none'
         }}
         >
-          {prizeConfig?.emoji || (winning ? '🎉' : '😞')}
+          {winning ? '🎉' : '😞'}
         </div>
 
         {/* Title */}
@@ -121,7 +121,7 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
                 textShadow: '0 0 10px rgba(255, 255, 255, 0.8)'
               }}
             >
-              🚀 RISCATTA SUBITO
+              RISCATTA SUBITO
             </Button>
           ) : (
             <Button 
@@ -138,7 +138,7 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
           }`}>
             {winning 
               ? 'Torna domani per un nuovo giro!' 
-              : 'Chiusura automatica tra 4 secondi...'
+              : 'Chiusura automatica tra 2.5 secondi...'
             }
           </p>
         </div>

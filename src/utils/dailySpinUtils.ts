@@ -2,22 +2,22 @@
 
 export const SEGMENTS = [
   'BUZZ x1',
-  'BUZZ x2', 
-  'Indizio Extra',
   'Missione Fallita',
-  'Missione Fallita',
-  'Nessun premio',
   'Clue di Settimana 4',
+  'Nessun Premio',
+  'BUZZ x2',
   'Missione Fallita',
-  'BUZZ MAPPA gratis',
+  'Premio Random',
+  'BUZZ MAPPA Gratis',
+  'Missione Fallita',
   '3h senza blocchi BUZZ',
-  'Missione Fallita',
-  'Premio Random'
+  'Indizio Extra',
+  'Missione Fallita'
 ];
 
 // Probabilità ridotta: solo 25% di vincita
-export const WINNING_SEGMENTS = [0, 1, 2, 6, 8, 9, 11]; // 7 su 12
-export const LOSING_SEGMENTS = [3, 4, 5, 7, 10]; // Missione Fallita e Nessun premio
+export const WINNING_SEGMENTS = [0, 2, 4, 6, 7, 9, 10]; // 7 su 12
+export const LOSING_SEGMENTS = [1, 3, 5, 8, 11]; // Missione Fallita e Nessun Premio
 
 // Map prize to redirect paths
 export const PRIZE_REDIRECTS: Record<string, string> = {
@@ -69,14 +69,14 @@ export const getPrizeRedirectPath = (prize: string): string | null => {
  * Check if a prize is winning (not "Missione Fallita" or "Nessun premio")
  */
 export const isWinningPrize = (prize: string): boolean => {
-  return !['Missione Fallita', 'Nessun premio'].includes(prize);
+  return !['Missione Fallita', 'Nessun Premio'].includes(prize);
 };
 
 /**
  * Get prize message based on prize type
  */
 export const getPrizeMessage = (prize: string): string => {
-  if (['Missione Fallita', 'Nessun premio'].includes(prize)) {
+  if (['Missione Fallita', 'Nessun Premio'].includes(prize)) {
     return `${prize} - Riprova domani!`;
   } else if (prize === '3h senza blocchi BUZZ') {
     return 'Hai vinto 3 ore senza limitazioni BUZZ!';
