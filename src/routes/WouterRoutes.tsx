@@ -25,6 +25,9 @@ import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 import { DailySpinPage } from "@/pages/DailySpinPage";
+import Terms from "@/pages/Terms";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import CookiePolicy from "@/pages/CookiePolicy";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -108,6 +111,12 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/settings/:section">
+            <ProtectedRoute>
+              <GlobalLayout><SettingsPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           <Route path="/subscriptions">
             <ProtectedRoute>
               <GlobalLayout><Subscriptions /></GlobalLayout>
@@ -133,6 +142,19 @@ const WouterRoutes: React.FC = () => {
             <ProtectedRoute>
               <DailySpinPage />
             </ProtectedRoute>
+          </Route>
+
+          {/* Legal routes */}
+          <Route path="/terms">
+            <GlobalLayout><Terms /></GlobalLayout>
+          </Route>
+          
+          <Route path="/privacy-policy">
+            <GlobalLayout><PrivacyPolicy /></GlobalLayout>
+          </Route>
+          
+          <Route path="/cookie-policy">
+            <GlobalLayout><CookiePolicy /></GlobalLayout>
           </Route>
 
           {/* Auth routes */}

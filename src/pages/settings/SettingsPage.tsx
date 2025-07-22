@@ -1,5 +1,6 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -21,7 +22,26 @@ type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'p
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
   const { profileImage } = useProfileImage();
+  const [location, navigate] = useLocation();
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+
+  // Handle URL-based section routing
+  useEffect(() => {
+    const path = location;
+    if (path.includes('/settings/')) {
+      const section = path.split('/settings/')[1] as SettingsSection;
+      const validSections: SettingsSection[] = ['profile', 'security', 'mission', 'notifications', 'payments', 'privacy', 'legal'];
+      if (validSections.includes(section)) {
+        setActiveSection(section);
+      }
+    }
+  }, [location]);
+
+  // Handle section change with URL update
+  const handleSectionChange = (section: SettingsSection) => {
+    setActiveSection(section);
+    navigate(`/settings/${section}`);
+  };
 
   const settingsSections = [
     { 
@@ -114,7 +134,7 @@ const SettingsPage: React.FC = () => {
                 <Button
                   key={section.id}
                   variant={isActive ? "default" : "ghost"}
-                  onClick={() => setActiveSection(section.id)}
+                  onClick={() => handleSectionChange(section.id)}
                   className={`w-full justify-start p-4 h-auto ${
                     isActive 
                       ? 'bg-[#00D1FF]/20 text-white border border-[#00D1FF]/30' 
