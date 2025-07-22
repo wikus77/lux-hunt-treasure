@@ -45,13 +45,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       console.log('💰 BUZZ PRICE CHECK', { currentPrice });
       
-      // Check if blocked
-      if (currentPrice === 0) {
-        toast.error('BUZZ bloccato per oggi! Limite giornaliero raggiunto.');
-        setBuzzing(false);
-        setShowShockwave(false);
-        return;
-      }
+      // BUZZ MAI BLOCCATO - ORDINE DIREZIONE - Rimosso controllo blocco
       
       // Check abuse protection
       const abuseResult = await checkAbuseAndLog(user.id);

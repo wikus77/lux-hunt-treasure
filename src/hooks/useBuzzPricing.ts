@@ -1,82 +1,98 @@
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// M1SSION™ - BUZZ Pricing Logic Hook - ORDINE DIREZIONE 22/07/2025
 
-import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useMemo } from 'react';
 
-export const useBuzzPricing = (userId: string | undefined) => {
-  const [userCluesCount, setUserCluesCount] = useState(0);
+/**
+ * Hook centralizzato per la logica dei prezzi BUZZ
+ * ORDINE DIREZIONE: Nessun limite giornaliero, prezzi progressivi
+ */
+export const useBuzzPricing = () => {
+  
+  /**
+   * Calcola il prezzo BUZZ basato sul numero di click giornalieri
+   * LOGICA ORDINE DIREZIONE:
+   * - Click 1-10: €1.99 ciascuno
+   * - Click 11-20: €3.99 ciascuno  
+   * - Click 21-30: €5.99 ciascuno
+   * - Click 31-40: €7.99 ciascuno
+   * - Click 41-50: €9.99 ciascuno
+   * - DAL Click 51+: €10.99 ciascuno
+   */
+  const getCurrentBuzzPrice = useMemo(() => {
+    return (dailyCount: number): number => {
+      console.log('💰 BUZZ PRICING CALCULATION', { dailyCount });
+      
+      if (dailyCount <= 10) return 1.99;
+      if (dailyCount <= 20) return 3.99;
+      if (dailyCount <= 30) return 5.99;
+      if (dailyCount <= 40) return 7.99;
+      if (dailyCount <= 50) return 9.99;
+      return 10.99; // DAL Click 51+: €10.99 ciascuno - ORDINE DIREZIONE
+    };
+  }, []);
 
-  // Load user clues count for pricing calculation
-  const loadUserCluesCount = useCallback(async () => {
-    if (!userId) return;
+  /**
+   * Calcola i dettagli del pricing per UI
+   */
+  const getPricingDetails = useMemo(() => {
+    return (dailyCount: number) => {
+      const currentPrice = getCurrentBuzzPrice(dailyCount);
+      const nextPrice = getCurrentBuzzPrice(dailyCount + 1);
+      
+      let priceRange = '';
+      if (dailyCount <= 10) priceRange = '1-10';
+      else if (dailyCount <= 20) priceRange = '11-20';
+      else if (dailyCount <= 30) priceRange = '21-30';
+      else if (dailyCount <= 40) priceRange = '31-40';
+      else if (dailyCount <= 50) priceRange = '41-50';
+      else priceRange = '51+';
+      
+      return {
+        currentPrice,
+        nextPrice,
+        priceRange,
+        isBlocked: false, // MAI BLOCCATO - ORDINE DIREZIONE
+        dailyCount,
+        isUnlimited: dailyCount >= 51
+      };
+    };
+  }, [getCurrentBuzzPrice]);
 
-    try {
-      const { count, error } = await supabase
-        .from('user_clues')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
-
-      if (error) {
-        console.error('Error loading user clues count:', error);
-        return;
-      }
-
-      const cluesCount = count || 0;
-      setUserCluesCount(cluesCount);
-      console.log('📊 User clues count loaded:', cluesCount);
-    } catch (err) {
-      console.error('Exception loading user clues count:', err);
-    }
-  }, [userId]);
-
-  // Calculate BUZZ MAP price based on clues count
-  const calculateBuzzMapPrice = useCallback((): number => {
-    console.log('💰 Calculating price for clues count:', userCluesCount);
-    
-    if (userCluesCount <= 10) {
-      console.log('💰 Price tier: 1-10 clues = 7.99€');
-      return 7.99;
-    }
-    if (userCluesCount <= 20) {
-      console.log('💰 Price tier: 11-20 clues = 9.99€');
-      return 9.99;
-    }
-    if (userCluesCount <= 30) {
-      console.log('💰 Price tier: 21-30 clues = 13.99€');
-      return 13.99;
-    }
-    if (userCluesCount <= 40) {
-      console.log('💰 Price tier: 31-40 clues = 19.99€');
-      return 19.99;
-    }
-    console.log('💰 Price tier: 41+ clues = 29.99€');
-    return 29.99;
-  }, [userCluesCount]);
-
-  // Test pricing logic
-  const testCalculationLogic = useCallback(() => {
-    console.log('🧪 TESTING BUZZ MAPPA PRICING:');
-    console.log('Current user clues:', userCluesCount);
-    console.log('Calculated price:', calculateBuzzMapPrice());
-    
-    const testCases = [5, 15, 25, 35, 45];
-    testCases.forEach(clues => {
-      const oldCount = userCluesCount;
-      setUserCluesCount(clues);
-      console.log(`With ${clues} clues: ${calculateBuzzMapPrice()}€`);
-      setUserCluesCount(oldCount);
-    });
-  }, [userCluesCount, calculateBuzzMapPrice]);
-
-  useEffect(() => {
-    if (userId) {
-      loadUserCluesCount();
-    }
-  }, [userId, loadUserCluesCount]);
+  /**
+   * Valida se un prezzo è corretto per il numero di click
+   */
+  const validateBuzzPrice = useMemo(() => {
+    return (dailyCount: number, expectedPrice: number): boolean => {
+      const correctPrice = getCurrentBuzzPrice(dailyCount);
+      return Math.abs(correctPrice - expectedPrice) < 0.01; // Tolleranza centesimi
+    };
+  }, [getCurrentBuzzPrice]);
 
   return {
-    userCluesCount,
-    calculateBuzzMapPrice,
-    testCalculationLogic,
-    loadUserCluesCount
+    getCurrentBuzzPrice,
+    getPricingDetails,
+    validateBuzzPrice
   };
 };
+
+/**
+ * Hook per compatibilità con i componenti esistenti
+ */
+export const useBuzzPrice = (dailyCount: number) => {
+  const { getCurrentBuzzPrice, getPricingDetails } = useBuzzPricing();
+  
+  const price = getCurrentBuzzPrice(dailyCount);
+  const details = getPricingDetails(dailyCount);
+  
+  return {
+    currentPrice: price,
+    isBlocked: false, // MAI BLOCCATO - ORDINE DIREZIONE
+    details
+  };
+};
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ - ORDINE DIREZIONE 22/07/2025
+ */

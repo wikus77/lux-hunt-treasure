@@ -7,10 +7,12 @@ import MapDebugger from './map/components/MapDebugger';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
+import { useBuzzPricing } from '@/hooks/useBuzzPricing';
 import { motion } from 'framer-motion';
 
 const MapPage: React.FC = () => {
   const { stats, loading: buzzLoading, loadBuzzStats } = useBuzzStats();
+  const { getCurrentBuzzPrice } = useBuzzPricing();
   
   const {
     isAddingPoint,
@@ -37,18 +39,8 @@ const MapPage: React.FC = () => {
   } = useNewMapPage();
 
   
-  // Get current buzz price based on daily count
-  const getCurrentBuzzPrice = (dailyCount: number): number => {
-    if (dailyCount <= 10) return 1.99;
-    if (dailyCount <= 20) return 3.99;
-    if (dailyCount <= 30) return 5.99;
-    if (dailyCount <= 40) return 7.99;
-    if (dailyCount <= 50) return 9.99;
-    return 0; // Blocked
-  };
-
   const currentPrice = getCurrentBuzzPrice(stats?.today_count || 0);
-  const isBlocked = currentPrice === 0;
+  const isBlocked = false; // MAI BLOCCATO - ORDINE DIREZIONE
 
   const handleBuzzSuccess = async () => {
     // Force immediate stats reload
