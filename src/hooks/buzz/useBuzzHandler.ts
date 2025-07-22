@@ -57,7 +57,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
     }
   }, [buzzing]);
 
-  // 🚨 CRITICAL: Reset on window focus to handle PWA issues
+  // 🚨 CRITICAL: Reset on window focus to handle PWA issues + force reset event
   useEffect(() => {
     const handleFocus = () => {
       if (buzzing) {
@@ -67,18 +67,28 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('visibilitychange', () => {
+    const handleForceReset = () => {
+      console.log('🚨 FORCE RESET EVENT: Clearing all BUZZ states');
+      setBuzzing(false);
+      setShowShockwave(false);
+    };
+
+    const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && buzzing) {
         console.log('🔄 VISIBILITY CHANGE: Resetting stuck buzzing state');
         setBuzzing(false);
         setShowShockwave(false);
       }
-    });
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('force-buzz-reset', handleForceReset);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('visibilitychange', handleFocus);
+      window.removeEventListener('force-buzz-reset', handleForceReset);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [buzzing]);
 
@@ -124,33 +134,20 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
       console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
-      // 🚨 CRITICAL: ESATTAMENTE come BUZZ MAPPA che funziona - await + check result
-      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - COPIO LOGICA BUZZ MAPPA');
+      // 🚨 CRITICAL: VERO PAGAMENTO STRIPE OBBLIGATORIO - NO MOCK!
+      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - REAL PAYMENT REQUIRED');
       
-      // COPIO ESATTAMENTE la logica del BUZZ MAPPA che FUNZIONA
+      // REAL Stripe checkout - NO MOCK PAYMENT!
       const result = await processBuzzPurchase(false, currentPrice, handlePaymentSuccess);
       
       if (result) {
-        console.log('✅ BUZZ: Stripe checkout opened successfully - waiting for payment completion');
+        console.log('✅ BUZZ: Stripe checkout opened successfully - REAL PAYMENT REQUIRED');
         toast.success("Checkout Stripe aperto", {
           description: `Completa il pagamento di €${currentPrice.toFixed(2)} per ricevere l'indizio BUZZ`
         });
         
-        // 🚨 CRITICAL FIX: Mock successful payment for testing (TEMP) - COME BUZZ MAPPA
-        // This simulates a successful Stripe payment for testing
-        const simulateSuccessfulPayment = async (sessionId: string) => {
-          console.log('🧪 SIMULATING SUCCESSFUL PAYMENT FOR TESTING - BUZZ NORMALE');
-          
-          // Wait a moment then call the success handler directly
-          setTimeout(async () => {
-            console.log('🧪 MOCK: Calling handlePaymentSuccess for BUZZ normale');
-            await handlePaymentSuccess();
-          }, 2000); // 2 second delay like BUZZ MAPPA
-        };
-        
-        // 🧪 TEMPORARY: Auto-trigger mock payment after 2 seconds
-        const mockSessionId = `mock_buzz_${Date.now()}`;
-        await simulateSuccessfulPayment(mockSessionId);
+        // 🚨 CRITICAL: NO MOCK! Payment success will be called ONLY after real Stripe payment
+        // buzzing state will be reset ONLY in handlePaymentSuccess or handlePaymentCancel
         
       } else {
         console.error('❌ BUZZ: processBuzzPurchase failed');

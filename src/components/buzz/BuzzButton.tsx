@@ -19,7 +19,7 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
 }) => {
   // 🚨 CRITICAL: Aggressive diagnostic logging
   React.useEffect(() => {
-    console.log('🚨 BUZZ BUTTON STATE:', {
+    console.log('🚨 BUZZ BUTTON STATE CHANGE:', {
       currentPrice,
       isBlocked,
       buzzing,
@@ -28,7 +28,7 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
     });
   }, [currentPrice, isBlocked, buzzing]);
 
-  // 🚨 CRITICAL: Log on every render
+  // 🚨 CRITICAL: Log on every render to track state
   console.log('🔄 BUZZ BUTTON RENDER:', {
     currentPrice,
     isBlocked,
@@ -36,6 +36,20 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
     disabled: isBlocked || buzzing,
     renderTime: new Date().toISOString()
   });
+
+  // 🚨 CRITICAL: Force enable click if stuck
+  React.useEffect(() => {
+    if (buzzing) {
+      console.log('🚨 WARNING: Buzzing state detected for more than 1 second');
+      const forceReset = setTimeout(() => {
+        console.log('🚨 FORCE RESET: Clearing stuck buzzing state after 1 second');
+        // We can't directly call setBuzzing here, but we'll log the issue
+        window.dispatchEvent(new CustomEvent('force-buzz-reset'));
+      }, 1000);
+      
+      return () => clearTimeout(forceReset);
+    }
+  }, [buzzing]);
 
   return (
     <div 
