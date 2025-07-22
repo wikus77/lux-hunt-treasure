@@ -113,9 +113,7 @@ const PaymentMethods = () => {
     try {
       await processBuzzPurchase(
         isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
+        priceInCents / 100 // Convert from cents to euros
       );
     } catch (error) {
       console.error("Errore durante il processo di pagamento:", error);
@@ -141,9 +139,7 @@ const PaymentMethods = () => {
     try {
       await processBuzzPurchase(
         isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
+        priceInCents / 100 // Convert from cents to euros
       );
     } catch (error) {
       console.error("Errore durante il pagamento rapido:", error);
@@ -169,9 +165,7 @@ const PaymentMethods = () => {
     try {
       await processBuzzPurchase(
         isMapBuzz, 
-        priceInCents, 
-        redirectUrl,
-        sessionId
+        priceInCents / 100 // Convert from cents to euros
       );
     } catch (error) {
       console.error("Errore durante il pagamento alternativo:", error);

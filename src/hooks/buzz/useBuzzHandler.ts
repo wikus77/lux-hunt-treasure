@@ -89,8 +89,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
       // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
-      // Open checkout modal and wait for payment completion
-      const paymentOpened = processBuzzPurchase(false, currentPrice);
+      // Open checkout modal - API call will happen in handlePaymentSuccess AFTER payment
+      const paymentOpened = processBuzzPurchase(false, currentPrice, handlePaymentSuccess);
       
       if (!paymentOpened) {
         toast.error("Pagamento obbligatorio", {
@@ -101,10 +101,10 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         return;
       }
       
-      console.log('✅ BUZZ: Stripe checkout opened successfully - RESET COMPLETO 17/07/2025');
+      console.log('✅ BUZZ: Stripe checkout opened successfully - waiting for payment completion');
       
       // Keep buzzing state active until payment completion
-      // The buzzing state will be reset in handlePaymentSuccess or if user cancels
+      // The buzzing state will be reset in handlePaymentSuccess or handlePaymentCancel
       
     } catch (err) {
       console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);

@@ -44,12 +44,11 @@ export const useUniversalStripePayment = () => {
     setCurrentPaymentConfig(null);
   };
 
-  const processBuzzPurchase = async (
+  const processBuzzPurchase = (
     isBuzzMap: boolean = false, 
     amount: number,
-    redirectUrl?: string,
-    sessionId?: string
-  ): Promise<boolean> => {
+    onPaymentSuccess?: () => void
+  ): boolean => {
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
@@ -62,18 +61,21 @@ export const useUniversalStripePayment = () => {
       ? 'Genera area di ricerca sulla mappa'
       : 'Indizio extra per la missione';
 
+    console.log('🔥 M1SSION™ BUZZ PURCHASE START:', {
+      user_id: user.id,
+      paymentType,
+      amount: amount * 100,
+      planName,
+      timestamp: new Date().toISOString()
+    });
+
     return processPayment({
       paymentType,
       planName,
       amount: amount * 100, // Convert to cents
       description,
       isBuzzMap,
-      onSuccess: () => {
-        // Handle navigation or callback based on redirectUrl
-        if (redirectUrl) {
-          console.log('✅ M1SSION™ Payment completed, redirect:', redirectUrl);
-        }
-      }
+      onSuccess: onPaymentSuccess // Pass the callback
     });
   };
 
