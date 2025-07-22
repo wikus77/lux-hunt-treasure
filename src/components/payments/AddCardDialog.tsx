@@ -88,7 +88,12 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-md shadow-2xl w-full max-w-md mx-auto fixed top-[5%] left-[50%] translate-x-[-50%] max-h-[90vh] overflow-hidden flex flex-col rounded-xl z-50 p-0">
+      <DialogContent className="bg-black/95 border-[#00D1FF]/30 backdrop-blur-md shadow-2xl w-full max-w-md mx-auto fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-h-[85vh] sm:max-h-[90vh] flex flex-col rounded-xl z-50 p-0 overflow-y-auto" 
+        style={{ 
+          maxHeight: 'calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 40px)',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}>
         <DialogHeader className="flex-shrink-0 p-6 border-b border-[#00D1FF]/20">
           <DialogTitle className="text-white font-orbitron flex items-center text-xl">
             <CreditCard className="w-6 h-6 mr-3 text-[#00D1FF]" />
@@ -99,8 +104,8 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
           </p>
         </DialogHeader>
         
-        <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <form onSubmit={handleSubmit} className="p-6 pb-0 space-y-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-2" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <form onSubmit={handleSubmit} className="p-4 pb-0 space-y-4 sm:p-6 sm:space-y-6">
             {/* Card Number */}
             <div className="space-y-3">
               <Label htmlFor="cardNumber" className="text-white font-medium flex items-center">
@@ -205,7 +210,10 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
         </div>
 
         {/* Sticky Footer Buttons */}
-        <div className="flex-shrink-0 border-t border-[#00D1FF]/20 p-6">
+        <div className="flex-shrink-0 border-t border-[#00D1FF]/20 p-4 sm:p-6 bg-black/95 sticky bottom-0"
+          style={{ 
+            paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+          }}>
           <div className="flex space-x-3">
             <Button
               type="button"
