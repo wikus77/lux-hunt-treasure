@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileText, Calendar, Mail } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { supabase } from '@/integrations/supabase/client';
 
 interface LegalDocument {
@@ -16,7 +16,7 @@ interface LegalDocument {
 }
 
 const GameRules: React.FC = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const [document, setDocument] = useState<LegalDocument | null>(null);
   const [loading, setLoading] = useState(true);
 
