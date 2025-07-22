@@ -37,6 +37,10 @@ const Subscriptions = () => {
 
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase + Checkout Handler
   useEffect(() => {
+    console.log('🔥 M1SSION™ SUBSCRIPTIONS PAGE MOUNTED');
+    console.log('🔥 M1SSION™ Current location:', window.location.href);
+    console.log('🔥 M1SSION™ Current subscription plan:', subscription.plan);
+    
     setProfileImage(localStorage.getItem('profileImage'));
     // Forza sincronizzazione con hook subscription
     setSelected(subscription.plan);
@@ -46,21 +50,31 @@ const Subscriptions = () => {
     const checkoutTier = urlParams.get('checkout');
     const tier = urlParams.get('tier');
     
-    console.log('🔍 M1SSION™ URL PARAMS:', { checkoutTier, tier, fullUrl: window.location.href });
+    console.log('🔍 M1SSION™ URL PARAMS:', { 
+      checkoutTier, 
+      tier, 
+      fullUrl: window.location.href,
+      search: window.location.search,
+      hasParams: !!checkoutTier && !!tier
+    });
     
     if (checkoutTier && tier) {
       console.log(`🚀 M1SSION™ AUTO-CHECKOUT TRIGGER: ${tier}`);
-      // Delay per assicurare che il component sia mounted
-      setTimeout(() => {
-        handleStripeCheckout(tier);
-      }, 500);
+      console.log(`🔧 M1SSION™ processSubscription available:`, typeof processSubscription);
+      
+      // Immediato call senza delay
+      console.log(`⚡ M1SSION™ CALLING IMMEDIATE processSubscription(${tier})`);
+      handleStripeCheckout(tier);
+    } else {
+      console.log('❌ M1SSION™ NO CHECKOUT PARAMS - checkoutTier:', checkoutTier, 'tier:', tier);
     }
-  }, [subscription.plan]);
+  }, [subscription.plan, processSubscription]);
 
   const handleStripeCheckout = async (tier: string) => {
     try {
       console.log(`💳 M1SSION™ STRIPE CHECKOUT START: ${tier}`);
       console.log(`🔧 M1SSION™ processSubscription function:`, typeof processSubscription);
+      console.log(`👤 M1SSION™ stripeLoading state:`, stripeLoading);
       
       if (!processSubscription) {
         console.error('❌ M1SSION™ processSubscription not available');
@@ -68,13 +82,25 @@ const Subscriptions = () => {
         return;
       }
       
+      if (stripeLoading) {
+        console.log('⏳ M1SSION™ Already processing Stripe checkout...');
+        return;
+      }
+      
       console.log(`🔄 M1SSION™ Calling processSubscription for ${tier}...`);
+      console.log(`🚀 M1SSION™ About to call processSubscription('${tier}')`);
+      
       await processSubscription(tier);
       
-      toast.success(`✅ Checkout ${tier} attivato`);
+      console.log(`✅ M1SSION™ processSubscription completed for ${tier}`);
+      toast.success(`✅ Checkout ${tier} attivato - reindirizzamento in corso...`);
       
     } catch (error) {
       console.error('❌ M1SSION™ Stripe checkout FAILED:', error);
+      console.error('❌ M1SSION™ Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
       toast.error("❌ Errore nel sistema di pagamento. Contatta l'assistenza.");
     }
   };

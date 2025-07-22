@@ -66,6 +66,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
   const handleUpdatePlan = async (plan: string) => {
     console.log(`🔥 M1SSION™ CLICK DETECTED: ${plan} button clicked`);
     console.log(`🔧 M1SSION™ STATE:`, { selected, plan, equal: plan === selected });
+    console.log(`🌐 M1SSION™ Current location before navigate:`, window.location.href);
     
     if (plan === selected) {
       console.log(`⚠️ M1SSION™ SAME PLAN: Already on ${plan}`);
