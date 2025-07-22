@@ -83,6 +83,47 @@ serve(async (req) => {
       logStep("✅ Webhook processed successfully", { sessionId: session.id });
     }
 
+    // Handle payment_intent.succeeded (CRITICAL FOR DB SYNC)
+    if (event.type === 'payment_intent.succeeded') {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      
+      logStep("💰 Payment intent succeeded", {
+        paymentIntentId: paymentIntent.id,
+        customerId: paymentIntent.customer,
+        amount: paymentIntent.amount
+      });
+
+      // Find session by payment intent and update profile directly
+      if (paymentIntent.metadata?.session_id) {
+        const sessionId = paymentIntent.metadata.session_id;
+        
+        // Get session from database
+        const { data: sessionData } = await supabaseClient
+          .from('checkout_sessions')
+          .select('*')
+          .eq('session_id', sessionId)
+          .single();
+        
+        if (sessionData) {
+          // Force profile update
+          const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .update({
+              subscription_tier: sessionData.tier,
+              tier: sessionData.tier,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', sessionData.user_id);
+          
+          logStep("✅ Profile force updated after payment", { 
+            userId: sessionData.user_id, 
+            tier: sessionData.tier,
+            error: profileError 
+          });
+        }
+      }
+    }
+
     // Handle subscription updates
     if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
       const subscription = event.data.object as Stripe.Subscription;

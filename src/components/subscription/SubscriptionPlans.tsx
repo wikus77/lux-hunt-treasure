@@ -1,6 +1,6 @@
 
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { toast as sonnerToast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,75 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
   const { navigate } = useWouterNavigation();
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   const { subscription, upgradeSubscription } = useProfileSubscription();
+
+  // ✅ SUCCESS URL HANDLING for Stripe Return
+  React.useEffect(() => {
+    const handleStripeReturn = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isSuccess = urlParams.get('success') === 'true';
+      const tier = urlParams.get('tier');
+      const sessionId = urlParams.get('session_id');
+      
+      console.log('🔍 M1SSION™ URL PARAMS:', {
+        checkoutTier: tier,
+        tier: urlParams.get('tier'),
+        sessionId: sessionId,
+        isSuccess: isSuccess,
+        fullUrl: window.location.href,
+        search: window.location.search,
+        hasParams: window.location.search.length > 0
+      });
+      
+      if (!tier && !sessionId && !isSuccess) {
+        console.log('❌ M1SSION™ NO CHECKOUT PARAMS - checkoutTier:', tier, 'sessionId:', sessionId);
+        return;
+      }
+      
+      if (isSuccess && (tier || sessionId)) {
+        console.log('✅ M1SSION™ STRIPE SUCCESS DETECTED - Processing tier update:', tier || 'from session');
+        
+        // Force subscription sync
+        try {
+          console.log('🔄 M1SSION™ Invoking verify-subscription-sync...');
+          const syncResult = await supabase.functions.invoke('verify-subscription-sync');
+          console.log('✅ M1SSION™ Sync result:', syncResult);
+          
+          // Force profile refresh
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('subscription_tier, tier')
+            .eq('id', (await supabase.auth.getUser()).data.user?.id)
+            .single();
+          
+          console.log('📊 M1SSION™ Profile after sync:', profileData);
+          
+          if (tier) {
+            setSelected(tier);
+            localStorage.setItem('pending_plan_update', tier);
+          }
+          
+          // Show success message
+          sonnerToast.success(`✅ Piano ${tier || 'Premium'} attivato!`, {
+            description: 'Abbonamento confermato e sincronizzato',
+            duration: 5000
+          });
+          
+          // Clean URL
+          setTimeout(() => {
+            window.history.replaceState({}, '', '/subscriptions');
+          }, 1000);
+          
+        } catch (error) {
+          console.error('❌ M1SSION™ Error processing success:', error);
+          sonnerToast.error('Errore sincronizzazione abbonamento', {
+            description: 'Contatta il supporto se il problema persiste'
+          });
+        }
+      }
+    };
+    
+    handleStripeReturn();
+  }, []);
 
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {
@@ -162,49 +231,21 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           console.log(`✅ M1SSION™ Stripe URL received: ${data.url}`);
           console.log(`📋 M1SSION™ Full data received:`, JSON.stringify(data, null, 2));
           
-          // 🚨 CRITICAL FIX: iOS PWA STRIPE REDIRECT - FORCED SOLUTION
-          console.warn(`🚀 M1SSION™ FORCING iOS PWA STRIPE REDIRECT`);
+          // ✅ SOLUTION: INTERNAL REDIRECT (NO NEW TAB) + iOS PWA COMPATIBILITY
+          console.warn("🚀 M1SSION™ FORCING INTERNAL STRIPE REDIRECT");
+          console.warn("🔧 M1SSION™ Opening Stripe in same window (internal redirect)");
           
           try {
-            // ALWAYS use window.open for PWA iOS - location.replace FAILS on iOS PWA
-            console.warn(`🔧 M1SSION™ Opening Stripe in new tab (iOS PWA compatible)`);
-            
-            // Method 1: Immediate window.open
-            let stripeWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
-            console.log(`🔍 M1SSION™ Immediate window.open result:`, !!stripeWindow);
-            
-            // Method 2: Delayed window.open (Safari iOS PWA workaround)
-            if (!stripeWindow || stripeWindow.closed) {
-              console.warn(`🔧 M1SSION™ Immediate open failed, trying delayed approach`);
-              setTimeout(() => {
-                console.warn(`🔧 M1SSION™ Executing delayed window.open`);
-                stripeWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
-                if (!stripeWindow || stripeWindow.closed) {
-                  console.error(`❌ M1SSION™ Delayed window.open also failed`);
-                  // Method 3: Force location change as last resort
-                  console.warn(`🔧 M1SSION™ Last resort: forcing location.href`);
-                  window.location.href = data.url;
-                } else {
-                  console.log(`✅ M1SSION™ Delayed window.open SUCCESS`);
-                }
-              }, 300);
-            } else {
-              console.log(`✅ M1SSION™ Immediate window.open SUCCESS`);
-            }
-            
-            // Show success message
-            sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
-              description: 'Apertura Stripe in corso...',
-              duration: 3000
-            });
-            
+            // Primary: Internal redirect (preferred)
+            window.location.href = data.url;
+            console.log("✅ M1SSION™ Primary redirect executed:", data.url);
           } catch (error) {
-            console.error("❌ M1SSION™ All redirect methods failed:", error);
-            toast({
-              title: "❌ Errore Redirect Critico",
-              description: "Impossibile aprire Stripe. Contatta il supporto.",
-              variant: "destructive",
-            });
+            console.error("❌ M1SSION™ Primary redirect failed:", error);
+            // Fallback: Force location replace
+            setTimeout(() => {
+              console.warn("🔧 M1SSION™ Fallback: location.replace");
+              window.location.replace(data.url);
+            }, 100);
           }
         }
       }

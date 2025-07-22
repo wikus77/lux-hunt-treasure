@@ -98,11 +98,18 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/payment-success?tier=${plan}`,
+      success_url: `${origin}/subscriptions?success=true&tier=${plan}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscriptions?canceled=true`,
       metadata: {
         user_id: user.id,
         tier: plan
+      },
+      payment_intent_data: {
+        metadata: {
+          session_id: "{CHECKOUT_SESSION_ID}",
+          plan: plan,
+          user_id: user.id
+        }
       }
     });
 
