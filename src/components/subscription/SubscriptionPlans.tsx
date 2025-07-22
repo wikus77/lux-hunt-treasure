@@ -20,74 +20,165 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   const { subscription, upgradeSubscription } = useProfileSubscription();
 
-  // ✅ SUCCESS URL HANDLING for Stripe Return
+  // ✅ SUCCESS URL HANDLING for Stripe Return - ENHANCED WITH FORCE REFRESH
   React.useEffect(() => {
     const handleStripeReturn = async () => {
+      console.log('🔍 M1SSION™ CHECKING URL FOR STRIPE RETURN...');
+      
       const urlParams = new URLSearchParams(window.location.search);
       const isSuccess = urlParams.get('success') === 'true';
       const tier = urlParams.get('tier');
       const sessionId = urlParams.get('session_id');
+      const isCanceled = urlParams.get('canceled') === 'true';
       
-      console.log('🔍 M1SSION™ URL PARAMS:', {
+      console.log('🔍 M1SSION™ URL PARAMS ANALYSIS:', {
         checkoutTier: tier,
-        tier: urlParams.get('tier'),
         sessionId: sessionId,
         isSuccess: isSuccess,
+        isCanceled: isCanceled,
         fullUrl: window.location.href,
         search: window.location.search,
         hasParams: window.location.search.length > 0
       });
       
-      if (!tier && !sessionId && !isSuccess) {
-        console.log('❌ M1SSION™ NO CHECKOUT PARAMS - checkoutTier:', tier, 'sessionId:', sessionId);
+      if (isCanceled) {
+        console.log('❌ M1SSION™ STRIPE CANCELED');
+        sonnerToast.error('Pagamento annullato', {
+          description: 'Il pagamento è stato annullato',
+          duration: 4000
+        });
+        // Clean URL
+        window.history.replaceState({}, '', '/subscriptions');
         return;
       }
       
-      if (isSuccess && (tier || sessionId)) {
-        console.log('✅ M1SSION™ STRIPE SUCCESS DETECTED - Processing tier update:', tier || 'from session');
-        
-        // Force subscription sync
-        try {
-          console.log('🔄 M1SSION™ Invoking verify-subscription-sync...');
-          const syncResult = await supabase.functions.invoke('verify-subscription-sync');
-          console.log('✅ M1SSION™ Sync result:', syncResult);
-          
-          // Force profile refresh
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('subscription_tier, tier')
-            .eq('id', (await supabase.auth.getUser()).data.user?.id)
-            .single();
-          
-          console.log('📊 M1SSION™ Profile after sync:', profileData);
-          
-          if (tier) {
-            setSelected(tier);
-            localStorage.setItem('pending_plan_update', tier);
-          }
-          
-          // Show success message
-          sonnerToast.success(`✅ Piano ${tier || 'Premium'} attivato!`, {
-            description: 'Abbonamento confermato e sincronizzato',
-            duration: 5000
-          });
-          
-          // Clean URL
-          setTimeout(() => {
-            window.history.replaceState({}, '', '/subscriptions');
-          }, 1000);
-          
-        } catch (error) {
-          console.error('❌ M1SSION™ Error processing success:', error);
-          sonnerToast.error('Errore sincronizzazione abbonamento', {
-            description: 'Contatta il supporto se il problema persiste'
-          });
+      if (!isSuccess || !tier) {
+        console.log('❌ M1SSION™ NO SUCCESS PARAMS - isSuccess:', isSuccess, 'tier:', tier);
+        return;
+      }
+      
+      console.log('🎉 M1SSION™ STRIPE SUCCESS DETECTED - PROCESSING TIER UPDATE:', tier);
+      
+      try {
+        // STEP 1: Get current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('❌ M1SSION™ User auth error:', userError);
+          return;
         }
+        
+        console.log('👤 M1SSION™ User authenticated:', user.id);
+        
+        // STEP 2: Force immediate profile update (CRITICAL)
+        console.log('🔄 M1SSION™ FORCING PROFILE UPDATE...');
+        const { data: profileUpdate, error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            subscription_tier: tier,
+            tier: tier,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id)
+          .select()
+          .single();
+        
+        if (profileError) {
+          console.error('❌ M1SSION™ Profile update error:', profileError);
+        } else {
+          console.log('✅ M1SSION™ Profile updated successfully:', profileUpdate);
+        }
+        
+        // STEP 3: Force subscription sync
+        console.log('🔄 M1SSION™ Invoking verify-subscription-sync...');
+        const { data: syncResult, error: syncError } = await supabase.functions.invoke('verify-subscription-sync');
+        if (syncError) {
+          console.error('❌ M1SSION™ Sync error:', syncError);
+        } else {
+          console.log('✅ M1SSION™ Sync result:', syncResult);
+        }
+        
+        // STEP 4: Create subscription record if needed
+        console.log('🔄 M1SSION™ Creating/updating subscription record...');
+        const { error: subscriptionError } = await supabase
+          .from('subscriptions')
+          .upsert({
+            user_id: user.id,
+            tier: tier,
+            status: 'active',
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+            updated_at: new Date().toISOString()
+          }, { 
+            onConflict: 'user_id' 
+          });
+        
+        if (subscriptionError) {
+          console.error('❌ M1SSION™ Subscription upsert error:', subscriptionError);
+        } else {
+          console.log('✅ M1SSION™ Subscription record created/updated');
+        }
+        
+        // STEP 5: Update local state immediately
+        console.log('🔄 M1SSION™ Updating local state...');
+        setSelected(tier);
+        localStorage.setItem('userTier', tier);
+        localStorage.setItem('pending_plan_update', tier);
+        
+        // STEP 6: Force UI refresh by calling upgradeSubscription
+        try {
+          await upgradeSubscription(tier);
+          console.log('✅ M1SSION™ upgradeSubscription called successfully');
+        } catch (upgradeError) {
+          console.error('❌ M1SSION™ upgradeSubscription error:', upgradeError);
+        }
+        
+        // STEP 7: Log successful upgrade in panel_logs
+        const { error: logError } = await supabase
+          .from('panel_logs')
+          .insert({
+            event_type: 'subscription_upgraded',
+            details: {
+              user_id: user.id,
+              new_tier: tier,
+              session_id: sessionId,
+              timestamp: new Date().toISOString(),
+              source: 'stripe_success_return'
+            }
+          });
+        
+        if (logError) {
+          console.error('❌ M1SSION™ Panel log error:', logError);
+        } else {
+          console.log('✅ M1SSION™ Panel log created');
+        }
+        
+        // STEP 8: Show success message
+        console.log('🎉 M1SSION™ SHOWING SUCCESS TOAST');
+        sonnerToast.success(`🎉 Piano ${tier} attivato!`, {
+          description: `Il tuo abbonamento ${tier} è ora attivo e funzionante`,
+          duration: 6000
+        });
+        
+        // STEP 9: Clean URL after delay
+        setTimeout(() => {
+          console.log('🧹 M1SSION™ Cleaning URL...');
+          window.history.replaceState({}, '', '/subscriptions');
+        }, 2000);
+        
+        console.log('✅ M1SSION™ STRIPE SUCCESS PROCESSING COMPLETED');
+        
+      } catch (error) {
+        console.error('❌ M1SSION™ Critical error processing success:', error);
+        sonnerToast.error('❌ Errore sincronizzazione abbonamento', {
+          description: 'Il pagamento è andato a buon fine ma c\'è stato un errore di sincronizzazione. Contatta il supporto.',
+          duration: 8000
+        });
       }
     };
     
+    // Execute immediately on component mount
     handleStripeReturn();
-  }, []);
+  }, []); // Empty dependency array - only run once on mount
 
   const getSubscriptionFeatures = (type: string) => {
     switch (type) {
@@ -332,6 +423,54 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       });
     }
   };
+
+  // ✅ REALTIME SUBSCRIPTION FOR IMMEDIATE UI UPDATES
+  React.useEffect(() => {
+    console.log('🔄 M1SSION™ Setting up realtime subscription updates...');
+    
+    const channel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles'
+        },
+        (payload) => {
+          console.log('🔄 M1SSION™ REALTIME PROFILE UPDATE:', payload);
+          
+          // Check if this is the current user's profile
+          if (payload.new && payload.new.id) {
+            supabase.auth.getUser().then(({ data: { user } }) => {
+              if (user && user.id === payload.new.id) {
+                console.log('✅ M1SSION™ REALTIME: Current user profile updated');
+                const newTier = payload.new.subscription_tier || payload.new.tier;
+                if (newTier && newTier !== selected) {
+                  console.log('🔄 M1SSION™ REALTIME: Updating UI to new tier:', newTier);
+                  setSelected(newTier);
+                  localStorage.setItem('userTier', newTier);
+                  
+                  // Show success toast if it's a paid tier
+                  if (newTier !== 'Base') {
+                    sonnerToast.success(`🎉 Piano ${newTier} sincronizzato!`, {
+                      description: 'Il tuo abbonamento è ora attivo',
+                      duration: 4000
+                    });
+                  }
+                }
+              }
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🧹 M1SSION™ Cleaning up realtime subscription...');
+      supabase.removeChannel(channel);
+    };
+  }, [selected]);
 
   return (
     <section className="w-full px-4 pb-10">
