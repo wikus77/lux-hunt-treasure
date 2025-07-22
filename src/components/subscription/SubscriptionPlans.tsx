@@ -109,14 +109,46 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         
       } else {
         console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
-        console.log(`🔄 M1SSION™ REDIRECTING: /subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
         
-        // 🚨 CRITICAL FIX: Force immediate redirect for ALL plans (upgrade, downgrade, re-checkout)
-        window.location.href = `/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`;
+        // 🚨 CRITICAL FIX: Direct Stripe checkout instead of double redirect
+        await upgradeSubscription(plan);
+        setSelected(plan);
         
-        sonnerToast.loading(`🔄 Reindirizzamento a checkout ${plan}...`, {
-          duration: 2000
-        });
+        // 🚀 M1SSION™ DIRECT STRIPE CHECKOUT - No double redirect
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data, error } = await supabase.functions.invoke('create-checkout', {
+            body: {
+              user_id: user.id,
+              plan,
+              payment_method: 'card',
+              mode: 'live'
+            }
+          });
+
+          if (error) {
+            console.error('❌ M1SSION™ Stripe checkout error:', error);
+            toast({
+              title: "❌ Errore checkout",
+              description: "Impossibile creare sessione Stripe",
+              variant: "destructive",
+              duration: 5000
+            });
+            return;
+          }
+
+          if (data?.url) {
+            console.log('🚀 M1SSION™ DIRECT STRIPE REDIRECT:', data.url);
+            
+            // 🚨 CRITICAL: Force immediate redirect to Stripe
+            window.location.href = data.url;
+            
+            sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
+              description: 'Reindirizzamento a Stripe...',
+              duration: 3000
+            });
+          }
+        }
       }
       
     } catch (error) {

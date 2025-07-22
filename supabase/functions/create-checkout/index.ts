@@ -49,12 +49,12 @@ serve(async (req) => {
     if (!plan) throw new Error("Piano mancante nel body");
     logStep("📋 Piano richiesto", { plan });
 
-    // Configurazione prezzi corretti M1SSION™
+    // Configurazione prezzi corretti M1SSION™ (in centesimi)
     const priceConfig = {
       'Silver': { price: 399, name: 'M1SSION™ Silver' },
       'Gold': { price: 699, name: 'M1SSION™ Gold' },
       'Black': { price: 999, name: 'M1SSION™ Black' },
-      'Titanium': { price: 2999, name: 'M1SSION™ Titanium VIP' }
+      'Titanium': { price: 2999, name: 'M1SSION™ Titanium VIP' } // €29.99
     };
 
     const tierConfig = priceConfig[plan as keyof typeof priceConfig];
