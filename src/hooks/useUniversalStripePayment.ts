@@ -19,7 +19,24 @@ export const useUniversalStripePayment = () => {
   const [currentPaymentConfig, setCurrentPaymentConfig] = useState<PaymentConfig | null>(null);
   const { user } = useAuthContext();
 
+  // 🚨 CRITICAL: LOG STATE CHANGES
+  console.log('🔄 useUniversalStripePayment STATE:', {
+    isCheckoutOpen,
+    hasCurrentPaymentConfig: !!currentPaymentConfig,
+    paymentType: currentPaymentConfig?.paymentType,
+    amount: currentPaymentConfig?.amount,
+    user: !!user,
+    timestamp: new Date().toISOString()
+  });
+
   const processPayment = (config: PaymentConfig) => {
+    console.log('🚨 processPayment CALLED WITH CONFIG:', {
+      config,
+      userExists: !!user,
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
@@ -34,8 +51,11 @@ export const useUniversalStripePayment = () => {
       timestamp: new Date().toISOString()
     });
 
+    console.log('🚨 ABOUT TO SET STATE - setCurrentPaymentConfig & setIsCheckoutOpen');
     setCurrentPaymentConfig(config);
     setIsCheckoutOpen(true);
+    
+    console.log('🚨 STATE SET COMPLETE - should trigger modal');
     return true;
   };
 
@@ -49,13 +69,22 @@ export const useUniversalStripePayment = () => {
     amount: number,
     onPaymentSuccess?: () => void
   ): Promise<boolean> => {
+    console.log('🚨 processBuzzPurchase CALLED:', {
+      isBuzzMap,
+      amount,
+      onPaymentSuccessExists: !!onPaymentSuccess,
+      userExists: !!user,
+      userId: user?.id,
+      timestamp: new Date().toISOString()
+    });
+
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
       return false;
     }
 
-    const paymentType = isBuzzMap ? 'buzz_map' : 'buzz';
+    const paymentType: 'subscription' | 'buzz' | 'buzz_map' = isBuzzMap ? 'buzz_map' : 'buzz';
     const planName = isBuzzMap ? 'BUZZ Map' : 'BUZZ Extra';
     const description = isBuzzMap 
       ? 'Genera area di ricerca sulla mappa'
@@ -69,14 +98,22 @@ export const useUniversalStripePayment = () => {
       timestamp: new Date().toISOString()
     });
 
-    return processPayment({
+    const paymentConfig: PaymentConfig = {
       paymentType,
       planName,
       amount: amount * 100, // Convert to cents
       description,
       isBuzzMap,
       onSuccess: onPaymentSuccess // Pass the callback
-    });
+    };
+
+    console.log('🚨 ABOUT TO CALL processPayment WITH CONFIG:', paymentConfig);
+    
+    const result = processPayment(paymentConfig);
+    
+    console.log('🚨 processPayment RETURNED:', result);
+    
+    return result;
   };
 
   const processSubscription = async (plan: string, paymentMethod?: string): Promise<void> => {

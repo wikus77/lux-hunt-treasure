@@ -55,12 +55,16 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
   // Debug log for checkout state
   useEffect(() => {
+    console.log('🔥 BUZZ CHECKOUT MODAL STATE CHANGED:', { 
+      isCheckoutOpen, 
+      paymentType: currentPaymentConfig?.paymentType,
+      amount: currentPaymentConfig?.amount,
+      hasConfig: !!currentPaymentConfig,
+      timestamp: new Date().toISOString()
+    });
+    
     if (currentPaymentConfig) {
-      console.log('🔥 BUZZ CHECKOUT MODAL STATE:', { 
-        isCheckoutOpen, 
-        paymentType: currentPaymentConfig.paymentType,
-        amount: currentPaymentConfig.amount 
-      });
+      console.log('🔥 FULL currentPaymentConfig:', currentPaymentConfig);
     }
   }, [isCheckoutOpen, currentPaymentConfig]);
 
