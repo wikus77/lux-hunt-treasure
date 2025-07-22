@@ -154,7 +154,7 @@ serve(async (req) => {
       logStep("✨ Nuovo customer creato", { customerId });
     }
 
-    // Crea sessione checkout Stripe
+    // Crea sessione checkout Stripe con FALLBACK robusto
     const origin = req.headers.get("origin") || "https://vkjrqirvdvjbemsfzxof.supabase.co";
     logStep("🔍 M1SSION™ Creating checkout session", { 
       origin,
@@ -164,48 +164,95 @@ serve(async (req) => {
     });
     
     let session;
-    try {
-      session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        line_items: [
-          {
-            price_data: {
-              currency: "eur",
-              product_data: {
-                name: tierConfig.name,
-                description: `Piano ${plan} - Accesso premium M1SSION™`
+    let sessionCreationAttempts = 0;
+    const maxAttempts = 3;
+    
+    while (sessionCreationAttempts < maxAttempts) {
+      try {
+        sessionCreationAttempts++;
+        logStep(`🔄 M1SSION™ Session creation attempt ${sessionCreationAttempts}/${maxAttempts}`, {
+          attempt: sessionCreationAttempts,
+          customerId,
+          plan
+        });
+        
+        // Base session configuration
+        const sessionConfig = {
+          customer: customerId,
+          line_items: [
+            {
+              price_data: {
+                currency: "eur",
+                product_data: {
+                  name: tierConfig.name,
+                  description: `Piano ${plan} - Accesso premium M1SSION™`
+                },
+                unit_amount: tierConfig.price,
+                recurring: { interval: "month" },
               },
-              unit_amount: tierConfig.price,
-              recurring: { interval: "month" },
+              quantity: 1,
             },
-            quantity: 1,
-          },
-        ],
-        mode: "subscription",
-        success_url: `${origin}/subscriptions?success=true&tier=${plan}&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/subscriptions?canceled=true`,
-        metadata: {
-          user_id: user.id,
-          tier: plan,
-          session_id: "{CHECKOUT_SESSION_ID}",
-          plan: plan
+          ],
+          mode: "subscription" as const,
+          success_url: `${origin}/subscriptions?success=true&tier=${plan}&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/subscriptions?canceled=true`,
+          metadata: {
+            user_id: user.id,
+            tier: plan,
+            session_id: "{CHECKOUT_SESSION_ID}",
+            plan: plan
+          }
+        };
+        
+        logStep("🔍 M1SSION™ Session config prepared", sessionConfig);
+        
+        session = await stripe.checkout.sessions.create(sessionConfig);
+        
+        // Verifica CRITICA: session.url deve esistere
+        if (!session || !session.url) {
+          const errorMsg = `Session created but missing URL - Session ID: ${session?.id || 'null'}, URL: ${session?.url || 'null'}`;
+          logStep("❌ M1SSION™ CRITICAL - Session missing URL", { 
+            sessionId: session?.id,
+            url: session?.url,
+            sessionData: session,
+            attempt: sessionCreationAttempts
+          });
+          
+          if (sessionCreationAttempts >= maxAttempts) {
+            throw new Error(errorMsg);
+          }
+          
+          // Retry con delay
+          await new Promise(resolve => setTimeout(resolve, 1000 * sessionCreationAttempts));
+          continue;
         }
-      });
-      
-      logStep("✅ M1SSION™ Stripe session created successfully", { 
-        sessionId: session.id,
-        url: session.url,
-        customerId: session.customer,
-        mode: session.mode
-      });
-      
-    } catch (stripeError) {
-      logStep("❌ M1SSION™ CRITICAL - Stripe session creation failed", { 
-        error: stripeError.message,
-        code: stripeError.code,
-        type: stripeError.type
-      });
-      throw new Error(`Errore Stripe: ${stripeError.message}`);
+        
+        logStep("✅ M1SSION™ Stripe session created successfully", { 
+          sessionId: session.id,
+          url: session.url,
+          customerId: session.customer,
+          mode: session.mode,
+          attempt: sessionCreationAttempts
+        });
+        
+        break; // Success, exit retry loop
+        
+      } catch (stripeError) {
+        logStep("❌ M1SSION™ Stripe session creation failed", { 
+          error: stripeError.message,
+          code: stripeError.code,
+          type: stripeError.type,
+          attempt: sessionCreationAttempts,
+          willRetry: sessionCreationAttempts < maxAttempts
+        });
+        
+        if (sessionCreationAttempts >= maxAttempts) {
+          throw new Error(`Errore Stripe dopo ${maxAttempts} tentativi: ${stripeError.message}`);
+        }
+        
+        // Retry con delay progressivo
+        await new Promise(resolve => setTimeout(resolve, 2000 * sessionCreationAttempts));
+      }
     }
 
     // 🚨 CRITICAL: Log checkout session in database
