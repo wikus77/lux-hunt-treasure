@@ -208,23 +208,66 @@ serve(async (req) => {
         
         session = await stripe.checkout.sessions.create(sessionConfig);
         
-        // Verifica CRITICA: session.url deve esistere
+        logStep("🔍 M1SSION™ Session created - initial state", {
+          sessionId: session?.id,
+          url: session?.url,
+          status: session?.status,
+          mode: session?.mode
+        });
+        
+        // 🚨 CRITICAL FIX: Force URL generation if missing
         if (!session || !session.url) {
-          const errorMsg = `Session created but missing URL - Session ID: ${session?.id || 'null'}, URL: ${session?.url || 'null'}`;
-          logStep("❌ M1SSION™ CRITICAL - Session missing URL", { 
+          logStep("⚠️ M1SSION™ Session created but URL missing - attempting re-fetch", {
             sessionId: session?.id,
-            url: session?.url,
-            sessionData: session,
             attempt: sessionCreationAttempts
           });
           
-          if (sessionCreationAttempts >= maxAttempts) {
-            throw new Error(errorMsg);
+          // Wait for Stripe internal processing
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Re-fetch the session to get the URL
+          if (session?.id) {
+            try {
+              const refreshedSession = await stripe.checkout.sessions.retrieve(session.id);
+              logStep("🔄 M1SSION™ Session re-fetched", {
+                sessionId: refreshedSession.id,
+                url: refreshedSession.url,
+                status: refreshedSession.status
+              });
+              
+              if (refreshedSession.url) {
+                session = refreshedSession;
+                logStep("✅ M1SSION™ URL recovered after re-fetch", { 
+                  sessionId: session.id,
+                  url: session.url 
+                });
+              }
+            } catch (refreshError) {
+              logStep("❌ M1SSION™ Session re-fetch failed", { 
+                error: refreshError.message,
+                sessionId: session?.id 
+              });
+            }
           }
           
-          // Retry con delay
-          await new Promise(resolve => setTimeout(resolve, 1000 * sessionCreationAttempts));
-          continue;
+          // Final URL check after re-fetch attempt
+          if (!session || !session.url) {
+            const errorMsg = `Session created but URL still missing after re-fetch - Session ID: ${session?.id || 'null'}, URL: ${session?.url || 'null'}`;
+            logStep("❌ M1SSION™ CRITICAL - Session URL still missing after re-fetch", { 
+              sessionId: session?.id,
+              url: session?.url,
+              sessionData: session,
+              attempt: sessionCreationAttempts
+            });
+            
+            if (sessionCreationAttempts >= maxAttempts) {
+              throw new Error(errorMsg);
+            }
+            
+            // Retry with progressive delay
+            await new Promise(resolve => setTimeout(resolve, 1000 * sessionCreationAttempts));
+            continue;
+          }
         }
         
         logStep("✅ M1SSION™ Stripe session created successfully", { 
