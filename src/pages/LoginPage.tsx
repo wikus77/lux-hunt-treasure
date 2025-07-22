@@ -17,6 +17,7 @@ interface FormData {
   password: string;
   fullName: string;
   confirmPassword: string;
+  acceptTerms: boolean;
 }
 
 interface FormErrors {
@@ -24,6 +25,7 @@ interface FormErrors {
   password?: string;
   fullName?: string;
   confirmPassword?: string;
+  acceptTerms?: string;
   general?: string;
 }
 
@@ -43,7 +45,8 @@ const LoginPage: React.FC = () => {
     email: '',
     password: '',
     fullName: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    acceptTerms: false
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
@@ -86,6 +89,11 @@ const LoginPage: React.FC = () => {
         newErrors.confirmPassword = 'Conferma password richiesta';
       } else if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Le password non corrispondono';
+      }
+
+      // ToS acceptance (solo registrazione)
+      if (!formData.acceptTerms) {
+        newErrors.acceptTerms = 'Devi accettare i Termini di Servizio e Privacy Policy';
       }
     }
 
@@ -150,8 +158,8 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  // Gestione input
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  // Gestione input - supporta sia string che boolean
+  const handleInputChange = (field: keyof FormData, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Rimuovi errore del campo quando l'utente inizia a digitare
@@ -167,7 +175,8 @@ const LoginPage: React.FC = () => {
       email: '',
       password: '',
       fullName: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      acceptTerms: false
     });
     setErrors({});
     vibrate(50);
@@ -377,7 +386,44 @@ const LoginPage: React.FC = () => {
                         )}
                       </motion.div>
                     )}
-                  </AnimatePresence>
+                   </AnimatePresence>
+
+                   {/* ToS Checkbox (solo registrazione) */}
+                   <AnimatePresence>
+                     {!isLoginMode && (
+                       <motion.div
+                         initial={{ height: 0, opacity: 0 }}
+                         animate={{ height: 'auto', opacity: 1 }}
+                         exit={{ height: 0, opacity: 0 }}
+                         transition={{ duration: 0.3 }}
+                         className="space-y-2"
+                       >
+                         <div className="flex items-start space-x-3">
+                           <input
+                             id="acceptTerms"
+                             type="checkbox"
+                             checked={formData.acceptTerms}
+                             onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
+                             className="mt-1 h-4 w-4 rounded border-muted-foreground focus:ring-primary"
+                             disabled={isLoading}
+                           />
+                           <Label htmlFor="acceptTerms" className="text-sm leading-relaxed cursor-pointer">
+                             Accetto i{' '}
+                             <button type="button" className="text-primary hover:underline" onClick={() => window.open('/terms', '_blank')}>
+                               Termini di Servizio
+                             </button>
+                             {' '}e la{' '}
+                             <button type="button" className="text-primary hover:underline" onClick={() => window.open('/privacy-policy', '_blank')}>
+                               Privacy Policy
+                             </button>
+                           </Label>
+                         </div>
+                         {errors.acceptTerms && (
+                           <p className="text-sm text-destructive">{errors.acceptTerms}</p>
+                         )}
+                       </motion.div>
+                     )}
+                   </AnimatePresence>
 
                   {/* Errore generale */}
                   {errors.general && (
