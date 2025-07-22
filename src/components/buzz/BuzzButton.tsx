@@ -66,6 +66,12 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
   return (
     <div 
       className="relative w-48 h-48"
+      style={{
+        zIndex: 9999,
+        pointerEvents: 'auto',
+        position: 'relative',
+        cursor: 'pointer'
+      }}
       onClick={(e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -114,6 +120,10 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
         }}
         className="w-full h-full rounded-full text-lg font-semibold text-white tracking-wide shadow-lg z-20"
         style={{
+          zIndex: 10000,
+          pointerEvents: 'auto',
+          position: 'relative',
+          cursor: 'pointer',
           background: isBlocked 
             ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
             : 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
