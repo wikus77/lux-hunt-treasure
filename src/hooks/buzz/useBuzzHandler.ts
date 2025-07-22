@@ -124,23 +124,29 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
       console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
-      // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
-      // Open checkout modal - API call will happen in handlePaymentSuccess AFTER payment
-      const paymentOpened = processBuzzPurchase(false, currentPrice, handlePaymentSuccess);
+      // 🚨 CRITICAL: ESATTAMENTE come BUZZ MAPPA che funziona - await + check result
+      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - COPIO LOGICA BUZZ MAPPA');
       
-      if (!paymentOpened) {
-        toast.error("Pagamento obbligatorio", {
-          description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
+      // COPIO ESATTAMENTE la logica del BUZZ MAPPA che FUNZIONA
+      const result = await processBuzzPurchase(false, currentPrice, handlePaymentSuccess);
+      
+      if (result) {
+        console.log('✅ BUZZ: Stripe checkout opened successfully - waiting for payment completion');
+        toast.success("Checkout Stripe aperto", {
+          description: `Completa il pagamento di €${currentPrice.toFixed(2)} per ricevere l'indizio BUZZ`
+        });
+        
+        // Keep buzzing state active until payment completion
+        // The buzzing state will be reset in handlePaymentSuccess or handlePaymentCancel
+      } else {
+        console.error('❌ BUZZ: processBuzzPurchase failed');
+        toast.error("Impossibile aprire il checkout", {
+          description: "Problema con il sistema di pagamento Stripe"
         });
         setBuzzing(false);
         setShowShockwave(false);
         return;
       }
-      
-      console.log('✅ BUZZ: Stripe checkout opened successfully - waiting for payment completion');
-      
-      // Keep buzzing state active until payment completion
-      // The buzzing state will be reset in handlePaymentSuccess or handlePaymentCancel
       
     } catch (err) {
       console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);

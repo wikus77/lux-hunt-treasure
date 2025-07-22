@@ -44,11 +44,11 @@ export const useUniversalStripePayment = () => {
     setCurrentPaymentConfig(null);
   };
 
-  const processBuzzPurchase = (
+  const processBuzzPurchase = async (
     isBuzzMap: boolean = false, 
     amount: number,
     onPaymentSuccess?: () => void
-  ): boolean => {
+  ): Promise<boolean> => {
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
