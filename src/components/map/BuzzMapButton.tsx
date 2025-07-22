@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useBuzzMapProgressivePricing } from '@/hooks/map/useBuzzMapProgressivePricing';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 import { supabase } from '@/integrations/supabase/client';
 import { BuzzCostWarningModal } from '@/components/buzz/BuzzCostWarningModal';
+import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 
 interface BuzzMapButtonProps {
   onBuzzPress: () => void;
@@ -35,7 +36,14 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     validateBuzzRequest,
     incrementGeneration 
   } = useBuzzMapProgressivePricing();
-  const { processBuzzPurchase, loading } = useStripePayment();
+  const { 
+    processBuzzPayment, 
+    showCheckout, 
+    paymentConfig, 
+    closeCheckout, 
+    handlePaymentSuccess,
+    loading 
+  } = useStripeInAppPayment();
   const { scheduleBuzzMappaNotification } = useBuzzNotificationScheduler();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
@@ -109,20 +117,19 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     }
 
     // Proceed with payment
-    await processBuzzPayment();
+    await processBuzzMapPayment();
   };
 
   const handleWarningConfirm = async () => {
     setShowWarningModal(false);
-    await processBuzzPayment();
+    await processBuzzMapPayment();
   };
 
   const handleWarningCancel = () => {
     setShowWarningModal(false);
   };
 
-  const processBuzzPayment = async () => {
-
+  const processBuzzMapPayment = async () => {
     // 🧠 SAVE MAP STATE BEFORE PAYMENT (CRITICAL FOR RESTORATION)
     if ((window as any).leafletMap) {
       const map = (window as any).leafletMap;
@@ -150,102 +157,54 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         return;
       }
 
-      // 🔥 PROGRESSIVE PRICING: Real Stripe checkout with validated pricing
-      console.log('💳 BUZZ MAPPA PROGRESSIVE: Opening Stripe checkout', {
-        price: buzzMapPrice,
-        radius: radiusKm,
-        segment: segment
+      // 🔥 NEW STRIPE IN-APP SYSTEM: Use the same system as BUZZ normal and subscriptions
+      console.log('🔥 M1SSION™ STRIPE IN-APP: Initiating BUZZ MAPPA payment', { 
+        buzzMapPrice, 
+        radiusKm,
+        timestamp: new Date().toISOString()
       });
-      const result = await processBuzzPurchase(true, buzzMapPrice);
-      
-      if (result) {
-        console.log('✅ BUZZ MAPPA PROGRESSIVE: Stripe checkout opened successfully');
-        toast.success("Checkout Stripe aperto", {
-          description: `Completa il pagamento di ${buzzMapPrice.toFixed(2)}€ per generare l'area BUZZ MAPPA (${radiusKm}km)`
-        });
-        
-        // 🚨 CRITICAL FIX: Mock successful payment for testing (TEMP)
-        // This simulates a successful Stripe payment for testing
-        const simulateSuccessfulPayment = async (stripeSessionId: string) => {
-          console.log('🧪 SIMULATING SUCCESSFUL PAYMENT FOR TESTING');
-          
-          // Update the payment status to succeeded
-          const { error: updateError } = await supabase
-            .from('payment_transactions')
-            .update({ status: 'succeeded' })
-            .eq('provider_transaction_id', stripeSessionId);
-          
-          if (updateError) {
-            console.error('Failed to update payment status:', updateError);
-            return false;
-          }
-          
-          // Wait a moment then create the area
-          setTimeout(async () => {
-            const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
-              body: { session_id: stripeSessionId }
-            });
-            
-            if (!error && data?.success) {
-              console.log('✅ BUZZ MAPPA: Area created successfully!', data);
-              
-              // 🎯 UNIFIED TOAST: Single toast with DB values - NO CITY NAME REVEALED
-              toast.success(`✅ BUZZ MAPPA creata!`, {
-                description: "Una nuova zona è stata creata sulla mappa. Inizia a indagare!"
-              });
 
-              // 🔔 Schedule push notification for 3 hours from now
-              console.log('📅 Scheduling BUZZ MAPPA™ cooldown notification...');
-              await scheduleBuzzMappaNotification();
-              
-              // Trigger area generation callback
-              if (onAreaGenerated && data.area) {
-                onAreaGenerated(data.area.lat, data.area.lng, data.area.radius_km);
-              }
-              
-              onBuzzPress();
-            } else {
-              console.error('Failed to create area:', error);
-              toast.error("Errore creazione area", {
-                description: "Area non creata. Contatta il supporto."
-              });
-            }
-          }, 3000); // Wait 3 seconds to simulate payment processing
-          
-          return true;
-        };
-        
-        // Extract session ID from the result and simulate payment
-        // In production, this would be handled by Stripe webhooks
-        const mockPaymentSuccess = async () => {
-          // Get the most recent pending payment for this user
-          const { data: recentPayments } = await supabase
-            .from('payment_transactions')
-            .select('provider_transaction_id')
-            .eq('user_id', user?.id)
-            .eq('status', 'pending')
-            .ilike('description', '%Buzz Map%')
-            .order('created_at', { ascending: false })
-            .limit(1);
-            
-          if (recentPayments && recentPayments.length > 0) {
-            const sessionId = recentPayments[0].provider_transaction_id;
-            await simulateSuccessfulPayment(sessionId);
-          }
-        };
-        
-        mockPaymentSuccess();
-        
-        } else {
-        console.error('❌ BUZZ MAPPA PROGRESSIVE: processBuzzPurchase failed');
-        toast.error("Errore Stripe", {
-          description: "Impossibile aprire il checkout Stripe. Riprova."
-        });
-      }
+      // Convert price to cents for Stripe (same as BUZZ normal)
+      const priceInCents = Math.round(buzzMapPrice * 100);
+      
+      console.log('💳 M1SSION™ BUZZ MAPPA: Opening in-app checkout', { 
+        priceInCents, 
+        buzzMapPrice,
+        userId: user?.id 
+      });
+      
+      // Open in-app checkout modal for BUZZ MAP
+      await processBuzzPayment(priceInCents, true); // true = is BUZZ MAP
       
     } catch (error) {
       console.error('❌ BUZZ Map Progressive error:', error);
       toast.error('Errore durante l\'apertura del checkout Stripe');
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBuzzMapPaymentSuccess = async (paymentIntentId: string) => {
+    console.log('✅ M1SSION™ BUZZ MAPPA: Payment completed, processing area creation', { paymentIntentId });
+    
+    try {
+      // First handle payment success via hook
+      await handlePaymentSuccess(paymentIntentId);
+      
+      // Then handle BUZZ MAP specific logic
+      console.log('📅 Scheduling BUZZ MAPPA™ cooldown notification...');
+      await scheduleBuzzMappaNotification();
+      
+      // 🎯 UNIFIED TOAST: Single toast with DB values - NO CITY NAME REVEALED
+      toast.success(`✅ BUZZ MAPPA creata!`, {
+        description: "Una nuova zona è stata creata sulla mappa. Inizia a indagare!"
+      });
+
+      // Trigger area generation callback - this will be handled by the payment success function
+      onBuzzPress();
+      
+    } catch (error) {
+      console.error('❌ M1SSION™ BUZZ MAPPA: Error in post-payment processing', error);
+      toast.error('Errore nella finalizzazione BUZZ MAPPA');
     } finally {
       setIsProcessing(false);
     }
@@ -310,6 +269,15 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           </div>
         )}
       </div>
+
+      {/* Universal Stripe In-App Checkout - © 2025 Joseph MULÉ – M1SSION™ */}
+      {showCheckout && paymentConfig && (
+        <StripeInAppCheckout
+          config={paymentConfig}
+          onSuccess={handleBuzzMapPaymentSuccess}
+          onCancel={closeCheckout}
+        />
+      )}
     </>
   );
 };
