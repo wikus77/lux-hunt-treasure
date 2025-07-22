@@ -13,6 +13,13 @@ import BottomNavigation from '@/components/layout/BottomNavigation';
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
 
+  // 🚨 CRITICAL: LOG BuzzPage MOUNT
+  console.log('✅ BuzzPage MOUNTED - CRITICAL DEBUG', {
+    stats,
+    loading,
+    timestamp: new Date().toISOString()
+  });
+
   // Get current buzz price
   const getCurrentBuzzPrice = (dailyCount: number): number => {
     if (dailyCount <= 10) return 1.99;
@@ -33,6 +40,17 @@ export const BuzzPage: React.FC = () => {
       console.log('🔄 Stats aggiornate post-BUZZ - RESET COMPLETO 17/07/2025');
     }, 100);
   };
+
+  // 🚨 CRITICAL: LOG EVERY RENDER
+  console.log('🔄 BuzzPage RENDER - CRITICAL VALUES:', {
+    currentPrice,
+    isBlocked,
+    todayCount: stats?.today_count || 0,
+    handleBuzzSuccessType: typeof handleBuzzSuccess,
+    statsLoaded: !!stats,
+    loading,
+    renderTime: new Date().toISOString()
+  });
 
   if (loading) {
     return (
@@ -101,12 +119,40 @@ export const BuzzPage: React.FC = () => {
           <div className="max-w-3xl mx-auto">
             {/* Pulsante BUZZ - Prima del container */}
             <div className="text-center mb-6">
+              {/* 🚨 CRITICAL: LOG BEFORE RENDERING BuzzActionButton */}
+              {(() => {
+                console.log('🚨 ABOUT TO RENDER BuzzActionButton WITH PROPS:', {
+                  currentPrice,
+                  isBlocked,
+                  todayCount: stats?.today_count || 0,
+                  onSuccessType: typeof handleBuzzSuccess,
+                  propsValid: !!(currentPrice && handleBuzzSuccess)
+                });
+                return null;
+              })()}
+              
               <BuzzActionButton
                 currentPrice={currentPrice}
                 isBlocked={isBlocked}
                 todayCount={stats?.today_count || 0}
                 onSuccess={handleBuzzSuccess}
               />
+              
+              {/* 🧪 EMERGENCY TEST BUTTON */}
+              <button 
+                onClick={() => console.log('🧪 EMERGENCY TEST CLICK WORKS!')}
+                style={{
+                  marginTop: '10px',
+                  padding: '8px 16px',
+                  background: 'red',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                TEST CLICK
+              </button>
             </div>
 
             {/* Container con descrizione - Sistema 200 indizi - RESET COMPLETO 17/07/2025 */}

@@ -20,9 +20,31 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   todayCount,
   onSuccess
 }) => {
+  // 🚨 CRITICAL: LOG BuzzActionButton MOUNT AND PROPS
+  console.log('✅ BuzzActionButton MOUNTED - CRITICAL DEBUG', {
+    currentPrice,
+    isBlocked,
+    todayCount,
+    onSuccessType: typeof onSuccess,
+    propsReceived: { currentPrice, isBlocked, todayCount, onSuccess: typeof onSuccess },
+    timestamp: new Date().toISOString()
+  });
+
   const { buzzing, showShockwave, handleBuzz, handlePaymentSuccess, handlePaymentCancel } = useBuzzHandler({
     currentPrice,
     onSuccess
+  });
+
+  // 🚨 CRITICAL: LOG handleBuzz FROM HOOK
+  console.log('✅ useBuzzHandler RETURNED - CRITICAL DEBUG', {
+    buzzingState: buzzing,
+    showShockwaveState: showShockwave,
+    handleBuzzType: typeof handleBuzz,
+    handleBuzzExists: !!handleBuzz,
+    handleBuzzName: handleBuzz?.name,
+    handlePaymentSuccessType: typeof handlePaymentSuccess,
+    handlePaymentCancelType: typeof handlePaymentCancel,
+    hookReturnedAt: new Date().toISOString()
   });
 
   const { 
@@ -44,12 +66,51 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
 
   return (
     <div className="relative flex flex-col items-center space-y-6">
+      {/* 🚨 CRITICAL: LOG BEFORE RENDERING BuzzButton */}
+      {(() => {
+        console.log('🚨 ABOUT TO RENDER BuzzButton WITH PROPS:', {
+          currentPrice,
+          isBlocked,
+          buzzing,
+          handleBuzzType: typeof handleBuzz,
+          handleBuzzExists: !!handleBuzz,
+          handleBuzzFunction: handleBuzz?.toString?.().substring(0, 100) + '...',
+          aboutToRenderAt: new Date().toISOString()
+        });
+        return null;
+      })()}
+      
       <BuzzButton
         currentPrice={currentPrice}
         isBlocked={isBlocked}
         buzzing={buzzing}
         onClick={handleBuzz}
       />
+      
+      {/* 🧪 DIRECT TEST IN BuzzActionButton */}
+      <button 
+        onClick={() => {
+          console.log('🧪 DIRECT TEST FROM BuzzActionButton - handleBuzz call:');
+          if (handleBuzz) {
+            console.log('🧪 Calling handleBuzz directly...');
+            handleBuzz();
+          } else {
+            console.error('🧪 handleBuzz is undefined!');
+          }
+        }}
+        style={{
+          marginTop: '10px',
+          padding: '4px 8px',
+          background: 'orange',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '12px'
+        }}
+      >
+        TEST handleBuzz
+      </button>
       
       <ShockwaveAnimation show={showShockwave} />
 
