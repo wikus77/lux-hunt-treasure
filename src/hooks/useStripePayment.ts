@@ -127,14 +127,19 @@ export const useStripePayment = () => {
       }
 
       if (data?.url) {
-        // Open Stripe checkout in new tab for live payments
-        window.open(data.url, '_blank');
+        console.log('🚀 M1SSION™ STRIPE REDIRECT - Redirecting to:', data.url);
         
-        // Show live payment notification
-        toast.success('Pagamento Live', {
-          description: 'Verrai reindirizzato al checkout sicuro di Stripe',
+        // PWA iOS Safari: Use same-tab redirect for better UX
+        window.location.href = data.url;
+        
+        console.log('✅ M1SSION™ STRIPE CHECKOUT SUCCESS - Redirected to checkout');
+        
+        // Show success notification
+        toast.success('✅ Redirect a Stripe in corso...', {
+          description: 'Stai per essere reindirizzato al checkout sicuro',
         });
       } else {
+        console.error('❌ M1SSION™ STRIPE CHECKOUT FAILED - No URL received');
         toast.error('Errore nel creare la sessione di pagamento');
       }
     } catch (error) {
