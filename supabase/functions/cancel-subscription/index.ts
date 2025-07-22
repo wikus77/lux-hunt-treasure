@@ -67,20 +67,37 @@ serve(async (req) => {
       }
     }
 
-    // Update database
-    await supabaseClient
+    // Update database - Force cleanup
+    const { error: updateError } = await supabaseClient
       .from('subscriptions')
-      .update({ status: 'canceled' })
+      .update({ 
+        status: 'canceled',
+        updated_at: new Date().toISOString()
+      })
       .eq('user_id', user.id)
       .eq('status', 'active');
 
-    await supabaseClient
+    if (updateError) {
+      logStep("⚠️ Error updating subscriptions table", { error: updateError });
+    } else {
+      logStep("✅ Subscriptions table updated");
+    }
+
+    // Force profile update
+    const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({ 
         subscription_tier: 'Base',
-        tier: 'Base'
+        tier: 'Base',
+        updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
+
+    if (profileError) {
+      logStep("⚠️ Error updating profile", { error: profileError });
+    } else {
+      logStep("✅ Profile updated to Base");
+    }
 
     logStep("✅ User downgraded to Base plan", { userId: user.id });
 

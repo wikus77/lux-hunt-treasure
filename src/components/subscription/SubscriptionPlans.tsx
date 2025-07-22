@@ -77,38 +77,42 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
     
     try {
+      console.log(`🔥 M1SSION™ PLAN UPDATE STARTED: ${plan}`);
+      console.log(`📊 M1SSION™ Current state:`, { 
+        selectedPlan: selected, 
+        requestedPlan: plan, 
+        isDowngrade: plan === "Base" 
+      });
+      
       if (plan === "Base") {
-          console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
-          
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            // Cancel active Stripe subscriptions first
-            const { data: activeSubscriptions } = await supabase
-              .from('subscriptions')
-              .select('stripe_subscription_id')
-              .eq('user_id', user.id)
-              .eq('status', 'active');
-
-            // Update database
-            await supabase
-              .from('subscriptions')
-              .update({ status: 'canceled' })
-              .eq('user_id', user.id)
-              .eq('status', 'active');
-              
-            await supabase
-              .from('profiles')
-              .update({ 
-                subscription_tier: 'Base',
-                tier: 'Base'
-              })
-              .eq('id', user.id);
-            
-            localStorage.setItem("userTier", "Base");
-            await upgradeSubscription("Base");
-            setSelected("Base");
-          }
+        console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
         
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          console.log(`👤 M1SSION™ User authenticated:`, user.id);
+          
+          // Call cancel-subscription edge function for Stripe cleanup
+          try {
+            console.log(`🔄 M1SSION™ Calling cancel-subscription function...`);
+            const { data: cancelData, error: cancelError } = await supabase.functions.invoke('cancel-subscription');
+            
+            if (cancelError) {
+              console.error('❌ M1SSION™ Cancel subscription error:', cancelError);
+            } else {
+              console.log('✅ M1SSION™ Cancel subscription response:', cancelData);
+            }
+          } catch (cancelStripeError) {
+            console.error('❌ M1SSION™ Cancel subscription failed:', cancelStripeError);
+          }
+          
+          // Force local updates
+          localStorage.setItem("userTier", "Base");
+          await upgradeSubscription("Base");
+          setSelected("Base");
+          
+          console.log(`✅ M1SSION™ Local state updated to Base`);
+        }
+      
         toast({
           title: "✅ Downgrade completato",
           description: "Sei tornato al piano Base gratuito",
@@ -146,7 +150,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           }
 
           if (!data?.url) {
-            console.error("❌ M1SSION™ NO URL from Stripe checkout:", data);
+            console.error("❌ M1SSION™ NO URL from Stripe checkout:", JSON.stringify(data, null, 2));
             toast({
               title: "Errore Stripe",
               description: "Impossibile avviare il pagamento. Riprova.",
@@ -156,24 +160,33 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           }
 
           console.log(`✅ M1SSION™ Stripe URL received: ${data.url}`);
+          console.log(`📋 M1SSION™ Full data received:`, JSON.stringify(data, null, 2));
           
           try {
             // PWA and iOS compatibility fixes
+            console.log(`🔍 M1SSION™ Navigator standalone:`, (window.navigator as any).standalone);
+            console.log(`🔍 M1SSION™ Display mode:`, window.matchMedia('(display-mode: standalone)').matches);
+            
             if ((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches) {
               console.log("🔧 M1SSION™ PWA mode detected - opening in new tab");
               const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+              console.log(`🔍 M1SSION™ New window opened:`, !!newWindow);
               if (!newWindow) {
+                console.error("❌ M1SSION™ Popup blocked by browser");
                 throw new Error("Popup blocked");
               }
             } else {
               console.log("🔧 M1SSION™ Regular browser - using location.replace");
+              console.log(`🔧 M1SSION™ About to redirect to: ${data.url}`);
               location.replace(data.url);
             }
           } catch (error) {
             console.error("❌ M1SSION™ Redirect failed:", error);
+            console.log("🔧 M1SSION™ Trying fallback: window.location.href");
             // Final fallback for iOS PWA
             try {
               window.location.href = data.url;
+              console.log("✅ M1SSION™ Fallback redirect initiated");
             } catch (fallbackError) {
               console.error("❌ M1SSION™ All redirect methods failed:", fallbackError);
               toast({
@@ -202,7 +215,39 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
   };
   
-  const handleCancelSubscription = () => {
+  // 🔄 M1SSION™ Funzione di verifica e retry per downgrade
+  const verifyDowngrade = async (maxRetries = 3) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        console.log(`🔄 M1SSION™ Verify attempt ${i + 1}/${maxRetries}`);
+        
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke('verify-subscription-sync');
+        
+        if (verifyError) {
+          console.error(`❌ M1SSION™ Verify error (attempt ${i + 1}):`, verifyError);
+          continue;
+        }
+        
+        console.log(`📊 M1SSION™ Verify result:`, verifyData);
+        
+        if (verifyData?.tier === 'Base') {
+          console.log(`✅ M1SSION™ Downgrade verified successfully`);
+          setSelected('Base');
+          return true;
+        } else {
+          console.log(`⚠️ M1SSION™ Still not Base tier: ${verifyData?.tier}, retrying...`);
+          if (i < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+          }
+        }
+      } catch (error) {
+        console.error(`❌ M1SSION™ Verify attempt ${i + 1} failed:`, error);
+      }
+    }
+    return false;
+  };
+  
+  const handleCancelSubscription = async () => {
     if (selected === "Base") {
       toast({
         title: "Nessun abbonamento attivo",
@@ -211,12 +256,35 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       return;
     }
     
-    upgradeSubscription("Base");
-    setSelected("Base");
-    toast({
-      title: "Abbonamento cancellato",
-      description: "Il tuo abbonamento è stato cancellato con successo"
-    });
+    console.log(`🔄 M1SSION™ Starting subscription cancellation...`);
+    
+    try {
+      // Call downgrade to Base
+      await handleUpdatePlan("Base");
+      
+      // Verify with retry
+      const success = await verifyDowngrade();
+      
+      if (success) {
+        toast({
+          title: "✅ Abbonamento cancellato",
+          description: "Il tuo abbonamento è stato cancellato con successo"
+        });
+      } else {
+        toast({
+          title: "⚠️ Cancellazione in corso",
+          description: "La cancellazione potrebbe richiedere alcuni minuti",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('❌ M1SSION™ Cancel subscription error:', error);
+      toast({
+        title: "❌ Errore cancellazione",
+        description: "Riprova tra qualche istante",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
