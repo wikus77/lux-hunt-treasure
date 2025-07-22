@@ -78,28 +78,36 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     
     try {
       if (plan === "Base") {
-        console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
-        await upgradeSubscription(plan);
-        setSelected(plan);
-        
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from('subscriptions')
-            .update({ status: 'canceled' })
-            .eq('user_id', user.id)
-            .eq('status', 'active');
-            
-          await supabase
-            .from('profiles')
-            .update({ 
-              subscription_tier: 'Base',
-              tier: 'Base'
-            })
-            .eq('id', user.id);
+          console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
           
-          localStorage.setItem("userTier", "Base");
-        }
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            // Cancel active Stripe subscriptions first
+            const { data: activeSubscriptions } = await supabase
+              .from('subscriptions')
+              .select('stripe_subscription_id')
+              .eq('user_id', user.id)
+              .eq('status', 'active');
+
+            // Update database
+            await supabase
+              .from('subscriptions')
+              .update({ status: 'canceled' })
+              .eq('user_id', user.id)
+              .eq('status', 'active');
+              
+            await supabase
+              .from('profiles')
+              .update({ 
+                subscription_tier: 'Base',
+                tier: 'Base'
+              })
+              .eq('id', user.id);
+            
+            localStorage.setItem("userTier", "Base");
+            await upgradeSubscription("Base");
+            setSelected("Base");
+          }
         
         toast({
           title: "✅ Downgrade completato",
@@ -111,8 +119,8 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
         
         // 🚨 CRITICAL FIX: Direct Stripe checkout instead of double redirect
-        await upgradeSubscription(plan);
-        setSelected(plan);
+        // Don't pre-update state for paid plans - wait for Stripe success
+        console.log(`🚀 M1SSION™ Starting Stripe checkout for ${plan}`);
         
         // 🚀 M1SSION™ DIRECT STRIPE CHECKOUT - No double redirect
         const { data: { user } } = await supabase.auth.getUser();
@@ -137,17 +145,37 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
             return;
           }
 
-          if (data?.url) {
-            console.log('🚀 M1SSION™ DIRECT STRIPE REDIRECT:', data.url);
-            
-            // 🚨 CRITICAL: Force immediate redirect to Stripe
-            window.location.href = data.url;
-            
-            sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
-              description: 'Reindirizzamento a Stripe...',
-              duration: 3000
+          if (!data?.url) {
+            console.error('❌ M1SSION™ Stripe URL missing:', data);
+            toast({
+              title: "❌ Errore",
+              description: "Stripe non ha restituito un URL valido",
+              variant: "destructive",
+              duration: 5000
             });
+            return;
           }
+
+          console.log('🚀 M1SSION™ DIRECT STRIPE REDIRECT:', data.url);
+          
+          // 🚨 iOS PWA FIX: Try location.replace for better PWA compatibility
+          try {
+            if ((window.navigator as any).standalone) {
+              // iOS PWA standalone mode
+              window.location.replace(data.url);
+            } else {
+              // Regular browser or fallback
+              window.location.href = data.url;
+            }
+          } catch (e) {
+            // Final fallback
+            window.open(data.url, '_blank');
+          }
+          
+          sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
+            description: 'Reindirizzamento a Stripe...',
+            duration: 3000
+          });
         }
       }
       

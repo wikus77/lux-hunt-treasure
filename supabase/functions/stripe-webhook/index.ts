@@ -112,6 +112,44 @@ serve(async (req) => {
       }
     }
 
+    // Handle subscription cancellation
+    if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object as Stripe.Subscription;
+      
+      logStep("🗑️ Subscription canceled", {
+        subscriptionId: subscription.id,
+        customerId: subscription.customer
+      });
+
+      // Find user by customer ID and reset to Base
+      const { data: subscriptions } = await supabaseClient
+        .from('subscriptions')
+        .select('user_id')
+        .eq('stripe_subscription_id', subscription.id)
+        .limit(1);
+
+      if (subscriptions && subscriptions.length > 0) {
+        const userId = subscriptions[0].user_id;
+        
+        // Update subscription to canceled
+        await supabaseClient
+          .from('subscriptions')
+          .update({ status: 'canceled' })
+          .eq('stripe_subscription_id', subscription.id);
+
+        // Reset user to Base plan
+        await supabaseClient
+          .from('profiles')
+          .update({ 
+            subscription_tier: 'Base',
+            tier: 'Base'
+          })
+          .eq('id', userId);
+
+        logStep("✅ User reset to Base plan", { userId });
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

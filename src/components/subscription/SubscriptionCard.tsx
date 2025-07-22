@@ -64,10 +64,10 @@ const SubscriptionCard = ({
 
   return (
     <div className={cn(
-      "relative glass-card p-6 transition-all duration-300",
-      isActive && "ring-2 ring-cyan-500",
+      "relative glass-card p-6",
+      isActive ? "ring-2 ring-cyan-500 transition-none" : "transition-all duration-300",
       isPopular && "transform scale-105 z-10",
-      type === "Titanium" && "shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+      type === "Titanium" && isActive ? "shadow-[0_0_30px_rgba(168,85,247,0.4)]" : type === "Titanium" && "shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:shadow-[0_0_40px_rgba(168,85,247,0.6)]"
     )}>
       {isPopular && (
         <Badge className="absolute -top-2 right-6 bg-gradient-to-r from-indigo-500 to-purple-600">
@@ -102,13 +102,13 @@ const SubscriptionCard = ({
             console.error(`❌ M1SSION™ No onClick handler for ${type}`);
           }
         }}
-        disabled={false}
+        disabled={isActive}
         className={cn(
-          "w-full transition-all duration-200 font-semibold",
+          "w-full font-semibold",
           isActive 
-            ? "bg-gradient-to-r from-cyan-600 to-cyan-800 cursor-not-allowed opacity-75"
-            : `bg-gradient-to-r ${getGradient()} hover:scale-102 active:scale-98`,
-          type === "Titanium" && "shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]"
+            ? "bg-gradient-to-r from-cyan-600 to-cyan-800 transition-none"
+            : `bg-gradient-to-r ${getGradient()} transition-all duration-200 hover:scale-102 active:scale-98`,
+          type === "Titanium" && !isActive && "shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]"
         )}
       >
         {ctaText}
