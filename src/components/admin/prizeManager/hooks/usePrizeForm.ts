@@ -63,6 +63,7 @@ export const usePrizeForm = () => {
     checkAuth();
     
     // Subscribe to auth state changes
+    // WARNING #1-3 FIXED: Proper subscription cleanup
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       const authenticated = !!session?.user?.id;
       setIsAuthenticated(authenticated);

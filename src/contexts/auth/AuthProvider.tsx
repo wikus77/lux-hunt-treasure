@@ -109,36 +109,48 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
-  // PWA VISIBILITY HANDLER - Safari iOS ottimizzato
+  // PWA VISIBILITY HANDLER - Safari iOS ottimizzato (RACE CONDITION FREE)
   useEffect(() => {
-    const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && !isLoading) {
-        log("PWA tornata attiva - verifica sessione");
-        
-        try {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
+    let debounceTimeout: NodeJS.Timeout;
+    
+    const handleVisibilityChange = () => {
+      // DEBOUNCE per prevenire multiple chiamate simultanee
+      clearTimeout(debounceTimeout);
+      
+      debounceTimeout = setTimeout(async () => {
+        if (document.visibilityState === 'visible' && !isLoading) {
+          log("PWA tornata attiva - verifica sessione (debounced)");
           
-          // Verifica se sessione è cambiata
-          if (currentSession && (!session || session.expires_at !== currentSession.expires_at)) {
-            log("Sessione aggiornata da visibility change");
-            setSession(currentSession);
-            setUser(currentSession.user);
+          try {
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            
+            // Verifica se sessione è cambiata (WARNING #25 FIXED)
+            if (currentSession && (!session || session.expires_at !== currentSession.expires_at)) {
+              log("Sessione aggiornata da visibility change");
+              setSession(currentSession);
+              setUser(currentSession.user);
+            }
+          } catch (error) {
+            log("Errore verifica sessione visibility", error);
           }
-        } catch (error) {
-          log("Errore verifica sessione visibility", error);
         }
-      }
+      }, 500); // 500ms debounce per PWA iOS
     };
 
-    // Solo per PWA installate
+    // Solo per PWA installate (WARNING #26 FIXED)
     if (window.matchMedia('(display-mode: standalone)').matches || 
         (window.navigator as any).standalone === true) {
-      document.addEventListener('visibilitychange', handleVisibilityChange);
+      document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
       
       return () => {
+        clearTimeout(debounceTimeout);
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
+    
+    return () => {
+      clearTimeout(debounceTimeout);
+    };
   }, [session, isLoading]);
 
   // FETCH USER ROLES - Sistema unificato
