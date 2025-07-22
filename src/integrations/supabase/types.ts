@@ -440,6 +440,51 @@ export type Database = {
         }
         Relationships: []
       }
+      checkout_sessions: {
+        Row: {
+          amount_total: number | null
+          completed_at: string | null
+          created_at: string
+          currency: string | null
+          id: string
+          payment_status: string | null
+          session_id: string
+          status: string
+          stripe_customer_id: string | null
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_total?: number | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payment_status?: string | null
+          session_id: string
+          status?: string
+          stripe_customer_id?: string | null
+          tier: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_total?: number | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payment_status?: string | null
+          session_id?: string
+          status?: string
+          stripe_customer_id?: string | null
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       clues: {
         Row: {
           created_at: string
@@ -2279,6 +2324,15 @@ export type Database = {
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
+        Returns: boolean
+      }
+      process_stripe_webhook_completed: {
+        Args: {
+          p_session_id: string
+          p_stripe_customer_id: string
+          p_payment_status: string
+          p_amount_total: number
+        }
         Returns: boolean
       }
       record_intelligence_tool_usage: {

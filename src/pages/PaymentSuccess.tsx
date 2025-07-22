@@ -9,19 +9,20 @@ import { useQueryParams } from "@/hooks/useQueryParams";
 
 const PaymentSuccess = () => {
   const navigate = useNavigate();
-  const queryParams = useQueryParams<{ plan?: string }>();
+  const queryParams = useQueryParams<{ plan?: string; tier?: string }>();
   const [plan, setPlan] = useState<string>("Base");
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
 
   useEffect(() => {
-    // Get the plan from query parameters
-    const planParam = queryParams.plan;
-    if (planParam && ["Silver", "Gold", "Black"].includes(planParam)) {
+    // Get the plan from query parameters - include Titanium
+    const planParam = queryParams.tier || queryParams.plan;
+    if (planParam && ["Silver", "Gold", "Black", "Titanium"].includes(planParam)) {
       setPlan(planParam);
       
       // Update local storage with the new plan
       localStorage.setItem("subscription_plan", planParam);
+      localStorage.setItem("userTier", planParam);
       // Force localStorage update event
       window.dispatchEvent(new Event('storage'));
       
@@ -36,8 +37,9 @@ const PaymentSuccess = () => {
       }, 1700);
       
       // Show success toast
-      toast.success(`Abbonamento ${planParam} attivato`, {
-        description: `Il tuo abbonamento ${planParam} è stato attivato con successo!`,
+      toast.success(`✅ Piano ${planParam} attivato!`, {
+        description: `Il tuo abbonamento ${planParam} è stato confermato con successo!`,
+        duration: 5000
       });
     }
   }, [queryParams]);
@@ -47,6 +49,7 @@ const PaymentSuccess = () => {
       case "Silver": return "€3,99";
       case "Gold": return "€6,99";
       case "Black": return "€9,99";
+      case "Titanium": return "€29,99";
       default: return "€0";
     }
   };

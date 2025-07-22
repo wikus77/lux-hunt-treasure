@@ -98,13 +98,32 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/subscriptions?success=true&tier=${plan}`,
+      success_url: `${origin}/payment-success?tier=${plan}`,
       cancel_url: `${origin}/subscriptions?canceled=true`,
       metadata: {
         user_id: user.id,
         tier: plan
       }
     });
+
+    // 🚨 CRITICAL: Log checkout session in database
+    const { error: sessionError } = await supabaseClient
+      .from('checkout_sessions')
+      .insert({
+        user_id: user.id,
+        session_id: session.id,
+        tier: plan,
+        status: 'pending',
+        stripe_customer_id: customerId,
+        amount_total: tierConfig.price,
+        currency: 'eur'
+      });
+
+    if (sessionError) {
+      logStep("⚠️ Warning: Failed to log session", { error: sessionError });
+    } else {
+      logStep("✅ Session logged in database", { sessionId: session.id });
+    }
 
     logStep("✅ Sessione Stripe creata", { sessionId: session.id, url: session.url });
 
