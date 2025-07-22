@@ -28,6 +28,7 @@ import { DailySpinPage } from "@/pages/DailySpinPage";
 import Terms from "@/pages/Terms";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
+import SafeCreative from "@/pages/SafeCreative";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -155,6 +156,10 @@ const WouterRoutes: React.FC = () => {
           
           <Route path="/cookie-policy">
             <GlobalLayout><CookiePolicy /></GlobalLayout>
+          </Route>
+          
+          <Route path="/safecreative">
+            <GlobalLayout><SafeCreative /></GlobalLayout>
           </Route>
 
           {/* Auth routes */}

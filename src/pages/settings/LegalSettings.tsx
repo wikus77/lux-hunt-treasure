@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { FileText, ExternalLink, Trash2, Shield, Copyright } from 'lucide-react';
+import { FileText, ExternalLink, Trash2, Shield, Copyright, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const LegalSettings: React.FC = () => {
@@ -18,19 +18,25 @@ const LegalSettings: React.FC = () => {
     {
       title: 'Termini di Servizio',
       description: 'Condizioni d\'uso dell\'applicazione M1SSION™',
-      url: '/legal/terms',
+      url: '/terms',
       icon: FileText
     },
     {
       title: 'Privacy Policy',
       description: 'Come raccogliamo e utilizziamo i tuoi dati',
-      url: '/legal/privacy',
+      url: '/privacy-policy',
       icon: Shield
+    },
+    {
+      title: 'Cookie Policy',
+      description: 'Come utilizziamo i cookie e tecnologie simili',
+      url: '/cookie-policy',
+      icon: Settings
     },
     {
       title: 'SafeCreative',
       description: 'Certificazione di proprietà intellettuale',
-      url: '/legal/safecreative',
+      url: '/safecreative',
       icon: Copyright
     }
   ];
@@ -75,8 +81,8 @@ const LegalSettings: React.FC = () => {
   };
 
   const openExternalLink = (url: string) => {
-    if (url.startsWith('/legal/')) {
-      // Navigate to internal legal pages
+    if (url.startsWith('/')) {
+      // Navigate to internal pages
       window.location.href = url;
     } else if ((window as any).Capacitor) {
       // In Capacitor, open external URLs in system browser
