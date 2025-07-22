@@ -4,25 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDailySpin } from '@/hooks/useDailySpin';
 import { useLocation } from 'wouter';
-
-const SEGMENTS = [
-  'BUZZ x1',
-  'BUZZ x2', 
-  'Indizio Extra',
-  'Missione Fallita',
-  'Missione Fallita',
-  'Nessun premio',
-  'Clue di Settimana 4',
-  'Missione Fallita',
-  'BUZZ MAPPA gratis',
-  '3h senza blocchi BUZZ',
-  'Missione Fallita',
-  'Premio Random'
-];
-
-// Probabilità ridotta: solo 25% di vincita
-const WINNING_SEGMENTS = [0, 1, 2, 6, 8, 9, 11]; // 7 su 12 = 58%, ma con logica 25%
-const LOSING_SEGMENTS = [3, 4, 5, 7, 10]; // Missione Fallita e Nessun premio
+import { 
+  SEGMENTS, 
+  WINNING_SEGMENTS, 
+  getRandomSegment, 
+  isWinningPrize 
+} from '@/utils/dailySpinUtils';
 
 export const DailySpinWheel: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -30,21 +17,6 @@ export const DailySpinWheel: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const { spinWheel, isSpinning, spinResult, error } = useDailySpin();
-
-  const getRandomSegment = () => {
-    const random = Math.random();
-    
-    // Solo 25% di possibilità di vincere
-    if (random <= 0.25) {
-      // Vince: prende un segmento vincente
-      const winningIndex = Math.floor(Math.random() * WINNING_SEGMENTS.length);
-      return WINNING_SEGMENTS[winningIndex];
-    } else {
-      // Perde: prende un segmento perdente
-      const losingIndex = Math.floor(Math.random() * LOSING_SEGMENTS.length);
-      return LOSING_SEGMENTS[losingIndex];
-    }
-  };
 
   const handleSpin = async () => {
     if (isSpinning || isAnimating) return;
@@ -85,8 +57,7 @@ export const DailySpinWheel: React.FC = () => {
   // Auto-close effect for losing prizes
   useEffect(() => {
     if (spinResult && showResult) {
-      const losingPrizes = ['Missione Fallita', 'Nessun premio'];
-      if (losingPrizes.includes(spinResult.prize)) {
+      if (!isWinningPrize(spinResult.prize)) {
         const timer = setTimeout(() => {
           setLocation('/home');
         }, 3000);
@@ -127,28 +98,28 @@ export const DailySpinWheel: React.FC = () => {
           >
             {/* Segmenti */}
             {SEGMENTS.map((segment, index) => {
-              const startAngle = index * segmentAngle;
-              const endAngle = (index + 1) * segmentAngle;
+              const startAngle = index * segmentAngle - 90; // Start from top (-90 degrees)
+              const endAngle = (index + 1) * segmentAngle - 90;
               
               // Calcola le coordinate del settore
               const largeArcFlag = segmentAngle > 180 ? 1 : 0;
-              const x1 = 160 + 150 * Math.cos((startAngle * Math.PI) / 180);
-              const y1 = 160 + 150 * Math.sin((startAngle * Math.PI) / 180);
-              const x2 = 160 + 150 * Math.cos((endAngle * Math.PI) / 180);
-              const y2 = 160 + 150 * Math.sin((endAngle * Math.PI) / 180);
+              const x1 = 160 + 140 * Math.cos((startAngle * Math.PI) / 180);
+              const y1 = 160 + 140 * Math.sin((startAngle * Math.PI) / 180);
+              const x2 = 160 + 140 * Math.cos((endAngle * Math.PI) / 180);
+              const y2 = 160 + 140 * Math.sin((endAngle * Math.PI) / 180);
 
               const pathData = [
                 `M 160 160`,
                 `L ${x1} ${y1}`,
-                `A 150 150 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+                `A 140 140 0 ${largeArcFlag} 1 ${x2} ${y2}`,
                 'Z'
               ].join(' ');
 
               // Colori alternati con tema neon
               const isWinning = WINNING_SEGMENTS.includes(index);
               const colors = isWinning 
-                ? ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--secondary))']
-                : ['hsl(var(--muted))', 'hsl(var(--muted-foreground))', 'hsl(var(--border))'];
+                ? ['hsl(221 83% 53%)', 'hsl(262 80% 50%)', 'hsl(47 96% 53%)'] // Blue, Purple, Yellow
+                : ['hsl(215 27% 32%)', 'hsl(215 20% 25%)', 'hsl(220 14% 20%)']; // Grays
               
               const color = colors[index % colors.length];
 
@@ -157,21 +128,21 @@ export const DailySpinWheel: React.FC = () => {
                   <path
                     d={pathData}
                     fill={color}
-                    stroke="hsl(var(--background))"
+                    stroke="hsl(0 0% 100%)"
                     strokeWidth="2"
                     className={isWinning ? 'drop-shadow-lg' : ''}
                   />
                   
                   {/* Testo del segmento */}
                   <text
-                    x={160 + 100 * Math.cos(((startAngle + endAngle) / 2 * Math.PI) / 180)}
-                    y={160 + 100 * Math.sin(((startAngle + endAngle) / 2 * Math.PI) / 180)}
+                    x={160 + 90 * Math.cos(((startAngle + endAngle) / 2 * Math.PI) / 180)}
+                    y={160 + 90 * Math.sin(((startAngle + endAngle) / 2 * Math.PI) / 180)}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="fill-background text-xs font-bold"
+                    className="fill-white text-xs font-bold"
                     transform={`rotate(${(startAngle + endAngle) / 2} ${
-                      160 + 100 * Math.cos(((startAngle + endAngle) / 2 * Math.PI) / 180)
-                    } ${160 + 100 * Math.sin(((startAngle + endAngle) / 2 * Math.PI) / 180)})`}
+                      160 + 90 * Math.cos(((startAngle + endAngle) / 2 * Math.PI) / 180)
+                    } ${160 + 90 * Math.sin(((startAngle + endAngle) / 2 * Math.PI) / 180)})`}
                   >
                     {segment}
                   </text>
@@ -183,12 +154,23 @@ export const DailySpinWheel: React.FC = () => {
             <circle
               cx="160"
               cy="160"
-              r="20"
-              fill="hsl(var(--background))"
-              stroke="hsl(var(--primary))"
-              strokeWidth="3"
+              r="25"
+              fill="hsl(0 0% 100%)"
+              stroke="hsl(221 83% 53%)"
+              strokeWidth="4"
               className="drop-shadow-lg"
             />
+            
+            {/* Logo M1SSION al centro */}
+            <text
+              x="160"
+              y="160"
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-blue-600 text-sm font-bold"
+            >
+              M1
+            </text>
           </svg>
         </div>
       </div>
@@ -243,12 +225,12 @@ export const DailySpinWheel: React.FC = () => {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                {['Missione Fallita', 'Nessun premio'].includes(spinResult.prize) 
+                {!isWinningPrize(spinResult.prize)
                   ? 'Riprova domani per un nuovo tentativo!'
                   : 'Torna domani per un nuovo giro!'
                 }
               </p>
-              {['Missione Fallita', 'Nessun premio'].includes(spinResult.prize) && (
+              {!isWinningPrize(spinResult.prize) && (
                 <p className="text-xs text-muted-foreground/60">
                   Chiusura automatica tra 3 secondi...
                 </p>

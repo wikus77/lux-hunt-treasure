@@ -24,22 +24,26 @@ Deno.serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Ottieni l'utente autenticato
+    // Ottieni l'utente autenticato dal JWT token
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('Missing authorization header')
     }
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
+    const token = authHeader.replace('Bearer ', '')
+    
+    // Verifica il token JWT e ottieni l'utente
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
 
     if (authError || !user) {
-      throw new Error('Unauthorized')
+      console.error('❌ Auth error:', authError)
+      throw new Error('Unauthorized: ' + (authError?.message || 'Invalid token'))
     }
+
+    console.log(`🔐 Utente autenticato: ${user.id} (${user.email})`)
 
     const { user_id, prize, rotation_deg, client_ip, reroute_path }: DailySpinRequest = await req.json()
 
@@ -83,7 +87,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Registra il giro
+    // Registra il giro usando il Service Role Key (bypassa RLS)
     const { data: spinLog, error: insertError } = await supabaseClient
       .from('daily_spin_logs')
       .insert({
@@ -97,11 +101,19 @@ Deno.serve(async (req) => {
       .single()
 
     if (insertError) {
-      console.error('Errore inserimento log:', insertError)
+      console.error('❌ Errore inserimento log:', insertError)
       throw insertError
     }
 
     console.log(`✅ Daily Spin registrato per utente ${user_id}: ${prize}`)
+    console.log(`📊 Dettagli spin:`, { 
+      user_id, 
+      prize, 
+      rotation_deg, 
+      reroute_path,
+      today,
+      log_id: spinLog.id 
+    })
 
     // Determina il messaggio personalizzato
     let message = `Hai vinto: ${prize}!`;

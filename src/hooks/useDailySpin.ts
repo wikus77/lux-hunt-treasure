@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { toast } from 'sonner';
+import { PRIZE_REDIRECTS } from '@/utils/dailySpinUtils';
 
 interface SpinResult {
   success: boolean;
@@ -13,17 +14,6 @@ interface SpinResult {
   log_id?: string;
   reroute_path?: string;
 }
-
-// Map prize to redirect paths
-const PRIZE_REDIRECTS: Record<string, string> = {
-  'BUZZ x1': '/buzz',
-  'BUZZ x2': '/buzz', 
-  'BUZZ MAPPA gratis': '/map?autoBuzzMapFree=true',
-  'Clue di Settimana 4': '/clue/week4',
-  'Premio Random': '/prizes',
-  '3h senza blocchi BUZZ': '/home', // Salva timestamp e redirect home
-  'Indizio Extra': '/clues'
-};
 
 export const useDailySpin = () => {
   const [isSpinning, setIsSpinning] = useState(false);
