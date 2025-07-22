@@ -58,9 +58,9 @@ serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { user_id, plan, amount, currency = 'eur' } = body;
+    const { user_id, plan, amount, currency = 'eur', payment_type, description, metadata } = body;
     
-    logStep('📋 Payment intent request', { user_id, plan, amount, currency });
+    logStep('📋 Payment intent request', { user_id, plan, amount, currency, payment_type, description });
 
     // Validate amount
     if (!amount || amount < 50) { // Minimum 0.50 EUR
@@ -82,7 +82,9 @@ serve(async (req) => {
         email: user.email,
         metadata: {
           user_id: user.id,
-          plan: plan
+          plan: plan || payment_type,
+          payment_type: payment_type,
+          mission: 'M1SSION'
         }
       });
       customerId = newCustomer.id;
@@ -97,10 +99,13 @@ serve(async (req) => {
       setup_future_usage: 'off_session', // For future payments
       metadata: {
         user_id: user.id,
-        plan: plan,
-        source: 'in_app_checkout'
+        plan: plan || payment_type,
+        payment_type: payment_type,
+        source: 'in_app_checkout',
+        mission: 'M1SSION',
+        ...metadata
       },
-      description: `M1SSION™ ${plan} subscription payment`
+      description: description || `M1SSION™ ${payment_type || plan} payment`
     });
 
     logStep('✅ Payment intent created', {
@@ -118,7 +123,7 @@ serve(async (req) => {
         user_id: user.id,
         amount: amount,
         currency: currency,
-        plan: plan,
+        plan: plan || payment_type,
         status: paymentIntent.status,
         created_at: new Date().toISOString()
       });

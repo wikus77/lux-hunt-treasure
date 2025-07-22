@@ -1,5 +1,5 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ Stripe In-App Checkout Component - RESET COMPLETO 22/07/2025
+// M1SSION™ Universal Stripe In-App Checkout Component - RESET COMPLETO 22/07/2025
 
 import React, { useState, useEffect } from 'react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
@@ -14,44 +14,27 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
+import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 interface StripeInAppCheckoutProps {
-  plan: string;
-  onSuccess: () => void;
+  config: PaymentConfig;
+  onSuccess: (paymentIntentId: string) => void;
   onCancel: () => void;
 }
 
 const CheckoutForm: React.FC<{ 
-  plan: string; 
-  onSuccess: () => void; 
+  config: PaymentConfig;
+  onSuccess: (paymentIntentId: string) => void; 
   onCancel: () => void;
-}> = ({ plan, onSuccess, onCancel }) => {
+}> = ({ config, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>('');
   const { user } = useAuthContext();
-
-  // Get plan details
-  const getPlanDetails = (planName: string) => {
-    switch (planName) {
-      case 'Silver':
-        return { amount: 399, name: 'M1SSION™ Silver', description: 'Piano Silver con vantaggi premium' };
-      case 'Gold':
-        return { amount: 799, name: 'M1SSION™ Gold', description: 'Piano Gold con accesso completo' };
-      case 'Black':
-        return { amount: 1299, name: 'M1SSION™ Black', description: 'Piano Black VIP esclusivo' };
-      case 'Titanium':
-        return { amount: 1999, name: 'M1SSION™ Titanium', description: 'Piano Titanium ultimate' };
-      default:
-        return { amount: 399, name: 'M1SSION™ Silver', description: 'Piano Silver' };
-    }
-  };
-
-  const planDetails = getPlanDetails(plan);
 
   // Create payment intent when component mounts
   useEffect(() => {
@@ -59,14 +42,17 @@ const CheckoutForm: React.FC<{
 
     const createPaymentIntent = async () => {
       try {
-        console.log('🔥 M1SSION™ Creating payment intent for:', plan);
+        console.log('🔥 M1SSION™ Creating payment intent for:', config.type, config);
         
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
             user_id: user.id,
-            plan: plan,
-            amount: planDetails.amount,
-            currency: 'eur'
+            plan: config.plan || config.type,
+            amount: config.amount,
+            currency: config.currency || 'eur',
+            payment_type: config.type,
+            description: config.description,
+            metadata: config.metadata
           }
         });
 
@@ -87,7 +73,7 @@ const CheckoutForm: React.FC<{
     };
 
     createPaymentIntent();
-  }, [user, plan, planDetails.amount]);
+  }, [user, config]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -124,17 +110,8 @@ const CheckoutForm: React.FC<{
       } else if (paymentIntent.status === 'succeeded') {
         console.log('✅ M1SSION™ Payment succeeded:', paymentIntent.id);
         
-        // Update subscription in database
-        await supabase.functions.invoke('handle-payment-success', {
-          body: {
-            payment_intent_id: paymentIntent.id,
-            user_id: user?.id,
-            plan: plan
-          }
-        });
-
-        toast.success(`🎉 Pagamento ${plan} completato!`);
-        onSuccess();
+        // Call parent success handler with payment intent ID
+        onSuccess(paymentIntent.id);
       }
     } catch (error) {
       console.error('❌ M1SSION™ Payment processing error:', error);
@@ -166,11 +143,14 @@ const CheckoutForm: React.FC<{
     <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
       <CardHeader>
         <CardTitle className="text-center text-white">
-          💳 Pagamento {plan}
+          💳 {config.type === 'subscription' ? `Abbonamento ${config.plan}` : config.type === 'buzz_map' ? 'BUZZ MAPPA' : 'BUZZ Payment'}
         </CardTitle>
         <div className="text-center text-gray-300">
-          <div className="text-xl font-bold">€{(planDetails.amount / 100).toFixed(2)}/mese</div>
-          <div className="text-sm">{planDetails.description}</div>
+          <div className="text-xl font-bold">
+            €{(config.amount / 100).toFixed(2)}
+            {config.type === 'subscription' ? '/mese' : ''}
+          </div>
+          <div className="text-sm">{config.description}</div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -194,7 +174,7 @@ const CheckoutForm: React.FC<{
               disabled={!stripe || loading || !clientSecret}
               className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
-              {loading ? 'Elaborazione...' : `Paga €${(planDetails.amount / 100).toFixed(2)}`}
+              {loading ? 'Elaborazione...' : `Paga €${(config.amount / 100).toFixed(2)}`}
             </Button>
           </div>
         </form>
@@ -208,7 +188,7 @@ const CheckoutForm: React.FC<{
 };
 
 const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({ 
-  plan, 
+  config, 
   onSuccess, 
   onCancel 
 }) => {
@@ -231,7 +211,7 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <Elements stripe={stripePromise} options={options}>
         <CheckoutForm 
-          plan={plan} 
+          config={config} 
           onSuccess={onSuccess} 
           onCancel={onCancel} 
         />

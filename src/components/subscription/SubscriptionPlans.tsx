@@ -555,8 +555,29 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       {/* In-App Checkout Modal */}
       {showInAppCheckout && (
         <StripeInAppCheckout
-          plan={selectedPlan}
-          onSuccess={handleInAppPaymentSuccess}
+          config={{
+            type: 'subscription',
+            amount: (() => {
+              switch (selectedPlan) {
+                case 'Silver': return 399;
+                case 'Gold': return 799;
+                case 'Black': return 1299;
+                case 'Titanium': return 1999;
+                default: return 399;
+              }
+            })(),
+            description: `Piano ${selectedPlan} con accesso premium`,
+            plan: selectedPlan,
+            metadata: {
+              subscription_plan: selectedPlan,
+              mission: 'M1SSION',
+              reset_date: '2025-07-22'
+            }
+          }}
+          onSuccess={async (paymentIntentId: string) => {
+            console.log('🎉 Subscription payment completed:', paymentIntentId);
+            await handleInAppPaymentSuccess();
+          }}
           onCancel={handleInAppPaymentCancel}
         />
       )}
