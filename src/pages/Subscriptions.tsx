@@ -47,7 +47,8 @@ const Subscriptions = () => {
     const tier = urlParams.get('tier');
     
     if (checkoutTier && tier) {
-      console.log(`🚀 M1SSION™ CHECKOUT: Processing ${tier} subscription via Stripe`);
+      console.log(`🚀 M1SSION™ AUTO-CHECKOUT: Processing ${tier} subscription`);
+      console.log(`🔧 M1SSION™ PARAMS:`, { checkoutTier, tier, url: window.location.href });
       handleStripeCheckout(tier);
     }
   }, [subscription.plan]);

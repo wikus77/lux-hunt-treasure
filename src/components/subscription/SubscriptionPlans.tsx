@@ -2,6 +2,7 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { toast as sonnerToast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import SubscriptionCard from "./SubscriptionCard";
@@ -63,7 +64,11 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
   
   // M1SSION™ Sistema Upgrade/Downgrade Completo
   const handleUpdatePlan = async (plan: string) => {
+    console.log(`🔥 M1SSION™ CLICK DETECTED: ${plan} button clicked`);
+    console.log(`🔧 M1SSION™ STATE:`, { selected, plan, equal: plan === selected });
+    
     if (plan === selected) {
+      console.log(`⚠️ M1SSION™ SAME PLAN: Already on ${plan}`);
       toast({
         title: "✅ Piano già attivo",
         description: `Sei già abbonato al piano ${plan}`,
@@ -73,23 +78,21 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
     
     try {
-      console.log(`🚀 M1SSION™ Upgrade requested: ${selected} → ${plan}`);
+      console.log(`🚀 M1SSION™ PROCESSING: ${selected} → ${plan}`);
       
       if (plan === "Base") {
-        // Downgrade a Base (gratuito)
+        console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
         await upgradeSubscription(plan);
         setSelected(plan);
         
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          // Cancella subscription attiva
           await supabase
             .from('subscriptions')
             .update({ status: 'canceled' })
             .eq('user_id', user.id)
             .eq('status', 'active');
             
-          // Aggiorna profilo
           await supabase
             .from('profiles')
             .update({ 
@@ -108,13 +111,13 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         });
         
       } else {
-        // Upgrade a piano a pagamento - Redirect a Stripe
-        console.log(`💳 Redirecting to Stripe checkout for ${plan}`);
+        console.log(`⬆️ M1SSION™ UPGRADE: To ${plan} plan`);
+        console.log(`🔄 M1SSION™ REDIRECTING: /subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
+        
+        // Forza redirect immediato
         navigate(`/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
         
-        toast({
-          title: "🔄 Reindirizzamento a Stripe...",
-          description: `Preparazione checkout per piano ${plan}`,
+        sonnerToast.loading(`🔄 Reindirizzamento a checkout ${plan}...`, {
           duration: 2000
         });
       }
