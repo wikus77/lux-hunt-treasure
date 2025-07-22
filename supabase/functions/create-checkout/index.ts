@@ -186,14 +186,9 @@ serve(async (req) => {
         cancel_url: `${origin}/subscriptions?canceled=true`,
         metadata: {
           user_id: user.id,
-          tier: plan
-        },
-        payment_intent_data: {
-          metadata: {
-            session_id: "{CHECKOUT_SESSION_ID}",
-            plan: plan,
-            user_id: user.id
-          }
+          tier: plan,
+          session_id: "{CHECKOUT_SESSION_ID}",
+          plan: plan
         }
       });
       
