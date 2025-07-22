@@ -127,38 +127,44 @@ export const useStripePayment = () => {
       }
 
       if (data?.url) {
-        console.log('🚀 M1SSION™ STRIPE REDIRECT - Redirecting to:', data.url);
+        console.log('🚀 M1SSION™ STRIPE REDIRECT - Opening checkout in new tab:', data.url);
         
-        // PWA iOS Safari standalone mode fix
-        const isIOSPWA = (window.navigator as any).standalone || 
-          (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+        // 🔥 CRITICAL FIX: Use window.open for consistent behavior with BUZZ payments
+        console.log('⚡ M1SSION™ Using window.open for subscription checkout (same as BUZZ)');
+        const newWindow = window.open(data.url, '_blank');
         
-        if (isIOSPWA) {
-          console.log('📱 iOS PWA detected - Using immediate redirect method');
+        if (!newWindow) {
+          console.error('❌ window.open blocked - trying fallback redirect methods');
           
-          // 🚀 M1SSION™ STRIPE PWA FIX: Immediate redirect for iOS PWA
-          try {
-            console.log('⚡ M1SSION™ Using location.replace for immediate redirect');
-            window.location.replace(data.url);
-          } catch (error) {
-            console.error('❌ location.replace failed, trying assign:', error);
+          // Fallback to direct redirect if popup blocked
+          const isIOSPWA = (window.navigator as any).standalone || 
+            (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+          
+          if (isIOSPWA) {
+            console.log('📱 iOS PWA detected - Using immediate redirect method');
             try {
-              window.location.assign(data.url);
-            } catch (assignError) {
-              console.error('❌ location.assign failed, using href:', assignError);
-              window.location.href = data.url;
+              console.log('⚡ M1SSION™ Using location.replace for immediate redirect');
+              window.location.replace(data.url);
+            } catch (error) {
+              console.error('❌ location.replace failed, trying assign:', error);
+              try {
+                window.location.assign(data.url);
+              } catch (assignError) {
+                console.error('❌ location.assign failed, using href:', assignError);
+                window.location.href = data.url;
+              }
             }
+          } else {
+            // Standard redirect for non-PWA environments
+            window.location.href = data.url;
           }
         } else {
-          // Standard redirect for non-PWA environments
-          window.location.href = data.url;
+          console.log('✅ M1SSION™ STRIPE CHECKOUT opened in new tab successfully');
         }
         
-        console.log('✅ M1SSION™ STRIPE CHECKOUT SUCCESS - Redirected to checkout');
-        
         // Show success notification
-        toast.success('✅ Redirect a Stripe in corso...', {
-          description: 'Stai per essere reindirizzato al checkout sicuro',
+        toast.success('✅ Apertura checkout Stripe...', {
+          description: 'Checkout aperto in nuova scheda - completa il pagamento',
         });
       } else {
         console.error('❌ M1SSION™ STRIPE CHECKOUT FAILED - No URL received');
