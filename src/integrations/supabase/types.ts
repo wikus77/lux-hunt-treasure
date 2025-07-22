@@ -595,6 +595,36 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_spin_logs: {
+        Row: {
+          client_ip: string | null
+          created_at: string
+          date: string
+          id: string
+          prize: string
+          rotation_deg: number
+          user_id: string
+        }
+        Insert: {
+          client_ip?: string | null
+          created_at?: string
+          date: string
+          id?: string
+          prize: string
+          rotation_deg: number
+          user_id: string
+        }
+        Update: {
+          client_ip?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          prize?: string
+          rotation_deg?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       device_tokens: {
         Row: {
           created_at: string
@@ -2213,6 +2243,10 @@ export type Database = {
       }
       has_role: {
         Args: { user_id: string; role_name: string }
+        Returns: boolean
+      }
+      has_user_played_spin_today: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
       increment_buzz_counter: {

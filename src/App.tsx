@@ -14,6 +14,7 @@ import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useAuth } from "./hooks/use-auth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
+import { DailySpinRedirect } from "./components/daily-spin/DailySpinRedirect";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -64,7 +65,9 @@ function App() {
               onEmailNotVerified={handleEmailNotVerified}
             />
             <BuzzPaymentMonitor />
-            <WouterRoutes />
+            <DailySpinRedirect>
+              <WouterRoutes />
+            </DailySpinRedirect>
             <InstallPrompt />
             <PushSetup />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />

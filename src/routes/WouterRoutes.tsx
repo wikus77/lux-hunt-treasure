@@ -24,6 +24,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import { DailySpinPage } from "@/pages/DailySpinPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -124,6 +125,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/panel-access">
             <ProtectedRoute>
               <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Daily Spin route */}
+          <Route path="/daily-spin">
+            <ProtectedRoute>
+              <DailySpinPage />
             </ProtectedRoute>
           </Route>
 
