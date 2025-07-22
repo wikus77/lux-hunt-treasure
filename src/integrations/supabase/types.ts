@@ -2460,6 +2460,19 @@ export type Database = {
           year_num: number
         }[]
       }
+      get_legal_document: {
+        Args: { document_type: string }
+        Returns: {
+          id: string
+          type: string
+          title: string
+          version: string
+          content_md: string
+          is_active: boolean
+          published_at: string
+          created_at: string
+        }[]
+      }
       get_map_radius_km: {
         Args: { p_week: number; p_generation_count: number }
         Returns: number
