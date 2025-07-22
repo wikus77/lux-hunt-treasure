@@ -21,7 +21,10 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
     <motion.button
       whileTap={{ scale: 0.97 }}
       disabled={isBlocked || buzzing}
-      onClick={onClick}
+      onClick={() => {
+        console.log('🔘 BUZZ BUTTON CLICKED', { isBlocked, buzzing, currentPrice });
+        onClick();
+      }}
       className="relative w-48 h-48 rounded-full text-lg font-semibold text-white tracking-wide shadow-lg z-20"
       style={{
         background: isBlocked 

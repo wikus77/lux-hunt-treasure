@@ -20,7 +20,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   todayCount,
   onSuccess
 }) => {
-  const { buzzing, showShockwave, handleBuzz, handlePaymentSuccess } = useBuzzHandler({
+  const { buzzing, showShockwave, handleBuzz, handlePaymentSuccess, handlePaymentCancel } = useBuzzHandler({
     currentPrice,
     onSuccess
   });
@@ -46,7 +46,10 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       {currentPaymentConfig && (
         <UniversalStripeCheckout
           isOpen={isCheckoutOpen}
-          onClose={closeCheckout}
+          onClose={() => {
+            handlePaymentCancel();
+            closeCheckout();
+          }}
           paymentType={currentPaymentConfig.paymentType}
           planName={currentPaymentConfig.planName}
           amount={currentPaymentConfig.amount}

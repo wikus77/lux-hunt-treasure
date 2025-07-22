@@ -36,6 +36,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
     if (!user) {
       console.log('❌ BUZZ FAILED - Missing user');
       toast.error('Devi essere loggato per utilizzare BUZZ!');
+      setBuzzing(false);
+      setShowShockwave(false);
       return;
     }
     
@@ -49,6 +51,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       // Check if blocked
       if (currentPrice === 0) {
         toast.error('BUZZ bloccato per oggi! Limite giornaliero raggiunto.');
+        setBuzzing(false);
+        setShowShockwave(false);
         return;
       }
       
@@ -56,6 +60,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       const abuseResult = await checkAbuseAndLog(user.id);
       if (abuseResult.isBlocked) {
         toast.error(abuseResult.message!);
+        setBuzzing(false);
+        setShowShockwave(false);
         return;
       }
 
@@ -77,10 +83,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       console.log('✅ BUZZ: Stripe checkout opened successfully - RESET COMPLETO 17/07/2025');
       
-      // Stop here - the actual BUZZ API call will be triggered after payment completion
-      // via the onSuccess callback in the UniversalStripeCheckout component
-      setBuzzing(false);
-      setShowShockwave(false);
+      // Keep buzzing state active until payment completion
+      // The buzzing state will be reset in handlePaymentSuccess or if user cancels
       
     } catch (err) {
       console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
@@ -124,12 +128,16 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         console.error('❌ BUZZ API Error:', buzzResult.errorMessage);
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
+        setBuzzing(false);
+        setShowShockwave(false);
         return;
       }
       
       if (!buzzResult.success) {
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
+        setBuzzing(false);
+        setShowShockwave(false);
         return;
       }
       
@@ -143,6 +151,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
         console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
         toast.error('❌ Indizio non ricevuto dal server');
+        setBuzzing(false);
+        setShowShockwave(false);
         return;
       }
       
@@ -186,10 +196,18 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
     }
   };
 
+  // Function to handle checkout cancellation
+  const handlePaymentCancel = () => {
+    console.log('❌ BUZZ: Payment cancelled by user');
+    setBuzzing(false);
+    setShowShockwave(false);
+  };
+
   return {
     buzzing,
     showShockwave,
     handleBuzz,
-    handlePaymentSuccess
+    handlePaymentSuccess,
+    handlePaymentCancel
   };
 }
