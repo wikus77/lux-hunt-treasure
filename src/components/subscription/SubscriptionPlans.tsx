@@ -162,39 +162,49 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           console.log(`✅ M1SSION™ Stripe URL received: ${data.url}`);
           console.log(`📋 M1SSION™ Full data received:`, JSON.stringify(data, null, 2));
           
+          // 🚨 CRITICAL FIX: iOS PWA STRIPE REDIRECT - FORCED SOLUTION
+          console.warn(`🚀 M1SSION™ FORCING iOS PWA STRIPE REDIRECT`);
+          
           try {
-            // PWA and iOS compatibility fixes
-            console.log(`🔍 M1SSION™ Navigator standalone:`, (window.navigator as any).standalone);
-            console.log(`🔍 M1SSION™ Display mode:`, window.matchMedia('(display-mode: standalone)').matches);
+            // ALWAYS use window.open for PWA iOS - location.replace FAILS on iOS PWA
+            console.warn(`🔧 M1SSION™ Opening Stripe in new tab (iOS PWA compatible)`);
             
-            if ((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches) {
-              console.log("🔧 M1SSION™ PWA mode detected - opening in new tab");
-              const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
-              console.log(`🔍 M1SSION™ New window opened:`, !!newWindow);
-              if (!newWindow) {
-                console.error("❌ M1SSION™ Popup blocked by browser");
-                throw new Error("Popup blocked");
-              }
+            // Method 1: Immediate window.open
+            let stripeWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+            console.log(`🔍 M1SSION™ Immediate window.open result:`, !!stripeWindow);
+            
+            // Method 2: Delayed window.open (Safari iOS PWA workaround)
+            if (!stripeWindow || stripeWindow.closed) {
+              console.warn(`🔧 M1SSION™ Immediate open failed, trying delayed approach`);
+              setTimeout(() => {
+                console.warn(`🔧 M1SSION™ Executing delayed window.open`);
+                stripeWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+                if (!stripeWindow || stripeWindow.closed) {
+                  console.error(`❌ M1SSION™ Delayed window.open also failed`);
+                  // Method 3: Force location change as last resort
+                  console.warn(`🔧 M1SSION™ Last resort: forcing location.href`);
+                  window.location.href = data.url;
+                } else {
+                  console.log(`✅ M1SSION™ Delayed window.open SUCCESS`);
+                }
+              }, 300);
             } else {
-              console.log("🔧 M1SSION™ Regular browser - using location.replace");
-              console.log(`🔧 M1SSION™ About to redirect to: ${data.url}`);
-              location.replace(data.url);
+              console.log(`✅ M1SSION™ Immediate window.open SUCCESS`);
             }
+            
+            // Show success message
+            sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
+              description: 'Apertura Stripe in corso...',
+              duration: 3000
+            });
+            
           } catch (error) {
-            console.error("❌ M1SSION™ Redirect failed:", error);
-            console.log("🔧 M1SSION™ Trying fallback: window.location.href");
-            // Final fallback for iOS PWA
-            try {
-              window.location.href = data.url;
-              console.log("✅ M1SSION™ Fallback redirect initiated");
-            } catch (fallbackError) {
-              console.error("❌ M1SSION™ All redirect methods failed:", fallbackError);
-              toast({
-                title: "Errore Redirect",
-                description: "Impossibile aprire Stripe. Aggiorna la pagina e riprova.",
-                variant: "destructive",
-              });
-            }
+            console.error("❌ M1SSION™ All redirect methods failed:", error);
+            toast({
+              title: "❌ Errore Redirect Critico",
+              description: "Impossibile aprire Stripe. Contatta il supporto.",
+              variant: "destructive",
+            });
           }
           
           sonnerToast.success(`✅ Checkout ${plan} attivato!`, {

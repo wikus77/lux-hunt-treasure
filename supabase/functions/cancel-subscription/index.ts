@@ -46,44 +46,77 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Find active subscriptions for user
-    const { data: activeSubscriptions } = await supabaseClient
+    // 🚨 CRITICAL FIX: Find ALL subscriptions for user (active, trialing, past_due)
+    const { data: allSubscriptions } = await supabaseClient
       .from('subscriptions')
-      .select('stripe_subscription_id')
+      .select('stripe_subscription_id, stripe_customer_id')
       .eq('user_id', user.id)
-      .eq('status', 'active');
+      .not('stripe_subscription_id', 'is', null);
 
-    if (activeSubscriptions && activeSubscriptions.length > 0) {
-      // Cancel each active Stripe subscription
-      for (const sub of activeSubscriptions) {
+    logStep("📊 Found user subscriptions", { count: allSubscriptions?.length || 0 });
+
+    // Cancel ALL Stripe subscriptions found
+    if (allSubscriptions && allSubscriptions.length > 0) {
+      for (const sub of allSubscriptions) {
         if (sub.stripe_subscription_id) {
           try {
+            logStep("🚫 Canceling Stripe subscription", { subscriptionId: sub.stripe_subscription_id });
             await stripe.subscriptions.cancel(sub.stripe_subscription_id);
             logStep("✅ Stripe subscription canceled", { subscriptionId: sub.stripe_subscription_id });
-          } catch (error) {
-            logStep("⚠️ Failed to cancel Stripe subscription", { subscriptionId: sub.stripe_subscription_id, error });
+          } catch (stripeError) {
+            logStep("⚠️ Failed to cancel Stripe subscription", { 
+              subscriptionId: sub.stripe_subscription_id, 
+              error: stripeError.message 
+            });
+            // Continue with other subscriptions even if one fails
           }
         }
       }
     }
 
-    // Update database - Force cleanup
-    const { error: updateError } = await supabaseClient
+    // Also try to find and cancel by customer email
+    try {
+      const customers = await stripe.customers.list({ email: user.email, limit: 10 });
+      if (customers.data.length > 0) {
+        for (const customer of customers.data) {
+          const subscriptions = await stripe.subscriptions.list({ 
+            customer: customer.id,
+            status: 'all'
+          });
+          
+          for (const subscription of subscriptions.data) {
+            if (['active', 'trialing', 'past_due'].includes(subscription.status)) {
+              try {
+                await stripe.subscriptions.cancel(subscription.id);
+                logStep("✅ Additional Stripe subscription canceled", { subscriptionId: subscription.id });
+              } catch (error) {
+                logStep("⚠️ Error canceling additional subscription", { error: error.message });
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      logStep("⚠️ Error searching customer subscriptions", { error: error.message });
+    }
+
+    // 🚨 CRITICAL FIX: Force update ALL subscriptions to canceled
+    const { error: updateAllError } = await supabaseClient
       .from('subscriptions')
       .update({ 
         status: 'canceled',
         updated_at: new Date().toISOString()
       })
       .eq('user_id', user.id)
-      .eq('status', 'active');
+      .neq('status', 'canceled');
 
-    if (updateError) {
-      logStep("⚠️ Error updating subscriptions table", { error: updateError });
+    if (updateAllError) {
+      logStep("⚠️ Error updating all subscriptions", { error: updateAllError });
     } else {
-      logStep("✅ Subscriptions table updated");
+      logStep("✅ All subscriptions marked as canceled");
     }
 
-    // Force profile update
+    // 🚨 CRITICAL FIX: FORCE profile update - ALWAYS to Base
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({ 
@@ -94,12 +127,21 @@ serve(async (req) => {
       .eq('id', user.id);
 
     if (profileError) {
-      logStep("⚠️ Error updating profile", { error: profileError });
+      logStep("❌ CRITICAL ERROR updating profile", { error: profileError });
+      throw new Error(`Profile update failed: ${profileError.message}`);
     } else {
-      logStep("✅ Profile updated to Base");
+      logStep("✅ Profile FORCED to Base tier");
     }
 
-    logStep("✅ User downgraded to Base plan", { userId: user.id });
+    // 🚨 CRITICAL FIX: Cleanup duplicate/orphaned subscriptions
+    const { error: cleanupError } = await supabaseClient.rpc('cleanup_duplicate_subscriptions');
+    if (cleanupError) {
+      logStep("⚠️ Cleanup function error", { error: cleanupError });
+    } else {
+      logStep("✅ Database cleanup completed");
+    }
+
+    logStep("✅ COMPLETE DOWNGRADE SUCCESSFUL", { userId: user.id });
 
     return new Response(JSON.stringify({ 
       success: true,

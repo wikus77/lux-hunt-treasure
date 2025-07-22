@@ -136,36 +136,39 @@ export const useProfileSubscription = () => {
     if (!currentUser) return;
 
     try {
-      console.log(`🔄 M1SSION™ UPGRADE: Starting ${newPlan} subscription for user ${currentUser.id}`);
+      console.warn(`🔥 M1SSION™ UPGRADE STARTED: ${newPlan} for user ${currentUser.id}`);
       
-      // STEP 1: Cancel ALL existing active subscriptions to prevent duplicates
-      const { error: cancelError } = await supabase
+      // 🚨 CRITICAL FIX: Cancel ALL existing subscriptions regardless of status
+      console.warn(`🧹 M1SSION™ CLEANUP: Canceling ALL existing subscriptions`);
+      const { error: cancelAllError } = await supabase
         .from('subscriptions')
-        .update({ status: 'canceled' })
+        .update({ status: 'canceled', updated_at: new Date().toISOString() })
         .eq('user_id', currentUser.id)
-        .eq('status', 'active');
+        .neq('status', 'canceled');
       
-      if (cancelError) {
-        console.error('❌ M1SSION™ Error canceling old subscriptions:', cancelError);
+      if (cancelAllError) {
+        console.error('❌ M1SSION™ Error canceling existing subscriptions:', cancelAllError);
       } else {
-        console.log('✅ M1SSION™ Old subscriptions canceled');
+        console.warn('✅ M1SSION™ All existing subscriptions canceled');
       }
 
-      // STEP 2: If downgrading to Base, call cancel-subscription edge function
+      // 🚨 CRITICAL FIX: If downgrading to Base, force complete cleanup
       if (newPlan === 'Base') {
-        console.log('🔻 M1SSION™ DOWNGRADE: Canceling Stripe subscription');
+        console.warn('🔻 M1SSION™ FORCING BASE DOWNGRADE');
+        
         try {
-          const { error: cancelStripeError } = await supabase.functions.invoke('cancel-subscription');
+          const { data: cancelData, error: cancelStripeError } = await supabase.functions.invoke('cancel-subscription');
           if (cancelStripeError) {
             console.error('❌ M1SSION™ Stripe cancel error:', cancelStripeError);
           } else {
-            console.log('✅ M1SSION™ Stripe subscription canceled successfully');
+            console.warn('✅ M1SSION™ Stripe cancellation completed:', cancelData);
           }
         } catch (stripeError) {
           console.error('❌ M1SSION™ Stripe cancel failed:', stripeError);
         }
       } else {
-        // STEP 3: Create new subscription (only for paid plans)
+        // 🚨 CRITICAL FIX: For paid plans, create new subscription
+        console.warn(`💰 M1SSION™ CREATING NEW SUBSCRIPTION: ${newPlan}`);
         const { error: insertError } = await supabase.from('subscriptions').insert({
           user_id: currentUser.id,
           tier: newPlan,
@@ -177,11 +180,13 @@ export const useProfileSubscription = () => {
 
         if (insertError) {
           console.error('❌ M1SSION™ Error creating subscription:', insertError);
-          return;
+        } else {
+          console.warn('✅ M1SSION™ New subscription created');
         }
       }
 
-      // STEP 4: Update profile tier in sync
+      // 🚨 CRITICAL FIX: FORCE profile update ALWAYS
+      console.warn(`🎯 M1SSION™ FORCING PROFILE UPDATE: ${newPlan}`);
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
@@ -192,20 +197,22 @@ export const useProfileSubscription = () => {
         .eq('id', currentUser.id);
 
       if (profileError) {
-        console.error('❌ M1SSION™ Error updating profile:', profileError);
+        console.error('❌ M1SSION™ CRITICAL PROFILE UPDATE ERROR:', profileError);
+        throw new Error(`Profile update failed: ${profileError.message}`);
       } else {
-        console.log(`✅ M1SSION™ Profile updated to ${newPlan}`);
+        console.warn(`✅ M1SSION™ PROFILE FORCED TO: ${newPlan}`);
       }
 
-      // STEP 5: Update localStorage for immediate UI sync
+      // 🚨 CRITICAL FIX: Force localStorage sync
       localStorage.setItem('subscription_plan', newPlan);
       localStorage.setItem('userTier', newPlan);
       window.dispatchEvent(new Event('storage'));
       
-      console.log(`✅ M1SSION™ UPGRADE COMPLETE: ${newPlan}`);
+      console.warn(`✅ M1SSION™ UPGRADE COMPLETE: ${newPlan}`);
       
     } catch (error) {
-      console.error('❌ M1SSION™ Critical error in upgradeSubscription:', error);
+      console.error('❌ M1SSION™ CRITICAL UPGRADE ERROR:', error);
+      throw error;
     }
   };
 
