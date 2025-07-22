@@ -126,22 +126,47 @@ const CheckoutForm: React.FC<{
         console.log('✅ M1SSION™ Payment succeeded:', paymentIntent.id);
         
         // Call appropriate success handler based on payment type
-        const successFunction = paymentType === 'subscription' ? 'handle-payment-success' : 'handle-buzz-payment-success';
-        const successBody = paymentType === 'subscription'
-          ? {
-              payment_intent_id: paymentIntent.id,
-              user_id: user?.id,
-              plan: planName
-            }
-          : {
-              payment_intent_id: paymentIntent.id,
-              user_id: user?.id,
-              amount: amount / 100,
-              is_buzz_map: isBuzzMap || paymentType === 'buzz_map',
-              payment_type: paymentType
-            };
+        let successFunction = '';
+        let successBody = {};
+        
+        if (paymentType === 'subscription') {
+          successFunction = 'handle-payment-success';
+          successBody = {
+            payment_intent_id: paymentIntent.id,
+            user_id: user?.id,
+            plan: planName
+          };
+        } else if (paymentType === 'buzz_map') {
+          successFunction = 'handle-buzz-payment-success';
+          successBody = {
+            payment_intent_id: paymentIntent.id,
+            user_id: user?.id,
+            amount: amount / 100,
+            is_buzz_map: true,
+            payment_type: paymentType
+          };
+        } else if (paymentType === 'buzz') {
+          // Per BUZZ normale, usa la nuova funzione
+          successFunction = 'handle-buzz-checkout-success';
+          successBody = {
+            payment_intent_id: paymentIntent.id,
+            user_id: user?.id,
+            amount: amount / 100,
+            payment_type: paymentType
+          };
+        }
 
-        await supabase.functions.invoke(successFunction, { body: successBody });
+        console.log(`🎯 Calling ${successFunction} with:`, successBody);
+        const { data: successData, error: successError } = await supabase.functions.invoke(successFunction, { 
+          body: successBody 
+        });
+        
+        if (successError) {
+          console.error('❌ Success handler error:', successError);
+          toast.error('Pagamento completato ma errore nel processare il risultato');
+        } else {
+          console.log('✅ Success handler completed:', successData);
+        }
 
         const paymentTypeText = paymentType === 'subscription' ? planName : (paymentType === 'buzz_map' ? 'BUZZ Map' : 'BUZZ');
         toast.success(`🎉 Pagamento ${paymentTypeText} completato!`);
