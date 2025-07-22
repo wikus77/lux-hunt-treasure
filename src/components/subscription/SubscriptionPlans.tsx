@@ -373,9 +373,33 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
 
             console.log(`✅ M1SSION™ SUCCESS - Stripe URL received: ${data.url}`);
             
-            // REDIRECT IMMEDIATO
-            console.log("🚀 M1SSION™ Executing window.location.href redirect...");
-            window.location.href = data.url;
+            // 🔥 CRITICAL FIX: Use window.open for subscriptions (same as BUZZ)
+            console.log("🚀 M1SSION™ Opening checkout in new tab...");
+            const newWindow = window.open(data.url, '_blank');
+            
+            if (!newWindow) {
+              console.error('❌ window.open blocked - trying fallback redirect methods');
+              
+              // Fallback to direct redirect if popup blocked
+              const isIOSPWA = (window.navigator as any).standalone || 
+                (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+              
+              if (isIOSPWA) {
+                console.log('📱 iOS PWA detected - Using immediate redirect method');
+                window.location.href = data.url;
+              } else {
+                // Standard redirect for non-PWA environments  
+                window.location.href = data.url;
+              }
+            } else {
+              console.log('✅ M1SSION™ STRIPE CHECKOUT opened in new tab successfully');
+            }
+            
+            // Show success notification
+            sonnerToast.success('✅ Apertura checkout Stripe...', {
+              description: 'Checkout aperto in nuova scheda - completa il pagamento',
+              duration: 4000
+            });
             
           } catch (invokeError) {
             console.error('❌ M1SSION™ CRITICAL - Edge function failed, using DIRECT STRIPE FALLBACK:', invokeError);
