@@ -88,15 +88,16 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-black/90 border-[#00D1FF]/20 backdrop-blur-sm max-h-[90vh] overflow-auto">
-        <DialogHeader>
+      <DialogContent className="bg-black/90 border-[#00D1FF]/20 backdrop-blur-sm max-h-[85vh] sm:max-h-[90vh] overflow-hidden flex flex-col pb-safe-bottom">
+        <DialogHeader className="flex-shrink-0 pb-4">
           <DialogTitle className="text-white font-orbitron flex items-center">
             <CreditCard className="w-5 h-5 mr-2" />
             Aggiungi Carta di Credito
           </DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex-1 overflow-y-auto min-h-0 pr-1">
+          <form onSubmit={handleSubmit} className="space-y-4 pb-4">
           {/* Card Number */}
           <div className="space-y-2">
             <Label htmlFor="cardNumber" className="text-white">Numero Carta</Label>
@@ -204,7 +205,8 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
               {loading ? 'Aggiunta...' : 'Salva Metodo'}
             </Button>
           </div>
-        </form>
+          </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
