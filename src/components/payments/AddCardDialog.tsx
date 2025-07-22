@@ -70,17 +70,22 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, child
       return;
     }
 
-    await onAddCard(cardData);
-    
-    // Reset form and close dialog
-    setCardData({
-      cardNumber: '',
-      expiryMonth: '',
-      expiryYear: '',
-      cvc: '',
-      nameOnCard: ''
-    });
-    setOpen(false);
+    try {
+      await onAddCard(cardData);
+      
+      // Reset form and close dialog only on success
+      setCardData({
+        cardNumber: '',
+        expiryMonth: '',
+        expiryYear: '',
+        cvc: '',
+        nameOnCard: ''
+      });
+      setOpen(false);
+    } catch (error) {
+      console.error('Error adding card:', error);
+      // Keep the dialog open on error so user can retry
+    }
   };
 
   const formatCardNumber = (value: string) => {
