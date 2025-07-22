@@ -5,8 +5,12 @@ import MapContainer from './map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import MapDebugger from './map/components/MapDebugger';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
+import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
+import { useBuzzStats } from '@/hooks/useBuzzStats';
+import { motion } from 'framer-motion';
 
 const MapPage: React.FC = () => {
+  const { stats, loading: buzzLoading, loadBuzzStats } = useBuzzStats();
   
   const {
     isAddingPoint,
@@ -31,6 +35,28 @@ const MapPage: React.FC = () => {
     handleBuzz,
     requestLocationPermission
   } = useNewMapPage();
+
+  
+  // Get current buzz price based on daily count
+  const getCurrentBuzzPrice = (dailyCount: number): number => {
+    if (dailyCount <= 10) return 1.99;
+    if (dailyCount <= 20) return 3.99;
+    if (dailyCount <= 30) return 5.99;
+    if (dailyCount <= 40) return 7.99;
+    if (dailyCount <= 50) return 9.99;
+    return 0; // Blocked
+  };
+
+  const currentPrice = getCurrentBuzzPrice(stats?.today_count || 0);
+  const isBlocked = currentPrice === 0;
+
+  const handleBuzzSuccess = async () => {
+    // Force immediate stats reload
+    setTimeout(async () => {
+      await loadBuzzStats();
+      console.log('🔄 Stats aggiornate post-BUZZ sulla mappa');
+    }, 100);
+  };
 
   // Log mount for debugging
   useEffect(() => {
@@ -101,6 +127,22 @@ const MapPage: React.FC = () => {
             requestLocationPermission={requestLocationPermission}
             toggleAddingSearchArea={toggleAddingSearchArea}
           />
+        </div>
+
+        {/* BUZZ Action Button Fixed Position - Top Right */}
+        <div className="fixed top-24 right-4 z-40">
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.3 }}
+          >
+            <BuzzActionButton
+              currentPrice={currentPrice}
+              isBlocked={isBlocked}
+              todayCount={stats?.today_count || 0}
+              onSuccess={handleBuzzSuccess}
+            />
+          </motion.div>
         </div>
       </div>
 
