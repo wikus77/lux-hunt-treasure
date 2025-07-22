@@ -142,12 +142,8 @@ export const useNewMapPage = () => {
   }, []);
 
   const handleBuzz = useCallback(() => {
-    // Navigate to Buzz page where the proper BUZZ functionality is implemented
-    console.log('🎯 Redirecting to BUZZ page for proper functionality');
-    toast.info('Reindirizzamento alla pagina BUZZ per utilizzare la funzione', {
-      description: 'La funzione BUZZ è disponibile nella pagina dedicata'
-    });
-    // Could navigate here if needed: window.location.href = '/buzz';
+    console.log('BUZZ pressed');
+    toast.info('Funzione BUZZ non ancora implementata');
   }, []);
 
   const requestLocationPermission = useCallback(() => {

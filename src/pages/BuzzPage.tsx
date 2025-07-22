@@ -7,16 +7,24 @@ import { motion } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { BuzzInstructions } from '@/components/buzz/BuzzInstructions';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
-import { useBuzzPricing } from '@/hooks/useBuzzPricing';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 
 export const BuzzPage: React.FC = () => {
   const { stats, loading, loadBuzzStats } = useBuzzStats();
-  const { getCurrentBuzzPrice } = useBuzzPricing();
+
+  // Get current buzz price
+  const getCurrentBuzzPrice = (dailyCount: number): number => {
+    if (dailyCount <= 10) return 1.99;
+    if (dailyCount <= 20) return 3.99;
+    if (dailyCount <= 30) return 5.99;
+    if (dailyCount <= 40) return 7.99;
+    if (dailyCount <= 50) return 9.99;
+    return 0; // Blocked
+  };
 
   const currentPrice = getCurrentBuzzPrice(stats?.today_count || 0);
-  const isBlocked = false; // MAI BLOCCATO - ORDINE DIREZIONE
+  const isBlocked = currentPrice === 0;
 
   const handleBuzzSuccess = async () => {
     // Force immediate stats reload - © 2025 Joseph MULÉ – M1SSION™
@@ -107,10 +115,10 @@ export const BuzzPage: React.FC = () => {
                 {/* Descrizione BUZZ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025 */}
                 <div className="text-white/80 space-y-2">
                   <p>Premi il pulsante per inviare un segnale e scoprire nuovi indizi. Ogni Buzz ti aiuta a trovare indizi nascosti per raggiungere l'obiettivo di 200 indizi totali.</p>
-                  <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0} (illimitati)</p>
-                  <p className="font-semibold">BUZZ totali: {stats?.total_count || 0} (target infinito)</p>
+                  <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0}/50 (massimo giornaliero)</p>
+                  <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/200 (target finale)</p>
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
-                  <p className="text-xs text-green-400">✅ Sistema attivo 24/7 - Nessun limite giornaliero - ORDINE DIREZIONE</p>
+                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ - RESET COMPLETO 17/07/2025</p>
                 </div>
               </div>
             </div>

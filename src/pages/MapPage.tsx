@@ -5,14 +5,8 @@ import MapContainer from './map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import MapDebugger from './map/components/MapDebugger';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
-import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
-import { useBuzzStats } from '@/hooks/useBuzzStats';
-import { useBuzzPricing } from '@/hooks/useBuzzPricing';
-import { motion } from 'framer-motion';
 
 const MapPage: React.FC = () => {
-  const { stats, loading: buzzLoading, loadBuzzStats } = useBuzzStats();
-  const { getCurrentBuzzPrice } = useBuzzPricing();
   
   const {
     isAddingPoint,
@@ -37,18 +31,6 @@ const MapPage: React.FC = () => {
     handleBuzz,
     requestLocationPermission
   } = useNewMapPage();
-
-  
-  const currentPrice = getCurrentBuzzPrice(stats?.today_count || 0);
-  const isBlocked = false; // MAI BLOCCATO - ORDINE DIREZIONE
-
-  const handleBuzzSuccess = async () => {
-    // Force immediate stats reload
-    setTimeout(async () => {
-      await loadBuzzStats();
-      console.log('🔄 Stats aggiornate post-BUZZ sulla mappa');
-    }, 100);
-  };
 
   // Log mount for debugging
   useEffect(() => {
@@ -119,22 +101,6 @@ const MapPage: React.FC = () => {
             requestLocationPermission={requestLocationPermission}
             toggleAddingSearchArea={toggleAddingSearchArea}
           />
-        </div>
-
-        {/* BUZZ Action Button Fixed Position - Top Right */}
-        <div className="fixed top-24 right-4 z-40">
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
-          >
-            <BuzzActionButton
-              currentPrice={currentPrice}
-              isBlocked={isBlocked}
-              todayCount={stats?.today_count || 0}
-              onSuccess={handleBuzzSuccess}
-            />
-          </motion.div>
         </div>
       </div>
 

@@ -22,7 +22,7 @@ export default function CommandCenterHome() {
   // Get real user data from Supabase
   const { user } = useAuth();
   const { userClues, loading: prizeLoading } = usePrizeData();
-  // Removed useBuzzPricing import that was causing build error
+  const { userCluesCount } = useBuzzPricing(user?.id);
   const { missionStatus, loading: missionLoading } = useMissionStatus();
   
   // 🧹 FORCE CLEAR ALL CACHE - RESET COMPLETO 17/07/2025
