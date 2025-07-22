@@ -129,8 +129,38 @@ export const useStripePayment = () => {
       if (data?.url) {
         console.log('🚀 M1SSION™ STRIPE REDIRECT - Redirecting to:', data.url);
         
-        // PWA iOS Safari: Use same-tab redirect for better UX
-        window.location.href = data.url;
+        // PWA iOS Safari standalone mode fix
+        const isIOSPWA = (window.navigator as any).standalone || 
+          (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+        
+        if (isIOSPWA) {
+          console.log('📱 iOS PWA detected - Using enhanced redirect method');
+          
+          // Try multiple redirect methods for iOS PWA compatibility
+          try {
+            // Method 1: location.assign (preferred for PWA)
+            window.location.assign(data.url);
+            
+            // Fallback after short delay if assign fails
+            setTimeout(() => {
+              console.log('🔄 Fallback redirect attempt');
+              try {
+                window.location.replace(data.url);
+              } catch (replaceError) {
+                console.log('🆘 Final fallback - opening in new window');
+                window.open(data.url, '_blank', 'noopener,noreferrer');
+              }
+            }, 1000);
+            
+          } catch (error) {
+            console.error('❌ iOS PWA redirect failed:', error);
+            // Final fallback
+            window.open(data.url, '_blank', 'noopener,noreferrer');
+          }
+        } else {
+          // Standard redirect for non-PWA environments
+          window.location.href = data.url;
+        }
         
         console.log('✅ M1SSION™ STRIPE CHECKOUT SUCCESS - Redirected to checkout');
         
