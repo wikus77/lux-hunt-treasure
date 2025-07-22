@@ -2229,7 +2229,7 @@ export type Database = {
       }
       cleanup_duplicate_subscriptions: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: Json
       }
       cleanup_old_abuse_logs: {
         Args: Record<PropertyKey, never>
@@ -2250,6 +2250,10 @@ export type Database = {
       force_subscription_sync: {
         Args: { p_user_id: string }
         Returns: boolean
+      }
+      force_user_to_base_tier: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       generate_referral_code: {
         Args: Record<PropertyKey, never>

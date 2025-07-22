@@ -206,11 +206,6 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
               variant: "destructive",
             });
           }
-          
-          sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
-            description: 'Reindirizzamento a Stripe...',
-            duration: 3000
-          });
         }
       }
       
