@@ -1,10 +1,10 @@
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ const PaymentSettings: React.FC = () => {
   const { user } = useAuth();
   const { subscription } = useProfileSubscription();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [location, navigate] = useLocation();
   const [loading, setLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
 

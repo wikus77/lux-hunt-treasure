@@ -2,7 +2,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Cookie, Settings, Shield, Info } from "lucide-react";
@@ -18,6 +18,7 @@ interface LegalDocument {
 }
 
 const CookiePolicy = () => {
+  const [location, setLocation] = useLocation();
   const [document, setDocument] = useState<LegalDocument | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -71,12 +72,14 @@ const CookiePolicy = () => {
         >
           {/* Header */}
           <div className="flex items-center space-x-4 mb-8">
-            <Link to="/">
-              <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                <ArrowLeft className="mr-2 w-4 h-4" /> 
-                Torna alla Home
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              className="border-white/20 text-white hover:bg-white/10"
+              onClick={() => setLocation('/')}
+            >
+              <ArrowLeft className="mr-2 w-4 h-4" /> 
+              Torna alla Home
+            </Button>
           </div>
 
           {/* Main Content Card */}
@@ -175,12 +178,13 @@ const CookiePolicy = () => {
                       </p>
                       
                       <div className="flex flex-col sm:flex-row gap-3">
-                        <Link to="/settings">
-                          <Button className="bg-gradient-to-r from-[#00D1FF] to-[#7B2BF9] hover:opacity-90">
-                            <Settings className="w-4 h-4 mr-2" />
-                            Vai alle Impostazioni
-                          </Button>
-                        </Link>
+                        <Button 
+                          className="bg-gradient-to-r from-[#00D1FF] to-[#7B2BF9] hover:opacity-90"
+                          onClick={() => setLocation('/settings')}
+                        >
+                          <Settings className="w-4 h-4 mr-2" />
+                          Vai alle Impostazioni
+                        </Button>
                       </div>
                     </section>
                   </div>
@@ -207,26 +211,31 @@ const CookiePolicy = () => {
           {/* Footer Actions */}
           <div className="text-center space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/privacy-policy">
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                  <Shield className="w-4 h-4 mr-2" />
-                  Privacy Policy
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white/10"
+                onClick={() => setLocation('/privacy-policy')}
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Privacy Policy
+              </Button>
               
-              <Link to="/terms">
-                <Button variant="outline" className="border-white/20 text-white hover:bg-white/10">
-                  <Info className="w-4 h-4 mr-2" />
-                  Termini di Servizio
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="border-white/20 text-white hover:bg-white/10"
+                onClick={() => setLocation('/terms')}
+              >
+                <Info className="w-4 h-4 mr-2" />
+                Termini di Servizio
+              </Button>
             </div>
             
-            <Link to="/">
-              <Button className="bg-gradient-to-r from-[#00D1FF] to-[#7B2BF9] hover:opacity-90">
-                Torna alla Home
-              </Button>
-            </Link>
+            <Button 
+              className="bg-gradient-to-r from-[#00D1FF] to-[#7B2BF9] hover:opacity-90"
+              onClick={() => setLocation('/')}
+            >
+              Torna alla Home
+            </Button>
           </div>
         </motion.div>
       </div>
