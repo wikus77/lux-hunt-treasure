@@ -14,8 +14,9 @@ import MissionSettings from './MissionSettings';
 import NotificationsSettings from './NotificationsSettings';
 import PaymentSettings from './PaymentSettings';
 import LegalSettings from './LegalSettings';
+import PrivacySettings from '@/components/settings/PrivacySettings';
 
-type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'payments' | 'legal';
+type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'payments' | 'privacy' | 'legal';
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -54,6 +55,12 @@ const SettingsPage: React.FC = () => {
       description: 'Metodi di pagamento e piani'
     },
     { 
+      id: 'privacy' as SettingsSection, 
+      label: 'Privacy', 
+      icon: Shield,
+      description: 'Gestione consensi e cookie'
+    },
+    { 
       id: 'legal' as SettingsSection, 
       label: 'Legale', 
       icon: FileText,
@@ -73,6 +80,8 @@ const SettingsPage: React.FC = () => {
         return <NotificationsSettings />;
       case 'payments':
         return <PaymentSettings />;
+      case 'privacy':
+        return <PrivacySettings />;
       case 'legal':
         return <LegalSettings />;
       default:
