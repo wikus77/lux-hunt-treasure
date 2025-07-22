@@ -123,29 +123,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       
       <ShockwaveAnimation show={showShockwave} />
 
-      {/* 🧪 CRITICAL: DEBUG FALLBACK SE STATO È CORRETTO MA MODALE INVISIBILE */}
-      {isCheckoutOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: '50px',
-            left: '10px',
-            background: 'red',
-            color: 'white',
-            padding: '10px',
-            zIndex: 9998,
-            fontSize: '12px',
-            borderRadius: '4px'
-          }}
-        >
-          🚨 BUZZ ACTION: isCheckoutOpen=TRUE<br/>
-          Config: {currentPaymentConfig ? 'EXISTS' : 'NULL'}<br/>
-          Type: {currentPaymentConfig?.paymentType}<br/>
-          Amount: {currentPaymentConfig?.amount}
-        </div>
-      )}
-
-      {/* 🚨 SAFARI PWA BYPASS - FORCE RENDER SEMPRE */}
+      {/* 🚨 SAFARI PWA BYPASS COMPLETO - FORCE RENDER STRIPE REDIRECT */}
       {isCheckoutOpen && (
         <div 
           style={{
@@ -163,8 +141,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
             zIndex: 999999,
             transform: 'translateZ(0)',
             WebkitTransform: 'translateZ(0)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden'
+            WebkitBackfaceVisibility: 'hidden',
+            overflow: 'hidden'
           }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -174,32 +152,38 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
             }
           }}
         >
-          {/* 🚨 SAFARI PWA CARD DEFINITIVA */}
+          {/* 🚨 SAFARI PWA CARD NATIVA - ZERO STRIPE ELEMENTS */}
           <div 
             style={{
               backgroundColor: '#1f2937',
-              borderRadius: '12px',
-              padding: '24px',
-              maxWidth: '400px',
+              borderRadius: '16px',
+              padding: '32px',
+              maxWidth: '420px',
               width: '90%',
               maxHeight: '80vh',
               overflowY: 'auto',
               position: 'relative',
               transform: 'translateZ(0)',
               WebkitTransform: 'translateZ(0)',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-              color: 'white'
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+              color: 'white',
+              textAlign: 'center'
             }}
           >
-            {/* 🚨 HEADER */}
+            {/* 🚨 HEADER CON X */}
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '20px'
+              marginBottom: '24px'
             }}>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>
-                {currentPaymentConfig?.planName || 'BUZZ Payment'}
+              <h2 style={{ 
+                margin: 0, 
+                fontSize: '24px', 
+                fontWeight: 'bold',
+                color: '#F213A4'
+              }}>
+                M1SSION™ BUZZ
               </h2>
               <button
                 onClick={() => {
@@ -211,46 +195,73 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
                   background: 'none',
                   border: 'none',
                   color: 'white',
-                  fontSize: '24px',
+                  fontSize: '28px',
                   cursor: 'pointer',
-                  padding: '4px'
+                  padding: '4px',
+                  lineHeight: 1
                 }}
               >
                 ×
               </button>
             </div>
 
-            {/* 🚨 CONTENT */}
-            <div style={{ textAlign: 'center' }}>
+            {/* 🚨 PREZZO GRANDE */}
+            <div style={{
+              fontSize: '48px',
+              fontWeight: 'bold',
+              marginBottom: '16px',
+              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}>
+              €{currentPaymentConfig ? (currentPaymentConfig.amount / 100).toFixed(2) : '1.99'}
+            </div>
+            
+            {/* 🚨 DESCRIZIONE */}
+            <div style={{
+              color: '#9ca3af',
+              marginBottom: '32px',
+              fontSize: '16px',
+              lineHeight: '1.5'
+            }}>
+              {currentPaymentConfig?.description || 'Indizio extra per la missione M1SSION™'}
+            </div>
+
+            {/* 🚨 STATUS REDIRECT */}
+            <div style={{
+              backgroundColor: '#374151',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '32px',
+              border: '1px solid #4B5563'
+            }}>
               <div style={{
-                fontSize: '24px',
+                fontSize: '18px',
                 fontWeight: 'bold',
-                marginBottom: '20px'
+                marginBottom: '8px',
+                color: '#10B981'
               }}>
-                €{currentPaymentConfig ? (currentPaymentConfig.amount / 100).toFixed(2) : '0.00'}
+                🔄 Apertura Stripe Checkout
               </div>
-              
               <div style={{
                 color: '#9ca3af',
-                marginBottom: '20px',
                 fontSize: '14px'
               }}>
-                {currentPaymentConfig?.description || 'Indizio extra per la missione'}
+                Pagamento sicuro tramite Stripe.<br/>
+                Ti reindirizzeremo alla pagina di checkout.
               </div>
+            </div>
 
-              <div style={{
-                color: '#9ca3af',
-                marginBottom: '30px',
-                fontSize: '14px'
-              }}>
-                🔄 Apertura Stripe Checkout in corso...<br/>
-                Ti reindirizzeremo alla pagina di pagamento sicura.
-              </div>
-
-              {/* 🚨 FORCE REDIRECT BUTTON */}
+            {/* 🚨 BOTTONI AZIONE */}
+            <div style={{
+              display: 'flex',
+              gap: '16px',
+              marginBottom: '24px'
+            }}>
               <button
                 onClick={async () => {
-                  console.log('🚨 SAFARI PWA: Force opening Stripe checkout');
+                  console.log('🚨 SAFARI PWA: Opening Stripe checkout directly');
                   
                   try {
                     const { data, error } = await supabase.functions.invoke('process-buzz-purchase', {
@@ -272,8 +283,12 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
                     if (data?.url) {
                       console.log('🚨 Opening Stripe URL:', data.url);
                       window.open(data.url, '_blank');
-                      handlePaymentCancel();
-                      closeCheckout();
+                      
+                      // Close modal after redirect
+                      setTimeout(() => {
+                        handlePaymentCancel();
+                        closeCheckout();
+                      }, 1000);
                     } else {
                       console.error('🚨 No URL returned');
                       toast.error('Errore nel checkout Stripe');
@@ -284,18 +299,19 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
                   }
                 }}
                 style={{
+                  flex: 1,
                   backgroundColor: '#8b5cf6',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  padding: '16px',
                   fontSize: '16px',
                   fontWeight: 'bold',
                   cursor: 'pointer',
-                  marginRight: '12px'
+                  transition: 'all 0.2s'
                 }}
               >
-                Apri Stripe Checkout
+                🚀 Apri Stripe Checkout
               </button>
 
               <button
@@ -307,22 +323,26 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
                 style={{
                   backgroundColor: '#374151',
                   color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
+                  border: '1px solid #4B5563',
+                  borderRadius: '12px',
+                  padding: '16px',
                   fontSize: '16px',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  minWidth: '80px'
                 }}
               >
                 Annulla
               </button>
             </div>
 
+            {/* 🚨 SICUREZZA FOOTER */}
             <div style={{
-              textAlign: 'center',
               fontSize: '12px',
               color: '#6b7280',
-              marginTop: '20px'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
             }}>
               🔒 Pagamento sicuro elaborato da Stripe
             </div>
@@ -330,22 +350,27 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         </div>
       )}
 
-      {/* 🚨 OLD SYSTEM - KEPT AS FALLBACK */}
-      {currentPaymentConfig && false && (
-        <UniversalStripeCheckout
-            isOpen={isCheckoutOpen}
-            onClose={() => {
-              console.log('❌ BUZZ CHECKOUT CLOSED by user');
-              handlePaymentCancel();
-              closeCheckout();
-            }}
-            paymentType={currentPaymentConfig.paymentType}
-            planName={currentPaymentConfig.planName}
-            amount={currentPaymentConfig.amount}
-            description={currentPaymentConfig.description}
-            isBuzzMap={currentPaymentConfig.isBuzzMap}
-          onSuccess={handlePaymentSuccess}
-        />
+      {/* 🧪 DEBUG BOX SEMPRE VISIBILE */}
+      {isCheckoutOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '10px',
+            left: '10px',
+            background: 'lime',
+            color: 'black',
+            padding: '8px',
+            zIndex: 9999999,
+            fontSize: '11px',
+            borderRadius: '4px',
+            maxWidth: '200px'
+          }}
+        >
+          ✅ SAFARI PWA BYPASS ATTIVO<br/>
+          isCheckoutOpen: {String(isCheckoutOpen)}<br/>
+          Config: {currentPaymentConfig ? 'OK' : 'NULL'}<br/>
+          Amount: €{currentPaymentConfig ? (currentPaymentConfig.amount / 100).toFixed(2) : '0.00'}
+        </div>
       )}
     </div>
   );
