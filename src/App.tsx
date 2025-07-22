@@ -13,10 +13,14 @@ import PushSetup from "./components/pwa/PushSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useAuth } from "./hooks/use-auth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
+import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 
 function App() {
   console.log("🚀 App component rendering...");
   console.log("🔍 App mount - checking for potential reload loops");
+  
+  // Initialize push notification processor
+  usePushNotificationProcessor();
   
   const handleAuthenticated = (userId: string) => {
     console.log("✅ APP LEVEL - User authenticated:", userId);

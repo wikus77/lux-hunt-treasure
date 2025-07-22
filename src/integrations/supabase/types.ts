@@ -1343,6 +1343,51 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message: string
+          notification_type: string
+          payload: Json | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message: string
+          notification_type: string
+          payload?: Json | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message?: string
+          notification_type?: string
+          payload?: Json | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       search_areas: {
         Row: {
           created_at: string

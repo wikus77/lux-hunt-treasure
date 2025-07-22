@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useBuzzMapProgressivePricing } from '@/hooks/map/useBuzzMapProgressivePricing';
 import { useStripePayment } from '@/hooks/useStripePayment';
+import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 import { supabase } from '@/integrations/supabase/client';
 import { BuzzCostWarningModal } from '@/components/buzz/BuzzCostWarningModal';
 
@@ -35,6 +36,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     incrementGeneration 
   } = useBuzzMapProgressivePricing();
   const { processBuzzPurchase, loading } = useStripePayment();
+  const { scheduleBuzzMappaNotification } = useBuzzNotificationScheduler();
   const [isProcessing, setIsProcessing] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
 
@@ -191,6 +193,10 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
               toast.success(`✅ BUZZ MAPPA creata!`, {
                 description: "Una nuova zona è stata creata sulla mappa. Inizia a indagare!"
               });
+
+              // 🔔 Schedule push notification for 3 hours from now
+              console.log('📅 Scheduling BUZZ MAPPA™ cooldown notification...');
+              await scheduleBuzzMappaNotification();
               
               // Trigger area generation callback
               if (onAreaGenerated && data.area) {

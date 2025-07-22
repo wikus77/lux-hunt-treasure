@@ -9,6 +9,7 @@ import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { useAbuseProtection } from './useAbuseProtection';
 import { useStripePayment } from '@/hooks/useStripePayment';
+import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 
 interface UseBuzzHandlerProps {
   currentPrice: number;
@@ -22,6 +23,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { vibrate } = useCapacitorHardware();
   const { checkAbuseAndLog } = useAbuseProtection();
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
+  const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
@@ -142,6 +144,10 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       
       // Success callback
       onSuccess();
+
+      // 🔔 Schedule push notification for 3 hours from now
+      console.log('📅 Scheduling BUZZ cooldown notification...');
+      await scheduleBuzzAvailableNotification();
       
       // Reset shockwave after animation
       setTimeout(() => {
