@@ -205,7 +205,10 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           isPopular={false}
           ctaText={selected === "Titanium" ? "Piano Attuale" : "Passa a Titanium"}
           type="Titanium"
-          onClick={() => handleUpdatePlan("Titanium")}
+          onClick={() => {
+            console.log('🔥 M1SSION™ TITANIUM CLICK INTERCEPTED');
+            handleUpdatePlan("Titanium");
+          }}
           isActive={selected === "Titanium"}
         />
       </div>

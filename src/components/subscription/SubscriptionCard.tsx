@@ -93,13 +93,21 @@ const SubscriptionCard = ({
       </ul>
 
       <Button
-        onClick={onClick}
+        onClick={() => {
+          console.log(`🔥 M1SSION™ CARD CLICK: ${type} button clicked`);
+          if (onClick) {
+            console.log(`🔧 M1SSION™ Executing onClick for ${type}`);
+            onClick();
+          } else {
+            console.error(`❌ M1SSION™ No onClick handler for ${type}`);
+          }
+        }}
         disabled={isActive}
         className={cn(
-          "w-full transition-all duration-300",
+          "w-full transition-all duration-200 font-semibold",
           isActive 
             ? "bg-gradient-to-r from-cyan-600 to-cyan-800 cursor-not-allowed opacity-75"
-            : `bg-gradient-to-r ${getGradient()} hover:scale-105`,
+            : `bg-gradient-to-r ${getGradient()} hover:scale-102 active:scale-98`,
           type === "Titanium" && "shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]"
         )}
       >

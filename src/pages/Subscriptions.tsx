@@ -46,28 +46,36 @@ const Subscriptions = () => {
     const checkoutTier = urlParams.get('checkout');
     const tier = urlParams.get('tier');
     
+    console.log('🔍 M1SSION™ URL PARAMS:', { checkoutTier, tier, fullUrl: window.location.href });
+    
     if (checkoutTier && tier) {
-      console.log(`🚀 M1SSION™ AUTO-CHECKOUT: Processing ${tier} subscription`);
-      console.log(`🔧 M1SSION™ PARAMS:`, { checkoutTier, tier, url: window.location.href });
-      handleStripeCheckout(tier);
+      console.log(`🚀 M1SSION™ AUTO-CHECKOUT TRIGGER: ${tier}`);
+      // Delay per assicurare che il component sia mounted
+      setTimeout(() => {
+        handleStripeCheckout(tier);
+      }, 500);
     }
   }, [subscription.plan]);
 
   const handleStripeCheckout = async (tier: string) => {
     try {
-      console.log(`🚀 M1SSION™ CHECKOUT: Processing ${tier} subscription via Stripe`);
+      console.log(`💳 M1SSION™ STRIPE CHECKOUT START: ${tier}`);
+      console.log(`🔧 M1SSION™ processSubscription function:`, typeof processSubscription);
+      
+      if (!processSubscription) {
+        console.error('❌ M1SSION™ processSubscription not available');
+        toast.error('Sistema di pagamento non disponibile');
+        return;
+      }
+      
+      console.log(`🔄 M1SSION™ Calling processSubscription for ${tier}...`);
       await processSubscription(tier);
       
-      // Mostra toast di conferma
-      toast.loading(`🔄 Apertura checkout per piano ${tier}...`, {
-        duration: 3000
-      });
+      toast.success(`✅ Checkout ${tier} attivato`);
       
     } catch (error) {
-      console.error('❌ M1SSION™ Stripe checkout error:', error);
-      toast.error("❌ Impossibile avviare il pagamento. Riprova.", {
-        duration: 4000
-      });
+      console.error('❌ M1SSION™ Stripe checkout FAILED:', error);
+      toast.error("❌ Errore nel sistema di pagamento. Contatta l'assistenza.");
     }
   };
 
