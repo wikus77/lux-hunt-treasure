@@ -73,14 +73,32 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       return;
     }
 
-    // Validate the request server-side
+    // Validate the request server-side with enhanced post-reset debugging
+    console.log('🔍 BUZZ VALIDATION START', {
+      buzzMapPrice,
+      radiusKm,
+      segment,
+      dailyBuzzMapCounter,
+      user: user?.id
+    });
+    
     const isValid = await validateBuzzRequest(buzzMapPrice, radiusKm);
+    console.log('🔍 BUZZ VALIDATION RESULT', { isValid });
+    
     if (!isValid) {
+      console.warn('🚫 BUZZ VALIDATION FAILED', {
+        price: buzzMapPrice,
+        radius: radiusKm,
+        expectedEntry: { price: 4.99, radius: 500 },
+        postResetCheck: true
+      });
       toast.error('Richiesta non valida', {
         description: 'Tentativo di bypass rilevato. Operazione bloccata.'
       });
       return;
     }
+    
+    console.log('✅ BUZZ VALIDATION PASSED - Proceeding with payment');
 
     // Show warning modal for high-cost operations
     if (needsCostWarning()) {
