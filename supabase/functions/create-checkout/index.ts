@@ -113,12 +113,12 @@ serve(async (req) => {
     }
     logStep("📋 Piano richiesto", { plan });
 
-    // Configurazione prezzi corretti M1SSION™ (in centesimi)
+    // Configurazione prezzi corretti M1SSION™ (in centesimi) + STRIPE PRODUCT CREATION DINAMICA
     const priceConfig = {
-      'Silver': { price: 399, name: 'M1SSION™ Silver' },
-      'Gold': { price: 699, name: 'M1SSION™ Gold' },
-      'Black': { price: 999, name: 'M1SSION™ Black' },
-      'Titanium': { price: 2999, name: 'M1SSION™ Titanium VIP' } // €29.99
+      'Silver': { price: 399, name: 'M1SSION™ Silver', description: 'Piano Silver con vantaggi premium' },
+      'Gold': { price: 699, name: 'M1SSION™ Gold', description: 'Piano Gold con accesso VIP' },
+      'Black': { price: 999, name: 'M1SSION™ Black', description: 'Piano Black con badge esclusivo' },
+      'Titanium': { price: 2999, name: 'M1SSION™ Titanium VIP', description: 'Piano Titanium con accesso illimitato' }
     };
 
     const tierConfig = priceConfig[plan as keyof typeof priceConfig];

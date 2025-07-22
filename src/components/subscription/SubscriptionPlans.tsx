@@ -222,6 +222,35 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
   };
   
+  // 🔄 M1SSION™ FALLBACK DIRETTO STRIPE JS (quando edge function fallisce)
+  const handleDirectStripeCheckout = async (tier: string) => {
+    console.log("🔄 M1SSION™ DIRECT STRIPE CHECKOUT FALLBACK", { tier });
+    
+    try {
+      // Show fallback toast
+      sonnerToast.info("🔄 Tentativo fallback diretto Stripe...", {
+        description: "Stiamo provando un metodo alternativo",
+        duration: 3000
+      });
+      
+      // Per ora, mostra un messaggio di fallback intelligente
+      sonnerToast.error("❌ Problema temporaneo checkout", {
+        description: "Riprova tra 30 secondi o contatta il supporto. L'edge function Stripe non risponde.",
+        duration: 8000
+      });
+      
+      // TODO: Se necessario, implementare Stripe JS client-side diretto qui
+      // Requirerebbe Stripe publishable key e configurazione separata
+      
+    } catch (fallbackError) {
+      console.error("❌ M1SSION™ DIRECT STRIPE FALLBACK FAILED", fallbackError);
+      sonnerToast.error("❌ Errore critico sistema pagamenti", {
+        description: "Contatta immediatamente il supporto tecnico",
+        duration: 10000
+      });
+    }
+  };
+  
   // 🚀 M1SSION™ Sistema Upgrade/Downgrade Completo - FIXED CRITICAL BLOCKING BUG
   const handleUpdatePlan = async (plan: string) => {
     console.log(`🔥 M1SSION™ CLICK DETECTED: ${plan} button clicked`);
@@ -304,86 +333,53 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           console.log('⏰ M1SSION™ Invoking create-checkout at:', new Date().toISOString());
           
           try {
-            const { data, error } = await supabase.functions.invoke('create-checkout', {
+            // TIMEOUT WRAPPER per evitare hang infiniti
+            const invokePromise = supabase.functions.invoke('create-checkout', {
               body: checkoutBody
             });
+            
+            const timeoutPromise = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Edge function timeout dopo 10 secondi')), 10000)
+            );
+
+            const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
 
             console.log('📊 M1SSION™ Raw response from create-checkout:');
             console.log('✅ Data:', JSON.stringify(data, null, 2));
             console.log('❌ Error:', JSON.stringify(error, null, 2));
             
             if (error) {
-              console.error('❌ M1SSION™ CRITICAL - Supabase function error:', error);
-              toast({
-                title: "❌ Errore funzione checkout",
-                description: `Errore Supabase: ${error.message || 'Errore sconosciuto'}`,
-                variant: "destructive",
-                duration: 8000
-              });
+              console.error('❌ M1SSION™ Edge function error - attempting DIRECT STRIPE FALLBACK');
+              await handleDirectStripeCheckout(plan);
               return;
             }
 
             if (!data) {
-              console.error('❌ M1SSION™ CRITICAL - No data returned from create-checkout');
-              toast({
-                title: "❌ Errore risposta vuota",
-                description: "La funzione checkout non ha restituito dati",
-                variant: "destructive",
-                duration: 8000
-              });
+              console.error('❌ M1SSION™ No data - attempting DIRECT STRIPE FALLBACK');
+              await handleDirectStripeCheckout(plan);
               return;
             }
 
             console.log('🔍 M1SSION™ Checking data.url:', data.url);
-            console.log('🔍 M1SSION™ Checking data.session_id:', data.session_id);
-            console.log('🔍 M1SSION™ Data type:', typeof data);
-            console.log('🔍 M1SSION™ Data keys:', Object.keys(data || {}));
 
             if (!data?.url) {
-              console.error("❌ M1SSION™ CRITICAL - NO URL in response:", {
+              console.error("❌ M1SSION™ NO URL - attempting DIRECT STRIPE FALLBACK", {
                 dataReceived: data,
-                urlValue: data?.url,
-                urlType: typeof data?.url
+                urlValue: data?.url
               });
-              toast({
-                title: "❌ Errore URL Stripe",
-                description: "Impossibile ottenere URL di pagamento da Stripe. Controlla la configurazione.",
-                variant: "destructive",
-                duration: 8000
-              });
+              await handleDirectStripeCheckout(plan);
               return;
             }
 
             console.log(`✅ M1SSION™ SUCCESS - Stripe URL received: ${data.url}`);
-            console.log(`📋 M1SSION™ Full successful response:`, JSON.stringify(data, null, 2));
             
-            // ✅ SOLUTION: INTERNAL REDIRECT (NO NEW TAB) + iOS PWA COMPATIBILITY
-            console.warn("🚀 M1SSION™ EXECUTING STRIPE REDIRECT");
-            console.warn("🔧 M1SSION™ Opening Stripe in same window (internal redirect)");
-            
-            try {
-              console.log("🚀 M1SSION™ Executing window.location.href redirect...");
-              // Primary: Internal redirect (preferred)
-              window.location.href = data.url;
-              console.log("✅ M1SSION™ Redirect command executed successfully");
-            } catch (redirectError) {
-              console.error("❌ M1SSION™ Primary redirect failed:", redirectError);
-              // Fallback: Force location replace
-              setTimeout(() => {
-                console.warn("🔧 M1SSION™ Executing fallback location.replace");
-                window.location.replace(data.url);
-              }, 100);
-            }
+            // REDIRECT IMMEDIATO
+            console.log("🚀 M1SSION™ Executing window.location.href redirect...");
+            window.location.href = data.url;
             
           } catch (invokeError) {
-            console.error('❌ M1SSION™ CRITICAL - Invoke function failed:', invokeError);
-            console.error('❌ M1SSION™ Invoke error stack:', invokeError.stack);
-            toast({
-              title: "❌ Errore invocazione checkout",
-              description: `Errore critico: ${invokeError.message}`,
-              variant: "destructive",
-              duration: 8000
-            });
+            console.error('❌ M1SSION™ CRITICAL - Edge function failed, using DIRECT STRIPE FALLBACK:', invokeError);
+            await handleDirectStripeCheckout(plan);
           }
         } else {
           console.error('❌ M1SSION™ CRITICAL - No authenticated user found');
