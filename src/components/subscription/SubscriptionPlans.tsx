@@ -286,58 +286,113 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         // Don't pre-update state for paid plans - wait for Stripe success
         console.log(`🚀 M1SSION™ Starting Stripe checkout for ${plan}`);
         
-        // 🚀 M1SSION™ DIRECT STRIPE CHECKOUT - No double redirect
+        // 🚀 M1SSION™ DIRECT STRIPE CHECKOUT - Enhanced Logging
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data, error } = await supabase.functions.invoke('create-checkout', {
-            body: {
-              user_id: user.id,
-              plan,
-              payment_method: 'card',
-              mode: 'live'
-            }
-          });
-
-          if (error) {
-            console.error('❌ M1SSION™ Stripe checkout error:', error);
-            toast({
-              title: "❌ Errore checkout",
-              description: "Impossibile creare sessione Stripe",
-              variant: "destructive",
-              duration: 5000
-            });
-            return;
-          }
-
-          if (!data?.url) {
-            console.error("❌ M1SSION™ NO URL from Stripe checkout:", JSON.stringify(data, null, 2));
-            toast({
-              title: "Errore Stripe",
-              description: "Impossibile avviare il pagamento. Riprova.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          console.log(`✅ M1SSION™ Stripe URL received: ${data.url}`);
-          console.log(`📋 M1SSION™ Full data received:`, JSON.stringify(data, null, 2));
+          console.log('🔥 M1SSION™ CRITICAL DEBUG - STARTING CHECKOUT PROCESS');
+          console.log('👤 M1SSION™ User data:', { id: user.id, email: user.email });
+          console.log('🎯 M1SSION™ Plan requested:', plan);
           
-          // ✅ SOLUTION: INTERNAL REDIRECT (NO NEW TAB) + iOS PWA COMPATIBILITY
-          console.warn("🚀 M1SSION™ FORCING INTERNAL STRIPE REDIRECT");
-          console.warn("🔧 M1SSION™ Opening Stripe in same window (internal redirect)");
+          const checkoutBody = {
+            user_id: user.id,
+            plan,
+            payment_method: 'card',
+            mode: 'live'
+          };
+          
+          console.log('📋 M1SSION™ Checkout body:', JSON.stringify(checkoutBody, null, 2));
+          console.log('⏰ M1SSION™ Invoking create-checkout at:', new Date().toISOString());
           
           try {
-            // Primary: Internal redirect (preferred)
-            window.location.href = data.url;
-            console.log("✅ M1SSION™ Primary redirect executed:", data.url);
-          } catch (error) {
-            console.error("❌ M1SSION™ Primary redirect failed:", error);
-            // Fallback: Force location replace
-            setTimeout(() => {
-              console.warn("🔧 M1SSION™ Fallback: location.replace");
-              window.location.replace(data.url);
-            }, 100);
+            const { data, error } = await supabase.functions.invoke('create-checkout', {
+              body: checkoutBody
+            });
+
+            console.log('📊 M1SSION™ Raw response from create-checkout:');
+            console.log('✅ Data:', JSON.stringify(data, null, 2));
+            console.log('❌ Error:', JSON.stringify(error, null, 2));
+            
+            if (error) {
+              console.error('❌ M1SSION™ CRITICAL - Supabase function error:', error);
+              toast({
+                title: "❌ Errore funzione checkout",
+                description: `Errore Supabase: ${error.message || 'Errore sconosciuto'}`,
+                variant: "destructive",
+                duration: 8000
+              });
+              return;
+            }
+
+            if (!data) {
+              console.error('❌ M1SSION™ CRITICAL - No data returned from create-checkout');
+              toast({
+                title: "❌ Errore risposta vuota",
+                description: "La funzione checkout non ha restituito dati",
+                variant: "destructive",
+                duration: 8000
+              });
+              return;
+            }
+
+            console.log('🔍 M1SSION™ Checking data.url:', data.url);
+            console.log('🔍 M1SSION™ Checking data.session_id:', data.session_id);
+            console.log('🔍 M1SSION™ Data type:', typeof data);
+            console.log('🔍 M1SSION™ Data keys:', Object.keys(data || {}));
+
+            if (!data?.url) {
+              console.error("❌ M1SSION™ CRITICAL - NO URL in response:", {
+                dataReceived: data,
+                urlValue: data?.url,
+                urlType: typeof data?.url
+              });
+              toast({
+                title: "❌ Errore URL Stripe",
+                description: "Impossibile ottenere URL di pagamento da Stripe. Controlla la configurazione.",
+                variant: "destructive",
+                duration: 8000
+              });
+              return;
+            }
+
+            console.log(`✅ M1SSION™ SUCCESS - Stripe URL received: ${data.url}`);
+            console.log(`📋 M1SSION™ Full successful response:`, JSON.stringify(data, null, 2));
+            
+            // ✅ SOLUTION: INTERNAL REDIRECT (NO NEW TAB) + iOS PWA COMPATIBILITY
+            console.warn("🚀 M1SSION™ EXECUTING STRIPE REDIRECT");
+            console.warn("🔧 M1SSION™ Opening Stripe in same window (internal redirect)");
+            
+            try {
+              console.log("🚀 M1SSION™ Executing window.location.href redirect...");
+              // Primary: Internal redirect (preferred)
+              window.location.href = data.url;
+              console.log("✅ M1SSION™ Redirect command executed successfully");
+            } catch (redirectError) {
+              console.error("❌ M1SSION™ Primary redirect failed:", redirectError);
+              // Fallback: Force location replace
+              setTimeout(() => {
+                console.warn("🔧 M1SSION™ Executing fallback location.replace");
+                window.location.replace(data.url);
+              }, 100);
+            }
+            
+          } catch (invokeError) {
+            console.error('❌ M1SSION™ CRITICAL - Invoke function failed:', invokeError);
+            console.error('❌ M1SSION™ Invoke error stack:', invokeError.stack);
+            toast({
+              title: "❌ Errore invocazione checkout",
+              description: `Errore critico: ${invokeError.message}`,
+              variant: "destructive",
+              duration: 8000
+            });
           }
+        } else {
+          console.error('❌ M1SSION™ CRITICAL - No authenticated user found');
+          toast({
+            title: "❌ Errore autenticazione",
+            description: "Utente non autenticato. Effettua login e riprova.",
+            variant: "destructive",
+            duration: 5000
+          });
         }
       }
       
