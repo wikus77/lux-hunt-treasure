@@ -9,8 +9,7 @@ import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import { useToast } from "@/hooks/use-toast";
-import { useUniversalStripePayment } from "@/hooks/useUniversalStripePayment";
-import UniversalStripeCheckout from "@/components/stripe/UniversalStripeCheckout";
+import { useStripePayment } from "@/hooks/useStripePayment";
 import { v4 as uuidv4 } from "uuid";
 
 const PaymentMethods = () => {
@@ -23,13 +22,7 @@ const PaymentMethods = () => {
   const [price, setPrice] = useState("1.99");
   const [sessionId, setSessionId] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const { 
-    processBuzzPurchase, 
-    isCheckoutOpen, 
-    currentPaymentConfig, 
-    closeCheckout,
-    loading 
-  } = useUniversalStripePayment();
+  const { processBuzzPurchase, loading } = useStripePayment();
 
   useEffect(() => {
     // Check if we're coming from the map page
@@ -113,7 +106,9 @@ const PaymentMethods = () => {
     try {
       await processBuzzPurchase(
         isMapBuzz, 
-        priceInCents / 100 // Convert from cents to euros
+        priceInCents, 
+        redirectUrl,
+        sessionId
       );
     } catch (error) {
       console.error("Errore durante il processo di pagamento:", error);
@@ -139,7 +134,9 @@ const PaymentMethods = () => {
     try {
       await processBuzzPurchase(
         isMapBuzz, 
-        priceInCents / 100 // Convert from cents to euros
+        priceInCents, 
+        redirectUrl,
+        sessionId
       );
     } catch (error) {
       console.error("Errore durante il pagamento rapido:", error);
@@ -165,7 +162,9 @@ const PaymentMethods = () => {
     try {
       await processBuzzPurchase(
         isMapBuzz, 
-        priceInCents / 100 // Convert from cents to euros
+        priceInCents, 
+        redirectUrl,
+        sessionId
       );
     } catch (error) {
       console.error("Errore durante il pagamento alternativo:", error);
@@ -177,25 +176,7 @@ const PaymentMethods = () => {
   };
 
   return (
-    <>
-      {/* Universal Stripe Checkout Modal */}
-      {currentPaymentConfig && (
-        <UniversalStripeCheckout
-          isOpen={isCheckoutOpen}
-          onClose={closeCheckout}
-          paymentType={currentPaymentConfig.paymentType}
-          planName={currentPaymentConfig.planName}
-          amount={currentPaymentConfig.amount}
-          description={currentPaymentConfig.description}
-          isBuzzMap={currentPaymentConfig.isBuzzMap}
-          onSuccess={() => {
-            handlePaymentCompleted();
-            closeCheckout();
-          }}
-        />
-      )}
-      
-      <div className="min-h-screen bg-black pb-6">
+    <div className="min-h-screen bg-black pb-6">
       <header className="px-4 py-6 flex items-center border-b border-m1ssion-deep-blue">
         <Button 
           variant="ghost" 
@@ -264,8 +245,7 @@ const PaymentMethods = () => {
           )}
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 };
 

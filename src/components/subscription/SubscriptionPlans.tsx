@@ -1,3 +1,4 @@
+
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -7,23 +8,12 @@ import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import SubscriptionCard from "./SubscriptionCard";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { supabase } from "@/integrations/supabase/client";
-import UniversalStripeCheckout from "@/components/stripe/UniversalStripeCheckout";
+import StripeInAppCheckout from "./StripeInAppCheckout";
 
 interface SubscriptionPlansProps {
   selected: string;
   setSelected: (plan: string) => void;
 }
-
-// Helper function to get plan amounts in cents
-const getPlanAmount = (planName: string): number => {
-  switch (planName) {
-    case 'Silver': return 399;
-    case 'Gold': return 799; 
-    case 'Black': return 1299;
-    case 'Titanium': return 1999;
-    default: return 399;
-  }
-};
 
 export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansProps) => {
   const { toast } = useToast();
@@ -562,16 +552,12 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         </div>
       )}
       
-      {/* Universal Stripe In-App Checkout Modal */}
+      {/* In-App Checkout Modal */}
       {showInAppCheckout && (
-        <UniversalStripeCheckout
-          isOpen={showInAppCheckout}
-          onClose={handleInAppPaymentCancel}
-          paymentType="subscription"
-          planName={selectedPlan}
-          amount={getPlanAmount(selectedPlan)}
-          description={`Piano ${selectedPlan} con vantaggi premium`}
+        <StripeInAppCheckout
+          plan={selectedPlan}
           onSuccess={handleInAppPaymentSuccess}
+          onCancel={handleInAppPaymentCancel}
         />
       )}
     </section>

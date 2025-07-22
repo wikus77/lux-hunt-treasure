@@ -10,7 +10,7 @@ import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
 import { SubscriptionBenefits } from "@/components/subscription/SubscriptionBenefits";
 import { SubscriptionFAQ } from "@/components/subscription/SubscriptionFAQ";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
-import { useUniversalStripePayment } from "@/hooks/useUniversalStripePayment";
+import { useStripePayment } from "@/hooks/useStripePayment";
 import { toast } from "sonner";
 
 const Subscriptions = () => {
@@ -19,7 +19,7 @@ const Subscriptions = () => {
   const { subscription } = useProfileSubscription();
   const [selected, setSelected] = useState<string>(subscription.plan);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const { processSubscription, loading: stripeLoading } = useUniversalStripePayment();
+  const { processSubscription, loading: stripeLoading } = useStripePayment();
   
   // Componente React da utilizzare come leftComponent
   const LeftComponent = () => (

@@ -58,9 +58,9 @@ serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { user_id, plan, amount, currency = 'eur', payment_type, is_buzz_map } = body;
+    const { user_id, plan, amount, currency = 'eur' } = body;
     
-    logStep('📋 Payment intent request', { user_id, plan, amount, currency, payment_type, is_buzz_map });
+    logStep('📋 Payment intent request', { user_id, plan, amount, currency });
 
     // Validate amount
     if (!amount || amount < 50) { // Minimum 0.50 EUR
@@ -89,32 +89,18 @@ serve(async (req) => {
       logStep('👤 New customer created', { customerId });
     }
 
-    // Create payment intent with dynamic metadata based on payment type
-    const metadata: any = { 
-      user_id: user.id,
-      source: 'in_app_checkout'
-    };
-    
-    let description = '';
-    
-    if (payment_type === 'subscription') {
-      metadata.plan = plan;
-      metadata.payment_type = 'subscription';
-      description = `M1SSION™ ${plan} subscription payment`;
-    } else {
-      metadata.payment_type = payment_type || 'buzz';
-      metadata.is_buzz_map = is_buzz_map || false;
-      metadata.item_name = is_buzz_map ? 'BUZZ Map' : 'BUZZ Extra';
-      description = is_buzz_map ? 'M1SSION™ BUZZ Map generation' : 'M1SSION™ BUZZ Extra content';
-    }
-
+    // Create payment intent
     const paymentIntent = await stripe.paymentIntents.create({
       amount: amount,
       currency: currency,
       customer: customerId,
-      setup_future_usage: payment_type === 'subscription' ? 'off_session' : undefined,
-      metadata,
-      description
+      setup_future_usage: 'off_session', // For future payments
+      metadata: {
+        user_id: user.id,
+        plan: plan,
+        source: 'in_app_checkout'
+      },
+      description: `M1SSION™ ${plan} subscription payment`
     });
 
     logStep('✅ Payment intent created', {
@@ -124,26 +110,18 @@ serve(async (req) => {
       status: paymentIntent.status
     });
 
-    // Store payment intent in database with appropriate data
-    const insertData: any = {
-      payment_intent_id: paymentIntent.id,
-      user_id: user.id,
-      amount: amount,
-      currency: currency,
-      status: paymentIntent.status,
-      created_at: new Date().toISOString()
-    };
-
-    if (payment_type === 'subscription') {
-      insertData.plan = plan;
-    } else {
-      insertData.payment_type = payment_type || 'buzz';
-      insertData.is_buzz_map = is_buzz_map || false;
-    }
-
+    // Store payment intent in database for tracking
     const { error: dbError } = await supabaseClient
       .from('payment_intents')
-      .insert(insertData);
+      .insert({
+        payment_intent_id: paymentIntent.id,
+        user_id: user.id,
+        amount: amount,
+        currency: currency,
+        plan: plan,
+        status: paymentIntent.status,
+        created_at: new Date().toISOString()
+      });
 
     if (dbError) {
       logStep('⚠️ Database insert warning', dbError);

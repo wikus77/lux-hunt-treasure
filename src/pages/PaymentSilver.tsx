@@ -8,8 +8,7 @@ import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import ApplePayBox from "@/components/payments/ApplePayBox";
 import GooglePayBox from "@/components/payments/GooglePayBox";
 import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
-import { useUniversalStripePayment } from "@/hooks/useUniversalStripePayment";
-import UniversalStripeCheckout from "@/components/stripe/UniversalStripeCheckout";
+import { useStripePayment } from "@/hooks/useStripePayment";
 
 const PaymentSilver = () => {
   const navigate = useNavigate();
@@ -24,12 +23,9 @@ const PaymentSilver = () => {
   
   const { 
     processSubscription, 
-    detectPaymentMethodAvailability,
-    loading,
-    isCheckoutOpen,
-    currentPaymentConfig,
-    closeCheckout
-  } = useUniversalStripePayment();
+    loading, 
+    detectPaymentMethodAvailability 
+  } = useStripePayment();
 
   useEffect(() => {
     // Check available payment methods
@@ -213,23 +209,6 @@ const PaymentSilver = () => {
           )}
         </div>
       </div>
-      
-      {/* Universal Stripe Checkout Modal */}
-      {currentPaymentConfig && (
-        <UniversalStripeCheckout
-          isOpen={isCheckoutOpen}
-          onClose={closeCheckout}
-          paymentType={currentPaymentConfig.paymentType}
-          planName={currentPaymentConfig.planName}
-          amount={currentPaymentConfig.amount}
-          description={currentPaymentConfig.description}
-          isBuzzMap={currentPaymentConfig.isBuzzMap}
-          onSuccess={() => {
-            handlePaymentCompleted();
-            currentPaymentConfig.onSuccess?.();
-          }}
-        />
-      )}
     </div>
   );
 };

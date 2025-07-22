@@ -6,8 +6,7 @@ import { toast } from 'sonner';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
-import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
-import UniversalStripeCheckout from '@/components/stripe/UniversalStripeCheckout';
+import { useStripePayment } from '@/hooks/useStripePayment';
 import { useAuth } from '@/hooks/use-auth';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,13 +27,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const [showRipple, setShowRipple] = useState(false);
   const { reloadAreas } = useBuzzMapLogic();
   const { buzzMapPrice, radiusKm, incrementGeneration } = useBuzzMapPricing();
-  const { 
-    processBuzzPurchase, 
-    isCheckoutOpen, 
-    currentPaymentConfig, 
-    closeCheckout,
-    loading: paymentLoading 
-  } = useUniversalStripePayment();
+  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
 
@@ -282,22 +275,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const isProcessing = isGenerating || paymentLoading;
 
   return (
-    <>
-      {/* Universal Stripe Checkout Modal */}
-      {currentPaymentConfig && (
-        <UniversalStripeCheckout
-          isOpen={isCheckoutOpen}
-          onClose={closeCheckout}
-          paymentType={currentPaymentConfig.paymentType}
-          planName={currentPaymentConfig.planName}
-          amount={currentPaymentConfig.amount}
-          description={currentPaymentConfig.description}
-          isBuzzMap={currentPaymentConfig.isBuzzMap}
-          onSuccess={currentPaymentConfig.onSuccess}
-        />
-      )}
-      
-      <motion.div className="fixed bottom-20 right-4 z-50">
+    <motion.div className="fixed bottom-20 right-4 z-50">
       <motion.button
         className={`relative rounded-full shadow-lg transition-all duration-300 ${
           canUseBuzz
@@ -360,8 +338,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
           </div>
         )}
       </motion.button>
-      </motion.div>
-    </>
+    </motion.div>
   );
 };
 

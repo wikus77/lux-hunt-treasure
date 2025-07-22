@@ -1,14 +1,14 @@
 
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - BUZZ Handler Hook - RESET COMPLETO 17/07/2025
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { useAbuseProtection } from './useAbuseProtection';
-import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
+import { useStripePayment } from '@/hooks/useStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 
 interface UseBuzzHandlerProps {
@@ -22,75 +22,8 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const { user } = useAuth();
   const { vibrate } = useCapacitorHardware();
   const { checkAbuseAndLog } = useAbuseProtection();
-  const { processBuzzPurchase, loading: paymentLoading } = useUniversalStripePayment();
+  const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
-  const { callBuzzApi } = useBuzzApi();
-
-  // 🚨 CRITICAL: AGGRESSIVE RESET ON MOUNT - MANDATORY FOR STUCK STATE
-  useEffect(() => {
-    console.log('🔄 BUZZ HANDLER INIT: AGGRESSIVE clearing any stuck state - CRITICAL FIX');
-    setBuzzing(false);
-    setShowShockwave(false);
-    
-    // 🚨 CRITICAL: Double reset after 100ms to ensure state is cleared
-    const doubleReset = setTimeout(() => {
-      console.log('🔄 BUZZ HANDLER: Double reset to ensure clean state');
-      setBuzzing(false);
-      setShowShockwave(false);
-    }, 100);
-    
-    return () => clearTimeout(doubleReset);
-  }, []);
-
-  // 🚨 CRITICAL: Auto-reset buzzing state after 5 seconds (reduced from 10) + window focus reset
-  useEffect(() => {
-    if (buzzing) {
-      console.log('🚨 BUZZING STATE ACTIVE: Setting 5-second auto-reset');
-      
-      const timeout = setTimeout(() => {
-        console.log('🔄 AUTO-RESET: Clearing stuck buzzing state after 5s');
-        setBuzzing(false);
-        setShowShockwave(false);
-      }, 5000); // Reduced to 5 seconds
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [buzzing]);
-
-  // 🚨 CRITICAL: Reset on window focus to handle PWA issues + force reset event
-  useEffect(() => {
-    const handleFocus = () => {
-      if (buzzing) {
-        console.log('🔄 WINDOW FOCUS: Resetting stuck buzzing state');
-        setBuzzing(false);
-        setShowShockwave(false);
-      }
-    };
-
-    const handleForceReset = () => {
-      console.log('🚨 FORCE RESET EVENT: Clearing all BUZZ states');
-      setBuzzing(false);
-      setShowShockwave(false);
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && buzzing) {
-        console.log('🔄 VISIBILITY CHANGE: Resetting stuck buzzing state');
-        setBuzzing(false);
-        setShowShockwave(false);
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('force-buzz-reset', handleForceReset);
-    window.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('force-buzz-reset', handleForceReset);
-      window.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [buzzing]);
 
   const handleBuzz = async () => {
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
@@ -102,8 +35,6 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
     if (!user) {
       console.log('❌ BUZZ FAILED - Missing user');
       toast.error('Devi essere loggato per utilizzare BUZZ!');
-      setBuzzing(false);
-      setShowShockwave(false);
       return;
     }
     
@@ -117,8 +48,6 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       // Check if blocked
       if (currentPrice === 0) {
         toast.error('BUZZ bloccato per oggi! Limite giornaliero raggiunto.');
-        setBuzzing(false);
-        setShowShockwave(false);
         return;
       }
       
@@ -126,59 +55,29 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       const abuseResult = await checkAbuseAndLog(user.id);
       if (abuseResult.isBlocked) {
         toast.error(abuseResult.message!);
-        setBuzzing(false);
-        setShowShockwave(false);
         return;
       }
 
       // 🚨 MANDATORY: FORCE STRIPE PAYMENT BEFORE BUZZ API - NO EXCEPTIONS
       console.log('💳 BUZZ: Processing MANDATORY Stripe payment - FORCED FOR ALL - RESET COMPLETO 17/07/2025');
       
-      // 🚨 CRITICAL: VERO PAGAMENTO STRIPE OBBLIGATORIO - NO MOCK!
-      console.log('💳 BUZZ: Processing MANDATORY Stripe payment - REAL PAYMENT REQUIRED');
+      // 🚨 CRITICAL: ALWAYS REQUIRE PAYMENT - NO BYPASS LOGIC
+      const paymentSuccess = await processBuzzPurchase(false, currentPrice);
       
-      // REAL Stripe checkout - NO MOCK PAYMENT!
-      const result = await processBuzzPurchase(false, currentPrice, handlePaymentSuccess);
-      
-      if (result) {
-        console.log('✅ BUZZ: Stripe checkout opened successfully - REAL PAYMENT REQUIRED');
-        toast.success("Checkout Stripe aperto", {
-          description: `Completa il pagamento di €${currentPrice.toFixed(2)} per ricevere l'indizio BUZZ`
-        });
-        
-        // 🚨 CRITICAL: NO MOCK! Payment success will be called ONLY after real Stripe payment
-        // buzzing state will be reset ONLY in handlePaymentSuccess or handlePaymentCancel
-        
-      } else {
-        console.error('❌ BUZZ: processBuzzPurchase failed');
-        toast.error("Impossibile aprire il checkout", {
-          description: "Problema con il sistema di pagamento Stripe"
+      if (!paymentSuccess) {
+        toast.error("Pagamento obbligatorio", {
+          description: "Il pagamento tramite Stripe è necessario per utilizzare BUZZ."
         });
         setBuzzing(false);
         setShowShockwave(false);
         return;
       }
       
-    } catch (err) {
-      console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
-      toast.error('Errore imprevisto durante BUZZ');
-      setBuzzing(false);
-      setShowShockwave(false);
-    }
-  };
+      console.log('✅ BUZZ: Stripe payment completed successfully - proceeding to API - RESET COMPLETO 17/07/2025');
 
-  // This function will be called after successful payment
-  const handlePaymentSuccess = async () => {
-    console.log('💳 BUZZ: Payment completed successfully - calling API - RESET COMPLETO 17/07/2025');
-    
-    if (!user) {
-      console.error('❌ BUZZ: No user available for API call');
-      return;
-    }
-    
-    try {
-      setBuzzing(true);
-      setShowShockwave(true);
+      // ✅ CHIAMATA API BUZZ DOPO PAGAMENTO VERIFICATO
+      console.log('🚨 CALLING BUZZ API AFTER PAYMENT...');
+      const { callBuzzApi } = useBuzzApi();
       
       const buzzResult = await callBuzzApi({
         userId: user.id,
@@ -201,16 +100,12 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
         console.error('❌ BUZZ API Error:', buzzResult.errorMessage);
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore di rete. Riprova.');
-        setBuzzing(false);
-        setShowShockwave(false);
         return;
       }
       
       if (!buzzResult.success) {
         toast.dismiss();
         toast.error(buzzResult.errorMessage || 'Errore durante BUZZ');
-        setBuzzing(false);
-        setShowShockwave(false);
         return;
       }
       
@@ -224,8 +119,6 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
         console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
         toast.error('❌ Indizio non ricevuto dal server');
-        setBuzzing(false);
-        setShowShockwave(false);
         return;
       }
       
@@ -262,25 +155,16 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       }, 1500);
       
     } catch (err) {
-      console.error('❌ Error in handlePaymentSuccess - RESET COMPLETO 17/07/2025:', err);
+      console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
       toast.error('Errore imprevisto durante BUZZ');
     } finally {
       setBuzzing(false);
     }
   };
 
-  // Function to handle checkout cancellation
-  const handlePaymentCancel = () => {
-    console.log('❌ BUZZ: Payment cancelled by user');
-    setBuzzing(false);
-    setShowShockwave(false);
-  };
-
   return {
     buzzing,
     showShockwave,
-    handleBuzz,
-    handlePaymentSuccess,
-    handlePaymentCancel
+    handleBuzz
   };
 }
