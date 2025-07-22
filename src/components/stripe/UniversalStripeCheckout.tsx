@@ -269,7 +269,25 @@ const UniversalStripeCheckout: React.FC<UniversalStripeCheckoutProps> = ({
   isBuzzMap,
   onSuccess 
 }) => {
-  if (!isOpen) return null;
+  // 🚨 CRITICAL: LOG EVERY RENDER ATTEMPT
+  console.log('🚨 UniversalStripeCheckout RENDER CALLED:', {
+    isOpen,
+    paymentType,
+    planName,
+    amount,
+    description,
+    isBuzzMap,
+    onSuccessExists: !!onSuccess,
+    onCloseExists: !!onClose,
+    timestamp: new Date().toISOString()
+  });
+
+  if (!isOpen) {
+    console.log('🚨 UniversalStripeCheckout: isOpen=false, returning null');
+    return null;
+  }
+
+  console.log('🚨 UniversalStripeCheckout: isOpen=true, RENDERING MODALE!');
 
   const options: StripeElementsOptions = {
     appearance: {
@@ -286,9 +304,31 @@ const UniversalStripeCheckout: React.FC<UniversalStripeCheckoutProps> = ({
     },
   };
 
+  console.log('🚨 UniversalStripeCheckout: About to return JSX with z-50');
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Elements stripe={stripePromise} options={options}>
+    <>
+      {/* 🧪 DEBUG FALLBACK VISIVO */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: '10px',
+          left: '10px',
+          background: 'lime',
+          color: 'black',
+          padding: '10px',
+          zIndex: 9999,
+          fontSize: '14px',
+          borderRadius: '4px'
+        }}
+      >
+        ⚠️ DEBUG: MODALE STRIPE DOVREBBE ESSERE VISIBILE!<br/>
+        isOpen: {String(isOpen)}<br/>
+        paymentType: {paymentType}
+      </div>
+
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <Elements stripe={stripePromise} options={options}>
         <CheckoutForm 
           paymentType={paymentType}
           planName={planName}
@@ -301,8 +341,9 @@ const UniversalStripeCheckout: React.FC<UniversalStripeCheckoutProps> = ({
           }}
           onCancel={onClose}
         />
-      </Elements>
-    </div>
+        </Elements>
+      </div>
+    </>
   );
 };
 

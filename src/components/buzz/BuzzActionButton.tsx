@@ -118,6 +118,27 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       
       <ShockwaveAnimation show={showShockwave} />
 
+      {/* 🧪 CRITICAL: DEBUG FALLBACK SE STATO È CORRETTO MA MODALE INVISIBILE */}
+      {isCheckoutOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: '50px',
+            left: '10px',
+            background: 'red',
+            color: 'white',
+            padding: '10px',
+            zIndex: 9998,
+            fontSize: '12px',
+            borderRadius: '4px'
+          }}
+        >
+          🚨 BUZZ ACTION: isCheckoutOpen=TRUE<br/>
+          Config: {currentPaymentConfig ? 'EXISTS' : 'NULL'}<br/>
+          Type: {currentPaymentConfig?.paymentType}
+        </div>
+      )}
+
       {/* Universal Stripe Checkout Modal */}
       {currentPaymentConfig && (
         <UniversalStripeCheckout
