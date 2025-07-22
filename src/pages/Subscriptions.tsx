@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { SubscriptionHeader } from "@/components/subscription/SubscriptionHeader";
 import { SubscriptionPlans } from "@/components/subscription/SubscriptionPlans";
@@ -12,7 +12,7 @@ import { SubscriptionFAQ } from "@/components/subscription/SubscriptionFAQ";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 
 const Subscriptions = () => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   // TASK 1 — Sincronizzazione Piano Attivo (PRIORITÀ MASSIMA)
   const { subscription } = useProfileSubscription();
   const [selected, setSelected] = useState<string>(subscription.plan);
@@ -24,7 +24,7 @@ const Subscriptions = () => {
       <Button 
         variant="ghost" 
         size="icon"
-        onClick={() => navigate(-1)} 
+        onClick={() => window.history.back()} 
         className="mr-2"
       >
         <ArrowLeft className="h-5 w-5" />
