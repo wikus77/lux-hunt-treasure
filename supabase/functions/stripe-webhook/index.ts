@@ -109,6 +109,18 @@ serve(async (req) => {
         logStep("❌ Error updating subscription", { error });
       } else {
         logStep("✅ Subscription updated successfully");
+
+        // Force immediate sync to profile
+        await supabaseClient
+          .from('profiles')
+          .update({ 
+            subscription_tier: subscription.metadata?.tier || 'Base',
+            tier: subscription.metadata?.tier || 'Base',
+            updated_at: new Date().toISOString()
+          })
+          .eq('stripe_customer_id', subscription.customer as string);
+
+        logStep("✅ Profile tier synced from subscription update");
       }
     }
 

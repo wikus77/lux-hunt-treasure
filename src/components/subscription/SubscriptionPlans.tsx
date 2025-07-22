@@ -146,30 +146,42 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           }
 
           if (!data?.url) {
-            console.error('❌ M1SSION™ Stripe URL missing:', data);
+            console.error("❌ M1SSION™ NO URL from Stripe checkout:", data);
             toast({
-              title: "❌ Errore",
-              description: "Stripe non ha restituito un URL valido",
+              title: "Errore Stripe",
+              description: "Impossibile avviare il pagamento. Riprova.",
               variant: "destructive",
-              duration: 5000
             });
             return;
           }
 
-          console.log('🚀 M1SSION™ DIRECT STRIPE REDIRECT:', data.url);
+          console.log(`✅ M1SSION™ Stripe URL received: ${data.url}`);
           
-          // 🚨 iOS PWA FIX: Try location.replace for better PWA compatibility
           try {
-            if ((window.navigator as any).standalone) {
-              // iOS PWA standalone mode
-              window.location.replace(data.url);
+            // PWA and iOS compatibility fixes
+            if ((window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches) {
+              console.log("🔧 M1SSION™ PWA mode detected - opening in new tab");
+              const newWindow = window.open(data.url, '_blank', 'noopener,noreferrer');
+              if (!newWindow) {
+                throw new Error("Popup blocked");
+              }
             } else {
-              // Regular browser or fallback
-              window.location.href = data.url;
+              console.log("🔧 M1SSION™ Regular browser - using location.replace");
+              location.replace(data.url);
             }
-          } catch (e) {
-            // Final fallback
-            window.open(data.url, '_blank');
+          } catch (error) {
+            console.error("❌ M1SSION™ Redirect failed:", error);
+            // Final fallback for iOS PWA
+            try {
+              window.location.href = data.url;
+            } catch (fallbackError) {
+              console.error("❌ M1SSION™ All redirect methods failed:", fallbackError);
+              toast({
+                title: "Errore Redirect",
+                description: "Impossibile aprire Stripe. Aggiorna la pagina e riprova.",
+                variant: "destructive",
+              });
+            }
           }
           
           sonnerToast.success(`✅ Checkout ${plan} attivato!`, {
