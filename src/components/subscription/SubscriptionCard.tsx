@@ -65,9 +65,13 @@ const SubscriptionCard = ({
   return (
     <div className={cn(
       "relative glass-card p-6",
-      isActive ? "ring-2 ring-cyan-500 transition-none" : "transition-all duration-300",
-      isPopular && "transform scale-105 z-10",
-      type === "Titanium" && isActive ? "shadow-[0_0_30px_rgba(168,85,247,0.4)]" : type === "Titanium" && "shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:shadow-[0_0_40px_rgba(168,85,247,0.6)]"
+      isActive 
+        ? "ring-2 ring-cyan-500 transition-none animate-none" 
+        : "transition-all duration-300 hover:scale-102",
+      isPopular && !isActive && "transform scale-105 z-10",
+      type === "Titanium" && isActive 
+        ? "shadow-[0_0_30px_rgba(168,85,247,0.4)] animate-none" 
+        : type === "Titanium" && "shadow-[0_0_30px_rgba(168,85,247,0.4)] hover:shadow-[0_0_40px_rgba(168,85,247,0.6)]"
     )}>
       {isPopular && (
         <Badge className="absolute -top-2 right-6 bg-gradient-to-r from-indigo-500 to-purple-600">
@@ -95,9 +99,11 @@ const SubscriptionCard = ({
       <Button
         onClick={() => {
           console.log(`🔥 M1SSION™ CARD CLICK: ${type} button clicked`);
-          if (onClick) {
+          if (onClick && !isActive) {
             console.log(`🔧 M1SSION™ Executing onClick for ${type}`);
             onClick();
+          } else if (isActive) {
+            console.log(`🚫 M1SSION™ Plan ${type} already active - no action`);
           } else {
             console.error(`❌ M1SSION™ No onClick handler for ${type}`);
           }
@@ -106,8 +112,8 @@ const SubscriptionCard = ({
         className={cn(
           "w-full font-semibold",
           isActive 
-            ? "bg-gradient-to-r from-cyan-600 to-cyan-800 transition-none"
-            : `bg-gradient-to-r ${getGradient()} transition-all duration-200 hover:scale-102 active:scale-98`,
+            ? "bg-gradient-to-r from-cyan-600 to-cyan-800 transition-none cursor-not-allowed opacity-75"
+            : `bg-gradient-to-r ${getGradient()} transition-all duration-200 hover:scale-102 active:scale-98 cursor-pointer`,
           type === "Titanium" && !isActive && "shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)]"
         )}
       >
