@@ -61,7 +61,7 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
         .eq('user_id', user.id)
         .single();
 
-      // Fetch subscription data
+      // Fetch subscription data with prioritized logic
       const { data: subscription } = await supabase
         .from('subscriptions')
         .select('tier')
@@ -69,8 +69,16 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
         .eq('status', 'active')
         .single();
 
-      // Fallback to profile tier or default to Base
-      const userTier = subscription?.tier || profile?.subscription_tier || 'Base';
+      // 🔑 M1SSION™ DEVELOPER OVERRIDE - Apply same logic as useProfileSubscription
+      let userTier = subscription?.tier || profile?.subscription_tier || 'Base';
+      
+      // Override for developer email (same as useProfileSubscription)
+      if (user.email === 'wikus77@hotmail.it') {
+        userTier = 'Titanium';
+        console.log('🔑 M1SSION™ ProfileToast Developer override: Titanium');
+      }
+      
+      console.log('📋 M1SSION™ ProfileToast Final tier:', userTier);
 
       setProfileData({
         username: profile?.username || profile?.full_name || 'Agente',

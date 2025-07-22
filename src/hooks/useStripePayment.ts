@@ -134,28 +134,20 @@ export const useStripePayment = () => {
           (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
         
         if (isIOSPWA) {
-          console.log('📱 iOS PWA detected - Using enhanced redirect method');
+          console.log('📱 iOS PWA detected - Using immediate redirect method');
           
-          // Try multiple redirect methods for iOS PWA compatibility
+          // 🚀 M1SSION™ STRIPE PWA FIX: Immediate redirect for iOS PWA
           try {
-            // Method 1: location.assign (preferred for PWA)
-            window.location.assign(data.url);
-            
-            // Fallback after short delay if assign fails
-            setTimeout(() => {
-              console.log('🔄 Fallback redirect attempt');
-              try {
-                window.location.replace(data.url);
-              } catch (replaceError) {
-                console.log('🆘 Final fallback - opening in new window');
-                window.open(data.url, '_blank', 'noopener,noreferrer');
-              }
-            }, 1000);
-            
+            console.log('⚡ M1SSION™ Using location.replace for immediate redirect');
+            window.location.replace(data.url);
           } catch (error) {
-            console.error('❌ iOS PWA redirect failed:', error);
-            // Final fallback
-            window.open(data.url, '_blank', 'noopener,noreferrer');
+            console.error('❌ location.replace failed, trying assign:', error);
+            try {
+              window.location.assign(data.url);
+            } catch (assignError) {
+              console.error('❌ location.assign failed, using href:', assignError);
+              window.location.href = data.url;
+            }
           }
         } else {
           // Standard redirect for non-PWA environments
