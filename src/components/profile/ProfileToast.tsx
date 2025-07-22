@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Calendar, Target, Clock, Copy, X, LogOut, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { useReferralCode } from '@/hooks/useReferralCode';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -263,19 +265,21 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
                     <h4 className="text-sm font-semibold text-blue-400 mb-3">Abbonamento</h4>
                     
                     <div className="space-y-3">
-                       <div className="flex items-center justify-between">
-                         <span className="text-sm text-gray-300">Piano attuale:</span>
-                         <span 
-                           className="font-medium text-sm px-2 py-1 rounded transition-all duration-300"
-                           style={{ 
-                             color: getTierColor(profileData.subscriptionTier),
-                             backgroundColor: `${getTierColor(profileData.subscriptionTier)}20`,
-                             border: `1px solid ${getTierColor(profileData.subscriptionTier)}40`,
-                             boxShadow: getTierGlow(profileData.subscriptionTier)
-                           }}
-                         >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-300">Piano attuale:</span>
+                          <Badge 
+                            variant="secondary" 
+                            className={cn(
+                              "font-semibold transition-all duration-300",
+                              profileData.subscriptionTier === "Base" && "bg-gray-500 text-white",
+                              profileData.subscriptionTier === "Silver" && "bg-gradient-to-r from-gray-300 to-gray-500 text-gray-900",
+                              profileData.subscriptionTier === "Gold" && "bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md",
+                              profileData.subscriptionTier === "Black" && "bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg",
+                              profileData.subscriptionTier === "Titanium" && "bg-gradient-to-r from-purple-500 to-cyan-500 text-white animate-pulse shadow-[0_0_20px_rgba(168,85,247,0.5)]"
+                            )}
+                          >
                            {profileData.subscriptionTier?.toUpperCase() || 'BASE'}
-                         </span>
+                          </Badge>
                        </div>
 
                       <Button

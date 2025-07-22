@@ -14,35 +14,51 @@ export const useProfileSubscription = () => {
   });
   const [credits, setCredits] = useState(500);
 
-  // TASK 1 — Sincronizzazione Piano Abbonamento - FIXED SYNC
+  // M1SSION™ Sistema Sincronizzazione Abbonamenti
   useEffect(() => {
     const loadSubscriptionFromSupabase = async () => {
       const currentUser = getCurrentUser();
       if (!currentUser) return;
 
       try {
-        // Query Supabase for subscription data first (priority source)
-        const { data: supabaseSubscription } = await supabase
+        console.log('🔄 M1SSION™ Checking active subscriptions...');
+        
+        // PRIORITÀ 1: Subscription attiva
+        const { data: activeSubscription } = await supabase
           .from('subscriptions')
-          .select('tier, status, end_date')
+          .select('*')
           .eq('user_id', currentUser.id)
           .eq('status', 'active')
-          .single();
+          .order('created_at', { ascending: false })
+          .limit(1);
 
-        // Fallback to profiles table if no active subscription
+        // PRIORITÀ 2: Fallback profilo
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('subscription_tier')
+          .select('subscription_tier, tier')
           .eq('id', currentUser.id)
           .single();
 
-        // Priority: Active subscription > Profile tier > Default Base
-        let finalPlan = supabaseSubscription?.tier || profileData?.subscription_tier || "Base";
+        // Determina piano finale con logica prioritaria
+        let finalPlan = "Base";
         
-        // Special user handling
-        const isSpecialUser = currentUser?.email === 'wikus77@hotmail.it';
-        if (isSpecialUser) {
-          finalPlan = "Black";
+        if (activeSubscription && activeSubscription.length > 0) {
+          const sub = activeSubscription[0];
+          const isExpired = sub.end_date && new Date(sub.end_date) < new Date();
+          
+          if (!isExpired) {
+            finalPlan = sub.tier;
+            console.log('✅ M1SSION™ Active subscription found:', finalPlan);
+          }
+        } else if (profileData?.subscription_tier) {
+          finalPlan = profileData.subscription_tier;
+          console.log('📋 M1SSION™ Using profile tier:', finalPlan);
+        }
+        
+        // Override speciale per developer
+        if (currentUser?.email === 'wikus77@hotmail.it') {
+          finalPlan = "Titanium";
+          console.log('🔑 M1SSION™ Developer override: Titanium');
         }
 
         // Update subscription based on active plan
@@ -76,6 +92,20 @@ export const useProfileSubscription = () => {
               ]
             });
             setCredits(10000);
+            break;
+          case "Titanium":
+            setSubscription({
+              plan: "Titanium",
+              expiry: "2025-12-31",
+              benefits: [
+                "Accesso illimitato a tutto",
+                "Badge Titanium esclusivo neon",
+                "Supporto prioritario 24/7",
+                "Eventi esclusivi Titanium VIP",
+                "Contenuti premium anticipati"
+              ]
+            });
+            setCredits(25000);
             break;
           default:
             setSubscription({

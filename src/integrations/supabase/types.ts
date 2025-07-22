@@ -2202,6 +2202,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_active_subscription: {
+        Args: { p_user_id: string }
+        Returns: {
+          tier: string
+          status: string
+          expires_at: string
+        }[]
+      }
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
         Returns: number

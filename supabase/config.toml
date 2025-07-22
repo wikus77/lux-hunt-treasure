@@ -1,63 +1,33 @@
-
 project_id = "vkjrqirvdvjbemsfzxof"
 
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+port = 54323
+
+[ingest]
+enabled = false
+
 [auth]
+enabled = true
+port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
 enable_signup = true
-enable_captcha = false
-enable_email_confirmations = false
-enable_phone_confirmations = false
 
-[auth.email]
-enable_signup = true
-double_confirm_changes = false
-enable_confirmations = false
+[edge_functions]
+enabled = true
+port = 54325
 
-[auth.sms]
-enable_signup = false
-enable_confirmations = false
-
-[auth.external.google]
-enabled = false
-
-[auth.external.github]
-enabled = false
-
-# Disable all bot protection
-[auth.hook.custom_access_token]
-enabled = false
-
-[functions.register-bypass]
-verify_jwt = false
-
-[functions.login-no-captcha]
-verify_jwt = false
-
-[functions.handle-buzz-press]
+[functions.create-checkout]
 verify_jwt = true
-
-[functions.process-buzz-purchase]
-verify_jwt = true
-
-[functions.handle-buzz-payment-success]
-verify_jwt = true
-
-[functions.ai-content-generator]
-verify_jwt = true
-
-[functions.secure-api-protection]
-verify_jwt = false
-
-[functions.panel-security-status]
-verify_jwt = true
-
-[functions.reset-mission]
-verify_jwt = false
-
-[functions.update-mission]
-verify_jwt = false
-
-# Additional security bypass for testing
-[auth.security]
-captcha_enabled = false
-refresh_token_rotation_enabled = true
-security_update_password_require_reauthentication = false

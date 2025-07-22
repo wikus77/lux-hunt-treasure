@@ -61,48 +61,71 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     }
   };
   
-  // TASK A — ABILITARE BOTTONE Passa a <Piano>
-  // TASK B — FLUSSO handleUpgrade(tier)
+  // M1SSION™ Sistema Upgrade/Downgrade Completo
   const handleUpdatePlan = async (plan: string) => {
     if (plan === selected) {
       toast({
-        title: "Piano già attivo",
-        description: `Sei già abbonato al piano ${plan}`
+        title: "✅ Piano già attivo",
+        description: `Sei già abbonato al piano ${plan}`,
+        duration: 3000
       });
       return;
     }
     
     try {
-      // TASK B — FLUSSO handleUpgrade(tier) - UNIFIED CHECKOUT
-      if (plan === "Silver" || plan === "Gold" || plan === "Black" || plan === "Titanium") {
-        // Use unified checkout URL with tier parameter
-        navigate(`/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
-      } else if (plan === "Base") {
-        // For Base plan (free), update directly via hook
+      console.log(`🚀 M1SSION™ Upgrade requested: ${selected} → ${plan}`);
+      
+      if (plan === "Base") {
+        // Downgrade a Base (gratuito)
         await upgradeSubscription(plan);
         setSelected(plan);
         
-        // TASK D — FUNZIONE updateUserTierInSupabase(tier)
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          await supabase.from('profiles').update({ 
-            subscription_tier: plan 
-          }).eq('id', user.id);
+          // Cancella subscription attiva
+          await supabase
+            .from('subscriptions')
+            .update({ status: 'canceled' })
+            .eq('user_id', user.id)
+            .eq('status', 'active');
+            
+          // Aggiorna profilo
+          await supabase
+            .from('profiles')
+            .update({ 
+              subscription_tier: 'Base',
+              tier: 'Base'
+            })
+            .eq('id', user.id);
           
-          localStorage.setItem("userTier", plan);
+          localStorage.setItem("userTier", "Base");
         }
         
         toast({
-          title: "✅ Upgrade completato con successo!",
-          description: `Il tuo abbonamento è stato aggiornato a ${plan}`
+          title: "✅ Downgrade completato",
+          description: "Sei tornato al piano Base gratuito",
+          duration: 4000
+        });
+        
+      } else {
+        // Upgrade a piano a pagamento - Redirect a Stripe
+        console.log(`💳 Redirecting to Stripe checkout for ${plan}`);
+        navigate(`/subscriptions?checkout=${plan.toLowerCase()}&tier=${plan}`);
+        
+        toast({
+          title: "🔄 Reindirizzamento a Stripe...",
+          description: `Preparazione checkout per piano ${plan}`,
+          duration: 2000
         });
       }
+      
     } catch (error) {
-      console.error('Upgrade error:', error);
+      console.error('❌ M1SSION™ Upgrade error:', error);
       toast({
-        title: "❌ Errore durante l'upgrade. Riprova.",
-        description: "Si è verificato un errore durante l'aggiornamento del piano.",
-        variant: "destructive"
+        title: "❌ Errore durante l'operazione",
+        description: "Si è verificato un errore. Riprova tra qualche istante.",
+        variant: "destructive",
+        duration: 5000
       });
     }
   };

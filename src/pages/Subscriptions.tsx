@@ -11,6 +11,7 @@ import { SubscriptionBenefits } from "@/components/subscription/SubscriptionBene
 import { SubscriptionFAQ } from "@/components/subscription/SubscriptionFAQ";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { useStripePayment } from "@/hooks/useStripePayment";
+import { toast } from "sonner";
 
 const Subscriptions = () => {
   const [, setLocation] = useLocation();
@@ -53,10 +54,19 @@ const Subscriptions = () => {
 
   const handleStripeCheckout = async (tier: string) => {
     try {
-      console.log(`💳 Initiating Stripe checkout for ${tier} tier`);
+      console.log(`🚀 M1SSION™ CHECKOUT: Processing ${tier} subscription via Stripe`);
       await processSubscription(tier);
+      
+      // Mostra toast di conferma
+      toast.loading(`🔄 Apertura checkout per piano ${tier}...`, {
+        duration: 3000
+      });
+      
     } catch (error) {
-      console.error('Stripe checkout error:', error);
+      console.error('❌ M1SSION™ Stripe checkout error:', error);
+      toast.error("❌ Impossibile avviare il pagamento. Riprova.", {
+        duration: 4000
+      });
     }
   };
 
