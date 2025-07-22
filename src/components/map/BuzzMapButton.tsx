@@ -37,7 +37,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     incrementGeneration 
   } = useBuzzMapProgressivePricing();
   const { 
-    processBuzzPurchase, 
+    processPayment, 
     isCheckoutOpen, 
     currentPaymentConfig, 
     closeCheckout,
@@ -129,8 +129,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   };
 
   const processBuzzPayment = async () => {
-
-    // 🧠 SAVE MAP STATE BEFORE PAYMENT (CRITICAL FOR RESTORATION)
+    // Save map state before payment
     if ((window as any).leafletMap) {
       const map = (window as any).leafletMap;
       const center = map.getCenter();
@@ -157,102 +156,45 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         return;
       }
 
-      // 🔥 PROGRESSIVE PRICING: Real Stripe checkout with validated pricing
-      console.log('💳 BUZZ MAPPA PROGRESSIVE: Opening Stripe checkout', {
+      // Use Universal Stripe In-App Checkout
+      console.log('💳 BUZZ MAPPA: Opening Universal Stripe Checkout', {
         price: buzzMapPrice,
         radius: radiusKm,
         segment: segment
       });
-      const result = await processBuzzPurchase(true, buzzMapPrice);
       
-      if (result) {
-        console.log('✅ BUZZ MAPPA PROGRESSIVE: Stripe checkout opened successfully');
-        toast.success("Checkout Stripe aperto", {
-          description: `Completa il pagamento di ${buzzMapPrice.toFixed(2)}€ per generare l'area BUZZ MAPPA (${radiusKm}km)`
-        });
-        
-        // 🚨 CRITICAL FIX: Mock successful payment for testing (TEMP)
-        // This simulates a successful Stripe payment for testing
-        const simulateSuccessfulPayment = async (stripeSessionId: string) => {
-          console.log('🧪 SIMULATING SUCCESSFUL PAYMENT FOR TESTING');
+      const result = await processPayment({
+        paymentType: 'buzz_map',
+        planName: 'BUZZ Map',
+        amount: buzzMapPrice * 100, // Convert to cents
+        description: `Genera area di ricerca sulla mappa (${radiusKm}km)`,
+        isBuzzMap: true,
+        onSuccess: async () => {
+          console.log('✅ BUZZ MAPPA Payment completed, area will be generated');
           
-          // Update the payment status to succeeded
-          const { error: updateError } = await supabase
-            .from('payment_transactions')
-            .update({ status: 'succeeded' })
-            .eq('provider_transaction_id', stripeSessionId);
-          
-          if (updateError) {
-            console.error('Failed to update payment status:', updateError);
-            return false;
-          }
-          
-          // Wait a moment then create the area
-          setTimeout(async () => {
-            const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
-              body: { session_id: stripeSessionId }
-            });
-            
-            if (!error && data?.success) {
-              console.log('✅ BUZZ MAPPA: Area created successfully!', data);
-              
-              // 🎯 UNIFIED TOAST: Single toast with DB values - NO CITY NAME REVEALED
-              toast.success(`✅ BUZZ MAPPA creata!`, {
-                description: "Una nuova zona è stata creata sulla mappa. Inizia a indagare!"
-              });
+          // Show success notification
+          toast.success(`✅ BUZZ MAPPA creata!`, {
+            description: "Una nuova zona è stata creata sulla mappa. Inizia a indagare!"
+          });
 
-              // 🔔 Schedule push notification for 3 hours from now
-              console.log('📅 Scheduling BUZZ MAPPA™ cooldown notification...');
-              await scheduleBuzzMappaNotification();
-              
-              // Trigger area generation callback
-              if (onAreaGenerated && data.area) {
-                onAreaGenerated(data.area.lat, data.area.lng, data.area.radius_km);
-              }
-              
-              onBuzzPress();
-            } else {
-              console.error('Failed to create area:', error);
-              toast.error("Errore creazione area", {
-                description: "Area non creata. Contatta il supporto."
-              });
-            }
-          }, 3000); // Wait 3 seconds to simulate payment processing
+          // Schedule notification and trigger callbacks
+          await scheduleBuzzMappaNotification();
+          onBuzzPress();
           
-          return true;
-        };
-        
-        // Extract session ID from the result and simulate payment
-        // In production, this would be handled by Stripe webhooks
-        const mockPaymentSuccess = async () => {
-          // Get the most recent pending payment for this user
-          const { data: recentPayments } = await supabase
-            .from('payment_transactions')
-            .select('provider_transaction_id')
-            .eq('user_id', user?.id)
-            .eq('status', 'pending')
-            .ilike('description', '%Buzz Map%')
-            .order('created_at', { ascending: false })
-            .limit(1);
-            
-          if (recentPayments && recentPayments.length > 0) {
-            const sessionId = recentPayments[0].provider_transaction_id;
-            await simulateSuccessfulPayment(sessionId);
-          }
-        };
-        
-        mockPaymentSuccess();
-        
-        } else {
-        console.error('❌ BUZZ MAPPA PROGRESSIVE: processBuzzPurchase failed');
-        toast.error("Errore Stripe", {
-          description: "Impossibile aprire il checkout Stripe. Riprova."
+          // Note: Area generation is handled by the payment success webhook/function
+        }
+      });
+      
+      if (!result) {
+        console.error('❌ BUZZ MAPPA: processPayment failed');
+        toast.error("Errore apertura checkout", {
+          description: "Impossibile aprire il checkout. Riprova."
         });
       }
       
     } catch (error) {
-      console.error('❌ BUZZ Map Progressive error:', error);
-      toast.error('Errore durante l\'apertura del checkout Stripe');
+      console.error('❌ BUZZ Map error:', error);
+      toast.error('Errore durante l\'apertura del checkout');
     } finally {
       setIsProcessing(false);
     }

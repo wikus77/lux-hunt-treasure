@@ -7,10 +7,17 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Crown, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
+import { useUniversalStripePayment } from '@/hooks/useUniversalStripePayment';
+import UniversalStripeCheckout from '@/components/stripe/UniversalStripeCheckout';
 
 const GoldPlanPage: React.FC = () => {
   const navigate = useNavigate();
+  const { 
+    processPayment, 
+    isCheckoutOpen, 
+    currentPaymentConfig, 
+    closeCheckout 
+  } = useUniversalStripePayment();
 
   const planFeatures = [
     "Tutti i vantaggi Silver",
@@ -102,14 +109,44 @@ const GoldPlanPage: React.FC = () => {
             </div>
 
             {/* Payment Section */}
-            <FakeStripeCheckout 
-              planName="Gold"
-              planPrice="€6,99"
-              planFeatures={planFeatures}
-            />
+            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-bold text-white mb-2">Attiva Piano Gold</h3>
+                <p className="text-2xl font-bold text-yellow-400">€6,99/mese</p>
+              </div>
+              
+              <Button
+                onClick={() => processPayment({
+                  paymentType: 'subscription',
+                  planName: 'Gold',
+                  amount: 799, // In cents
+                  description: 'Piano Gold con vantaggi premium',
+                  onSuccess: () => {
+                    console.log('✅ Gold subscription activated');
+                    navigate('/profile/subscriptions');
+                  }
+                })}
+                className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3"
+              >
+                Attiva Piano Gold
+              </Button>
+            </div>
           </div>
         </div>
       </motion.main>
+      
+      {/* Universal Stripe Checkout Modal */}
+      {currentPaymentConfig && (
+        <UniversalStripeCheckout
+          isOpen={isCheckoutOpen}
+          onClose={closeCheckout}
+          paymentType={currentPaymentConfig.paymentType}
+          planName={currentPaymentConfig.planName}
+          amount={currentPaymentConfig.amount}
+          description={currentPaymentConfig.description}
+          onSuccess={currentPaymentConfig.onSuccess}
+        />
+      )}
     </div>
   );
 };
