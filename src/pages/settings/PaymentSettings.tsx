@@ -57,47 +57,64 @@ const PaymentSettings: React.FC = () => {
     cvc: string;
     nameOnCard: string;
   }) => {
-    if (!user) return;
+    if (!user) {
+      console.error('❌ No user authenticated');
+      throw new Error('Utente non autenticato');
+    }
 
+    console.log('💳 Inizio processo aggiunta carta per user:', user.id);
     setLoading(true);
+    
     try {
-      // Extract card brand from number (mock logic)
+      // Extract card brand from number
       const firstDigit = cardData.cardNumber.replace(/\s/g, '')[0];
       const brand = firstDigit === '4' ? 'Visa' : firstDigit === '5' ? 'Mastercard' : 'Visa';
       
       const newMethod = {
+        user_id: user.id, // Explicitly set user_id
         brand,
         last4: cardData.cardNumber.replace(/\s/g, '').slice(-4),
         exp_month: parseInt(cardData.expiryMonth),
         exp_year: parseInt(cardData.expiryYear),
-        is_default: paymentMethods.length === 0
+        is_default: paymentMethods.length === 0,
+        stripe_pm_id: `pm_${Math.random().toString(36).substring(2, 15)}`
       };
+
+      console.log('💳 Inserimento metodo di pagamento:', {
+        brand: newMethod.brand,
+        last4: newMethod.last4,
+        is_default: newMethod.is_default
+      });
 
       const { data, error } = await supabase
         .from('user_payment_methods')
-        .insert({
-          user_id: user.id,
-          ...newMethod,
-          stripe_pm_id: `pm_${Math.random().toString(36).substring(2, 15)}`
-        })
+        .insert(newMethod)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Errore Supabase inserimento:', error);
+        throw error;
+      }
 
+      console.log('✅ Carta inserita con successo:', data);
+
+      // Reload payment methods
       await loadPaymentMethods();
       
       toast({
         title: "✅ Carta aggiunta con successo",
         description: `${brand} ••••${newMethod.last4} è stata salvata correttamente.`
       });
+      
     } catch (error) {
-      console.error('Error adding payment method:', error);
+      console.error('❌ Errore completo aggiunta carta:', error);
       toast({
         title: "❌ Errore aggiunta carta",
-        description: "Impossibile aggiungere il metodo di pagamento. Riprova.",
+        description: error instanceof Error ? error.message : "Impossibile aggiungere il metodo di pagamento. Riprova.",
         variant: "destructive"
       });
+      throw error; // Re-throw to prevent modal from closing
     } finally {
       setLoading(false);
     }
