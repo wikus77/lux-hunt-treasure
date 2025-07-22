@@ -42,220 +42,142 @@ const CheckoutForm: React.FC<{
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
-  const [clientSecret, setClientSecret] = useState<string>('');
   const { user } = useAuthContext();
 
-  // Create payment intent when component mounts
+  // 🚨 SAFARI PWA LOG
+  console.log('🚨 CheckoutForm MOUNTED in Safari PWA mode');
+
+  // 🚨 REDIRECT TO STRIPE CHECKOUT IMMEDIATELY
   useEffect(() => {
     if (!user) return;
 
+    console.log('🔥 Creating payment intent for:', { paymentType, amount });
+    
     const createPaymentIntent = async () => {
       try {
-        console.log(`🔥 M1SSION™ Creating ${paymentType} payment intent:`, { planName, amount });
-        
-        const body = paymentType === 'subscription' 
-          ? {
-              user_id: user.id,
-              plan: planName,
-              amount: amount,
-              currency: 'eur',
-              payment_type: paymentType
-            }
-          : {
-              user_id: user.id,
-              amount: amount / 100, // Convert back to euros for buzz payments
-              is_buzz_map: isBuzzMap || paymentType === 'buzz_map',
-              currency: 'EUR',
-              payment_type: paymentType
-            };
-
-        const { data, error } = await supabase.functions.invoke('create-payment-intent', { body });
+        const { data, error } = await supabase.functions.invoke('process-buzz-purchase', {
+          body: {
+            user_id: user.id,
+            amount: amount / 100, // Convert back to euros for the API
+            is_buzz_map: isBuzzMap || false,
+            currency: 'eur',
+            mode: 'payment'
+          }
+        });
 
         if (error) {
-          console.error('❌ M1SSION™ Payment intent error:', error);
+          console.error('🚨 Payment intent creation failed:', error);
           toast.error('Errore nella creazione del pagamento');
           return;
         }
 
-        if (data?.client_secret) {
-          setClientSecret(data.client_secret);
-          console.log('✅ M1SSION™ Payment intent created successfully');
+        if (data?.url) {
+          // 🚨 REDIRECT TO STRIPE CHECKOUT - PWA SAFE
+          console.log('🔥 Redirecting to Stripe Checkout:', data.url);
+          window.open(data.url, '_blank');
+          onCancel(); // Close the modal since we're redirecting
+        } else {
+          console.error('🚨 No URL returned from payment creation');
+          toast.error('Errore nella creazione del checkout');
         }
       } catch (error) {
-        console.error('❌ M1SSION™ Payment intent failed:', error);
-        toast.error('Errore nel sistema di pagamento');
+        console.error('🚨 Error creating payment intent:', error);
+        toast.error('Errore imprevisto nella creazione del pagamento');
       }
     };
 
     createPaymentIntent();
-  }, [user, paymentType, planName, amount, isBuzzMap]);
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!stripe || !elements || !clientSecret) {
-      toast.error('Sistema di pagamento non pronto');
-      return;
-    }
-
-    setLoading(true);
-
-    const cardElement = elements.getElement(CardElement);
-    if (!cardElement) {
-      toast.error('Elemento carta non trovato');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      console.log('🚀 M1SSION™ Processing payment...');
-
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: cardElement,
-          billing_details: {
-            email: user?.email || '',
-          },
-        },
-      });
-
-      if (error) {
-        console.error('❌ M1SSION™ Payment failed:', error);
-        toast.error(`Pagamento fallito: ${error.message}`);
-      } else if (paymentIntent.status === 'succeeded') {
-        console.log('✅ M1SSION™ Payment succeeded:', paymentIntent.id);
-        
-        // Call appropriate success handler based on payment type
-        const successFunction = paymentType === 'subscription' ? 'handle-payment-success' : 'handle-buzz-payment-success';
-        const successBody = paymentType === 'subscription'
-          ? {
-              payment_intent_id: paymentIntent.id,
-              user_id: user?.id,
-              plan: planName
-            }
-          : {
-              payment_intent_id: paymentIntent.id,
-              user_id: user?.id,
-              amount: amount / 100,
-              is_buzz_map: isBuzzMap || paymentType === 'buzz_map',
-              payment_type: paymentType
-            };
-
-        await supabase.functions.invoke(successFunction, { body: successBody });
-
-        const paymentTypeText = paymentType === 'subscription' ? planName : (paymentType === 'buzz_map' ? 'BUZZ Map' : 'BUZZ');
-        toast.success(`🎉 Pagamento ${paymentTypeText} completato!`);
-        
-        if (onSuccess) {
-          onSuccess();
-        }
-      }
-    } catch (error) {
-      console.error('❌ M1SSION™ Payment processing error:', error);
-      toast.error('Errore nel processare il pagamento');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const cardElementOptions = {
-    style: {
-      base: {
-        fontSize: '16px',
-        color: '#ffffff',
-        '::placeholder': {
-          color: '#aab7c4',
-        },
-        backgroundColor: 'transparent',
-      },
-      invalid: {
-        color: '#fa755a',
-        iconColor: '#fa755a',
-      },
-    },
-    hidePostalCode: true,
-  };
-
-  const getTitle = () => {
-    switch (paymentType) {
-      case 'subscription':
-        return `💳 Abbonamento ${planName}`;
-      case 'buzz_map':
-        return '🗺️ BUZZ Map';
-      case 'buzz':
-        return '⚡ BUZZ Extra';
-      default:
-        return '💳 Pagamento';
-    }
-  };
-
-  const getDescription = () => {
-    if (description) return description;
-    
-    switch (paymentType) {
-      case 'subscription':
-        return `Piano ${planName} con vantaggi premium`;
-      case 'buzz_map':
-        return 'Genera area di ricerca sulla mappa';
-      case 'buzz':
-        return 'Indizio extra per la missione';
-      default:
-        return 'Pagamento M1SSION™';
-    }
-  };
+  }, [user, paymentType, amount, isBuzzMap, onCancel]);
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
-      <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-white">
-            {getTitle()}
-          </CardTitle>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCancel}
-            className="text-gray-400 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="text-center text-gray-300">
-          <div className="text-xl font-bold">€{(amount / 100).toFixed(2)}</div>
-          <div className="text-sm">{getDescription()}</div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-600">
-            <CardElement options={cardElementOptions} />
-          </div>
-          
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              className="flex-1"
-              disabled={loading}
-            >
-              Annulla
-            </Button>
-            <Button
-              type="submit"
-              disabled={!stripe || loading || !clientSecret}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-            >
-              {loading ? 'Elaborazione...' : `Paga €${(amount / 100).toFixed(2)}`}
-            </Button>
-          </div>
-        </form>
-        
-        <div className="text-xs text-gray-400 text-center">
-          🔒 Pagamento sicuro elaborato da Stripe
-        </div>
-      </CardContent>
-    </Card>
+    <>
+      {/* 🚨 HEADER CON X BUTTON */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        color: 'white'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 'bold' }}>
+          {planName}
+        </h2>
+        <button
+          onClick={onCancel}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'white',
+            fontSize: '24px',
+            cursor: 'pointer',
+            padding: '4px'
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* 🚨 DESCRIPTION */}
+      <div style={{
+        color: '#9ca3af',
+        marginBottom: '20px',
+        fontSize: '14px'
+      }}>
+        {description}
+      </div>
+
+      {/* 🚨 AMOUNT */}
+      <div style={{
+        color: 'white',
+        fontSize: '24px',
+        fontWeight: 'bold',
+        marginBottom: '20px',
+        textAlign: 'center'
+      }}>
+        €{(amount / 100).toFixed(2)}
+      </div>
+
+      {/* 🚨 REDIRECT MESSAGE */}
+      <div style={{
+        textAlign: 'center',
+        color: '#9ca3af',
+        marginBottom: '20px'
+      }}>
+        Ti stiamo reindirizzando a Stripe per completare il pagamento in modo sicuro...
+      </div>
+
+      {/* 🚨 BUTTONS */}
+      <div style={{
+        display: 'flex',
+        gap: '12px',
+        marginTop: '20px'
+      }}>
+        <button
+          onClick={onCancel}
+          style={{
+            flex: 1,
+            padding: '12px',
+            backgroundColor: '#374151',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '16px'
+          }}
+        >
+          Annulla
+        </button>
+      </div>
+
+      <div style={{
+        textAlign: 'center',
+        fontSize: '12px',
+        color: '#6b7280',
+        marginTop: '16px'
+      }}>
+        🔒 Pagamento sicuro elaborato da Stripe
+      </div>
+    </>
   );
 };
 
@@ -304,7 +226,7 @@ const UniversalStripeCheckout: React.FC<UniversalStripeCheckoutProps> = ({
     },
   };
 
-  console.log('🚨 UniversalStripeCheckout: About to return JSX with z-50');
+  console.log('🚨 UniversalStripeCheckout: About to return JSX with SAFARI PWA FIX');
 
   return (
     <>
@@ -327,21 +249,62 @@ const UniversalStripeCheckout: React.FC<UniversalStripeCheckoutProps> = ({
         paymentType: {paymentType}
       </div>
 
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-        <Elements stripe={stripePromise} options={options}>
-        <CheckoutForm 
-          paymentType={paymentType}
-          planName={planName}
-          amount={amount}
-          description={description}
-          isBuzzMap={isBuzzMap}
-          onSuccess={() => {
-            onClose();
-            if (onSuccess) onSuccess();
+      {/* 🚨 SAFARI PWA FIX - FORZARE VISIBILITÀ CON STYLE INLINE */}
+      <div 
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 999999,
+          transform: 'translateZ(0)', // Force GPU acceleration
+          WebkitTransform: 'translateZ(0)', // Safari specific
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden'
+        }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
+        {/* 🚨 SAFARI PWA COMPATIBLE CARD */}
+        <div 
+          style={{
+            backgroundColor: '#1f2937',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '400px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            position: 'relative',
+            transform: 'translateZ(0)', // Force GPU acceleration
+            WebkitTransform: 'translateZ(0)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
           }}
-          onCancel={onClose}
-        />
-        </Elements>
+        >
+          <Elements stripe={stripePromise} options={options}>
+            <CheckoutForm 
+              paymentType={paymentType}
+              planName={planName}
+              amount={amount}
+              description={description}
+              isBuzzMap={isBuzzMap}
+              onSuccess={() => {
+                onClose();
+                if (onSuccess) onSuccess();
+              }}
+              onCancel={onClose}
+            />
+          </Elements>
+        </div>
       </div>
     </>
   );
