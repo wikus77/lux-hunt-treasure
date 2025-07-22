@@ -1,21 +1,13 @@
-/**
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
- * 
- * Create Payment Intent Edge Function - WARNING FREE VERSION
- * FIXES: WARNING #11-18 (CORS, Headers, JWT)
- */
+// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// M1SSION™ Create Payment Intent - RESET COMPLETO 22/07/2025
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-// WARNING #11-14 FIXED: Complete CORS headers for PWA iOS
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-  'Vary': 'Origin',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 const logStep = (step: string, details?: any) => {
@@ -24,12 +16,8 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
-  // WARNING #11-12 FIXED: Proper CORS preflight handling
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {

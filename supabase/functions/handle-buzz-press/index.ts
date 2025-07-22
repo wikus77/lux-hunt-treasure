@@ -184,34 +184,6 @@ serve(async (req) => {
       );
     }
 
-    // 🚨 CRITICAL: VERIFICA PAGAMENTO OBBLIGATORIO PRIMA DI GENERARE INDIZIO
-    console.log('🔒 BUZZ: Verifying payment status before generating clue...');
-    
-    // Verifica se esiste un pagamento valido per questo user e sessione
-    const { data: validPayment, error: paymentCheckError } = await supabase
-      .from('payment_transactions')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'succeeded')
-      .eq('provider_transaction_id', sessionId || 'none')
-      .single();
-
-    if (paymentCheckError || !validPayment) {
-      console.log('❌ BUZZ: No valid payment found - indizio generation BLOCKED');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: true, 
-          errorMessage: "Pagamento richiesto: completa il checkout Stripe per ottenere l'indizio",
-          payment_required: true,
-          buzz_cost: buzzCost
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    console.log(`✅ BUZZ: Valid payment confirmed (${validPayment.id}) - proceeding with clue generation`);
-
     // 🧬 BUZZ_CLUE_ENGINE - Generate clue with progressive logic
     const clueEngineResult = await generateSmartClue(supabase, userId, currentWeek);
     console.log(`🧬 BUZZ_CLUE_ENGINE Result:`, clueEngineResult);

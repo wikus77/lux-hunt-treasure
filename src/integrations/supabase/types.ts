@@ -2303,20 +2303,9 @@ export type Database = {
           expires_at: string
         }[]
       }
-      get_authenticated_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      get_current_user_profile_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          role: string
-          email: string
-        }[]
       }
       get_current_week_and_year: {
         Args: Record<PropertyKey, never>
@@ -2342,10 +2331,6 @@ export type Database = {
       get_user_by_email: {
         Args: { email_param: string }
         Returns: unknown[]
-      }
-      get_user_role_safe: {
-        Args: { p_user_id: string }
-        Returns: string
       }
       get_user_roles: {
         Args: { user_id: string }
@@ -2380,10 +2365,6 @@ export type Database = {
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
-      }
-      is_admin_email_safe: {
-        Args: { p_email: string }
-        Returns: boolean
       }
       is_ip_blocked: {
         Args: { ip_addr: unknown }
