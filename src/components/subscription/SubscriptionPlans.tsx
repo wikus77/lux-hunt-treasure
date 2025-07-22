@@ -8,6 +8,7 @@ import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import SubscriptionCard from "./SubscriptionCard";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { supabase } from "@/integrations/supabase/client";
+import StripeInAppCheckout from "./StripeInAppCheckout";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -17,8 +18,9 @@ interface SubscriptionPlansProps {
 export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansProps) => {
   const { toast } = useToast();
   const { navigate } = useWouterNavigation();
-  // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   const { subscription, upgradeSubscription } = useProfileSubscription();
+  const [showInAppCheckout, setShowInAppCheckout] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>('');
 
   // ✅ SUCCESS URL HANDLING for Stripe Return - ENHANCED WITH FORCE REFRESH
   React.useEffect(() => {
@@ -311,109 +313,10 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       } else {
         console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
         
-        // 🚨 CRITICAL FIX: Direct Stripe checkout instead of double redirect
-        // Don't pre-update state for paid plans - wait for Stripe success
-        console.log(`🚀 M1SSION™ Starting Stripe checkout for ${plan}`);
-        
-        // 🚀 M1SSION™ DIRECT STRIPE CHECKOUT - Enhanced Logging
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          console.log('🔥 M1SSION™ CRITICAL DEBUG - STARTING CHECKOUT PROCESS');
-          console.log('👤 M1SSION™ User data:', { id: user.id, email: user.email });
-          console.log('🎯 M1SSION™ Plan requested:', plan);
-          
-          const checkoutBody = {
-            user_id: user.id,
-            plan,
-            payment_method: 'card',
-            mode: 'live'
-          };
-          
-          console.log('📋 M1SSION™ Checkout body:', JSON.stringify(checkoutBody, null, 2));
-          console.log('⏰ M1SSION™ Invoking create-checkout at:', new Date().toISOString());
-          
-          try {
-            // TIMEOUT WRAPPER per evitare hang infiniti
-            const invokePromise = supabase.functions.invoke('create-checkout', {
-              body: checkoutBody
-            });
-            
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Edge function timeout dopo 10 secondi')), 10000)
-            );
-
-            const { data, error } = await Promise.race([invokePromise, timeoutPromise]) as any;
-
-            console.log('📊 M1SSION™ Raw response from create-checkout:');
-            console.log('✅ Data:', JSON.stringify(data, null, 2));
-            console.log('❌ Error:', JSON.stringify(error, null, 2));
-            
-            if (error) {
-              console.error('❌ M1SSION™ Edge function error - attempting DIRECT STRIPE FALLBACK');
-              await handleDirectStripeCheckout(plan);
-              return;
-            }
-
-            if (!data) {
-              console.error('❌ M1SSION™ No data - attempting DIRECT STRIPE FALLBACK');
-              await handleDirectStripeCheckout(plan);
-              return;
-            }
-
-            console.log('🔍 M1SSION™ Checking data.url:', data.url);
-
-            if (!data?.url) {
-              console.error("❌ M1SSION™ NO URL - attempting DIRECT STRIPE FALLBACK", {
-                dataReceived: data,
-                urlValue: data?.url
-              });
-              await handleDirectStripeCheckout(plan);
-              return;
-            }
-
-            console.log(`✅ M1SSION™ SUCCESS - Stripe URL received: ${data.url}`);
-            
-            // 🔥 CRITICAL FIX: Use window.open for subscriptions (same as BUZZ)
-            console.log("🚀 M1SSION™ Opening checkout in new tab...");
-            const newWindow = window.open(data.url, '_blank');
-            
-            if (!newWindow) {
-              console.error('❌ window.open blocked - trying fallback redirect methods');
-              
-              // Fallback to direct redirect if popup blocked
-              const isIOSPWA = (window.navigator as any).standalone || 
-                (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-              
-              if (isIOSPWA) {
-                console.log('📱 iOS PWA detected - Using immediate redirect method');
-                window.location.href = data.url;
-              } else {
-                // Standard redirect for non-PWA environments  
-                window.location.href = data.url;
-              }
-            } else {
-              console.log('✅ M1SSION™ STRIPE CHECKOUT opened in new tab successfully');
-            }
-            
-            // Show success notification
-            sonnerToast.success('✅ Apertura checkout Stripe...', {
-              description: 'Checkout aperto in nuova scheda - completa il pagamento',
-              duration: 4000
-            });
-            
-          } catch (invokeError) {
-            console.error('❌ M1SSION™ CRITICAL - Edge function failed, using DIRECT STRIPE FALLBACK:', invokeError);
-            await handleDirectStripeCheckout(plan);
-          }
-        } else {
-          console.error('❌ M1SSION™ CRITICAL - No authenticated user found');
-          toast({
-            title: "❌ Errore autenticazione",
-            description: "Utente non autenticato. Effettua login e riprova.",
-            variant: "destructive",
-            duration: 5000
-          });
-        }
+        // 🚀 CRITICAL: Use in-app checkout instead of external redirect
+        console.log(`💳 M1SSION™ Opening in-app checkout for ${plan}`);
+        setSelectedPlan(plan);
+        setShowInAppCheckout(true);
       }
       
     } catch (error) {
@@ -425,6 +328,33 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         duration: 5000
       });
     }
+  };
+
+  // Handle successful in-app payment
+  const handleInAppPaymentSuccess = async () => {
+    console.log('🎉 M1SSION™ In-app payment successful');
+    setShowInAppCheckout(false);
+    
+    // Update local state
+    setSelected(selectedPlan);
+    
+    // Force refresh subscription data
+    try {
+      await upgradeSubscription(selectedPlan);
+      sonnerToast.success(`🎉 Piano ${selectedPlan} attivato!`, {
+        description: 'Il tuo abbonamento è ora attivo',
+        duration: 6000
+      });
+    } catch (error) {
+      console.error('❌ M1SSION™ Error refreshing subscription:', error);
+    }
+  };
+
+  // Handle in-app payment cancellation
+  const handleInAppPaymentCancel = () => {
+    console.log('❌ M1SSION™ In-app payment cancelled');
+    setShowInAppCheckout(false);
+    setSelectedPlan('');
   };
   
   // 🔄 M1SSION™ Funzione di verifica e retry per downgrade
@@ -620,6 +550,15 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
             Cancella abbonamento
           </Button>
         </div>
+      )}
+      
+      {/* In-App Checkout Modal */}
+      {showInAppCheckout && (
+        <StripeInAppCheckout
+          plan={selectedPlan}
+          onSuccess={handleInAppPaymentSuccess}
+          onCancel={handleInAppPaymentCancel}
+        />
       )}
     </section>
   );

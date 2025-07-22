@@ -1122,6 +1122,42 @@ export type Database = {
           },
         ]
       }
+      payment_intents: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          id: string
+          payment_intent_id: string
+          plan: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          payment_intent_id: string
+          plan: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          id?: string
+          payment_intent_id?: string
+          plan?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       payment_transactions: {
         Row: {
           amount: number
