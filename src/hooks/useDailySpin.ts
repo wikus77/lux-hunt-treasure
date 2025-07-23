@@ -22,82 +22,22 @@ export const useDailySpin = () => {
   const { user, session } = useUnifiedAuth();
 
   const spinWheel = async (prize: string, rotationDeg: number) => {
-    if (!user || !session) {
-      const errorMsg = 'Devi essere autenticato per giocare';
-      setError(errorMsg);
-      toast.error(errorMsg);
-      return null;
-    }
-
-    try {
-      setIsSpinning(true);
-      setSpinResult(null);
-      setError(null);
-
-      // COSMETIC ONLY: No prize redirects
-      const reroute_path = "/home";
-
-      const { data, error } = await supabase.functions.invoke('log-daily-spin', {
-        body: {
-          user_id: user.id,
-          prize,
-          rotation_deg: rotationDeg,
-          client_ip: null, // Verrà rilevato dal server
-          reroute_path
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error('❌ Errore spin:', error);
-        
-        let errorMessage = 'Errore durante il giro della ruota';
-        if (error.message?.includes('ALREADY_PLAYED_TODAY')) {
-          errorMessage = 'Hai già giocato oggi! Torna domani per un nuovo giro.';
-        } else if (error.message?.includes('row-level security')) {
-          errorMessage = 'Errore di sicurezza. Riprova più tardi.';
-        }
-        
-        setError(errorMessage);
-        toast.error(errorMessage);
-        return null;
-      }
-
-      console.log('🎰 Risultato spin:', data);
-      
-      // COSMETIC ONLY: Fixed redirect to home
-      const resultWithRedirect = {
-        ...data,
-        reroute_path: "/home"
-      };
-      
-      setSpinResult(resultWithRedirect);
-      
-      // Handle special case for 3h buzz cooldown
-      if (prize === '3h senza blocchi BUZZ') {
-        localStorage.setItem('buzzCooldownEnd', (Date.now() + 3 * 60 * 60 * 1000).toString());
-      }
-      
-      // Toast di successo
-      toast.success(data.message || `Hai vinto: ${data.prize}!`);
-      
-      return resultWithRedirect;
-
-    } catch (err) {
-      console.error('❌ Errore critico spin:', err);
-      const errorMsg = 'Errore imprevisto durante il giro';
-      setError(errorMsg);
-      toast.error(errorMsg);
-      return null;
-    } finally {
-      setIsSpinning(false);
-    }
+    // COSMETIC ONLY: This function is maintained for compatibility but no longer awards prizes
+    console.log("🎰 Cosmetic spin triggered - no prizes awarded");
+    
+    // Return cosmetic result
+    return {
+      success: true,
+      prize: "Grazie per aver partecipato!",
+      rotation_deg: rotationDeg,
+      message: "Continua la missione per vincere premi reali basati sulla tua abilità.",
+      reroute_path: "/home"
+    };
   };
 
-  const getPrizeRedirectPath = (prize: string) => {
-    return "/home"; // COSMETIC ONLY: Always redirect to home
+  // COSMETIC ONLY: No prize redirects
+  const getPrizeRedirectPath = () => {
+    return "/home";
   };
 
   return {
@@ -105,7 +45,7 @@ export const useDailySpin = () => {
     isSpinning,
     spinResult,
     error,
-    setSpinResult,
+    setSpinResult: () => {}, // No-op for cosmetic wheel
     getPrizeRedirectPath,
   };
 };
