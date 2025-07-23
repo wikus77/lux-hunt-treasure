@@ -1,8 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React from 'react';
-import { SEGMENTS, WINNING_SEGMENTS } from '@/utils/dailySpinUtils';
-import { PRIZE_CONFIG } from '@/utils/dailySpinPrizeMap';
+import { SEGMENTS } from '@/utils/dailySpinUtils';
+// REMOVED: WINNING_SEGMENTS and PRIZE_CONFIG - cosmetic only
 
 interface DailySpin3DWheelProps {
   rotation: number;
@@ -114,10 +114,10 @@ export const DailySpin3DWheel: React.FC<DailySpin3DWheelProps> = ({
               'Z'
             ].join(' ');
 
-            // Get segment configuration
-            const isWinning = WINNING_SEGMENTS.includes(index);
+            // COSMETIC ONLY: All segments equal visual treatment
+            const isWinning = false; // No winning segments in cosmetic wheel
             const colors = getSegmentColors(index, isWinning);
-            const config = PRIZE_CONFIG[segment as keyof typeof PRIZE_CONFIG];
+            // No prize config needed - cosmetic only
             
             // Text positioning
             const textRadius = radius * 0.7;
@@ -177,7 +177,7 @@ export const DailySpin3DWheel: React.FC<DailySpin3DWheelProps> = ({
                     filter: isWinning ? 'drop-shadow(0 0 4px rgba(255,255,255,0.3))' : 'none'
                   }}
                 >
-                  {config?.short || segment}
+                  {segment}
                 </text>
               </g>
             );

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { toast } from 'sonner';
-import { PRIZE_REDIRECTS } from '@/utils/dailySpinUtils';
+// REMOVED: PRIZE_REDIRECTS - cosmetic wheel only
 
 interface SpinResult {
   success: boolean;
@@ -34,8 +34,8 @@ export const useDailySpin = () => {
       setSpinResult(null);
       setError(null);
 
-      // Add redirect path to the request
-      const reroute_path = PRIZE_REDIRECTS[prize] || null;
+      // COSMETIC ONLY: No prize redirects
+      const reroute_path = "/home";
 
       const { data, error } = await supabase.functions.invoke('log-daily-spin', {
         body: {
@@ -67,10 +67,10 @@ export const useDailySpin = () => {
 
       console.log('🎰 Risultato spin:', data);
       
-      // Add redirect path to result
+      // COSMETIC ONLY: Fixed redirect to home
       const resultWithRedirect = {
         ...data,
-        reroute_path: PRIZE_REDIRECTS[data.prize] || null
+        reroute_path: "/home"
       };
       
       setSpinResult(resultWithRedirect);
@@ -97,7 +97,7 @@ export const useDailySpin = () => {
   };
 
   const getPrizeRedirectPath = (prize: string) => {
-    return PRIZE_REDIRECTS[prize] || null;
+    return "/home"; // COSMETIC ONLY: Always redirect to home
   };
 
   return {

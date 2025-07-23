@@ -3,8 +3,7 @@
 import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
-import { isWinningPrize } from '@/utils/dailySpinUtils';
-import { PRIZE_CONFIG } from '@/utils/dailySpinPrizeMap';
+// REMOVED: isWinningPrize and PRIZE_CONFIG - cosmetic only
 
 interface DailySpinResultModalProps {
   isOpen: boolean;
@@ -23,15 +22,15 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
 }) => {
   const [, setLocation] = useLocation();
 
-  // Auto-close effect for losing prizes
+  // Auto-close effect for cosmetic results
   useEffect(() => {
-    if (isOpen && !isWinningPrize(prize)) {
+    if (isOpen) {
         const timer = setTimeout(() => {
           setLocation('/home');
         }, 2500);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, prize, setLocation]);
+  }, [isOpen, setLocation]);
 
   const handleRedirect = () => {
     if (reroute_path) {
@@ -43,8 +42,8 @@ export const DailySpinResultModal: React.FC<DailySpinResultModalProps> = ({
 
   if (!isOpen) return null;
 
-  const winning = isWinningPrize(prize);
-  const prizeConfig = PRIZE_CONFIG[prize as keyof typeof PRIZE_CONFIG];
+  const winning = false; // COSMETIC ONLY: No winning in cosmetic wheel
+  // No prize config needed
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
