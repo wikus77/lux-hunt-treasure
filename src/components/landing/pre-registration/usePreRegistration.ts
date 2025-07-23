@@ -48,7 +48,8 @@ export const usePreRegistration = () => {
           data: {
             name: formData.name,
             agent_code: newAgentCode,
-            is_pre_registered: true
+            is_pre_registered: true,
+            email_confirm: true
           }
         }
       });
