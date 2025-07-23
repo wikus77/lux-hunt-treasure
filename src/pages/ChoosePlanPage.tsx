@@ -156,7 +156,7 @@ const ChoosePlanPage: React.FC = () => {
       try {
         await handlePlanUpgrade('Base');
         toast.success('Piano Base attivato!');
-        setLocation('/home');
+        setLocation('/how-it-works');
       } catch (error) {
         toast.error('Errore durante l\'attivazione del piano Base');
       }
@@ -200,9 +200,9 @@ const ChoosePlanPage: React.FC = () => {
 
       toast.success(`🎉 Piano ${paymentConfig?.plan} attivato con successo!`);
       
-      // Reindirizza alla home dopo un breve delay
+      // Reindirizza alla how-it-works dopo un breve delay
       setTimeout(() => {
-        setLocation('/home');
+        setLocation('/how-it-works');
       }, 2000);
       
     } catch (error) {
@@ -332,7 +332,11 @@ const ChoosePlanPage: React.FC = () => {
       {/* Stripe Checkout Modal */}
       {showCheckout && paymentConfig && (
         <StripeInAppCheckout
-          config={paymentConfig}
+          config={{
+            plan: paymentConfig.plan || '',
+            amount: paymentConfig.amount,
+            description: paymentConfig.description
+          }}
           onSuccess={handlePaymentComplete}
           onCancel={closeCheckout}
         />

@@ -85,15 +85,14 @@ const SuccessView: React.FC<SuccessViewProps> = ({
       <div className="space-y-3">
         <Button 
           onClick={() => {
-            // Salva agent code per la pagina di scelta piano
-            if (agentCode) {
-              localStorage.setItem('tempAgentCode', agentCode);
-            }
-            window.location.href = `/choose-plan${agentCode ? `?agent_code=${agentCode}` : ''}`;
+            // Crea account Supabase e poi reindirizza a scelta piano
+            window.dispatchEvent(new CustomEvent('create-supabase-account', {
+              detail: { agentCode, needsEmailVerification }
+            }));
           }}
           className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
         >
-          🚀 Scegli il tuo Piano
+          🚀 Continua e Scegli Piano
         </Button>
         
         <Button 

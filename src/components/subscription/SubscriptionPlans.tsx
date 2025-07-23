@@ -556,7 +556,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       {showInAppCheckout && (
         <StripeInAppCheckout
           config={{
-            type: 'subscription',
+            plan: selectedPlan,
             amount: (() => {
               switch (selectedPlan) {
                 case 'Silver': return 399;
@@ -566,13 +566,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
                 default: return 399;
               }
             })(),
-            description: `Piano ${selectedPlan} con accesso premium`,
-            plan: selectedPlan,
-            metadata: {
-              subscription_plan: selectedPlan,
-              mission: 'M1SSION',
-              reset_date: '2025-07-22'
-            }
+            description: `Piano ${selectedPlan} con accesso premium`
           }}
           onSuccess={async (paymentIntentId: string) => {
             console.log('🎉 Subscription payment completed:', paymentIntentId);

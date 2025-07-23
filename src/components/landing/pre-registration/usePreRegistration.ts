@@ -87,10 +87,69 @@ export const usePreRegistration = () => {
       setReferralCode(`CODE ${newAgentCode}`);
       setNeedsEmailVerification(true);
       setIsSuccess(true);
-      toast.success('Pre-registrazione completata! Controlla la tua email per la verifica.');
+      
+      // Ascolta per la creazione account Supabase
+      window.addEventListener('create-supabase-account', handleCreateSupabaseAccount);
+      
+      toast.success('Pre-registrazione completata! Ora crea il tuo account per continuare.');
     } catch (err: any) {
       setError(err.message);
       toast.error('Errore durante la pre-registrazione');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateSupabaseAccount = async (event: CustomEvent) => {
+    const { agentCode: eventAgentCode, needsEmailVerification: emailVerification } = event.detail;
+    
+    try {
+      setIsSubmitting(true);
+      
+      // Create Supabase auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: agentCode + '2025', // Temporary password
+        options: {
+          emailRedirectTo: `${window.location.origin}/choose-plan?agent_code=${eventAgentCode}`,
+          data: {
+            name: formData.name,
+            agent_code: eventAgentCode,
+            is_pre_registered: true
+          }
+        }
+      });
+
+      if (authError) {
+        throw new Error(authError.message);
+      }
+
+      if (authData.user) {
+        // Note: pre_registered_users table doesn't have user_id field, skip this update
+
+        // Create profile record
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            email: formData.email,
+            name: formData.name,
+            agent_code: eventAgentCode,
+            is_pre_registered: true,
+            plan: 'Base',
+            credits: 100
+          });
+
+        toast.success('Account creato! Reindirizzamento in corso...');
+        
+        // Redirect to choose plan
+        setTimeout(() => {
+          window.location.href = `/choose-plan?agent_code=${eventAgentCode}`;
+        }, 1500);
+      }
+    } catch (error: any) {
+      console.error('Error creating Supabase account:', error);
+      toast.error('Errore nella creazione account: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -103,6 +162,9 @@ export const usePreRegistration = () => {
     setReferralCode('');
     setAgentCode('');
     setNeedsEmailVerification(false);
+    
+    // Remove event listener
+    window.removeEventListener('create-supabase-account', handleCreateSupabaseAccount);
   };
 
   return {

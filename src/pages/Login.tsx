@@ -98,17 +98,29 @@ const Login = () => {
     if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
       console.log('🔄 LOGIN PAGE: User already authenticated, checking pre-registration status');
       
-      // Check if user is pre-registered and mission hasn't started
+      // Check if user is pre-registered and needs plan selection
       const checkUserStatus = async () => {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) return;
+
         const { data: profile } = await supabase
           .from('profiles')
-          .select('is_pre_registered, pre_registration_date')
-          .eq('id', (await supabase.auth.getUser()).data.user?.id)
+          .select('plan, is_pre_registered, agent_code')
+          .eq('id', currentUser.id)
           .single();
 
-        if (profile?.is_pre_registered && !missionStarted) {
-          console.log('🎯 Pre-registered user - redirecting to how-it-works');
-          navigate('/how-it-works');
+        console.log('🔍 User profile check:', profile);
+
+        if (profile?.is_pre_registered) {
+          // Se è pre-registrato ma non ha piano o ha piano Base, va alla scelta piano
+          if (!profile.plan || profile.plan === 'Base') {
+            console.log('🎯 Pre-registered user without plan - redirecting to choose-plan');
+            navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
+          } else {
+            // Ha già un piano, va alla how-it-works o home in base alla missione
+            console.log('🎯 Pre-registered user with plan - redirecting to how-it-works');
+            navigate('/how-it-works');
+          }
         } else {
           forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
         }

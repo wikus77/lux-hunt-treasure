@@ -21,6 +21,8 @@ import { Badge } from '@/components/ui/badge';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HowItWorksStep {
   id: number;
@@ -89,8 +91,10 @@ const steps: HowItWorksStep[] = [
 
 export const HowItWorksPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(1);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const { navigateWithFeedback } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
+  const { isAuthenticated, getCurrentUser } = useUnifiedAuth();
 
   // Handle step selection
   const handleStepSelect = preserveFunctionName(async (stepId: number) => {
@@ -98,10 +102,42 @@ export const HowItWorksPage: React.FC = () => {
     setActiveStep(stepId);
   }, 'handleStepSelect');
 
+  // Load user profile on mount
+  React.useEffect(() => {
+    const loadUserProfile = async () => {
+      if (isAuthenticated) {
+        const user = getCurrentUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('plan, is_pre_registered, agent_code, can_access_app')
+            .eq('id', user.id)
+            .single();
+          
+          setUserProfile(profile);
+        }
+      }
+    };
+
+    loadUserProfile();
+  }, [isAuthenticated, getCurrentUser]);
+
   // Handle start mission
   const handleStartMission = preserveFunctionName(async () => {
     await vibrate(50);
-    navigateWithFeedback('/register');
+    
+    if (isAuthenticated && userProfile?.is_pre_registered) {
+      // Se è pre-registrato ma non ha piano, vai alla scelta piano
+      if (!userProfile.plan || userProfile.plan === 'Base') {
+        navigateWithFeedback('/choose-plan' + (userProfile.agent_code ? `?agent_code=${userProfile.agent_code}` : ''));
+      } else {
+        // Se ha già un piano, vai alla home
+        navigateWithFeedback('/');
+      }
+    } else {
+      // Se non è autenticato, vai alla registrazione
+      navigateWithFeedback('/register');
+    }
   }, 'handleStartMission');
 
   return (
@@ -112,6 +148,14 @@ export const HowItWorksPage: React.FC = () => {
         animate={{ y: 0, opacity: 1 }}
         className="text-center space-y-4"
       >
+        {/* Show Agent Code if user is pre-registered */}
+        {userProfile?.agent_code && (
+          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30 rounded-lg p-3 mb-4">
+            <p className="text-cyan-400 font-semibold text-sm">Agente</p>
+            <p className="text-white font-mono text-lg">{userProfile.agent_code}</p>
+          </div>
+        )}
+        
         <div className="flex items-center justify-center gap-3 mb-4">
           <div className="w-12 h-12 bg-gradient-to-r from-[#00D1FF] to-[#F059FF] rounded-full flex items-center justify-center">
             <Play className="w-6 h-6 text-white" />
@@ -273,15 +317,20 @@ export const HowItWorksPage: React.FC = () => {
                       Successivo
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
-                  ) : (
-                    <Button
-                      onClick={handleStartMission}
-                      className="bg-gradient-to-r from-[#00D1FF] to-[#F059FF] text-white font-bold px-8"
-                    >
-                      <Play className="w-5 h-5 mr-2" />
-                      Inizia la Missione
-                    </Button>
-                  )}
+                   ) : (
+                     <Button
+                       onClick={handleStartMission}
+                       className="bg-gradient-to-r from-[#00D1FF] to-[#F059FF] text-white font-bold px-8"
+                     >
+                       <Play className="w-5 h-5 mr-2" />
+                       {userProfile?.is_pre_registered && (!userProfile.plan || userProfile.plan === 'Base') 
+                         ? 'Scegli il tuo Piano' 
+                         : userProfile?.is_pre_registered 
+                         ? 'Vai alla Dashboard' 
+                         : 'Inizia la Missione'
+                       }
+                     </Button>
+                   )}
                 </div>
               </CardContent>
             </Card>
@@ -387,7 +436,12 @@ export const HowItWorksPage: React.FC = () => {
           className="bg-gradient-to-r from-[#00D1FF] to-[#F059FF] text-white font-bold px-12 py-4 text-lg"
         >
           <Star className="w-6 h-6 mr-3" />
-          Diventa un Agente M1SSION™
+          {userProfile?.is_pre_registered && (!userProfile.plan || userProfile.plan === 'Base') 
+            ? 'Scegli il tuo Piano Agente' 
+            : userProfile?.is_pre_registered 
+            ? 'Accedi alla Dashboard' 
+            : 'Diventa un Agente M1SSION™'
+          }
           <ArrowRight className="w-6 h-6 ml-3" />
         </Button>
         
