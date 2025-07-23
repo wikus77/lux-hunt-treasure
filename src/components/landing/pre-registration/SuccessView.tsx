@@ -20,6 +20,12 @@ const SuccessView: React.FC<SuccessViewProps> = ({
   userCredentials,
   onReset
 }) => {
+  console.log('🎊 SuccessView rendered with props:', {
+    referralCode,
+    agentCode,
+    needsEmailVerification,
+    userCredentials
+  });
   const handleCopyReferralCode = () => {
     navigator.clipboard.writeText(referralCode);
     toast.success("Codice referral copiato!");

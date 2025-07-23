@@ -27,15 +27,18 @@ export const usePreRegistration = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 PRE-REGISTRATION: Form submitted', { formData });
     setIsSubmitting(true);
     setError(null);
 
     try {
       // Generate unique agent code
       const newAgentCode = await generateUniqueAgentCode();
+      console.log('🔥 AGENT CODE GENERATED:', newAgentCode);
       
       // STEP 1: Create Supabase auth account FIRST
       const temporaryPassword = `AG${newAgentCode.slice(-4)}2025!`;
+      console.log('🔐 TEMPORARY PASSWORD:', temporaryPassword);
       
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -51,11 +54,14 @@ export const usePreRegistration = () => {
       });
 
       if (authError) {
+        console.error('❌ SUPABASE AUTH ERROR:', authError);
         if (authError.message.includes('already registered')) {
           throw new Error('Email già registrato. Vai al login per accedere.');
         }
         throw new Error(authError.message);
       }
+
+      console.log('✅ SUPABASE ACCOUNT CREATED:', authData.user?.id);
 
       // STEP 2: Insert into pre_registered_users table
       const { error: insertError } = await supabase
@@ -122,6 +128,8 @@ export const usePreRegistration = () => {
       setAgentCode(newAgentCode);
       setReferralCode(`CODE ${newAgentCode}`);
       setNeedsEmailVerification(authData.user?.email_confirmed_at ? false : true);
+      
+      console.log('🎉 PRE-REGISTRATION SUCCESS! Setting isSuccess=true');
       setIsSuccess(true);
       
       // Store credentials for UI display
@@ -150,9 +158,11 @@ export const usePreRegistration = () => {
         }
       }
     } catch (err: any) {
+      console.error('💥 PRE-REGISTRATION ERROR:', err);
       setError(err.message);
       toast.error('Errore durante la pre-registrazione');
     } finally {
+      console.log('🔄 PRE-REGISTRATION: Setting isSubmitting=false');
       setIsSubmitting(false);
     }
   };

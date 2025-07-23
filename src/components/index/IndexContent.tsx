@@ -104,6 +104,7 @@ const IndexContent = ({
       <PresentationSection visible={true} />
       
       {/* NUOVA SEZIONE: Form di pre-registrazione */}
+      {console.log('🏠 IndexContent: Rendering PreRegistrationForm with countdownCompleted:', countdownCompleted)}
       <PreRegistrationForm countdownCompleted={countdownCompleted} />
       
       {/* Game Explanation Section */}

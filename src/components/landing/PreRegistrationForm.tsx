@@ -26,7 +26,16 @@ const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
     resetForm
   } = usePreRegistration();
 
+  console.log('🖥️ PreRegistrationForm render:', { 
+    isSuccess, 
+    agentCode, 
+    referralCode, 
+    userCredentials,
+    needsEmailVerification
+  });
+
   if (isSuccess) {
+    console.log('✅ Rendering SuccessView with:', { referralCode, agentCode, userCredentials });
     return (
       <SuccessView 
         referralCode={referralCode}

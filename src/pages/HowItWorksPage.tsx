@@ -23,6 +23,8 @@ import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { supabase } from '@/integrations/supabase/client';
+import PreRegistrationForm from '@/components/landing/PreRegistrationForm';
+import { getMissionDeadline } from '@/utils/countdownDate';
 
 interface HowItWorksStep {
   id: number;
@@ -92,9 +94,17 @@ const steps: HowItWorksStep[] = [
 export const HowItWorksPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(1);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [countdownCompleted, setCountdownCompleted] = useState(false);
   const { navigateWithFeedback } = useEnhancedNavigation();
   const { vibrate } = useCapacitorHardware();
   const { isAuthenticated, getCurrentUser } = useUnifiedAuth();
+
+  // Initialize countdown completed state
+  React.useEffect(() => {
+    const deadline = getMissionDeadline();
+    const isCompleted = Date.now() >= deadline.getTime();
+    setCountdownCompleted(isCompleted);
+  }, []);
 
   // Handle step selection
   const handleStepSelect = preserveFunctionName(async (stepId: number) => {
@@ -449,6 +459,18 @@ export const HowItWorksPage: React.FC = () => {
           Registrazione gratuita • 100 crediti inclusi • Premi reali
         </p>
       </motion.div>
+
+      {/* SEZIONE TEST: Form di pre-registrazione per debug */}
+      {!userProfile?.is_pre_registered && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="mb-8"
+        >
+          <PreRegistrationForm countdownCompleted={countdownCompleted} />
+        </motion.div>
+      )}
     </div>
   );
 };

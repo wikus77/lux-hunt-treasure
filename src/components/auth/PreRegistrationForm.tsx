@@ -4,9 +4,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { usePreRegistration } from '../landing/pre-registration/usePreRegistration';
+import SuccessView from '../landing/pre-registration/SuccessView';
 
 interface PreRegistrationFormProps {
   onSuccess?: () => void;
@@ -17,81 +17,57 @@ export const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
   onSuccess, 
   onCancel 
 }) => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
+  const {
+    formData,
+    isSubmitting,
+    isSuccess,
+    error,
+    referralCode,
+    agentCode,
+    needsEmailVerification,
+    userCredentials,
+    handleInputChange,
+    handleSubmit,
+    resetForm
+  } = usePreRegistration();
+
+  console.log('🖥️ Modal PreRegistrationForm render:', { 
+    isSuccess, 
+    agentCode, 
+    referralCode, 
+    userCredentials,
+    needsEmailVerification
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Le password non corrispondono');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('La password deve essere di almeno 6 caratteri');
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      // Create user account with email verification
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/how-it-works`,
-          data: {
-            email_confirm: true
-          }
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user && !data.user.email_confirmed_at) {
-        // Store in pre_registered_users table for tracking
-        await supabase
-          .from('pre_registered_users')
-          .insert({
-            email: formData.email,
-            password_hash: 'handled_by_supabase_auth',
-            is_verified: false
-          });
-
-        toast.success('Pre-registrazione completata!', {
-          description: '📧 Controlla la tua email per completare la verifica dell\'indirizzo e attivare il tuo Codice Agente personale.'
-        });
-      } else {
-        toast.success('Pre-registrazione completata!', {
-          description: 'Accesso disponibile dal 19 Agosto 2025.'
-        });
-      }
-
-      onSuccess?.();
-      
-    } catch (error: any) {
-      console.error('Pre-registration error:', error);
-      toast.error(error.message || 'Errore durante la pre-registrazione');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  if (isSuccess) {
+    console.log('✅ Modal: Rendering SuccessView with:', { referralCode, agentCode, userCredentials });
+    return (
+      <motion.div
+        className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+      >
+        <motion.div
+          className="w-full max-w-2xl bg-black/90 border border-cyan-500/30 rounded-xl p-6"
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+        >
+          <SuccessView 
+            referralCode={referralCode}
+            agentCode={agentCode}
+            needsEmailVerification={needsEmailVerification}
+            userCredentials={userCredentials}
+            onReset={() => {
+              resetForm();
+              onCancel?.();
+            }}
+          />
+        </motion.div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -117,48 +93,38 @@ export const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
+            <Label htmlFor="name" className="text-white">Nome completo</Label>
+            <Input
+              id="name"
+              name="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => handleInputChange('name', e.target.value)}
+              required
+              className="bg-black/50 border-gray-600 text-white"
+              placeholder="Inserisci il tuo nome"
+            />
+          </div>
+
+          <div>
             <Label htmlFor="email" className="text-white">Email</Label>
             <Input
               id="email"
               name="email"
               type="email"
               value={formData.email}
-              onChange={handleInputChange}
+              onChange={(e) => handleInputChange('email', e.target.value)}
               required
               className="bg-black/50 border-gray-600 text-white"
               placeholder="la-tua-email@esempio.com"
             />
           </div>
 
-          <div>
-            <Label htmlFor="password" className="text-white">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              minLength={6}
-              className="bg-black/50 border-gray-600 text-white"
-              placeholder="Almeno 6 caratteri"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="confirmPassword" className="text-white">Conferma Password</Label>
-            <Input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-              minLength={6}
-              className="bg-black/50 border-gray-600 text-white"
-              placeholder="Ripeti la password"
-            />
-          </div>
+          {error && (
+            <div className="text-red-400 text-sm bg-red-900/20 p-3 rounded-lg border border-red-500/30">
+              {error}
+            </div>
+          )}
 
           <div className="flex gap-3 pt-4">
             <Button
@@ -173,7 +139,7 @@ export const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
             <Button
               type="submit"
               className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white"
-              disabled={isSubmitting}
+              disabled={isSubmitting || !formData.name.trim() || !formData.email.trim()}
             >
               {isSubmitting ? 'Registrazione...' : 'PRE-REGISTRATI ORA'}
             </Button>
