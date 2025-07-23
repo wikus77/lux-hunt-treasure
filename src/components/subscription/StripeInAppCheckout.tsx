@@ -1,5 +1,5 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ Universal Stripe In-App Checkout Component - RESET COMPLETO 22/07/2025
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ Universal Stripe In-App Checkout Component with Saved Card Support
 
 import React, { useState, useEffect } from 'react';
 import { loadStripe, StripeElementsOptions } from '@stripe/stripe-js';
@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
+import SavedCardPayment from '@/components/payments/SavedCardPayment';
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
@@ -192,6 +193,8 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   onSuccess, 
   onCancel 
 }) => {
+  const [useSavedCard, setUseSavedCard] = useState(true);
+
   const options: StripeElementsOptions = {
     appearance: {
       theme: 'night',
@@ -208,14 +211,22 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Elements stripe={stripePromise} options={options}>
-        <CheckoutForm 
-          config={config} 
-          onSuccess={onSuccess} 
-          onCancel={onCancel} 
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+      {useSavedCard ? (
+        <SavedCardPayment
+          config={config}
+          onSuccess={onSuccess}
+          onCancel={onCancel}
         />
-      </Elements>
+      ) : (
+        <Elements stripe={stripePromise} options={options}>
+          <CheckoutForm 
+            config={config} 
+            onSuccess={onSuccess} 
+            onCancel={onCancel} 
+          />
+        </Elements>
+      )}
     </div>
   );
 };
@@ -223,6 +234,6 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
 export default StripeInAppCheckout;
 
 /*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ - RESET COMPLETO 22/07/2025
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * M1SSION™ - Universal Checkout with Saved Card Auto-Prefill
  */
