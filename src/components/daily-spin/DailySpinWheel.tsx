@@ -50,10 +50,10 @@ export const DailySpinWheel: React.FC = () => {
       reroute_path: "/home"
     };
 
-    // Registra che l'utente ha giocato oggi nel database
+    // 🔥 REGISTRA IMMEDIATAMENTE che l'utente ha giocato oggi nel database
     try {
       if (user && session) {
-        console.log('🎰 Registrando Daily Spin nel database...');
+        console.log('🎰 SALVATAGGIO IMMEDIATO Daily Spin nel database...');
         const today = new Date().toISOString().split('T')[0];
         
         const { error: logError } = await supabase
@@ -68,31 +68,78 @@ export const DailySpinWheel: React.FC = () => {
         if (logError) {
           console.error('❌ Errore salvataggio daily spin:', logError);
         } else {
-          console.log('✅ Daily Spin registrato con successo');
+          console.log('✅ Daily Spin registrato con successo nel database');
+          
+          // 🔥 SALVA ANCHE IN LOCALSTORAGE come backup per IMMEDIATA prevenzione loop
+          localStorage.setItem(`daily_spin_${user.id}_${today}`, 'true');
+          console.log('✅ Daily Spin salvato anche in localStorage per prevenzione loop');
         }
       }
     } catch (error) {
-      console.error('❌ Errore durante il salvataggio:', error);
+      console.error('❌ Errore durante il salvataggio Daily Spin:', error);
     }
     
-    // Fine animazione dopo 4 secondi
+    // Fine animazione dopo 4 secondi con REDIRECT FORZATO MULTIPLO
     setTimeout(() => {
       setIsAnimating(false);
       setShowResult(true);
       // Set cosmetic result directly without server call
       setCosmeticResult(newCosmeticResult);
+      
+      // 🔥 REDIRECT FORZATO IMMEDIATO - Multipli metodi per sicurezza massima
+      console.log('🚀 Daily Spin: INIZIANDO REDIRECT FORZATO MULTIPLO A /home');
+      
+      // Metodo 1: Wouter navigate (primario)
+      setTimeout(() => {
+        console.log('🚀 Metodo 1: wouter setLocation');
+        setLocation('/home');
+      }, 100);
+      
+      // Metodo 2: window.location.href (fallback per PWA)
+      setTimeout(() => {
+        console.log('🚀 Metodo 2: window.location.href fallback');
+        if (window.location.pathname.includes('/daily-spin')) {
+          window.location.href = '/home';
+        }
+      }, 500);
+      
+      // Metodo 3: window.location.replace (fallback estremo)
+      setTimeout(() => {
+        console.log('🚀 Metodo 3: window.location.replace fallback estremo');
+        if (window.location.pathname.includes('/daily-spin')) {
+          window.location.replace('/home');
+        }
+      }, 1000);
     }, 4000);
   };
 
   const handleRedirect = () => {
-    console.log('🚀 DailySpinWheel: redirecting to home');
+    console.log('🚀 DailySpinWheel: handleRedirect chiamato - FORZANDO redirect multiplo');
+    
+    // Metodo primario
     setLocation('/home');
+    
+    // Fallback per PWA
+    setTimeout(() => {
+      if (window.location.pathname.includes('/daily-spin')) {
+        window.location.href = '/home';
+      }
+    }, 300);
   };
 
   const handleCloseModal = () => {
-    console.log('🚀 DailySpinWheel: closing modal and redirecting to home');
+    console.log('🚀 DailySpinWheel: handleCloseModal chiamato - FORZANDO redirect multiplo');
     setShowResult(false);
+    
+    // Metodo primario
     setLocation('/home');
+    
+    // Fallback per PWA
+    setTimeout(() => {
+      if (window.location.pathname.includes('/daily-spin')) {
+        window.location.href = '/home';
+      }
+    }, 300);
   };
 
   // Handle responsive wheel size
@@ -106,14 +153,31 @@ export const DailySpinWheel: React.FC = () => {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Auto-close effect for cosmetic wheel
+  // 🔥 AUTO-REDIRECT EFFECT POTENZIATO - Ridotto a 1.5 secondi per redirect più veloce
   useEffect(() => {
     if (cosmeticResult && showResult) {
-      console.log('🚀 DailySpinWheel: setting up auto-redirect timer (3s)');
+      console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER ATTIVATO (1.5s)');
       const timer = setTimeout(() => {
-        console.log('🚀 DailySpinWheel: auto-redirect timer triggered, navigating to home');
+        console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER TRIGGERED - FORZANDO redirect a /home');
+        
+        // Triplo fallback per massima sicurezza
         setLocation('/home');
-      }, 3000); // 3 seconds for auto-close
+        
+        setTimeout(() => {
+          if (window.location.pathname.includes('/daily-spin')) {
+            console.log('🔄 Fallback 1: window.location.href');
+            window.location.href = '/home';
+          }
+        }, 200);
+        
+        setTimeout(() => {
+          if (window.location.pathname.includes('/daily-spin')) {
+            console.log('🔄 Fallback 2: window.location.replace');
+            window.location.replace('/home');
+          }
+        }, 500);
+      }, 1500); // 🔥 Ridotto da 3000 a 1500ms per redirect più veloce
+      
       return () => {
         console.log('🚀 DailySpinWheel: clearing auto-redirect timer');
         clearTimeout(timer);

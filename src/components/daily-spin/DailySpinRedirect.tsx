@@ -15,12 +15,12 @@ export const DailySpinRedirect: React.FC<DailySpinRedirectProps> = ({ children }
   const { spinStatus, isLoading } = useDailySpinCheck();
 
   useEffect(() => {
-    // Non fare redirect se:
+    // 🚨 BLOCCA TUTTI I REDIRECT se:
     // 1. Stiamo caricando
-    // 2. Non c'è utente autenticato
+    // 2. Non c'è utente autenticato  
     // 3. Siamo già sulla pagina daily-spin
-    // 4. Siamo su pagine di auth/login/register
-    // 5. Siamo su pagine di scelta piano
+    // 4. Siamo su pagine di auth/login/register/choose-plan
+    // 5. L'utente ha già giocato oggi (CRITICO PER EVITARE LOOP)
     if (
       isLoading ||
       !user ||
@@ -28,21 +28,28 @@ export const DailySpinRedirect: React.FC<DailySpinRedirectProps> = ({ children }
       location.includes('/login') ||
       location.includes('/register') ||
       location.includes('/auth') ||
-      location.includes('/choose-plan')
+      location.includes('/choose-plan') ||
+      spinStatus?.hasPlayedToday // 🔥 PREVENZIONE LOOP ASSOLUTA
     ) {
+      console.log('🚫 DailySpinRedirect: BLOCCATO', {
+        isLoading,
+        hasUser: !!user,
+        location,
+        hasPlayedToday: spinStatus?.hasPlayedToday,
+        canPlay: spinStatus?.canPlay
+      });
       return;
     }
 
-    // IMPORTANTE: Non fare redirect se l'utente ha già giocato oggi
-    if (spinStatus?.hasPlayedToday) {
-      console.log('🎰 Daily Spin: utente ha già giocato oggi, nessun redirect');
-      return;
-    }
-
-    // Se l'utente può giocare al Daily Spin E non ha ancora giocato oggi, redirect
+    // ✅ REDIRECT SOLO se l'utente può giocare E non ha ancora giocato oggi
     if (spinStatus?.canPlay && !spinStatus?.hasPlayedToday) {
-      console.log('🎰 Daily Spin: utente può giocare e non ha giocato oggi, redirect a /daily-spin');
+      console.log('🎰 Daily Spin: REDIRECT AUTORIZZATO - utente può giocare e non ha giocato oggi');
       setLocation('/daily-spin');
+    } else {
+      console.log('🎰 Daily Spin: NESSUN REDIRECT necessario', {
+        canPlay: spinStatus?.canPlay,
+        hasPlayedToday: spinStatus?.hasPlayedToday
+      });
     }
   }, [spinStatus, isLoading, user, location, setLocation]);
 
