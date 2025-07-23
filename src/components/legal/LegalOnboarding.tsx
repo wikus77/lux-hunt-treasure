@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Check, FileText, Globe } from 'lucide-react';
 import { useLegalConsent } from '@/hooks/useLegalConsent';
+import { useLocation } from 'wouter';
 
 type SupportedLanguage = 'en' | 'fr' | 'es' | 'de';
 
@@ -52,6 +53,9 @@ const LegalOnboarding: React.FC = () => {
   const { needsConsent, isLoading, acceptLegalConsent } = useLegalConsent();
   const [currentLang, setCurrentLang] = useState<SupportedLanguage>('en');
   const [accepting, setAccepting] = useState(false);
+  const [, setLocation] = useLocation();
+
+  console.log('🏛️ LegalOnboarding render:', { needsConsent, isLoading });
 
   useEffect(() => {
     // Auto-detect browser language
@@ -81,12 +85,23 @@ const LegalOnboarding: React.FC = () => {
   };
 
   const openTerms = () => {
-    window.open('/terms', '_blank');
+    console.log('🔗 Opening terms page...');
+    
+    // PWA-compatible navigation - use internal routing instead of window.open
+    setLocation('/terms');
   };
 
-  if (isLoading || !needsConsent) {
+  if (isLoading) {
+    console.log('🏛️ LegalOnboarding: Loading state');
     return null;
   }
+  
+  if (!needsConsent) {
+    console.log('🏛️ LegalOnboarding: No consent needed');
+    return null;
+  }
+  
+  console.log('🏛️ LegalOnboarding: Showing banner for language:', currentLang);
 
   const content = translations[currentLang];
 
@@ -176,7 +191,10 @@ const LegalOnboarding: React.FC = () => {
                 </Button>
                 
                 <Button
-                  onClick={openTerms}
+                  onClick={() => {
+                    console.log('🔗 Learn More button clicked');
+                    openTerms();
+                  }}
                   variant="outline"
                   className="w-full border-white/20 text-white hover:bg-white/10"
                 >
