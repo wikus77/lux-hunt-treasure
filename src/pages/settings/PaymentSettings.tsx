@@ -326,7 +326,10 @@ const PaymentSettings: React.FC = () => {
               Metodi di Pagamento
             </div>
             <Button
-              onClick={() => setShowAddCardModal(true)}
+              onClick={() => {
+                console.log('💳 PaymentSettings: Add Card button clicked - opening modal');
+                setShowAddCardModal(true);
+              }}
               disabled={loading}
               size="sm"
               className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
@@ -358,7 +361,10 @@ const PaymentSettings: React.FC = () => {
                 Aggiungi una carta di credito per abilitare gli acquisti e gli abbonamenti M1SSION™.
               </p>
               <Button
-                onClick={() => setShowAddCardModal(true)}
+                onClick={() => {
+                  console.log('💳 PaymentSettings: Add First Card button clicked - opening modal');
+                  setShowAddCardModal(true);
+                }}
                 disabled={loading}
                 className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
               >
@@ -374,7 +380,10 @@ const PaymentSettings: React.FC = () => {
       <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
         <CardContent className="pt-6">
           <Button
-            onClick={() => navigate('/profile/payments')}
+            onClick={() => {
+              console.log('💳 PaymentSettings: Payment History button clicked - navigating to /profile/payments');
+              navigate('/profile/payments');
+            }}
             variant="outline"
             className="w-full border-white/20 text-white hover:bg-white/10 font-medium"
           >
@@ -403,7 +412,10 @@ const PaymentSettings: React.FC = () => {
       {/* Add Card Modal - PURE MODAL NO ROUTING */}
       {showAddCardModal && (
         <AddCardDialog 
-          onClose={() => setShowAddCardModal(false)}
+          onClose={() => {
+            console.log('💳 PaymentSettings: Closing modal');
+            setShowAddCardModal(false);
+          }}
           onAddCard={addNewPaymentMethod} 
           loading={loading}
         />
