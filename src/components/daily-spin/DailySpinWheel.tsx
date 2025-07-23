@@ -57,10 +57,12 @@ export const DailySpinWheel: React.FC = () => {
   };
 
   const handleRedirect = () => {
+    console.log('🚀 DailySpinWheel: redirecting to home');
     setLocation('/home');
   };
 
   const handleCloseModal = () => {
+    console.log('🚀 DailySpinWheel: closing modal and redirecting to home');
     setShowResult(false);
     setLocation('/home');
   };
@@ -79,10 +81,15 @@ export const DailySpinWheel: React.FC = () => {
   // Auto-close effect for cosmetic wheel
   useEffect(() => {
     if (cosmeticResult && showResult) {
+      console.log('🚀 DailySpinWheel: setting up auto-redirect timer (3s)');
       const timer = setTimeout(() => {
+        console.log('🚀 DailySpinWheel: auto-redirect timer triggered, navigating to home');
         setLocation('/home');
       }, 3000); // 3 seconds for auto-close
-      return () => clearTimeout(timer);
+      return () => {
+        console.log('🚀 DailySpinWheel: clearing auto-redirect timer');
+        clearTimeout(timer);
+      };
     }
   }, [cosmeticResult, showResult, setLocation]);
 

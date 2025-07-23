@@ -129,9 +129,9 @@ const Login = () => {
             console.log('🎯 Pre-registered user without plan - redirecting to choose-plan');
             navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
           } else {
-            // Ha già un piano, va alla how-it-works o home in base alla missione
-            console.log('🎯 Pre-registered user with plan - redirecting to how-it-works');
-            navigate('/how-it-works');
+            // Ha già un piano, va alla home invece che how-it-works
+            console.log('🎯 Pre-registered user with plan - redirecting to home');
+            forceRedirectToHome('PRE_REGISTERED_USER_WITH_PLAN');
           }
         } else {
           forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
