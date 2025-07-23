@@ -14,6 +14,8 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe('pk_test_51QVLKLHM8cWnSL9I8GXe7CZdyqnKqHHp5GXhJXgE1mQpzm1fPqXwE8SY2dGUQEsFLu0yfxBP1FE5OQKfKgCcdxU2009yyY8BKp');
 
 interface AddCardDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onAddCard: (cardData: {
     cardNumber: string;
     expiryMonth: string;
@@ -27,8 +29,16 @@ interface AddCardDialogProps {
   children?: React.ReactNode;
 }
 
-const AddCardDialog: React.FC<AddCardDialogProps> = ({ onAddCard, loading, children }) => {
-  const [open, setOpen] = useState(false);
+const AddCardDialog: React.FC<AddCardDialogProps> = ({ 
+  open: externalOpen, 
+  onOpenChange: externalOnOpenChange, 
+  onAddCard, 
+  loading, 
+  children 
+}) => {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = externalOnOpenChange || setInternalOpen;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardData, setCardData] = useState({

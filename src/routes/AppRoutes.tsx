@@ -30,7 +30,7 @@ import SafeCreative from "@/pages/legal/SafeCreative";
 // Profile subpages - BY JOSEPH MULE
 import PersonalInfoPage from "@/pages/profile/PersonalInfoPage";
 import SecurityPage from "@/pages/profile/SecurityPage";
-import PaymentsPage from "@/pages/profile/PaymentsPage";
+import PaymentsHistoryPage from "@/pages/profile/PaymentsHistoryPage";
 
 // Subscription plan pages - BY JOSEPH MULE
 import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
@@ -189,7 +189,7 @@ const AppRoutes: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <GlobalLayout>
-                    <PaymentsPage />
+                    <PaymentsHistoryPage />
                   </GlobalLayout>
                 </ProtectedRoute>
               }
