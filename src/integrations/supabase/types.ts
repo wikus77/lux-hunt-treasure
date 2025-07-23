@@ -1450,10 +1450,12 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          can_access_app: boolean | null
           city: string | null
           country: string | null
           created_at: string
           credits: number | null
+          early_access_hours: number | null
           email: string | null
           first_name: string | null
           full_name: string | null
@@ -1463,6 +1465,7 @@ export type Database = {
           language: string | null
           last_cookie_banner_shown: string | null
           last_name: string | null
+          last_plan_change: string | null
           notifications_enabled: boolean | null
           phone: string | null
           plan: string | null
@@ -1489,10 +1492,12 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          can_access_app?: boolean | null
           city?: string | null
           country?: string | null
           created_at?: string
           credits?: number | null
+          early_access_hours?: number | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -1502,6 +1507,7 @@ export type Database = {
           language?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
+          last_plan_change?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
@@ -1528,10 +1534,12 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          can_access_app?: boolean | null
           city?: string | null
           country?: string | null
           created_at?: string
           credits?: number | null
+          early_access_hours?: number | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
@@ -1541,6 +1549,7 @@ export type Database = {
           language?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
+          last_plan_change?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
@@ -2026,6 +2035,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_map_areas: {
         Row: {
           clue_id: string | null
@@ -2294,6 +2333,36 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           subscription_id?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_permissions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          id: string
+          permission_type: string
+          permission_value: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          permission_type: string
+          permission_value?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          permission_type?: string
+          permission_value?: boolean | null
           user_id?: string
         }
         Relationships: []
@@ -2595,6 +2664,10 @@ export type Database = {
           role: string
         }[]
       }
+      get_user_sync_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
@@ -2639,6 +2712,16 @@ export type Database = {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
       }
+      log_user_action: {
+        Args: {
+          p_user_id: string
+          p_action: string
+          p_details?: Json
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       process_stripe_webhook_completed: {
         Args: {
           p_session_id: string
@@ -2668,6 +2751,16 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: Json
       }
+      send_user_notification: {
+        Args: {
+          p_user_id: string
+          p_notification_type: string
+          p_title: string
+          p_message: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
       setup_developer_user: {
         Args: { uid: string }
         Returns: undefined
@@ -2675,6 +2768,10 @@ export type Database = {
       submit_final_shot: {
         Args: { p_mission_id: string; p_latitude: number; p_longitude: number }
         Returns: Json
+      }
+      sync_user_permissions: {
+        Args: { p_user_id: string }
+        Returns: undefined
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
