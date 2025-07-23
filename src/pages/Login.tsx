@@ -23,6 +23,11 @@ const Login = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const redirectAttemptedRef = useRef(false);
   const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Pre-fill email from URL params
+  const prefillEmail = searchParams.get('email') || '';
+  const redirectAfterLogin = searchParams.get('redirect') || '';
+  const agentCodeFromUrl = searchParams.get('agent_code') || '';
 
   // 🔍 PWA Detection
   const isPWAStandalone = () => {
@@ -105,13 +110,20 @@ const Login = () => {
 
         const { data: profile } = await supabase
           .from('profiles')
-          .select('plan, is_pre_registered, agent_code')
+          .select('plan, is_pre_registered, agent_code, can_access_app')
           .eq('id', currentUser.id)
           .single();
 
         console.log('🔍 User profile check:', profile);
 
         if (profile?.is_pre_registered) {
+          // Check if there's a specific redirect requested
+          if (redirectAfterLogin === 'choose-plan') {
+            console.log('🎯 Forced redirect to choose-plan requested');
+            navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
+            return;
+          }
+          
           // Se è pre-registrato ma non ha piano o ha piano Base, va alla scelta piano
           if (!profile.plan || profile.plan === 'Base') {
             console.log('🎯 Pre-registered user without plan - redirecting to choose-plan');
@@ -128,7 +140,7 @@ const Login = () => {
 
       checkUserStatus();
     }
-  }, [isAuthenticated, isLoading, missionStarted]);
+  }, [isAuthenticated, isLoading, missionStarted, redirectAfterLogin]);
 
   // ⏱️ FALLBACK TIMER - PWA iOS Safari Emergency Exit
   useEffect(() => {
@@ -195,7 +207,22 @@ const Login = () => {
         </div>
 
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
-          <StandardLoginForm verificationStatus={verificationStatus} />
+          {prefillEmail && (
+            <div className="bg-cyan-500/10 border border-cyan-500/30 p-3 rounded-lg mb-4">
+              <p className="text-cyan-400 text-sm font-semibold mb-1">
+                👤 Account pre-registrato rilevato
+              </p>
+              <p className="text-white/70 text-xs">
+                Email: {prefillEmail} {agentCodeFromUrl && `• Agente: ${agentCodeFromUrl}`}
+              </p>
+            </div>
+          )}
+          <StandardLoginForm 
+            verificationStatus={verificationStatus} 
+            prefillEmail={prefillEmail}
+            redirectAfterLogin={redirectAfterLogin}
+            agentCode={agentCodeFromUrl}
+          />
 
           {/* Pre-Registration Button - Only show if mission hasn't started and user not authenticated */}
           {!missionStarted && !isAuthenticated && (

@@ -9,6 +9,7 @@ interface SuccessViewProps {
   referralCode: string;
   agentCode?: string;
   needsEmailVerification?: boolean;
+  userCredentials?: {email: string, password: string} | null;
   onReset: () => void;
 }
 
@@ -16,6 +17,7 @@ const SuccessView: React.FC<SuccessViewProps> = ({
   referralCode,
   agentCode,
   needsEmailVerification = false,
+  userCredentials,
   onReset
 }) => {
   const handleCopyReferralCode = () => {
@@ -39,14 +41,56 @@ const SuccessView: React.FC<SuccessViewProps> = ({
         <div className="bg-cyan-500/10 border border-cyan-500/30 p-4 rounded-lg mb-6">
           <p className="text-cyan-400 font-semibold mb-2">📧 Verifica la tua email</p>
           <p className="text-white/70 text-sm">
-            Controlla la tua email per completare la verifica dell'indirizzo e attivare il tuo Codice Agente personale.
+            Controlla la tua email per completare la verifica, poi usa le credenziali qui sotto per accedere.
           </p>
         </div>
       ) : (
-        <p className="text-white/70 mb-6">
-          Hai ricevuto <span className="text-yellow-300">100 crediti</span> da utilizzare per le missioni al lancio.
-          Invita i tuoi amici per guadagnare crediti extra!
-        </p>
+        <div className="bg-green-500/10 border border-green-500/30 p-4 rounded-lg mb-6">
+          <p className="text-green-400 font-semibold mb-2">✅ Account creato con successo!</p>
+          <p className="text-white/70 text-sm">
+            Hai ricevuto <span className="text-yellow-300">100 crediti</span> e puoi ora accedere per scegliere il tuo piano.
+          </p>
+        </div>
+      )}
+      
+      {/* Credenziali di accesso */}
+      {userCredentials && (
+        <div className="bg-purple-500/10 border border-purple-500/30 p-4 rounded-lg mb-4">
+          <p className="text-purple-400 font-semibold mb-3">🔑 Le tue credenziali di accesso:</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-white/70 text-sm">Email:</span>
+              <span className="text-cyan-400 font-mono">{userCredentials.email}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(userCredentials.email);
+                  toast.success("Email copiata!");
+                }} 
+                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                title="Copia email"
+              >
+                <Copy size={16} />
+              </button>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-white/70 text-sm">Password:</span>
+              <span className="text-cyan-400 font-mono">{userCredentials.password}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(userCredentials.password);
+                  toast.success("Password copiata!");
+                }} 
+                className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                title="Copia password"
+              >
+                <Copy size={16} />
+              </button>
+            </div>
+          </div>
+          <p className="text-yellow-300 text-xs mt-3 text-center">
+            ⚠️ Salva queste credenziali! Le userai per accedere all'app.
+          </p>
+        </div>
       )}
       
       {agentCode && (
@@ -83,17 +127,27 @@ const SuccessView: React.FC<SuccessViewProps> = ({
       </div>
       
       <div className="space-y-3">
-        <Button 
-          onClick={() => {
-            // Crea account Supabase e poi reindirizza a scelta piano
-            window.dispatchEvent(new CustomEvent('create-supabase-account', {
-              detail: { agentCode, needsEmailVerification }
-            }));
-          }}
-          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
-        >
-          🚀 Continua e Scegli Piano
-        </Button>
+        {!needsEmailVerification && userCredentials && (
+          <Button 
+            onClick={() => {
+              window.location.href = `/login?email=${encodeURIComponent(userCredentials.email)}&redirect=choose-plan&agent_code=${agentCode}`;
+            }}
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+          >
+            🚀 Accedi e Scegli Piano
+          </Button>
+        )}
+        
+        {needsEmailVerification && (
+          <Button 
+            onClick={() => {
+              window.location.href = `/login?email=${encodeURIComponent(userCredentials?.email || '')}&agent_code=${agentCode}`;
+            }}
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+          >
+            🔑 Vai al Login (dopo verifica email)
+          </Button>
+        )}
         
         <Button 
           onClick={onReset}

@@ -16,6 +16,7 @@ export const usePreRegistration = () => {
   const [referralCode, setReferralCode] = useState('');
   const [agentCode, setAgentCode] = useState('');
   const [needsEmailVerification, setNeedsEmailVerification] = useState(false);
+  const [userCredentials, setUserCredentials] = useState<{email: string, password: string} | null>(null);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -33,8 +34,31 @@ export const usePreRegistration = () => {
       // Generate unique agent code
       const newAgentCode = await generateUniqueAgentCode();
       
-      // Insert into pre_registered_users table
-      const { data, error: insertError } = await supabase
+      // STEP 1: Create Supabase auth account FIRST
+      const temporaryPassword = `AG${newAgentCode.slice(-4)}2025!`;
+      
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: temporaryPassword,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/verify-complete?agent_code=${newAgentCode}`,
+          data: {
+            name: formData.name,
+            agent_code: newAgentCode,
+            is_pre_registered: true
+          }
+        }
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          throw new Error('Email già registrato. Vai al login per accedere.');
+        }
+        throw new Error(authError.message);
+      }
+
+      // STEP 2: Insert into pre_registered_users table
+      const { error: insertError } = await supabase
         .from('pre_registered_users')
         .insert({
           name: formData.name,
@@ -43,15 +67,27 @@ export const usePreRegistration = () => {
           is_verified: false,
           is_pre_registered: true,
           password_hash: null
-        })
-        .select()
-        .single();
+        });
 
-      if (insertError) {
-        if (insertError.code === '23505') {
-          throw new Error('Email già registrato. Usa un\'altra email.');
-        }
-        throw new Error(insertError.message);
+      if (insertError && insertError.code !== '23505') {
+        console.warn('Warning inserting into pre_registered_users:', insertError);
+        // Don't fail if this insert fails - auth account is primary
+      }
+
+      // STEP 3: Create profile record immediately
+      if (authData.user) {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: authData.user.id,
+            email: formData.email,
+            name: formData.name,
+            agent_code: newAgentCode,
+            is_pre_registered: true,
+            plan: 'Base',
+            credits: 100,
+            can_access_app: false
+          });
       }
 
       // Send verification email using edge function
@@ -85,13 +121,34 @@ export const usePreRegistration = () => {
 
       setAgentCode(newAgentCode);
       setReferralCode(`CODE ${newAgentCode}`);
-      setNeedsEmailVerification(true);
+      setNeedsEmailVerification(authData.user?.email_confirmed_at ? false : true);
       setIsSuccess(true);
       
-      // Ascolta per la creazione account Supabase
-      window.addEventListener('create-supabase-account', handleCreateSupabaseAccount);
+      // Store credentials for UI display
+      setUserCredentials({
+        email: formData.email,
+        password: temporaryPassword
+      });
       
-      toast.success('Pre-registrazione completata! Ora crea il tuo account per continuare.');
+      // Show credentials to user
+      toast.success(`Account creato! Codice Agente: ${newAgentCode}`, {
+        description: `Email: ${formData.email} | Password: ${temporaryPassword}`,
+        duration: 10000
+      });
+      
+      // If user doesn't need email verification, auto-login and redirect
+      if (authData.user?.email_confirmed_at) {
+        const { error: loginError } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: temporaryPassword
+        });
+        
+        if (!loginError) {
+          setTimeout(() => {
+            window.location.href = `/choose-plan?agent_code=${newAgentCode}`;
+          }, 2000);
+        }
+      }
     } catch (err: any) {
       setError(err.message);
       toast.error('Errore durante la pre-registrazione');
@@ -175,6 +232,7 @@ export const usePreRegistration = () => {
     referralCode,
     agentCode,
     needsEmailVerification,
+    userCredentials,
     handleInputChange,
     handleSubmit,
     resetForm

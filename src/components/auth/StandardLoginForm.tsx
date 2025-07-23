@@ -10,10 +10,18 @@ import { useAuthContext } from '@/contexts/auth';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
+  prefillEmail?: string;
+  redirectAfterLogin?: string;
+  agentCode?: string;
 }
 
-export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
-  const [email, setEmail] = useState('');
+export function StandardLoginForm({ 
+  verificationStatus, 
+  prefillEmail = '', 
+  redirectAfterLogin = '',
+  agentCode = ''
+}: StandardLoginFormProps) {
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +59,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
 
       console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - Emitting auth-success event');
       toast.success('Login effettuato con successo', {
-        description: 'Benvenuto in M1SSION™!'
+        description: `Benvenuto in M1SSION™${agentCode ? ` Agente ${agentCode}` : ''}!`
       });
       
       // Emit custom auth success event for PWA compatibility
@@ -59,9 +67,16 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         detail: { email, timestamp: Date.now() } 
       }));
       
+      // Intelligent redirect based on user state
+      let redirectPath = '/';
+      
+      if (redirectAfterLogin === 'choose-plan') {
+        redirectPath = `/choose-plan${agentCode ? `?agent_code=${agentCode}` : ''}`;
+      }
+      
       // Primary redirect attempt
-      console.log('🚀 ATTEMPTING PRIMARY REDIRECT via navigate');
-      navigate('/');
+      console.log('🚀 ATTEMPTING PRIMARY REDIRECT via navigate to:', redirectPath);
+      navigate(redirectPath);
       
       // PWA iOS Safari fallback
       if (window.matchMedia('(display-mode: standalone)').matches || 
@@ -70,7 +85,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         setTimeout(() => {
           if (window.location.pathname === '/login') {
             console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href');
-            window.location.href = '/';
+            window.location.href = redirectPath;
           }
         }, 800);
       }

@@ -20,6 +20,7 @@ const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
     referralCode,
     agentCode,
     needsEmailVerification,
+    userCredentials,
     handleInputChange,
     handleSubmit,
     resetForm
@@ -31,6 +32,7 @@ const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
         referralCode={referralCode}
         agentCode={agentCode}
         needsEmailVerification={needsEmailVerification}
+        userCredentials={userCredentials}
         onReset={resetForm}
       />
     );
