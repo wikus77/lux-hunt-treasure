@@ -29,8 +29,11 @@ const PaymentsHistoryPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentTransaction[]>([]);
 
+  console.log('💳 PaymentsHistoryPage: Component rendered - loading payment history');
+
   useEffect(() => {
     if (user) {
+      console.log('💳 PaymentsHistoryPage: User authenticated, loading payment history');
       loadPaymentHistory();
     }
   }, [user]);
