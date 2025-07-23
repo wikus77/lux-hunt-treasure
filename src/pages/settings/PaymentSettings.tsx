@@ -41,7 +41,7 @@ const PaymentSettings: React.FC = () => {
   const [location, navigate] = useLocation();
   const [loading, setLoading] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [addCardOpen, setAddCardOpen] = useState(false);
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -157,8 +157,8 @@ const PaymentSettings: React.FC = () => {
         description: `${brand} ••••${last4} è stata salvata correttamente${cardData.saveForFuture ? ' per pagamenti futuri' : ''}.`
       });
 
-      // Close dialog
-      setAddCardOpen(false);
+      // Close modal
+      setShowAddCardModal(false);
       
     } catch (error) {
       console.error('❌ Complete error in card addition:', error);
@@ -326,7 +326,7 @@ const PaymentSettings: React.FC = () => {
               Metodi di Pagamento
             </div>
             <Button
-              onClick={() => setAddCardOpen(true)}
+              onClick={() => setShowAddCardModal(true)}
               disabled={loading}
               size="sm"
               className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
@@ -358,7 +358,7 @@ const PaymentSettings: React.FC = () => {
                 Aggiungi una carta di credito per abilitare gli acquisti e gli abbonamenti M1SSION™.
               </p>
               <Button
-                onClick={() => setAddCardOpen(true)}
+                onClick={() => setShowAddCardModal(true)}
                 disabled={loading}
                 className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
               >
@@ -400,13 +400,14 @@ const PaymentSettings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Add Card Dialog */}
-      <AddCardDialog 
-        open={addCardOpen}
-        onOpenChange={setAddCardOpen}
-        onAddCard={addNewPaymentMethod} 
-        loading={loading}
-      />
+      {/* Add Card Modal - PURE MODAL NO ROUTING */}
+      {showAddCardModal && (
+        <AddCardDialog 
+          onClose={() => setShowAddCardModal(false)}
+          onAddCard={addNewPaymentMethod} 
+          loading={loading}
+        />
+      )}
     </motion.div>
   );
 };

@@ -1,12 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ Add Card Dialog Component - Safari PWA ULTIMATE FIX
 import React, { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { CreditCard, Plus, X, AlertCircle, Shield, Lock } from 'lucide-react';
+import { CreditCard, X, AlertCircle, Shield, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -14,8 +12,7 @@ import { loadStripe } from '@stripe/stripe-js';
 const stripePromise = loadStripe('pk_test_51QVLKLHM8cWnSL9I8GXe7CZdyqnKqHHp5GXhJXgE1mQpzm1fPqXwE8SY2dGUQEsFLu0yfxBP1FE5OQKfKgCcdxU2009yyY8BKp');
 
 interface AddCardDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  onClose: () => void;
   onAddCard: (cardData: {
     cardNumber: string;
     expiryMonth: string;
@@ -26,19 +23,13 @@ interface AddCardDialogProps {
     stripeToken?: string;
   }) => Promise<void>;
   loading: boolean;
-  children?: React.ReactNode;
 }
 
 const AddCardDialog: React.FC<AddCardDialogProps> = ({ 
-  open: externalOpen, 
-  onOpenChange: externalOnOpenChange, 
+  onClose, 
   onAddCard, 
-  loading, 
-  children 
+  loading
 }) => {
-  const [internalOpen, setInternalOpen] = useState(false);
-  const open = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setOpen = externalOnOpenChange || setInternalOpen;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cardData, setCardData] = useState({
@@ -50,58 +41,39 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({
     saveForFuture: true
   });
 
-  // Safari PWA viewport and keyboard handling
+  // Prevent body scroll and fix position for iOS
   useEffect(() => {
-    if (open) {
-      console.log('💳 AddCardDialog: Modal opening');
-      
-      // Prevent body scroll and fix position for iOS
-      const body = document.body;
-      const originalOverflow = body.style.overflow;
-      const originalPosition = body.style.position;
-      const originalTop = body.style.top;
-      const originalWidth = body.style.width;
+    console.log('💳 AddCardDialog: Modal opening - applying iOS fixes');
+    
+    const body = document.body;
+    const originalOverflow = body.style.overflow;
+    const originalPosition = body.style.position;
+    const originalTop = body.style.top;
+    const originalWidth = body.style.width;
 
-      body.style.overflow = 'hidden';
-      body.style.position = 'fixed';
-      body.style.top = '0';
-      body.style.width = '100%';
-      
-      // iOS PWA specific viewport locks
-      if ('standalone' in window.navigator && (window.navigator as any).standalone) {
-        console.log('💳 PWA Mode detected - applying iOS fixes');
-        body.style.height = '100vh';
-        body.style.touchAction = 'none';
-      }
-
-      return () => {
-        // Restore original styles
-        body.style.overflow = originalOverflow;
-        body.style.position = originalPosition;
-        body.style.top = originalTop;
-        body.style.width = originalWidth;
-        body.style.height = '';
-        body.style.touchAction = '';
-        console.log('💳 AddCardDialog: Modal closed - styles restored');
-      };
+    body.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = '0';
+    body.style.width = '100%';
+    
+    // iOS PWA specific viewport locks
+    if ('standalone' in window.navigator && (window.navigator as any).standalone) {
+      console.log('💳 PWA Mode detected - applying iOS fixes');
+      body.style.height = '100vh';
+      body.style.touchAction = 'none';
     }
-  }, [open]);
 
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!open) {
-      setCardData({
-        cardNumber: '',
-        expiryMonth: '',
-        expiryYear: '',
-        cvc: '',
-        nameOnCard: '',
-        saveForFuture: true
-      });
-      setError(null);
-      setSubmitting(false);
-    }
-  }, [open]);
+    return () => {
+      // Restore original styles
+      body.style.overflow = originalOverflow;
+      body.style.position = originalPosition;
+      body.style.top = originalTop;
+      body.style.width = originalWidth;
+      body.style.height = '';
+      body.style.touchAction = '';
+      console.log('💳 AddCardDialog: Modal closed - styles restored');
+    };
+  }, []);
 
   const formatCardNumber = useCallback((value: string) => {
     const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
@@ -172,11 +144,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({
 
       console.log('🔒 Creazione token Stripe per validazione carta...');
       
-      // Create a temporary card element for tokenization
-      const cardElement = stripe.elements().create('card');
-      
-      // For now, simulate successful validation since we have client-side validation
-      // In production, you would use Stripe Elements or Payment Methods API
+      // For development, simulate successful validation
       const mockToken = {
         id: `tok_${Math.random().toString(36).substring(2, 15)}`,
         card: {
@@ -230,7 +198,7 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({
       });
       
       // Close modal only on success
-      setOpen(false);
+      onClose();
       
     } catch (error) {
       console.error('❌ Errore salvataggio carta:', error);
@@ -248,287 +216,271 @@ const AddCardDialog: React.FC<AddCardDialogProps> = ({
 
   const handleClose = useCallback(() => {
     if (!submitting) {
-      setOpen(false);
+      onClose();
     }
-  }, [submitting]);
+  }, [submitting, onClose]);
 
   const isFormValid = validateForm() === null;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children || (
+    <div 
+      className="fixed inset-0 z-[9999] bg-black/98 backdrop-blur-md flex flex-col"
+      style={{
+        width: '100vw',
+        height: '100vh',
+        left: '0',
+        top: '0',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'contain',
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingBottom: 'env(safe-area-inset-bottom)'
+      }}
+    >
+      {/* Fixed Header */}
+      <div className="flex-shrink-0 bg-black/95 border-b border-[#00D1FF]/20 sticky top-0 z-10">
+        <div className="flex items-center justify-between p-4 pt-6">
+          <div className="flex items-center">
+            <CreditCard className="w-6 h-6 mr-3 text-[#00D1FF]" />
+            <div>
+              <h2 className="text-white font-orbitron text-lg font-semibold">
+                Aggiungi Nuova Carta
+              </h2>
+              <p className="text-white/60 text-sm">
+                Sicurezza garantita PCI DSS
+              </p>
+            </div>
+          </div>
           <Button
-            disabled={loading}
-            size="sm"
-            className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            disabled={submitting}
+            className="text-white hover:bg-white/10 h-10 w-10"
           >
-            <Plus className="w-4 h-4 mr-1" />
-            Aggiungi
+            <X className="h-5 w-5" />
           </Button>
-        )}
-      </DialogTrigger>
-      
-      <DialogContent 
-        className="fixed inset-0 z-[9999] bg-black/98 backdrop-blur-md border-0 rounded-none p-0 m-0 flex flex-col"
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div 
+        className="flex-1 overflow-y-auto bg-black/95 relative"
         style={{
-          width: '100vw',
-          height: '100vh',
-          maxWidth: '100vw',
-          maxHeight: '100vh',
-          left: '0',
-          top: '0',
-          transform: 'none',
           WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain'
+          overscrollBehavior: 'contain',
+          scrollBehavior: 'smooth'
         }}
       >
-        {/* Fixed Header */}
-        <div className="flex-shrink-0 bg-black/95 border-b border-[#00D1FF]/20 safe-area-top sticky top-0 z-10">
-          <div className="flex items-center justify-between p-4 pt-6">
-            <div className="flex items-center">
-              <CreditCard className="w-6 h-6 mr-3 text-[#00D1FF]" />
-              <div>
-                <h2 className="text-white font-orbitron text-lg font-semibold">
-                  Aggiungi Nuova Carta
-                </h2>
-                <p className="text-white/60 text-sm">
-                  Sicurezza garantita PCI DSS
-                </p>
+        <div className="p-4 pb-32 min-h-full">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/30 border border-red-500/40 rounded-xl">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-red-200 font-medium">Errore</p>
+                  <p className="text-red-300/90 text-sm">{error}</p>
+                </div>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              disabled={submitting}
-              className="text-white hover:bg-white/10 h-10 w-10"
-            >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
+          )}
 
-        {/* Scrollable Content */}
-        <div 
-          className="flex-1 overflow-y-auto bg-black/95 relative"
-          style={{
-            WebkitOverflowScrolling: 'touch',
-            overscrollBehavior: 'contain',
-            scrollBehavior: 'smooth'
-          }}
-        >
-          <div className="p-4 pb-32 min-h-full">
-            {/* Error Message */}
-            {error && (
-              <div className="mb-6 p-4 bg-red-900/30 border border-red-500/40 rounded-xl">
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="w-5 h-5 text-red-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="text-red-200 font-medium">Errore</p>
-                    <p className="text-red-300/90 text-sm">{error}</p>
-                  </div>
+          <form onSubmit={handleSubmit} className="space-y-6 max-w-sm mx-auto">
+            {/* Card Number */}
+            <div className="space-y-3">
+              <Label htmlFor="cardNumber" className="text-white font-medium text-base">
+                💳 Numero Carta
+              </Label>
+              <Input
+                id="cardNumber"
+                type="text"
+                value={cardData.cardNumber}
+                onChange={handleCardNumberChange}
+                placeholder="1234 5678 9012 3456"
+                maxLength={19}
+                autoFocus
+                disabled={submitting}
+                className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-lg font-mono rounded-lg"
+                required
+              />
+            </div>
+
+            {/* Expiry & CVC */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-3">
+                <Label htmlFor="expiryMonth" className="text-white font-medium text-sm">Mese</Label>
+                <Input
+                  id="expiryMonth"
+                  type="text"
+                  value={cardData.expiryMonth}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 2 && (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 12))) {
+                      setCardData(prev => ({ ...prev, expiryMonth: value }));
+                      setError(null);
+                    }
+                  }}
+                  placeholder="MM"
+                  maxLength={2}
+                  disabled={submitting}
+                  className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-center font-mono rounded-lg"
+                  required
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="expiryYear" className="text-white font-medium text-sm">Anno</Label>
+                <Input
+                  id="expiryYear"
+                  type="text"
+                  value={cardData.expiryYear}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 4) {
+                      setCardData(prev => ({ ...prev, expiryYear: value }));
+                      setError(null);
+                    }
+                  }}
+                  placeholder="YYYY"
+                  maxLength={4}
+                  disabled={submitting}
+                  className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-center font-mono rounded-lg"
+                  required
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="cvc" className="text-white font-medium text-sm">CVC</Label>
+                <Input
+                  id="cvc"
+                  type="password"
+                  value={cardData.cvc}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '');
+                    if (value.length <= 4) {
+                      setCardData(prev => ({ ...prev, cvc: value }));
+                      setError(null);
+                    }
+                  }}
+                  placeholder="123"
+                  maxLength={4}
+                  disabled={submitting}
+                  className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-center font-mono rounded-lg"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Name on Card */}
+            <div className="space-y-3">
+              <Label htmlFor="nameOnCard" className="text-white font-medium text-base">
+                👤 Nome sulla Carta
+              </Label>
+              <Input
+                id="nameOnCard"
+                type="text"
+                value={cardData.nameOnCard}
+                onChange={(e) => {
+                  setCardData(prev => ({ ...prev, nameOnCard: e.target.value.toUpperCase() }));
+                  setError(null);
+                }}
+                placeholder="MARIO ROSSI"
+                disabled={submitting}
+                className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 uppercase text-lg rounded-lg"
+                required
+              />
+            </div>
+
+            {/* Save for Future Payments */}
+            <div className="bg-[#00D1FF]/10 border border-[#00D1FF]/30 rounded-xl p-4">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="saveForFuture"
+                  checked={cardData.saveForFuture}
+                  onCheckedChange={(checked) => {
+                    setCardData(prev => ({ ...prev, saveForFuture: !!checked }));
+                  }}
+                  disabled={submitting}
+                  className="border-[#00D1FF]/50 data-[state=checked]:bg-[#00D1FF] data-[state=checked]:border-[#00D1FF]"
+                />
+                <div className="flex-1">
+                  <Label htmlFor="saveForFuture" className="text-[#00D1FF] font-medium cursor-pointer">
+                    💾 Salva per pagamenti futuri
+                  </Label>
+                  <p className="text-white/60 text-sm">
+                    Sicuro e crittografato tramite Stripe PCI DSS
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Notice */}
+            <div className="bg-green-900/30 border border-green-500/40 rounded-xl p-4 mt-6">
+              <div className="flex items-start space-x-3">
+                <Shield className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                <div className="text-green-100">
+                  <p className="font-semibold mb-2 text-sm flex items-center">
+                    <Lock className="w-4 h-4 mr-1" />
+                    Sicurezza Garantita PCI DSS Level 1
+                  </p>
+                  <p className="text-green-200/90 text-sm leading-relaxed">
+                    I dati della carta vengono tokenizzati e crittografati immediatamente tramite Stripe. 
+                    M1SSION™ non memorizza mai i numeri di carta completi.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Brand Detection */}
+            {cardData.cardNumber && (
+              <div className="text-center">
+                <div className="inline-flex items-center px-3 py-2 bg-white/10 rounded-lg">
+                  <CreditCard className="w-4 h-4 mr-2 text-[#00D1FF]" />
+                  <span className="text-white/80 text-sm font-medium">
+                    {getBrandFromNumber(cardData.cardNumber)} Rilevata
+                  </span>
                 </div>
               </div>
             )}
-
-            <form onSubmit={handleSubmit} className="space-y-6 max-w-sm mx-auto">
-              {/* Card Number */}
-              <div className="space-y-3">
-                <Label htmlFor="cardNumber" className="text-white font-medium text-base">
-                  💳 Numero Carta
-                </Label>
-                <Input
-                  id="cardNumber"
-                  type="text"
-                  value={cardData.cardNumber}
-                  onChange={handleCardNumberChange}
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
-                  autoFocus
-                  disabled={submitting}
-                  className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-lg font-mono rounded-lg"
-                  required
-                />
-              </div>
-
-              {/* Expiry & CVC */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-3">
-                  <Label htmlFor="expiryMonth" className="text-white font-medium text-sm">Mese</Label>
-                  <Input
-                    id="expiryMonth"
-                    type="text"
-                    value={cardData.expiryMonth}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 2 && (value === '' || (parseInt(value) >= 1 && parseInt(value) <= 12))) {
-                        setCardData(prev => ({ ...prev, expiryMonth: value }));
-                        setError(null);
-                      }
-                    }}
-                    placeholder="MM"
-                    maxLength={2}
-                    disabled={submitting}
-                    className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-center font-mono rounded-lg"
-                    required
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="expiryYear" className="text-white font-medium text-sm">Anno</Label>
-                  <Input
-                    id="expiryYear"
-                    type="text"
-                    value={cardData.expiryYear}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 4) {
-                        setCardData(prev => ({ ...prev, expiryYear: value }));
-                        setError(null);
-                      }
-                    }}
-                    placeholder="YYYY"
-                    maxLength={4}
-                    disabled={submitting}
-                    className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-center font-mono rounded-lg"
-                    required
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="cvc" className="text-white font-medium text-sm">CVC</Label>
-                  <Input
-                    id="cvc"
-                    type="password"
-                    value={cardData.cvc}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/\D/g, '');
-                      if (value.length <= 4) {
-                        setCardData(prev => ({ ...prev, cvc: value }));
-                        setError(null);
-                      }
-                    }}
-                    placeholder="123"
-                    maxLength={4}
-                    disabled={submitting}
-                    className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 text-center font-mono rounded-lg"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Name on Card */}
-              <div className="space-y-3">
-                <Label htmlFor="nameOnCard" className="text-white font-medium text-base">
-                  👤 Nome sulla Carta
-                </Label>
-                <Input
-                  id="nameOnCard"
-                  type="text"
-                  value={cardData.nameOnCard}
-                  onChange={(e) => {
-                    setCardData(prev => ({ ...prev, nameOnCard: e.target.value.toUpperCase() }));
-                    setError(null);
-                  }}
-                  placeholder="MARIO ROSSI"
-                  disabled={submitting}
-                  className="bg-black/40 border-[#00D1FF]/50 text-white placeholder:text-white/40 focus:border-[#00D1FF] focus:ring-[#00D1FF]/30 h-14 uppercase text-lg rounded-lg"
-                  required
-                />
-              </div>
-
-              {/* Save for Future Payments */}
-              <div className="bg-[#00D1FF]/10 border border-[#00D1FF]/30 rounded-xl p-4">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="saveForFuture"
-                    checked={cardData.saveForFuture}
-                    onCheckedChange={(checked) => {
-                      setCardData(prev => ({ ...prev, saveForFuture: !!checked }));
-                    }}
-                    disabled={submitting}
-                    className="border-[#00D1FF]/50 data-[state=checked]:bg-[#00D1FF] data-[state=checked]:border-[#00D1FF]"
-                  />
-                  <div className="flex-1">
-                    <Label htmlFor="saveForFuture" className="text-[#00D1FF] font-medium cursor-pointer">
-                      💾 Salva per pagamenti futuri
-                    </Label>
-                    <p className="text-white/60 text-sm">
-                      Sicuro e crittografato tramite Stripe PCI DSS
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Security Notice */}
-              <div className="bg-green-900/30 border border-green-500/40 rounded-xl p-4 mt-6">
-                <div className="flex items-start space-x-3">
-                  <Shield className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-green-100">
-                    <p className="font-semibold mb-2 text-sm flex items-center">
-                      <Lock className="w-4 h-4 mr-1" />
-                      Sicurezza Garantita PCI DSS Level 1
-                    </p>
-                    <p className="text-green-200/90 text-sm leading-relaxed">
-                      I dati della carta vengono tokenizzati e crittografati immediatamente tramite Stripe. 
-                      M1SSION™ non memorizza mai i numeri di carta completi.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card Brand Detection */}
-              {cardData.cardNumber && (
-                <div className="text-center">
-                  <div className="inline-flex items-center px-3 py-2 bg-white/10 rounded-lg">
-                    <CreditCard className="w-4 h-4 mr-2 text-[#00D1FF]" />
-                    <span className="text-white/80 text-sm font-medium">
-                      {getBrandFromNumber(cardData.cardNumber)} Rilevata
-                    </span>
-                  </div>
-                </div>
-              )}
-            </form>
-          </div>
+          </form>
         </div>
+      </div>
 
-        {/* Fixed Footer */}
-        <div 
-          className="flex-shrink-0 bg-black/95 border-t border-[#00D1FF]/20 safe-area-bottom sticky bottom-0 z-10"
-          style={{ 
-            paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
-          }}
-        >
-          <div className="p-4 flex space-x-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={submitting}
-              className="flex-1 border-white/40 text-white hover:bg-white/10 h-12 font-medium rounded-lg"
-            >
-              Annulla
-            </Button>
-            <Button
-              type="submit"
-              disabled={submitting || !isFormValid}
-              onClick={handleSubmit}
-              className="flex-1 bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold h-12 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
-            >
-              {submitting ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin mr-2"></div>
-                  Salvando...
-                </div>
-              ) : (
-                <span className="flex items-center justify-center">
-                  💳 Salva Carta
-                </span>
-              )}
-            </Button>
-          </div>
+      {/* Fixed Footer */}
+      <div 
+        className="flex-shrink-0 bg-black/95 border-t border-[#00D1FF]/20 sticky bottom-0 z-10"
+        style={{ 
+          paddingBottom: 'max(16px, env(safe-area-inset-bottom))'
+        }}
+      >
+        <div className="p-4 flex space-x-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={submitting}
+            className="flex-1 border-white/40 text-white hover:bg-white/10 h-12 font-medium rounded-lg"
+          >
+            Annulla
+          </Button>
+          <Button
+            type="submit"
+            disabled={submitting || !isFormValid}
+            onClick={handleSubmit}
+            className="flex-1 bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold h-12 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
+          >
+            {submitting ? (
+              <div className="flex items-center justify-center">
+                <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin mr-2"></div>
+                Salvando...
+              </div>
+            ) : (
+              <span className="flex items-center justify-center">
+                💳 Salva Carta
+              </span>
+            )}
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 };
 
