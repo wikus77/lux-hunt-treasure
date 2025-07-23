@@ -21,9 +21,12 @@ export const useDailySpinCheck = () => {
   const { user, session } = useUnifiedAuth();
 
   const checkDailySpinStatus = async () => {
+    console.log('[SPIN-STATUS] Starting check', { hasUser: !!user, hasSession: !!session });
+    
     if (!user || !session) {
-      setIsLoading(false);
+      console.log('[SPIN-STATUS] No user/session - setting safe defaults');
       setSpinStatus({ hasPlayedToday: false, canPlay: false });
+      setIsLoading(false);
       return;
     }
 
@@ -31,47 +34,83 @@ export const useDailySpinCheck = () => {
       setIsLoading(true);
       setError(null);
 
-      // 🔥 FALLBACK DIRETTO AL DATABASE - No Edge Function per prevenire loop
+      // 🔥 CONTROLLO IMMEDIATO localStorage per prevenire race conditions
       const today = new Date().toISOString().split('T')[0];
-      
-      // Check localStorage first for immediate response
       const localSpinKey = `daily_spin_${user.id}_${today}`;
       const hasPlayedLocalStorage = localStorage.getItem(localSpinKey);
       
-      // Check database for today's spin
-      const { data: spinLogs, error: dbError } = await supabase
+      console.log('[SPIN-STATUS] localStorage check:', { key: localSpinKey, hasPlayed: !!hasPlayedLocalStorage });
+
+      // 🔥 DOPPIO CONTROLLO: Database + Edge Function con TIMEOUT
+      let dbSpinLog = null;
+      let edgeFunctionResult = null;
+
+      // Controllo database diretto
+      const { data: spinLog, error: dbError } = await supabase
         .from('daily_spin_logs')
         .select('*')
         .eq('user_id', user.id)
         .eq('date', today)
         .maybeSingle();
 
-      if (dbError && dbError.code !== 'PGRST116') { // PGRST116 = no rows found
-        throw dbError;
+      if (!dbError) {
+        dbSpinLog = spinLog;
+        console.log('[SPIN-STATUS] Database check:', { hasSpinLog: !!dbSpinLog });
       }
 
-      const hasPlayedToday = !!spinLogs || !!hasPlayedLocalStorage;
-      const canPlay = user && session && !hasPlayedToday;
+      // Edge function con timeout gestito tramite Promise.race
+      try {
+        const edgeFunctionPromise = supabase.functions.invoke(
+          'check-daily-spin',
+          {
+            headers: {
+              Authorization: `Bearer ${session.access_token}`,
+            }
+          }
+        );
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Edge function timeout')), 3000)
+        );
+
+        const { data: edgeData, error: functionError } = await Promise.race([
+          edgeFunctionPromise,
+          timeoutPromise
+        ]) as any;
+        
+        if (!functionError) {
+          edgeFunctionResult = edgeData;
+          console.log('[SPIN-STATUS] Edge function result:', edgeFunctionResult);
+        }
+      } catch (edgeError) {
+        console.warn('[SPIN-STATUS] Edge function failed/timeout:', edgeError);
+      }
+
+      // 🔥 LOGICA DETERMINISTICA: Se uno qualsiasi dice che ha giocato, allora ha giocato
+      const hasPlayedToday = !!hasPlayedLocalStorage || !!dbSpinLog || !!edgeFunctionResult?.hasPlayedToday;
+      const canPlay = !hasPlayedToday && !!user && !!session;
 
       const result: DailySpinStatus = {
         hasPlayedToday,
         canPlay,
-        todaysResult: spinLogs ? {
-          prize: spinLogs.prize,
-          rotation_deg: spinLogs.rotation_deg,
-          played_at: spinLogs.created_at
-        } : null
+        todaysResult: dbSpinLog ? {
+          prize: dbSpinLog.prize,
+          rotation_deg: dbSpinLog.rotation_deg,
+          played_at: dbSpinLog.created_at
+        } : edgeFunctionResult?.todaysResult || null
       };
 
+      console.log('[SPIN-STATUS] Final result:', result);
       setSpinStatus(result);
-      console.log('🎰 Daily Spin Status (Direct DB):', result);
 
     } catch (err) {
-      console.error('❌ Errore check daily spin:', err);
+      console.error('[SPIN-STATUS] Error:', err);
       setError(err instanceof Error ? err.message : 'Errore sconosciuto');
       
-      // 🔥 EMERGENCY FALLBACK - Set safe defaults to prevent infinite loop
-      setSpinStatus({ hasPlayedToday: false, canPlay: false });
+      // 🔥 EMERGENCY FALLBACK - SEMPRE valori sicuri per prevenire loop infinito
+      const emergencyResult = { hasPlayedToday: false, canPlay: false };
+      console.log('[SPIN-STATUS] Emergency fallback:', emergencyResult);
+      setSpinStatus(emergencyResult);
     } finally {
       setIsLoading(false);
     }
