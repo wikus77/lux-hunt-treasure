@@ -109,6 +109,51 @@ export const usePreRegistration = () => {
             }
           }
           
+          // Se non ha un profilo esistente, crea uno nuovo per l'utente esistente
+          console.log('🆕 Creating profile for existing auth user...');
+          
+          // Recupera l'utente esistente
+          const { data: existingAuthUser } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: temporaryPassword
+          });
+          
+          if (existingAuthUser.user) {
+            // Crea il profilo mancante
+            await supabase
+              .from('profiles')
+              .upsert({
+                id: existingAuthUser.user.id,
+                email: formData.email,
+                name: formData.name,
+                agent_code: newAgentCode,
+                is_pre_registered: true,
+                plan: 'Base',
+                credits: 100,
+                can_access_app: false
+              });
+              
+            setAgentCode(newAgentCode);
+            setReferralCode(`CODE ${newAgentCode}`);
+            setUserCredentials({
+              email: formData.email,
+              password: temporaryPassword
+            });
+            setNeedsEmailVerification(false);
+            setIsSuccess(true);
+            
+            toast.success(`Profilo sincronizzato! Codice Agente: ${newAgentCode}`, {
+              description: `Accesso ripristinato`,
+              duration: 5000
+            });
+            
+            setTimeout(() => {
+              window.location.href = `/choose-plan?agent_code=${newAgentCode}`;
+            }, 2000);
+            
+            return;
+          }
+          
           throw new Error('Email già registrato. Vai al login per accedere con le tue credenziali.');
         }
         throw new Error(authError.message);
