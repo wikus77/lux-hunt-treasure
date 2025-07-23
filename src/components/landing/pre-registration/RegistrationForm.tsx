@@ -21,6 +21,12 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({
   onInputChange,
   onSubmit,
 }) => {
+  console.log('🖥️ RegistrationForm render:', { 
+    isSubmitting, 
+    formDataFilled: !!(formData.name && formData.email),
+    error: !!error 
+  });
+  
   return (
     <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-4">
       <FormField

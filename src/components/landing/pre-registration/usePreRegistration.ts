@@ -55,8 +55,59 @@ export const usePreRegistration = () => {
 
       if (authError) {
         console.error('❌ SUPABASE AUTH ERROR:', authError);
-        if (authError.message.includes('already registered')) {
-          throw new Error('Email già registrato. Vai al login per accedere.');
+        if (authError.message.includes('already registered') || authError.message.includes('User already registered')) {
+          // Se l'utente è già registrato, prova a recuperare i suoi dati esistenti
+          console.log('🔄 User already exists, checking existing data...');
+          
+          // Recupera i dati esistenti dell'utente dalla tabella profiles
+          const { data: existingProfile } = await supabase
+            .from('profiles')
+            .select('agent_code, plan, email')
+            .eq('email', formData.email)
+            .single();
+            
+          if (existingProfile?.agent_code) {
+            // Usa il codice agente esistente per generare la password
+            const existingPassword = `AG${existingProfile.agent_code.slice(-4)}2025!`;
+            console.log('🔐 USING EXISTING PASSWORD:', existingPassword);
+            
+            // Prova il login con la password esistente
+            const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+              email: formData.email,
+              password: existingPassword
+            });
+            
+            if (!loginError && loginData.user) {
+              console.log('✅ DIRECT LOGIN SUCCESS:', loginData.user.id);
+              
+              setAgentCode(existingProfile.agent_code);
+              setReferralCode(`CODE ${existingProfile.agent_code}`);
+              setUserCredentials({
+                email: formData.email,
+                password: existingPassword
+              });
+              setNeedsEmailVerification(false);
+              setIsSuccess(true);
+              
+              toast.success(`Bentornato Agente ${existingProfile.agent_code}!`, {
+                description: `Accesso completato`,
+                duration: 5000
+              });
+              
+              // Redirect appropriato
+              setTimeout(() => {
+                if (!existingProfile.plan || existingProfile.plan === 'Base') {
+                  window.location.href = `/choose-plan?agent_code=${existingProfile.agent_code}`;
+                } else {
+                  window.location.href = '/how-it-works';
+                }
+              }, 2000);
+              
+              return; // Esci dalla funzione qui
+            }
+          }
+          
+          throw new Error('Email già registrato. Vai al login per accedere con le tue credenziali.');
         }
         throw new Error(authError.message);
       }

@@ -1,9 +1,12 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePreRegistration } from './pre-registration/usePreRegistration';
 import { RegistrationForm } from './pre-registration/RegistrationForm';
 import SuccessView from './pre-registration/SuccessView';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface PreRegistrationFormProps {
   countdownCompleted?: boolean;
@@ -12,6 +15,7 @@ interface PreRegistrationFormProps {
 const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({ 
   countdownCompleted = false 
 }) => {
+  const { isAuthenticated } = useUnifiedAuth();
   const {
     formData,
     isSubmitting,
@@ -31,8 +35,15 @@ const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
     agentCode, 
     referralCode, 
     userCredentials,
-    needsEmailVerification
+    needsEmailVerification,
+    isAuthenticated
   });
+
+  // Se l'utente è già autenticato, non mostrare il form
+  if (isAuthenticated) {
+    console.log('✅ User authenticated - hiding PreRegistrationForm');
+    return null;
+  }
 
   if (isSuccess) {
     console.log('✅ Rendering SuccessView with:', { referralCode, agentCode, userCredentials });

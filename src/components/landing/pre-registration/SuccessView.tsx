@@ -136,7 +136,10 @@ const SuccessView: React.FC<SuccessViewProps> = ({
         {!needsEmailVerification && userCredentials && (
           <Button 
             onClick={() => {
-              window.location.href = `/login?email=${encodeURIComponent(userCredentials.email)}&redirect=choose-plan&agent_code=${agentCode}`;
+              console.log('🚀 ACCEDI E SCEGLI PIANO clicked');
+              const url = `/login?email=${encodeURIComponent(userCredentials.email)}&redirect=choose-plan&agent_code=${agentCode}`;
+              console.log('🚀 Redirecting to:', url);
+              window.location.href = url;
             }}
             className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
           >
@@ -147,7 +150,10 @@ const SuccessView: React.FC<SuccessViewProps> = ({
         {needsEmailVerification && (
           <Button 
             onClick={() => {
-              window.location.href = `/login?email=${encodeURIComponent(userCredentials?.email || '')}&agent_code=${agentCode}`;
+              console.log('🔑 VAI AL LOGIN clicked');
+              const url = `/login?email=${encodeURIComponent(userCredentials?.email || '')}&agent_code=${agentCode}`;
+              console.log('🔑 Redirecting to:', url);
+              window.location.href = url;
             }}
             className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
           >
@@ -168,3 +174,5 @@ const SuccessView: React.FC<SuccessViewProps> = ({
 };
 
 export default SuccessView;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
