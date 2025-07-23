@@ -9,6 +9,7 @@ import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import LaunchCountdown from "@/components/login/LaunchCountdown";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
@@ -130,6 +131,9 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Launch Countdown */}
+        <LaunchCountdown />
+
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
