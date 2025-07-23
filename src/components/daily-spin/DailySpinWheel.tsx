@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useDailySpin } from '@/hooks/useDailySpin';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { DailySpinHeader } from './DailySpinHeader';
 import { DailySpin3DWheel } from './DailySpin3DWheel';
 import { DailySpinButton } from './DailySpinButton';
@@ -18,7 +16,6 @@ export const DailySpinWheel: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [wheelSize, setWheelSize] = useState(400);
   const { spinWheel, isSpinning, error } = useDailySpin();
-  const { user, session } = useUnifiedAuth();
   const [cosmeticResult, setCosmeticResult] = useState<any>(null);
 
   const handleSpin = async () => {
@@ -49,125 +46,23 @@ export const DailySpinWheel: React.FC = () => {
       message: "Grazie per aver partecipato! Continua la missione per vincere premi reali basati sulla tua abilità.",
       reroute_path: "/home"
     };
-
-    // 🔥 REGISTRA IMMEDIATAMENTE che l'utente ha giocato oggi nel database
-    try {
-      if (user && session) {
-        console.log('🎰 SALVATAGGIO IMMEDIATO Daily Spin nel database...');
-        const today = new Date().toISOString().split('T')[0];
-        
-        const { error: logError } = await supabase
-          .from('daily_spin_logs')
-          .insert({
-            user_id: user.id,
-            date: today,
-            prize: message,
-            rotation_deg: finalRotation
-          });
-          
-        if (logError) {
-          console.error('❌ Errore salvataggio daily spin:', logError);
-        } else {
-          console.log('✅ Daily Spin registrato con successo nel database');
-          
-          // 🔥 SALVA ANCHE IN LOCALSTORAGE come backup per IMMEDIATA prevenzione loop
-          localStorage.setItem(`daily_spin_${user.id}_${today}`, 'true');
-          console.log('✅ Daily Spin salvato anche in localStorage per prevenzione loop');
-        }
-      }
-    } catch (error) {
-      console.error('❌ Errore durante il salvataggio Daily Spin:', error);
-    }
     
-    // Fine animazione dopo 4 secondi con REDIRECT FORZATO MULTIPLO BLINDATO
+    // Fine animazione dopo 4 secondi
     setTimeout(() => {
       setIsAnimating(false);
       setShowResult(true);
+      // Set cosmetic result directly without server call
       setCosmeticResult(newCosmeticResult);
-      
-      console.log('[SPIN-REDIRECT] Iniziando redirect forzato multiplo PWA-safe');
-      
-      // 🔥 REDIRECT FORZATO IMMEDIATO - Strategia multipla per massima compatibilità
-      const executeRedirects = () => {
-        let redirectCompleted = false;
-        
-        // Strategia 1: Wouter setLocation (primaria)
-        setTimeout(() => {
-          if (!redirectCompleted && window.location.pathname.includes('/daily-spin')) {
-            console.log('[SPIN-REDIRECT] Tentativo 1: wouter setLocation');
-            setLocation('/home');
-            
-            // Verifica se ha funzionato
-            setTimeout(() => {
-              if (window.location.pathname.includes('/daily-spin')) {
-                console.log('[SPIN-REDIRECT] Wouter fallito, continuando...');
-              } else {
-                redirectCompleted = true;
-                console.log('[SPIN-REDIRECT] ✅ Wouter riuscito');
-              }
-            }, 100);
-          }
-        }, 100);
-        
-        // Strategia 2: window.location.href (PWA iOS Safari)
-        setTimeout(() => {
-          if (!redirectCompleted && window.location.pathname.includes('/daily-spin')) {
-            console.log('[SPIN-REDIRECT] Tentativo 2: window.location.href');
-            window.location.href = '/home';
-            redirectCompleted = true;
-          }
-        }, 500);
-        
-        // Strategia 3: window.location.replace (emergenza)
-        setTimeout(() => {
-          if (!redirectCompleted && window.location.pathname.includes('/daily-spin')) {
-            console.log('[SPIN-REDIRECT] Tentativo 3: window.location.replace');
-            window.location.replace('/home');
-            redirectCompleted = true;
-          }
-        }, 1000);
-        
-        // Strategia 4: Alert + reload (ultimo resort)
-        setTimeout(() => {
-          if (!redirectCompleted && window.location.pathname.includes('/daily-spin')) {
-            console.log('[SPIN-REDIRECT] Tentativo 4: alert + reload');
-            alert('Accesso completato. Stiamo caricando la tua esperienza...');
-            window.location.replace('/home');
-          }
-        }, 1500);
-      };
-      
-      executeRedirects();
     }, 4000);
   };
 
   const handleRedirect = () => {
-    console.log('🚀 DailySpinWheel: handleRedirect chiamato - FORZANDO redirect multiplo');
-    
-    // Metodo primario
     setLocation('/home');
-    
-    // Fallback per PWA
-    setTimeout(() => {
-      if (window.location.pathname.includes('/daily-spin')) {
-        window.location.href = '/home';
-      }
-    }, 300);
   };
 
   const handleCloseModal = () => {
-    console.log('🚀 DailySpinWheel: handleCloseModal chiamato - FORZANDO redirect multiplo');
     setShowResult(false);
-    
-    // Metodo primario
     setLocation('/home');
-    
-    // Fallback per PWA
-    setTimeout(() => {
-      if (window.location.pathname.includes('/daily-spin')) {
-        window.location.href = '/home';
-      }
-    }, 300);
   };
 
   // Handle responsive wheel size
@@ -181,47 +76,13 @@ export const DailySpinWheel: React.FC = () => {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 🔥 AUTO-REDIRECT EFFECT POTENZIATO - Forzato e immediato per prevenire blocchi
+  // Auto-close effect for cosmetic wheel
   useEffect(() => {
     if (cosmeticResult && showResult) {
-      console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER ATTIVATO (1s)');
-      
-      // 🚀 REDIRECT IMMEDIATO MULTIPLO
       const timer = setTimeout(() => {
-        console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER TRIGGERED - FORZANDO redirect a /home');
-        
-        // Primary redirect
         setLocation('/home');
-        
-        // PWA iOS Safari fallback
-        setTimeout(() => {
-          if (window.location.pathname.includes('/daily-spin')) {
-            console.log('🔄 PWA Fallback: window.location.href = /home');
-            window.location.href = '/home';
-          }
-        }, 100);
-        
-        // Emergency fallback
-        setTimeout(() => {
-          if (window.location.pathname.includes('/daily-spin')) {
-            console.log('🔄 Emergency Fallback: window.location.replace = /home');
-            window.location.replace('/home');
-          }
-        }, 300);
-        
-        // Ultimate fallback with alert
-        setTimeout(() => {
-          if (window.location.pathname.includes('/daily-spin')) {
-            alert('Accesso completato. Stiamo caricando la tua esperienza...');
-            window.location.replace('/home');
-          }
-        }, 1000);
-      }, 1000); // 🔥 Ridotto a 1 secondo per redirect più veloce
-      
-      return () => {
-        console.log('🚀 DailySpinWheel: clearing auto-redirect timer');
-        clearTimeout(timer);
-      };
+      }, 3000); // 3 seconds for auto-close
+      return () => clearTimeout(timer);
     }
   }, [cosmeticResult, showResult, setLocation]);
 

@@ -98,65 +98,47 @@ const Login = () => {
     };
   }, []);
 
-  // 🔄 REDIRECT AUTHENTICATED USERS - POTENZIATO per prevenire loop
+  // 🔄 REDIRECT AUTHENTICATED USERS - Enhanced
   useEffect(() => {
     if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
-      console.log('🔄 LOGIN PAGE: User already authenticated, checking profile status');
+      console.log('🔄 LOGIN PAGE: User already authenticated, checking pre-registration status');
       
       // Check if user is pre-registered and needs plan selection
-      const checkUserStatusSecure = async () => {
-        try {
-          const { data: { user: currentUser } } = await supabase.auth.getUser();
-          if (!currentUser) return;
+      const checkUserStatus = async () => {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) return;
 
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('plan, is_pre_registered, agent_code, can_access_app')
-            .eq('id', currentUser.id)
-            .single();
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('plan, is_pre_registered, agent_code, can_access_app')
+          .eq('id', currentUser.id)
+          .single();
 
-          console.log('🔍 PROFILO UTENTE:', profile);
+        console.log('🔍 User profile check:', profile);
 
-          if (profile?.is_pre_registered) {
-            // Check if there's a specific redirect requested
-            if (redirectAfterLogin === 'choose-plan') {
-              console.log('🎯 REDIRECT FORZATO a choose-plan richiesto');
-              navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
-              return;
-            }
-            
-            // 🔥 CONTROLLO DAILY SPIN: Se ha già giocato oggi, vai direttamente alla home
-            const today = new Date().toISOString().split('T')[0];
-            const localSpinKey = `daily_spin_${currentUser.id}_${today}`;
-            const hasPlayedLocalStorage = localStorage.getItem(localSpinKey);
-            
-            console.log('🎰 CONTROLLO DAILY SPIN localStorage:', hasPlayedLocalStorage);
-            
-            if (hasPlayedLocalStorage) {
-              console.log('🏠 UTENTE ha già giocato oggi (localStorage) - redirect DIRETTO a home');
-              forceRedirectToHome('USER_ALREADY_PLAYED_TODAY_LOCALSTORAGE');
-              return;
-            }
-            
-            // Se è pre-registrato ma non ha piano o ha piano Base, va alla scelta piano
-            if (!profile.plan || profile.plan === 'base' || profile.plan === 'Base') {
-              console.log('🎯 Pre-registered user senza piano - redirect a choose-plan');
-              navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
-            } else {
-              // Ha già un piano, va alla home invece che how-it-works
-              console.log('🎯 Pre-registered user con piano - redirect a home');
-              forceRedirectToHome('PRE_REGISTERED_USER_WITH_PLAN');
-            }
-          } else {
-            forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
+        if (profile?.is_pre_registered) {
+          // Check if there's a specific redirect requested
+          if (redirectAfterLogin === 'choose-plan') {
+            console.log('🎯 Forced redirect to choose-plan requested');
+            navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
+            return;
           }
-        } catch (error) {
-          console.error('❌ Errore check user status:', error);
-          forceRedirectToHome('ERROR_CHECKING_STATUS');
+          
+          // Se è pre-registrato ma non ha piano o ha piano Base, va alla scelta piano
+          if (!profile.plan || profile.plan === 'Base') {
+            console.log('🎯 Pre-registered user without plan - redirecting to choose-plan');
+            navigate('/choose-plan' + (profile.agent_code ? `?agent_code=${profile.agent_code}` : ''));
+          } else {
+            // Ha già un piano, va alla how-it-works o home in base alla missione
+            console.log('🎯 Pre-registered user with plan - redirecting to how-it-works');
+            navigate('/how-it-works');
+          }
+        } else {
+          forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
         }
       };
 
-      checkUserStatusSecure();
+      checkUserStatus();
     }
   }, [isAuthenticated, isLoading, missionStarted, redirectAfterLogin]);
 

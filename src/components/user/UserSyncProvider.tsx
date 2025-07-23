@@ -21,7 +21,7 @@ interface UserSyncContextType {
   logAction: (action: string, details?: any) => Promise<any>;
   syncPermissions: () => Promise<boolean>;
   sendNotification: (type: 'email' | 'push' | 'in_app', title: string, message: string, metadata?: any) => Promise<any>;
-  handlePlanUpgrade: (newPlan: string, paymentIntentId?: string, amount?: number) => Promise<boolean>;
+  handlePlanUpgrade: (newPlan: string) => Promise<boolean>;
   markNotificationRead: (notificationId: string) => Promise<boolean>;
   hasPermission: (permissionType: string) => boolean;
   refreshSync: () => Promise<void>;
@@ -47,14 +47,14 @@ export const UserSyncProvider: React.FC<UserSyncProviderProps> = ({ children }) 
   const userSync = useUserSync();
 
   // Handle plan upgrades with comprehensive notifications
-  const handlePlanUpgradeWithNotifications = async (newPlan: string, paymentIntentId?: string, amount?: number): Promise<boolean> => {
+  const handlePlanUpgradeWithNotifications = async (newPlan: string): Promise<boolean> => {
     const user = getCurrentUser();
     if (!user) return false;
 
     const oldPlan = userSync.syncState.plan;
     
     // Perform the upgrade
-    const success = await userSync.handlePlanUpgrade(newPlan, paymentIntentId, amount);
+    const success = await userSync.handlePlanUpgrade(newPlan);
     
     if (success) {
       // Send comprehensive notifications

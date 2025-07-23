@@ -1,8 +1,6 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
 import { useMemo } from 'react';
 import { useI18n } from '@/intl/useI18n';
-import { useUserSync } from '@/hooks/useUserSync';
+import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 import plansConfig from '@/config/plans.config.json';
 
 interface PlanInfo {
@@ -30,23 +28,21 @@ interface UseUserPlanReturn {
   isTitanium: boolean;
   planPrice: number;
   loading: boolean;
-  canAccessApp: boolean;
-  accessStartsAt: string | null;
 }
 
 /**
- * Hook unificato per gestire il piano dell'utente con sincronizzazione totale
- * Legge direttamente dallo stato sincronizzato e restituisce i dati completi
+ * Hook per gestire il piano dell'utente corrente con localizzazione
+ * Legge il piano dal profilo utente e restituisce i dati completi dal config
  */
 export const useUserPlan = (): UseUserPlanReturn => {
   const { currentLang } = useI18n();
-  const { syncState } = useUserSync();
+  const { subscription } = useProfileSubscription();
   
   const planInfo = useMemo((): PlanInfo | null => {
-    if (!syncState.plan) return null;
+    if (!subscription?.plan) return null;
     
     // Normalizza il nome del piano per il matching con plans.config.json
-    const normalizedPlan = syncState.plan.toLowerCase();
+    const normalizedPlan = subscription.plan.toLowerCase();
     const planConfig = plansConfig.find(plan => plan.id === normalizedPlan);
     if (!planConfig) return null;
     
@@ -59,7 +55,7 @@ export const useUserPlan = (): UseUserPlanReturn => {
       supporto: planConfig.supporto,
       note: planConfig.note[currentLang] || planConfig.note.en
     };
-  }, [syncState.plan, currentLang]);
+  }, [subscription?.plan, currentLang]);
   
   const planLabel = planInfo?.label || '';
   const cluesMax = planInfo?.cluesPerWeek || 0;
@@ -69,7 +65,7 @@ export const useUserPlan = (): UseUserPlanReturn => {
   const planPrice = planInfo?.price || 0;
   
   // Determina tipo di piano (normalizzato)
-  const currentPlan = syncState.plan?.toLowerCase() || 'base';
+  const currentPlan = subscription?.plan?.toLowerCase() || 'base';
   const isPremium = currentPlan !== 'base';
   const isBase = currentPlan === 'base';
   const isSilver = currentPlan === 'silver';
@@ -91,8 +87,6 @@ export const useUserPlan = (): UseUserPlanReturn => {
     isBlack,
     isTitanium,
     planPrice,
-    loading: syncState.isLoading,
-    canAccessApp: syncState.canAccessApp,
-    accessStartsAt: syncState.lastPlanChange
+    loading: false
   };
 };
