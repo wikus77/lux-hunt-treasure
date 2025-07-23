@@ -15,7 +15,8 @@ export const DailySpinWheel: React.FC = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [wheelSize, setWheelSize] = useState(400);
-  const { spinWheel, isSpinning, spinResult, error } = useDailySpin();
+  const { spinWheel, isSpinning, error } = useDailySpin();
+  const [cosmeticResult, setCosmeticResult] = useState<any>(null);
 
   const handleSpin = async () => {
     if (isSpinning || isAnimating) return;
@@ -38,7 +39,7 @@ export const DailySpinWheel: React.FC = () => {
     const message = getMessageFromRotation(finalRotation);
     
     // Simulate result for visual feedback only - NO PRIZES
-    const cosmeticResult = {
+    const newCosmeticResult = {
       success: true,
       prize: message,
       rotation_deg: finalRotation,
@@ -51,16 +52,12 @@ export const DailySpinWheel: React.FC = () => {
       setIsAnimating(false);
       setShowResult(true);
       // Set cosmetic result directly without server call
-      spinResult || (spinResult as any) = cosmeticResult;
+      setCosmeticResult(newCosmeticResult);
     }, 4000);
   };
 
   const handleRedirect = () => {
-    if (spinResult?.reroute_path) {
-      setLocation(spinResult.reroute_path);
-    } else {
-      setLocation('/home');
-    }
+    setLocation('/home');
   };
 
   const handleCloseModal = () => {
@@ -81,13 +78,13 @@ export const DailySpinWheel: React.FC = () => {
 
   // Auto-close effect for cosmetic wheel
   useEffect(() => {
-    if (spinResult && showResult) {
+    if (cosmeticResult && showResult) {
       const timer = setTimeout(() => {
         setLocation('/home');
       }, 3000); // 3 seconds for auto-close
       return () => clearTimeout(timer);
     }
-  }, [spinResult, showResult, setLocation]);
+  }, [cosmeticResult, showResult, setLocation]);
 
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
@@ -155,12 +152,12 @@ export const DailySpinWheel: React.FC = () => {
         />
         
         {/* Result Modal */}
-        {spinResult && (
+        {cosmeticResult && (
           <DailySpinResultModal
             isOpen={showResult}
-            prize={spinResult.prize}
-            message={spinResult.message}
-            reroute_path={spinResult.reroute_path}
+            prize={cosmeticResult.prize}
+            message={cosmeticResult.message}
+            reroute_path={cosmeticResult.reroute_path}
             onClose={handleCloseModal}
           />
         )}
