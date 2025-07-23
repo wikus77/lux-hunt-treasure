@@ -72,6 +72,23 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
       ],
       buttonText: 'Scegli Black',
       buttonColor: 'bg-gradient-to-r from-[#1A1A1A] to-[#333333] text-white hover:shadow-[0_0_15px_rgba(0,0,0,0.7)]'
+    },
+    {
+      title: '🔱 Titanium',
+      price: '€29.99',
+      period: '/mese',
+      highlight: false,
+      features: [
+        "Tutto incluso nel piano Black",
+        "Indizi esclusivi top-secret",
+        "Accesso anticipato 72h",
+        "Supporto Ultra Priority",
+        "Accesso a eventi IRL riservati",
+        "Accesso completo al M1SSION INTELLIGENCE PANEL™",
+        "Riconoscimento utente Titanium in App",
+      ],
+      buttonText: 'Scegli Titanium',
+      buttonColor: 'bg-gradient-to-r from-[#C8C8C8] via-[#FFFFFF] to-[#C8C8C8] text-black hover:shadow-[0_0_20px_rgba(200,200,200,0.8)]'
     }
   ];
 
@@ -95,7 +112,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
           {subscriptions.map((sub, index) => (
             <motion.div
               key={index}
