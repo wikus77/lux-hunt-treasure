@@ -237,69 +237,61 @@ export const useUserSync = () => {
     }
   }, [getCurrentUser]);
 
-  // Handle plan upgrade with full sync
-  const handlePlanUpgrade = useCallback(async (newPlan: string) => {
+  // Handle plan upgrade with full sync using edge function
+  const handlePlanUpgrade = useCallback(async (newPlan: string, paymentIntentId?: string, amount?: number) => {
     const user = getCurrentUser();
     if (!user) return false;
 
     try {
-      // Log the upgrade attempt
-      await logAction('plan_upgrade_initiated', { 
-        new_plan: newPlan,
-        current_plan: syncState.plan 
+      console.log(`🔄 M1SSION™ Plan upgrade starting: ${newPlan}`);
+
+      // Call the comprehensive plan update edge function
+      const { data, error } = await supabase.functions.invoke('handle-plan-update', {
+        body: {
+          user_id: user.id,
+          new_plan: newPlan,
+          event_type: newPlan === 'base' ? 'downgrade' : 'upgrade',
+          old_plan: syncState.plan,
+          amount: amount,
+          payment_intent_id: paymentIntentId
+        }
       });
 
-      // Update the plan in profiles table (this will trigger the database trigger)
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ 
-          plan: newPlan,
-          last_plan_change: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('❌ M1SSION™ Plan update error:', updateError);
-        await logAction('plan_upgrade_failed', { error: updateError.message, new_plan: newPlan });
+      if (error) {
+        console.error('❌ M1SSION™ Plan update edge function error:', error);
+        await logAction('plan_upgrade_failed', { 
+          error: error.message, 
+          new_plan: newPlan,
+          edge_function_error: true 
+        });
         return false;
       }
 
-      // Send upgrade notification
-      await sendNotification(
-        'in_app',
-        `Piano aggiornato a ${newPlan.toUpperCase()}!`,
-        `Il tuo piano è stato aggiornato con successo. Ora hai accesso a tutte le funzionalità ${newPlan}.`,
-        { plan: newPlan, upgraded_at: new Date().toISOString() }
-      );
-
-      // If early access plan, send early access notification
-      if (['silver', 'gold', 'black', 'titanium'].includes(newPlan.toLowerCase())) {
-        const earlyHours = {
-          silver: 2,
-          gold: 24,
-          black: 48,
-          titanium: 72
-        }[newPlan.toLowerCase()] || 0;
-
-        await sendNotification(
-          'email',
-          'Accesso Anticipato Attivato!',
-          `Congratulazioni! Il tuo piano ${newPlan.toUpperCase()} ti garantisce ${earlyHours}h di accesso anticipato alle missioni M1SSION™.`,
-          { early_access_hours: earlyHours, plan: newPlan }
-        );
+      if (!data?.success) {
+        console.error('❌ M1SSION™ Plan update failed:', data);
+        await logAction('plan_upgrade_failed', { 
+          error: data?.error || 'Unknown error', 
+          new_plan: newPlan 
+        });
+        return false;
       }
 
-      // Reload sync status
+      console.log('✅ M1SSION™ Plan upgrade completed:', data);
+
+      // Reload sync status to get the latest data
       await loadSyncStatus();
       
-      console.log('✅ M1SSION™ Plan upgrade completed:', newPlan);
       return true;
     } catch (error) {
-      console.error('❌ M1SSION™ Plan upgrade failed:', error);
-      await logAction('plan_upgrade_failed', { error: error.message, new_plan: newPlan });
+      console.error('❌ M1SSION™ Plan upgrade exception:', error);
+      await logAction('plan_upgrade_failed', { 
+        error: error.message, 
+        new_plan: newPlan,
+        exception: true 
+      });
       return false;
     }
-  }, [getCurrentUser, syncState.plan, logAction, sendNotification, loadSyncStatus]);
+  }, [getCurrentUser, syncState.plan, logAction, loadSyncStatus]);
 
   // Check if user can access app based on plan and timing
   const canUserAccessApp = useCallback(() => {

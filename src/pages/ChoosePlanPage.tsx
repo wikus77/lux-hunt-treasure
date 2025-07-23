@@ -154,9 +154,15 @@ const ChoosePlanPage: React.FC = () => {
   const handlePlanSelection = async (planId: string) => {
     if (planId === 'Base') {
       try {
-        await handlePlanUpgrade('Base');
-        toast.success('Piano Base attivato!');
-        setLocation('/how-it-works');
+        const success = await handlePlanUpgrade('Base');
+        if (success) {
+          toast.success('🎯 Piano Base attivato!', {
+            description: 'Ora puoi accedere alle missioni base di M1SSION™'
+          });
+          setLocation('/how-it-works');
+        } else {
+          toast.error('Errore durante l\'attivazione del piano Base');
+        }
       } catch (error) {
         toast.error('Errore durante l\'attivazione del piano Base');
       }
@@ -192,18 +198,55 @@ const ChoosePlanPage: React.FC = () => {
     try {
       await handlePaymentSuccess(paymentIntentId);
       
+      const planName = paymentConfig?.plan || 'unknown';
+      
+      // Usa il nuovo sistema per aggiornare il piano con tutte le notifiche
+      const success = await handlePlanUpgrade(planName, paymentIntentId);
+      
       await logAction('plan_payment_completed', { 
-        plan: paymentConfig?.plan,
+        plan: planName,
         agent_code: agentCode,
-        payment_intent_id: paymentIntentId
+        payment_intent_id: paymentIntentId,
+        sync_success: success
       });
 
-      toast.success(`🎉 Piano ${paymentConfig?.plan} attivato con successo!`);
+      if (success) {
+        const planEmojis = {
+          silver: '🥈',
+          gold: '🏆', 
+          black: '⚫',
+          titanium: '💎'
+        };
+        
+        const emoji = planEmojis[planName.toLowerCase() as keyof typeof planEmojis] || '🎯';
+        
+        toast.success(`${emoji} Piano ${planName.toUpperCase()} Attivato!`, {
+          description: 'Email di benvenuto inviata! Controlla la tua casella.',
+          duration: 6000
+        });
+        
+        // Mostra notifica di accesso anticipato per piani premium
+        if (['silver', 'gold', 'black', 'titanium'].includes(planName.toLowerCase())) {
+          const earlyHours = {
+            silver: 2,
+            gold: 24,
+            black: 48,
+            titanium: 72
+          }[planName.toLowerCase()] || 0;
+          
+          toast.info(`⏰ Accesso Anticipato Attivo!`, {
+            description: `Hai ${earlyHours}h di vantaggio sulle missioni!`,
+            duration: 8000
+          });
+        }
+      } else {
+        toast.error('Piano pagato ma sincronizzazione fallita - contatta il supporto');
+      }
       
       // Reindirizza alla how-it-works dopo un breve delay
       setTimeout(() => {
         setLocation('/how-it-works');
-      }, 2000);
+      }, 3000);
       
     } catch (error) {
       console.error('Errore durante la finalizzazione del pagamento:', error);

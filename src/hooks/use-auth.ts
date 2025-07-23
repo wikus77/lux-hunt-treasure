@@ -58,6 +58,53 @@ export const useAuth = () => {
       }
 
       console.log('✅ REGISTRATION SUCCESS');
+      
+      // 🔧 FALLBACK MANUALE: Verifica che il profilo sia stato creato dal trigger
+      // Se non esiste, lo creiamo manualmente
+      if (data.user) {
+        console.log('🔍 Verifico esistenza profilo per:', data.user.id);
+        
+        setTimeout(async () => {
+          try {
+            const { data: existingProfile, error: profileError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', data.user.id)
+              .single();
+            
+            if (profileError || !existingProfile) {
+              console.log('⚠️ Profilo mancante - creazione manuale fallback');
+              
+              // Genera un agent code usando la funzione DB
+              const { data: agentCodeData } = await supabase.rpc('generate_agent_code');
+              const agentCode = agentCodeData || `AG-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+              
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: data.user.id,
+                  email: data.user.email,
+                  agent_code: agentCode,
+                  plan: 'base',
+                  credits: 100,
+                  can_access_app: false,
+                  is_pre_registered: true
+                });
+              
+              if (insertError) {
+                console.error('❌ Fallback profile creation failed:', insertError);
+              } else {
+                console.log('✅ Fallback profile created successfully');
+              }
+            } else {
+              console.log('✅ Profilo già presente dal trigger');
+            }
+          } catch (fallbackError) {
+            console.error('💥 Fallback verification failed:', fallbackError);
+          }
+        }, 1000); // Aspetta 1 secondo per il trigger
+      }
+      
       return { success: true, data };
 
     } catch (error: any) {
