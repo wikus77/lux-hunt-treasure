@@ -261,7 +261,16 @@ const PaymentSettings: React.FC = () => {
               <CreditCard className="w-5 h-5 mr-2" />
               Metodi di Pagamento
             </div>
-            <AddCardDialog onAddCard={addNewPaymentMethod} loading={loading} />
+            <AddCardDialog onAddCard={addNewPaymentMethod} loading={loading}>
+              <Button
+                disabled={loading}
+                size="sm"
+                className="bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Aggiungi
+              </Button>
+            </AddCardDialog>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
