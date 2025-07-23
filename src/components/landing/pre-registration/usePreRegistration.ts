@@ -40,7 +40,9 @@ export const usePreRegistration = () => {
           name: formData.name,
           email: formData.email,
           agent_code: newAgentCode,
-          is_verified: false
+          is_verified: false,
+          is_pre_registered: true,
+          password_hash: null
         })
         .select()
         .single();

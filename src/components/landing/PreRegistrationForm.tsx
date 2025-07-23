@@ -18,6 +18,8 @@ const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
     isSuccess,
     error,
     referralCode,
+    agentCode,
+    needsEmailVerification,
     handleInputChange,
     handleSubmit,
     resetForm
@@ -26,7 +28,9 @@ const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
   if (isSuccess) {
     return (
       <SuccessView 
-        referralCode={referralCode} 
+        referralCode={referralCode}
+        agentCode={agentCode}
+        needsEmailVerification={needsEmailVerification}
         onReset={resetForm}
       />
     );

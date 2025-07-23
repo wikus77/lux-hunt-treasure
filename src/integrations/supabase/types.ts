@@ -1268,7 +1268,8 @@ export type Database = {
           id: string
           is_pre_registered: boolean
           is_verified: boolean | null
-          password_hash: string
+          name: string | null
+          password_hash: string | null
         }
         Insert: {
           agent_code?: string | null
@@ -1277,7 +1278,8 @@ export type Database = {
           id?: string
           is_pre_registered?: boolean
           is_verified?: boolean | null
-          password_hash: string
+          name?: string | null
+          password_hash?: string | null
         }
         Update: {
           agent_code?: string | null
@@ -1286,7 +1288,8 @@ export type Database = {
           id?: string
           is_pre_registered?: boolean
           is_verified?: boolean | null
-          password_hash?: string
+          name?: string | null
+          password_hash?: string | null
         }
         Relationships: []
       }

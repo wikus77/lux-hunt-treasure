@@ -7,11 +7,15 @@ import { toast } from "sonner";
 
 interface SuccessViewProps {
   referralCode: string;
+  agentCode?: string;
+  needsEmailVerification?: boolean;
   onReset: () => void;
 }
 
 const SuccessView: React.FC<SuccessViewProps> = ({
   referralCode,
+  agentCode,
+  needsEmailVerification = false,
   onReset
 }) => {
   const handleCopyReferralCode = () => {
@@ -30,10 +34,39 @@ const SuccessView: React.FC<SuccessViewProps> = ({
         <UserPlus className="text-[#00E5FF] h-8 w-8" />
       </div>
       <h3 className="text-xl font-bold text-white mb-2">Pre-registrazione completata!</h3>
-      <p className="text-white/70 mb-6">
-        Hai ricevuto <span className="text-yellow-300">100 crediti</span> da utilizzare per le missioni al lancio.
-        Invita i tuoi amici per guadagnare crediti extra!
-      </p>
+      
+      {needsEmailVerification ? (
+        <div className="bg-cyan-500/10 border border-cyan-500/30 p-4 rounded-lg mb-6">
+          <p className="text-cyan-400 font-semibold mb-2">📧 Verifica la tua email</p>
+          <p className="text-white/70 text-sm">
+            Controlla la tua email per completare la verifica dell'indirizzo e attivare il tuo Codice Agente personale.
+          </p>
+        </div>
+      ) : (
+        <p className="text-white/70 mb-6">
+          Hai ricevuto <span className="text-yellow-300">100 crediti</span> da utilizzare per le missioni al lancio.
+          Invita i tuoi amici per guadagnare crediti extra!
+        </p>
+      )}
+      
+      {agentCode && (
+        <div className="bg-black/30 p-4 rounded-lg mb-4">
+          <p className="text-white/70 text-sm">Il tuo Codice Agente:</p>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <span className="text-xl font-mono text-cyan-400">{agentCode}</span>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText(agentCode);
+                toast.success("Codice Agente copiato!");
+              }} 
+              className="text-cyan-400 hover:text-cyan-300 transition-colors"
+              title="Copia codice"
+            >
+              <Copy size={18} />
+            </button>
+          </div>
+        </div>
+      )}
       
       <div className="bg-black/30 p-4 rounded-lg mb-6">
         <p className="text-white/70 text-sm">Il tuo codice di invito:</p>
