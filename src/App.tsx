@@ -15,6 +15,7 @@ import { useAuth } from "./hooks/use-auth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import { DailySpinRedirect } from "./components/daily-spin/DailySpinRedirect";
+import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
   console.log("🚀 App component rendering...");
@@ -65,6 +66,7 @@ function App() {
               onEmailNotVerified={handleEmailNotVerified}
             />
             <BuzzPaymentMonitor />
+            <LegalOnboarding />
             <DailySpinRedirect>
               <WouterRoutes />
             </DailySpinRedirect>
