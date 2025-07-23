@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useDailySpin } from '@/hooks/useDailySpin';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { DailySpinHeader } from './DailySpinHeader';
 import { DailySpin3DWheel } from './DailySpin3DWheel';
 import { DailySpinButton } from './DailySpinButton';
@@ -16,6 +18,7 @@ export const DailySpinWheel: React.FC = () => {
   const [showResult, setShowResult] = useState(false);
   const [wheelSize, setWheelSize] = useState(400);
   const { spinWheel, isSpinning, error } = useDailySpin();
+  const { user, session } = useUnifiedAuth();
   const [cosmeticResult, setCosmeticResult] = useState<any>(null);
 
   const handleSpin = async () => {
@@ -46,6 +49,31 @@ export const DailySpinWheel: React.FC = () => {
       message: "Grazie per aver partecipato! Continua la missione per vincere premi reali basati sulla tua abilità.",
       reroute_path: "/home"
     };
+
+    // Registra che l'utente ha giocato oggi nel database
+    try {
+      if (user && session) {
+        console.log('🎰 Registrando Daily Spin nel database...');
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { error: logError } = await supabase
+          .from('daily_spin_logs')
+          .insert({
+            user_id: user.id,
+            date: today,
+            prize: message,
+            rotation_deg: finalRotation
+          });
+          
+        if (logError) {
+          console.error('❌ Errore salvataggio daily spin:', logError);
+        } else {
+          console.log('✅ Daily Spin registrato con successo');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Errore durante il salvataggio:', error);
+    }
     
     // Fine animazione dopo 4 secondi
     setTimeout(() => {
