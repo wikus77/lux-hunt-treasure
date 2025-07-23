@@ -1427,6 +1427,7 @@ export type Database = {
           id: string
           investigative_style: string | null
           language: string | null
+          last_cookie_banner_shown: string | null
           last_name: string | null
           notifications_enabled: boolean | null
           phone: string | null
@@ -1463,6 +1464,7 @@ export type Database = {
           id: string
           investigative_style?: string | null
           language?: string | null
+          last_cookie_banner_shown?: string | null
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
@@ -1499,6 +1501,7 @@ export type Database = {
           id?: string
           investigative_style?: string | null
           language?: string | null
+          last_cookie_banner_shown?: string | null
           last_name?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null

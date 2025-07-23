@@ -9,6 +9,7 @@ import { Cookie, Settings, X, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
+import { useLocation } from 'wouter';
 
 interface CookiePreferences {
   essential: boolean;
@@ -20,6 +21,7 @@ interface CookiePreferences {
 const CookieBanner: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [location] = useLocation();
   const [showBanner, setShowBanner] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,42 +33,68 @@ const CookieBanner: React.FC = () => {
   });
 
   useEffect(() => {
-    checkCookieConsent();
-  }, [user]);
+    // Only show banner on homepage and only once per day
+    if (location === '/') {
+      checkCookieConsent();
+    }
+  }, [user, location]);
 
   const checkCookieConsent = async () => {
     try {
-      // Check localStorage first (for anonymous users)
-      const savedConsent = localStorage.getItem('cookie_consent');
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
       
       if (user) {
         // For authenticated users, check database
-        const { data, error } = await supabase
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('last_cookie_banner_shown')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error('Error loading profile data:', profileError);
+        }
+
+        // Check if banner was already shown today
+        if (profileData?.last_cookie_banner_shown === today) {
+          console.log('🍪 Cookie banner already shown today, skipping');
+          return;
+        }
+
+        // Check if user has preferences set
+        const { data: cookieData, error: cookieError } = await supabase
           .from('user_cookie_preferences')
           .select('*')
           .eq('user_id', user.id)
           .single();
 
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error loading cookie preferences:', error);
+        if (cookieError && cookieError.code !== 'PGRST116') {
+          console.error('Error loading cookie preferences:', cookieError);
         }
 
-        if (data) {
+        if (cookieData) {
           setPreferences({
-            essential: data.essential_cookies,
-            analytics: data.analytics_cookies,
-            marketing: data.marketing_cookies,
-            preferences: data.preferences_cookies
+            essential: cookieData.essential_cookies,
+            analytics: cookieData.analytics_cookies,
+            marketing: cookieData.marketing_cookies,
+            preferences: cookieData.preferences_cookies
           });
           return; // User has already set preferences
         }
-      } else if (savedConsent) {
-        // Anonymous user has set preferences
-        setPreferences(JSON.parse(savedConsent));
-        return;
+      } else {
+        // For anonymous users, check localStorage with daily tracking
+        const savedConsent = localStorage.getItem('cookie_consent');
+        const lastShown = localStorage.getItem('cookie_banner_last_shown');
+        
+        if (lastShown === today && savedConsent) {
+          console.log('🍪 Cookie banner already shown today (anonymous), skipping');
+          setPreferences(JSON.parse(savedConsent));
+          return;
+        }
       }
 
-      // Show banner if no consent found
+      // Show banner if no consent found or not shown today
+      console.log('🍪 Showing cookie banner for first time today');
       setShowBanner(true);
     } catch (error) {
       console.error('Error checking cookie consent:', error);
@@ -133,6 +161,8 @@ const CookieBanner: React.FC = () => {
 
   const saveCookiePreferences = async (prefs: CookiePreferences) => {
     try {
+      const today = new Date().toISOString().split('T')[0];
+      
       if (user) {
         // Save to database for authenticated users
         const { error } = await supabase
@@ -153,9 +183,18 @@ const CookieBanner: React.FC = () => {
           cookie_consent: true
         }, { onConflict: 'user_id' });
 
+        // Update last_cookie_banner_shown in profiles
+        await supabase
+          .from('profiles')
+          .update({ last_cookie_banner_shown: today })
+          .eq('id', user.id);
+
+        console.log('🍪 Cookie preferences saved and banner timestamp updated');
       } else {
         // Save to localStorage for anonymous users
         localStorage.setItem('cookie_consent', JSON.stringify(prefs));
+        localStorage.setItem('cookie_banner_last_shown', today);
+        console.log('🍪 Cookie preferences saved to localStorage with daily tracking');
       }
 
       setPreferences(prefs);
