@@ -28,16 +28,33 @@ export const DailySpinRedirect: React.FC<DailySpinRedirectProps> = ({ children }
       location.includes('/login') ||
       location.includes('/register') ||
       location.includes('/auth') ||
-      location.includes('/choose-plan') ||
-      spinStatus?.hasPlayedToday // 🔥 PREVENZIONE LOOP ASSOLUTA
+      location.includes('/choose-plan')
     ) {
-      console.log('🚫 DailySpinRedirect: BLOCCATO', {
+      console.log('🚫 DailySpinRedirect: BLOCCATO per pagina/stato', {
         isLoading,
         hasUser: !!user,
         location,
         hasPlayedToday: spinStatus?.hasPlayedToday,
         canPlay: spinStatus?.canPlay
       });
+      return;
+    }
+
+    // 🔥 CONTROLLO IMMEDIATO localStorage per prevenire loop
+    if (user) {
+      const today = new Date().toISOString().split('T')[0];
+      const localSpinKey = `daily_spin_${user.id}_${today}`;
+      const hasPlayedLocalStorage = localStorage.getItem(localSpinKey);
+      
+      if (hasPlayedLocalStorage) {
+        console.log('🚫 DailySpinRedirect: BLOCCATO - utente ha già giocato oggi (localStorage)');
+        return;
+      }
+    }
+
+    // 🔥 CONTROLLO SPINSTATUS - Blocca se ha già giocato
+    if (spinStatus?.hasPlayedToday) {
+      console.log('🚫 DailySpinRedirect: BLOCCATO - utente ha già giocato oggi (spinStatus)');
       return;
     }
 

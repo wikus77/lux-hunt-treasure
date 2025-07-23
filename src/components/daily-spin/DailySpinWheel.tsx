@@ -153,30 +153,42 @@ export const DailySpinWheel: React.FC = () => {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 🔥 AUTO-REDIRECT EFFECT POTENZIATO - Ridotto a 1.5 secondi per redirect più veloce
+  // 🔥 AUTO-REDIRECT EFFECT POTENZIATO - Forzato e immediato per prevenire blocchi
   useEffect(() => {
     if (cosmeticResult && showResult) {
-      console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER ATTIVATO (1.5s)');
+      console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER ATTIVATO (1s)');
+      
+      // 🚀 REDIRECT IMMEDIATO MULTIPLO
       const timer = setTimeout(() => {
         console.log('🚀 DailySpinWheel: AUTO-REDIRECT TIMER TRIGGERED - FORZANDO redirect a /home');
         
-        // Triplo fallback per massima sicurezza
+        // Primary redirect
         setLocation('/home');
         
+        // PWA iOS Safari fallback
         setTimeout(() => {
           if (window.location.pathname.includes('/daily-spin')) {
-            console.log('🔄 Fallback 1: window.location.href');
+            console.log('🔄 PWA Fallback: window.location.href = /home');
             window.location.href = '/home';
           }
-        }, 200);
+        }, 100);
         
+        // Emergency fallback
         setTimeout(() => {
           if (window.location.pathname.includes('/daily-spin')) {
-            console.log('🔄 Fallback 2: window.location.replace');
+            console.log('🔄 Emergency Fallback: window.location.replace = /home');
             window.location.replace('/home');
           }
-        }, 500);
-      }, 1500); // 🔥 Ridotto da 3000 a 1500ms per redirect più veloce
+        }, 300);
+        
+        // Ultimate fallback with alert
+        setTimeout(() => {
+          if (window.location.pathname.includes('/daily-spin')) {
+            alert('Accesso completato. Stiamo caricando la tua esperienza...');
+            window.location.replace('/home');
+          }
+        }, 1000);
+      }, 1000); // 🔥 Ridotto a 1 secondo per redirect più veloce
       
       return () => {
         console.log('🚀 DailySpinWheel: clearing auto-redirect timer');
