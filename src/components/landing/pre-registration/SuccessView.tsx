@@ -82,13 +82,28 @@ const SuccessView: React.FC<SuccessViewProps> = ({
         </div>
       </div>
       
-      <Button 
-        onClick={onReset}
-        variant="outline"
-        className="border-white/20 text-white/80 hover:text-white hover:bg-white/10"
-      >
-        Registra un altro utente
-      </Button>
+      <div className="space-y-3">
+        <Button 
+          onClick={() => {
+            // Salva agent code per la pagina di scelta piano
+            if (agentCode) {
+              localStorage.setItem('tempAgentCode', agentCode);
+            }
+            window.location.href = `/choose-plan${agentCode ? `?agent_code=${agentCode}` : ''}`;
+          }}
+          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700"
+        >
+          🚀 Scegli il tuo Piano
+        </Button>
+        
+        <Button 
+          onClick={onReset}
+          variant="outline"
+          className="w-full border-white/20 text-white/80 hover:text-white hover:bg-white/10"
+        >
+          Registra un altro utente
+        </Button>
+      </div>
     </motion.div>
   );
 };
