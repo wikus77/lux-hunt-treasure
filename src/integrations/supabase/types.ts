@@ -1444,7 +1444,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          access_starts_at: string | null
           address: string | null
           agent_code: string | null
           agent_title: string | null
@@ -1487,7 +1486,6 @@ export type Database = {
           weekly_hints: string | null
         }
         Insert: {
-          access_starts_at?: string | null
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
@@ -1530,7 +1528,6 @@ export type Database = {
           weekly_hints?: string | null
         }
         Update: {
-          access_starts_at?: string | null
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
@@ -2370,48 +2367,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_plan_events: {
-        Row: {
-          amount: number | null
-          created_at: string | null
-          currency: string | null
-          event_type: string
-          id: string
-          metadata: Json | null
-          old_plan: string | null
-          plan: string
-          stripe_payment_intent_id: string | null
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          amount?: number | null
-          created_at?: string | null
-          currency?: string | null
-          event_type: string
-          id?: string
-          metadata?: Json | null
-          old_plan?: string | null
-          plan: string
-          stripe_payment_intent_id?: string | null
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          amount?: number | null
-          created_at?: string | null
-          currency?: string | null
-          event_type?: string
-          id?: string
-          metadata?: Json | null
-          old_plan?: string | null
-          plan?: string
-          stripe_payment_intent_id?: string | null
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_profiles: {
         Row: {
           address: string | null
@@ -2564,10 +2519,6 @@ export type Database = {
           block_reason?: string
         }
         Returns: undefined
-      }
-      calculate_access_start_time: {
-        Args: { p_plan: string }
-        Returns: string
       }
       calculate_buzz_price: {
         Args: { daily_count: number }
@@ -2821,17 +2772,6 @@ export type Database = {
       sync_user_permissions: {
         Args: { p_user_id: string }
         Returns: undefined
-      }
-      update_user_plan_complete: {
-        Args: {
-          p_user_id: string
-          p_new_plan: string
-          p_event_type?: string
-          p_old_plan?: string
-          p_amount?: number
-          p_payment_intent_id?: string
-        }
-        Returns: Json
       }
       update_user_subscription_tier: {
         Args: { target_user_id: string; new_tier: string }
