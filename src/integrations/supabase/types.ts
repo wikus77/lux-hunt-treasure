@@ -1260,6 +1260,30 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_registered_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          is_pre_registered: boolean
+          password_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          is_pre_registered?: boolean
+          password_hash: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          is_pre_registered?: boolean
+          password_hash?: string
+        }
+        Relationships: []
+      }
       pre_registrations: {
         Row: {
           confirmed: boolean
@@ -1426,6 +1450,7 @@ export type Database = {
           full_name: string | null
           id: string
           investigative_style: string | null
+          is_pre_registered: boolean | null
           language: string | null
           last_cookie_banner_shown: string | null
           last_name: string | null
@@ -1433,6 +1458,7 @@ export type Database = {
           phone: string | null
           plan: string | null
           postal_code: string | null
+          pre_registration_date: string | null
           preferred_language: string | null
           preferred_rewards: string[] | null
           recovery_key: string | null
@@ -1463,6 +1489,7 @@ export type Database = {
           full_name?: string | null
           id: string
           investigative_style?: string | null
+          is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
@@ -1470,6 +1497,7 @@ export type Database = {
           phone?: string | null
           plan?: string | null
           postal_code?: string | null
+          pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
           recovery_key?: string | null
@@ -1500,6 +1528,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           investigative_style?: string | null
+          is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
@@ -1507,6 +1536,7 @@ export type Database = {
           phone?: string | null
           plan?: string | null
           postal_code?: string | null
+          pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
           recovery_key?: string | null
@@ -2555,6 +2585,10 @@ export type Database = {
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
+      }
+      has_mission_started: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       has_role: {
         Args: { user_id: string; role_name: string }
