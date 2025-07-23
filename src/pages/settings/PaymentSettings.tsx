@@ -56,6 +56,8 @@ const PaymentSettings: React.FC = () => {
     expiryYear: string;
     cvc: string;
     nameOnCard: string;
+    saveForFuture?: boolean;
+    stripeToken?: string;
   }) => {
     if (!user) {
       console.error('❌ No user authenticated');
@@ -63,27 +65,39 @@ const PaymentSettings: React.FC = () => {
     }
 
     console.log('💳 Inizio processo aggiunta carta per user:', user.id);
+    console.log('💳 Stripe token ricevuto:', cardData.stripeToken);
     setLoading(true);
     
     try {
-      // Extract card brand from number
-      const firstDigit = cardData.cardNumber.replace(/\s/g, '')[0];
-      const brand = firstDigit === '4' ? 'Visa' : firstDigit === '5' ? 'Mastercard' : 'Visa';
+      // Enhanced card brand detection
+      const cleanNumber = cardData.cardNumber.replace(/\s/g, '');
+      const getBrand = (number: string) => {
+        if (number.startsWith('4')) return 'Visa';
+        if (number.startsWith('5') || number.startsWith('2')) return 'Mastercard';
+        if (number.startsWith('3')) return 'American Express';
+        if (number.startsWith('6')) return 'Discover';
+        return 'Visa';
+      };
+      
+      const brand = getBrand(cleanNumber);
+      const last4 = cleanNumber.slice(-4);
       
       const newMethod = {
         user_id: user.id, // Explicitly set user_id
         brand,
-        last4: cardData.cardNumber.replace(/\s/g, '').slice(-4),
+        last4,
         exp_month: parseInt(cardData.expiryMonth),
         exp_year: parseInt(cardData.expiryYear),
         is_default: paymentMethods.length === 0,
-        stripe_pm_id: `pm_${Math.random().toString(36).substring(2, 15)}`
+        stripe_pm_id: cardData.stripeToken || `pm_${Math.random().toString(36).substring(2, 15)}`
       };
 
       console.log('💳 Inserimento metodo di pagamento:', {
         brand: newMethod.brand,
         last4: newMethod.last4,
-        is_default: newMethod.is_default
+        is_default: newMethod.is_default,
+        stripe_token: newMethod.stripe_pm_id,
+        save_for_future: cardData.saveForFuture
       });
 
       const { data, error } = await supabase
@@ -104,7 +118,7 @@ const PaymentSettings: React.FC = () => {
       
       toast({
         title: "✅ Carta aggiunta con successo",
-        description: `${brand} ••••${newMethod.last4} è stata salvata correttamente.`
+        description: `${brand} ••••${newMethod.last4} è stata salvata correttamente${cardData.saveForFuture ? ' e impostata per pagamenti futuri' : ''}.`
       });
       
     } catch (error) {
