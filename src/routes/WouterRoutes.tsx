@@ -30,6 +30,7 @@ import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import SafeCreative from "@/pages/SafeCreative";
 import GameRules from "@/pages/GameRules";
+import HowItWorks from "@/pages/HowItWorks";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -165,6 +166,11 @@ const WouterRoutes: React.FC = () => {
           
           <Route path="/game-rules">
             <GlobalLayout><GameRules /></GlobalLayout>
+          </Route>
+          
+          {/* How It Works - Pre-registration landing */}
+          <Route path="/how-it-works">
+            <HowItWorks />
           </Route>
 
           {/* Auth routes */}

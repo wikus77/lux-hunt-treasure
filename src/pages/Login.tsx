@@ -1,5 +1,5 @@
 
-// © Joseph Mule – M1SSION™ App. All rights reserved.
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useState, useEffect, useRef } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Link } from "wouter";
@@ -10,9 +10,14 @@ import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import LaunchCountdown from "@/components/login/LaunchCountdown";
+import { PreRegistrationForm } from "@/components/auth/PreRegistrationForm";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [showPreRegistration, setShowPreRegistration] = useState(false);
+  const [missionStarted, setMissionStarted] = useState(false);
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -24,6 +29,22 @@ const Login = () => {
     return window.matchMedia('(display-mode: standalone)').matches || 
            (window.navigator as any).standalone === true;
   };
+
+  // Check if mission has started
+  useEffect(() => {
+    const checkMissionStatus = async () => {
+      try {
+        const { data, error } = await supabase.rpc('has_mission_started');
+        if (!error) {
+          setMissionStarted(data);
+        }
+      } catch (error) {
+        console.error('Error checking mission status:', error);
+      }
+    };
+
+    checkMissionStatus();
+  }, []);
 
   // 🚀 FORCE REDIRECT FUNCTION - PWA iOS Safari Optimized
   const forceRedirectToHome = (reason: string) => {
@@ -75,10 +96,27 @@ const Login = () => {
   // 🔄 REDIRECT AUTHENTICATED USERS - Enhanced
   useEffect(() => {
     if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
-      console.log('🔄 LOGIN PAGE: User already authenticated, initiating redirect');
-      forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
+      console.log('🔄 LOGIN PAGE: User already authenticated, checking pre-registration status');
+      
+      // Check if user is pre-registered and mission hasn't started
+      const checkUserStatus = async () => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_pre_registered, pre_registration_date')
+          .eq('id', (await supabase.auth.getUser()).data.user?.id)
+          .single();
+
+        if (profile?.is_pre_registered && !missionStarted) {
+          console.log('🎯 Pre-registered user - redirecting to how-it-works');
+          navigate('/how-it-works');
+        } else {
+          forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
+        }
+      };
+
+      checkUserStatus();
     }
-  }, [isAuthenticated, isLoading]);
+  }, [isAuthenticated, isLoading, missionStarted]);
 
   // ⏱️ FALLBACK TIMER - PWA iOS Safari Emergency Exit
   useEffect(() => {
@@ -147,6 +185,21 @@ const Login = () => {
         <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
           <StandardLoginForm verificationStatus={verificationStatus} />
 
+          {/* Pre-Registration Button - Only show if mission hasn't started and user not authenticated */}
+          {!missionStarted && !isAuthenticated && (
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <Button
+                onClick={() => setShowPreRegistration(true)}
+                className="w-full bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-white font-bold py-3 text-lg"
+              >
+                🟪 PRE-REGISTRATI ORA
+              </Button>
+              <p className="text-xs text-gray-500 text-center mt-2">
+                Registrati ora per essere pronto al lancio del 19 Agosto 2025
+              </p>
+            </div>
+          )}
+
           <div className="mt-6 text-center">
             <p className="text-sm text-white/50 mt-2">
               <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
@@ -155,6 +208,17 @@ const Login = () => {
             </p>
           </div>
         </div>
+
+        {/* Pre-Registration Modal */}
+        {showPreRegistration && (
+          <PreRegistrationForm
+            onSuccess={() => {
+              setShowPreRegistration(false);
+              navigate('/how-it-works');
+            }}
+            onCancel={() => setShowPreRegistration(false)}
+          />
+        )}
 
       </motion.div>
     </div>

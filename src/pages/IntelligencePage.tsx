@@ -115,9 +115,11 @@ const IntelligencePage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-[100dvh] w-full overflow-hidden" style={{
+      <div className="flex flex-col min-h-screen max-h-screen w-full overflow-y-auto" style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)',
+        WebkitOverflowScrolling: 'touch',
+        overscrollBehavior: 'none'
       }}>
         
         {/* Header */}
@@ -137,7 +139,10 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         {/* FULLSCREEN MODULE AREA - SINGLE RENDERING ONLY */}
-        <div className="flex-1 w-full relative bg-black/20 border-b-2 border-cyan-500/20 overflow-hidden">
+        <div className="flex-1 w-full relative bg-black/20 border-b-2 border-cyan-500/20 overflow-y-auto" style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain'
+        }}>
           {activeModule ? (
             <div className="absolute inset-0 w-full h-full overflow-y-auto">
               {/* Close Module Button */}
