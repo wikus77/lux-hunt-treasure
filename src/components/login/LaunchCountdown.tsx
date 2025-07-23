@@ -82,7 +82,7 @@ const LaunchCountdown = () => {
       transition={{ duration: 0.5 }}
     >
       {/* Countdown Timer */}
-      <div className="text-4xl sm:text-6xl font-orbitron text-white tracking-wider">
+      <div className="text-3xl sm:text-5xl font-orbitron text-white tracking-wider">
         <span>{formatNumber(timeLeft.days)}</span>
         <span className="mx-1">:</span>
         <span>{formatNumber(timeLeft.hours)}</span>
@@ -90,13 +90,23 @@ const LaunchCountdown = () => {
         <span>{formatNumber(timeLeft.minutes)}</span>
         <span className="mx-1">:</span>
         <span>{formatNumber(timeLeft.seconds)}</span>
-      </div>
-      
-      {/* Motivational Text */}
-      <div 
-        className="text-sm tracking-wider mt-2 font-orbitron"
-        style={{ color: '#d9b100' }}
-      >
+        </div>
+        
+        {/* Labels */}
+        <div className="text-sm text-white/60 font-orbitron tracking-widest mt-1 flex justify-center">
+          <div className="grid grid-cols-4 gap-8 text-center">
+            <span>DAYS</span>
+            <span>HOURS</span>
+            <span>MINUTES</span>
+            <span>SECONDS</span>
+          </div>
+        </div>
+        
+        {/* Motivational Text */}
+        <div 
+          className="text-sm tracking-wider mt-4 font-orbitron"
+          style={{ color: '#d9b100' }}
+        >
         IT IS POSSIBLE
       </div>
     </motion.div>
