@@ -44,15 +44,16 @@ export const usePreRegistration = () => {
         email: formData.email,
         password: temporaryPassword,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/verify-complete?agent_code=${newAgentCode}`,
           data: {
             name: formData.name,
             agent_code: newAgentCode,
-            is_pre_registered: true,
-            email_confirm: true
+            is_pre_registered: true
           }
         }
       });
+
+      console.log('📧 SIGNUP RESPONSE:', authData);
+      console.log('❌ SIGNUP ERROR:', authError);
 
       if (authError) {
         console.error('❌ SUPABASE AUTH ERROR:', authError);
@@ -114,6 +115,20 @@ export const usePreRegistration = () => {
       }
 
       console.log('✅ SUPABASE ACCOUNT CREATED:', authData.user?.id);
+
+      // STEP 1.5: TEST LOGIN IMMEDIATELY TO VERIFY CREDENTIALS WORK
+      console.log('🧪 TESTING LOGIN WITH GENERATED CREDENTIALS...');
+      const { data: testLoginData, error: testLoginError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: temporaryPassword
+      });
+
+      if (testLoginError) {
+        console.error('💥 CRITICAL: LOGIN TEST FAILED!', testLoginError);
+        throw new Error(`Registrazione fallita: le credenziali generate non funzionano (${testLoginError.message})`);
+      }
+
+      console.log('✅ LOGIN TEST SUCCESS! Credentials are valid:', testLoginData.user?.id);
 
       // STEP 2: Insert into pre_registered_users table
       const { error: insertError } = await supabase
