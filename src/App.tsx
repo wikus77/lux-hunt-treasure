@@ -5,7 +5,6 @@ import { Router } from 'wouter';
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
-import { UserSyncProvider } from "./components/user/UserSyncProvider";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
 import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
@@ -61,21 +60,19 @@ function App() {
       <Router>
         <SoundProvider>
           <AuthProvider>
-            <UserSyncProvider>
-              <AuthenticationManager 
-                onAuthenticated={handleAuthenticated}
-                onNotAuthenticated={handleNotAuthenticated}
-                onEmailNotVerified={handleEmailNotVerified}
-              />
-              <BuzzPaymentMonitor />
-              <LegalOnboarding />
-              <DailySpinRedirect>
-                <WouterRoutes />
-              </DailySpinRedirect>
-              <InstallPrompt />
-              <PushSetup />
-              <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
-            </UserSyncProvider>
+            <AuthenticationManager 
+              onAuthenticated={handleAuthenticated}
+              onNotAuthenticated={handleNotAuthenticated}
+              onEmailNotVerified={handleEmailNotVerified}
+            />
+            <BuzzPaymentMonitor />
+            <LegalOnboarding />
+            <DailySpinRedirect>
+              <WouterRoutes />
+            </DailySpinRedirect>
+            <InstallPrompt />
+            <PushSetup />
+            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
       </Router>

@@ -273,11 +273,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       {/* Universal Stripe In-App Checkout - © 2025 Joseph MULÉ – M1SSION™ */}
       {showCheckout && paymentConfig && (
         <StripeInAppCheckout
-          config={{
-            plan: paymentConfig.plan || 'buzz_map',
-            amount: paymentConfig.amount,
-            description: paymentConfig.description
-          }}
+          config={paymentConfig}
           onSuccess={handleBuzzMapPaymentSuccess}
           onCancel={closeCheckout}
         />

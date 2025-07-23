@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useAuthContext } from '@/contexts/auth';
 
 export interface PaymentConfig {
   type: 'buzz' | 'buzz_map' | 'subscription';
@@ -29,8 +29,7 @@ export const useStripeInAppPayment = () => {
   const [loading, setLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
-  const { getCurrentUser } = useUnifiedAuth();
-  const user = getCurrentUser();
+  const { user } = useAuthContext();
 
   const initiatePayment = async (config: PaymentConfig): Promise<void> => {
     if (!user) {
@@ -83,7 +82,7 @@ export const useStripeInAppPayment = () => {
       metadata: {
         subscription_plan: plan,
         mission: 'M1SSION',
-        reset_date: '2025-07-23'
+        reset_date: '2025-07-22'
       }
     };
 

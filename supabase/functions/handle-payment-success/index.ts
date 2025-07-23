@@ -100,14 +100,12 @@ serve(async (req) => {
 
     logStep('✅ Subscription updated successfully');
 
-    // Update user profile with plan and sync permissions
+    // Update user profile
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({
         subscription_tier: plan,
         tier: plan,
-        plan: plan,
-        last_plan_change: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .eq('id', user_id);
@@ -118,69 +116,6 @@ serve(async (req) => {
     }
 
     logStep('✅ Profile updated successfully');
-
-    // Sync user permissions based on new plan
-    const { error: syncError } = await supabaseClient.rpc('sync_user_permissions', {
-      p_user_id: user_id
-    });
-
-    if (syncError) {
-      logStep('⚠️ Permission sync warning', syncError);
-    } else {
-      logStep('✅ Permissions synced successfully');
-    }
-
-    // Get updated profile for notification data
-    const { data: updatedProfile } = await supabaseClient
-      .from('profiles')
-      .select('early_access_hours, can_access_app, email')
-      .eq('id', user_id)
-      .single();
-
-    // Send success notifications
-    try {
-      // Send in-app notification
-      await supabaseClient.rpc('send_user_notification', {
-        p_user_id: user_id,
-        p_notification_type: 'in_app',
-        p_title: `🎉 Piano ${plan.toUpperCase()} attivato!`,
-        p_message: `Il tuo piano è stato aggiornato con successo. ${updatedProfile?.early_access_hours ? `Hai ${updatedProfile.early_access_hours}h di accesso anticipato.` : 'Ora puoi accedere a M1SSION™.'}`,
-        p_metadata: {
-          plan: plan,
-          payment_intent_id: payment_intent_id,
-          early_access_hours: updatedProfile?.early_access_hours || 0,
-          notification_category: 'plan_activation'
-        }
-      });
-
-      logStep('✅ In-app notification sent');
-
-      // Send email notification if user has email
-      if (updatedProfile?.email) {
-        await supabaseClient.functions.invoke('send-mailjet-email', {
-          body: {
-            to_email: updatedProfile.email,
-            to_name: updatedProfile.email.split('@')[0],
-            subject: `🎉 Piano ${plan.toUpperCase()} attivato!`,
-            template_id: 5043087,
-            variables: {
-              plan_name: plan.toUpperCase(),
-              early_access_hours: updatedProfile.early_access_hours || 0,
-              app_access_message: updatedProfile.early_access_hours 
-                ? `Hai ${updatedProfile.early_access_hours} ore di accesso anticipato!`
-                : 'Ora puoi accedere a M1SSION™!',
-              upgrade_date: new Date().toLocaleDateString('it-IT')
-            }
-          }
-        });
-
-        logStep('✅ Email notification sent');
-      }
-
-    } catch (notificationError) {
-      logStep('⚠️ Notification warning', notificationError);
-      // Don't fail the payment process for notification errors
-    }
 
     // Log the successful upgrade
     const { error: logError } = await supabaseClient
@@ -206,8 +141,6 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       tier: plan,
-      early_access_hours: updatedProfile?.early_access_hours || 0,
-      can_access_app: updatedProfile?.can_access_app || false,
       message: 'Subscription activated successfully'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

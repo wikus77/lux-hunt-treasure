@@ -7,22 +7,13 @@ import { toast } from 'sonner';
 import FormField from './form-field';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuthContext } from '@/contexts/auth';
-import { supabase } from '@/integrations/supabase/client';
 
 interface StandardLoginFormProps {
   verificationStatus?: string | null;
-  prefillEmail?: string;
-  redirectAfterLogin?: string;
-  agentCode?: string;
 }
 
-export function StandardLoginForm({ 
-  verificationStatus, 
-  prefillEmail = '', 
-  redirectAfterLogin = '',
-  agentCode = ''
-}: StandardLoginFormProps) {
-  const [email, setEmail] = useState(prefillEmail);
+export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps) {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -52,37 +43,6 @@ export function StandardLoginForm({
 
       if (!result.success) {
         console.error('❌ LOGIN ERROR via DIRECT AuthContext:', result.error);
-        
-        // Se il login fallisce, prova con la password temporanea per utenti pre-registrati
-        if (result.error?.message?.includes('Invalid login credentials')) {
-          console.log('🔄 Trying pre-registration password for:', email);
-          
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('agent_code')
-            .eq('email', email)
-            .single();
-            
-          if (profile?.agent_code) {
-            const tempPassword = `AG${profile.agent_code.slice(-4)}2025!`;
-            console.log('🔐 TRYING TEMP PASSWORD FORMAT:', tempPassword);
-            
-            const retryResult = await login(email, tempPassword);
-            
-            if (retryResult.success) {
-              console.log('✅ LOGIN SUCCESS WITH TEMP PASSWORD');
-              toast.success('Accesso completato con credenziali temporanee!');
-              
-              // Emit custom auth success event for PWA compatibility
-              window.dispatchEvent(new CustomEvent('auth-success', { 
-                detail: { email, timestamp: Date.now() } 
-              }));
-              
-              return;
-            }
-          }
-        }
-        
         toast.error('Errore di login', {
           description: result.error?.message || 'Credenziali non valide'
         });
@@ -91,7 +51,7 @@ export function StandardLoginForm({
 
       console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - Emitting auth-success event');
       toast.success('Login effettuato con successo', {
-        description: `Benvenuto in M1SSION™${agentCode ? ` Agente ${agentCode}` : ''}!`
+        description: 'Benvenuto in M1SSION™!'
       });
       
       // Emit custom auth success event for PWA compatibility
@@ -99,16 +59,9 @@ export function StandardLoginForm({
         detail: { email, timestamp: Date.now() } 
       }));
       
-      // Intelligent redirect based on user state
-      let redirectPath = '/';
-      
-      if (redirectAfterLogin === 'choose-plan') {
-        redirectPath = `/choose-plan${agentCode ? `?agent_code=${agentCode}` : ''}`;
-      }
-      
       // Primary redirect attempt
-      console.log('🚀 ATTEMPTING PRIMARY REDIRECT via navigate to:', redirectPath);
-      navigate(redirectPath);
+      console.log('🚀 ATTEMPTING PRIMARY REDIRECT via navigate');
+      navigate('/');
       
       // PWA iOS Safari fallback
       if (window.matchMedia('(display-mode: standalone)').matches || 
@@ -117,7 +70,7 @@ export function StandardLoginForm({
         setTimeout(() => {
           if (window.location.pathname === '/login') {
             console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href');
-            window.location.href = redirectPath;
+            window.location.href = '/';
           }
         }, 800);
       }

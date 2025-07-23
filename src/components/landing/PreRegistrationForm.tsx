@@ -1,12 +1,9 @@
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePreRegistration } from './pre-registration/usePreRegistration';
 import { RegistrationForm } from './pre-registration/RegistrationForm';
 import SuccessView from './pre-registration/SuccessView';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface PreRegistrationFormProps {
   countdownCompleted?: boolean;
@@ -15,44 +12,21 @@ interface PreRegistrationFormProps {
 const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({ 
   countdownCompleted = false 
 }) => {
-  const { isAuthenticated } = useUnifiedAuth();
   const {
     formData,
     isSubmitting,
     isSuccess,
     error,
     referralCode,
-    agentCode,
-    needsEmailVerification,
-    userCredentials,
     handleInputChange,
     handleSubmit,
     resetForm
   } = usePreRegistration();
 
-  console.log('🖥️ PreRegistrationForm render:', { 
-    isSuccess, 
-    agentCode, 
-    referralCode, 
-    userCredentials,
-    needsEmailVerification,
-    isAuthenticated
-  });
-
-  // Se l'utente è già autenticato, non mostrare il form
-  if (isAuthenticated) {
-    console.log('✅ User authenticated - hiding PreRegistrationForm');
-    return null;
-  }
-
   if (isSuccess) {
-    console.log('✅ Rendering SuccessView with:', { referralCode, agentCode, userCredentials });
     return (
       <SuccessView 
-        referralCode={referralCode}
-        agentCode={agentCode}
-        needsEmailVerification={needsEmailVerification}
-        userCredentials={userCredentials}
+        referralCode={referralCode} 
         onReset={resetForm}
       />
     );

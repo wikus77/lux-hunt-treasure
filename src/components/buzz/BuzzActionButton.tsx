@@ -94,11 +94,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       {/* Universal Stripe In-App Checkout - © 2025 Joseph MULÉ – M1SSION™ */}
       {showCheckout && paymentConfig && (
         <StripeInAppCheckout
-          config={{
-            plan: paymentConfig.plan || 'buzz',
-            amount: paymentConfig.amount,
-            description: paymentConfig.description
-          }}
+          config={paymentConfig}
           onSuccess={handlePaymentComplete}
           onCancel={closeCheckout}
         />
