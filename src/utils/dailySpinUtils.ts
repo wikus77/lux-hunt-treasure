@@ -1,39 +1,30 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
+// COSMETIC SEGMENTS - Visual only, no prize assignment
 export const SEGMENTS = [
-  'BUZZ x1',
-  'Missione Fallita',
-  'Clue di Settimana 4',
-  'Nessun Premio',
-  'BUZZ x2',
-  'Missione Fallita',
-  'Premio Random',
-  'BUZZ MAPPA Gratis',
-  'Missione Fallita',
-  '3h senza blocchi BUZZ',
-  'Indizio Extra',
-  'Missione Fallita'
+  'Grazie per aver partecipato!',
+  'M1SSION™ Experience',
+  'Torna domani',
+  'Continua la missione',
+  'Prosegui l\'avventura',
+  'Prossimo step',
+  'M1SSION™ Community',
+  'Buona fortuna!',
+  'Keep exploring',
+  'Skill beats chance',
+  'Deduzione vincente',
+  'Strategic thinking'
 ];
 
-// Probabilità ridotta: solo 25% di vincita
-export const WINNING_SEGMENTS = [0, 2, 4, 6, 7, 9, 10]; // 7 su 12
-export const LOSING_SEGMENTS = [1, 3, 5, 8, 11]; // Missione Fallita e Nessun Premio
+// REMOVED: All prize/winning logic - wheel is now cosmetic only
+// No more WINNING_SEGMENTS or LOSING_SEGMENTS
 
-// Map prize to redirect paths
-export const PRIZE_REDIRECTS: Record<string, string> = {
-  'BUZZ x1': '/buzz',
-  'BUZZ x2': '/buzz', 
-  'BUZZ MAPPA gratis': '/map?autoBuzzMapFree=true',
-  'Clue di Settimana 4': '/clues?week=4',
-  'Premio Random': '/prizes',
-  '3h senza blocchi BUZZ': '/home', // Salva timestamp e redirect home
-  'Indizio Extra': '/clues'
-};
+// REMOVED: All prize redirects - no prizes awarded from spin
 
 /**
- * Get prize based on rotation degrees
+ * Get message based on rotation degrees - COSMETIC ONLY
  */
-export const getPrizeFromRotation = (rotationDeg: number): string => {
+export const getMessageFromRotation = (rotationDeg: number): string => {
   const normalizedDeg = ((rotationDeg % 360) + 360) % 360; // Normalize to 0-360
   const segmentAngle = 360 / 12; // 30 degrees per segment
   const segmentIndex = Math.floor(normalizedDeg / segmentAngle);
@@ -41,46 +32,15 @@ export const getPrizeFromRotation = (rotationDeg: number): string => {
 };
 
 /**
- * Get random segment based on 25% win probability
+ * Get fixed segment for cosmetic wheel - NO RNG, SKILL-BASED ONLY
+ * Always returns the same result to eliminate gambling mechanics
  */
-export const getRandomSegment = (): number => {
-  const random = Math.random();
-  
-  // Solo 25% di possibilità di vincere
-  if (random <= 0.25) {
-    // Vince: prende un segmento vincente
-    const winningIndex = Math.floor(Math.random() * WINNING_SEGMENTS.length);
-    return WINNING_SEGMENTS[winningIndex];
-  } else {
-    // Perde: prende un segmento perdente
-    const losingIndex = Math.floor(Math.random() * LOSING_SEGMENTS.length);
-    return LOSING_SEGMENTS[losingIndex];
-  }
+export const getCosmeticSegment = (): number => {
+  // Always return segment 0 for consistent, non-random experience
+  return 0; // "Grazie per aver partecipato!"
 };
 
 /**
- * Get redirect path for a prize
+ * REMOVED: All prize-related functions
+ * M1SSION™ awards prizes based on skill, deduction and coordinate precision only
  */
-export const getPrizeRedirectPath = (prize: string): string | null => {
-  return PRIZE_REDIRECTS[prize] || null;
-};
-
-/**
- * Check if a prize is winning (not "Missione Fallita" or "Nessun premio")
- */
-export const isWinningPrize = (prize: string): boolean => {
-  return !['Missione Fallita', 'Nessun Premio'].includes(prize);
-};
-
-/**
- * Get prize message based on prize type
- */
-export const getPrizeMessage = (prize: string): string => {
-  if (['Missione Fallita', 'Nessun Premio'].includes(prize)) {
-    return `${prize} - Riprova domani!`;
-  } else if (prize === '3h senza blocchi BUZZ') {
-    return 'Hai vinto 3 ore senza limitazioni BUZZ!';
-  } else {
-    return `Hai vinto: ${prize}!`;
-  }
-};

@@ -2,14 +2,16 @@
 import { vagueBuzzClues } from "@/data/vagueBuzzClues";
 
 /**
- * Returns a random clue that hasn't been used before
+ * Returns the next sequential clue that hasn't been used before
+ * SKILL-BASED: No randomization - clues are given in order
  * @param usedClues Array of clues that have already been used
- * @returns A random clue from available clues
+ * @returns The next sequential clue from available clues
  */
 export function getNextVagueClue(usedClues: string[]) {
   const available = vagueBuzzClues.filter(clue => !usedClues.includes(clue));
   if (available.length === 0) return vagueBuzzClues[0]; // Return first clue if all have been used
-  return available[Math.floor(Math.random() * available.length)];
+  // SKILL-BASED: Return first available clue (sequential order) instead of random
+  return available[0];
 }
 
 /**

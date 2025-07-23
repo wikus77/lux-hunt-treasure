@@ -7,7 +7,7 @@ import { DailySpinHeader } from './DailySpinHeader';
 import { DailySpin3DWheel } from './DailySpin3DWheel';
 import { DailySpinButton } from './DailySpinButton';
 import { DailySpinResultModal } from './DailySpinResultModal';
-import { getRandomSegment, SEGMENTS, isWinningPrize } from '@/utils/dailySpinUtils';
+import { getCosmeticSegment, SEGMENTS, getMessageFromRotation } from '@/utils/dailySpinUtils';
 
 export const DailySpinWheel: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -23,27 +23,35 @@ export const DailySpinWheel: React.FC = () => {
     setIsAnimating(true);
     setShowResult(false);
     
-    // Calcola il segmento vincente
-    const winningSegment = getRandomSegment();
+    // COSMETIC ONLY: Fixed segment for visual experience
+    const cosmeticSegment = getCosmeticSegment();
     const segmentAngle = 360 / 12; // 30 gradi per segmento
-    const targetAngle = (winningSegment * segmentAngle) + (segmentAngle / 2);
+    const targetAngle = (cosmeticSegment * segmentAngle) + (segmentAngle / 2);
     
-    // Aggiunge giri extra per l'animazione (3-5 giri completi)
-    const extraSpins = (Math.floor(Math.random() * 3) + 3) * 360;
-    const finalRotation = extraSpins + (360 - targetAngle); // Inverso perché la ruota gira al contrario
+    // Fixed animation for consistent experience (4 complete spins)
+    const extraSpins = 4 * 360; // Fixed 4 spins instead of random
+    const finalRotation = extraSpins + (360 - targetAngle);
     
     setRotation(prev => prev + finalRotation);
     
-    // Invia il risultato al server
-    const prize = SEGMENTS[winningSegment];
-    const result = await spinWheel(prize, finalRotation);
+    // COSMETIC: Show message without prize award
+    const message = getMessageFromRotation(finalRotation);
+    
+    // Simulate result for visual feedback only - NO PRIZES
+    const cosmeticResult = {
+      success: true,
+      prize: message,
+      rotation_deg: finalRotation,
+      message: "Grazie per aver partecipato! Continua la missione per vincere premi reali basati sulla tua abilità.",
+      reroute_path: "/home"
+    };
     
     // Fine animazione dopo 4 secondi
     setTimeout(() => {
       setIsAnimating(false);
-      if (result && result.success) {
-        setShowResult(true);
-      }
+      setShowResult(true);
+      // Set cosmetic result directly without server call
+      spinResult || (spinResult as any) = cosmeticResult;
     }, 4000);
   };
 
@@ -71,12 +79,12 @@ export const DailySpinWheel: React.FC = () => {
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // Auto-close effect for losing prizes
+  // Auto-close effect for cosmetic wheel
   useEffect(() => {
-    if (spinResult && showResult && !isWinningPrize(spinResult.prize)) {
+    if (spinResult && showResult) {
       const timer = setTimeout(() => {
         setLocation('/home');
-      }, 2500); // 2.5 seconds for auto-close
+      }, 3000); // 3 seconds for auto-close
       return () => clearTimeout(timer);
     }
   }, [spinResult, showResult, setLocation]);
@@ -98,15 +106,15 @@ export const DailySpinWheel: React.FC = () => {
         />
       </div>
 
-      {/* Floating Particles */}
+      {/* Floating Particles - FIXED POSITIONS for compliance */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-cyan-400 rounded-full opacity-60 animate-float-particle"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${(i * 15) % 100}%`, // Fixed positions based on index
+              top: `${(i * 20) % 100}%`,  // Fixed positions based on index
               animationDelay: `${i * 2}s`,
               animationDuration: `${10 + i * 2}s`,
               filter: 'blur(1px)'
