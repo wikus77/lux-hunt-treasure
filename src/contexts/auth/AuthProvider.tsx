@@ -230,7 +230,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // REGISTER FUNCTION - Unified
+  // REGISTER FUNCTION - Unified with Email Verification
   const register = async (email: string, password: string) => {
     log("Register attempt", email);
     
@@ -239,7 +239,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/auth/email-verified`
         }
       });
 
@@ -248,8 +248,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, error };
       }
 
-      log("Register success", data.user?.email);
-      return { success: true, data };
+      log("Register success - email verification required", data.user?.email);
+      return { success: true, data, needsEmailVerification: !data.user?.email_confirmed_at };
     } catch (error) {
       log("Register exception", error);
       return { success: false, error };
@@ -323,6 +323,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // CHECK MISSION STARTED - Unified
+  const checkMissionStarted = async (): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.rpc('has_mission_started');
+      if (error) {
+        log("Error checking mission start", error);
+        return false;
+      }
+      log("Mission started check", data);
+      return data || false;
+    } catch (error) {
+      log("Exception checking mission start", error);
+      return false;
+    }
+  };
+
   // CONTEXT VALUE - Unified interface
   const authContextValue: AuthContextType = {
     user,
@@ -340,6 +356,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     resetPassword,
     resendVerificationEmail,
+    checkMissionStarted,
   };
 
   // Debug context state

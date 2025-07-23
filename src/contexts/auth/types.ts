@@ -1,7 +1,7 @@
 
 export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: any; session?: any }>;
-  register: (email: string, password: string) => Promise<{ success: boolean; error?: any; data?: any }>;
+  register: (email: string, password: string) => Promise<{ success: boolean; error?: any; data?: any; needsEmailVerification?: boolean }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -15,6 +15,7 @@ export interface AuthContextType {
   hasRole: (role: string) => boolean;
   isRoleLoading: boolean;
   user: User | null;
+  checkMissionStarted: () => Promise<boolean>;
 }
 
 export interface User {
