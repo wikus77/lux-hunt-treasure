@@ -1924,6 +1924,7 @@ export type Database = {
           id: string
           marketing_consent: boolean | null
           profiling_consent: boolean | null
+          terms_accepted: boolean | null
           updated_at: string | null
           user_id: string
         }
@@ -1935,6 +1936,7 @@ export type Database = {
           id?: string
           marketing_consent?: boolean | null
           profiling_consent?: boolean | null
+          terms_accepted?: boolean | null
           updated_at?: string | null
           user_id: string
         }
@@ -1946,6 +1948,7 @@ export type Database = {
           id?: string
           marketing_consent?: boolean | null
           profiling_consent?: boolean | null
+          terms_accepted?: boolean | null
           updated_at?: string | null
           user_id?: string
         }

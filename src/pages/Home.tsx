@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
+import CookieBanner from '@/components/legal/CookieBanner';
+import TermsBanner from '@/components/legal/TermsBanner';
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -211,6 +213,12 @@ const Home = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Cookie Banner */}
+      <CookieBanner />
+      
+      {/* Terms Banner */}
+      <TermsBanner />
       
       <BottomNavigation />
     </div>
