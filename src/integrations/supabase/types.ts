@@ -1262,24 +1262,30 @@ export type Database = {
       }
       pre_registered_users: {
         Row: {
+          agent_code: string | null
           created_at: string
           email: string
           id: string
           is_pre_registered: boolean
+          is_verified: boolean | null
           password_hash: string
         }
         Insert: {
+          agent_code?: string | null
           created_at?: string
           email: string
           id?: string
           is_pre_registered?: boolean
+          is_verified?: boolean | null
           password_hash: string
         }
         Update: {
+          agent_code?: string | null
           created_at?: string
           email?: string
           id?: string
           is_pre_registered?: boolean
+          is_verified?: boolean | null
           password_hash?: string
         }
         Relationships: []
@@ -2506,6 +2512,10 @@ export type Database = {
       force_user_to_base_tier: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      generate_agent_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_referral_code: {
         Args: Record<PropertyKey, never>

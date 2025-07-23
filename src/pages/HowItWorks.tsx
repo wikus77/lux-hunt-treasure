@@ -78,12 +78,128 @@ const HowItWorks: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Premi in Palio Section */}
+        <motion.div
+          className="mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          <h2 className="text-3xl font-bold mb-8 text-center">
+            💎 <span className="text-cyan-400">Premi in Palio</span>
+          </h2>
+          
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* Premi Donna */}
+            <div>
+              <h3 className="text-xl font-bold mb-4 text-center text-pink-400">👩 Target Donna</h3>
+              <div className="space-y-4">
+                <motion.div 
+                  className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 p-4 rounded-xl border border-pink-500/30"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">💎</div>
+                    <div>
+                      <h4 className="font-bold text-white">Chanel N°5</h4>
+                      <p className="text-sm text-gray-300">Profumo iconico da 100ml</p>
+                      <p className="text-xs text-pink-400">Valore: €150</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 p-4 rounded-xl border border-pink-500/30"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">👜</div>
+                    <div>
+                      <h4 className="font-bold text-white">Borsa Hermès</h4>
+                      <p className="text-sm text-gray-300">Modello esclusivo limited edition</p>
+                      <p className="text-xs text-pink-400">Valore: €3.500</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-gradient-to-r from-pink-500/20 to-purple-500/20 p-4 rounded-xl border border-pink-500/30"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🏝️</div>
+                    <div>
+                      <h4 className="font-bold text-white">Viaggio Seychelles</h4>
+                      <p className="text-sm text-gray-300">7 giorni per 2 persone, volo incluso</p>
+                      <p className="text-xs text-pink-400">Valore: €5.000</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Premi Uomo */}
+            <div>
+              <h3 className="text-xl font-bold mb-4 text-center text-blue-400">👨 Target Uomo</h3>
+              <div className="space-y-4">
+                <motion.div 
+                  className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 p-4 rounded-xl border border-blue-500/30"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">⌚</div>
+                    <div>
+                      <h4 className="font-bold text-white">Rolex Explorer</h4>
+                      <p className="text-sm text-gray-300">Modello 214270, acciaio inossidabile</p>
+                      <p className="text-xs text-blue-400">Valore: €7.500</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 p-4 rounded-xl border border-blue-500/30"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🎮</div>
+                    <div>
+                      <h4 className="font-bold text-white">PS5 Limited Edition</h4>
+                      <p className="text-sm text-gray-300">Console + controller + giochi esclusivi</p>
+                      <p className="text-xs text-blue-400">Valore: €800</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div 
+                  className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 p-4 rounded-xl border border-blue-500/30"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🧥</div>
+                    <div>
+                      <h4 className="font-bold text-white">Giacca Moncler</h4>
+                      <p className="text-sm text-gray-300">Modello Maya, collezione invernale</p>
+                      <p className="text-xs text-blue-400">Valore: €1.200</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Mission Timeline */}
         <motion.div
           className="bg-black/50 p-8 rounded-xl border border-cyan-500/30 mb-16"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
         >
           <h2 className="text-2xl font-bold mb-6 text-center text-cyan-400">
             Come Funziona M1SSION™
@@ -145,7 +261,7 @@ const HowItWorks: React.FC = () => {
           className="text-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
         >
           <h2 className="text-3xl font-bold mb-4 text-cyan-400">
             Sei Pronto per la M1SSION™?

@@ -48,12 +48,15 @@ export const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Create user account
+      // Create user account with email verification
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/how-it-works`
+          emailRedirectTo: `${window.location.origin}/how-it-works`,
+          data: {
+            email_confirm: true
+          }
         }
       });
 
@@ -61,28 +64,24 @@ export const PreRegistrationForm: React.FC<PreRegistrationFormProps> = ({
         throw error;
       }
 
-      // Mark user as pre-registered in profiles
-      if (data.user) {
+      if (data.user && !data.user.email_confirmed_at) {
+        // Store in pre_registered_users table for tracking
         await supabase
-          .from('profiles')
-          .update({
-            is_pre_registered: true,
-            pre_registration_date: new Date().toISOString()
-          })
-          .eq('id', data.user.id);
-      }
+          .from('pre_registered_users')
+          .insert({
+            email: formData.email,
+            password_hash: 'handled_by_supabase_auth',
+            is_verified: false
+          });
 
-      // Store in pre_registered_users table
-      await supabase
-        .from('pre_registered_users')
-        .insert({
-          email: formData.email,
-          password_hash: 'handled_by_supabase_auth',
+        toast.success('Pre-registrazione completata!', {
+          description: '📧 Controlla la tua email per completare la verifica dell\'indirizzo e attivare il tuo Codice Agente personale.'
         });
-
-      toast.success('Pre-registrazione completata!', {
-        description: 'Riceverai una email di conferma. Accesso disponibile dal 19 Agosto 2025.'
-      });
+      } else {
+        toast.success('Pre-registrazione completata!', {
+          description: 'Accesso disponibile dal 19 Agosto 2025.'
+        });
+      }
 
       onSuccess?.();
       
