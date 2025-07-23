@@ -138,58 +138,12 @@ export const useProfileSubscription = () => {
     try {
       console.warn(`🔥 M1SSION™ UPGRADE STARTED: ${newPlan} for user ${currentUser.id}`);
       
-      // 🚨 CRITICAL FIX: Cancel ALL existing subscriptions regardless of status
-      console.warn(`🧹 M1SSION™ CLEANUP: Canceling ALL existing subscriptions`);
-      const { error: cancelAllError } = await supabase
-        .from('subscriptions')
-        .update({ status: 'canceled', updated_at: new Date().toISOString() })
-        .eq('user_id', currentUser.id)
-        .neq('status', 'canceled');
-      
-      if (cancelAllError) {
-        console.error('❌ M1SSION™ Error canceling existing subscriptions:', cancelAllError);
-      } else {
-        console.warn('✅ M1SSION™ All existing subscriptions canceled');
-      }
-
-      // 🚨 CRITICAL FIX: If downgrading to Base, force complete cleanup
-      if (newPlan === 'Base') {
-        console.warn('🔻 M1SSION™ FORCING BASE DOWNGRADE');
-        
-        try {
-          const { data: cancelData, error: cancelStripeError } = await supabase.functions.invoke('cancel-subscription');
-          if (cancelStripeError) {
-            console.error('❌ M1SSION™ Stripe cancel error:', cancelStripeError);
-          } else {
-            console.warn('✅ M1SSION™ Stripe cancellation completed:', cancelData);
-          }
-        } catch (stripeError) {
-          console.error('❌ M1SSION™ Stripe cancel failed:', stripeError);
-        }
-      } else {
-        // 🚨 CRITICAL FIX: For paid plans, create new subscription
-        console.warn(`💰 M1SSION™ CREATING NEW SUBSCRIPTION: ${newPlan}`);
-        const { error: insertError } = await supabase.from('subscriptions').insert({
-          user_id: currentUser.id,
-          tier: newPlan,
-          status: 'active',
-          start_date: new Date().toISOString(),
-          end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-          provider: 'stripe'
-        });
-
-        if (insertError) {
-          console.error('❌ M1SSION™ Error creating subscription:', insertError);
-        } else {
-          console.warn('✅ M1SSION™ New subscription created');
-        }
-      }
-
-      // 🚨 CRITICAL FIX: FORCE profile update ALWAYS
-      console.warn(`🎯 M1SSION™ FORCING PROFILE UPDATE: ${newPlan}`);
+      // Use the new sync system by updating the plan in profiles
+      // This will trigger the database trigger that handles all synchronization
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ 
+          plan: newPlan.toLowerCase(),
           subscription_tier: newPlan,
           tier: newPlan,
           updated_at: new Date().toISOString()
@@ -199,11 +153,29 @@ export const useProfileSubscription = () => {
       if (profileError) {
         console.error('❌ M1SSION™ CRITICAL PROFILE UPDATE ERROR:', profileError);
         throw new Error(`Profile update failed: ${profileError.message}`);
-      } else {
-        console.warn(`✅ M1SSION™ PROFILE FORCED TO: ${newPlan}`);
       }
 
-      // 🚨 CRITICAL FIX: Force localStorage sync
+      // Handle subscription records
+      if (newPlan.toLowerCase() === 'base') {
+        // Cancel existing subscriptions for base plan
+        await supabase
+          .from('subscriptions')
+          .update({ status: 'canceled', updated_at: new Date().toISOString() })
+          .eq('user_id', currentUser.id)
+          .neq('status', 'canceled');
+      } else {
+        // Create new subscription for paid plans
+        await supabase.from('subscriptions').insert({
+          user_id: currentUser.id,
+          tier: newPlan,
+          status: 'active',
+          start_date: new Date().toISOString(),
+          end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          provider: 'stripe'
+        });
+      }
+
+      // Force localStorage sync
       localStorage.setItem('subscription_plan', newPlan);
       localStorage.setItem('userTier', newPlan);
       window.dispatchEvent(new Event('storage'));
