@@ -9,7 +9,7 @@ import SubscriptionCard from "./SubscriptionCard";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import StripeInAppCheckout from "./StripeInAppCheckout";
-import { getDisplayPrice } from "@/lib/constants/pricingConfig";
+import { getDisplayPrice, getPriceCents } from "@/lib/constants/pricingConfig";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -317,8 +317,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         // 🚀 CRITICAL: Use in-app checkout with centralized pricing
         console.log(`💳 M1SSION™ Opening in-app checkout for ${plan}`);
         
-        // Import centralized pricing to ensure consistency
-        const { getPriceCents } = await import('@/lib/constants/pricingConfig');
+        // Use centralized pricing for consistency
         const planPriceCents = getPriceCents(plan);
         
         console.log(`💰 M1SSION™ Plan ${plan} price: ${planPriceCents} cents`);
@@ -563,7 +562,6 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       {/* In-App Checkout Modal */}
       {showInAppCheckout && (() => {
         // © 2025 Joseph MULÉ – M1SSION™ – Calculate price using centralized config
-        const { getPriceCents } = require('@/lib/constants/pricingConfig');
         const planPrice = getPriceCents(selectedPlan) || 399;
         
         return (
