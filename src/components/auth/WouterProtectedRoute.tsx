@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useLocation } from 'wouter';
-import { useAuth } from '@/hooks/use-auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import Login from '@/pages/Login';
 
 interface ProtectedRouteProps {
@@ -11,7 +11,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useUnifiedAuth();
   const [location, setLocation] = useLocation();
 
   // Show loading while checking auth

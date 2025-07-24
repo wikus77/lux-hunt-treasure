@@ -1,6 +1,6 @@
 // M1SSION™ - App Initialization Hook for iOS Capacitor
 import { useEffect, useState } from 'react';
-import { useAuth } from './use-auth';
+import { useUnifiedAuth } from './useUnifiedAuth';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { explicitNavigationHandler } from '@/utils/iosCapacitorFunctions';
 
@@ -13,7 +13,7 @@ interface AppInitializationState {
 }
 
 export const useAppInitialization = () => {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
   const { setCapacitorMode, setCurrentTab } = useNavigationStore();
   
   const [state, setState] = useState<AppInitializationState>({

@@ -5,7 +5,7 @@ import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { BuzzButton } from './BuzzButton';
 import { ShockwaveAnimation } from './ShockwaveAnimation';
 import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
-import { useAuth } from '@/hooks/use-auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { toast } from 'sonner';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 
@@ -22,7 +22,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   todayCount,
   onSuccess
 }) => {
-  const { user } = useAuth();
+  const { user } = useUnifiedAuth();
   const { 
     processBuzzPayment, 
     showCheckout, 

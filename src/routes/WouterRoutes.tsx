@@ -51,12 +51,19 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page */}
+          {/* Landing page with forced redirect */}
           <Route path="/">
             {isAuthenticated && !isLoading ? (
               <>
-                {console.log('🏠 WouterRoutes: Rendering AppHome for authenticated user')}
+                {console.log('🏠 WouterRoutes: Authenticated user - redirecting to /home')}
                 <GlobalLayout><AppHome /></GlobalLayout>
+              </>
+            ) : isLoading ? (
+              <>
+                {console.log('🔄 WouterRoutes: Loading auth state')}
+                <div className="min-h-screen flex items-center justify-center bg-black">
+                  <div className="text-white">Caricamento...</div>
+                </div>
               </>
             ) : (
               <>
@@ -139,12 +146,6 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* Daily Spin redirect to Intelligence */}
-          <Route path="/daily-spin">
-            <ProtectedRoute>
-              <GlobalLayout><IntelligencePage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
 
           {/* Legal routes */}
           <Route path="/terms">

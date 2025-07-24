@@ -110,11 +110,20 @@ export const useLogin = () => {
         throw new Error(errorMessage);
       }
 
-      // Show success toast and redirect (handled by the auth context)
+      // Show success toast and force redirect
       toast.success('Accesso effettuato', {
         description: 'Benvenuto!',
-        duration: 3000
+        duration: 2000
       });
+
+      // Force redirect to home after successful login
+      console.log('🚀 LOGIN SUCCESS - Forcing redirect to /home');
+      setTimeout(() => {
+        navigate('/home');
+        // Dispatch auth success event
+        const event = new CustomEvent('auth-success');
+        window.dispatchEvent(event);
+      }, 500);
       
     } catch (error: any) {
       console.error('Errore login:', error);
