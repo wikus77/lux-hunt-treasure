@@ -69,16 +69,14 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
         .eq('status', 'active')
         .single();
 
-      // 🔑 M1SSION™ DEVELOPER OVERRIDE - Apply same logic as useProfileSubscription
+      // 🔑 M1SSION™ FINAL SUBSCRIPTION SYNC - Use unified source
       let userTier = subscription?.tier || profile?.subscription_tier || 'Base';
       
-      // Override for developer email (same as useProfileSubscription)
-      if (user.email === 'wikus77@hotmail.it') {
-        userTier = 'Titanium';
-        console.log('🔑 M1SSION™ ProfileToast Developer override: Titanium');
-      }
+      // REMOVED: Developer override to maintain consistency with main subscription logic
+      // The subscription should be managed via useProfileSubscription hook only
+      console.log('📋 M1SSION™ ProfileToast Using unified tier:', userTier);
       
-      console.log('📋 M1SSION™ ProfileToast Final tier:', userTier);
+      console.log('📋 M1SSION™ ProfileToast Final unified tier:', userTier);
 
       setProfileData({
         username: profile?.username || profile?.full_name || 'Agente',
