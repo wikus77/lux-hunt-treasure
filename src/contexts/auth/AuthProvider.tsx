@@ -44,7 +44,7 @@ useEffect(() => {
         >
         </AuthContext.Provider>
     );
-}
+};
 
 export default AuthProvider;
 export default AuthProvider;
