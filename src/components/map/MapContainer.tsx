@@ -8,7 +8,6 @@ import './leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './MapControls';
 import BuzzMapButton from '@/components/map/BuzzMapButton';
-import WeeklyBuzzStatus from '@/components/map/WeeklyBuzzStatus';
 import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
@@ -184,11 +183,6 @@ const MapContainer: React.FC<MapContainerProps> = ({
         <MapZoomControls />
       </LeafletMapContainer>
       
-      {/* Weekly BUZZ Status Display */}
-      <div className="fixed top-20 right-4 z-40">
-        <WeeklyBuzzStatus />
-      </div>
-
       {/* BUZZ Button */}
       <BuzzMapButton 
         onBuzzPress={handleBuzz}
