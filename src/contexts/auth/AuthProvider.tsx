@@ -85,9 +85,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         session,
-        user,
-        userRoles,
-      };
 
       clearCacheAndLogout();
     }, [session]);
@@ -157,4 +154,8 @@ export default AuthProvider;
         login,
         logout,
         resetPassword,
+      };
+      return {
+        user,
+        userRoles,
       };
