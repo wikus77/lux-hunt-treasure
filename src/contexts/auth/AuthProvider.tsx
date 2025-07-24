@@ -36,11 +36,9 @@ useEffect(() => {
             isAuthenticated,
             setUserRoles,
             rolesCount: userRoles.length,
-            isRoleLoading,
-            login,
-            logout,
-            resetPassword
-          }}
+          resetPassword,
+        }}
+      >
       </AuthContext.Provider>
   );
 }
