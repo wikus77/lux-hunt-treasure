@@ -77,16 +77,12 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Errore durante pulizia cache:", err);
       }
     };
-
-    handleLogout();
+  useEffect(() => {
+    clearCacheAndLogout();
   }, [session]);
 
   return (
-  useEffect(() => {
-    clearCacheAndLogout();
-  }, [session])
-
-    <AuthContext.Provider
+    <AuthContext.Provider value={{
       value={{
   useEffect(() => {
     clearCacheAndLogout();
