@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
-import { formatPrice } from '@/lib/constants/subscriptionPrices';
+import { getDisplayPrice } from '@/lib/constants/pricingConfig';
 
 const SilverPlanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -76,7 +76,7 @@ const SilverPlanPage: React.FC = () => {
                 <Star className="h-8 w-8 text-silver" />
                 <h2 className="text-3xl font-bold text-white">M1SSION™ Silver</h2>
               </div>
-              <p className="text-4xl font-bold text-primary mb-2">{formatPrice('silver')}</p>
+              <p className="text-4xl font-bold text-primary mb-2">{getDisplayPrice('Silver')}</p>
               <p className="text-white/60">al mese</p>
             </div>
 
@@ -96,7 +96,7 @@ const SilverPlanPage: React.FC = () => {
             {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Silver"
-              planPrice={formatPrice('silver')}
+              planPrice={getDisplayPrice('Silver')}
               planFeatures={planFeatures}
             />
           </div>

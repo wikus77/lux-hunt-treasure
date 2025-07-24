@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
-import { SUBSCRIPTION_PRICES, getPriceCents } from '@/lib/constants/subscriptionPrices';
+// Utilizzo configurazione prezzi centralizzata da pricingConfig
 
 export interface PaymentConfig {
   type: 'buzz' | 'buzz_map' | 'subscription';
