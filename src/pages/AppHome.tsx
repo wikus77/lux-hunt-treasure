@@ -1,4 +1,4 @@
-// © Joseph Mule – M1SSION™ App. All rights reserved.
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
@@ -9,10 +9,8 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import { Helmet } from "react-helmet";
 import { toast } from "sonner";
-import BottomNavigation from "@/components/layout/BottomNavigation";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
-import { useAuthContext } from "@/contexts/auth";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 
@@ -26,7 +24,7 @@ const AppHome = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
-  const { hasRole, user, isAuthenticated, isLoading } = useAuthContext();
+  const { hasRole, user, isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
   const [, navigate] = useLocation();
 
   // CRITICAL DEBUG: Log received user state
@@ -104,7 +102,6 @@ const AppHome = () => {
   }, [error]);
 
   // Check admin/developer access for Panel button
-  const { getCurrentUser } = useAuthContext();
   const isAdmin = hasRole('admin');
   const isDeveloper = hasRole('developer');
   const showPanelButton = isAdmin || isDeveloper;
@@ -147,16 +144,8 @@ const AppHome = () => {
         <title>M1SSION™ - Home App</title>
       </Helmet>
       
-      {/* Unified Header - same as other pages */}
-      <UnifiedHeader profileImage={profileImage} />
-      
-      <div 
-        className="px-4 space-y-6"
-        style={{ 
-          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
+      {/* CRITICAL FIX: Remove duplicate header/nav - GlobalLayout handles these */}
+      <div className="px-4 space-y-6">
         <AnimatePresence>
           {isLoaded && (
             <motion.div
@@ -203,7 +192,7 @@ const AppHome = () => {
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
                 </motion.div>
 
-                <main className="max-w-screen-xl mx-auto pb-20">
+                <main className="max-w-screen-xl mx-auto">
                   <CommandCenterHome />
                   
                   {/* M1SSION PANEL™ Button - Only for Admin/Developer */}
@@ -258,8 +247,6 @@ const AppHome = () => {
           )}
         </AnimatePresence>
       </div>
-      
-      <BottomNavigation />
     </div>
   );
 };

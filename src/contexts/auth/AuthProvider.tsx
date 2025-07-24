@@ -319,14 +319,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUserRoles([]);
       setIsRoleLoading(false);
       
-      // 🚨 CRITICAL: Force redirect to login after logout
+      // 🚨 CRITICAL: Force redirect to login after logout + PWA iOS stability
       setTimeout(() => {
         setIsLoading(false);
+        
+        // PWA iOS compatibility: clear all caches before redirect
+        if ('caches' in window) {
+          caches.keys().then(cacheNames => {
+            cacheNames.forEach(cacheName => {
+              caches.delete(cacheName);
+            });
+          });
+        }
+        
         if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
           log("Force redirect to login after logout");
-          window.location.href = '/login';
+          
+          // Enhanced PWA iOS redirect with fallback
+          const redirectToLogin = () => {
+            try {
+              window.location.href = '/login';
+            } catch (error) {
+              log("Fallback redirect method", error);
+              window.location.replace('/login');
+            }
+          };
+          
+          redirectToLogin();
         }
-      }, 100);
+      }, 150);
       
       log("Logout completato");
     } catch (error) {
