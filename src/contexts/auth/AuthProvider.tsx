@@ -41,12 +41,9 @@ useEffect(() => {
             logout,
             resetPassword
           }}
-        >
-        </AuthContext.Provider>
-    );
-};
-
-export default AuthProvider;
+      </AuthContext.Provider>
+  );
+}
 export default AuthProvider;
       return {
         user,
