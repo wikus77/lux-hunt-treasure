@@ -42,11 +42,11 @@ useEffect(() => {
             resetPassword
           }}
         >
-          {children}
         </AuthContext.Provider>
-      );
-    }
+    );
+}
 
+export default AuthProvider;
 export default AuthProvider;
       return {
         user,
