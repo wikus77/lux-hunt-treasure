@@ -1,4 +1,4 @@
-// ✅ File conforme M1SSION™ — BY JOSEPH MULE
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React from 'react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import M1ssionText from '@/components/logo/M1ssionText';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
+import { formatPrice } from '@/lib/constants/subscriptionPrices';
 
 const SilverPlanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -75,7 +76,7 @@ const SilverPlanPage: React.FC = () => {
                 <Star className="h-8 w-8 text-silver" />
                 <h2 className="text-3xl font-bold text-white">M1SSION™ Silver</h2>
               </div>
-              <p className="text-4xl font-bold text-primary mb-2">€3,99</p>
+              <p className="text-4xl font-bold text-primary mb-2">{formatPrice('silver')}</p>
               <p className="text-white/60">al mese</p>
             </div>
 
@@ -95,7 +96,7 @@ const SilverPlanPage: React.FC = () => {
             {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Silver"
-              planPrice="€3,99"
+              planPrice={formatPrice('silver')}
               planFeatures={planFeatures}
             />
           </div>

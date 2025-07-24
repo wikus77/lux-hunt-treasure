@@ -1,10 +1,11 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ Universal Stripe In-App Payment Hook - RESET COMPLETO 22/07/2025
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ Universal Stripe In-App Payment Hook - SYNCHRONIZED PRICING
 
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
+import { SUBSCRIPTION_PRICES, getPriceCents } from '@/lib/constants/subscriptionPrices';
 
 export interface PaymentConfig {
   type: 'buzz' | 'buzz_map' | 'subscription';
@@ -65,22 +66,24 @@ export const useStripeInAppPayment = () => {
   };
 
   const processSubscription = async (plan: string): Promise<void> => {
-    const planDetails = {
-      Silver: { amount: 399, description: 'Piano Silver con vantaggi premium' },
-      Gold: { amount: 699, description: 'Piano Gold con accesso completo' },
-      Black: { amount: 999, description: 'Piano Black VIP esclusivo' },
-      Titanium: { amount: 2999, description: 'Piano Titanium ultimate' }
-    };
-
-    const details = planDetails[plan as keyof typeof planDetails] || planDetails.Silver;
+    // Use centralized pricing constants
+    const planKey = plan.toLowerCase() as keyof typeof SUBSCRIPTION_PRICES;
+    const planData = SUBSCRIPTION_PRICES[planKey];
+    
+    if (!planData) {
+      toast.error('Piano di abbonamento non valido');
+      return;
+    }
 
     const config: PaymentConfig = {
       type: 'subscription',
-      amount: details.amount,
-      description: details.description,
+      amount: planData.priceCents, // Use centralized price
+      description: `${planData.label} con vantaggi premium`,
       plan: plan,
       metadata: {
         subscription_plan: plan,
+        price_cents: planData.priceCents,
+        price_eur: planData.priceEur,
         mission: 'M1SSION',
         reset_date: '2025-07-22'
       }
