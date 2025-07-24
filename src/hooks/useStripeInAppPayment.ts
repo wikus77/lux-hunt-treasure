@@ -67,9 +67,9 @@ export const useStripeInAppPayment = () => {
   const processSubscription = async (plan: string): Promise<void> => {
     const planDetails = {
       Silver: { amount: 399, description: 'Piano Silver con vantaggi premium' },
-      Gold: { amount: 799, description: 'Piano Gold con accesso completo' },
-      Black: { amount: 1299, description: 'Piano Black VIP esclusivo' },
-      Titanium: { amount: 1999, description: 'Piano Titanium ultimate' }
+      Gold: { amount: 699, description: 'Piano Gold con accesso completo' },
+      Black: { amount: 999, description: 'Piano Black VIP esclusivo' },
+      Titanium: { amount: 2999, description: 'Piano Titanium ultimate' }
     };
 
     const details = planDetails[plan as keyof typeof planDetails] || planDetails.Silver;

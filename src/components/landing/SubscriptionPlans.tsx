@@ -38,7 +38,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'silver',
     name: 'SILVER',
-    price: 9.99,
+    price: 3.99,
     icon: Zap,
     earlyAccessHours: 2,
     features: [
@@ -54,8 +54,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'gold',
     name: 'GOLD',
-    price: 24.99,
-    originalPrice: 34.99,
+    price: 6.99,
     icon: Crown,
     earlyAccessHours: 24,
     highlighted: true,
@@ -73,8 +72,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'black',
     name: 'BLACK',
-    price: 49.99,
-    originalPrice: 69.99,
+    price: 9.99,
     icon: Diamond,
     earlyAccessHours: 48,
     features: [
@@ -92,7 +90,7 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'titanium',
     name: 'TITANIUM',
-    price: 299.99,
+    price: 29.99,
     icon: Infinity,
     earlyAccessHours: 72,
     features: [

@@ -38,7 +38,7 @@
       "zh": "白银计划",
       "ar": "الخطة الفضية"
     },
-    "price": 6.99,
+    "price": 3.99,
     "cluesPerWeek": 3,
     "accessoAnticipatoOre": 2,
     "supporto": "chat",
@@ -65,7 +65,7 @@
       "zh": "黄金计划",
       "ar": "الخطة الذهبية"
     },
-    "price": 9.99,
+    "price": 6.99,
     "cluesPerWeek": 5,
     "accessoAnticipatoOre": 6,
     "supporto": "prioritario",
@@ -92,7 +92,7 @@
       "zh": "黑钻计划",
       "ar": "الخطة السوداء"
     },
-    "price": 13.99,
+    "price": 9.99,
     "cluesPerWeek": 7,
     "accessoAnticipatoOre": 12,
     "supporto": "vip",
@@ -119,7 +119,7 @@
       "zh": "钛金计划",
       "ar": "خطة التيتانيوم"
     },
-    "price": 49.00,
+    "price": 29.99,
     "cluesPerWeek": 9,
     "accessoAnticipatoOre": 24,
     "supporto": "ultra",
