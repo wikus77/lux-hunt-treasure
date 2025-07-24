@@ -15,15 +15,13 @@ const AuthProvider = () => {
     );
   }
 
-export default AuthProvider;
-  useEffect(() => { clearCacheAndLogout(); }, [session]);
-              cacheNames.forEach((cacheName) => {
-                caches.delete(cacheName);
-              });
-            })
-            .catch((err) => {
-              console.error("Errore durante pulizia cache:", err);
-            });
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => caches.delete(cacheName))
+      );
+    }).catch((err) => {
+      console.error("Errore durante pulizia cache:", err);
+    });
           })
           .catch((err) => {
             console.error("Errore durante caches.keys():", err);
