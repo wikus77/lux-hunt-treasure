@@ -208,7 +208,7 @@ export const useProfileSubscription = () => {
       localStorage.setItem('userTier', newPlan);
       window.dispatchEvent(new Event('storage'));
       
-      // 🚨 CRITICAL FIX: Force immediate UI state update
+      // 🚨 CRITICAL FIX: Force immediate UI state update (triplo refresh per sincronizzazione garantita)
       setTimeout(() => {
         loadSubscriptionFromSupabase();
       }, 100);
@@ -217,6 +217,11 @@ export const useProfileSubscription = () => {
       setTimeout(() => {
         loadSubscriptionFromSupabase();
       }, 1000);
+      
+      // 🚨 CRITICAL FIX: Final safety refresh for persistent state sync
+      setTimeout(() => {
+        loadSubscriptionFromSupabase();
+      }, 3000);
       
       console.warn(`✅ M1SSION™ UPGRADE COMPLETE: ${newPlan}`);
       

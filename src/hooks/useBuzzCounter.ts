@@ -1,11 +1,15 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ BUZZ Counter Hook - Enhanced with Progressive Pricing
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { calculateBuzzPrice, getBuzzDisplayPrice, getBuzzPriceCents } from '@/lib/constants/buzzPricing';
 
 export const useBuzzCounter = (userId: string | undefined) => {
   const [dailyBuzzCounter, setDailyBuzzCounter] = useState(0);
 
-  // Load daily BUZZ counter for color calculation
+  // Load daily BUZZ counter for pricing calculation
   const loadDailyBuzzCounter = useCallback(async () => {
     if (!userId) return;
 
@@ -24,7 +28,7 @@ export const useBuzzCounter = (userId: string | undefined) => {
 
       const buzzCount = data?.buzz_count || 0;
       setDailyBuzzCounter(buzzCount);
-      console.log('📊 DYNAMIC COLOR - Daily buzz counter loaded:', buzzCount);
+      console.log('📊 PROGRESSIVE PRICING - Daily buzz counter loaded:', buzzCount);
     } catch (err) {
       console.error('Exception loading daily buzz counter:', err);
     }
@@ -46,7 +50,7 @@ export const useBuzzCounter = (userId: string | undefined) => {
         });
       
       setDailyBuzzCounter(newBuzzCounter);
-      console.log('🎨 DYNAMIC COLOR - Updated buzz counter for color calculation:', newBuzzCounter);
+      console.log('🎨 PROGRESSIVE PRICING - Updated buzz counter:', newBuzzCounter);
       
       return newBuzzCounter;
     } catch (err) {
@@ -54,6 +58,19 @@ export const useBuzzCounter = (userId: string | undefined) => {
       return dailyBuzzCounter;
     }
   }, [userId, dailyBuzzCounter]);
+
+  // Get current BUZZ pricing
+  const getCurrentBuzzPrice = useCallback(() => {
+    return calculateBuzzPrice(dailyBuzzCounter);
+  }, [dailyBuzzCounter]);
+
+  const getCurrentBuzzDisplayPrice = useCallback(() => {
+    return getBuzzDisplayPrice(dailyBuzzCounter);
+  }, [dailyBuzzCounter]);
+
+  const getCurrentBuzzPriceCents = useCallback(() => {
+    return getBuzzPriceCents(dailyBuzzCounter);
+  }, [dailyBuzzCounter]);
 
   useEffect(() => {
     if (userId) {
@@ -64,6 +81,11 @@ export const useBuzzCounter = (userId: string | undefined) => {
   return {
     dailyBuzzCounter,
     loadDailyBuzzCounter,
-    updateDailyBuzzCounter
+    updateDailyBuzzCounter,
+    getCurrentBuzzPrice,
+    getCurrentBuzzDisplayPrice,
+    getCurrentBuzzPriceCents
   };
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

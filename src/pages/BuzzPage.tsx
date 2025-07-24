@@ -103,9 +103,7 @@ export const BuzzPage: React.FC = () => {
             {/* Pulsante BUZZ - Prima del container */}
             <div className="text-center mb-6">
               <BuzzActionButton
-                currentPrice={currentPrice}
                 isBlocked={isBlocked}
-                todayCount={stats?.today_count || 0}
                 onSuccess={handleBuzzSuccess}
               />
             </div>

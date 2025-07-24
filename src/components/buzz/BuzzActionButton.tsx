@@ -1,28 +1,40 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ - BUZZ Action Button with Universal Stripe In-App Payment
+// M1SSION™ - BUZZ Action Button with Progressive Pricing & Universal Stripe In-App Payment
 import React from 'react';
 import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { BuzzButton } from './BuzzButton';
 import { ShockwaveAnimation } from './ShockwaveAnimation';
 import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { toast } from 'sonner';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
+import { validateBuzzPrice } from '@/lib/constants/buzzPricing';
 
 interface BuzzActionButtonProps {
-  currentPrice: number;
   isBlocked: boolean;
-  todayCount: number;
   onSuccess: () => void;
 }
 
 export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
-  currentPrice,
   isBlocked,
-  todayCount,
   onSuccess
 }) => {
   const { user } = useUnifiedAuth();
+  
+  // Enhanced BUZZ counter with progressive pricing
+  const { 
+    dailyBuzzCounter, 
+    getCurrentBuzzPriceCents,
+    getCurrentBuzzDisplayPrice,
+    updateDailyBuzzCounter
+  } = useBuzzCounter(user?.id);
+  
+  // Progressive pricing calculation
+  const currentPriceCents = getCurrentBuzzPriceCents();
+  const currentPriceEur = currentPriceCents / 100;
+  const currentPriceDisplay = getCurrentBuzzDisplayPrice();
+  
   const { 
     processBuzzPayment, 
     showCheckout, 
@@ -32,15 +44,17 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   } = useStripeInAppPayment();
   
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
-    currentPrice,
+    currentPrice: currentPriceEur,
     onSuccess
   });
 
-  // © 2025 Joseph MULÉ – M1SSION™ – Universal Stripe In-App Payment Handler
+  // © 2025 Joseph MULÉ – M1SSION™ – Progressive BUZZ Pricing Handler
   const handleStripePayment = async () => {
-    console.log('🔥 M1SSION™ STRIPE IN-APP: Initiating BUZZ payment', { 
-      currentPrice, 
-      todayCount,
+    console.log('🔥 M1SSION™ PROGRESSIVE BUZZ: Initiating payment', { 
+      dailyCount: dailyBuzzCounter,
+      nextClick: dailyBuzzCounter + 1,
+      priceCents: currentPriceCents,
+      priceEur: currentPriceEur,
       timestamp: new Date().toISOString()
     });
     
@@ -49,25 +63,37 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       return;
     }
 
-    // Convert price to cents for Stripe
-    const priceInCents = Math.round(currentPrice * 100);
+    // Validate pricing integrity
+    if (!validateBuzzPrice(dailyBuzzCounter, currentPriceCents)) {
+      console.error('❌ BUZZ PRICING VALIDATION FAILED');
+      toast.error('Errore nel calcolo del prezzo. Riprova.');
+      return;
+    }
     
-    console.log('💳 M1SSION™ BUZZ: Opening in-app checkout', { 
-      priceInCents, 
-      currentPrice,
+    console.log('💳 M1SSION™ PROGRESSIVE BUZZ: Opening in-app checkout', { 
+      priceCents: currentPriceCents, 
+      priceEur: currentPriceEur,
+      dailyCount: dailyBuzzCounter,
       userId: user.id 
     });
     
-    // Open in-app checkout modal
-    await processBuzzPayment(priceInCents, false);
+    // Open in-app checkout modal with validated progressive pricing
+    await processBuzzPayment(currentPriceCents, false);
   };
 
   const handlePaymentComplete = async (paymentIntentId: string) => {
-    console.log('✅ M1SSION™ BUZZ: Payment completed, processing BUZZ action', { paymentIntentId });
+    console.log('✅ M1SSION™ PROGRESSIVE BUZZ: Payment completed', { 
+      paymentIntentId,
+      dailyCount: dailyBuzzCounter,
+      pricePaid: currentPriceEur
+    });
     
     try {
       // First handle payment success via hook
       await handlePaymentSuccess(paymentIntentId);
+      
+      // Update BUZZ counter after successful payment
+      await updateDailyBuzzCounter();
       
       // Then execute the BUZZ logic
       await handleBuzz();
@@ -75,7 +101,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // Finally call parent success callback
       onSuccess();
     } catch (error) {
-      console.error('❌ M1SSION™ BUZZ: Error in post-payment processing', error);
+      console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
       toast.error('Errore nella finalizzazione BUZZ');
     }
   };
@@ -83,7 +109,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   return (
     <div className="relative flex flex-col items-center space-y-6">
       <BuzzButton
-        currentPrice={currentPrice}
+        currentPrice={currentPriceEur}
         isBlocked={isBlocked}
         buzzing={buzzing}
         onClick={handleStripePayment}
