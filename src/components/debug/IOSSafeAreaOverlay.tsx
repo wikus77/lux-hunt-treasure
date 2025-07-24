@@ -107,8 +107,3 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
         </div>
       )}
 
-      {/* Info panel */}
-      <div className="absolute top-16 left-4 bg-black bg-opacity-80 text-white p-2 rounded text-xs font-mono">
-        <div>Orientation: {window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait'}</div>
-        <div>Viewport: {window.innerWidth}×{window.innerHeight}</div>
-        <div>Safe Area: T{safeArea.top} B{safeArea.bottom} L{safeArea.left} R{safeArea.right}</div>
