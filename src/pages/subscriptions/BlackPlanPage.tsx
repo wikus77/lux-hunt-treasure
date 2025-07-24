@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Zap, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
+import { getDisplayPrice } from '@/lib/constants/pricingConfig';
 
 const BlackPlanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -82,7 +83,7 @@ const BlackPlanPage: React.FC = () => {
                 <Zap className="h-8 w-8 text-purple-400" />
                 <h2 className="text-3xl font-bold text-white">M1SSION™ Black</h2>
               </div>
-              <p className="text-4xl font-bold text-primary mb-2">€9,99</p>
+              <p className="text-4xl font-bold text-primary mb-2">{getDisplayPrice("Black")}</p>
               <p className="text-white/60">al mese</p>
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/30 rounded-full">
                 <Crown className="h-4 w-4 text-purple-400" />
@@ -114,7 +115,7 @@ const BlackPlanPage: React.FC = () => {
             {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Black"
-              planPrice="€9,99"
+              planPrice={getDisplayPrice("Black")}
               planFeatures={planFeatures}
             />
           </div>

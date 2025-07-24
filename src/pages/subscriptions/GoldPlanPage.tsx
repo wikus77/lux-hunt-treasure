@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Crown, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
+import { getDisplayPrice } from '@/lib/constants/pricingConfig';
 
 const GoldPlanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -80,7 +81,7 @@ const GoldPlanPage: React.FC = () => {
                 <Crown className="h-8 w-8 text-yellow-400" />
                 <h2 className="text-3xl font-bold text-white">M1SSION™ Gold</h2>
               </div>
-              <p className="text-4xl font-bold text-primary mb-2">€6,99</p>
+              <p className="text-4xl font-bold text-primary mb-2">{getDisplayPrice("Gold")}</p>
               <p className="text-white/60">al mese</p>
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-yellow-500/20 border border-yellow-500/30 rounded-full">
                 <Star className="h-4 w-4 text-yellow-400" />
@@ -105,7 +106,7 @@ const GoldPlanPage: React.FC = () => {
             {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Gold"
-              planPrice="€6,99"
+              planPrice={getDisplayPrice("Gold")}
               planFeatures={planFeatures}
             />
           </div>

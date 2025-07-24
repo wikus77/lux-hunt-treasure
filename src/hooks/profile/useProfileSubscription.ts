@@ -15,8 +15,7 @@ export const useProfileSubscription = () => {
   const [credits, setCredits] = useState(500);
 
   // M1SSION™ Sistema Sincronizzazione Abbonamenti
-  useEffect(() => {
-    const loadSubscriptionFromSupabase = async () => {
+  const loadSubscriptionFromSupabase = async () => {
       const currentUser = getCurrentUser();
       if (!currentUser) return;
 
@@ -120,6 +119,7 @@ export const useProfileSubscription = () => {
       }
     };
 
+  useEffect(() => {
     loadSubscriptionFromSupabase();
 
     // Listen for localStorage changes to sync across tabs
@@ -208,6 +208,16 @@ export const useProfileSubscription = () => {
       localStorage.setItem('userTier', newPlan);
       window.dispatchEvent(new Event('storage'));
       
+      // 🚨 CRITICAL FIX: Force immediate UI state update
+      setTimeout(() => {
+        loadSubscriptionFromSupabase();
+      }, 100);
+      
+      // 🚨 CRITICAL FIX: Force component refresh after delay to ensure DB consistency
+      setTimeout(() => {
+        loadSubscriptionFromSupabase();
+      }, 1000);
+      
       console.warn(`✅ M1SSION™ UPGRADE COMPLETE: ${newPlan}`);
       
     } catch (error) {
@@ -221,6 +231,7 @@ export const useProfileSubscription = () => {
     credits,
     setSubscription,
     setCredits,
-    upgradeSubscription
+    upgradeSubscription,
+    refreshSubscription: loadSubscriptionFromSupabase
   };
 };

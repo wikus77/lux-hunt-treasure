@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Infinity, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
+import { getDisplayPrice } from '@/lib/constants/pricingConfig';
 
 const TitaniumPlanPage: React.FC = () => {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ const TitaniumPlanPage: React.FC = () => {
                 <Infinity className="h-8 w-8 text-cyan-400" />
                 <h2 className="text-3xl font-bold text-white">M1SSION™ Titanium</h2>
               </div>
-              <p className="text-4xl font-bold text-primary mb-2">€29,99</p>
+              <p className="text-4xl font-bold text-primary mb-2">{getDisplayPrice("Titanium")}</p>
               <p className="text-white/60">al mese</p>
               <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/20 border border-cyan-500/30 rounded-full">
                 <Crown className="h-4 w-4 text-cyan-400" />
@@ -116,7 +117,7 @@ const TitaniumPlanPage: React.FC = () => {
             {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Titanium"
-              planPrice="€29,99"
+              planPrice={getDisplayPrice("Titanium")}
               planFeatures={planFeatures}
             />
           </div>

@@ -9,6 +9,7 @@ import SubscriptionCard from "./SubscriptionCard";
 import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 import { supabase } from "@/integrations/supabase/client";
 import StripeInAppCheckout from "./StripeInAppCheckout";
+import { getDisplayPrice } from "@/lib/constants/pricingConfig";
 
 interface SubscriptionPlansProps {
   selected: string;
@@ -493,7 +494,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         />
         <SubscriptionCard
           title="Silver"
-          price="€3,99"
+          price={getDisplayPrice("Silver")}
           period="mese"
           features={getSubscriptionFeatures("Silver")}
           isPopular={false}
@@ -504,7 +505,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         />
         <SubscriptionCard
           title="Gold"
-          price="€6,99"
+          price={getDisplayPrice("Gold")}
           period="mese"
           features={getSubscriptionFeatures("Gold")}
           isPopular={true}
@@ -515,7 +516,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         />
         <SubscriptionCard
           title="Black"
-          price="€9,99"
+          price={getDisplayPrice("Black")}
           period="mese"
           features={getSubscriptionFeatures("Black")}
           isPopular={false}
@@ -526,7 +527,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         />
         <SubscriptionCard
           title="Titanium"
-          price="€29,99"
+          price={getDisplayPrice("Titanium")}
           period="mese"
           features={getSubscriptionFeatures("Titanium")}
           isPopular={false}
