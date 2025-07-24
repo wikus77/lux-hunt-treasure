@@ -113,6 +113,7 @@ const TitaniumPlanPage: React.FC = () => {
             </div>
 
             {/* Payment Section */}
+            {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Titanium"
               planPrice="€29,99"

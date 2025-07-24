@@ -102,6 +102,7 @@ const GoldPlanPage: React.FC = () => {
             </div>
 
             {/* Payment Section */}
+            {/* Payment Section */}
             <FakeStripeCheckout 
               planName="Gold"
               planPrice="€6,99"
