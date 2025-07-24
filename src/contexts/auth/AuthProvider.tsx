@@ -93,15 +93,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         isRoleLoading,
         login,
         logout,
-        resetPassword
       }}
-      };
-
-      const clearCacheAndLogout = async () => {
-        try {
-          const cacheNames = await caches.keys();
-          await Promise.all(cacheNames.map(cache => caches.delete(cache)));
-        } catch (err) {
+    };
           console.error('Errore durante pulizia cache:', err);
         }
         handleLogout();
