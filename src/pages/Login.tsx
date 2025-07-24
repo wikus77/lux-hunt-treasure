@@ -1,5 +1,6 @@
 
-// © Joseph Mule – M1SSION™ App. All rights reserved.
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import { useState, useEffect, useRef } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { Link } from "wouter";
@@ -7,12 +8,14 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
+import { PreRegistrationForm } from "@/components/auth/PreRegistrationForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import LaunchCountdown from "@/components/login/LaunchCountdown";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [showPreRegistration, setShowPreRegistration] = useState(false);
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -140,21 +143,38 @@ const Login = () => {
           </div>
           <h2 className="text-2xl font-bold text-white mb-1 neon-text-cyan">M1SSION™</h2>
           <p className="text-gray-400">
-            Accedi per iniziare la tua missione
+            {showPreRegistration ? 'Ottieni accesso prioritario' : 'Accedi per iniziare la tua missione'}
           </p>
         </div>
 
-        <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
-          <StandardLoginForm verificationStatus={verificationStatus} />
+        {showPreRegistration ? (
+          <PreRegistrationForm
+            onSuccess={() => {
+              setShowPreRegistration(false);
+              toast.success('Pre-registrazione completata! Riceverai una email quando sarà il momento dell\'accesso.');
+            }}
+            onCancel={() => setShowPreRegistration(false)}
+          />
+        ) : (
+          <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
+            <StandardLoginForm verificationStatus={verificationStatus} />
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-white/50 mt-2">
-              <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                ← Torna alla homepage
-              </Link>
-            </p>
+            <div className="mt-6 text-center space-y-3">
+              <button
+                onClick={() => setShowPreRegistration(true)}
+                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-semibold"
+              >
+                🚀 Pre-registrati ora
+              </button>
+              
+              <p className="text-sm text-white/50">
+                <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                  ← Torna alla homepage
+                </Link>
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
       </motion.div>
     </div>

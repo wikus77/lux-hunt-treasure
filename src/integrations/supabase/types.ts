@@ -1260,6 +1260,39 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_registered_users: {
+        Row: {
+          agent_code: string | null
+          created_at: string
+          email: string
+          id: string
+          is_pre_registered: boolean
+          is_verified: boolean | null
+          name: string | null
+          password_hash: string | null
+        }
+        Insert: {
+          agent_code?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          is_pre_registered?: boolean
+          is_verified?: boolean | null
+          name?: string | null
+          password_hash?: string | null
+        }
+        Update: {
+          agent_code?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          is_pre_registered?: boolean
+          is_verified?: boolean | null
+          name?: string | null
+          password_hash?: string | null
+        }
+        Relationships: []
+      }
       pre_registrations: {
         Row: {
           confirmed: boolean
@@ -1411,28 +1444,34 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_starts_at: string | null
           address: string | null
           agent_code: string | null
           agent_title: string | null
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          can_access_app: boolean | null
           city: string | null
           country: string | null
           created_at: string
           credits: number | null
+          early_access_hours: number | null
           email: string | null
           first_name: string | null
           full_name: string | null
           id: string
           investigative_style: string | null
+          is_pre_registered: boolean | null
           language: string | null
           last_cookie_banner_shown: string | null
           last_name: string | null
+          last_plan_change: string | null
           notifications_enabled: boolean | null
           phone: string | null
           plan: string | null
           postal_code: string | null
+          pre_registration_date: string | null
           preferred_language: string | null
           preferred_rewards: string[] | null
           recovery_key: string | null
@@ -1448,28 +1487,34 @@ export type Database = {
           weekly_hints: string | null
         }
         Insert: {
+          access_starts_at?: string | null
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          can_access_app?: boolean | null
           city?: string | null
           country?: string | null
           created_at?: string
           credits?: number | null
+          early_access_hours?: number | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
           id: string
           investigative_style?: string | null
+          is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
+          last_plan_change?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
           postal_code?: string | null
+          pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
           recovery_key?: string | null
@@ -1485,28 +1530,34 @@ export type Database = {
           weekly_hints?: string | null
         }
         Update: {
+          access_starts_at?: string | null
           address?: string | null
           agent_code?: string | null
           agent_title?: string | null
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          can_access_app?: boolean | null
           city?: string | null
           country?: string | null
           created_at?: string
           credits?: number | null
+          early_access_hours?: number | null
           email?: string | null
           first_name?: string | null
           full_name?: string | null
           id?: string
           investigative_style?: string | null
+          is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
+          last_plan_change?: string | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
           postal_code?: string | null
+          pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
           recovery_key?: string | null
@@ -1987,6 +2038,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_map_areas: {
         Row: {
           clue_id: string | null
@@ -2259,6 +2340,78 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          granted_at: string | null
+          id: string
+          permission_type: string
+          permission_value: boolean | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          permission_type: string
+          permission_value?: boolean | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          permission_type?: string
+          permission_value?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_plan_events: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          old_plan: string | null
+          plan: string
+          stripe_payment_intent_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          old_plan?: string | null
+          plan: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          currency?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          old_plan?: string | null
+          plan?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           address: string | null
@@ -2412,6 +2565,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      calculate_access_start_time: {
+        Args: { p_plan: string }
+        Returns: string
+      }
       calculate_buzz_price: {
         Args: { daily_count: number }
         Returns: number
@@ -2476,6 +2633,10 @@ export type Database = {
       force_user_to_base_tier: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      generate_agent_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       generate_referral_code: {
         Args: Record<PropertyKey, never>
@@ -2552,9 +2713,17 @@ export type Database = {
           role: string
         }[]
       }
+      get_user_sync_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
+      }
+      has_mission_started: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
       }
       has_role: {
         Args: { user_id: string; role_name: string }
@@ -2592,6 +2761,16 @@ export type Database = {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
       }
+      log_user_action: {
+        Args: {
+          p_user_id: string
+          p_action: string
+          p_details?: Json
+          p_ip_address?: unknown
+          p_user_agent?: string
+        }
+        Returns: string
+      }
       process_stripe_webhook_completed: {
         Args: {
           p_session_id: string
@@ -2621,12 +2800,37 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: Json
       }
+      send_user_notification: {
+        Args: {
+          p_user_id: string
+          p_notification_type: string
+          p_title: string
+          p_message: string
+          p_metadata?: Json
+        }
+        Returns: string
+      }
       setup_developer_user: {
         Args: { uid: string }
         Returns: undefined
       }
       submit_final_shot: {
         Args: { p_mission_id: string; p_latitude: number; p_longitude: number }
+        Returns: Json
+      }
+      sync_user_permissions: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      update_user_plan_complete: {
+        Args: {
+          p_user_id: string
+          p_new_plan: string
+          p_event_type?: string
+          p_old_plan?: string
+          p_amount?: number
+          p_payment_intent_id?: string
+        }
         Returns: Json
       }
       update_user_subscription_tier: {

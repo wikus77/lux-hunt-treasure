@@ -14,7 +14,7 @@ import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useAuth } from "./hooks/use-auth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
-import { DailySpinRedirect } from "./components/daily-spin/DailySpinRedirect";
+
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
@@ -67,9 +67,7 @@ function App() {
             />
             <BuzzPaymentMonitor />
             <LegalOnboarding />
-            <DailySpinRedirect>
-              <WouterRoutes />
-            </DailySpinRedirect>
+            <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
