@@ -31,6 +31,12 @@ import CookiePolicy from "@/pages/CookiePolicy";
 import SafeCreative from "@/pages/SafeCreative";
 import GameRules from "@/pages/GameRules";
 
+// Subscription plan pages
+import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
+import GoldPlanPage from "@/pages/subscriptions/GoldPlanPage";
+import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
+import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
+
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
 
@@ -129,6 +135,31 @@ const WouterRoutes: React.FC = () => {
           <Route path="/subscriptions">
             <ProtectedRoute>
               <GlobalLayout><Subscriptions /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Subscription plan pages */}
+          <Route path="/subscriptions/silver">
+            <ProtectedRoute>
+              <GlobalLayout><SilverPlanPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/subscriptions/gold">
+            <ProtectedRoute>
+              <GlobalLayout><GoldPlanPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/subscriptions/black">
+            <ProtectedRoute>
+              <GlobalLayout><BlackPlanPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/subscriptions/titanium">
+            <ProtectedRoute>
+              <GlobalLayout><TitaniumPlanPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

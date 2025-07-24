@@ -29,7 +29,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Silver',
-      price: '€6.99',
+      price: '€3.99',
       period: '/mese',
       features: [
         "Tutto del piano Base",
@@ -46,7 +46,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Gold',
-      price: '€9.99',
+      price: '€6.99',
       period: '/mese',
       highlight: true,
       features: [
@@ -61,7 +61,7 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
     },
     {
       title: 'Black',
-      price: '€13.99',
+      price: '€9.99',
       period: '/mese',
       features: [
         "Tutto del piano Gold",

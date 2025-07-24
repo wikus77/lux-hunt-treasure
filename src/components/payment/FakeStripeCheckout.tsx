@@ -58,7 +58,8 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
       const planPrices: Record<string, number> = {
         'Silver': 3.99,
         'Gold': 6.99,
-        'Black': 9.99
+        'Black': 9.99,
+        'Titanium': 29.99
       };
       
       await supabase.from('payment_transactions').insert({

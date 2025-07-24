@@ -307,19 +307,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     log("Logout iniziato");
     
     try {
+      // 🔄 FORCE LOADING STATE per evitare race conditions
+      setIsLoading(true);
+      
       // Supabase signOut - NO localStorage cleanup manuale
       await supabase.auth.signOut();
       
-      // Cleanup stato locale
+      // Cleanup stato locale IMMEDIATO
       setUser(null);
       setSession(null);
       setUserRoles([]);
-      setIsLoading(false);
       setIsRoleLoading(false);
+      
+      // 🚨 CRITICAL: Force redirect to login after logout
+      setTimeout(() => {
+        setIsLoading(false);
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/') {
+          log("Force redirect to login after logout");
+          window.location.href = '/login';
+        }
+      }, 100);
       
       log("Logout completato");
     } catch (error) {
       log("Errore logout", error);
+      setIsLoading(false);
     }
   };
 
