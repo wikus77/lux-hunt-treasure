@@ -314,8 +314,15 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       } else {
         console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
         
-        // 🚀 CRITICAL: Use in-app checkout instead of external redirect
+        // 🚀 CRITICAL: Use in-app checkout with centralized pricing
         console.log(`💳 M1SSION™ Opening in-app checkout for ${plan}`);
+        
+        // Import centralized pricing to ensure consistency
+        const { getPriceCents } = await import('@/lib/constants/pricingConfig');
+        const planPriceCents = getPriceCents(plan);
+        
+        console.log(`💰 M1SSION™ Plan ${plan} price: ${planPriceCents} cents`);
+        
         setSelectedPlan(plan);
         setShowInAppCheckout(true);
       }
@@ -559,13 +566,9 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           config={{
             type: 'subscription',
             amount: (() => {
-              switch (selectedPlan) {
-                case 'Silver': return 399;
-                case 'Gold': return 799;
-                case 'Black': return 1299;
-                case 'Titanium': return 1999;
-                default: return 399;
-              }
+              // © 2025 Joseph MULÉ – M1SSION™ – Use centralized pricing
+              const { getPriceCents } = require('@/lib/constants/pricingConfig');
+              return getPriceCents(selectedPlan) || 399;
             })(),
             description: `Piano ${selectedPlan} con accesso premium`,
             plan: selectedPlan,

@@ -141,7 +141,7 @@ const CheckoutForm: React.FC<{
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
+    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 max-h-[85vh] overflow-y-auto">
       <CardHeader>
         <CardTitle className="text-center text-white">
           💳 {config.type === 'subscription' ? `Abbonamento ${config.plan}` : config.type === 'buzz_map' ? 'BUZZ MAPPA' : 'BUZZ Payment'}
@@ -211,7 +211,12 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto" 
+         style={{ 
+           paddingTop: 'calc(env(safe-area-inset-top, 47px) + 20px)',
+           paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
+           maxHeight: '100dvh'
+         }}>
       {useSavedCard ? (
         <SavedCardPayment
           config={config}

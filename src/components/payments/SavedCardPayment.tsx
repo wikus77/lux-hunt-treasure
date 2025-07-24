@@ -174,7 +174,7 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
   // If user chooses manual entry or no saved card, show fallback
   if (useManualEntry || !savedCard) {
     return (
-      <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
+      <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 max-h-[85vh] overflow-y-auto">
         <CardHeader>
           <CardTitle className="text-center text-white">
             💳 {config.type === 'subscription' ? `Abbonamento ${config.plan}` : config.type === 'buzz_map' ? 'BUZZ MAPPA' : 'BUZZ Payment'}
@@ -215,7 +215,7 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30">
+    <Card className="w-full max-w-md mx-auto bg-gradient-to-br from-purple-900/20 to-blue-900/20 border-purple-500/30 max-h-[85vh] overflow-y-auto">
       <CardHeader>
         <CardTitle className="text-center text-white">
           💳 {config.type === 'subscription' ? `Abbonamento ${config.plan}` : config.type === 'buzz_map' ? 'BUZZ MAPPA' : 'BUZZ Payment'}
