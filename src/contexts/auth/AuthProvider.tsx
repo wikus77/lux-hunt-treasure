@@ -1,23 +1,12 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import React, { useEffect } from "react";
 
-
-  return (
-  return (
-    <AuthContext.Provider value={{
+const AuthProvider = () => {
+  useEffect(() => {
+    clearCacheAndLogout();
   }, [session]);
 
-    return (
-      <AuthContext.Provider
-        value={{
-          session,
-          user,
-          userRoles,
-          isAuthenticated,
-          setUserRoles,
-          rolesCount: userRoles.length,
-          isRoleLoading,
-          login,
-          logout,
+  return (
+    <AuthContext.Provider value={{
           resetPassword
         }}
       >
