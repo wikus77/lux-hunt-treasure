@@ -56,14 +56,9 @@ export const useProfileSubscription = () => {
           console.log('📋 M1SSION™ Using profile tier:', finalPlan);
         }
         
-        // Override speciale per developer (CONDITIONAL for downgrade testing)
-        if (currentUser?.email === 'wikus77@hotmail.it' && finalPlan === "Base") {
-          // Allow developer to test downgrade - no override
-          console.log('🔧 M1SSION™ DEV: Allowing downgrade to Base for testing');
-        } else if (currentUser?.email === 'wikus77@hotmail.it') {
-          finalPlan = "Titanium";
-          console.log('🔑 M1SSION™ Developer override: Titanium');
-        }
+        // 🚨 REMOVED: All developer overrides for production consistency
+        // Subscription tier is now managed purely by database state
+        console.log('📋 M1SSION™ Using pure database tier without overrides:', finalPlan);
 
         // Update subscription based on active plan
         switch (finalPlan) {
