@@ -115,26 +115,39 @@ export const useBuzzMapProgressivePricing = () => {
         p_user_id: user.id
       });
 
+      console.log('🔍 BUZZ MAPPA RPC RAW RESPONSE:', {
+        weeklyStatus,
+        weeklyError,
+        typeOfStatus: typeof weeklyStatus,
+        isObject: weeklyStatus && typeof weeklyStatus === 'object',
+        hasKeys: weeklyStatus ? Object.keys(weeklyStatus) : null
+      });
+
       if (!weeklyError && weeklyStatus && typeof weeklyStatus === 'object') {
         const status = weeklyStatus as any;
-        setWeeklyBuzzCount(status.buzz_count || 0);
-        setWeeklyBuzzRemaining(status.remaining || 10);
-        setIsEligibleForBuzz(status.can_buzz || true);
+        const buzzCount = status.buzz_count ?? 0;
+        const remaining = status.remaining ?? 10;
+        const canBuzz = status.can_buzz ?? true;
         
-        console.log('📊 BUZZ MAPPA Weekly Status:', {
-          buzzCount: status.buzz_count,
-          remaining: status.remaining,
-          canBuzz: status.can_buzz,
+        setWeeklyBuzzCount(buzzCount);
+        setWeeklyBuzzRemaining(remaining);
+        setIsEligibleForBuzz(canBuzz);
+        
+        console.log('✅ BUZZ MAPPA Weekly Status SUCCESS:', {
+          buzzCount,
+          remaining,
+          canBuzz,
           weekNumber: status.week_number,
           weekStart: status.week_start,
           nextReset: status.next_reset
         });
       } else {
-        console.error('❌ BUZZ MAPPA Weekly Status ERROR:', {
-          weeklyError,
+        console.error('❌ BUZZ MAPPA Weekly Status ERROR - APPLYING FALLBACK:', {
+          weeklyError: weeklyError?.message || 'No error message',
           weeklyStatus,
           fallbackApplied: true
         });
+        // 🚨 CRITICAL FALLBACK: Force safe values for launch phase
         setWeeklyBuzzCount(0);
         setWeeklyBuzzRemaining(10);
         setIsEligibleForBuzz(true);
@@ -198,9 +211,44 @@ export const useBuzzMapProgressivePricing = () => {
       timestamp: new Date().toISOString()
     });
 
-    // Check weekly limit instead of daily
+    // 🚨 CRITICAL LAUNCH PHASE FALLBACK: Re-check weekly status if validation fails
     if (!isEligibleForBuzz || weeklyBuzzRemaining <= 0) {
-      console.error('🚫 ANTI-FRAUD: Weekly BUZZ limit reached', {
+      console.warn('⚠️ WEEKLY BUZZ VALIDATION FAILED - RECHECKING RPC STATUS...', {
+        weeklyBuzzCount,
+        weeklyBuzzRemaining,
+        isEligibleForBuzz,
+        attemptingFallback: true
+      });
+      
+      // Attempt fresh RPC call to get current status
+      try {
+        const { data: freshStatus, error: freshError } = await supabase.rpc('get_user_weekly_buzz_status', {
+          p_user_id: user.id
+        });
+        
+        if (!freshError && freshStatus && typeof freshStatus === 'object') {
+          const status = freshStatus as any;
+          const freshRemaining = status.remaining ?? 10;
+          const freshCanBuzz = status.can_buzz ?? true;
+          
+          console.log('🔄 FRESH RPC STATUS RETRIEVED:', {
+            freshRemaining,
+            freshCanBuzz,
+            buzzCount: status.buzz_count,
+            weekNumber: status.week_number
+          });
+          
+          // If fresh status shows we can buzz, allow it
+          if (freshCanBuzz && freshRemaining > 0) {
+            console.log('✅ FALLBACK SUCCESS: Fresh RPC allows BUZZ, proceeding...');
+            return true; // Skip the weekly limit check since fresh status is good
+          }
+        }
+      } catch (fallbackError) {
+        console.error('❌ FALLBACK RPC FAILED:', fallbackError);
+      }
+      
+      console.error('🚫 ANTI-FRAUD: Weekly BUZZ limit reached (confirmed after fallback)', {
         weeklyBuzzCount,
         weeklyBuzzRemaining,
         isEligibleForBuzz,
