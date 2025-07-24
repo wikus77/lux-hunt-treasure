@@ -19,11 +19,11 @@ caches.keys()
   .then((cacheNames) =>
     Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)))
   )
+caches.keys()
+  .then((cacheNames) => Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))))
   .catch((err) => {
     console.error("Errore durante caches.keys():", err);
   });
-          });
-        };
 
         handleLogout();
       }, [session]);
