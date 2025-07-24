@@ -97,7 +97,3 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
           style={{ 
             width: `${safeArea.right}px`,
             opacity,
-            writingMode: 'vertical-lr',
-            textOrientation: 'mixed'
-          }}
-        >
