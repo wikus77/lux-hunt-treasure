@@ -56,11 +56,11 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
 
       // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
       // TASK E — REGISTRAZIONE TRANSAZIONE - PREZZI SINCRONIZZATI CON CENTRALE
-      const { getPriceEur } = await import('@/lib/constants/pricingConfig');
+      const { getPriceEur, getPriceCents } = await import('@/lib/constants/pricingConfig');
       
       await supabase.from('payment_transactions').insert({
         user_id: user.id,
-        amount: getPriceEur(planName) || 0,
+        amount: getPriceCents(planName) || 0, // CRITICAL FIX: Use cents for Stripe compatibility
         currency: 'EUR',
         description: `Upgrade to ${planName} plan`,
         status: 'success',

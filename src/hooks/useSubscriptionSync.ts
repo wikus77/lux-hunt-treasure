@@ -61,8 +61,11 @@ export const useSubscriptionSync = () => {
         finalPlan = profileData.subscription_tier;
       }
       
-      // Developer override
-      if (user?.email === 'wikus77@hotmail.it') {
+      // Developer override (NON-BLOCKING for downgrade testing)
+      if (user?.email === 'wikus77@hotmail.it' && finalPlan === 'Base') {
+        // Allow developer to downgrade for testing - no override to Titanium
+        console.log('🔧 M1SSION™ DEV: Allowing downgrade to Base for testing');
+      } else if (user?.email === 'wikus77@hotmail.it') {
         finalPlan = 'Titanium';
       }
 
