@@ -17,7 +17,7 @@ const stagger = {
 
 const fadeSlideUp = {
   hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
 };
 
 const HeroSection = () => {
@@ -116,7 +116,7 @@ const HeroSection = () => {
         <motion.div 
           className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
           animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          transition={{ duration: 2, repeat: Infinity }}
           variants={fadeSlideUp}
         >
           <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
