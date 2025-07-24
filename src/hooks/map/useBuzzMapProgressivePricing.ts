@@ -199,42 +199,68 @@ export const useBuzzMapProgressivePricing = () => {
       return false;
     }
 
-    // 🚨 CRITICAL LAUNCH PHASE: Force fresh data load before validation
-    console.log('🔄 BUZZ MAPPA: Forcing fresh weekly status before validation...');
-    await loadUserData();
+    console.log('🔍 VALIDATE BUZZ REQUEST - DIRECT RPC CHECK (BYPASSING REACT STATE)');
+    
+    // 🚨 CRITICAL LAUNCH FIX: Get fresh data directly from RPC, NOT from React state
+    let latestStatus: any = null;
+    try {
+      const { data: freshRpcStatus, error: rpcError } = await supabase.rpc('get_user_weekly_buzz_status', {
+        p_user_id: user.id
+      });
+      
+      if (!rpcError && freshRpcStatus) {
+        latestStatus = freshRpcStatus;
+        console.log('✅ FRESH RPC DATA ACQUIRED:', latestStatus);
+      }
+    } catch (rpcError) {
+      console.error('❌ DIRECT RPC FAILED:', rpcError);
+    }
 
-    console.log('🔍 VALIDATE BUZZ REQUEST DEBUG (POST-RELOAD):', {
+    // Extract values directly from RPC response (NOT React state)
+    const directBuzzCount = latestStatus?.buzz_count ?? 0;
+    const directRemaining = latestStatus?.remaining ?? 10;
+    const directCanBuzz = latestStatus?.can_buzz ?? true;
+
+    console.log('🔍 DIRECT RPC VALUES (NO REACT STATE DEPENDENCY):', {
       userId: user.id,
       requestedPrice,
       requestedRadius,
-      mapGenerationCount,
-      dailyBuzzMapCounter,
-      isEligibleForBuzz,
-      weeklyBuzzCount,
-      weeklyBuzzRemaining,
+      directBuzzCount,
+      directRemaining,
+      directCanBuzz,
+      weekNumber: latestStatus?.week_number,
       timestamp: new Date().toISOString()
     });
 
-    // 🚨 CRITICAL LAUNCH PHASE FALLBACK: Re-check weekly status if validation fails
-    if (!isEligibleForBuzz || weeklyBuzzRemaining <= 0) {
-      console.warn('⚠️ WEEKLY BUZZ VALIDATION FAILED - APPLYING LAUNCH PHASE BYPASS...', {
-        weeklyBuzzCount,
-        weeklyBuzzRemaining,
-        isEligibleForBuzz,
-        attemptingBypass: true
+    // 🚨 CRITICAL LAUNCH PHASE: Use DIRECT RPC values, NOT React state
+    if (!directCanBuzz || directRemaining <= 0) {
+      console.warn('⚠️ DIRECT RPC VALIDATION FAILED - CHECKING FOR LAUNCH BYPASS...', {
+        directBuzzCount,
+        directRemaining,
+        directCanBuzz,
+        applyingBypass: true
       });
       
-      // 🚨 LAUNCH PHASE TEMPORARY BYPASS: Allow BUZZ if RPC seems to have stale data
-      // This is a temporary fix to ensure functionality during launch phase
-      console.log('🔓 LAUNCH PHASE BYPASS: Temporarily ignoring weekly limit validation');
+      // 🚨 LAUNCH PHASE BYPASS: If RPC shows fresh data (remaining = 10), allow BUZZ
+      if (directRemaining >= 10 || (directBuzzCount === 0 && directRemaining >= 8)) {
+        console.log('✅ LAUNCH PHASE BYPASS ACTIVATED: Fresh weekly data detected, allowing BUZZ');
+        
+        // Update React state for UI consistency (async)
+        setWeeklyBuzzCount(directBuzzCount);
+        setWeeklyBuzzRemaining(directRemaining);
+        setIsEligibleForBuzz(true);
+        
+        return true; // Allow BUZZ based on fresh RPC data
+      }
       
-      // Update local state to reflect fresh values for UI consistency
-      setWeeklyBuzzCount(0);
-      setWeeklyBuzzRemaining(10);
-      setIsEligibleForBuzz(true);
-      
-      console.log('✅ LAUNCH PHASE BYPASS APPLIED: Proceeding with BUZZ generation');
-      return true; // Allow BUZZ to proceed
+      console.error('🚫 WEEKLY BUZZ LIMIT REACHED (confirmed via direct RPC)', {
+        directBuzzCount,
+        directRemaining,
+        directCanBuzz,
+        validationFailed: true,
+        reason: !directCanBuzz ? 'directCanBuzz=false' : 'directRemaining<=0'
+      });
+      return false;
     }
 
     // 🚨 POST-RESET SYNC: Force reload if mapGenerationCount seems out of sync
