@@ -6,7 +6,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
+import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { Toaster } from 'sonner';
+
+// Initialize production optimizations
+setupProductionConsole();
+enableProductionOptimizations();
 
 // Mobile-compatible Sentry initialization
 // Uses Supabase secret for DSN to work in Capacitor environments

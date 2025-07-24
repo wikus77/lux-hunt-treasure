@@ -48,10 +48,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
       scale: 1,
       y: 0,
       transition: {
-        type: "spring",
-        duration: 0.4,
-        bounce: 0,
-        ease: [0.4, 0, 0.2, 1]
+        duration: 0.4
       }
     },
     exit: {
@@ -62,8 +59,7 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
       scale: 0.95,
       y: 0,
       transition: {
-        duration: 0.3,
-        ease: [0.4, 0, 0.2, 1]
+        duration: 0.3
       }
     }
   };
@@ -78,16 +74,14 @@ const AgentInfoPopup = ({ isOpen, onClose, agentCode }: AgentInfoPopupProps) => 
       y: 0,
       transition: {
         delay: 0.15,
-        duration: 0.3,
-        ease: [0.4, 0, 0.2, 1]
+        duration: 0.3
       }
     },
     exit: {
       opacity: 0,
       y: 10,
       transition: {
-        duration: 0.2,
-        ease: [0.4, 0, 0.2, 1]
+        duration: 0.2
       }
     }
   };

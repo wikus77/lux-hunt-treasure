@@ -94,7 +94,7 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     target: 'es2015',
-    minify: 'terser',
+    minify: 'esbuild', // ✅ FINAL: Use esbuild for faster, safer builds
     sourcemap: false,
     rollupOptions: {
       output: {
@@ -115,12 +115,10 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000,
     terserOptions: {
       compress: {
-        drop_console: false,
+        drop_console: false, // ✅ Keep for debugging in dev
         drop_debugger: true,
       },
-      mangle: {
-        keep_fnames: true,
-      },
+      mangle: false, // ✅ Disable mangling to prevent iOS errors
       format: {
         comments: false,
       },

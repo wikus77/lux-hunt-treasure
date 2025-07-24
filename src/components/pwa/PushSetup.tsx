@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface PushSetupProps {
   className?: string;
@@ -13,7 +13,7 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const { user } = useAuth();
+  const { user } = useUnifiedAuth();
   const { toast } = useToast();
 
   useEffect(() => {
