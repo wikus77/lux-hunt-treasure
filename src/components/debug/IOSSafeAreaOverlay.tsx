@@ -1,7 +1,6 @@
 
 // M1SSION™ - iOS Safe Area Debug Overlay
 import React, { useEffect, useState } from 'react';
-import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
 
 interface IOSSafeAreaOverlayProps {
   children: React.ReactNode;
@@ -15,13 +14,11 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
   opacity = 0.3
 }) => {
   const [safeArea, setSafeArea] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
-  const [isCapacitor, setIsCapacitor] = useState(false);
 
   useEffect(() => {
     const updateSafeArea = () => {
       const insets = getSafeAreaInsets();
       setSafeArea(insets);
-      setIsCapacitor(detectCapacitorEnvironment());
     };
 
     updateSafeArea();
@@ -39,7 +36,6 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
     };
   }, []);
 
-  if (!visible || !isCapacitor) {
     return <>{children}</>;
   }
 
@@ -113,12 +109,6 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
 
       {/* Info panel */}
       <div className="absolute top-16 left-4 bg-black bg-opacity-80 text-white p-2 rounded text-xs font-mono">
-        <div>Platform: {isCapacitor ? 'Capacitor' : 'Web'}</div>
         <div>Orientation: {window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait'}</div>
         <div>Viewport: {window.innerWidth}×{window.innerHeight}</div>
         <div>Safe Area: T{safeArea.top} B{safeArea.bottom} L{safeArea.left} R{safeArea.right}</div>
-      </div>
-      </div>
-    </>
-  );
-};
