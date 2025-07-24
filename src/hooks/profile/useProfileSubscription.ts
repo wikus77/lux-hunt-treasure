@@ -4,9 +4,11 @@
 import { useState, useEffect } from "react";
 import { useAuthContext } from "@/contexts/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useUniversalSubscriptionSync } from "@/hooks/useUniversalSubscriptionSync";
 
 export const useProfileSubscription = () => {
   const { getCurrentUser } = useAuthContext();
+  const { triggerGlobalSync } = useUniversalSubscriptionSync();
   const [subscription, setSubscription] = useState({
     plan: "Base",
     expiry: "2025-12-31",
@@ -117,6 +119,10 @@ export const useProfileSubscription = () => {
             });
             setCredits(500);
         }
+        
+        // 🚨 CRITICAL: Trigger universal sync after plan is set
+        triggerGlobalSync(finalPlan);
+        
       } catch (error) {
         console.error('Error loading subscription:', error);
       }
