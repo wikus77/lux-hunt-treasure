@@ -92,5 +92,3 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
 
       {/* Right safe area */}
       {safeArea.right > 0 && (
-        <div
-          className="absolute top-0 bottom-0 right-0 bg-yellow-500 flex items-center justify-center"
