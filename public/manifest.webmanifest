@@ -1,0 +1,29 @@
+{
+  "name": "M1SSION™",
+  "short_name": "M1SSION",
+  "description": "Un'esperienza di gioco rivoluzionaria che unisce caccia al tesoro, enigmi e premi esclusivi",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000C18",
+  "theme_color": "#00D1FF",
+  "lang": "en",
+  "scope": "/",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ]
+}
