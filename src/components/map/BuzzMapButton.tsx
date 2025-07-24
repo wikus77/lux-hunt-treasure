@@ -68,17 +68,10 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       return;
     }
 
-    // Anti-fraud checks
-    if (dailyBuzzMapCounter >= 3) {
-      toast.error('Limite giornaliero raggiunto', {
-        description: 'Massimo 3 BUZZ MAPPA al giorno per sicurezza.'
-      });
-      return;
-    }
-
+    // Weekly limit check
     if (!isEligibleForBuzz) {
-      toast.error('Attendi prima del prossimo BUZZ', {
-        description: 'Devi attendere almeno 3 ore tra i BUZZ per sicurezza.'
+      toast.error('Limite settimanale raggiunto', {
+        description: 'Hai raggiunto il limite massimo settimanale di BUZZ MAPPA. Riprova la prossima settimana.'
       });
       return;
     }
@@ -247,7 +240,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
         <Button
           onClick={handleBuzzMapPress}
-          disabled={!isAuthenticated || isProcessing || loading || !isEligibleForBuzz || dailyBuzzMapCounter >= 3}
+          disabled={!isAuthenticated || isProcessing || loading || !isEligibleForBuzz}
           className="h-16 px-6 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
           style={{
             background: getSegmentColor(),
@@ -263,9 +256,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           </div>
         </Button>
         
-        {(!isEligibleForBuzz || dailyBuzzMapCounter >= 3) && (
+        {!isEligibleForBuzz && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs text-red-400 whitespace-nowrap">
-            {dailyBuzzMapCounter >= 3 ? 'Limite giornaliero raggiunto' : 'Attendere 3h dal precedente'}
+            Limite settimanale raggiunto
           </div>
         )}
       </div>

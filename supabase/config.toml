@@ -31,3 +31,6 @@ port = 54325
 
 [functions.create-checkout]
 verify_jwt = true
+
+[functions.weekly-buzz-reset-notification]
+verify_jwt = false

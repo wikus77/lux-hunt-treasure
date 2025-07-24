@@ -63,7 +63,8 @@ export const useBuzzMapProgressivePricing = () => {
   const [mapGenerationCount, setMapGenerationCount] = useState(0);
   const [segment, setSegment] = useState("Entry");
   const [dailyBuzzMapCounter, setDailyBuzzMapCounter] = useState(0);
-  const [lastBuzzTime, setLastBuzzTime] = useState<Date | null>(null);
+  const [weeklyBuzzCount, setWeeklyBuzzCount] = useState(0);
+  const [weeklyBuzzRemaining, setWeeklyBuzzRemaining] = useState(10);
   const [isEligibleForBuzz, setIsEligibleForBuzz] = useState(true);
   const { user } = useAuthContext();
   
@@ -109,23 +110,26 @@ export const useBuzzMapProgressivePricing = () => {
         setDailyBuzzMapCounter(0);
       }
 
-      // Get last buzz time for anti-spam protection
-      const { data: lastAction, error: actionError } = await supabase
-        .from('buzz_map_actions')
-        .select('created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      // Get weekly BUZZ status instead of 3-hour cooldown
+      const { data: weeklyStatus, error: weeklyError } = await supabase.rpc('get_user_weekly_buzz_status', {
+        p_user_id: user.id
+      });
 
-      if (!actionError && lastAction) {
-        const lastTime = new Date(lastAction.created_at);
-        setLastBuzzTime(lastTime);
+      if (!weeklyError && weeklyStatus && typeof weeklyStatus === 'object') {
+        const status = weeklyStatus as any;
+        setWeeklyBuzzCount(status.buzz_count || 0);
+        setWeeklyBuzzRemaining(status.remaining || 10);
+        setIsEligibleForBuzz(status.can_buzz || true);
         
-        // Check if 3 hours have passed since last buzz
-        const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
-        setIsEligibleForBuzz(lastTime < threeHoursAgo);
+        console.log('📊 BUZZ MAPPA Weekly Status:', {
+          buzzCount: status.buzz_count,
+          remaining: status.remaining,
+          canBuzz: status.can_buzz,
+          weekNumber: status.week_number
+        });
       } else {
+        setWeeklyBuzzCount(0);
+        setWeeklyBuzzRemaining(10);
         setIsEligibleForBuzz(true);
       }
 
@@ -141,7 +145,9 @@ export const useBuzzMapProgressivePricing = () => {
         radius: pricingData.radius,
         segment: pricingData.segment,
         dailyCounter: dailyCounter?.buzz_map_count || 0,
-        isEligible: lastAction ? new Date(lastAction.created_at) < new Date(Date.now() - 3 * 60 * 60 * 1000) : true,
+        weeklyBuzzCount,
+        weeklyBuzzRemaining,
+        isEligible: isEligibleForBuzz,
         resetDetected: generationCount === 0 && (mapAreas?.length === 0)
       });
       
@@ -182,20 +188,12 @@ export const useBuzzMapProgressivePricing = () => {
       timestamp: new Date().toISOString()
     });
 
-    // Check daily limit (max 3 BUZZ per day)
-    if (dailyBuzzMapCounter >= 3) {
-      console.warn('🚫 ANTI-FRAUD: Daily BUZZ limit exceeded', {
-        dailyBuzzMapCounter,
-        limit: 3
-      });
-      return false;
-    }
-
-    // Check time-based anti-spam (3 hours minimum)
-    if (!isEligibleForBuzz) {
-      console.warn('🚫 ANTI-FRAUD: Time-based anti-spam triggered', {
-        isEligibleForBuzz,
-        lastBuzzTime
+    // Check weekly limit instead of daily
+    if (!isEligibleForBuzz || weeklyBuzzRemaining <= 0) {
+      console.warn('🚫 ANTI-FRAUD: Weekly BUZZ limit reached', {
+        weeklyBuzzCount,
+        weeklyBuzzRemaining,
+        isEligibleForBuzz
       });
       return false;
     }
@@ -277,7 +275,7 @@ export const useBuzzMapProgressivePricing = () => {
 
     console.log('✅ ANTI-FRAUD: Validation passed');
     return true;
-  }, [user?.id, dailyBuzzMapCounter, isEligibleForBuzz, mapGenerationCount, lastBuzzTime]);
+  }, [user?.id, dailyBuzzMapCounter, isEligibleForBuzz, mapGenerationCount, weeklyBuzzRemaining]);
 
   // Check if user needs cost warning (high-cost alert)
   const needsCostWarning = useCallback((): boolean => {
@@ -333,8 +331,18 @@ export const useBuzzMapProgressivePricing = () => {
       const newGenerationCount = mapGenerationCount + 1;
       setMapGenerationCount(newGenerationCount);
       setDailyBuzzMapCounter(dailyBuzzMapCounter + 1);
-      setLastBuzzTime(new Date());
-      setIsEligibleForBuzz(false);
+      
+      // Update weekly status
+      const { data: newWeeklyStatus } = await supabase.rpc('consume_buzz_mappa', {
+        p_user_id: user.id
+      });
+      
+      if (newWeeklyStatus && typeof newWeeklyStatus === 'object') {
+        const status = newWeeklyStatus as any;
+        setWeeklyBuzzCount(status.buzz_count || 0);
+        setWeeklyBuzzRemaining(status.remaining || 0);
+        setIsEligibleForBuzz((status.remaining || 0) > 0);
+      }
 
       // Update pricing for next generation
       const nextPricing = getPricingForGeneration(newGenerationCount);
@@ -354,7 +362,7 @@ export const useBuzzMapProgressivePricing = () => {
       console.error('❌ Error incrementing generation:', error);
       return false;
     }
-  }, [user?.id, buzzMapPrice, radiusKm, mapGenerationCount, dailyBuzzMapCounter, validateBuzzRequest]);
+  }, [user?.id, buzzMapPrice, radiusKm, mapGenerationCount, dailyBuzzMapCounter, weeklyBuzzRemaining, validateBuzzRequest]);
 
   useEffect(() => {
     if (user?.id) {
@@ -451,7 +459,8 @@ export const useBuzzMapProgressivePricing = () => {
     segment,
     dailyBuzzMapCounter,
     isEligibleForBuzz,
-    lastBuzzTime,
+    weeklyBuzzCount,
+    weeklyBuzzRemaining,
     needsCostWarning,
     isEliteMaxPrice,
     validateBuzzRequest,
