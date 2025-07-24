@@ -125,9 +125,16 @@ export const useBuzzMapProgressivePricing = () => {
           buzzCount: status.buzz_count,
           remaining: status.remaining,
           canBuzz: status.can_buzz,
-          weekNumber: status.week_number
+          weekNumber: status.week_number,
+          weekStart: status.week_start,
+          nextReset: status.next_reset
         });
       } else {
+        console.error('❌ BUZZ MAPPA Weekly Status ERROR:', {
+          weeklyError,
+          weeklyStatus,
+          fallbackApplied: true
+        });
         setWeeklyBuzzCount(0);
         setWeeklyBuzzRemaining(10);
         setIsEligibleForBuzz(true);
@@ -148,6 +155,7 @@ export const useBuzzMapProgressivePricing = () => {
         weeklyBuzzCount,
         weeklyBuzzRemaining,
         isEligible: isEligibleForBuzz,
+        weeklyStatus: weeklyStatus, // Add full weekly status for debugging
         resetDetected: generationCount === 0 && (mapAreas?.length === 0)
       });
       
@@ -185,15 +193,19 @@ export const useBuzzMapProgressivePricing = () => {
       mapGenerationCount,
       dailyBuzzMapCounter,
       isEligibleForBuzz,
+      weeklyBuzzCount,
+      weeklyBuzzRemaining,
       timestamp: new Date().toISOString()
     });
 
     // Check weekly limit instead of daily
     if (!isEligibleForBuzz || weeklyBuzzRemaining <= 0) {
-      console.warn('🚫 ANTI-FRAUD: Weekly BUZZ limit reached', {
+      console.error('🚫 ANTI-FRAUD: Weekly BUZZ limit reached', {
         weeklyBuzzCount,
         weeklyBuzzRemaining,
-        isEligibleForBuzz
+        isEligibleForBuzz,
+        validationFailed: true,
+        reason: !isEligibleForBuzz ? 'isEligibleForBuzz=false' : 'weeklyBuzzRemaining<=0'
       });
       return false;
     }
