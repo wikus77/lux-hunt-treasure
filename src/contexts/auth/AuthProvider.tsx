@@ -24,10 +24,9 @@ caches.keys()
   .catch((err) => {
     console.error("Errore durante caches.keys():", err);
   });
-
-        handleLogout();
-      }, [session]);
-
+useEffect(() => {
+  handleLogout();
+}, [session]);
       return (
         <AuthContext.Provider
           value={{
