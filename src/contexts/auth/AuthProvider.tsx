@@ -85,7 +85,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     clearCacheAndLogout();
   }, [session]);
-
   return (
     <AuthContext.Provider value={{
   }, [session]);
