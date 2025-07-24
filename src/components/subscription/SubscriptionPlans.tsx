@@ -561,30 +561,32 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       )}
       
       {/* In-App Checkout Modal */}
-      {showInAppCheckout && (
-        <StripeInAppCheckout
-          config={{
-            type: 'subscription',
-            amount: (() => {
-              // © 2025 Joseph MULÉ – M1SSION™ – Use centralized pricing
-              const { getPriceCents } = require('@/lib/constants/pricingConfig');
-              return getPriceCents(selectedPlan) || 399;
-            })(),
-            description: `Piano ${selectedPlan} con accesso premium`,
-            plan: selectedPlan,
-            metadata: {
-              subscription_plan: selectedPlan,
-              mission: 'M1SSION',
-              reset_date: '2025-07-22'
-            }
-          }}
-          onSuccess={async (paymentIntentId: string) => {
-            console.log('🎉 Subscription payment completed:', paymentIntentId);
-            await handleInAppPaymentSuccess();
-          }}
-          onCancel={handleInAppPaymentCancel}
-        />
-      )}
+      {showInAppCheckout && (() => {
+        // © 2025 Joseph MULÉ – M1SSION™ – Calculate price using centralized config
+        const { getPriceCents } = require('@/lib/constants/pricingConfig');
+        const planPrice = getPriceCents(selectedPlan) || 399;
+        
+        return (
+          <StripeInAppCheckout
+            config={{
+              type: 'subscription',
+              amount: planPrice,
+              description: `Piano ${selectedPlan} con accesso premium`,
+              plan: selectedPlan,
+              metadata: {
+                subscription_plan: selectedPlan,
+                mission: 'M1SSION',
+                reset_date: '2025-07-22'
+              }
+            }}
+            onSuccess={async (paymentIntentId: string) => {
+              console.log('🎉 Subscription payment completed:', paymentIntentId);
+              await handleInAppPaymentSuccess();
+            }}
+            onCancel={handleInAppPaymentCancel}
+          />
+        );
+      })()}
     </section>
   );
 };

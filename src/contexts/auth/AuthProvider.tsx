@@ -39,59 +39,96 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     let isMounted = true;
 
-    const initializeAuth = async () => {
-      try {
-        log("Inizializzazione sistema unified auth");
-        authHealthLogger.log('AuthProvider_Init', true, { timestamp: new Date().toISOString() });
-        
-        // CRITICAL PWA iOS FIX: Clear stale cache before auth check
-        if ('serviceWorker' in navigator && window.location.host.includes('lovableproject.com')) {
-          try {
-            const registrations = await navigator.serviceWorker.getRegistrations();
-            for (let registration of registrations) {
-              await registration.unregister();
-            }
-            log("🔄 PWA iOS: Service workers cleared");
-            authHealthLogger.log('ServiceWorker_Cleared', true, { count: registrations.length });
-          } catch (e) {
-            log("PWA cache clear failed", e);
-            authHealthLogger.log('ServiceWorker_Clear_Failed', false, {}, e.message);
+  const initializeAuth = async () => {
+    try {
+      log("Inizializzazione sistema unified auth");
+      authHealthLogger.log('AuthProvider_Init', true, { timestamp: new Date().toISOString() });
+      
+      // CRITICAL PWA iOS FIX: Clear stale cache before auth check
+      if ('serviceWorker' in navigator && window.location.host.includes('lovableproject.com')) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (let registration of registrations) {
+            await registration.unregister();
           }
-        }
-        
-        // STEP 1: Verifica sessione corrente - nativo Supabase SOLO
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          log("Errore getSession", error);
-          if (isMounted) {
-            setIsLoading(false);
-          }
-          return;
-        }
-
-        if (currentSession && isMounted) {
-          log("Sessione trovata", currentSession.user.email);
-          setSession(currentSession);
-          setUser(currentSession.user);
-        } else {
-          log("Nessuna sessione attiva");
-        }
-      } catch (error) {
-        log("Errore init auth", error);
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
+          log("🔄 PWA iOS: Service workers cleared");
+          authHealthLogger.log('ServiceWorker_Cleared', true, { count: registrations.length });
+        } catch (e) {
+          log("PWA cache clear failed", e);
+          authHealthLogger.log('ServiceWorker_Clear_Failed', false, {}, e.message);
         }
       }
-    };
+      
+      // Clear localStorage auth cache every hour to prevent stale sessions
+      const clearAuthCacheIfNeeded = () => {
+        const lastClear = localStorage.getItem('auth_cache_clear');
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+        
+        if (!lastClear || (now - parseInt(lastClear)) > oneHour) {
+          log("🧹 PWA: Clearing stale auth cache");
+          localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+          localStorage.setItem('auth_cache_clear', now.toString());
+        }
+      };
+      
+      clearAuthCacheIfNeeded();
+      
+      // STEP 1: Verifica sessione corrente con retry
+      let session = null;
+      let attempts = 0;
+      const maxAttempts = 3;
+      
+      while (attempts < maxAttempts && !session) {
+        try {
+          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            log(`Errore getSession (tentativo ${attempts + 1})`, error);
+            attempts++;
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
+            if (isMounted) {
+              setIsLoading(false);
+            }
+            return;
+          }
+          
+          session = currentSession;
+          break;
+        } catch (error) {
+          log(`Errore getSession exception (tentativo ${attempts + 1})`, error);
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+      }
 
-    initializeAuth();
+      if (session && isMounted) {
+        log("Sessione trovata", session.user.email);
+        setSession(session);
+        setUser(session.user);
+      } else {
+        log("Nessuna sessione attiva");
+      }
+    } catch (error) {
+      log("Errore init auth", error);
+    } finally {
+      if (isMounted) {
+        setIsLoading(false);
+      }
+    }
+  };
 
-    // Cleanup
-    return () => {
-      isMounted = false;
-    };
+  initializeAuth();
+
+  // Cleanup
+  return () => {
+    isMounted = false;
+  };
   }, []);
 
   // LISTENER STATO AUTH - Gestione eventi Supabase
