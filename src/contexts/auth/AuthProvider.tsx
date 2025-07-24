@@ -87,17 +87,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         user,
         userRoles,
-        isAuthenticated: !!session,
-        setUserRoles,
-        rolesCount: userRoles.length,
-        isRoleLoading,
-        login,
-        logout,
-      }}
-    };
-          console.error('Errore durante pulizia cache:', err);
-        }
-        handleLogout();
       };
 
       clearCacheAndLogout();
@@ -161,3 +150,11 @@ export default AuthProvider;
     }
 
 export default AuthProvider;
+      return {
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        logout,
+        resetPassword,
+      };
