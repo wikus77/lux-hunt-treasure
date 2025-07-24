@@ -34,13 +34,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
 
-  // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized
+  // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized with Cache Clear
   useEffect(() => {
     let isMounted = true;
 
     const initializeAuth = async () => {
       try {
         log("Inizializzazione sistema unified auth");
+        
+        // CRITICAL PWA iOS FIX: Clear stale cache before auth check
+        if ('serviceWorker' in navigator && window.location.host.includes('lovableproject.com')) {
+          try {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) {
+              await registration.unregister();
+            }
+            log("🔄 PWA iOS: Service workers cleared");
+          } catch (e) {
+            log("PWA cache clear failed", e);
+          }
+        }
         
         // STEP 1: Verifica sessione corrente - nativo Supabase SOLO
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
@@ -91,10 +104,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
+          
+          // PWA iOS: Force reload once after login to stabilize
+          if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
+            log("🔄 PWA iOS: Post-login cache refresh");
+            setTimeout(() => {
+              if (!sessionStorage.getItem('auth_reload_done')) {
+                sessionStorage.setItem('auth_reload_done', 'true');
+                window.location.reload();
+              }
+            }, 1000);
+          }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
           setUserRoles([]);
           setIsRoleLoading(false);
+          sessionStorage.removeItem('auth_reload_done');
         }
         
         // Auth completata

@@ -66,10 +66,15 @@ export const useStripeInAppPayment = () => {
   };
 
   const processSubscription = async (plan: string): Promise<void> => {
-    // Use centralized pricing constants
-    const planKey = plan.toLowerCase() as keyof typeof SUBSCRIPTION_PRICES;
-    const planData = SUBSCRIPTION_PRICES[planKey];
+    // CORRECTED: Use exact pricing with forced cent alignment
+    const planPrices: Record<string, { cents: number; eur: number }> = {
+      'Silver': { cents: 399, eur: 3.99 },
+      'Gold': { cents: 699, eur: 6.99 },
+      'Black': { cents: 999, eur: 9.99 },
+      'Titanium': { cents: 2999, eur: 29.99 }
+    };
     
+    const planData = planPrices[plan];
     if (!planData) {
       toast.error('Piano di abbonamento non valido');
       return;
@@ -77,13 +82,13 @@ export const useStripeInAppPayment = () => {
 
     const config: PaymentConfig = {
       type: 'subscription',
-      amount: planData.priceCents, // Use centralized price
-      description: `${planData.label} con vantaggi premium`,
+      amount: planData.cents, // FIXED: Use exact cents
+      description: `Piano ${plan} con vantaggi premium`,
       plan: plan,
       metadata: {
         subscription_plan: plan,
-        price_cents: planData.priceCents,
-        price_eur: planData.priceEur,
+        price_cents: planData.cents,
+        price_eur: planData.eur,
         mission: 'M1SSION',
         reset_date: '2025-07-22'
       }
