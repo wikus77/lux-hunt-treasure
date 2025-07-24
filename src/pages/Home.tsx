@@ -125,10 +125,10 @@ const Home = () => {
     return {};
   };
 
-  // Show developer access screen for mobile users without access
-  if (isMobile && !hasAccess) {
-    return <DeveloperAccess />;
-  }
+  // Allow access for authenticated users - remove mobile restriction
+  // if (isMobile && !hasAccess) {
+  //   return <DeveloperAccess />;
+  // }
 
   if (error) {
     return (

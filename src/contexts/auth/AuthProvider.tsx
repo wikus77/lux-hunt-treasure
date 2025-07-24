@@ -12,6 +12,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
+import { authHealthLogger } from '@/utils/AuthHealthCheckLog';
 
 interface AuthProviderProps {
   children: ReactNode;
@@ -41,6 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const initializeAuth = async () => {
       try {
         log("Inizializzazione sistema unified auth");
+        authHealthLogger.log('AuthProvider_Init', true, { timestamp: new Date().toISOString() });
         
         // CRITICAL PWA iOS FIX: Clear stale cache before auth check
         if ('serviceWorker' in navigator && window.location.host.includes('lovableproject.com')) {
@@ -50,8 +52,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               await registration.unregister();
             }
             log("🔄 PWA iOS: Service workers cleared");
+            authHealthLogger.log('ServiceWorker_Cleared', true, { count: registrations.length });
           } catch (e) {
             log("PWA cache clear failed", e);
+            authHealthLogger.log('ServiceWorker_Clear_Failed', false, {}, e.message);
           }
         }
         

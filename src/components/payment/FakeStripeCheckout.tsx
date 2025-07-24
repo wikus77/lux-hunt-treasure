@@ -55,17 +55,12 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
       });
 
       // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-      // TASK E — REGISTRAZIONE TRANSAZIONE - PREZZI UFFICIALI SINCRONIZZATI
-      const planPrices: Record<string, number> = {
-        'Silver': 3.99,
-        'Gold': 6.99, 
-        'Black': 9.99,
-        'Titanium': 29.99
-      };
+      // TASK E — REGISTRAZIONE TRANSAZIONE - PREZZI SINCRONIZZATI CON CENTRALE
+      const { getPriceEur } = await import('@/lib/constants/pricingConfig');
       
       await supabase.from('payment_transactions').insert({
         user_id: user.id,
-        amount: planPrices[planName] || 0,
+        amount: getPriceEur(planName) || 0,
         currency: 'EUR',
         description: `Upgrade to ${planName} plan`,
         status: 'success',

@@ -66,29 +66,26 @@ export const useStripeInAppPayment = () => {
   };
 
   const processSubscription = async (plan: string): Promise<void> => {
-    // CORRECTED: Use exact pricing with forced cent alignment
-    const planPrices: Record<string, { cents: number; eur: number }> = {
-      'Silver': { cents: 399, eur: 3.99 },
-      'Gold': { cents: 699, eur: 6.99 },
-      'Black': { cents: 999, eur: 9.99 },
-      'Titanium': { cents: 2999, eur: 29.99 }
-    };
+    // Import centralized pricing configuration
+    const { getPriceCents, getPriceEur } = await import('@/lib/constants/pricingConfig');
     
-    const planData = planPrices[plan];
-    if (!planData) {
+    const cents = getPriceCents(plan);
+    const eur = getPriceEur(plan);
+    
+    if (!cents || !eur) {
       toast.error('Piano di abbonamento non valido');
       return;
     }
 
     const config: PaymentConfig = {
       type: 'subscription',
-      amount: planData.cents, // FIXED: Use exact cents
+      amount: cents, // SYNCHRONIZED: Use centralized pricing
       description: `Piano ${plan} con vantaggi premium`,
       plan: plan,
       metadata: {
         subscription_plan: plan,
-        price_cents: planData.cents,
-        price_eur: planData.eur,
+        price_cents: cents,
+        price_eur: eur,
         mission: 'M1SSION',
         reset_date: '2025-07-22'
       }

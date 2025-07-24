@@ -57,12 +57,15 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page with forced redirect */}
+          {/* Landing page - redirect authenticated users to home */}
           <Route path="/">
             {isAuthenticated && !isLoading ? (
               <>
                 {console.log('🏠 WouterRoutes: Authenticated user - redirecting to /home')}
-                <GlobalLayout><AppHome /></GlobalLayout>
+                {window.location.pathname === '/' && (window.location.href = '/home')}
+                <div className="min-h-screen flex items-center justify-center bg-black">
+                  <div className="text-white">Reindirizzamento...</div>
+                </div>
               </>
             ) : isLoading ? (
               <>
