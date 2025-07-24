@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Award, Clock, Shield, BadgeAlert, Bell } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import { useProfileSubscription } from "@/hooks/profile/useProfileSubscription";
 
 interface ProfileTabsProps {
   stats: {
@@ -47,7 +48,7 @@ const ProfileTabs = ({
   stats,
   history,
   badges,
-  subscription,
+  subscription: passedSubscription,
   personalNotes,
   isEditing,
   setPersonalNotes,
@@ -57,6 +58,19 @@ const ProfileTabs = ({
   navigateToPaymentMethods,
   navigateToSubscriptions,
 }: ProfileTabsProps) => {
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  // Force real-time subscription data to override any stale props
+  const { subscription: liveSubscription } = useProfileSubscription();
+  
+  // Use live subscription data instead of potentially stale props
+  const subscription = liveSubscription;
+  
+  console.log('🔍 ProfileTabs SUBSCRIPTION DEBUG:', {
+    passedSubscription: passedSubscription.plan,
+    liveSubscription: liveSubscription.plan,
+    usingPlan: subscription.plan,
+    timestamp: new Date().toISOString()
+  });
   return (
     <Tabs defaultValue="stats" className="w-full">
       <TabsList className="w-full grid grid-cols-4 bg-black/30">
