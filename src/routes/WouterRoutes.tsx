@@ -24,7 +24,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
-import { DailySpinPage } from "@/pages/DailySpinPage";
+
 import Terms from "@/pages/Terms";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
@@ -139,10 +139,10 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* Daily Spin route */}
+          {/* Daily Spin redirect to Intelligence */}
           <Route path="/daily-spin">
             <ProtectedRoute>
-              <DailySpinPage />
+              <GlobalLayout><IntelligencePage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

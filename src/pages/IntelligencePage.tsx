@@ -114,8 +114,8 @@ const IntelligencePage: React.FC = () => {
   }, []);
 
   return (
-    <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-[100dvh] w-full overflow-hidden" style={{
+    <SafeAreaWrapper className="min-h-screen bg-background">
+      <div className="flex flex-col min-h-[100dvh] w-full" style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
       }}>
@@ -136,23 +136,27 @@ const IntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* FULLSCREEN MODULE AREA - SINGLE RENDERING ONLY */}
-        <div className="flex-1 w-full relative bg-black/20 border-b-2 border-cyan-500/20 overflow-hidden">
+        {/* FULLSCREEN MODULE AREA - MOBILE PWA iOS OPTIMIZED */}
+        <div className="flex-1 w-full relative bg-black/20 border-b-2 border-cyan-500/20 min-h-[60vh]">
           {activeModule ? (
-            <div className="absolute inset-0 w-full h-full overflow-y-auto">
+            <div className="w-full h-full overflow-y-auto" style={{
+              WebkitOverflowScrolling: 'touch',
+              height: 'calc(100dvh - 200px)',
+              maxHeight: 'calc(100dvh - 200px)'
+            }}>
               {/* Close Module Button */}
               <button
                 onClick={() => {
                   setActiveModule(null);
                   setModulesExpanded(true);
                 }}
-                className="absolute top-4 left-4 z-50 bg-black/80 backdrop-blur-sm text-white/70 hover:text-white text-lg p-2 hover:bg-white/10 rounded-full transition-all shadow-lg"
+                className="sticky top-4 left-4 z-50 bg-black/80 backdrop-blur-sm text-white/70 hover:text-white text-lg p-2 hover:bg-white/10 rounded-full transition-all shadow-lg mb-4"
               >
                 ✕
               </button>
               
-              {/* Module Content Container - SCROLLABLE AND SIZED CORRECTLY */}
-              <div className="w-full h-full min-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-160px)]">
+              {/* Module Content Container - PWA iOS SCROLL OPTIMIZED */}
+              <div className="w-full pb-20" style={{ minHeight: 'auto' }}>
                 {modules.find(m => m.id === activeModule)?.component}
               </div>
             </div>
