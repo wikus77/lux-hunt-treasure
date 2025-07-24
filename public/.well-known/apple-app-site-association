@@ -1,0 +1,8 @@
+{
+  "webcredentials": {
+    "apps": []
+  },
+  "webapp": {
+    "paths": [ "*" ]
+  }
+}
