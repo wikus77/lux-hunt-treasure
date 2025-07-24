@@ -104,6 +104,3 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
           <span className="text-white text-xs font-mono">
             RIGHT ({safeArea.right}px)
           </span>
-        </div>
-      )}
-
