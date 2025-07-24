@@ -54,7 +54,7 @@ const FakeStripeCheckout: React.FC<FakeStripeCheckoutProps> = ({
         updated_at: new Date().toISOString()
       });
 
-      // TASK E — REGISTRAZIONE TRANSAZIONE
+      // TASK E — REGISTRAZIONE TRANSAZIONE - PREZZI UFFICIALI SINCRONIZZATI
       const planPrices: Record<string, number> = {
         'Silver': 3.99,
         'Gold': 6.99,
