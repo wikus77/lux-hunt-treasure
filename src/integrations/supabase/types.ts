@@ -2514,6 +2514,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_weekly_buzz_limits: {
+        Row: {
+          buzz_map_count: number
+          created_at: string | null
+          id: string
+          last_buzz_at: string | null
+          max_buzz_map_allowed: number
+          next_reset_at: string
+          updated_at: string | null
+          user_id: string
+          week_number: number
+          week_start_date: string
+        }
+        Insert: {
+          buzz_map_count?: number
+          created_at?: string | null
+          id?: string
+          last_buzz_at?: string | null
+          max_buzz_map_allowed?: number
+          next_reset_at: string
+          updated_at?: string | null
+          user_id: string
+          week_number: number
+          week_start_date: string
+        }
+        Update: {
+          buzz_map_count?: number
+          created_at?: string | null
+          id?: string
+          last_buzz_at?: string | null
+          max_buzz_map_allowed?: number
+          next_reset_at?: string
+          updated_at?: string | null
+          user_id?: string
+          week_number?: number
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
@@ -2585,6 +2624,10 @@ export type Database = {
         Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
         Returns: boolean
       }
+      can_user_buzz_mappa: {
+        Args: { p_user_id: string }
+        Returns: boolean
+      }
       can_user_use_buzz: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -2617,6 +2660,10 @@ export type Database = {
       cleanup_security_tables: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      consume_buzz_mappa: {
+        Args: { p_user_id: string }
+        Returns: Json
       }
       consume_buzz_usage: {
         Args: { p_user_id: string }
@@ -2654,6 +2701,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_current_game_week: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -2689,6 +2740,10 @@ export type Database = {
         Args: { p_week: number; p_generation_count: number }
         Returns: number
       }
+      get_max_buzz_for_week: {
+        Args: { week_num: number }
+        Returns: number
+      }
       get_max_map_generations: {
         Args: { p_week: number }
         Returns: number
@@ -2716,6 +2771,14 @@ export type Database = {
       get_user_sync_status: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      get_user_weekly_buzz_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_week_start_date: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
