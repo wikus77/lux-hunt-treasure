@@ -45,7 +45,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       authHealthLogger.log('AuthProvider_Init', true, { timestamp: new Date().toISOString() });
       
       // CRITICAL PWA iOS FIX: Clear stale cache before auth check
-      if ('serviceWorker' in navigator && window.location.host.includes('lovableproject.com')) {
+      if ('serviceWorker' in navigator && (window.location.hostname === 'localhost' || window.location.protocol === 'https:')) {
         try {
           const registrations = await navigator.serviceWorker.getRegistrations();
           for (let registration of registrations) {
