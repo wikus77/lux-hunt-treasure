@@ -36,7 +36,7 @@ export const useEventHandlers = (countdownCompleted: boolean): EventHandlersResu
 
   const handleAgeVerified = () => {
     setShowAgeVerification(false);
-    navigate("/register");
+    navigate("/subscriptions");
   };
 
   // Function to handle invite friend button click

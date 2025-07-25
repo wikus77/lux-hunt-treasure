@@ -26,26 +26,25 @@ const HeroSection = () => {
       className="min-h-screen w-full relative flex items-center justify-center overflow-hidden py-24 px-4"
       data-scroll-section
     >
-      {/* Animated background with moving light */}
-      <div className="absolute inset-0 z-0">
-        <div className="bg-animated absolute inset-0" />
-        <ParallaxImage
-          src="/lovable-uploads/49a73ae5-c836-4c5d-8e07-0555edac931d.png"
-          alt="Luxury car background"
-          speed={0.2}
-          className="w-full h-full"
-          imageClassName="w-full h-full object-cover opacity-40"
-        />
-        <div className="absolute inset-0 bg-black/60 z-10"></div>
+      {/* Static background instead of animated particles */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
+        {/* Static dots instead of animated particles */}
+        {[...Array(10)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${Math.random() * 4 + 2}px`,
+              height: `${Math.random() * 4 + 2}px`,
+              background: i % 2 === 0 ? "#00E5FF" : "#8A2BE2",
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              opacity: 0.4,
+              filter: "blur(1px)"
+            }}
+          />
+        ))}
       </div>
-      
-      {/* Glowing overlay effect */}
-      <motion.div 
-        className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-[#00a3ff]/20 to-transparent"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 0.5 }}
-      />
       
       <motion.div 
         className="relative z-20 max-w-4xl mx-auto text-center" 
@@ -55,47 +54,54 @@ const HeroSection = () => {
         initial="hidden"
         animate="show"
       >
+        {/* Main Title with the styled M1SSION text */}
         <motion.div
           variants={fadeSlideUp}
-          className="mb-6"
+          className="mb-8"
         >
-          <h2 className="text-sm md:text-base uppercase tracking-[0.3em] text-cyan-300">Benvenuto in</h2>
+          <h1 className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light">
+            WELCOME TO{" "}
+            <span>
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+            </span>
+          </h1>
         </motion.div>
         
         <motion.div
           variants={fadeSlideUp}
-          className="mb-4"
+          className="mb-8"
         >
-          <h1 className="text-6xl md:text-8xl font-orbitron font-bold gradient-text-cyan mb-4">
-            M1SSION
-          </h1>
+          <p className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto">
+            Un premio attende chi sa vedere oltre.
+            Gli indizi non sono nascosti: sono camuffati.
+            Serve logica, freddezza e visione.
+            La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>.
+          </p>
         </motion.div>
         
         <motion.div
           variants={fadeSlideUp}
           className="mb-10"
         >
-          <h3 className="text-xl md:text-3xl text-white/90 font-light">
-            La tua <span className="text-yellow-400 font-medium">sfida</span> inizia ora
-          </h3>
-          <p className="text-lg md:text-xl text-white/70 mt-4 max-w-2xl mx-auto">
-            Vivi l'esperienza di una caccia al tesoro esclusiva con auto sportive di lusso in palio ogni 30 giorni
+          <p className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest">
+            IT IS POSSIBLE
           </p>
         </motion.div>
         
         <motion.div
           variants={fadeSlideUp}
-          className="flex flex-col md:flex-row items-center justify-center gap-6"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <MagneticButton
-              className="bg-gradient-to-r from-cyan-400 to-blue-600 text-black px-8 py-4 rounded-full font-semibold text-lg flex items-center gap-2 hover:shadow-[0_0_20px_rgba(0,229,255,0.5)] transition-all duration-300"
+              className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
               strength={30}
             >
-              Scopri la missione <ArrowRight className="w-5 h-5 ml-1" />
+              JOIN THE HUNT
             </MagneticButton>
           </motion.div>
           
@@ -104,25 +110,19 @@ const HeroSection = () => {
             whileTap={{ scale: 0.95 }}
           >
             <MagneticButton
-              className="px-8 py-4 rounded-full bg-transparent border border-cyan-400 text-cyan-400 font-medium hover:bg-cyan-400/10 transition-all duration-300"
+              className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
               strength={20}
             >
-              Come funziona
+              LEARN MORE
             </MagneticButton>
           </motion.div>
         </motion.div>
         
-        {/* Scroll indicator */}
-        <motion.div 
-          className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
+        {/* Static decorative element instead of animated glow */}
+        <motion.div
+          className="absolute bottom-40 w-3/4 h-px bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent"
           variants={fadeSlideUp}
-        >
-          <div className="w-8 h-12 rounded-full border-2 border-white/30 flex items-start justify-center p-2">
-            <div className="w-1 h-3 bg-white/70 rounded-full"></div>
-          </div>
-        </motion.div>
+        />
       </motion.div>
     </section>
   );

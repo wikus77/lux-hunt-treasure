@@ -1,22 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
-import LandingHeader from "@/components/landing/LandingHeader";
-import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
+import HeroSection from "@/components/home/HeroSection";
 import PresentationSection from "@/components/presentation/PresentationSection";
-import GameExplanationSection from "@/components/landing/GameExplanationSection";
-import NewsletterSection from "@/components/landing/NewsletterSection";
 import HowItWorks from "@/components/landing/HowItWorks";
 import SubscriptionSection from "@/components/landing/SubscriptionSection";
-import CTASection from "@/components/landing/CTASection";
+import CallToAction from "@/components/home/CallToAction";
 import LandingFooter from "@/components/landing/LandingFooter";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Info, IdCard } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
-import CarBrandSelection from "@/components/landing/CarBrandSelection";
-import KYCSection from "@/components/kyc/KYCSection";
-import PreRegistrationForm from "@/components/landing/PreRegistrationForm";
+import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -92,7 +87,8 @@ const IndexContent = ({
         </Button>
       </div>
       
-      <LandingHeader countdownCompleted={countdownCompleted} />
+      {/* Hero Section with countdown */}
+      <HeroSection />
       
       {/* Launch Progress Bar */}
       <LaunchProgressBar 
@@ -103,42 +99,14 @@ const IndexContent = ({
       {/* Presentation Section */}
       <PresentationSection visible={true} />
       
-      {/* NUOVA SEZIONE: Form di pre-registrazione */}
-      <PreRegistrationForm countdownCompleted={countdownCompleted} />
-      
-      {/* Game Explanation Section */}
-      <div id="game-explanation">
-        <GameExplanationSection />
-      </div>
-      
-      {/* How It Works Section */}
-      <HowItWorks onRegisterClick={() => {
-        const preRegistrationSection = document.getElementById('pre-registration-form');
-        if (preRegistrationSection) {
-          preRegistrationSection.scrollIntoView({ behavior: 'smooth' });
-        } else {
-          onRegisterClick();
-        }
-      }} countdownCompleted={countdownCompleted} />
-      
-      {/* "Vuoi provarci? Fallo. Ma fallo per vincere." Section */}
-      <section className="w-full relative overflow-hidden py-16 bg-black">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-3xl md:text-5xl font-orbitron text-cyan-400 mb-8 text-center">
-            Vuoi provarci? Fallo. Ma fallo per vincere.
-          </div>
-          
-          <CarBrandSelection />
-        </div>
-      </section>
-      
-      {/* Newsletter Section */}
-      <NewsletterSection countdownCompleted={countdownCompleted} />
+      {/* How It Works Section - "Scopri M1SSION" */}
+      <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
       
       {/* Subscription Section */}
       <SubscriptionSection countdownCompleted={countdownCompleted} />
       
-      <CTASection onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
+      {/* Call to Action */}
+      <CallToAction />
       
       {/* KYC Verification Section */}
       <div className="py-12 bg-black">
@@ -164,7 +132,6 @@ const IndexContent = ({
         </div>
       </div>
       
-      {/* Manteniamo la sezione corretta nel footer e rimuoviamo la sezione duplicata qui */}
       <LandingFooter />
 
       {/* Prize Details Modal */}
