@@ -36,6 +36,7 @@ import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
 import GoldPlanPage from "@/pages/subscriptions/GoldPlanPage";
 import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
 import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
+import ChoosePlanPage from "@/pages/ChoosePlanPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -200,6 +201,13 @@ const WouterRoutes: React.FC = () => {
           
           <Route path="/game-rules">
             <GlobalLayout><GameRules /></GlobalLayout>
+          </Route>
+
+          {/* Plan selection route */}
+          <Route path="/choose-plan">
+            <ProtectedRoute>
+              <GlobalLayout><ChoosePlanPage /></GlobalLayout>
+            </ProtectedRoute>
           </Route>
 
           {/* Auth routes */}

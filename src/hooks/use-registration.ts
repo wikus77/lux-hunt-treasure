@@ -70,7 +70,7 @@ export const useRegistration = () => {
           data: {
             full_name: name,
             mission_preference: missionPreference || null,
-            subscription_plan: 'base',
+            subscription_plan: null,
             access_enabled: false,
             status: 'registered_pending'
           }
@@ -114,10 +114,10 @@ export const useRegistration = () => {
         // Dopo registrazione successful, invia notifica e vai agli abbonamenti
         console.log('📧 Inviando notifiche post-registrazione...');
         
-        // Reindirizza alla selezione piano abbonamento
-        setTimeout(() => {
-          navigate("/subscriptions");
-        }, 2000);
+          // Reindirizza alla selezione piano abbonamento
+          setTimeout(() => {
+            navigate("/choose-plan");
+          }, 2000);
         return;
       }
 
@@ -131,7 +131,7 @@ export const useRegistration = () => {
             password,
             fullName: name,
             missionPreference: missionPreference || null,
-            subscriptionPlan: 'base',
+            subscriptionPlan: null,
             accessEnabled: false,
             status: 'registered_pending'
           }
@@ -179,7 +179,7 @@ export const useRegistration = () => {
           
           // Reindirizza alla selezione piano abbonamento
           setTimeout(() => {
-            navigate("/subscriptions");
+            navigate("/choose-plan");
           }, 2000);
           return;
         }
