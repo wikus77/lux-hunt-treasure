@@ -213,9 +213,10 @@ const ChoosePlanPage: React.FC = () => {
             handlePaymentSuccess(paymentIntentId);
             setIsProcessing(false);
             setSelectedPlan('');
+            // Redirect to verification page to handle race condition
             setTimeout(() => {
-              setLocation('/subscriptions');
-            }, 1500);
+              setLocation('/subscription-verify');
+            }, 500);
           }}
           onCancel={() => {
             closeCheckout();

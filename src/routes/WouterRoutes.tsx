@@ -38,6 +38,7 @@ import GoldPlanPage from "@/pages/subscriptions/GoldPlanPage";
 import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
 import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
 import ChoosePlanPage from "@/pages/ChoosePlanPage";
+import SubscriptionVerify from "@/pages/SubscriptionVerify";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -198,6 +199,15 @@ const WouterRoutes: React.FC = () => {
           <Route path="/choose-plan">
             {isAuthenticated ? (
               <GlobalLayout><ChoosePlanPage /></GlobalLayout>
+            ) : (
+              <Login />
+            )}
+          </Route>
+
+          {/* Subscription verification route */}
+          <Route path="/subscription-verify">
+            {isAuthenticated ? (
+              <SubscriptionVerify />
             ) : (
               <Login />
             )}
