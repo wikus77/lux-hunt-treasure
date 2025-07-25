@@ -212,12 +212,13 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto" 
+    <div className="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center p-4 z-[9999] overflow-y-auto" 
          style={{ 
            paddingTop: 'calc(env(safe-area-inset-top, 47px) + 20px)',
            paddingBottom: 'calc(env(safe-area-inset-bottom, 34px) + 20px)',
            maxHeight: '100dvh'
          }}>
+      {/* DEBUG: Modal should be visible with this high z-index */}
       {useSavedCard ? (
         <SavedCardPayment
           config={config}
