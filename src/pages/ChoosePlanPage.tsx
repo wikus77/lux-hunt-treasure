@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 
 const plans = [
   {
-    id: 'SILVER',
+    id: 'Silver',
     name: 'Silver',
     price: '3.99',
     icon: <Shield className="w-8 h-8" />,
@@ -28,7 +28,7 @@ const plans = [
     color: 'from-slate-400 to-slate-600'
   },
   {
-    id: 'GOLD',
+    id: 'Gold',
     name: 'Gold',
     price: '9.99',
     icon: <Crown className="w-8 h-8" />,
@@ -43,7 +43,7 @@ const plans = [
     color: 'from-yellow-400 to-yellow-600'
   },
   {
-    id: 'BLACK',
+    id: 'Black',
     name: 'Black',
     price: '19.99',
     icon: <Zap className="w-8 h-8" />,
@@ -58,7 +58,7 @@ const plans = [
     color: 'from-gray-800 to-black'
   },
   {
-    id: 'TITANIUM',
+    id: 'Titanium',
     name: 'Titanium',
     price: '39.99',
     icon: <Star className="w-8 h-8" />,
