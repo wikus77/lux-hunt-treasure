@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
-import HeroSection from "@/components/home/HeroSection";
-import PresentationSection from "@/components/presentation/PresentationSection";
-import HowItWorks from "@/components/landing/HowItWorks";
-import SubscriptionSection from "@/components/landing/SubscriptionSection";
-import CallToAction from "@/components/home/CallToAction";
-import LandingFooter from "@/components/landing/LandingFooter";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Info, IdCard } from "lucide-react";
+import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
+import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import LandingFooter from "@/components/landing/LandingFooter";
+import { motion } from "framer-motion";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -60,6 +56,99 @@ const IndexContent = ({
     return <div className="min-h-screen bg-black"></div>;
   }
 
+  // Step data for "Scopri M1SSION" section
+  const steps = [
+    {
+      icon: <UserCheck className="w-8 h-8 text-[#00E5FF]" />,
+      title: "Registrazione",
+      description: "Crea il tuo account su M1SSION e preparati alla sfida"
+    },
+    {
+      icon: <Check className="w-8 h-8 text-[#00E5FF]" />,
+      title: "Ricevi Indizi", 
+      description: "Ogni settimana ricevi nuovi indizi via app ed email"
+    },
+    {
+      icon: <MapPin className="w-8 h-8 text-[#FFC107]" />,
+      title: "Risolvi la Missione",
+      description: "Analizza gli indizi e trova la posizione del premio"
+    },
+    {
+      icon: <Award className="w-8 h-8 text-[#FF00FF]" />,
+      title: "Vinci davvero",
+      description: "Se sei il primo a trovare il premio, diventa tuo!"
+    }
+  ];
+
+  // Subscription plans data
+  const subscriptions = [
+    {
+      title: 'Base',
+      price: 'Gratuito',
+      highlight: false,
+      features: [
+        "Accesso all'app base",
+        "1 indizio a settimana",
+        "Partecipazione alle missioni base",
+        "Supporto via email",
+      ],
+      notIncluded: [
+        "Indizi premium",
+        "Tracciamento avanzato",
+        "Accesso anticipato",
+        "Supporto prioritario"
+      ],
+      buttonText: 'Inizia Gratis',
+      buttonColor: 'bg-gradient-to-r from-[#00E5FF] to-[#008eb3] text-black hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]'
+    },
+    {
+      title: 'Silver',
+      price: '€6.99',
+      period: '/mese',
+      features: [
+        "Tutto del piano Base",
+        "3 indizi a settimana",
+        "Tracciamento base",
+        "Supporto chat",
+      ],
+      notIncluded: [
+        "Accesso anticipato",
+        "Supporto prioritario"
+      ],
+      buttonText: 'Scegli Silver',
+      buttonColor: 'bg-gradient-to-r from-[#C0C0C0] to-[#919191] text-black hover:shadow-[0_0_15px_rgba(192,192,192,0.5)]'
+    },
+    {
+      title: 'Gold',
+      price: '€9.99',
+      period: '/mese',
+      highlight: true,
+      features: [
+        "Tutto del piano Silver",
+        "5 indizi a settimana",
+        "Tracciamento avanzato",
+        "Accesso anticipato (24h)",
+        "Supporto prioritario",
+      ],
+      buttonText: 'Scegli Gold',
+      buttonColor: 'bg-gradient-to-r from-[#FFD700] to-[#FFA500] text-black hover:shadow-[0_0_15px_rgba(255,215,0,0.5)]'
+    },
+    {
+      title: 'Black',
+      price: '€13.99',
+      period: '/mese',
+      features: [
+        "Tutto del piano Gold",
+        "7 indizi a settimana",
+        "Contenuti esclusivi",
+        "Accesso anticipato (48h)",
+        "Supporto VIP",
+      ],
+      buttonText: 'Scegli Black',
+      buttonColor: 'bg-gradient-to-r from-[#1A1A1A] to-[#333333] text-white hover:shadow-[0_0_15px_rgba(0,0,0,0.7)]'
+    }
+  ];
+
   return (
     <>
       <BackgroundParallax />
@@ -87,27 +176,296 @@ const IndexContent = ({
         </Button>
       </div>
       
-      {/* Hero Section with countdown */}
-      <HeroSection />
-      
+      {/* HERO SECTION - WELCOME TO M1SSION™ */}
+      <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-16">
+        {/* Static background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
+          {/* Static dots */}
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                width: `${Math.random() * 4 + 2}px`,
+                height: `${Math.random() * 4 + 2}px`,
+                background: i % 2 === 0 ? "#00E5FF" : "#8A2BE2",
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                opacity: 0.4,
+                filter: "blur(1px)"
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="z-10 max-w-5xl">
+          {/* Main Title */}
+          <h1 className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4">
+            WELCOME TO{" "}
+            <span>
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+            </span>
+          </h1>
+          
+          {/* MISSION START */}
+          <p className="text-green-400 text-sm md:text-base font-orbitron tracking-widest mb-8">
+            MISSION START
+          </p>
+          
+          {/* Description text */}
+          <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+            Un premio attende chi sa vedere oltre.
+            Gli indizi non sono nascosti: sono camuffati.
+            Serve logica, freddezza e visione.
+            La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>.
+          </p>
+          
+          <p className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10">
+            IT IS POSSIBLE
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button 
+              className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+              onClick={onRegisterClick}
+            >
+              JOIN THE HUNT
+            </button>
+            <button 
+              className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
+            >
+              LEARN MORE
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* Launch Progress Bar */}
       <LaunchProgressBar 
         targetDate={new Date(2025, 5, 19, 12, 0, 0)}  
         onCountdownComplete={() => {}} // Handled in parent component
       />
-      
-      {/* Presentation Section */}
-      <PresentationSection visible={true} />
-      
-      {/* How It Works Section - "Scopri M1SSION" */}
-      <HowItWorks onRegisterClick={onRegisterClick} countdownCompleted={countdownCompleted} />
-      
-      {/* Subscription Section */}
-      <SubscriptionSection countdownCompleted={countdownCompleted} />
-      
-      {/* Call to Action */}
-      <CallToAction />
-      
+
+      {/* WELCOME TO M1SSION™ Text Section */}
+      <section className="relative py-20 px-4 bg-black">
+        <div className="max-w-4xl mx-auto">
+          <div className="glass-card p-8 md:p-12 text-center relative overflow-hidden">
+            <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
+              WELCOME TO{" "}
+              <span>
+                <span className="text-[#00E5FF]">M1</span>
+                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+              </span>
+            </h2>
+            
+            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+              In the near future...
+              The world becomes a gameboard.
+              The clues are encrypted. The stakes are real.
+            </p>
+            
+            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+              Thousands will try. Only a few will see the pattern.
+              You're not just chasing a prize—you're chasing the proof that you can outthink them all.
+            </p>
+
+            <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
+              This is <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. The countdown has begun. Are you ready?
+            </p>
+
+            {/* Static accent line */}
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+          </div>
+        </div>
+      </section>
+
+      {/* REGISTRATION FORM SECTION */}
+      <section className="relative py-20 px-4 bg-gradient-to-b from-purple-900/20 to-cyan-900/20">
+        <div className="max-w-md mx-auto">
+          <div className="glass-card p-8 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">
+              Registrati per <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+            </h2>
+            
+            <p className="text-white/70 mb-6">
+              Ottieni accesso esclusivo e un codice referral unico. Preparati per l'avventura che cambierà tutto.
+            </p>
+            
+            <form className="space-y-4">
+              <input
+                type="text"
+                placeholder="Inserisci il tuo nome"
+                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
+              />
+              <input
+                type="email"
+                placeholder="Inserisci la tua email"
+                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
+              />
+              <Button 
+                className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold py-3 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+                onClick={onRegisterClick}
+              >
+                REGISTRATI SUBITO
+              </Button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* SCOPRI M1SSION SECTION - 4 Steps */}
+      <section className="py-20 px-4 bg-black">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
+            Scopri <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 relative">
+            {/* Linea connettore per desktop */}
+            <div className="hidden lg:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[#00E5FF] via-[#FFC107] to-[#FF00FF] z-0"></div>
+            
+            {steps.map((step, index) => (
+              <motion.div
+                key={index}
+                className="glass-card relative z-10"
+                initial={{ y: 30, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-20">
+                  {index + 1}
+                </span>
+                <div className="flex flex-col items-center text-center">
+                  <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
+                  <p className="text-white/70">{step.description}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center">
+            <Button 
+              onClick={onRegisterClick}
+              className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full"
+              size="lg"
+            >
+              Inizia La Tua M1SSION
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* STAY UPDATED SECTION */}
+      <section className="py-12 px-4 bg-black">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Stay Updated
+          </h2>
+          <p className="text-white/70 mb-8">
+            Get the latest updates about M1SSION™ and be the first to know about new challenges.
+          </p>
+        </div>
+      </section>
+
+      {/* SUBSCRIPTION SECTION */}
+      <section className="py-16 px-4 bg-black relative">
+        <div className="absolute inset-0 bg-[url('/public/images/grid-pattern.png')] opacity-10"></div>
+        
+        <div className="relative z-10 max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold inline-block">
+              <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> Abbonamenti
+            </h2>
+            <p className="mt-4 text-white/70 max-w-2xl mx-auto">
+              Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            {subscriptions.map((sub, index) => (
+              <motion.div
+                key={index}
+                className={`rounded-xl relative p-6 ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                {/* Badge per il piano consigliato */}
+                {sub.highlight && (
+                  <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-3 rounded-full flex items-center">
+                    Consigliato
+                  </div>
+                )}
+                
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-white">{sub.title}</h3>
+                  <div className="mt-2">
+                    <span className="text-2xl font-bold text-white">{sub.price}</span>
+                    {sub.period && <span className="text-white/50 text-sm">{sub.period}</span>}
+                  </div>
+                </div>
+                
+                <div className="space-y-4 mb-6">
+                  {sub.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-center">
+                      <Check className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" />
+                      <span className="text-white/80 text-sm">{feature}</span>
+                    </div>
+                  ))}
+                  
+                  {sub.notIncluded?.map((feature, idx) => (
+                    <div key={idx} className="flex items-center text-white/40">
+                      <span className="h-5 w-5 mr-2 flex-shrink-0 text-center">×</span>
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button 
+                  className={`w-full ${sub.buttonColor} ${!countdownCompleted ? 'opacity-70 cursor-not-allowed' : ''}`}
+                  disabled={!countdownCompleted}
+                >
+                  {sub.buttonText}
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="text-center text-white/50 text-sm">
+            Tutti gli abbonamenti sono soggetti ai nostri Termini e Condizioni. Puoi cancellare in qualsiasi momento.
+          </div>
+        </div>
+      </section>
+
+      {/* PREPARATI PER LA MISSIONE DI UNA VITA */}
+      <section className="py-20 px-4 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text mb-8">
+            Missione di una vita
+          </h2>
+          
+          <p className="text-xl text-white/80 mb-8">
+            Unisciti a noi e inizia l'avventura! Registrati per essere il primo a sapere quando inizia la M1SSION™!
+          </p>
+          
+          <Button 
+            onClick={onRegisterClick}
+            className="bg-gradient-to-r from-cyan-400 to-purple-600 text-black font-bold px-12 py-4 rounded-full text-lg hover:shadow-[0_0_20px_rgba(0,229,255,0.5)]"
+          >
+            REGISTRATI ORA
+          </Button>
+        </div>
+      </section>
+
       {/* KYC Verification Section */}
       <div className="py-12 bg-black">
         <div className="max-w-3xl mx-auto px-4 text-center">
@@ -131,6 +489,31 @@ const IndexContent = ({
           </Link>
         </div>
       </div>
+
+      {/* DOWNLOAD APP SECTION */}
+      <section className="py-12 bg-black">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+            Scarica l'app
+          </h2>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors">
+              <div className="text-left">
+                <div className="text-xs text-white/70">Download on the</div>
+                <div className="text-lg font-bold text-white">App Store</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors">
+              <div className="text-left">
+                <div className="text-xs text-white/70">GET IT ON</div>
+                <div className="text-lg font-bold text-white">Google Play</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
       
       <LandingFooter />
 
