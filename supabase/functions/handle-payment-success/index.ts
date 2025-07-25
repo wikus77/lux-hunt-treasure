@@ -65,6 +65,15 @@ serve(async (req) => {
       status: paymentIntent.status
     });
 
+    // Enhanced plan mapping with better validation
+    let mappedPlan = plan;
+    if (plan === 'SILVER' || plan === 'silver') mappedPlan = 'SILVER';
+    else if (plan === 'GOLD' || plan === 'gold') mappedPlan = 'GOLD';
+    else if (plan === 'BLACK' || plan === 'black') mappedPlan = 'BLACK';
+    else if (plan === 'TITANIUM' || plan === 'titanium') mappedPlan = 'TITANIUM';
+    
+    logStep('🎯 Plan mapping', { originalPlan: plan, mappedPlan: mappedPlan });
+
     // Update payment intent in database
     const { error: updateError } = await supabaseClient
       .from('payment_intents')
@@ -100,24 +109,32 @@ serve(async (req) => {
 
     logStep('✅ Subscription updated successfully');
 
-    // Calculate access_start_date based on plan
+    // Calculate access_start_date based on plan - FIXED DATE CALCULATION
     const calculateAccessStartDate = (planName: string) => {
+      // Use future dates for testing, subtract hours for early access
+      const baseDate = new Date('2025-08-19T12:00:00Z'); // Mission start date
       const hours = planName === 'SILVER' ? 2 : planName === 'GOLD' ? 24 : planName === 'BLACK' ? 48 : planName === 'TITANIUM' ? 72 : 0;
-      return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+      return new Date(baseDate.getTime() - hours * 60 * 60 * 1000).toISOString();
     };
 
     // CRITICAL FIX: Update subscription_plan field in profiles
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({
-        subscription_plan: plan, // 🔥 CRITICAL: This field was missing!
-        subscription_tier: plan,
-        tier: plan,
-        access_start_date: calculateAccessStartDate(plan),
+        subscription_plan: mappedPlan, // 🔥 CRITICAL: Using mapped plan!
+        subscription_tier: mappedPlan,
+        tier: mappedPlan,
+        access_start_date: calculateAccessStartDate(mappedPlan),
         access_enabled: false, // Must be manually enabled
         updated_at: new Date().toISOString()
       })
       .eq('id', user_id);
+
+    logStep('📝 Profile update attempt', {
+      user_id: user_id,
+      subscription_plan: mappedPlan,
+      access_start_date: calculateAccessStartDate(mappedPlan)
+    });
 
     if (profileError) {
       logStep('❌ Profile update error', profileError);
