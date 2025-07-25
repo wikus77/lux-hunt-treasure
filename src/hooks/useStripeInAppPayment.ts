@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ Universal Stripe In-App Payment Hook - SYNCHRONIZED PRICING
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
@@ -30,7 +30,44 @@ export const useStripeInAppPayment = () => {
   const [loading, setLoading] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig | null>(null);
+  const [defaultPaymentMethod, setDefaultPaymentMethod] = useState<any>(null);
   const { user } = useAuthContext();
+
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  // Load default payment method on initialization
+  useEffect(() => {
+    const loadDefaultPaymentMethod = async () => {
+      if (!user) return;
+
+      try {
+        console.log('🔍 M1SSION™ Loading default payment method for auto-fill');
+        
+        const { data, error } = await supabase
+          .from('user_payment_methods')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_default', true)
+          .maybeSingle();
+
+        if (error) {
+          console.error('❌ M1SSION™ Error loading default payment method:', error);
+          return;
+        }
+
+        if (data) {
+          setDefaultPaymentMethod(data);
+          console.log('✅ M1SSION™ Default payment method loaded for auto-fill:', { 
+            brand: data.brand, 
+            last4: data.last4 
+          });
+        }
+      } catch (error) {
+        console.error('❌ M1SSION™ Error in loadDefaultPaymentMethod:', error);
+      }
+    };
+
+    loadDefaultPaymentMethod();
+  }, [user]);
 
   const initiatePayment = async (config: PaymentConfig): Promise<void> => {
     if (!user) {
@@ -43,10 +80,21 @@ export const useStripeInAppPayment = () => {
       type: config.type,
       amount: config.amount,
       user_id: user.id,
+      defaultPaymentMethod: defaultPaymentMethod ? `${defaultPaymentMethod.brand} ****${defaultPaymentMethod.last4}` : 'none',
       timestamp: new Date().toISOString()
     });
 
-    setPaymentConfig(config);
+    // Auto-fill with default payment method if available
+    const configWithDefaults = {
+      ...config,
+      metadata: {
+        ...config.metadata,
+        default_payment_method: defaultPaymentMethod?.stripe_pm_id,
+        auto_fill_enabled: !!defaultPaymentMethod
+      }
+    };
+
+    setPaymentConfig(configWithDefaults);
     setShowCheckout(true);
   };
 
@@ -153,6 +201,7 @@ export const useStripeInAppPayment = () => {
     paymentConfig,
     loading,
     setLoading,
+    defaultPaymentMethod, // © 2025 Joseph MULÉ – M1SSION™ – Auto-fill support
     
     // Handlers
     closeCheckout,
