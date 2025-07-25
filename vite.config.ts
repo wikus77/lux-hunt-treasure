@@ -28,13 +28,15 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3MB
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB - increased for large bundle
         globIgnores: [
           '**/lovable-uploads/**',
-          '**/*.{png,jpg,jpeg}' // Exclude all images from precaching
+          '**/*.{png,jpg,jpeg}', // Exclude all images from precaching
+          '**/assets/index.*.js' // Exclude large main bundle from precaching
         ],
         globPatterns: [
-          '**/*.{js,css,html,ico,svg}' // Only cache essential files
+          '**/*.{css,html,ico,svg}', // Cache essential files but not large JS bundles
+          '**/assets/!(index).*.js' // Cache vendor chunks but not main bundle
         ],
         runtimeCaching: [
           {
