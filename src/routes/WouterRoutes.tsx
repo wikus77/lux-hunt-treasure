@@ -56,6 +56,9 @@ const WouterRoutes: React.FC = () => {
     timestamp: new Date().toISOString()
   });
 
+  console.log(`✅ ROUTE: Current path = ${window.location.pathname}`);
+  console.log(`🔐 AUTH STATUS: isAuthenticated = ${isAuthenticated}, isLoading = ${isLoading}`);
+
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>

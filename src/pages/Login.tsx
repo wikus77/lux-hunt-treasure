@@ -30,6 +30,7 @@ const Login = () => {
     if (redirectAttemptedRef.current) return;
     
     console.log(`🏠 FORCE REDIRECT TO HOME: ${reason}`);
+    console.log('✅ ROUTE: Login → /home (authenticated user)');
     redirectAttemptedRef.current = true;
     
     // Clear any existing fallback timer
@@ -38,10 +39,10 @@ const Login = () => {
       fallbackTimerRef.current = null;
     }
     
-    // Strategy 1: Try wouter navigate first
+    // Strategy 1: Try wouter navigate first - REDIRECT TO /home NOT /
     try {
-      navigate('/');
-      console.log('✅ WOUTER NAVIGATE EXECUTED');
+      navigate('/home');
+      console.log('✅ WOUTER NAVIGATE TO /home EXECUTED');
     } catch (error) {
       console.error('❌ WOUTER NAVIGATE FAILED:', error);
     }
@@ -51,8 +52,8 @@ const Login = () => {
       console.log('📱 PWA STANDALONE DETECTED - Using window.location.href fallback');
       setTimeout(() => {
         if (window.location.pathname === '/login') {
-          console.log('🔄 WOUTER FAILED - Forcing window.location.href');
-          window.location.href = '/';
+          console.log('🔄 WOUTER FAILED - Forcing window.location.href to /home');
+          window.location.href = '/home';
         }
       }, 500);
     }
@@ -91,11 +92,11 @@ const Login = () => {
           
           // Final fallback: Hard reload to home
           if (isPWAStandalone()) {
-            console.log('📱 PWA HARD REDIRECT TO HOME');
-            window.location.replace('/');
+            console.log('📱 PWA HARD REDIRECT TO /home');
+            window.location.replace('/home');
           } else {
-            console.log('🌐 BROWSER HARD REDIRECT TO HOME');
-            window.location.href = '/';
+            console.log('🌐 BROWSER HARD REDIRECT TO /home');
+            window.location.href = '/home';
           }
         }
       }, 2000);
@@ -145,6 +146,12 @@ const Login = () => {
           <StandardLoginForm verificationStatus={verificationStatus} />
 
           <div className="mt-6 text-center space-y-3">
+            <p className="text-sm text-white/70">
+              Non hai un account?{" "}
+              <Link to="/register" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                Registrati
+              </Link>
+            </p>
             <p className="text-sm text-white/50">
               <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
                 ← Torna alla homepage
