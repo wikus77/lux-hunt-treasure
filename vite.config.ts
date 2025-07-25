@@ -10,3 +10,16 @@ export default defineConfig({
     devOptions: {
       enabled: true
     },
+  })],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+    },
+  },
+  base: '/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    target: 'es2015',
+  },
+});
