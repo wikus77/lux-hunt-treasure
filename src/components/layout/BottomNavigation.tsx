@@ -5,16 +5,20 @@ import { Mail, Map, Home, Award, User, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
 
+// Explicit function name for iOS Capacitor compatibility
 const BottomNavigationComponent = () => {
   const [currentPath] = useLocation();
   const { unreadCount } = useNotifications();
   const { 
     navigate, 
+    isCapacitor 
   } = useWouterNavigation();
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
+    isCapacitor,
     unreadCount
   });
 
@@ -68,18 +72,22 @@ const BottomNavigationComponent = () => {
     },
   ];
 
+  // iOS Capacitor compatible navigation handler with haptic feedback
   const handleNavigationExplicit = async (link: typeof links[0], e: React.MouseEvent) => {
     e.preventDefault();
     
+    console.log('🧭 Navigation clicked:', { path: link.path, isCapacitor });
     
     // Execute Wouter navigation
     navigate(link.path);
     
     // iOS WebView scroll fix with explicit function
     const applyIOSScrollFix = () => {
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
+      if (isCapacitor) {
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+        }, 100);
+      }
     };
     applyIOSScrollFix();
   };
@@ -93,6 +101,7 @@ const BottomNavigationComponent = () => {
         right: 0,
         bottom: "0px",
         zIndex: 9999,
+        paddingBottom: isCapacitor ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "12px",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         backgroundColor: "rgba(0,0,0,0.95)",
@@ -277,5 +286,6 @@ const BottomNavigationComponent = () => {
   );
 };
 
+// Export with explicit name for iOS Capacitor compatibility
 const BottomNavigation = BottomNavigationComponent;
 export default BottomNavigation;

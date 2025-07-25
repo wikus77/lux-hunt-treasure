@@ -1,4 +1,5 @@
 
+/* iOS Capacitor specific fixes for Leaflet */
 .leaflet-container {
   background: transparent !important;
   outline: none !important;

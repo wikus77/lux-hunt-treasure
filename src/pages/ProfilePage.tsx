@@ -1,3 +1,5 @@
+// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
+// M1SSION™ - Profile Page for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -20,6 +22,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { supabase } from '@/integrations/supabase/client';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 
@@ -49,6 +53,7 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
   const { navigateWithFeedback, toHome } = useEnhancedNavigation();
+  const { vibrate } = useCapacitorHardware();
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   const { subscription } = useProfileSubscription();
 
@@ -329,6 +334,7 @@ export const ProfilePage: React.FC = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="space-y-4"
       >
+        {/* Removed duplicate content that's already in /settings - 🔐 FIRMATO: BY JOSEPH MULE — Capacitor iOS Compatible */}
 
         <Button
           variant="outline"

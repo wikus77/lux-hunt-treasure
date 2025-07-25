@@ -1,3 +1,4 @@
+// M1SSION™ - Console Component for iOS Capacitor
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -17,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 interface ConsoleMessage {
   id: string;

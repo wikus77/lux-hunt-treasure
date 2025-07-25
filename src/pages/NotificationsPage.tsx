@@ -1,3 +1,4 @@
+// M1SSION™ - Notifications Page for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -17,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 
 interface Notification {
@@ -34,6 +37,7 @@ export const NotificationsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [markingAsRead, setMarkingAsRead] = useState<string | null>(null);
   const { user } = useAuth();
+  const { vibrate } = useCapacitorHardware();
 
   // Load notifications
   const loadNotifications = preserveFunctionName(async () => {

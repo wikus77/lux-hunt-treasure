@@ -41,6 +41,7 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
       >
         <div className="container mx-auto px-4 pt-4 pb-2 max-w-6xl">
           {/* 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+          {/* ✅ Compatibile Capacitor iOS */}
           
           {children}
         </div>

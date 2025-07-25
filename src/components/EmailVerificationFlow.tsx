@@ -1,3 +1,4 @@
+// M1SSION™ - Email Verification Flow for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -15,6 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 
 interface EmailVerificationFlowProps {
@@ -33,6 +36,7 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
   const [countdown, setCountdown] = useState(0);
   const [lastSentTime, setLastSentTime] = useState<Date | null>(null);
   const { user } = useAuth();
+  const { vibrate } = useCapacitorHardware();
 
   // Check verification status
   const checkVerificationStatus = preserveFunctionName(async () => {

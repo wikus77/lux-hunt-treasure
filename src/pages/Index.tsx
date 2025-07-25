@@ -93,5 +93,6 @@ export default Index;
 
 /*
  * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Index Page refactorizzato con Custom Hooks per iOS Capacitor
  * Problema TypeScript risolto: handleIntroComplete function signature
  */

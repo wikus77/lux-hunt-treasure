@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Play, RotateCcw, Star, Clock, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +30,7 @@ interface GameStats {
 
 const MemoryHackGame: React.FC = () => {
   const navigate = useNavigate();
+  const { vibrate, playSound } = useCapacitorHardware();
   const { toast } = useToast();
   
   const [gameState, setGameState] = useState<GameState>({

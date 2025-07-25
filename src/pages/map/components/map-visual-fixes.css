@@ -1,3 +1,4 @@
+/* M1SSION™ Map Visual Fixes - Leaflet + Capacitor iOS */
 
 /* iOS Container Fixes */
 .map-container-wrapper {
@@ -23,6 +24,7 @@
   user-select: none !important;
 }
 
+/* iOS Capacitor Performance */
 .leaflet-container {
   -webkit-transform: translateZ(0) !important;
   transform: translateZ(0) !important;

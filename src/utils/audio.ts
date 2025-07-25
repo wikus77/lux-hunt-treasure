@@ -1,3 +1,5 @@
+// Utility per gestire audio in ambiente Capacitor iOS
+import { Capacitor } from '@capacitor/core';
 
 interface AudioMap {
   [key: string]: string;
@@ -20,7 +22,9 @@ class AudioManager {
 
   constructor() {
     // Su piattaforme native, precarica i suoni
-    this.preloadAudio();
+    if (Capacitor.isNativePlatform()) {
+      this.preloadAudio();
+    }
   }
 
   private async preloadAudio() {

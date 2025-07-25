@@ -29,6 +29,7 @@ interface Window {
 }
 
 // Mobile-compatible environment interface
+// Removed VITE_ variables for Capacitor compatibility
 interface ImportMetaEnv {
   readonly NODE_ENV: string;
 }

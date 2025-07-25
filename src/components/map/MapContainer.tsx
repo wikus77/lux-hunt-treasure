@@ -86,6 +86,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
       }
     }
     
+    // iOS Capacitor fixes
     setTimeout(() => {
       if (map) {
         map.invalidateSize();

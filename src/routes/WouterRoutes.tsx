@@ -1,3 +1,4 @@
+// M1SSION™ - Wouter Routes for Capacitor iOS Compatibility
 // 🔐 FIRMATO: Joseph Mulè – CEO NIYVORA KFT™
 
 import React from "react";
@@ -8,6 +9,7 @@ import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 
+// Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
 import AppHome from "@/pages/AppHome";
@@ -41,12 +43,14 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
 
+  const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
      (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
 
   console.log('🔍 WOUTER ROUTING STATE DEBUG:', {
     isAuthenticated,
     isLoading,
+    isCapacitorApp,
     currentPath: window.location.pathname,
     userExists: !!isAuthenticated,
     timestamp: new Date().toISOString()

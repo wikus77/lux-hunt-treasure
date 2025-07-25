@@ -1,28 +1,33 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ - App Initialization Hook for iOS Capacitor
 import { useEffect, useState } from 'react';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { useNavigationStore } from '@/stores/navigationStore';
+import { explicitNavigationHandler } from '@/utils/iosCapacitorFunctions';
 
 interface AppInitializationState {
   isInitialized: boolean;
+  isCapacitor: boolean;
   hasCompletedIntro: boolean;
   appVersion: string;
   deviceInfo: any;
 }
 
 export const useAppInitialization = () => {
-  const { session, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
-  const { setCurrentTab } = useNavigationStore();
+  const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
+  const { setCapacitorMode, setCurrentTab } = useNavigationStore();
   
   const [state, setState] = useState<AppInitializationState>({
     isInitialized: false,
+    isCapacitor: false,
     hasCompletedIntro: false,
     appVersion: '1.0.0',
     deviceInfo: null
   });
 
-  const isBrowser = () => {
-    return typeof window !== 'undefined';
+  // Detect Capacitor environment with explicit function names
+  const detectCapacitorEnvironment = (): boolean => {
+    return typeof window !== 'undefined' && 
+      (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
   };
 
   // Initialize app with explicit function names for iOS compatibility
@@ -30,11 +35,20 @@ export const useAppInitialization = () => {
     console.log('🚀 M1SSION App Initialization starting...');
     
     try {
+      const isCapacitor = detectCapacitorEnvironment();
+      
+      // Update navigation store
+      setCapacitorMode(isCapacitor);
+      
+      // Get device info if in Capacitor
       let deviceInfo = null;
-      if (isBrowser()) {
+      if (isCapacitor && (window as any).Capacitor) {
         try {
-          deviceInfo = { platform: 'web' };
-          console.log('📱 Device Info:', deviceInfo);
+          const { Device } = (window as any).Capacitor;
+          if (Device) {
+            deviceInfo = await Device.getInfo();
+            console.log('📱 Device Info:', deviceInfo);
+          }
         } catch (error) {
           console.warn('⚠️ Could not get device info:', error);
         }
@@ -44,18 +58,20 @@ export const useAppInitialization = () => {
       const hasCompletedIntro = localStorage.getItem('m1ssion-intro-completed') === 'true';
       
       // Set initial route based on auth and intro status
-      if (session) {
+      if (isCapacitor && isAuthenticated && !authLoading) {
         setCurrentTab('/home');
       }
 
       setState({
         isInitialized: true,
+        isCapacitor,
         hasCompletedIntro,
         appVersion: '1.0.0',
         deviceInfo
       });
 
       console.log('✅ M1SSION App Initialization completed:', {
+        isCapacitor,
         isAuthenticated,
         hasCompletedIntro,
         deviceInfo: deviceInfo?.platform || 'web'
@@ -74,7 +90,7 @@ export const useAppInitialization = () => {
 
   // iOS-specific optimizations
   useEffect(() => {
-    if (isBrowser()) {
+    if (state.isCapacitor && state.isInitialized) {
       // Prevent iOS bounce scroll
       document.body.style.overscrollBehavior = 'none';
       (document.body.style as any).WebkitOverflowScrolling = 'touch';
@@ -95,7 +111,7 @@ export const useAppInitialization = () => {
       
       addSafeAreaStyles();
     }
-  }, []);
+  }, [state.isCapacitor, state.isInitialized]);
 
   return {
     ...state,

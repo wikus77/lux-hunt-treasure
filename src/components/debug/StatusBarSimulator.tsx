@@ -1,6 +1,7 @@
 
 // M1SSION™ - Status Bar Simulator for Development
 import React, { useEffect, useState } from 'react';
+import { detectCapacitorEnvironment, getDeviceOrientation } from '@/utils/iosCapacitorFunctions';
 
 interface StatusBarSimulatorProps {
   visible?: boolean;
@@ -13,6 +14,7 @@ export const StatusBarSimulator: React.FC<StatusBarSimulatorProps> = ({
 }) => {
   const [orientation, setOrientation] = useState('portrait');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const isCapacitor = detectCapacitorEnvironment();
 
   useEffect(() => {
     const updateOrientation = () => {
@@ -39,6 +41,7 @@ export const StatusBarSimulator: React.FC<StatusBarSimulatorProps> = ({
   }, []);
 
   // Only show in web environment for development
+  if (!visible || isCapacitor) return null;
 
   const timeString = currentTime.toLocaleTimeString('en-US', {
     hour: 'numeric',

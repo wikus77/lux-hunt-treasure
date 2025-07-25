@@ -47,6 +47,7 @@
   padding-top: env(safe-area-inset-top, 44px) !important;
 }
 
+/* Dynamic Island and Notch support for Capacitor */
 @media screen and (max-width: 430px) {
   .capacitor-safe-header {
     height: calc(72px + env(safe-area-inset-top, 59px)) !important;
@@ -54,6 +55,7 @@
   }
 }
 
+/* Content offset for Capacitor Safe Area */
 .capacitor-safe-content {
   padding-top: calc(72px + env(safe-area-inset-top, 44px)) !important;
 }

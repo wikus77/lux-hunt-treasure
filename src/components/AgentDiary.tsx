@@ -1,3 +1,4 @@
+// M1SSION™ - Agent Diary Component for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -17,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 interface DiaryEntry {
   id: string;

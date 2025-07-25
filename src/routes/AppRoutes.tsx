@@ -52,12 +52,15 @@ import Terms from "@/pages/Terms";
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
 
+  // Enhanced routing logic for Capacitor iOS - mobile compatible
+  const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
      (window.location.hostname === 'localhost' && process.env.NODE_ENV === 'development'));
 
   console.log('🔍 ROUTING STATE:', {
     isAuthenticated,
     isLoading,
+    isCapacitorApp,
     currentPath: window.location.pathname,
     timestamp: new Date().toISOString()
   });
@@ -70,7 +73,7 @@ const AppRoutes: React.FC = () => {
             <Route 
               path="/" 
               element={
-                session ? (
+                isCapacitorApp && isAuthenticated && !isLoading ? (
                   <Navigate to="/home" replace />
                 ) : (
                   <Index />

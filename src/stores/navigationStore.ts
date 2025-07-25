@@ -1,9 +1,11 @@
+// M1SSION™ - Navigation Store for iOS Capacitor Compatibility
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface NavigationState {
   currentTab: string;
   history: string[];
+  isCapacitor: boolean;
   lastNavigation: number;
 }
 
@@ -12,6 +14,7 @@ interface NavigationActions {
   addToHistory: (path: string) => void;
   goBack: () => string | null;
   clearHistory: () => void;
+  setCapacitorMode: (isCapacitor: boolean) => void;
   getNavigationInfo: () => NavigationState;
 }
 
@@ -23,6 +26,7 @@ export const useNavigationStore = create<NavigationStore>()(
       // State
       currentTab: '/',
       history: ['/'],
+      isCapacitor: false,
       lastNavigation: Date.now(),
 
       // Actions
@@ -69,20 +73,30 @@ export const useNavigationStore = create<NavigationStore>()(
         });
       },
 
+      setCapacitorMode: (isCapacitor: boolean) => {
+        console.log('🏪 Navigation Store: Setting Capacitor mode:', isCapacitor);
+        set({ 
+          isCapacitor,
+          lastNavigation: Date.now() 
+        });
+      },
+
       getNavigationInfo: () => {
         return get();
-      }
+      },
     }),
     {
       name: 'm1ssion-navigation-store',
       partialize: (state) => ({
         currentTab: state.currentTab,
         history: state.history,
+        isCapacitor: state.isCapacitor,
       }),
     }
   )
 );
 
+// Explicit helper functions for iOS Capacitor compatibility
 export const navigationHelpers = {
   explicitSetTab: (tab: string) => {
     const store = useNavigationStore.getState();

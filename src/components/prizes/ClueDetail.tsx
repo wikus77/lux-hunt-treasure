@@ -1,3 +1,4 @@
+// M1SSION™ - Clue Detail Component for iOS Capacitor
 import React from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -16,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 
 interface Clue {
@@ -39,6 +42,7 @@ export const ClueDetail: React.FC<ClueDetailProps> = ({
   open,
   onOpenChange
 }) => {
+  const { vibrate } = useCapacitorHardware();
 
   // Copy clue text to clipboard
   const copyClueText = preserveFunctionName(async () => {

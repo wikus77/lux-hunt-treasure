@@ -1,5 +1,6 @@
 
 // This file contains email configuration settings
+// Mobile-compatible configuration for Capacitor environments
 
 export const emailConfig = {
   // EmailJS Configuration - mobile compatible

@@ -8,6 +8,7 @@ interface AuthHealthCheck {
   data?: any;
   error?: string;
   userAgent?: string;
+  isCapacitor?: boolean;
   pathname?: string;
 }
 
@@ -23,6 +24,7 @@ class AuthHealthCheckLogger {
       data,
       error,
       userAgent: navigator.userAgent,
+      isCapacitor: !!(window as any).Capacitor,
       pathname: window.location.pathname
     };
 
