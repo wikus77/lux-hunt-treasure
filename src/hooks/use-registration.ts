@@ -79,9 +79,34 @@ export const useRegistration = () => {
 
       console.log('📊 M1SSION signup result:', standardResult);
 
-      // Check if standard signup succeeded
       if (!standardResult.error && standardResult.data.user) {
         console.log('✅ M1SSION registration successful!');
+        
+        // Ottieni l'agent code dal profilo creato
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('agent_code')
+            .eq('id', standardResult.data.user.id)
+            .single();
+
+          if (profile?.agent_code) {
+            // Invia notifiche di registrazione
+            await supabase.functions.invoke('send-registration-notification', {
+              body: {
+                userId: standardResult.data.user.id,
+                email: standardResult.data.user.email,
+                agentCode: profile.agent_code,
+                fullName: name
+              }
+            });
+            console.log('📧 Notifiche post-registrazione inviate');
+          }
+        } catch (notificationError) {
+          console.error('⚠️ Errore invio notifiche:', notificationError);
+          // Non bloccare il flusso se le notifiche falliscono
+        }
+
         toast.success("Registrazione completata!", {
           description: "Ora scegli il tuo piano di abbonamento per accedere alla missione."
         });
@@ -123,6 +148,26 @@ export const useRegistration = () => {
 
         if (bypassResult?.success) {
           console.log('✅ M1SSION bypass registration successful!');
+          
+          // Per il bypass, generiamo un agent code e inviamo notifiche manualmente
+          try {
+            // Genera agent code unico
+            const { data: codeResult } = await supabase.rpc('generate_unique_agent_code');
+            const agentCode = codeResult || 'AG-TEMP';
+            
+            // Invia notifiche di registrazione
+            await supabase.functions.invoke('send-registration-notification', {
+              body: {
+                userId: 'bypass-user', // Per il bypass non abbiamo un ID reale
+                email: email,
+                agentCode: agentCode,
+                fullName: name
+              }
+            });
+            console.log('📧 Notifiche post-registrazione bypass inviate');
+          } catch (notificationError) {
+            console.error('⚠️ Errore invio notifiche bypass:', notificationError);
+          }
           
           toast.success("Registrazione completata!", {
             description: "Ora scegli il tuo piano di abbonamento per accedere alla missione.",
