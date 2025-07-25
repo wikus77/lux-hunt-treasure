@@ -70,6 +70,7 @@ const AppRoutes: React.FC = () => {
             <Route 
               path="/" 
               element={
+                session ? (
                   <Navigate to="/home" replace />
                 ) : (
                   <Index />

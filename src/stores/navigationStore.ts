@@ -69,14 +69,9 @@ export const useNavigationStore = create<NavigationStore>()(
         });
       },
 
-        set({ 
-          lastNavigation: Date.now() 
-        });
-      },
-
       getNavigationInfo: () => {
         return get();
-      },
+      }
     }),
     {
       name: 'm1ssion-navigation-store',

@@ -77,10 +77,9 @@ const BottomNavigationComponent = () => {
     
     // iOS WebView scroll fix with explicit function
     const applyIOSScrollFix = () => {
-        setTimeout(() => {
-          window.scrollTo(0, 0);
-        }, 100);
-      }
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
     };
     applyIOSScrollFix();
   };

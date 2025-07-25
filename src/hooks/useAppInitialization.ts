@@ -1,3 +1,4 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useEffect, useState } from 'react';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { useNavigationStore } from '@/stores/navigationStore';
@@ -10,7 +11,8 @@ interface AppInitializationState {
 }
 
 export const useAppInitialization = () => {
-  const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
+  const { session, isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
+  const { setCurrentTab } = useNavigationStore();
   
   const [state, setState] = useState<AppInitializationState>({
     isInitialized: false,
@@ -19,7 +21,8 @@ export const useAppInitialization = () => {
     deviceInfo: null
   });
 
-    return typeof window !== 'undefined' && 
+  const isBrowser = () => {
+    return typeof window !== 'undefined';
   };
 
   // Initialize app with explicit function names for iOS compatibility
@@ -27,15 +30,11 @@ export const useAppInitialization = () => {
     console.log('🚀 M1SSION App Initialization starting...');
     
     try {
-      
-      // Update navigation store
-      
       let deviceInfo = null;
+      if (isBrowser()) {
         try {
-          if (Device) {
-            deviceInfo = await Device.getInfo();
-            console.log('📱 Device Info:', deviceInfo);
-          }
+          deviceInfo = { platform: 'web' };
+          console.log('📱 Device Info:', deviceInfo);
         } catch (error) {
           console.warn('⚠️ Could not get device info:', error);
         }
@@ -45,6 +44,7 @@ export const useAppInitialization = () => {
       const hasCompletedIntro = localStorage.getItem('m1ssion-intro-completed') === 'true';
       
       // Set initial route based on auth and intro status
+      if (session) {
         setCurrentTab('/home');
       }
 
@@ -74,6 +74,7 @@ export const useAppInitialization = () => {
 
   // iOS-specific optimizations
   useEffect(() => {
+    if (isBrowser()) {
       // Prevent iOS bounce scroll
       document.body.style.overscrollBehavior = 'none';
       (document.body.style as any).WebkitOverflowScrolling = 'touch';
@@ -94,6 +95,7 @@ export const useAppInitialization = () => {
       
       addSafeAreaStyles();
     }
+  }, []);
 
   return {
     ...state,
