@@ -1,63 +1,91 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ Build Optimization - Production Safety
-
 /**
- * Production-safe console wrapper for build optimization
- * Prevents console errors in production builds
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * Build Optimization Utilities
  */
-export const safeLog = {
-  info: (message: string, ...args: any[]) => {
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log(message, ...args);
-    }
-  },
-  
-  warn: (message: string, ...args: any[]) => {
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.warn(message, ...args);
-    }
-  },
-  
-  error: (message: string, ...args: any[]) => {
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.error(message, ...args);
-    }
+
+// Remove all console statements in production
+export const setupProductionLogging = () => {
+  if (typeof window !== 'undefined' && import.meta.env.PROD) {
+    // Store original methods
+    const originalLog = console.log;
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    
+    // Override console methods
+    console.log = (...args: any[]) => {
+      // Only show CRITICAL logs in production
+      if (args[0]?.includes('CRITICAL') || args[0]?.includes('SECURITY')) {
+        originalLog.apply(console, args);
+      }
+    };
+    
+    console.warn = originalWarn; // Keep warnings
+    console.error = originalError; // Keep errors
+    
+    // Disable debug methods
+    console.debug = () => {};
+    console.info = () => {};
+    console.trace = () => {};
   }
 };
 
-/**
- * Force build compatibility check
- * Ensures all critical paths are available for production
- */
-export const validateBuildPaths = () => {
-  const criticalPaths = [
-    '/home',
-    '/map', 
-    '/buzz',
-    '/games',
-    '/profile',
-    '/leaderboard'
-  ];
-  
-  return criticalPaths.every(path => typeof path === 'string');
+// Bundle size analysis
+export const getBundleInfo = () => {
+  if (typeof window !== 'undefined' && import.meta.env.DEV) {
+    const scripts = document.querySelectorAll('script[src]');
+    const styles = document.querySelectorAll('link[rel="stylesheet"]');
+    
+    console.log('📦 Bundle Analysis:', {
+      scripts: scripts.length,
+      styles: styles.length,
+      timestamp: new Date().toISOString()
+    });
+  }
 };
 
-/**
- * Production build ready check
- * Ensures app is deployment-ready
- */
-export const isProductionReady = (): boolean => {
-  try {
-    const hasRequiredEnv = !!(
-      import.meta.env || 
-      process.env.NODE_ENV || 
-      typeof window !== 'undefined'
-    );
+// Performance monitoring
+export const monitorPerformance = () => {
+  if (typeof window !== 'undefined' && 'performance' in window) {
+    const perfData = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
     
-    const hasValidConfig = validateBuildPaths();
+    if (import.meta.env.DEV) {
+      console.log('⚡ Performance Metrics:', {
+        loadTime: Math.round(perfData.loadEventEnd - perfData.fetchStart),
+        domContentLoaded: Math.round(perfData.domContentLoadedEventEnd - perfData.fetchStart),
+        firstPaint: Math.round(performance.getEntriesByType('paint')[0]?.startTime || 0),
+      });
+    }
     
-    return hasRequiredEnv && hasValidConfig;
-  } catch {
-    return true; // Fail-safe for production
+    return {
+      loadTime: perfData.loadEventEnd - perfData.fetchStart,
+      domContentLoaded: perfData.domContentLoadedEventEnd - perfData.fetchStart,
+    };
   }
+  
+  return null;
+};
+
+// Safe logging for production
+export const safeLog = (...args: any[]) => {
+  if (import.meta.env.DEV || args[0]?.includes('CRITICAL') || args[0]?.includes('SECURITY')) {
+    console.log(...args);
+  }
+};
+
+// Production readiness check
+export const isProductionReady = () => {
+  const checks = {
+    serviceWorker: 'serviceWorker' in navigator,
+    webPush: 'PushManager' in window,
+    notifications: 'Notification' in window,
+    localStorage: typeof Storage !== 'undefined',
+  };
+  
+  const ready = Object.values(checks).every(Boolean);
+  
+  if (import.meta.env.DEV) {
+    console.log('🔍 Production Readiness Check:', checks);
+  }
+  
+  return ready;
 };

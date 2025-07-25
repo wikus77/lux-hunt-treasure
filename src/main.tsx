@@ -7,11 +7,18 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
+import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { Toaster } from 'sonner';
 
 // Initialize production optimizations
 setupProductionConsole();
+setupProductionLogging();
 enableProductionOptimizations();
+
+// Performance monitoring in development
+if (import.meta.env.DEV) {
+  setTimeout(() => monitorPerformance(), 2000);
+}
 
 // Mobile-compatible Sentry initialization
 // Uses Supabase secret for DSN to work in Capacitor environments

@@ -18,11 +18,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   esbuild: {
-    // ✅ Temporary fix: Disable strict TypeScript checking for stable builds
     target: 'es2020',
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    // Ignore TypeScript errors for Framer Motion type inconsistencies
-    ignoreAnnotations: true,
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
   plugins: [
     react(),
@@ -101,8 +99,8 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     target: 'es2015',
-    minify: 'esbuild', // ✅ FINAL: Use esbuild for faster, safer builds
-    sourcemap: false,
+    minify: mode === 'production' ? 'esbuild' : false,
+    sourcemap: mode === 'development',
     rollupOptions: {
       output: {
         entryFileNames: 'assets/[name].[hash].js',
@@ -122,10 +120,11 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000,
     terserOptions: {
       compress: {
-        drop_console: false, // ✅ Keep for debugging in dev
+        drop_console: mode === 'production',
         drop_debugger: true,
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
       },
-      mangle: false, // ✅ Disable mangling to prevent iOS errors
+      mangle: false,
       format: {
         comments: false,
       },

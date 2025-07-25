@@ -17,9 +17,9 @@ export const ProductionSafety: React.FC<ProductionSafetyProps> = ({ children }) 
     const isReady = isProductionReady();
     
     if (!isReady) {
-      safeLog.warn('⚠️ Production readiness check failed');
+      console.warn('⚠️ Production readiness check failed');
     } else {
-      safeLog.info('✅ M1SSION™ Production Ready - By Joseph Mulè / NIYVORA KFT™');
+      safeLog('✅ M1SSION™ Production Ready - By Joseph Mulè / NIYVORA KFT™');
     }
   }, []);
 
