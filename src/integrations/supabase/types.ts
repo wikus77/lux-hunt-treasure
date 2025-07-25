@@ -1444,6 +1444,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          access_enabled: boolean | null
+          access_start_date: string | null
           access_starts_at: string | null
           address: string | null
           agent_code: string | null
@@ -1456,6 +1458,7 @@ export type Database = {
           country: string | null
           created_at: string
           credits: number | null
+          device_token: string | null
           early_access_hours: number | null
           email: string | null
           first_name: string | null
@@ -1477,8 +1480,10 @@ export type Database = {
           recovery_key: string | null
           referral_code: string | null
           role: string
+          status: string | null
           stripe_customer_id: string | null
           subscription_end: string | null
+          subscription_plan: string | null
           subscription_start: string | null
           subscription_tier: string
           tier: string | null
@@ -1487,6 +1492,8 @@ export type Database = {
           weekly_hints: string | null
         }
         Insert: {
+          access_enabled?: boolean | null
+          access_start_date?: string | null
           access_starts_at?: string | null
           address?: string | null
           agent_code?: string | null
@@ -1499,6 +1506,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           credits?: number | null
+          device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
           first_name?: string | null
@@ -1520,8 +1528,10 @@ export type Database = {
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
+          status?: string | null
           stripe_customer_id?: string | null
           subscription_end?: string | null
+          subscription_plan?: string | null
           subscription_start?: string | null
           subscription_tier?: string
           tier?: string | null
@@ -1530,6 +1540,8 @@ export type Database = {
           weekly_hints?: string | null
         }
         Update: {
+          access_enabled?: boolean | null
+          access_start_date?: string | null
           access_starts_at?: string | null
           address?: string | null
           agent_code?: string | null
@@ -1542,6 +1554,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           credits?: number | null
+          device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
           first_name?: string | null
@@ -1563,8 +1576,10 @@ export type Database = {
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
+          status?: string | null
           stripe_customer_id?: string | null
           subscription_end?: string | null
+          subscription_plan?: string | null
           subscription_start?: string | null
           subscription_tier?: string
           tier?: string | null
@@ -2514,6 +2529,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_weekly_buzz_limits: {
+        Row: {
+          buzz_map_count: number
+          created_at: string | null
+          id: string
+          last_buzz_at: string | null
+          max_buzz_map_allowed: number
+          next_reset_at: string
+          updated_at: string | null
+          user_id: string
+          week_number: number
+          week_start_date: string
+        }
+        Insert: {
+          buzz_map_count?: number
+          created_at?: string | null
+          id?: string
+          last_buzz_at?: string | null
+          max_buzz_map_allowed?: number
+          next_reset_at: string
+          updated_at?: string | null
+          user_id: string
+          week_number: number
+          week_start_date: string
+        }
+        Update: {
+          buzz_map_count?: number
+          created_at?: string | null
+          id?: string
+          last_buzz_at?: string | null
+          max_buzz_map_allowed?: number
+          next_reset_at?: string
+          updated_at?: string | null
+          user_id?: string
+          week_number?: number
+          week_start_date?: string
+        }
+        Relationships: []
+      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
@@ -2565,6 +2619,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      calculate_access_start_date: {
+        Args: { plan_name: string }
+        Returns: string
+      }
       calculate_access_start_time: {
         Args: { p_plan: string }
         Returns: string
@@ -2583,6 +2641,14 @@ export type Database = {
       }
       can_use_intelligence_tool: {
         Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
+        Returns: boolean
+      }
+      can_user_access_mission: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      can_user_buzz_mappa: {
+        Args: { p_user_id: string }
         Returns: boolean
       }
       can_user_use_buzz: {
@@ -2618,6 +2684,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      consume_buzz_mappa: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
       consume_buzz_usage: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -2642,6 +2712,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      generate_unique_agent_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_active_subscription: {
         Args: { p_user_id: string }
         Returns: {
@@ -2653,6 +2727,10 @@ export type Database = {
       get_authenticated_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_current_game_week: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       get_current_mission_week: {
         Args: Record<PropertyKey, never>
@@ -2689,6 +2767,10 @@ export type Database = {
         Args: { p_week: number; p_generation_count: number }
         Returns: number
       }
+      get_max_buzz_for_week: {
+        Args: { week_num: number }
+        Returns: number
+      }
       get_max_map_generations: {
         Args: { p_week: number }
         Returns: number
@@ -2716,6 +2798,14 @@ export type Database = {
       get_user_sync_status: {
         Args: { p_user_id: string }
         Returns: Json
+      }
+      get_user_weekly_buzz_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_week_start_date: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
