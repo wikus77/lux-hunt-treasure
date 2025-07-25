@@ -1,4 +1,6 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useLocation } from "wouter";
@@ -8,7 +10,7 @@ import RegistrationForm from "@/components/auth/registration-form";
 import RegisterHeader from "@/components/auth/register-header";
 import { Button } from "@/components/ui/button";
 import { useQueryParams } from "@/hooks/useQueryParams";
-import DebugAuth from "@/components/auth/debug-auth";
+
 
 const Register = () => {
   const { preference } = useQueryParams<{ preference?: 'uomo' | 'donna' }>();
@@ -23,12 +25,9 @@ const Register = () => {
     if (preference === 'uomo' || preference === 'donna') {
       console.log('✅ Setting mission preference:', preference);
       setMissionPreference(preference);
-    } else {
-      console.log('❌ No valid preference, redirecting to mission selection');
-      // If no preference is set, redirect to mission selection
-      navigate("/select-mission");
     }
-  }, [preference, navigate]);
+    // Allow registration without mission preference
+  }, [preference]);
 
   console.log('🎯 Current mission preference:', missionPreference);
 
@@ -45,11 +44,6 @@ const Register = () => {
       >
         {/* Header with logo */}
         <RegisterHeader />
-        
-        {/* DEBUG COMPONENT - REMOVE AFTER FIXING */}
-        <div className="mb-6">
-          <DebugAuth />
-        </div>
         
         {/* Mission preference indicator */}
         {missionPreference && (

@@ -1,4 +1,6 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import { useState, FormEvent } from 'react';
 import { useWouterNavigation } from './useWouterNavigation';
 import { toast } from 'sonner';
