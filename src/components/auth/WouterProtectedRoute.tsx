@@ -34,6 +34,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Login />;
   }
 
+  // Force plan selection if no subscription plan chosen
+  if (!subscriptionPlan || subscriptionPlan === '') {
+    console.log('🛑 NO PLAN SELECTED - Forcing plan selection:', {
+      subscriptionPlan,
+      currentLocation: location
+    });
+    
+    if (location !== '/choose-plan') {
+      setLocation('/choose-plan');
+    }
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white">Reindirizzamento alla selezione piano...</div>
+      </div>
+    );
+  }
+
   // Block access if user doesn't have permission (post-registration control)
   if (!canAccess) {
     console.log('🚫 ACCESS BLOCKED - User authenticated but access not enabled:', {

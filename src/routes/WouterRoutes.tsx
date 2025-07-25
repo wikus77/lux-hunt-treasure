@@ -58,16 +58,12 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page - redirect authenticated users to home */}
+          {/* Landing page - public access for anonymous users */}
           <Route path="/">
             {isAuthenticated && !isLoading ? (
-              <>
-                {console.log('🏠 WouterRoutes: Authenticated user - redirecting to /home')}
-                {window.location.pathname === '/' && (window.location.href = '/home')}
-                <div className="min-h-screen flex items-center justify-center bg-black">
-                  <div className="text-white">Reindirizzamento...</div>
-                </div>
-              </>
+              <ProtectedRoute>
+                <GlobalLayout><AppHome /></GlobalLayout>
+              </ProtectedRoute>
             ) : isLoading ? (
               <>
                 {console.log('🔄 WouterRoutes: Loading auth state')}
@@ -77,7 +73,7 @@ const WouterRoutes: React.FC = () => {
               </>
             ) : (
               <>
-                {console.log('🔍 WouterRoutes: Rendering Index page - not authenticated')}
+                {console.log('🔍 WouterRoutes: Showing public landing page')}
                 <Index />
               </>
             )}
@@ -203,11 +199,13 @@ const WouterRoutes: React.FC = () => {
             <GlobalLayout><GameRules /></GlobalLayout>
           </Route>
 
-          {/* Plan selection route */}
+          {/* Plan selection route - accessible even without plan selected */}
           <Route path="/choose-plan">
-            <ProtectedRoute>
+            {isAuthenticated ? (
               <GlobalLayout><ChoosePlanPage /></GlobalLayout>
-            </ProtectedRoute>
+            ) : (
+              <Login />
+            )}
           </Route>
 
           {/* Auth routes */}

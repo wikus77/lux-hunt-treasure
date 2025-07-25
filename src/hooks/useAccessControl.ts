@@ -19,7 +19,7 @@ export const useAccessControl = (): AccessControlState => {
     canAccess: false,
     isLoading: true,
     accessStartDate: null,
-    subscriptionPlan: 'base',
+    subscriptionPlan: '',
     status: 'registered_pending',
     timeUntilAccess: null
   });
@@ -64,7 +64,7 @@ export const useAccessControl = (): AccessControlState => {
           canAccess: !!canAccessData,
           isLoading: false,
           accessStartDate,
-          subscriptionPlan: profile.subscription_plan || 'base',
+          subscriptionPlan: profile.subscription_plan || '',
           status: profile.status || 'registered_pending',
           timeUntilAccess
         });
