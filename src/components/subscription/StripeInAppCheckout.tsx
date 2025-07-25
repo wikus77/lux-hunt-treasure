@@ -193,7 +193,8 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   onSuccess, 
   onCancel 
 }) => {
-  const [useSavedCard, setUseSavedCard] = useState(true);
+  // Always use card element for new payments - simplified flow
+  const [useSavedCard, setUseSavedCard] = useState(false);
 
   const options: StripeElementsOptions = {
     appearance: {
