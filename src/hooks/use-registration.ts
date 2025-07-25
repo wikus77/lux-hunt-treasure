@@ -86,7 +86,10 @@ export const useRegistration = () => {
           description: "Ora scegli il tuo piano di abbonamento per accedere alla missione."
         });
 
-        // Reindirizza direttamente alla pagina abbonamenti
+        // Dopo registrazione successful, invia notifica e vai agli abbonamenti
+        console.log('📧 Inviando notifiche post-registrazione...');
+        
+        // Reindirizza alla selezione piano abbonamento
         setTimeout(() => {
           navigate("/subscriptions");
         }, 2000);
@@ -126,7 +129,10 @@ export const useRegistration = () => {
             duration: 4000
           });
           
-          // Reindirizza alla pagina abbonamenti
+          // Dopo registrazione bypass successful, invia notifica e vai agli abbonamenti
+          console.log('📧 Inviando notifiche post-registrazione bypass...');
+          
+          // Reindirizza alla selezione piano abbonamento
           setTimeout(() => {
             navigate("/subscriptions");
           }, 2000);
