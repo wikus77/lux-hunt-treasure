@@ -100,12 +100,21 @@ serve(async (req) => {
 
     logStep('✅ Subscription updated successfully');
 
-    // Update user profile
+    // Calculate access_start_date based on plan
+    const calculateAccessStartDate = (planName: string) => {
+      const hours = planName === 'SILVER' ? 2 : planName === 'GOLD' ? 24 : planName === 'BLACK' ? 48 : planName === 'TITANIUM' ? 72 : 0;
+      return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+    };
+
+    // Update user profile with subscription_plan and access_start_date
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({
+        subscription_plan: plan,
         subscription_tier: plan,
         tier: plan,
+        access_start_date: calculateAccessStartDate(plan),
+        access_enabled: false, // Must be manually enabled
         updated_at: new Date().toISOString()
       })
       .eq('id', user_id);
