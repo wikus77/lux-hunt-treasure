@@ -105,7 +105,7 @@ const IndexContent = ({
     },
     {
       title: 'Silver',
-      price: '€6.99',
+      price: '€3.99',
       period: '/mese',
       features: [
         "Tutto del piano Base",
@@ -122,7 +122,7 @@ const IndexContent = ({
     },
     {
       title: 'Gold',
-      price: '€9.99',
+      price: '€6.99',
       period: '/mese',
       highlight: true,
       features: [
@@ -137,7 +137,7 @@ const IndexContent = ({
     },
     {
       title: 'Black',
-      price: '€13.99',
+      price: '€9.99',
       period: '/mese',
       features: [
         "Tutto del piano Gold",
@@ -148,6 +148,20 @@ const IndexContent = ({
       ],
       buttonText: 'Scegli Black',
       buttonColor: 'bg-gradient-to-r from-[#1A1A1A] to-[#333333] text-white hover:shadow-[0_0_15px_rgba(0,0,0,0.7)]'
+    },
+    {
+      title: 'Titanium',
+      price: '€29.99',
+      period: '/mese',
+      features: [
+        "Tutti i vantaggi Black",
+        "Indizi illimitati",
+        "Accesso anticipato (72h)",
+        "Supporto prioritario diretto",
+        "Eventi esclusivi M1SSION™",
+      ],
+      buttonText: 'Scegli Titanium',
+      buttonColor: 'bg-gradient-to-r from-[#E6E6FA] to-[#FFD700] text-black hover:shadow-[0_0_15px_rgba(230,230,250,0.8)]'
     }
   ];
 
@@ -513,27 +527,29 @@ const IndexContent = ({
         </div>
       </div>
 
-      {/* DOWNLOAD APP SECTION */}
+      {/* PWA INSTALLATION SECTION */}
       <section className="py-12 bg-black">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-            Scarica l'app
+            Installa M1SSION™
           </h2>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors min-w-[180px]">
-              <div className="text-left">
-                <div className="text-xs text-white/70">Download on the</div>
-                <div className="text-lg font-bold text-white">App Store</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors min-w-[180px]">
-              <div className="text-left">
-                <div className="text-xs text-white/70">GET IT ON</div>
-                <div className="text-lg font-bold text-white">Google Play</div>
-              </div>
-            </div>
+          <div className="mb-8 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg">
+            <p className="text-white mb-4 font-medium">
+              Per installare M1SSION™ sul tuo dispositivo mobile:
+            </p>
+            <ul className="text-white/80 space-y-2 text-left max-w-2xl mx-auto">
+              <li>📱 <strong>iOS (Safari):</strong> premi il tasto "Condividi" e seleziona "Aggiungi alla Home"</li>
+              <li>🤖 <strong>Android (Chrome):</strong> apri il menu ⋮ e premi "Installa App"</li>
+            </ul>
+          </div>
+          
+          <div className="flex justify-center">
+            <button className="glass-card border-2 border-blue-500/30 px-8 py-4 rounded-lg hover:border-blue-400/50 transition-all duration-300 glow-blue">
+              <span className="text-white font-semibold text-lg">
+                Aggiungi M1SSION™ alla tua Home
+              </span>
+            </button>
           </div>
         </div>
       </section>

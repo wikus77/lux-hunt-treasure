@@ -215,10 +215,11 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       case "Titanium":
         return [
           { text: "Tutti i vantaggi Black" },
-          { text: "Accesso illimitato a tutto" },
-          { text: "Badge Titanium esclusivo neon" },
-          { text: "Supporto prioritario 24/7" },
-          { text: "Eventi esclusivi Titanium VIP" }
+          { text: "Indizi illimitati" },
+          { text: "Accesso anticipato (72h)" },
+          { text: "Supporto prioritario diretto" },
+          { text: "Eventi esclusivi M1SSION™" },
+          { text: "Badge Titanium esclusivo neon" }
         ];
       default:
         return [];
