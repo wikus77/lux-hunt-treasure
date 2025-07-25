@@ -106,11 +106,11 @@ serve(async (req) => {
       return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
     };
 
-    // Update user profile with subscription_plan and access_start_date
+    // CRITICAL FIX: Update subscription_plan field in profiles
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .update({
-        subscription_plan: plan,
+        subscription_plan: plan, // 🔥 CRITICAL: This field was missing!
         subscription_tier: plan,
         tier: plan,
         access_start_date: calculateAccessStartDate(plan),
@@ -121,7 +121,7 @@ serve(async (req) => {
 
     if (profileError) {
       logStep('❌ Profile update error', profileError);
-      throw new Error('Failed to update profile');
+      throw new Error(`Failed to update profile: ${profileError.message}`);
     }
 
     logStep('✅ Profile updated successfully');

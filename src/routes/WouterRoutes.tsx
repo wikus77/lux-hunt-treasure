@@ -11,6 +11,7 @@ import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
+import LandingPage from "@/pages/LandingPage";
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
@@ -58,14 +59,14 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page - Always show to anonymous users */}
+          {/* Landing page - FIXED: Always show LandingPage to anonymous users */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="text-white">Caricamento...</div>
               </div>
             ) : !isAuthenticated ? (
-              <Index />
+              <LandingPage />
             ) : (
               <ProtectedRoute>
                 <GlobalLayout><AppHome /></GlobalLayout>
