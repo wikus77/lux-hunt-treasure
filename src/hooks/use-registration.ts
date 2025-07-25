@@ -65,16 +65,16 @@ export const useRegistration = () => {
       const standardResult = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: window.location.origin + '/auth',
-          data: {
-            full_name: name,
-            mission_preference: missionPreference || null,
-            subscription_plan: null,
-            access_enabled: false,
-            status: 'registered_pending'
+          options: {
+            emailRedirectTo: window.location.origin + '/choose-plan',
+            data: {
+              full_name: name,
+              mission_preference: missionPreference || null,
+              subscription_plan: null,
+              access_enabled: false,
+              status: 'registered_pending'
+            }
           }
-        }
       });
 
       console.log('📊 M1SSION signup result:', standardResult);
@@ -108,7 +108,7 @@ export const useRegistration = () => {
         }
 
         toast.success("Registrazione completata!", {
-          description: "Ora scegli il tuo piano di abbonamento per accedere alla missione."
+          description: "Controlla la tua email per il codice agente. Ora scegli il tuo piano di abbonamento."
         });
 
         // Dopo registrazione successful, invia notifica e vai agli abbonamenti
@@ -117,7 +117,7 @@ export const useRegistration = () => {
           // Reindirizza alla selezione piano abbonamento
           setTimeout(() => {
             navigate("/choose-plan");
-          }, 2000);
+          }, 1500);
         return;
       }
 
@@ -170,7 +170,7 @@ export const useRegistration = () => {
           }
           
           toast.success("Registrazione completata!", {
-            description: "Ora scegli il tuo piano di abbonamento per accedere alla missione.",
+            description: "Controlla la tua email per il codice agente. Ora scegli il tuo piano di abbonamento.",
             duration: 4000
           });
           
@@ -180,7 +180,7 @@ export const useRegistration = () => {
           // Reindirizza alla selezione piano abbonamento
           setTimeout(() => {
             navigate("/choose-plan");
-          }, 2000);
+          }, 1500);
           return;
         }
       }

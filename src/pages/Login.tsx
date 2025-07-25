@@ -8,14 +8,11 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
-import { PreRegistrationForm } from "@/components/auth/PreRegistrationForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
-import LaunchCountdown from "@/components/login/LaunchCountdown";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
-  const [showPreRegistration, setShowPreRegistration] = useState(false);
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -134,16 +131,13 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {/* Launch Countdown */}
-        <LaunchCountdown />
-
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <AnimatedLogo />
           </div>
           <h2 className="text-2xl font-bold text-white mb-1 neon-text-cyan">M1SSION™</h2>
           <p className="text-gray-400">
-            {showPreRegistration ? 'Ottieni accesso prioritario' : 'Accedi per iniziare la tua missione'}
+            Accedi per iniziare la tua missione
           </p>
         </div>
 
