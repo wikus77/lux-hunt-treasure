@@ -149,17 +149,31 @@ const Home = () => {
     );
   }
 
+  // DEBUG: Add logging to track rendering
+  console.log("✅ M1SSION™ Home component rendering with:", { 
+    isLoaded, 
+    hasAccess, 
+    isCapacitor,
+    profileImage: !!profileImage,
+    timestamp: new Date().toISOString()
+  });
+
   return (
-    <div className="min-h-screen bg-[#070818] pb-20 w-full">
-      <Helmet>
-        <title>M1SSION™ - Home</title>
-      </Helmet>
+    <>
+      {/* DEBUG: Force visibility with explicit positioning */}
+      {(() => {
+        console.log("✅ M1SSION™ UnifiedHeader render triggered");
+        return (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }}>
+            <UnifiedHeader profileImage={profileImage} />
+          </div>
+        );
+      })()}
       
-      <UnifiedHeader profileImage={profileImage} />
-      <div 
-        className={getContentPaddingClass()}
-        style={getContentPaddingStyle()}
-      />
+      <div className="min-h-screen bg-[#070818] w-full" style={{ paddingTop: '140px', paddingBottom: '120px' }}>
+        <Helmet>
+          <title>M1SSION™ - Home</title>
+        </Helmet>
 
       <AnimatePresence>
         {isLoaded && (
@@ -219,9 +233,18 @@ const Home = () => {
       
       {/* Terms Banner */}
       <TermsBanner />
+      </div>
       
-      <BottomNavigation />
-    </div>
+      {/* DEBUG: Force visibility with explicit positioning */}
+      {(() => {
+        console.log("✅ M1SSION™ BottomNavigation render triggered");
+        return (
+          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
+            <BottomNavigation />
+          </div>
+        );
+      })()}
+    </>
   );
 };
 
