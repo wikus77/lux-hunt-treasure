@@ -121,8 +121,9 @@ export const useStripePayment = () => {
       });
 
       if (error) {
-        console.error('❌ STRIPE Error creating checkout session:', error);
-        toast.error('Errore nel creare la sessione di pagamento');
+      console.error('❌ STRIPE Error creating checkout session:', error);
+      console.error('❌ STRIPE Full error details:', JSON.stringify(error, null, 2));
+      toast.error(`Errore Stripe: ${error.message || 'Sessione di pagamento fallita'}`);
         return;
       }
 

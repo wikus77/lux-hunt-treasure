@@ -60,10 +60,11 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* Landing page - public access for anonymous users */}
           <Route path="/">
-            {isAuthenticated && !isLoading ? (
-              <ProtectedRoute>
-                <GlobalLayout><AppHome /></GlobalLayout>
-              </ProtectedRoute>
+            {!isAuthenticated && !isLoading ? (
+              <>
+                {console.log('🔍 WouterRoutes: Showing public landing page for anonymous user')}
+                <Index />
+              </>
             ) : isLoading ? (
               <>
                 {console.log('🔄 WouterRoutes: Loading auth state')}
@@ -72,10 +73,9 @@ const WouterRoutes: React.FC = () => {
                 </div>
               </>
             ) : (
-              <>
-                {console.log('🔍 WouterRoutes: Showing public landing page')}
-                <Index />
-              </>
+              <ProtectedRoute>
+                <GlobalLayout><AppHome /></GlobalLayout>
+              </ProtectedRoute>
             )}
           </Route>
 
