@@ -1,7 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useLocation } from "wouter";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import BackgroundParticles from "@/components/ui/background-particles";
 import RegistrationForm from "@/components/auth/registration-form";
 import RegisterHeader from "@/components/auth/register-header";
@@ -12,7 +14,7 @@ import DebugAuth from "@/components/auth/debug-auth";
 const Register = () => {
   const { preference } = useQueryParams<{ preference?: 'uomo' | 'donna' }>();
   const [missionPreference, setMissionPreference] = useState<'uomo' | 'donna' | null>(null);
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   
   console.log('📍 Register page loaded');
   console.log('🎯 Mission preference from URL:', preference);
