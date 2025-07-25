@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import BackgroundParticles from "@/components/ui/background-particles";
 import RegistrationForm from "@/components/auth/registration-form";
