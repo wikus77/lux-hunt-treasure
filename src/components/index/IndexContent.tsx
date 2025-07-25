@@ -1,7 +1,9 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award } from "lucide-react";
+import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award, X, Sparkles } from "lucide-react";
 import BackgroundParallax from "@/components/ui/background-parallax";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
@@ -199,7 +201,7 @@ const IndexContent = ({
         </div>
 
         {/* Content */}
-        <div className="z-10 max-w-5xl">
+        <div className="z-10 max-w-5xl mx-auto">
           {/* Main Title */}
           <h1 className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4">
             WELCOME TO{" "}
@@ -261,14 +263,11 @@ const IndexContent = ({
             </h2>
             
             <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
-              In the near future...
-              The world becomes a gameboard.
-              The clues are encrypted. The stakes are real.
+              In the near future... The world becomes a gameboard. The clues are encrypted. The stakes are real.
             </p>
             
             <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
-              Thousands will try. Only a few will see the pattern.
-              You're not just chasing a prize—you're chasing the proof that you can outthink them all.
+              Thousands will try. Only a few will see the pattern. You're not just chasing a prize—you're chasing the proof that you can outthink them all.
             </p>
 
             <p className="text-lg mb-6 max-w-3xl mx-auto text-gray-200">
@@ -282,11 +281,16 @@ const IndexContent = ({
       </section>
 
       {/* REGISTRATION FORM SECTION */}
-      <section className="relative py-20 px-4 bg-gradient-to-b from-purple-900/20 to-cyan-900/20">
-        <div className="max-w-md mx-auto">
+      <section className="relative py-20 px-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40"></div>
+        <div className="max-w-md mx-auto relative z-10">
           <div className="glass-card p-8 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
-              Registrati per <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+              Registrati per{" "}
+              <span>
+                <span className="text-[#00E5FF]">M1</span>
+                <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+              </span>
             </h2>
             
             <p className="text-white/70 mb-6">
@@ -294,16 +298,22 @@ const IndexContent = ({
             </p>
             
             <form className="space-y-4">
-              <input
-                type="text"
-                placeholder="Inserisci il tuo nome"
-                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
-              />
-              <input
-                type="email"
-                placeholder="Inserisci la tua email"
-                className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
-              />
+              <div>
+                <label className="block text-left text-white/80 text-sm mb-2">Nome completo</label>
+                <input
+                  type="text"
+                  placeholder="Inserisci il tuo nome"
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-left text-white/80 text-sm mb-2">Email</label>
+                <input
+                  type="email"
+                  placeholder="Inserisci la tua email"
+                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
+                />
+              </div>
               <Button 
                 className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold py-3 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
                 onClick={onRegisterClick}
@@ -353,7 +363,7 @@ const IndexContent = ({
           <div className="text-center">
             <Button 
               onClick={onRegisterClick}
-              className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full"
+              className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full text-lg hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
               size="lg"
             >
               Inizia La Tua M1SSION
@@ -379,14 +389,20 @@ const IndexContent = ({
         <div className="absolute inset-0 bg-[url('/public/images/grid-pattern.png')] opacity-10"></div>
         
         <div className="relative z-10 max-w-6xl mx-auto">
-          <div className="text-center mb-12">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
             <h2 className="text-3xl md:text-4xl font-bold inline-block">
               <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> Abbonamenti
             </h2>
             <p className="mt-4 text-white/70 max-w-2xl mx-auto">
               Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
             </p>
-          </div>
+          </motion.div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             {subscriptions.map((sub, index) => (
@@ -402,6 +418,7 @@ const IndexContent = ({
                 {/* Badge per il piano consigliato */}
                 {sub.highlight && (
                   <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-3 rounded-full flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
                     Consigliato
                   </div>
                 )}
@@ -424,7 +441,7 @@ const IndexContent = ({
                   
                   {sub.notIncluded?.map((feature, idx) => (
                     <div key={idx} className="flex items-center text-white/40">
-                      <span className="h-5 w-5 mr-2 flex-shrink-0 text-center">×</span>
+                      <X className="h-5 w-5 mr-2 flex-shrink-0" />
                       <span className="text-sm">{feature}</span>
                     </div>
                   ))}
@@ -440,9 +457,15 @@ const IndexContent = ({
             ))}
           </div>
           
-          <div className="text-center text-white/50 text-sm">
+          <motion.div
+            className="text-center text-white/50 text-sm"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            viewport={{ once: true }}
+          >
             Tutti gli abbonamenti sono soggetti ai nostri Termini e Condizioni. Puoi cancellare in qualsiasi momento.
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -493,19 +516,19 @@ const IndexContent = ({
       {/* DOWNLOAD APP SECTION */}
       <section className="py-12 bg-black">
         <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
             Scarica l'app
           </h2>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors">
+            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors min-w-[180px]">
               <div className="text-left">
                 <div className="text-xs text-white/70">Download on the</div>
                 <div className="text-lg font-bold text-white">App Store</div>
               </div>
             </div>
             
-            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors">
+            <div className="flex items-center justify-center bg-black border border-white/20 rounded-lg px-6 py-3 hover:border-white/40 transition-colors min-w-[180px]">
               <div className="text-left">
                 <div className="text-xs text-white/70">GET IT ON</div>
                 <div className="text-lg font-bold text-white">Google Play</div>
