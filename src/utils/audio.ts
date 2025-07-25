@@ -20,8 +20,7 @@ class AudioManager {
 
   constructor() {
     // Su piattaforme native, precarica i suoni
-      this.preloadAudio();
-    }
+    this.preloadAudio();
   }
 
   private async preloadAudio() {

@@ -107,14 +107,13 @@ const Home = () => {
   }, [error]);
 
   const getContentPaddingClass = () => {
+    return "";
   };
 
   const getContentPaddingStyle = () => {
-      return { 
-        paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' 
-      };
-    }
-    return {};
+    return { 
+      paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' 
+    };
   };
 
   // Allow access for authenticated users - remove mobile restriction
@@ -167,8 +166,9 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
+                style={{
                   top: 'calc(72px + env(safe-area-inset-top) + 50px)'
-                } : {}}
+                }}
               >
                 <NotificationsBanner
                   notifications={notifications}

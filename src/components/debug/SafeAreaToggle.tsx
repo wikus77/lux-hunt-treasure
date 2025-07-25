@@ -1,37 +1,21 @@
-
-// M1SSION™ - Safe Area Debug Toggle
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
 
-interface SafeAreaToggleProps {
-  children: React.ReactNode;
-  onToggle?: (visible: boolean) => void;
-  initialVisible?: boolean;
-}
+export const SafeAreaToggle: React.FC = () => {
+  const [visible, setVisible] = useState(false);
 
-export const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({
-  children,
-  onToggle,
-  initialVisible = false
-}) => {
-  const [visible, setVisible] = useState(initialVisible);
-
-  const handleToggle = () => {
-    const newVisible = !visible;
-    setVisible(newVisible);
-    onToggle?.(newVisible);
-  };
+  const isDevelopment = process.env.NODE_ENV === 'development';
 
   return (
     <>
-      {children}
-      
+      {isDevelopment && (
         <Button
-          variant="outline"
           size="sm"
-          onClick={handleToggle}
-          className="fixed top-4 right-4 z-[9999] bg-black/80 text-white border-white/20"
+          variant="outline"
+          className="fixed bottom-4 left-4 z-[9999] bg-black/50 border-white/20 text-white hover:bg-white/10"
+          onClick={() => setVisible(!visible)}
         >
           {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           <span className="ml-2 text-xs">
