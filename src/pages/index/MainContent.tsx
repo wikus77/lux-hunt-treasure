@@ -73,8 +73,8 @@ const MainContent: React.FC<MainContentProps> = ({
         />
       )}
       
-      {/* Main content renderizzato solo quando tutto è pronto */}
-      {renderContent && introCompleted && (
+      {/* Main content renderizzato quando la pagina è caricata */}
+      {renderContent && (
         <ParallaxContainer>
           <IndexContent 
             countdownCompleted={countdownCompleted}
