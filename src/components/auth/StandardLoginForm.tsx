@@ -133,24 +133,15 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           {isLoading ? 'Caricamento...' : 'Accedi'}
         </Button>
 
-        {/* Pulsante Registrati - DISABILITATO */}
+        {/* Pulsante Registrati - ATTIVATO */}
         <Button
           type="button"
-          className="w-full bg-gray-600/30 text-gray-400 font-bold text-lg py-3 rounded-xl cursor-not-allowed"
-          disabled={true}
+          onClick={() => navigate('/register')}
+          className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 font-bold text-lg py-3 rounded-xl transition-all duration-300"
+          disabled={isLoading}
         >
           Registrati - Accesso limitato
         </Button>
-
-        {/* Messaggio di accesso limitato */}
-        <div className="text-center p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
-          <p className="text-yellow-400 text-sm">
-            🔒 Accesso temporaneamente limitato
-          </p>
-          <p className="text-yellow-300 text-xs mt-1">
-            Registrazione in preparazione
-          </p>
-        </div>
       </div>
     </form>
   );

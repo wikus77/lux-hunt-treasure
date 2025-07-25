@@ -147,34 +147,17 @@ const Login = () => {
           </p>
         </div>
 
-        {showPreRegistration ? (
-          <PreRegistrationForm
-            onSuccess={() => {
-              setShowPreRegistration(false);
-              toast.success('Pre-registrazione completata! Riceverai una email quando sarà il momento dell\'accesso.');
-            }}
-            onCancel={() => setShowPreRegistration(false)}
-          />
-        ) : (
-          <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
-            <StandardLoginForm verificationStatus={verificationStatus} />
+        <div className="glass-card p-6 backdrop-blur-md border border-gray-800 rounded-xl">
+          <StandardLoginForm verificationStatus={verificationStatus} />
 
-            <div className="mt-6 text-center space-y-3">
-              <button
-                onClick={() => setShowPreRegistration(true)}
-                className="w-full px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 font-semibold"
-              >
-                🚀 Pre-registrati ora
-              </button>
-              
-              <p className="text-sm text-white/50">
-                <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-                  ← Torna alla homepage
-                </Link>
-              </p>
-            </div>
+          <div className="mt-6 text-center space-y-3">
+            <p className="text-sm text-white/50">
+              <Link to="/" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+                ← Torna alla homepage
+              </Link>
+            </p>
           </div>
-        )}
+        </div>
 
       </motion.div>
     </div>

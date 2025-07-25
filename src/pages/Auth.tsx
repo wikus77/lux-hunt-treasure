@@ -6,9 +6,11 @@ import Login from "./Login";
 import ProfileQuiz from "@/components/profile/ProfileQuiz";
 import { Spinner } from "@/components/ui/spinner";
 import VerificationPendingView from "@/components/auth/VerificationPendingView";
+import AccessBlockedView from "@/components/auth/AccessBlockedView";
 import { useEmailVerificationHandler } from "@/components/auth/EmailVerificationHandler";
 import { AuthenticationManager } from "@/components/auth/AuthenticationManager";
 import { ProfileCheckManager } from "@/components/auth/ProfileCheckManager";
+import { useAccessControl } from "@/hooks/useAccessControl";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -20,6 +22,9 @@ const Auth = () => {
   const [emailVerified, setEmailVerified] = useState(false);
   const searchParams = useQueryParams<{ redirect?: string; verification?: string }>();
   const { navigate, currentPath } = useWouterNavigation();
+  
+  // Nuovo controllo di accesso M1SSION
+  const accessControl = useAccessControl();
   
   console.log("Auth page loaded - current path:", currentPath);
   
@@ -184,6 +189,13 @@ const Auth = () => {
           </h2>
           <ProfileQuiz onComplete={handleQuizComplete} userId={userId} />
         </div>
+      ) : !accessControl.canAccess ? (
+        // Nuovo: Controllo di accesso M1SSION
+        <AccessBlockedView
+          subscriptionPlan={accessControl.subscriptionPlan}
+          accessStartDate={accessControl.accessStartDate}
+          timeUntilAccess={accessControl.timeUntilAccess}
+        />
       ) : (
         <div className="flex items-center justify-center h-screen">
           <div className="text-white text-xl">Reindirizzamento in corso...</div>

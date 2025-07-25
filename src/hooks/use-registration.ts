@@ -40,9 +40,10 @@ export const useRegistration = () => {
   const handleSubmit = async (e: FormEvent, turnstileToken?: string, missionPreference?: 'uomo' | 'donna' | null) => {
     e.preventDefault();
 
-    console.log('🚀 STARTING REGISTRATION WITH BYPASS OPTION');
+    console.log('🚀 STARTING M1SSION REGISTRATION WITH ACCESS CONTROL');
     console.log('📧 Email:', formData.email);
     console.log('🔐 Password length:', formData.password.length);
+    console.log('🎯 Mission preference:', missionPreference);
 
     // Validazione client-side
     const validation = validateRegistration(formData);
@@ -56,9 +57,9 @@ export const useRegistration = () => {
     const { name, email, password } = formData;
 
     try {
-      console.log('🔄 Attempting standard Supabase signUp first...');
+      console.log('🔄 Attempting M1SSION enhanced signup...');
       
-      // First try standard signup (in case CAPTCHA was disabled)
+      // Standard signup with M1SSION enhanced data
       const standardResult = await supabase.auth.signUp({
         email,
         password,
@@ -66,41 +67,48 @@ export const useRegistration = () => {
           emailRedirectTo: window.location.origin + '/auth',
           data: {
             full_name: name,
-            mission_preference: missionPreference || null
+            mission_preference: missionPreference || null,
+            subscription_plan: 'base',
+            access_enabled: false,
+            status: 'registered_pending'
           }
         }
       });
 
-      console.log('📊 Standard signup result:', standardResult);
+      console.log('📊 M1SSION signup result:', standardResult);
 
       // Check if standard signup succeeded
       if (!standardResult.error && standardResult.data.user) {
-        console.log('✅ Standard registration successful!');
+        console.log('✅ M1SSION registration successful!');
         toast.success("Registrazione completata!", {
-          description: "Controlla la tua casella email e conferma il tuo account."
+          description: "Ora scegli il tuo piano di abbonamento per accedere alla missione."
         });
 
+        // Reindirizza direttamente alla pagina abbonamenti
         setTimeout(() => {
-          navigate("/login?verification=pending");
+          navigate("/subscriptions");
         }, 2000);
         return;
       }
 
       // If standard signup failed with CAPTCHA error, try bypass
       if (standardResult.error && standardResult.error.message.includes('captcha')) {
-        console.log('🔄 Standard signup blocked by CAPTCHA, trying bypass...');
+        console.log('🔄 Standard signup blocked by CAPTCHA, trying M1SSION bypass...');
         
         const { data: bypassResult, error: bypassError } = await supabase.functions.invoke('register-bypass', {
           body: {
             email,
             password,
             fullName: name,
-            missionPreference: missionPreference || null
+            missionPreference: missionPreference || null,
+            subscriptionPlan: 'base',
+            accessEnabled: false,
+            status: 'registered_pending'
           }
         });
 
         if (bypassError) {
-          console.error('❌ Bypass registration failed:', bypassError);
+          console.error('❌ M1SSION bypass registration failed:', bypassError);
           toast.error("Errore nel bypass", {
             description: bypassError.message || "Errore durante la registrazione con bypass.",
             duration: 3000
@@ -109,39 +117,31 @@ export const useRegistration = () => {
         }
 
         if (bypassResult?.success) {
-          console.log('✅ Bypass registration successful!');
+          console.log('✅ M1SSION bypass registration successful!');
           
-          if (bypassResult.requireManualLogin) {
-            toast.success("Registrazione completata!", {
-              description: "Account creato con successo. Ora puoi effettuare il login.",
-              duration: 4000
-            });
-            setTimeout(() => {
-              navigate(`/login?email=${encodeURIComponent(email)}`);
-            }, 2000);
-          } else {
-            toast.success("Registrazione e login completati!", {
-              description: "Sei stato registrato e connesso automaticamente.",
-              duration: 3000
-            });
-            setTimeout(() => {
-              navigate("/home");
-            }, 2000);
-          }
+          toast.success("Registrazione completata!", {
+            description: "Ora scegli il tuo piano di abbonamento per accedere alla missione.",
+            duration: 4000
+          });
+          
+          // Reindirizza alla pagina abbonamenti
+          setTimeout(() => {
+            navigate("/subscriptions");
+          }, 2000);
           return;
         }
       }
 
       // If both methods failed, show error
       const errorMessage = standardResult.error?.message || "Errore sconosciuto durante la registrazione";
-      console.error('❌ Both registration methods failed:', errorMessage);
+      console.error('❌ Both M1SSION registration methods failed:', errorMessage);
       toast.error("Errore", {
         description: errorMessage,
         duration: 3000
       });
 
     } catch (error: any) {
-      console.error("💥 Registration exception:", error);
+      console.error("💥 M1SSION registration exception:", error);
       toast.error("Errore", {
         description: error.message || "Si è verificato un errore. Riprova più tardi.",
         duration: 3000

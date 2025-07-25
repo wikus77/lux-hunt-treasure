@@ -31,3 +31,6 @@ port = 54325
 
 [functions.create-checkout]
 verify_jwt = true
+
+[functions.notify-mission-access]
+verify_jwt = false
