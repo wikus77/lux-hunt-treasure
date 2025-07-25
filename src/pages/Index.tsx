@@ -20,7 +20,8 @@ import {
 } from "./index/hooks";
 
 const Index = () => {
-  console.log("Index component rendering - PUBLIC LANDING PAGE - BY JOSEPH MULÈ");
+  console.log("✅ LANDING MOUNTED - Index component rendering - PUBLIC LANDING PAGE - BY JOSEPH MULÈ");
+  console.log("✅ ROUTE: Landing page component successfully mounted at /");
   
   // Custom hooks for organized state management
   const { showDeveloperAccess } = useDeveloperAccess();
@@ -56,7 +57,7 @@ const Index = () => {
     return <DeveloperAccess />;
   }
 
-  console.log("Index render state:", { introCompleted, pageLoaded, renderContent });
+  console.log("✅ LANDING RENDER STATE:", { introCompleted, pageLoaded, renderContent, showDeveloperAccess });
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">

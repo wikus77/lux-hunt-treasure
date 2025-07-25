@@ -23,15 +23,12 @@ export const useDeveloperAccess = () => {
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('Index access check:', { isMobile, isCapacitorApp });
+      console.log('🔍 Index access check:', { isMobile, isCapacitorApp });
       
-      if (isMobile) {
-        // Mobile users without access need to login
-        setShowDeveloperAccess(true);
-      } else if (!isMobile) {
-        // Web users always see landing page
-        setShowDeveloperAccess(false);
-      }
+      // DISABILITATO: Permetti sempre la visualizzazione della Landing Page
+      // La landing deve essere sempre visibile per utenti anonimi
+      console.log('✅ LANDING PAGE: Access sempre consentito - disabilitato developer access');
+      setShowDeveloperAccess(false);
     };
     
     checkAccess();
