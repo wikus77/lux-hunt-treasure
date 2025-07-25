@@ -58,19 +58,19 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page - public access for anonymous users */}
+          {/* Landing page - FIXED: Always show to anonymous users */}
           <Route path="/">
-            {!isAuthenticated && !isLoading ? (
+            {isLoading ? (
               <>
-                {console.log('🔍 WouterRoutes: Showing public landing page for anonymous user')}
-                <Index />
-              </>
-            ) : isLoading ? (
-              <>
-                {console.log('🔄 WouterRoutes: Loading auth state')}
+                {console.log('🔄 M1SSION™ WouterRoutes: Caricamento stato auth')}
                 <div className="min-h-screen flex items-center justify-center bg-black">
                   <div className="text-white">Caricamento...</div>
                 </div>
+              </>
+            ) : !isAuthenticated ? (
+              <>
+                {console.log('🔍 M1SSION™ WouterRoutes: Mostrando landing page pubblica per utente anonimo')}
+                <Index />
               </>
             ) : (
               <ProtectedRoute>

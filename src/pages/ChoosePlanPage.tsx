@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
-import { useStripePayment } from '@/hooks/useStripePayment';
+import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
+import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -79,7 +80,13 @@ const ChoosePlanPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const { processSubscription } = useStripePayment();
+  const { 
+    processSubscription, 
+    showCheckout, 
+    paymentConfig, 
+    closeCheckout, 
+    handlePaymentSuccess 
+  } = useStripeInAppPayment();
   
   const handlePlanSelection = async (planId: string) => {
     if (isProcessing) return;
@@ -88,23 +95,17 @@ const ChoosePlanPage: React.FC = () => {
     setSelectedPlan(planId);
     
     try {
-      console.log('🛒 Iniziando checkout per piano:', planId);
+      console.log('🛒 M1SSION™ Aprendo checkout in-app per piano:', planId);
       
-      // Process subscription with Stripe
+      // Process subscription with in-app Stripe modal
       await processSubscription(planId);
       
-      console.log('✅ Checkout avviato per piano:', planId);
-      toast.success('Reindirizzamento al pagamento...');
-      
-      // Redirect to subscriptions page after a delay
-      setTimeout(() => {
-        setLocation('/subscriptions');
-      }, 1500);
+      console.log('✅ M1SSION™ Checkout modal aperto per piano:', planId);
+      toast.success('Checkout aperto - completa il pagamento');
       
     } catch (error) {
       console.error('❌ Errore durante selezione piano:', error);
       toast.error('Errore durante la selezione del piano');
-    } finally {
       setIsProcessing(false);
       setSelectedPlan('');
     }
@@ -196,13 +197,33 @@ const ChoosePlanPage: React.FC = () => {
         {/* Footer Info */}
         <div className="text-center text-gray-400">
           <p className="mb-4">
-            Tutti i piani includono accesso completo al gioco e indizi illimitati
+            Tutti i piani includono accesso completo al gioco e indizi in base al piano di abbonamento scelto
           </p>
           <p className="text-sm">
             Puoi cancellare o modificare il tuo piano in qualsiasi momento
           </p>
         </div>
       </motion.div>
+
+      {/* Stripe In-App Checkout Modal */}
+      {showCheckout && paymentConfig && (
+        <StripeInAppCheckout
+          config={paymentConfig}
+          onSuccess={(paymentIntentId) => {
+            handlePaymentSuccess(paymentIntentId);
+            setIsProcessing(false);
+            setSelectedPlan('');
+            setTimeout(() => {
+              setLocation('/subscriptions');
+            }, 1500);
+          }}
+          onCancel={() => {
+            closeCheckout();
+            setIsProcessing(false);
+            setSelectedPlan('');
+          }}
+        />
+      )}
     </div>
   );
 };
