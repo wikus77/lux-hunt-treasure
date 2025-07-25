@@ -35,6 +35,19 @@ export const useAccessControl = (): AccessControlState => {
         const user = getCurrentUser();
         if (!user) return;
 
+        // 🔐 ECCEZIONE SVILUPPATORE - ACCESSO COMPLETO
+        if (user.email === 'wikus77@hotmail.it') {
+          setState({
+            canAccess: true,
+            isLoading: false,
+            accessStartDate: new Date(),
+            subscriptionPlan: 'DEV',
+            status: 'developer_access',
+            timeUntilAccess: null
+          });
+          return;
+        }
+
         // Verifica con la funzione del database
         const { data: canAccessData, error: accessError } = await supabase
           .rpc('can_user_access_mission', { user_id: user.id });

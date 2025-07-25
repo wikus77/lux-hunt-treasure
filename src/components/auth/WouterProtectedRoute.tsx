@@ -13,9 +13,16 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading: authLoading } = useUnifiedAuth();
+  const { isAuthenticated, isLoading: authLoading, getCurrentUser } = useUnifiedAuth();
   const { canAccess, isLoading: accessLoading, subscriptionPlan, accessStartDate, timeUntilAccess } = useAccessControl();
   const [location, setLocation] = useLocation();
+
+  // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
+  const user = getCurrentUser();
+  if (user?.email === 'wikus77@hotmail.it') {
+    console.log('🔓 DEVELOPER ACCESS - Bypassing all restrictions');
+    return <>{children}</>;
+  }
 
   // Show loading while checking auth or access
   if (authLoading || accessLoading) {

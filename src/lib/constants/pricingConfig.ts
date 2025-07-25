@@ -13,21 +13,21 @@ export const PRICING_CONFIG = {
     label: "Piano Silver"
   },
   Gold: {
-    priceEur: 6.99,
-    priceCents: 699,
-    displayPrice: "€6.99",
-    label: "Piano Gold"
-  },
-  Black: {
     priceEur: 9.99,
     priceCents: 999,
     displayPrice: "€9.99",
+    label: "Piano Gold"
+  },
+  Black: {
+    priceEur: 19.99,
+    priceCents: 1999,
+    displayPrice: "€19.99",
     label: "Piano Black"
   },
   Titanium: {
-    priceEur: 29.99,
-    priceCents: 2999,
-    displayPrice: "€29.99",
+    priceEur: 39.99,
+    priceCents: 3999,
+    displayPrice: "€39.99",
     label: "Piano Titanium"
   }
 } as const;

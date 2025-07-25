@@ -16,7 +16,7 @@ const plans = [
   {
     id: 'SILVER',
     name: 'Silver',
-    price: '7.99',
+    price: '3.99',
     icon: <Shield className="w-8 h-8" />,
     earlyAccess: '2 ore prima',
     features: [
@@ -29,7 +29,7 @@ const plans = [
   {
     id: 'GOLD',
     name: 'Gold',
-    price: '19.99',
+    price: '9.99',
     icon: <Crown className="w-8 h-8" />,
     earlyAccess: '24 ore prima',
     features: [
@@ -44,7 +44,7 @@ const plans = [
   {
     id: 'BLACK',
     name: 'Black',
-    price: '39.99',
+    price: '19.99',
     icon: <Zap className="w-8 h-8" />,
     earlyAccess: '48 ore prima',
     features: [
@@ -59,7 +59,7 @@ const plans = [
   {
     id: 'TITANIUM',
     name: 'Titanium',
-    price: '79.99',
+    price: '39.99',
     icon: <Star className="w-8 h-8" />,
     earlyAccess: '72 ore prima',
     features: [
