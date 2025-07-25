@@ -1,4 +1,3 @@
-// M1SSION™ - Prize Clue Modal Component for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -20,8 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 import { ClueDetail } from './ClueDetail';
 
@@ -68,7 +65,6 @@ export const PrizeClueModal: React.FC<PrizeClueModalProps> = ({
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [unlockingClue, setUnlockingClue] = useState<string | null>(null);
   const { user } = useAuth();
-  const { vibrate } = useCapacitorHardware();
 
   // Load clues for this prize
   const loadClues = preserveFunctionName(async () => {

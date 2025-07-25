@@ -36,7 +36,6 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     console.log('🗺️ MapPage mounted successfully');
     console.log('🗺️ Current path:', window.location.pathname);
-    console.log('🗺️ Capacitor detected:', !!(window as any).Capacitor);
     
     // Force scroll to top on iOS
     if (typeof window !== 'undefined') {

@@ -11,16 +11,12 @@ export const useMapNavigation = () => {
   useEffect(() => {
     console.log('🧭 Navigation hook - Current path:', location);
     
-    // Check if we're in Capacitor environment
-    const isCapacitor = !!(window as any).Capacitor;
-    console.log('🧭 Capacitor environment:', isCapacitor);
     
     // Log when navigating to map
     if (location === '/map') {
       console.log('🗺️ Successfully navigated to map page');
       
       // iOS-specific fixes
-      if (isCapacitor) {
         // Force scroll to top
         setTimeout(() => {
           window.scrollTo(0, 0);
@@ -38,7 +34,6 @@ export const useMapNavigation = () => {
     return {
       currentPath: location,
       isMapPage: location === '/map',
-      isCapacitor: !!(window as any).Capacitor,
       canNavigate: !!navigate
     };
   };

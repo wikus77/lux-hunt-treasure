@@ -1,4 +1,3 @@
-// M1SSION™ - How It Works Page for iOS Capacitor
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -19,8 +18,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 
 interface HowItWorksStep {
   id: number;
@@ -90,7 +87,6 @@ const steps: HowItWorksStep[] = [
 export const HowItWorksPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(1);
   const { navigateWithFeedback } = useEnhancedNavigation();
-  const { vibrate } = useCapacitorHardware();
 
   // Handle step selection
   const handleStepSelect = preserveFunctionName(async (stepId: number) => {

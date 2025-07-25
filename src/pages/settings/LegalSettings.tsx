@@ -90,9 +90,6 @@ const LegalSettings: React.FC = () => {
     if (url.startsWith('/')) {
       // Navigate to internal pages
       window.location.href = url;
-    } else if ((window as any).Capacitor) {
-      // In Capacitor, open external URLs in system browser
-      (window as any).Capacitor.Plugins.Browser?.open({ url });
     } else {
       // In web, open external URLs in new tab
       window.open(url, '_blank', 'noopener,noreferrer');

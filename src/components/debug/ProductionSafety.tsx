@@ -2,7 +2,6 @@
 // M1SSION™ Production Safety Component
 
 import { useEffect } from 'react';
-import { safeLog, isProductionReady } from '@/utils/buildOptimization';
 
 interface ProductionSafetyProps {
   children: React.ReactNode;

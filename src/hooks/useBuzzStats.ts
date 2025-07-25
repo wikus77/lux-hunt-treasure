@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 interface BuzzStats {
   today_count: number;

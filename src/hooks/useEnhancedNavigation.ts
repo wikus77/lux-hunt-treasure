@@ -1,12 +1,8 @@
-// M1SSION™ - Enhanced Navigation Hook for iOS Capacitor
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { useCapacitorHardware } from './useCapacitorHardware';
-import { explicitNavigationHandler, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 export const useEnhancedNavigation = () => {
   const { navigate, currentPath: location } = useWouterNavigation();
-  const { isCapacitor, vibrate } = useCapacitorHardware();
   const { setCurrentTab, addToHistory, goBack } = useNavigationStore();
 
   // Enhanced navigation with haptic feedback and iOS optimizations
@@ -15,7 +11,6 @@ export const useEnhancedNavigation = () => {
       console.log('🧭 Enhanced navigation to:', path);
       
       // Haptic feedback on navigation (iOS)
-      if (options?.haptic !== false && isCapacitor) {
         await vibrate(50);
       }
       
@@ -27,7 +22,6 @@ export const useEnhancedNavigation = () => {
       navigate(path, options);
       
       // iOS scroll fix
-      if (isCapacitor) {
         setTimeout(() => {
           window.scrollTo(0, 0);
         }, 100);
@@ -42,7 +36,6 @@ export const useEnhancedNavigation = () => {
       console.log('🧭 Enhanced back navigation');
       
       // Haptic feedback
-      if (options?.haptic !== false && isCapacitor) {
         await vibrate(30);
       }
       
@@ -51,7 +44,6 @@ export const useEnhancedNavigation = () => {
         navigate(previousPath);
         
         // iOS scroll fix
-        if (isCapacitor) {
           setTimeout(() => {
             window.scrollTo(0, 0);
           }, 100);
@@ -96,7 +88,6 @@ export const useEnhancedNavigation = () => {
   const navigationState = {
     currentPath: location,
     currentTab: getCurrentTab(),
-    isCapacitor,
     canGoBack: window.history.length > 1,
   };
 

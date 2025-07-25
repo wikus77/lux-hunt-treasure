@@ -39,25 +39,17 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
   const { profileImage } = useProfileImage();
   const [hasAccess, setHasAccess] = useState(false);
-  const [isCapacitor, setIsCapacitor] = useState(false);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
 
-  // Check for Capacitor environment and device type
   useEffect(() => {
     const checkAccess = () => {
-      // Detect Capacitor environment
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
       
-      // Enhanced mobile detection including Capacitor
       const userAgent = navigator.userAgent;
-      const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
       const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
       
-      console.log('UnifiedHeader access check:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
       
       // DEVELOPER ACCESS: Grant unlimited access if developer credentials are stored
       if (isDeveloperUser) {
@@ -79,19 +71,15 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   }, []);
 
   const handleProfileClick = () => {
-    const isCapacitorApp = !!(window as any).Capacitor;
     const userAgent = navigator.userAgent;
-    const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
     const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
     
-    console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
     
     if (!isDeveloperUser && isMobile && !hasStoredAccess) {
       localStorage.removeItem('developer_access');
       localStorage.removeItem('developer_user');
       localStorage.removeItem('full_access_granted');
-      console.log('Triggering developer login for Capacitor');
       window.location.reload();
     }
   };

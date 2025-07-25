@@ -1,7 +1,5 @@
-// M1SSION™ - Post Login Redirect Logic for iOS Capacitor
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { detectCapacitorEnvironment, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 
 export interface PostLoginOptions {
   navigate: NavigateFunction;
@@ -22,17 +20,14 @@ export interface ProfileData {
 }
 
 /**
- * Handles post-login redirect logic for M1SSION™ iOS Capacitor app
  */
 export const handlePostLoginRedirect = preserveFunctionName(async (options: PostLoginOptions) => {
   const { navigate, defaultRoute = '/home', skipProfileCheck = false, forceRoute } = options;
-  const isCapacitor = detectCapacitorEnvironment();
 
   console.log('🔄 Post-login redirect:', {
     defaultRoute,
     skipProfileCheck,
     forceRoute,
-    isCapacitor
   });
 
   try {
@@ -76,7 +71,6 @@ export const handlePostLoginRedirect = preserveFunctionName(async (options: Post
     navigate(redirectRoute, { replace: true });
 
     // iOS specific optimizations
-    if (isCapacitor) {
       // Scroll to top after navigation
       setTimeout(() => {
         window.scrollTo(0, 0);
@@ -263,7 +257,6 @@ const generateAgentCode = (): string => {
  * Handle logout redirect
  */
 export const handleLogoutRedirect = preserveFunctionName(async (navigate: NavigateFunction) => {
-  const isCapacitor = detectCapacitorEnvironment();
   
   console.log('🚪 Handling logout redirect');
   
@@ -280,7 +273,6 @@ export const handleLogoutRedirect = preserveFunctionName(async (navigate: Naviga
     navigate('/login', { replace: true });
     
     // iOS specific cleanup
-    if (isCapacitor) {
       setTimeout(() => {
         window.scrollTo(0, 0);
         window.history.replaceState(null, '', '/login');

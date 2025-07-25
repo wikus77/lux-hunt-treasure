@@ -1,4 +1,3 @@
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';

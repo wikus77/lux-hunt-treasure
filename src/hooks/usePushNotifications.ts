@@ -28,12 +28,7 @@ export const usePushNotifications = () => {
         setPermission(Notification.permission);
       }
 
-      // Check for iOS Capacitor environment
-      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
-      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
       
-      if (isCapacitor && isIOS) {
-        console.log('🍎 iOS Capacitor detected - Enhanced push notification support');
         setIsSupported(true);
       }
 
@@ -80,15 +75,10 @@ export const usePushNotifications = () => {
     setLoading(true);
     
     try {
-      // For iOS Capacitor, use native permission request
-      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
-      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
 
-      if (isCapacitor && isIOS) {
         console.log('🍎 Requesting iOS native push permission...');
         
         try {
-          // Use Capacitor's native push notification plugin
           const { PushNotifications } = await import('@capacitor/push-notifications');
           
           const permResult = await PushNotifications.requestPermissions();
@@ -113,7 +103,6 @@ export const usePushNotifications = () => {
             return { success: false, reason: 'permission-denied' };
           }
         } catch (capacitorError) {
-          console.warn('Capacitor push notifications not available, falling back to web API');
         }
       }
 
@@ -159,10 +148,7 @@ export const usePushNotifications = () => {
     status: string;
   }) => {
     try {
-      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
-      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
 
-      if (isCapacitor && isIOS) {
         console.log('🏝️ Starting Dynamic Island live activity...', activityData);
         
         // Call native Dynamic Island plugin if available
@@ -186,9 +172,6 @@ export const usePushNotifications = () => {
     requestPermission,
     startLiveActivity,
     // iOS-specific features
-    isIOSCapacitor: typeof window !== 'undefined' && 
-      (window as any).Capacitor?.isNativePlatform() && 
-      (window as any).Capacitor?.getPlatform() === 'ios'
   };
 };
 

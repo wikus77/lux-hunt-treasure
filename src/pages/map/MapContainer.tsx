@@ -76,9 +76,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
     mapRef.current = map;
     setMapReady(true);
     
-    console.log('🗺️ Map container ready for iOS Capacitor');
     
-    // iOS Capacitor fixes - multiple invalidations for proper rendering
     const invalidateMap = () => {
       if (map) {
         map.invalidateSize();
@@ -102,9 +100,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
     setTimeout(invalidateMap, 1000);
   };
 
-  // Force map update on mount for iOS Capacitor
   useEffect(() => {
-    console.log('🗺️ MapContainer mounted - iOS Capacitor mode');
     
     const timer = setTimeout(() => {
       if (mapRef.current && mapReady) {

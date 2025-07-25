@@ -26,7 +26,6 @@ const Home = () => {
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
-  const [isCapacitor, setIsCapacitor] = useState(false);
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
   const {
@@ -44,16 +43,11 @@ const Home = () => {
   // Attiva il sistema di sicurezza Dynamic Island
   useDynamicIslandSafety();
 
-  // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
       
       const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('Home access check:', { isMobileDevice, isCapacitorApp });
       
       if (isMobileDevice) {
         // Mobile users need to login properly now
@@ -113,11 +107,9 @@ const Home = () => {
   }, [error]);
 
   const getContentPaddingClass = () => {
-    return isCapacitor ? "capacitor-safe-content" : "";
   };
 
   const getContentPaddingStyle = () => {
-    if (!isCapacitor) {
       return { 
         paddingTop: 'calc(72px + env(safe-area-inset-top) + 50px)' 
       };
@@ -175,8 +167,6 @@ const Home = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className={`fixed inset-x-0 z-[60] px-2 md:px-4 ${isCapacitor ? 'capacitor-safe-content' : ''}`}
-                style={!isCapacitor ? { 
                   top: 'calc(72px + env(safe-area-inset-top) + 50px)'
                 } : {}}
               >

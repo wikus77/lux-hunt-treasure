@@ -22,12 +22,9 @@ const NavigationWrapper: React.FC<NavigationWrapperProps> = ({ children }) => {
     });
   }, [location, setCurrentTab, addToHistory]);
 
-  // iOS Capacitor specific optimizations
   useEffect(() => {
-    const isCapacitor = !!(window as any).Capacitor;
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    if (isCapacitor && isIOS) {
       // Prevent iOS bounce effect
       document.body.style.overscrollBehavior = 'none';
       (document.body.style as any).WebkitOverflowScrolling = 'touch';

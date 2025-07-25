@@ -23,7 +23,6 @@ const AppHome = () => {
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
-  const [isCapacitor, setIsCapacitor] = useState(false);
   const { hasRole, user, isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
   const [, navigate] = useLocation();
 
@@ -62,16 +61,11 @@ const AppHome = () => {
     );
   }
 
-  // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
-      const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
       
       const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
       
       // Allow access for all users since this is an internal authenticated route
       // If users reach this page, they're already authenticated

@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, User, Bell, Shield, Globe, Smartphone, Volume2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -45,7 +44,6 @@ interface UserSettings {
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, updateProfile, logout } = useAuth();
-  const { vibrate, playSound } = useCapacitorHardware();
   const { toast } = useToast();
   
   const [settings, setSettings] = useState<UserSettings>({

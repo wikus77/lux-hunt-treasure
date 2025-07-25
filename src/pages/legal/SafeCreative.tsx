@@ -1,4 +1,3 @@
-// 🔐 BY JOSEPH MULE — Capacitor iOS Compatible
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,7 +77,6 @@ const SafeCreative: React.FC = () => {
                     <li>Algoritmo di posizionamento geografico per treasure hunt</li>
                     <li>Framework di gamification multi-tier</li>
                     <li>Sistema di sicurezza e autenticazione avanzato</li>
-                    <li>Interfaccia utente ottimizzata per Capacitor iOS</li>
                   </ul>
                 </div>
               </section>

@@ -1,4 +1,3 @@
-// M1SSION™ - Prize List Component for iOS Capacitor
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, MapPin, Calendar, Star, Lock, Unlock } from 'lucide-react';
@@ -8,8 +7,6 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { PrizeClueModal } from './PrizeClueModal';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 
 interface Prize {
   id: string;
@@ -33,7 +30,6 @@ export const PrizeList: React.FC = () => {
   const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { vibrate } = useCapacitorHardware();
 
   // Load prizes with clue information
   const loadPrizes = preserveFunctionName(async () => {

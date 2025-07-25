@@ -4,7 +4,6 @@ import { useLocation } from "wouter";
 import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
-import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
 import CookieBanner from "@/components/legal/CookieBanner";
 
 interface GlobalLayoutProps {
@@ -16,7 +15,6 @@ interface GlobalLayoutProps {
  */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   const [location] = useLocation();
-  const isCapacitor = detectCapacitorEnvironment();
   
   // Routes that should hide navigation
   const hideNavigationRoutes = [
@@ -43,7 +41,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
     path: location,
     shouldHideNavigation,
     isFullScreen,
-    isCapacitor
   });
 
   // Landing and auth pages - minimal layout
@@ -87,7 +84,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
           className="relative z-10 pt-[119px] pb-20"
           style={{
             minHeight: 'calc(100vh - 119px - 80px)', // Account for header and bottom nav
-            paddingTop: isCapacitor ? 'calc(119px + env(safe-area-inset-top, 0px))' : '119px'
           }}
         >
           {children}

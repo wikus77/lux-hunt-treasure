@@ -1,4 +1,3 @@
-// M1SSION™ - Games Page for iOS Capacitor
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
@@ -17,8 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
 
 interface GameCard {
@@ -101,7 +98,6 @@ const gamesList: GameCard[] = [
 export const GamesPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<GameCard | null>(null);
   const { navigateWithFeedback } = useEnhancedNavigation();
-  const { vibrate } = useCapacitorHardware();
 
   // Handle game selection
   const handleGameSelect = preserveFunctionName(async (game: GameCard) => {

@@ -49,7 +49,6 @@ const MapDebugger: React.FC = () => {
       <div>Mounted: {mounted ? '✅' : '❌'}</div>
       <div>Pathname: {location.pathname}</div>
       <div>Renders: {renderCount}</div>
-      <div>Capacitor: {!!(window as any).Capacitor ? '✅' : '❌'}</div>
       <button 
         onClick={() => navigate('/home')}
         style={{ marginTop: '5px', padding: '2px 5px', fontSize: '10px' }}
