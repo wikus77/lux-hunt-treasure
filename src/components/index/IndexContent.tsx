@@ -528,29 +528,40 @@ const IndexContent = ({
       </div>
 
       {/* PWA INSTALLATION SECTION */}
-      <section className="py-12 bg-black">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
-            Installa M1SSION™
-          </h2>
-          
-          <div className="mb-8 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg">
-            <p className="text-white mb-4 font-medium">
+      <section className="py-16 px-4 bg-black">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="glass-card p-8 rounded-2xl text-center"
+          >
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">
+              Installa M1SSION™
+            </h2>
+            
+            <p className="text-white mb-6 font-medium">
               Per installare M1SSION™ sul tuo dispositivo mobile:
             </p>
-            <ul className="text-white/80 space-y-2 text-left max-w-2xl mx-auto">
-              <li>📱 <strong>iOS (Safari):</strong> premi il tasto "Condividi" e seleziona "Aggiungi alla Home"</li>
-              <li>🤖 <strong>Android (Chrome):</strong> apri il menu ⋮ e premi "Installa App"</li>
-            </ul>
-          </div>
-          
-          <div className="flex justify-center">
-            <button className="glass-card border-2 border-blue-500/30 px-8 py-4 rounded-lg hover:border-blue-400/50 transition-all duration-300 glow-blue">
-              <span className="text-white font-semibold text-lg">
+            
+            <div className="space-y-3 text-left max-w-2xl mx-auto mb-8">
+              <div className="flex items-center space-x-3 text-white/80">
+                <span className="text-2xl">📱</span>
+                <span><strong>iOS (Safari):</strong> premi il tasto "Condividi" e seleziona "Aggiungi alla Home"</span>
+              </div>
+              <div className="flex items-center space-x-3 text-white/80">
+                <span className="text-2xl">🤖</span>
+                <span><strong>Android (Chrome):</strong> apri il menu ⋮ e premi "Installa App"</span>
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-4 rounded-lg transition-all duration-300 hover:shadow-[0_0_20px_rgba(59,130,246,0.5)]">
                 Aggiungi M1SSION™ alla tua Home
-              </span>
-            </button>
-          </div>
+              </button>
+            </div>
+          </motion.div>
         </div>
       </section>
       
