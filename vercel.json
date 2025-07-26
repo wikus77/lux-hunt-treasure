@@ -2,23 +2,11 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ],
-  "headers": [
+  "redirects": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
-      ]
+      "source": "https://www.m1ssion.com/:path*",
+      "destination": "https://m1ssion.com/:path*",
+      "permanent": true
     }
   ]
 }
