@@ -36,9 +36,39 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
   const { logout } = useAuthContext();
   const [, setLocation] = useLocation();
 
+  // © 2025 Joseph MULÉ – M1SSION™ - Real-time sync implementation
   useEffect(() => {
     if (isOpen) {
       fetchProfileData();
+      
+      // Set up real-time updates every 1 second for live sync
+      const interval = setInterval(() => {
+        fetchProfileData();
+      }, 1000);
+
+      // Set up Supabase real-time subscription for instant updates
+      const subscription = supabase
+        .channel('profile-updates')
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'user_mission_status' }, 
+          () => {
+            console.log('🔄 M1SSION™ Real-time update detected - refreshing ProfileToast data');
+            fetchProfileData();
+          }
+        )
+        .on('postgres_changes', 
+          { event: '*', schema: 'public', table: 'profiles' }, 
+          () => {
+            console.log('🔄 M1SSION™ Profile update detected - refreshing data');
+            fetchProfileData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        clearInterval(interval);
+        subscription.unsubscribe();
+      };
     }
   }, [isOpen]);
 
@@ -47,6 +77,8 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      console.log('🔄 M1SSION™ ProfileToast fetching real-time data...');
+
       // Fetch profile data
       const { data: profile } = await supabase
         .from('profiles')
@@ -54,12 +86,28 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
         .eq('id', user.id)
         .single();
 
-      // Fetch mission status
+      // Fetch mission status with real-time calculation
       const { data: missionStatus } = await supabase
         .from('user_mission_status')
         .select('clues_found, mission_started_at, mission_days_remaining')
         .eq('user_id', user.id)
         .single();
+
+      // Real-time days calculation to match home page
+      let daysRemaining = 30;
+      if (missionStatus?.mission_started_at) {
+        const startDate = new Date(missionStatus.mission_started_at);
+        const currentDate = new Date();
+        const daysPassed = Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        daysRemaining = Math.max(0, 30 - daysPassed);
+        
+        console.log('🔄 M1SSION™ Real-time days calculation:', { 
+          startDate: startDate.toISOString(),
+          currentDate: currentDate.toISOString(),
+          daysPassed,
+          daysRemaining 
+        });
+      }
 
       // Fetch subscription data with prioritized logic
       const { data: subscription } = await supabase
@@ -72,23 +120,23 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
       // 🔑 M1SSION™ FINAL SUBSCRIPTION SYNC - Use unified source
       let userTier = subscription?.tier || profile?.subscription_tier || 'Base';
       
-      // REMOVED: Developer override to maintain consistency with main subscription logic
-      // The subscription should be managed via useProfileSubscription hook only
-      console.log('📋 M1SSION™ ProfileToast Using unified tier:', userTier);
-      
-      console.log('📋 M1SSION™ ProfileToast Final unified tier:', userTier);
+      console.log('🔄 M1SSION™ ProfileToast sync data:', { 
+        daysRemaining,
+        cluesFound: missionStatus?.clues_found || 0,
+        tier: userTier 
+      });
 
       setProfileData({
         username: profile?.username || profile?.full_name || 'Agente',
         email: user.email || '',
         cluesFound: missionStatus?.clues_found || 0,
         totalClues: 12, // Total clues in the mission
-        daysRemaining: missionStatus?.mission_days_remaining || 30,
+        daysRemaining: daysRemaining, // Use real-time calculated value
         missionStartDate: missionStatus?.mission_started_at || new Date().toISOString(),
         subscriptionTier: userTier
       });
     } catch (error) {
-      console.error('Error fetching profile data:', error);
+      console.error('❌ M1SSION™ Error fetching profile data:', error);
     } finally {
       setLoading(false);
     }

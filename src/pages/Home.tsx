@@ -160,15 +160,22 @@ const Home = () => {
 
   return (
     <>
-      {/* DEBUG: Force visibility with explicit positioning */}
-      {(() => {
-        console.log("✅ M1SSION™ UnifiedHeader render triggered");
-        return (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999 }}>
-            <UnifiedHeader profileImage={profileImage} />
-          </div>
-        );
-      })()}
+      {/* © 2025 Joseph MULÉ – M1SSION™ - HEADER VISIBILITY FORCED */}
+      <div 
+        id="mission-header-container"
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform'
+        }}
+      >
+        <UnifiedHeader profileImage={profileImage} />
+      </div>
       
       <div className="min-h-screen bg-[#070818] w-full" style={{ paddingTop: '140px', paddingBottom: '120px' }}>
         <Helmet>
@@ -235,15 +242,22 @@ const Home = () => {
       <TermsBanner />
       </div>
       
-      {/* DEBUG: Force visibility with explicit positioning */}
-      {(() => {
-        console.log("✅ M1SSION™ BottomNavigation render triggered");
-        return (
-          <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999 }}>
-            <BottomNavigation />
-          </div>
-        );
-      })()}
+      {/* © 2025 Joseph MULÉ – M1SSION™ - BOTTOM NAV VISIBILITY FORCED */}
+      <div 
+        id="mission-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform'
+        }}
+      >
+        <BottomNavigation />
+      </div>
     </>
   );
 };
