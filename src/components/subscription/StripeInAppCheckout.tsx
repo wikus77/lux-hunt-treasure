@@ -193,8 +193,37 @@ const StripeInAppCheckout: React.FC<StripeInAppCheckoutProps> = ({
   onSuccess, 
   onCancel 
 }) => {
-  // Always use card element for new payments - simplified flow
   const [useSavedCard, setUseSavedCard] = useState(false);
+  const { user } = useAuthContext();
+
+  // Check for saved default payment method on mount
+  useEffect(() => {
+    const checkDefaultPaymentMethod = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('user_payment_methods')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('is_default', true)
+          .maybeSingle();
+
+        if (!error && data) {
+          console.log('✅ M1SSION™ Default payment method found - enabling auto-fill');
+          setUseSavedCard(true);
+        } else {
+          console.log('ℹ️ M1SSION™ No default payment method - using manual entry');
+          setUseSavedCard(false);
+        }
+      } catch (error) {
+        console.error('❌ M1SSION™ Error checking default payment method:', error);
+        setUseSavedCard(false);
+      }
+    };
+
+    checkDefaultPaymentMethod();
+  }, [user]);
 
   const options: StripeElementsOptions = {
     appearance: {
