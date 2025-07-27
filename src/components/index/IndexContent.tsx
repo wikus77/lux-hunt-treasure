@@ -311,30 +311,20 @@ const IndexContent = ({
               Ottieni accesso esclusivo e un codice referral unico. Preparati per l'avventura che cambierà tutto.
             </p>
             
-            <form className="space-y-4">
-              <div>
-                <label className="block text-left text-white/80 text-sm mb-2">Nome completo</label>
-                <input
-                  type="text"
-                  placeholder="Inserisci il tuo nome"
-                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-left text-white/80 text-sm mb-2">Email</label>
-                <input
-                  type="email"
-                  placeholder="Inserisci la tua email"
-                  className="w-full px-4 py-3 bg-black/50 border border-white/20 rounded-lg text-white placeholder-white/50 focus:border-cyan-400 focus:outline-none"
-                />
-              </div>
+            <div className="space-y-4">
+              <p className="text-yellow-400 text-lg font-semibold">
+                🔒 Registrazioni chiuse
+              </p>
+              <p className="text-white/60 text-sm">
+                Le registrazioni sono temporaneamente sospese in preparazione al lancio.
+              </p>
               <Button 
-                className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold py-3 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-                onClick={onRegisterClick}
+                className="w-full bg-gray-600 text-white font-bold py-3 cursor-not-allowed opacity-60"
+                disabled
               >
-                REGISTRATI SUBITO
+                REGISTRAZIONI CHIUSE
               </Button>
-            </form>
+            </div>
           </div>
         </div>
       </section>

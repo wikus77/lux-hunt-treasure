@@ -19,6 +19,8 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import CookieBanner from '@/components/legal/CookieBanner';
 import TermsBanner from '@/components/legal/TermsBanner';
+import M1ssionRevealAnimation from "@/components/intro/M1ssionRevealAnimation";
+import { useM1ssionIntroAnimation } from "@/hooks/useM1ssionIntroAnimation";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,7 @@ const Home = () => {
   } = useNotificationManager();
 
   const { isConnected } = useRealTimeNotifications();
+  const { showAnimation, completeAnimation } = useM1ssionIntroAnimation();
 
   // Attiva il sistema di sicurezza Dynamic Island
   useDynamicIslandSafety();
@@ -176,6 +179,13 @@ const Home = () => {
 
   return (
     <>
+      {/* M1SSION Reveal Animation */}
+      <AnimatePresence>
+        {showAnimation && (
+          <M1ssionRevealAnimation onComplete={completeAnimation} />
+        )}
+      </AnimatePresence>
+
       {/* © 2025 Joseph MULÉ – M1SSION™ - HEADER VISIBILITY FORCED + PWA STANDALONE */}
       <div 
         id="mission-header-container"

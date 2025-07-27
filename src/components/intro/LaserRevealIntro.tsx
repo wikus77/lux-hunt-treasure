@@ -180,7 +180,7 @@ const LaserRevealIntro: React.FC<LaserRevealIntroProps> = ({ onComplete, onSkip 
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9, ease: "easeOut" }}
             >
-              STARTS ON JULY 19
+              STARTS ON AUGUST 19
             </motion.p>
           )}
         </motion.div>

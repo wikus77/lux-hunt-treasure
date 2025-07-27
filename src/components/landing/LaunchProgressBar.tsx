@@ -1,9 +1,48 @@
 
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { getMissionDeadline, calculateRemainingDays } from "@/utils/countdownDate";
+
+// Live countdown component with real-time updates
+const LiveCountdown: React.FC = () => {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const targetDate = new Date("2025-08-19T00:00:00Z"); // August 19, 2025
+      const now = new Date();
+      const diffTime = targetDate.getTime() - now.getTime();
+      
+      if (diffTime <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0 });
+        return;
+      }
+      
+      const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diffTime % (1000 * 60 * 60)) / (1000 * 60));
+      
+      setTimeLeft({ days, hours, minutes });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="text-right">
+      <p className="text-white text-sm">
+        <span className="font-bold text-yellow-400">{timeLeft.days}</span> giorni{' '}
+        <span className="font-bold text-yellow-400">{timeLeft.hours}</span>h{' '}
+        <span className="font-bold text-yellow-400">{timeLeft.minutes}</span>m al lancio
+      </p>
+    </div>
+  );
+};
 
 interface LaunchProgressBarProps {
   targetDate: Date;
@@ -70,9 +109,7 @@ const LaunchProgressBar: React.FC<LaunchProgressBarProps> = ({ targetDate, onCou
               </span>
             </h3>
             <div className="text-right">
-              <p className="text-white text-sm">
-                <span className="font-bold text-yellow-400">{daysRemaining}</span> days to launch
-              </p>
+              <LiveCountdown />
             </div>
           </div>
           
