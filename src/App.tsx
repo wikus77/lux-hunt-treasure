@@ -72,10 +72,12 @@ function App() {
   }, [animationChecked, showM1ssionAnimation]);
 
   const handleAnimationComplete = () => {
-    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and hiding");
+    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and redirecting to /home");
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem("m1ssionPostLoginAnimationShown", "true");
+        // Navigate to /home after animation
+        window.location.href = '/home';
       }
     } catch (error) {
       console.error("🎬 Error setting animation completion flag:", error);
@@ -94,9 +96,9 @@ function App() {
         
         // Clear the flag so animation can show
         sessionStorage.removeItem("m1ssionPostLoginAnimationShown");
-        console.log("🎬 AUTH SUCCESS - Animation flag cleared, forcing animation show");
+        console.log("🎬 AUTH SUCCESS - Animation flag cleared, triggering animation immediately");
         
-        // Force animation to show on next /home visit
+        // Force animation to show immediately after login
         setShowM1ssionAnimation(true);
         setAnimationChecked(true);
       }
