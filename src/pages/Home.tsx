@@ -44,16 +44,32 @@ const Home = () => {
   // Attiva il sistema di sicurezza Dynamic Island
   useDynamicIslandSafety();
 
-  // Check for developer access and Capacitor environment
+  // Check for developer access and Capacitor environment + PWA standalone mode
   useEffect(() => {
     const checkAccess = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
-      setIsCapacitor(isCapacitorApp);
+      const isPWAStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                              (window.navigator as any).standalone === true;
+      
+      setIsCapacitor(isCapacitorApp || isPWAStandalone);
       
       const userAgent = navigator.userAgent;
-      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
+      const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp || isPWAStandalone;
       
-      console.log('Home access check:', { isMobileDevice, isCapacitorApp });
+      console.log('🏠 HOME access check:', { 
+        isMobileDevice, 
+        isCapacitorApp, 
+        isPWAStandalone,
+        displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'
+      });
+      
+      // FORCE ALLOW PWA STANDALONE ACCESS
+      if (isPWAStandalone) {
+        console.log('📱 PWA STANDALONE DETECTED - Enabling full access');
+        setHasAccess(true);
+        setIsLoaded(true);
+        return;
+      }
       
       if (isMobileDevice) {
         // Mobile users need to login properly now
@@ -160,7 +176,7 @@ const Home = () => {
 
   return (
     <>
-      {/* © 2025 Joseph MULÉ – M1SSION™ - HEADER VISIBILITY FORCED */}
+      {/* © 2025 Joseph MULÉ – M1SSION™ - HEADER VISIBILITY FORCED + PWA STANDALONE */}
       <div 
         id="mission-header-container"
         style={{ 
@@ -168,16 +184,30 @@ const Home = () => {
           top: 0, 
           left: 0, 
           right: 0, 
+          width: '100vw',
           zIndex: 10000,
           isolation: 'isolate',
           transform: 'translateZ(0)',
-          willChange: 'transform'
-        }}
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
       >
         <UnifiedHeader profileImage={profileImage} />
       </div>
       
-      <div className="min-h-screen bg-[#070818] w-full" style={{ paddingTop: '140px', paddingBottom: '120px' }}>
+      <div 
+        className="min-h-screen bg-[#070818]" 
+        style={{ 
+          paddingTop: '140px', 
+          paddingBottom: '120px',
+          width: '100vw',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
+          position: 'relative'
+        }}
+      >
         <Helmet>
           <title>M1SSION™ - Home</title>
         </Helmet>
@@ -242,7 +272,7 @@ const Home = () => {
       <TermsBanner />
       </div>
       
-      {/* © 2025 Joseph MULÉ – M1SSION™ - BOTTOM NAV VISIBILITY FORCED */}
+      {/* © 2025 Joseph MULÉ – M1SSION™ - BOTTOM NAV VISIBILITY FORCED + PWA STANDALONE */}
       <div 
         id="mission-bottom-nav-container"
         style={{ 
@@ -250,11 +280,15 @@ const Home = () => {
           bottom: 0, 
           left: 0, 
           right: 0, 
+          width: '100vw',
           zIndex: 10000,
           isolation: 'isolate',
           transform: 'translateZ(0)',
-          willChange: 'transform'
-        }}
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
       >
         <BottomNavigation />
       </div>
