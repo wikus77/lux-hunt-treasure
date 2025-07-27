@@ -313,7 +313,7 @@ const IndexContent = ({
             
             <div className="space-y-4">
               <p className="text-green-400 text-lg font-semibold">
-                STARTS ON AUGUST 19
+                ✅ Phase 2 - STARTS ON AUGUST 19
               </p>
               <p className="text-white/60 text-sm">
                 Registrati ora per accedere alla missione

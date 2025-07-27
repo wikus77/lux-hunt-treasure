@@ -9,13 +9,12 @@ const PostLoginMissionAnimation: React.FC = () => {
   const [currentText, setCurrentText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
   const [showTrademark, setShowTrademark] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
 
   const targetText = 'M1SSION';
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 
   useEffect(() => {
-    console.log("[MissionIntro] Animation started");
+    console.log("✅ Phase 4 - Post-login M1SSION animation started");
     
     let currentIndex = 0;
     let isGeneratingRandomly = true;
@@ -45,16 +44,15 @@ const PostLoginMissionAnimation: React.FC = () => {
             } else {
               // All characters revealed
               setTimeout(() => {
-                console.log("[MissionIntro] M1SSION text complete - showing slogan");
+                console.log("✅ Phase 4 - M1SSION text complete, showing slogan");
                 setShowSlogan(true);
                 
                 setTimeout(() => {
-                  console.log("[MissionIntro] Slogan shown - showing trademark");
+                  console.log("✅ Phase 4 - Slogan shown, showing trademark");
                   setShowTrademark(true);
                   
                   setTimeout(() => {
-                    console.log("[MissionIntro] Animation done → redirect to /home");
-                    setIsComplete(true);
+                    console.log("✅ Phase 5 passed - Animation done, redirect to /home");
                     sessionStorage.setItem("hasSeenPostLoginIntro", "true");
                     navigate('/home');
                   }, 1000); // 1 second pause after trademark
@@ -74,16 +72,12 @@ const PostLoginMissionAnimation: React.FC = () => {
     };
   }, [navigate]);
 
-  if (isComplete) {
-    return null; // Component completed, should be navigating
-  }
-
   return (
     <div className="fixed inset-0 z-[999] bg-black flex items-center justify-center">
       <div className="text-center">
         {/* M1SSION Text */}
         <motion.h1 
-          className="text-6xl md:text-8xl font-technovier mb-4"
+          className="text-6xl md:text-8xl font-orbitron mb-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
@@ -108,7 +102,7 @@ const PostLoginMissionAnimation: React.FC = () => {
         <AnimatePresence>
           {showSlogan && (
             <motion.p 
-              className="text-yellow-600 text-xl md:text-2xl font-technovier tracking-wider"
+              className="text-yellow-400 text-xl md:text-2xl font-orbitron tracking-wider"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, type: "spring", stiffness: 80 }}

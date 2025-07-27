@@ -11,8 +11,8 @@ const M1ssionFlowDebugger: React.FC = () => {
     localStorage.clear();
     sessionStorage.clear();
     
-    console.log("✅ All storage cleared - ready for complete sequence test");
-    console.log("Expected flow: Laser Intro → Landing → Login → Mission Animation → Home");
+    console.log("✅ RESET COMPLETE FLOW - Testing sequence:");
+    console.log("Phase 1: Laser Intro → Phase 2: Landing → Phase 3: Login → Phase 4: Mission Animation → Phase 5: Home");
     
     window.location.href = '/';
   };

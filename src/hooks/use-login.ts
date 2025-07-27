@@ -117,7 +117,7 @@ export const useLogin = () => {
       });
 
       // Login successful
-      console.log('[Login] Success → playing MissionIntro');
+      console.log('✅ Phase 3 passed - Login success, playing MissionIntro');
       
       // Clear post-login intro flag to ensure animation plays
       sessionStorage.removeItem("hasSeenPostLoginIntro");
