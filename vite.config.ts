@@ -100,7 +100,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    target: 'es2015',
+    target: 'es2020',
     minify: mode === 'production' ? 'esbuild' : false,
     sourcemap: mode === 'development',
     rollupOptions: {
@@ -113,20 +113,32 @@ export default defineConfig(({ mode }) => ({
           'router-vendor': ['react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
           'supabase-vendor': ['@supabase/supabase-js'],
-          'animation-vendor': ['framer-motion', 'lottie-react']
+          'animation-vendor': ['framer-motion', 'lottie-react'],
+          'three-vendor': ['three', '@react-three/drei'],
+          'map-vendor': ['leaflet', 'react-leaflet', '@react-google-maps/api'],
+          'stripe-vendor': ['@stripe/stripe-js', '@stripe/react-stripe-js']
         }
+      },
+      external: [],
+      onwarn(warning, warn) {
+        if (warning.code === 'SOURCEMAP_ERROR') return;
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE') return;
+        warn(warning);
       }
     },
     emptyOutDir: true,
-    cssCodeSplit: false,
-    chunkSizeWarningLimit: 1000,
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 2000,
+    reportCompressedSize: false,
     terserOptions: {
       compress: {
         drop_console: mode === 'production',
         drop_debugger: true,
         pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
       },
-      mangle: false,
+      mangle: {
+        safari10: true
+      },
       format: {
         comments: false,
       },
