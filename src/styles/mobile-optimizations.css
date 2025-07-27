@@ -115,3 +115,46 @@
   -o-transform: translateZ(0);
   transform: translateZ(0);
 }
+
+/* PWA Native App Behavior - Disable Zoom and Gestures */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow text selection for inputs and text areas */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Disable zoom on all elements */
+html, body {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  touch-action: pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent double-tap zoom */
+* {
+  touch-action: manipulation;
+}
+
+/* iOS Safari specific zoom prevention */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  html {
+    -webkit-text-size-adjust: none;
+  }
+}

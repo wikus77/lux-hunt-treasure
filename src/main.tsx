@@ -227,10 +227,15 @@ if (typeof window !== 'undefined') {
     timestamp: new Date().toISOString()
   });
   
-  // Initialize Capacitor if available
+  // Initialize Capacitor if available, or apply PWA zoom prevention
   if (window.location.protocol === 'capacitor:' || (window as any).Capacitor) {
     import('@/utils/iosCapacitorFunctions').then(({ initializeCapacitorWithExplicitName }) => {
       initializeCapacitorWithExplicitName();
+    });
+  } else {
+    // Apply PWA native behavior even in browser
+    import('@/utils/iosCapacitorFunctions').then(({ disableZoomAndGestures }) => {
+      disableZoomAndGestures();
     });
   }
 }

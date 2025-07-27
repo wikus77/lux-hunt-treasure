@@ -253,11 +253,66 @@ export const handleHardwareBackButton = preserveFunctionName(
   'handleHardwareBackButton'
 );
 
+// Disable zoom and gestures for native app behavior
+export const disableZoomAndGestures = preserveFunctionName(
+  () => {
+    if (typeof window === 'undefined') return;
+    
+    console.log('🚫 Disabling zoom and gestures for native app behavior...');
+    
+    // Prevent zoom via JavaScript events
+    const preventZoom = (e: Event) => {
+      if ((e as any).scale && (e as any).scale !== 1) {
+        e.preventDefault();
+      }
+    };
+    
+    // Prevent gesture events
+    const preventGesture = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    
+    // Add event listeners for gesture prevention
+    document.addEventListener('gesturestart', preventGesture, { passive: false });
+    document.addEventListener('gesturechange', preventGesture, { passive: false });
+    document.addEventListener('gestureend', preventGesture, { passive: false });
+    
+    // Prevent pinch zoom
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Prevent double-tap zoom
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', (e) => {
+      const now = new Date().getTime();
+      if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+      }
+      lastTouchEnd = now;
+    }, false);
+    
+    console.log('✅ Zoom and gestures disabled');
+  },
+  'disableZoomAndGestures'
+);
+
 // Initialize Capacitor with explicit function name
 export const initializeCapacitorWithExplicitName = preserveFunctionName(
   async () => {
     if (!detectCapacitorEnvironment()) {
       console.log('📱 Web environment detected - Capacitor not initialized');
+      // Still disable zoom for PWA behavior
+      disableZoomAndGestures();
       return false;
     }
     
@@ -281,6 +336,9 @@ export const initializeCapacitorWithExplicitName = preserveFunctionName(
       
       // Apply safe area styles
       applySafeAreaStyles();
+      
+      // Disable zoom and gestures for native behavior
+      disableZoomAndGestures();
       
       // Hide splash screen
       if (SplashScreen) {
