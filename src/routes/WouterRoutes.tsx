@@ -44,14 +44,13 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   
-  // Check if user just logged in and needs to see the M1SSION animation
-  const justLoggedIn = isAuthenticated && !sessionStorage.getItem("hasSeenPostLoginIntro");
-  
-  // Show post-login animation if user just authenticated
-  if (justLoggedIn && !isLoading) {
-    console.log("✅ Phase 3 passed successfully - User just logged in, showing M1SSION animation");
-    return <PostLoginMissionIntro />;
-  }
+  console.log('🔍 WOUTER DEBUG - Route evaluation:', {
+    isAuthenticated,
+    isLoading,
+    currentPath: window.location.pathname,
+    hasSeenPostLoginIntro: !!sessionStorage.getItem("hasSeenPostLoginIntro"),
+    timestamp: new Date().toISOString()
+  });
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
@@ -73,7 +72,16 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page - FIXED: Always show LandingPage to anonymous users */}
+          {/* POST-LOGIN M1SSION ANIMATION - Special route */}
+          <Route path="/mission-intro">
+            {isAuthenticated ? (
+              <PostLoginMissionIntro />
+            ) : (
+              <Index />
+            )}
+          </Route>
+
+          {/* Landing page - Show Index for non-authenticated users */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">

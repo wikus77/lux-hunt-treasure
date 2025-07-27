@@ -119,12 +119,12 @@ export const useLogin = () => {
       // ✅ Phase 3 passed successfully - Login completed
       console.log('✅ Phase 3 passed successfully - Login successful, user authenticated');
       
-      // Clear the post-login intro flag to ensure it shows
+      // Clear the post-login intro flag to ensure animation shows
       sessionStorage.removeItem("hasSeenPostLoginIntro");
       
-      // The router will handle showing the M1SSION animation before redirecting to home
+      // Navigate to special mission intro route
       setTimeout(() => {
-        navigate('/');
+        navigate('/mission-intro');
         // Dispatch auth success event
         const event = new CustomEvent('auth-success');
         window.dispatchEvent(event);

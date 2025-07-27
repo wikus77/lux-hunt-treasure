@@ -107,21 +107,20 @@ export const useRegistration = () => {
           // Non bloccare il flusso se le notifiche falliscono
         }
 
-        console.log('✅ Phase 3 passed successfully - Registration successful, user may be authenticated');
+        console.log('✅ Phase 3 passed successfully - Registration successful');
         
         toast.success("Registrazione completata!", {
           description: "Controlla la tua email per il codice agente."
         });
 
-        // Clear the post-login intro flag so the M1SSION animation shows if user is auto-logged in
+        // Clear the post-login intro flag so animation shows if user gets auto-logged in
         sessionStorage.removeItem("hasSeenPostLoginIntro");
         
-        // After registration, check if user gets auto-logged in
         console.log('📧 Inviando notifiche post-registrazione...');
         
-        // Navigate back to root to handle authentication flow properly  
+        // Navigate to mission intro route if authenticated, otherwise to choose plan
         setTimeout(() => {
-          navigate("/");
+          navigate("/choose-plan");
         }, 1500);
         return;
       }
@@ -184,12 +183,11 @@ export const useRegistration = () => {
           // Clear the post-login intro flag  
           sessionStorage.removeItem("hasSeenPostLoginIntro");
           
-          // Dopo registrazione bypass successful, invia notifica
           console.log('📧 Inviando notifiche post-registrazione bypass...');
           
-          // Navigate back to root to handle authentication flow properly
+          // Navigate to choose plan
           setTimeout(() => {
-            navigate("/");
+            navigate("/choose-plan");
           }, 1500);
           return;
         }
