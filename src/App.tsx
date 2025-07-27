@@ -30,11 +30,12 @@ function App() {
   // Initialize push notification processor
   usePushNotificationProcessor();
 
-  // Check for post-login animation need
+  // Check for post-login animation need - only trigger ONCE after authentication
   useEffect(() => {
     console.log("🎬 CHECKING M1SSION ANIMATION CONDITION...");
     
-    const checkAnimationCondition = () => {
+    // Only check if we haven't already checked and we're not already showing animation
+    if (!animationChecked && !showM1ssionAnimation) {
       try {
         if (typeof window !== 'undefined') {
           const currentPath = window.location.pathname;
@@ -48,12 +49,10 @@ function App() {
             shouldShow: isHomePage && !hasSeenAnimation
           });
           
-          // FORCE SHOW ANIMATION CONDITIONS:
-          // 1. Must be on /home page
-          // 2. Animation flag not set in sessionStorage
-          // 3. OR if user just navigated to home (to catch redirects)
+          // ONLY show animation when:
+          // 1. On /home page AND no animation flag exists (fresh login)
           if (isHomePage && !hasSeenAnimation) {
-            console.log("🎬 ✅ FORCING M1SSION ANIMATION SHOW - CONDITIONS MET");
+            console.log("🎬 ✅ FORCING M1SSION ANIMATION SHOW - POST-LOGIN CONDITIONS MET");
             setShowM1ssionAnimation(true);
           } else {
             console.log("🎬 ❌ SKIPPING M1SSION ANIMATION", { 
@@ -69,39 +68,16 @@ function App() {
         console.error("🎬 Error checking animation condition:", error);
         setAnimationChecked(true);
       }
-    };
-
-    // Check immediately and also on path changes
-    checkAnimationCondition();
-    
-    // Listen for route changes (wouter doesn't have built-in listener)
-    const originalPushState = window.history.pushState;
-    const originalReplaceState = window.history.replaceState;
-    
-    window.history.pushState = function() {
-      originalPushState.apply(window.history, arguments);
-      setTimeout(checkAnimationCondition, 100);
-    };
-    
-    window.history.replaceState = function() {
-      originalReplaceState.apply(window.history, arguments);
-      setTimeout(checkAnimationCondition, 100);
-    };
-    
-    window.addEventListener('popstate', checkAnimationCondition);
-    
-    return () => {
-      window.history.pushState = originalPushState;
-      window.history.replaceState = originalReplaceState;
-      window.removeEventListener('popstate', checkAnimationCondition);
-    };
-  }, []);
+    }
+  }, [animationChecked, showM1ssionAnimation]);
 
   const handleAnimationComplete = () => {
-    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and hiding");
+    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and redirecting to /home");
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem("m1ssionPostLoginAnimationShown", "true");
+        // Navigate to /home after animation
+        window.location.href = '/home';
       }
     } catch (error) {
       console.error("🎬 Error setting animation completion flag:", error);
@@ -112,7 +88,7 @@ function App() {
   const handleAuthenticated = (userId: string) => {
     console.log("✅ APP LEVEL - User authenticated:", userId);
     
-    // Reset animation flag on successful authentication
+    // Reset animation flag on successful authentication and force show
     try {
       if (typeof window !== 'undefined') {
         const currentFlag = sessionStorage.getItem("m1ssionPostLoginAnimationShown");
@@ -120,7 +96,11 @@ function App() {
         
         // Clear the flag so animation can show
         sessionStorage.removeItem("m1ssionPostLoginAnimationShown");
-        console.log("🎬 AUTH SUCCESS - Animation flag cleared, ready to show on /home");
+        console.log("🎬 AUTH SUCCESS - Animation flag cleared, triggering animation immediately");
+        
+        // Force animation to show immediately after login
+        setShowM1ssionAnimation(true);
+        setAnimationChecked(true);
       }
     } catch (error) {
       console.error("🎬 Error clearing animation flag on auth:", error);

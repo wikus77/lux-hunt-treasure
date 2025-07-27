@@ -12,42 +12,59 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
   const [showFinal, setShowFinal] = useState(false);
   const [showSlogan, setShowSlogan] = useState(false);
   const [showTrademark, setShowTrademark] = useState(false);
+  const [convergenceStep, setConvergenceStep] = useState(0);
 
   // Characters for random generation
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const finalText = 'M1SSION';
   
-  // Generate random text
-  const generateRandomText = () => {
-    return 'M1SSION'.split('').map((char, index) => {
-      if (index === 0 || index === 1) return char; // Keep M1
-      return chars[Math.floor(Math.random() * chars.length)];
-    }).join('');
+  // Generate progressive convergence text
+  const generateConvergingText = (step: number) => {
+    const fixedChars = Math.min(step, finalText.length);
+    let result = '';
+    
+    for (let i = 0; i < finalText.length; i++) {
+      if (i < fixedChars) {
+        // Keep the correct character fixed
+        result += finalText[i];
+      } else {
+        // Random character for remaining positions
+        result += chars[Math.floor(Math.random() * chars.length)];
+      }
+    }
+    return result;
   };
 
   useEffect(() => {
     let animationFrame: number;
     let startTime = Date.now();
+    let convergenceInterval: NodeJS.Timeout;
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
       
-      if (elapsed < 800) {
-        // Random text phase (0.8s)
-        setCurrentText(generateRandomText());
+      if (elapsed < 1200) {
+        // Progressive convergence phase (1.2s)
+        const progressStep = Math.floor((elapsed / 1200) * finalText.length);
+        setConvergenceStep(progressStep);
+        setCurrentText(generateConvergingText(progressStep));
         animationFrame = requestAnimationFrame(animate);
-      } else if (elapsed >= 800 && !showFinal) {
-        // Show final M1SSION
+      } else if (elapsed >= 1200 && !showFinal) {
+        // Show final M1SSION and stop animation
         setCurrentText('M1SSION');
         setShowFinal(true);
         
-        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 1.6s)
+        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 2.0s)
         setTimeout(() => setShowSlogan(true), 800);
         
-        // Show trademark after 1.3s (cumulative: 2.1s)  
+        // Show trademark after 1.3s (cumulative: 2.5s)  
         setTimeout(() => setShowTrademark(true), 1300);
         
-        // Auto redirect after 2.5s (cumulative: 3.3s)
-        setTimeout(() => onComplete(), 2500);
+        // Auto redirect after 3.5s (cumulative: 4.7s) - longer delay
+        setTimeout(() => {
+          console.log("🎬 M1SSION ANIMATION COMPLETE - calling onComplete callback");
+          onComplete();
+        }, 3500);
       }
     };
     
@@ -57,18 +74,21 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
       if (animationFrame) {
         cancelAnimationFrame(animationFrame);
       }
+      if (convergenceInterval) {
+        clearInterval(convergenceInterval);
+      }
     };
-  }, [onComplete, showFinal]);
+  }, [onComplete, showFinal, convergenceStep]);
 
   return (
     <div className="fixed inset-0 z-[999] bg-black flex items-center justify-center">
       <div className="text-center">
         {/* M1SSION Text */}
         <motion.h1 
-          className="text-6xl md:text-8xl font-technovier font-bold mb-4"
+          className="text-6xl md:text-8xl font-technovier font-normal mb-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="text-cyan-400">M1</span>
           <span className="text-white">
