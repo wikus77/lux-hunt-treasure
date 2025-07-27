@@ -40,12 +40,10 @@ const IndexContent = ({
     // Rimuovi i flag che potrebbero impedire il caricamento completo
     if (typeof window !== 'undefined') {
       try {
-        // CRITICAL: Reset the laser intro flag to ensure it shows
+        // Rimuove solo i flag relativi all'intro e non altri dati importanti
         localStorage.removeItem("skipIntro");
         localStorage.removeItem("introStep");
         localStorage.removeItem("introShown");
-        
-        console.log("🎬 RESET: Intro flags cleared - laser intro will show on next reload");
         
         // Non rimuovere informazioni di autenticazione o altre preferenze utente
         console.log("Cache di navigazione pulita per garantire il corretto caricamento");
@@ -245,14 +243,12 @@ const IndexContent = ({
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/login">
-              <button 
-                className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-                onClick={onRegisterClick}
-              >
-                JOIN THE HUNT
-              </button>
-            </Link>
+            <button 
+              className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+              onClick={onRegisterClick}
+            >
+              JOIN THE HUNT
+            </button>
             <button 
               className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
             >
@@ -317,19 +313,17 @@ const IndexContent = ({
             
             <div className="space-y-4">
               <p className="text-yellow-400 text-lg font-semibold">
-                🚀 Registrazioni aperte!
+                🔒 Registrazioni chiuse
               </p>
               <p className="text-white/60 text-sm">
-                Ottieni accesso esclusivo e preparati per l'avventura che cambierà tutto.
+                Le registrazioni sono temporaneamente sospese in preparazione al lancio.
               </p>
-              <Link href="/login">
-                <Button 
-                  className="w-full bg-gradient-to-r from-[#00E5FF] to-[#008eb3] text-black font-bold py-3 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-                  onClick={onRegisterClick}
-                >
-                  ACCEDI / REGISTRATI
-                </Button>
-              </Link>
+              <Button 
+                className="w-full bg-gray-600 text-white font-bold py-3 cursor-not-allowed opacity-60"
+                disabled
+              >
+                REGISTRAZIONI CHIUSE
+              </Button>
             </div>
           </div>
         </div>
@@ -371,15 +365,13 @@ const IndexContent = ({
           </div>
 
           <div className="text-center">
-            <Link href="/login">
-              <Button 
-                onClick={onRegisterClick}
-                className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full text-lg hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-                size="lg"
-              >
-                Inizia La Tua M1SSION
-              </Button>
-            </Link>
+            <Button 
+              onClick={onRegisterClick}
+              className="bg-gradient-to-r from-[#00E5FF] to-[#00BFFF] text-black font-bold px-8 py-6 rounded-full text-lg hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+              size="lg"
+            >
+              Inizia La Tua M1SSION
+            </Button>
           </div>
         </div>
       </section>
