@@ -6,6 +6,7 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
+import PostLoginTransition from "@/components/transitions/PostLoginTransition";
 import { useAuth } from "@/hooks/use-auth";
 
 // Public routes
@@ -68,6 +69,7 @@ const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
+        <PostLoginTransition>
         <Routes>
             {/* Landing page routing - Fixed for iOS */}
             <Route 
@@ -270,6 +272,7 @@ const AppRoutes: React.FC = () => {
             {/* 404 route */}
             <Route path="*" element={<NotFound />} />
         </Routes>
+        </PostLoginTransition>
       </IOSSafeAreaOverlay>
     </ErrorBoundary>
   );

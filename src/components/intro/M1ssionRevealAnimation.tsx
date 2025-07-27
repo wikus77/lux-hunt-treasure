@@ -40,13 +40,13 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
         setCurrentText('M1SSION');
         setShowFinal(true);
         
-        // Show "IT IS POSSIBLE" after 0.8s
+        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 1.6s)
         setTimeout(() => setShowSlogan(true), 800);
         
-        // Show trademark after 1.3s
+        // Show trademark after 1.3s (cumulative: 2.1s)  
         setTimeout(() => setShowTrademark(true), 1300);
         
-        // Auto redirect after 2.5s
+        // Auto redirect after 2.5s (cumulative: 3.3s)
         setTimeout(() => onComplete(), 2500);
       }
     };
