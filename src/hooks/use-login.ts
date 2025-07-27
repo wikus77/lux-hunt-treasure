@@ -116,10 +116,15 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // Force redirect to home after successful login
-      console.log('🚀 LOGIN SUCCESS - Forcing redirect to /home');
+      // ✅ Phase 3 passed successfully - Login completed
+      console.log('✅ Phase 3 passed successfully - Login successful, user authenticated');
+      
+      // Clear the post-login intro flag to ensure it shows
+      sessionStorage.removeItem("hasSeenPostLoginIntro");
+      
+      // The router will handle showing the M1SSION animation before redirecting to home
       setTimeout(() => {
-        navigate('/home');
+        navigate('/');
         // Dispatch auth success event
         const event = new CustomEvent('auth-success');
         window.dispatchEvent(event);

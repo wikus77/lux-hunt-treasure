@@ -312,18 +312,24 @@ const IndexContent = ({
             </p>
             
             <div className="space-y-4">
-              <p className="text-yellow-400 text-lg font-semibold">
-                🔒 Registrazioni chiuse
+              <p className="text-green-400 text-lg font-semibold">
+                STARTS ON AUGUST 19
               </p>
               <p className="text-white/60 text-sm">
-                Le registrazioni sono temporaneamente sospese in preparazione al lancio.
+                Registrati ora per accedere alla missione
               </p>
-              <Button 
-                className="w-full bg-gray-600 text-white font-bold py-3 cursor-not-allowed opacity-60"
-                disabled
-              >
-                REGISTRAZIONI CHIUSE
-              </Button>
+              <div className="grid grid-cols-2 gap-3">
+                <Link to="/login">
+                  <Button className="w-full bg-gradient-to-r from-cyan-400 to-blue-600 text-black font-bold py-3">
+                    ACCEDI
+                  </Button>
+                </Link>
+                <Link to="/register">
+                  <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-3">
+                    REGISTRATI
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>

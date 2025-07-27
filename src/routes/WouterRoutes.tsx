@@ -25,6 +25,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import PostLoginMissionIntro from "@/components/auth/PostLoginMissionIntro";
 
 import Terms from "@/pages/Terms";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
@@ -42,6 +43,15 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
+  
+  // Check if user just logged in and needs to see the M1SSION animation
+  const justLoggedIn = isAuthenticated && !sessionStorage.getItem("hasSeenPostLoginIntro");
+  
+  // Show post-login animation if user just authenticated
+  if (justLoggedIn && !isLoading) {
+    console.log("✅ Phase 3 passed successfully - User just logged in, showing M1SSION animation");
+    return <PostLoginMissionIntro />;
+  }
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 

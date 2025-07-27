@@ -14,6 +14,7 @@ import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
+import M1ssionFlowDebugger from "./components/debug/M1ssionFlowDebugger";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
@@ -70,6 +71,7 @@ function App() {
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
+            <M1ssionFlowDebugger />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>

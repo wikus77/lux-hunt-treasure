@@ -37,12 +37,14 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     try {
       // Solo lato client dopo montaggio del componente
       if (typeof window !== 'undefined') {
-        // Force the intro to show every time for now (for testing)
-        try {
-          localStorage.removeItem("hasSeenIntro");
-        } catch (e) {
-          console.warn("Non è stato possibile accedere a localStorage, ignoriamo:", e);
+        // Check if user has seen the intro before
+        const hasSeenIntro = localStorage.getItem("hasSeenIntro");
+        if (hasSeenIntro === "true") {
+          console.log("✅ Phase 1 passed successfully - User has seen intro, skipping laser reveal");
+          handleIntroComplete();
+          return;
         }
+        console.log("✅ Phase 1 passed successfully - First time user, showing laser intro");
         
         setHasCheckedStorage(true);
         
