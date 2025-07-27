@@ -116,10 +116,11 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // Force redirect to home after successful login
-      console.log('🚀 LOGIN SUCCESS - Forcing redirect to /home');
+      // Force redirect to mission intro after successful login
+      console.log('🚀 LOGIN SUCCESS - Redirecting to mission intro animation');
+      sessionStorage.removeItem("hasSeenPostLoginIntro");
       setTimeout(() => {
-        navigate('/home');
+        navigate('/mission-intro');
         // Dispatch auth success event
         const event = new CustomEvent('auth-success');
         window.dispatchEvent(event);
