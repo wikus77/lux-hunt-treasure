@@ -25,7 +25,6 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
-import PostLoginMissionAnimation from "@/components/auth/PostLoginMissionAnimation";
 
 import Terms from "@/pages/Terms";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
@@ -64,16 +63,7 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Post-login mission animation route */}
-          <Route path="/mission-intro">
-            {isAuthenticated ? (
-              <PostLoginMissionAnimation />
-            ) : (
-              <Login />
-            )}
-          </Route>
-          
-          {/* Landing page - Show Index for anonymous users */}
+          {/* Landing page - FIXED: Always show LandingPage to anonymous users */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">

@@ -107,21 +107,17 @@ export const useRegistration = () => {
           // Non bloccare il flusso se le notifiche falliscono
         }
 
-        console.log('✅ Phase 3 passed successfully - Registration successful');
-        
         toast.success("Registrazione completata!", {
-          description: "Controlla la tua email per il codice agente."
+          description: "Controlla la tua email per il codice agente. Ora scegli il tuo piano di abbonamento."
         });
 
-        // Clear the post-login intro flag so animation shows if user gets auto-logged in
-        sessionStorage.removeItem("hasSeenPostLoginIntro");
-        
+        // Dopo registrazione successful, invia notifica e vai agli abbonamenti
         console.log('📧 Inviando notifiche post-registrazione...');
         
-        // Navigate to mission intro route if authenticated, otherwise to choose plan
-        setTimeout(() => {
-          navigate("/choose-plan");
-        }, 1500);
+          // Reindirizza alla selezione piano abbonamento
+          setTimeout(() => {
+            navigate("/choose-plan");
+          }, 1500);
         return;
       }
 
@@ -173,19 +169,15 @@ export const useRegistration = () => {
             console.error('⚠️ Errore invio notifiche bypass:', notificationError);
           }
           
-          console.log('✅ Phase 3 passed successfully - Registration bypass successful');
-          
           toast.success("Registrazione completata!", {
-            description: "Controlla la tua email per il codice agente.",
+            description: "Controlla la tua email per il codice agente. Ora scegli il tuo piano di abbonamento.",
             duration: 4000
           });
           
-          // Clear the post-login intro flag  
-          sessionStorage.removeItem("hasSeenPostLoginIntro");
-          
+          // Dopo registrazione bypass successful, invia notifica e vai agli abbonamenti
           console.log('📧 Inviando notifiche post-registrazione bypass...');
           
-          // Navigate to choose plan
+          // Reindirizza alla selezione piano abbonamento
           setTimeout(() => {
             navigate("/choose-plan");
           }, 1500);

@@ -116,16 +116,10 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // Login successful
-      console.log('✅ Phase 3 passed - Login success, playing MissionIntro');
-      
-      // Clear post-login intro flag to ensure animation plays
-      sessionStorage.removeItem("hasSeenPostLoginIntro");
-      
-      // Navigate to mission intro animation
+      // Force redirect to home after successful login
+      console.log('🚀 LOGIN SUCCESS - Forcing redirect to /home');
       setTimeout(() => {
-        navigate('/mission-intro');
-        
+        navigate('/home');
         // Dispatch auth success event
         const event = new CustomEvent('auth-success');
         window.dispatchEvent(event);
