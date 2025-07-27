@@ -12,6 +12,9 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
   const [showFinal, setShowFinal] = useState(false);
   const [showSlogan, setShowSlogan] = useState(false);
   const [showTrademark, setShowTrademark] = useState(false);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+
+  console.log("📺 MissionIntro montata");
 
   // Characters for random generation
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -25,29 +28,41 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
   };
 
   useEffect(() => {
+    console.log("🎬 Inizializzazione sequenza animazione M1SSION");
     let animationFrame: number;
     let startTime = Date.now();
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
       
-      if (elapsed < 800) {
-        // Random text phase (0.8s)
+      if (elapsed < 1000) {
+        // Random text phase (1s)
         setCurrentText(generateRandomText());
         animationFrame = requestAnimationFrame(animate);
-      } else if (elapsed >= 800 && !showFinal) {
+      } else if (elapsed >= 1000 && !showFinal) {
         // Show final M1SSION
+        console.log("🎯 Generazione finale M1SSION");
         setCurrentText('M1SSION');
         setShowFinal(true);
         
-        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 1.6s)
-        setTimeout(() => setShowSlogan(true), 800);
+        // Show "IT IS POSSIBLE" after 1s (cumulative: 2s)
+        setTimeout(() => {
+          console.log("💫 Mostrando 'IT IS POSSIBLE'");
+          setShowSlogan(true);
+        }, 1000);
         
-        // Show trademark after 1.3s (cumulative: 2.1s)  
-        setTimeout(() => setShowTrademark(true), 1300);
+        // Show trademark after 1.8s (cumulative: 2.8s)  
+        setTimeout(() => {
+          console.log("™️ Mostrando trademark");
+          setShowTrademark(true);
+        }, 1800);
         
-        // Auto redirect after 2.5s (cumulative: 3.3s)
-        setTimeout(() => onComplete(), 2500);
+        // Mark animation as complete after 3.5s (cumulative: 4.5s)
+        setTimeout(() => {
+          console.log("🏁 Animazione completata, sto andando in Home");
+          setIsAnimationComplete(true);
+          onComplete();
+        }, 3500);
       }
     };
     
@@ -58,14 +73,14 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
         cancelAnimationFrame(animationFrame);
       }
     };
-  }, [onComplete, showFinal]);
+  }, [onComplete, showFinal, isAnimationComplete]);
 
   return (
     <div className="fixed inset-0 z-[999] bg-black flex items-center justify-center">
       <div className="text-center">
         {/* M1SSION Text */}
         <motion.h1 
-          className="text-6xl md:text-8xl font-technovier font-bold mb-4"
+          className="text-6xl md:text-8xl font-technovier font-normal mb-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}

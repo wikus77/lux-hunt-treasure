@@ -32,6 +32,7 @@ function App() {
 
   const handleAnimationComplete = () => {
     console.log("✅ M1SSION INTRO ESEGUITA - Animation completed, navigating to home");
+    console.log("🚫 Blocchi Home disattivati");
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem("hasSeenIntro", "true");
@@ -41,8 +42,11 @@ function App() {
     }
     setShowM1ssionAnimation(false);
     setJustLoggedIn(false);
-    // Navigate to home after animation
-    window.location.href = '/home';
+    
+    // Use timeout to ensure state updates before navigation
+    setTimeout(() => {
+      window.location.href = '/home';
+    }, 100);
   };
   
   const handleAuthenticated = (userId: string) => {
