@@ -16,21 +16,10 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
   // Characters for random generation
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   
-  const finalText = 'M1SSION';
-  
-  // Generate text that progressively converges to M1SSION
-  const generateProgressiveText = (elapsed: number) => {
-    return finalText.split('').map((char, index) => {
-      // Always keep M1 fixed
-      if (index === 0 || index === 1) return char;
-      
-      // Progressive convergence - each letter locks in over time
-      const lockTime = 200 + (index - 2) * 100; // Letters lock progressively
-      if (elapsed > lockTime) {
-        return char; // Lock this letter
-      }
-      
-      // Still randomizing
+  // Generate random text
+  const generateRandomText = () => {
+    return 'M1SSION'.split('').map((char, index) => {
+      if (index === 0 || index === 1) return char; // Keep M1
       return chars[Math.floor(Math.random() * chars.length)];
     }).join('');
   };
@@ -42,26 +31,23 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
     const animate = () => {
       const elapsed = Date.now() - startTime;
       
-      if (elapsed < 1200) {
-        // Progressive convergence phase (1.2s)
-        setCurrentText(generateProgressiveText(elapsed));
+      if (elapsed < 800) {
+        // Random text phase (0.8s)
+        setCurrentText(generateRandomText());
         animationFrame = requestAnimationFrame(animate);
-      } else if (elapsed >= 1200 && !showFinal) {
-        // Ensure final M1SSION is set
+      } else if (elapsed >= 800 && !showFinal) {
+        // Show final M1SSION
         setCurrentText('M1SSION');
         setShowFinal(true);
         
-        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 2.0s)
+        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 1.6s)
         setTimeout(() => setShowSlogan(true), 800);
         
-        // Show trademark after 1.3s (cumulative: 2.5s)  
+        // Show trademark after 1.3s (cumulative: 2.1s)  
         setTimeout(() => setShowTrademark(true), 1300);
         
-        // Auto redirect after 4s total (cumulative: 4.0s) - longer pause for visibility
-        setTimeout(() => {
-          console.log("🎬 M1SSION ANIMATION COMPLETE - Redirecting to /home");
-          onComplete();
-        }, 4000);
+        // Auto redirect after 2.5s (cumulative: 3.3s)
+        setTimeout(() => onComplete(), 2500);
       }
     };
     
@@ -79,8 +65,7 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
       <div className="text-center">
         {/* M1SSION Text */}
         <motion.h1 
-          className="text-6xl md:text-8xl font-technovier font-normal mb-4"
-          style={{ fontWeight: 400 }}
+          className="text-6xl md:text-8xl font-technovier font-bold mb-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}

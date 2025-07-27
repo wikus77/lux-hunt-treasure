@@ -16,7 +16,6 @@ import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import M1ssionRevealAnimation from "./components/intro/M1ssionRevealAnimation";
 import { useState, useEffect } from "react";
-import { useWouterNavigation } from "./hooks/useWouterNavigation";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
@@ -24,38 +23,82 @@ function App() {
   console.log("🚀 App component rendering...");
   console.log("🔍 App mount - checking for potential reload loops");
   
-  const { navigate } = useWouterNavigation();
-  
   // M1SSION Post-Login Animation State
   const [showM1ssionAnimation, setShowM1ssionAnimation] = useState(false);
-  const [justAuthenticated, setJustAuthenticated] = useState(false);
+  const [animationChecked, setAnimationChecked] = useState(false);
   
   // Initialize push notification processor
   usePushNotificationProcessor();
 
-  // Check for post-login animation trigger  
+  // Check for post-login animation need
   useEffect(() => {
-    if (justAuthenticated) {
-      const hasSeenAnimation = sessionStorage.getItem("m1ssionPostLoginAnimationShown");
-      
-      console.log("🎬 POST-LOGIN ANIMATION CHECK:", {
-        justAuthenticated,
-        hasSeenAnimation,
-        shouldShow: !hasSeenAnimation
-      });
-      
-      if (!hasSeenAnimation) {
-        console.log("🎬 ✅ TRIGGERING M1SSION ANIMATION - POST LOGIN");
-        setShowM1ssionAnimation(true);
-      } else {
-        console.log("🎬 ❌ SKIPPING ANIMATION - Already seen this session");
-        setJustAuthenticated(false);
+    console.log("🎬 CHECKING M1SSION ANIMATION CONDITION...");
+    
+    const checkAnimationCondition = () => {
+      try {
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const hasSeenAnimation = sessionStorage.getItem("m1ssionPostLoginAnimationShown");
+          const isHomePage = currentPath === '/home';
+          
+          console.log("🎬 Animation check:", {
+            currentPath,
+            hasSeenAnimation,
+            isHomePage,
+            shouldShow: isHomePage && !hasSeenAnimation
+          });
+          
+          // FORCE SHOW ANIMATION CONDITIONS:
+          // 1. Must be on /home page
+          // 2. Animation flag not set in sessionStorage
+          // 3. OR if user just navigated to home (to catch redirects)
+          if (isHomePage && !hasSeenAnimation) {
+            console.log("🎬 ✅ FORCING M1SSION ANIMATION SHOW - CONDITIONS MET");
+            setShowM1ssionAnimation(true);
+          } else {
+            console.log("🎬 ❌ SKIPPING M1SSION ANIMATION", { 
+              reason: hasSeenAnimation ? 'already_shown_in_session' : 'not_home_page',
+              currentPath,
+              hasSeenAnimation: !!hasSeenAnimation
+            });
+          }
+          
+          setAnimationChecked(true);
+        }
+      } catch (error) {
+        console.error("🎬 Error checking animation condition:", error);
+        setAnimationChecked(true);
       }
-    }
-  }, [justAuthenticated]);
+    };
+
+    // Check immediately and also on path changes
+    checkAnimationCondition();
+    
+    // Listen for route changes (wouter doesn't have built-in listener)
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = function() {
+      originalPushState.apply(window.history, arguments);
+      setTimeout(checkAnimationCondition, 100);
+    };
+    
+    window.history.replaceState = function() {
+      originalReplaceState.apply(window.history, arguments);
+      setTimeout(checkAnimationCondition, 100);
+    };
+    
+    window.addEventListener('popstate', checkAnimationCondition);
+    
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener('popstate', checkAnimationCondition);
+    };
+  }, []);
 
   const handleAnimationComplete = () => {
-    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and redirecting");
+    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and hiding");
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem("m1ssionPostLoginAnimationShown", "true");
@@ -63,38 +106,24 @@ function App() {
     } catch (error) {
       console.error("🎬 Error setting animation completion flag:", error);
     }
-    
-    // Reset states BEFORE navigating to prevent loops
     setShowM1ssionAnimation(false);
-    setJustAuthenticated(false);
-    
-    // Use wouter navigation instead of window.location to prevent reload
-    setTimeout(() => {
-      console.log("🎬 Navigating to /home via wouter");
-      navigate('/home');
-    }, 100);
   };
   
   const handleAuthenticated = (userId: string) => {
     console.log("✅ APP LEVEL - User authenticated:", userId);
     
-    // Trigger post-login animation
+    // Reset animation flag on successful authentication
     try {
       if (typeof window !== 'undefined') {
         const currentFlag = sessionStorage.getItem("m1ssionPostLoginAnimationShown");
         console.log("🎬 AUTH SUCCESS - Current animation flag:", currentFlag);
         
-        if (!currentFlag) {
-          console.log("🎬 AUTH SUCCESS - Triggering post-login animation");
-          setJustAuthenticated(true);
-        } else {
-          console.log("🎬 AUTH SUCCESS - Animation already shown this session, redirecting to home");
-          setTimeout(() => navigate('/home'), 100);
-        }
+        // Clear the flag so animation can show
+        sessionStorage.removeItem("m1ssionPostLoginAnimationShown");
+        console.log("🎬 AUTH SUCCESS - Animation flag cleared, ready to show on /home");
       }
     } catch (error) {
-      console.error("🎬 Error handling authentication:", error);
-      setTimeout(() => navigate('/home'), 100);
+      console.error("🎬 Error clearing animation flag on auth:", error);
     }
   };
   
@@ -107,11 +136,13 @@ function App() {
   };
   
   
-  // Show M1SSION animation if triggered by login
-  if (showM1ssionAnimation) {
-    console.log("🎬 RENDERING M1SSION POST-LOGIN ANIMATION OVERLAY");
+  // Show M1SSION animation if conditions are met
+  if (animationChecked && showM1ssionAnimation) {
+    console.log("🎬 RENDERING M1SSION ANIMATION OVERLAY");
     return <M1ssionRevealAnimation onComplete={handleAnimationComplete} />;
   }
+  
+  console.log("🎬 RENDERING NORMAL APP (animation check complete)");
   
   return (
     <ErrorBoundary fallback={
