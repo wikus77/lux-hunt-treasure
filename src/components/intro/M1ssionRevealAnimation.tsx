@@ -31,23 +31,23 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
     const animate = () => {
       const elapsed = Date.now() - startTime;
       
-      if (elapsed < 800) {
-        // Random text phase (0.8s)
+      if (elapsed < 1200) {
+        // Random text phase (1.2s - slower)
         setCurrentText(generateRandomText());
         animationFrame = requestAnimationFrame(animate);
-      } else if (elapsed >= 800 && !showFinal) {
+      } else if (elapsed >= 1200 && !showFinal) {
         // Show final M1SSION
         setCurrentText('M1SSION');
         setShowFinal(true);
         
-        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 1.6s)
+        // Show "IT IS POSSIBLE" after 0.8s (cumulative: 2.0s)
         setTimeout(() => setShowSlogan(true), 800);
         
-        // Show trademark after 1.3s (cumulative: 2.1s)  
+        // Show trademark after 1.3s (cumulative: 2.5s)  
         setTimeout(() => setShowTrademark(true), 1300);
         
-        // Auto redirect after 2.5s (cumulative: 3.3s)
-        setTimeout(() => onComplete(), 2500);
+        // Auto redirect after 3.5s (cumulative: 4.7s) - longer delay
+        setTimeout(() => onComplete(), 3500);
       }
     };
     
@@ -65,10 +65,10 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
       <div className="text-center">
         {/* M1SSION Text */}
         <motion.h1 
-          className="text-6xl md:text-8xl font-technovier font-bold mb-4"
+          className="text-6xl md:text-8xl font-technovier font-normal mb-4"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
           <span className="text-cyan-400">M1</span>
           <span className="text-white">
