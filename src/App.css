@@ -19,10 +19,25 @@ html, body {
   background-image: radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%);
   background-attachment: fixed;
   color: white;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
   overscroll-behavior-x: none;
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
+  touch-action: manipulation;
+}
+
+/* PWA STANDALONE MODE FIXES */
+* {
+  box-sizing: border-box;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Landing page inspired animations */

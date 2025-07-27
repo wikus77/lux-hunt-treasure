@@ -20,7 +20,6 @@ const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   
   // Routes that should hide navigation
   const hideNavigationRoutes = [
-    '/',
     '/login',
     '/register',
     '/auth',
