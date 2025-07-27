@@ -32,31 +32,29 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     }
   }, [introCompleted, pageLoaded]);
   
-  // MIGLIORAMENTO: Verifica localStorage in modo sicuro con gestione errori
+  // FORCE LASER INTRO TO SHOW - Check localStorage properly
   useEffect(() => {
+    console.log("🔍 CHECKING LASER INTRO STATE");
     try {
-      // Solo lato client dopo montaggio del componente
       if (typeof window !== 'undefined') {
-        // Force the intro to show every time for now (for testing)
-        try {
-          localStorage.removeItem("hasSeenIntro");
-        } catch (e) {
-          console.warn("Non è stato possibile accedere a localStorage, ignoriamo:", e);
+        const hasSeenLaserIntro = localStorage.getItem("hasSeenLaserIntro");
+        console.log("🎬 hasSeenLaserIntro flag:", hasSeenLaserIntro);
+        
+        if (hasSeenLaserIntro === "true") {
+          console.log("⏭️ SKIPPING LASER INTRO - Already seen");
+          setIntroCompleted(true);
+          handleIntroComplete();
+        } else {
+          console.log("🎯 WILL SHOW LASER INTRO - First time or flag cleared");
+          setIntroCompleted(false);
         }
         
         setHasCheckedStorage(true);
-        
-        // Uncommenta questa parte per abilitare il salt dell'intro per gli utenti di ritorno
-        // const hasSeenIntro = localStorage.getItem("hasSeenIntro");
-        // if (hasSeenIntro === "true") {
-        //   console.log("User has already seen the intro, skipping...");
-        //   handleIntroComplete();
-        // }
-        // setHasCheckedStorage(true);
       }
     } catch (error) {
       console.error("Error accessing localStorage:", error);
-      // In caso di errore con localStorage, consideriamo come check eseguito
+      // In case of error, show intro to be safe
+      setIntroCompleted(false);
       setHasCheckedStorage(true);
       setError(error as Error);
     }
@@ -81,18 +79,20 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   }, [pageLoaded]);
 
   const handleIntroComplete = () => {
+    console.log("🏁 LASER INTRO COMPLETED");
     try {
-      // Cancelliamo il timeout di sicurezza se esiste
+      // Clear safety timeout
       if (timeoutId) window.clearTimeout(timeoutId);
       
       setIntroCompleted(true);
       
-      // Store that the user has seen the intro
+      // Store that user has seen the LASER intro specifically
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem("hasSeenIntro", "true");
+          localStorage.setItem("hasSeenLaserIntro", "true");
+          console.log("💾 hasSeenLaserIntro flag set to true");
         } catch (e) {
-          console.warn("Non è stato possibile salvare su localStorage, ignoriamo:", e);
+          console.warn("Cannot save to localStorage:", e);
         }
       }
       
@@ -124,8 +124,9 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     return <LoadingScreen />;
   }
   
-  // MIGLIORAMENTO: Rendering più sicuro dell'intro
+  // Show laser intro if not completed
   if (!introCompleted) {
+    console.log("🎬 RENDERING LASER INTRO ANIMATION");
     return (
       <div className="fixed inset-0 z-[9999] bg-black">
         <IntroAnimationOptions 

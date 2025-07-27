@@ -18,6 +18,7 @@ import {
   useHealthMonitor,
   useIndexHandlers
 } from "./index/hooks";
+import ForceIntroReset from "@/components/debug/ForceIntroReset";
 
 const Index = () => {
   console.log("✅ LANDING MOUNTED - Index component rendering - PUBLIC LANDING PAGE - BY JOSEPH MULÈ");
@@ -61,6 +62,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
+      <ForceIntroReset />
       <CookiebotInit />
       
       <LoadingManager onLoaded={handleLoaded} />

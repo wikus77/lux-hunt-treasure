@@ -30,13 +30,13 @@ function App() {
   usePushNotificationProcessor();
 
   const handleAnimationComplete = () => {
-    console.log("🏁 Redirect a /home in corso - Animation completed");
+    console.log("🏁 Redirecting to /home... - Animation completed");
     console.log("🚫 Blocchi Home disattivati");
     
     try {
       if (typeof window !== 'undefined') {
-        sessionStorage.setItem("hasSeenIntro", "true");
-        console.log("💾 hasSeenIntro flag set to true");
+        sessionStorage.setItem("hasSeenPostLoginIntro", "true");
+        console.log("💾 hasSeenPostLoginIntro flag set to true");
       }
     } catch (error) {
       console.error("🎬 Error setting animation completion flag:", error);
@@ -52,18 +52,18 @@ function App() {
   };
   
   const handleAuthenticated = (userId: string) => {
-    console.log("✅ Login completato - User authenticated:", userId);
+    console.log("🔓 Login OK - User authenticated:", userId);
     console.log("🎯 Fresh login detected - triggering M1SSION animation");
     
     // Clear any existing intro flag and trigger animation
     try {
       if (typeof window !== 'undefined') {
-        sessionStorage.removeItem("hasSeenIntro");
-        console.log("🗑️ Cleared hasSeenIntro to ensure animation shows");
+        sessionStorage.removeItem("hasSeenPostLoginIntro");
+        console.log("🗑️ Cleared hasSeenPostLoginIntro to ensure animation shows");
         
         // Trigger animation immediately
         setShowM1ssionAnimation(true);
-        console.log("🎬 Animazione M1SSION avviata");
+        console.log("🎬 M1SSION intro triggered");
       }
     } catch (error) {
       console.error("🎬 Error handling authentication:", error);
