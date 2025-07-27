@@ -14,8 +14,6 @@ import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
-import M1ssionRevealAnimation from "./components/intro/M1ssionRevealAnimation";
-import { useState, useEffect } from "react";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
@@ -23,88 +21,11 @@ function App() {
   console.log("🚀 App component rendering...");
   console.log("🔍 App mount - checking for potential reload loops");
   
-  // M1SSION Post-Login Animation State
-  const [showM1ssionAnimation, setShowM1ssionAnimation] = useState(false);
-  const [animationChecked, setAnimationChecked] = useState(false);
-  
   // Initialize push notification processor
   usePushNotificationProcessor();
-
-  // Check for post-login animation need - only trigger ONCE after authentication
-  useEffect(() => {
-    console.log("🎬 CHECKING M1SSION ANIMATION CONDITION...");
-    
-    // Only check if we haven't already checked and we're not already showing animation
-    if (!animationChecked && !showM1ssionAnimation) {
-      try {
-        if (typeof window !== 'undefined') {
-          const currentPath = window.location.pathname;
-          const hasSeenAnimation = sessionStorage.getItem("m1ssionPostLoginAnimationShown");
-          const isHomePage = currentPath === '/home';
-          
-          console.log("🎬 Animation check:", {
-            currentPath,
-            hasSeenAnimation,
-            isHomePage,
-            shouldShow: isHomePage && !hasSeenAnimation
-          });
-          
-          // ONLY show animation when:
-          // 1. On /home page AND no animation flag exists (fresh login)
-          if (isHomePage && !hasSeenAnimation) {
-            console.log("🎬 ✅ FORCING M1SSION ANIMATION SHOW - POST-LOGIN CONDITIONS MET");
-            setShowM1ssionAnimation(true);
-          } else {
-            console.log("🎬 ❌ SKIPPING M1SSION ANIMATION", { 
-              reason: hasSeenAnimation ? 'already_shown_in_session' : 'not_home_page',
-              currentPath,
-              hasSeenAnimation: !!hasSeenAnimation
-            });
-          }
-          
-          setAnimationChecked(true);
-        }
-      } catch (error) {
-        console.error("🎬 Error checking animation condition:", error);
-        setAnimationChecked(true);
-      }
-    }
-  }, [animationChecked, showM1ssionAnimation]);
-
-  const handleAnimationComplete = () => {
-    console.log("🎬 M1SSION ANIMATION COMPLETED - setting flag and redirecting to /home");
-    try {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem("m1ssionPostLoginAnimationShown", "true");
-        // Navigate to /home after animation
-        window.location.href = '/home';
-      }
-    } catch (error) {
-      console.error("🎬 Error setting animation completion flag:", error);
-    }
-    setShowM1ssionAnimation(false);
-  };
   
   const handleAuthenticated = (userId: string) => {
     console.log("✅ APP LEVEL - User authenticated:", userId);
-    
-    // Reset animation flag on successful authentication and force show
-    try {
-      if (typeof window !== 'undefined') {
-        const currentFlag = sessionStorage.getItem("m1ssionPostLoginAnimationShown");
-        console.log("🎬 AUTH SUCCESS - Current animation flag:", currentFlag);
-        
-        // Clear the flag so animation can show
-        sessionStorage.removeItem("m1ssionPostLoginAnimationShown");
-        console.log("🎬 AUTH SUCCESS - Animation flag cleared, triggering animation immediately");
-        
-        // Force animation to show immediately after login
-        setShowM1ssionAnimation(true);
-        setAnimationChecked(true);
-      }
-    } catch (error) {
-      console.error("🎬 Error clearing animation flag on auth:", error);
-    }
   };
   
   const handleNotAuthenticated = () => {
@@ -114,15 +35,6 @@ function App() {
   const handleEmailNotVerified = () => {
     console.log("📧 APP LEVEL - Email not verified");
   };
-  
-  
-  // Show M1SSION animation if conditions are met
-  if (animationChecked && showM1ssionAnimation) {
-    console.log("🎬 RENDERING M1SSION ANIMATION OVERLAY");
-    return <M1ssionRevealAnimation onComplete={handleAnimationComplete} />;
-  }
-  
-  console.log("🎬 RENDERING NORMAL APP (animation check complete)");
   
   return (
     <ErrorBoundary fallback={
