@@ -35,30 +35,20 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
   // MIGLIORAMENTO: Verifica localStorage in modo sicuro con gestione errori
   useEffect(() => {
     try {
-      // Solo lato client dopo montaggio del componente
       if (typeof window !== 'undefined') {
-        // Check if user has seen the intro before
         const hasSeenIntro = localStorage.getItem("hasSeenIntro");
+        
         if (hasSeenIntro === "true") {
-          console.log("✅ Phase 1 passed successfully - User has seen intro, skipping laser reveal");
+          console.log("[Intro] User has seen laser intro before - skipping to landing");
           handleIntroComplete();
           return;
         }
-        console.log("✅ Phase 1 passed successfully - First time user, showing laser intro");
         
+        console.log("[Intro] First time user - showing laser intro");
         setHasCheckedStorage(true);
-        
-        // Uncommenta questa parte per abilitare il salt dell'intro per gli utenti di ritorno
-        // const hasSeenIntro = localStorage.getItem("hasSeenIntro");
-        // if (hasSeenIntro === "true") {
-        //   console.log("User has already seen the intro, skipping...");
-        //   handleIntroComplete();
-        // }
-        // setHasCheckedStorage(true);
       }
     } catch (error) {
       console.error("Error accessing localStorage:", error);
-      // In caso di errore con localStorage, consideriamo come check eseguito
       setHasCheckedStorage(true);
       setError(error as Error);
     }
@@ -84,17 +74,18 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
 
   const handleIntroComplete = () => {
     try {
-      // Cancelliamo il timeout di sicurezza se esiste
+      // Clear timeout if exists
       if (timeoutId) window.clearTimeout(timeoutId);
       
+      console.log("[Intro] Laser completed - setting intro as seen");
       setIntroCompleted(true);
       
-      // Store that the user has seen the intro
+      // Store that user has seen the intro
       if (typeof window !== 'undefined') {
         try {
           localStorage.setItem("hasSeenIntro", "true");
         } catch (e) {
-          console.warn("Non è stato possibile salvare su localStorage, ignoriamo:", e);
+          console.warn("Could not save to localStorage:", e);
         }
       }
       
@@ -102,14 +93,13 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
       try {
         document.body.style.overflow = "auto";
       } catch (e) {
-        console.warn("Errore nel ripristino dell'overflow, ignoriamo:", e);
+        console.warn("Error restoring overflow:", e);
       }
       
-      // Notify parent component
+      console.log("[Routing] Redirected to landing");
       onIntroComplete();
     } catch (error) {
       console.error("Error in handleIntroComplete:", error);
-      // Forziamo il completamento anche in caso di errore
       onIntroComplete();
     }
   };

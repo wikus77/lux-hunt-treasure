@@ -25,7 +25,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
-import PostLoginMissionIntro from "@/components/auth/PostLoginMissionIntro";
+import PostLoginMissionAnimation from "@/components/auth/PostLoginMissionAnimation";
 
 import Terms from "@/pages/Terms";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
@@ -43,14 +43,6 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
-  
-  console.log('🔍 WOUTER DEBUG - Route evaluation:', {
-    isAuthenticated,
-    isLoading,
-    currentPath: window.location.pathname,
-    hasSeenPostLoginIntro: !!sessionStorage.getItem("hasSeenPostLoginIntro"),
-    timestamp: new Date().toISOString()
-  });
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
@@ -72,16 +64,16 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* POST-LOGIN M1SSION ANIMATION - Special route */}
+          {/* Post-login mission animation route */}
           <Route path="/mission-intro">
             {isAuthenticated ? (
-              <PostLoginMissionIntro />
+              <PostLoginMissionAnimation />
             ) : (
-              <Index />
+              <Login />
             )}
           </Route>
-
-          {/* Landing page - Show Index for non-authenticated users */}
+          
+          {/* Landing page - Show Index for anonymous users */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">

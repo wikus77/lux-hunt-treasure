@@ -4,28 +4,32 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 
 const M1ssionFlowDebugger: React.FC = () => {
-  const resetIntroFlow = () => {
-    console.log("🔄 DEBUGGER: Resetting intro flow for testing");
-    localStorage.removeItem("hasSeenIntro");
-    sessionStorage.removeItem("hasSeenPostLoginIntro");
-    console.log("✅ Phase 1-5 reset complete - Ready for full sequence test");
-    window.location.reload();
+  const resetFullFlow = () => {
+    console.log("🔄 DEBUGGER: Resetting complete M1SSION flow for testing");
+    
+    // Clear all storage
+    localStorage.clear();
+    sessionStorage.clear();
+    
+    console.log("✅ All storage cleared - ready for complete sequence test");
+    console.log("Expected flow: Laser Intro → Landing → Login → Mission Animation → Home");
+    
+    window.location.href = '/';
   };
 
-  const testPostLoginAnimation = () => {
-    console.log("🔄 DEBUGGER: Testing post-login animation");
+  const testLoginFlow = () => {
+    console.log("🔄 DEBUGGER: Testing login flow (skipping intro)");
+    localStorage.setItem("hasSeenIntro", "true");
     sessionStorage.removeItem("hasSeenPostLoginIntro");
     window.location.href = '/';
   };
 
-  const runFullTest = () => {
-    console.log("🔄 DEBUGGER: Starting full 5-phase test sequence");
-    console.log("Phase 1: Laser intro will show on next load");
-    console.log("Phase 2: Landing page with 'STARTS ON AUGUST 19' and login buttons");
-    console.log("Phase 3: Login/Registration functionality");
-    console.log("Phase 4: M1SSION post-login animation");
-    console.log("Phase 5: Redirect to /home");
-    resetIntroFlow();
+  const logCurrentState = () => {
+    console.log("🔍 CURRENT STATE DEBUG:");
+    console.log("- hasSeenIntro:", localStorage.getItem("hasSeenIntro"));
+    console.log("- hasSeenPostLoginIntro:", sessionStorage.getItem("hasSeenPostLoginIntro"));
+    console.log("- Current path:", window.location.pathname);
+    console.log("- User agent:", navigator.userAgent);
   };
 
   // Only show in development
@@ -37,27 +41,24 @@ const M1ssionFlowDebugger: React.FC = () => {
     <div className="fixed bottom-4 left-4 z-50 bg-black/80 p-4 rounded-lg border border-cyan-400">
       <h3 className="text-cyan-400 text-sm font-bold mb-2">M1SSION™ Flow Debugger</h3>
       <div className="space-y-2">
-        <Button 
-          onClick={runFullTest}
-          className="w-full text-xs bg-cyan-500 hover:bg-cyan-600 text-black"
-          size="sm"
+        <button 
+          onClick={resetFullFlow}
+          className="w-full text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
         >
-          Run Full 5-Phase Test
-        </Button>
-        <Button 
-          onClick={resetIntroFlow}
-          className="w-full text-xs bg-yellow-500 hover:bg-yellow-600 text-black"
-          size="sm"
+          🔄 RESET COMPLETE FLOW
+        </button>
+        <button 
+          onClick={testLoginFlow}
+          className="w-full text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded"
         >
-          Reset Intro Flow
-        </Button>
-        <Button 
-          onClick={testPostLoginAnimation}
-          className="w-full text-xs bg-purple-500 hover:bg-purple-600 text-white"
-          size="sm"
+          🔑 Test Login Flow
+        </button>
+        <button 
+          onClick={logCurrentState}
+          className="w-full text-xs bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded"
         >
-          Test Post-Login Animation
-        </Button>
+          📊 Log Current State
+        </button>
       </div>
     </div>
   );
