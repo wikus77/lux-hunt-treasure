@@ -312,18 +312,27 @@ const IndexContent = ({
             </p>
             
             <div className="space-y-4">
-              <p className="text-yellow-400 text-lg font-semibold">
-                🔒 Registrazioni chiuse
+              <p className="text-green-400 text-lg font-semibold">
+                🚀 Registrazione attiva
               </p>
               <p className="text-white/60 text-sm">
-                Le registrazioni sono temporaneamente sospese in preparazione al lancio.
+                Crea il tuo account e inizia la tua M1SSION™
               </p>
-              <Button 
-                className="w-full bg-gray-600 text-white font-bold py-3 cursor-not-allowed opacity-60"
-                disabled
-              >
-                REGISTRAZIONI CHIUSE
-              </Button>
+              <Link to="/register">
+                <Button 
+                  className="w-full bg-gradient-to-r from-[#00E5FF] to-[#008eb3] text-black font-bold py-3 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+                >
+                  REGISTRATI ORA
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button 
+                  variant="outline"
+                  className="w-full border-white/20 text-white hover:bg-white/10"
+                >
+                  Hai già un account? Accedi
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
