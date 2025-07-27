@@ -16,12 +16,15 @@ import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import M1ssionRevealAnimation from "./components/intro/M1ssionRevealAnimation";
 import { useState, useEffect } from "react";
+import { useWouterNavigation } from "./hooks/useWouterNavigation";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
   console.log("🚀 App component rendering...");
   console.log("🔍 App mount - checking for potential reload loops");
+  
+  const { navigate } = useWouterNavigation();
   
   // M1SSION Post-Login Animation State
   const [showM1ssionAnimation, setShowM1ssionAnimation] = useState(false);
@@ -56,14 +59,20 @@ function App() {
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem("m1ssionPostLoginAnimationShown", "true");
-        // Redirect to home after animation
-        window.location.href = '/home';
       }
     } catch (error) {
       console.error("🎬 Error setting animation completion flag:", error);
     }
+    
+    // Reset states BEFORE navigating to prevent loops
     setShowM1ssionAnimation(false);
     setJustAuthenticated(false);
+    
+    // Use wouter navigation instead of window.location to prevent reload
+    setTimeout(() => {
+      console.log("🎬 Navigating to /home via wouter");
+      navigate('/home');
+    }, 100);
   };
   
   const handleAuthenticated = (userId: string) => {
@@ -80,12 +89,12 @@ function App() {
           setJustAuthenticated(true);
         } else {
           console.log("🎬 AUTH SUCCESS - Animation already shown this session, redirecting to home");
-          setTimeout(() => window.location.href = '/home', 100);
+          setTimeout(() => navigate('/home'), 100);
         }
       }
     } catch (error) {
       console.error("🎬 Error handling authentication:", error);
-      setTimeout(() => window.location.href = '/home', 100);
+      setTimeout(() => navigate('/home'), 100);
     }
   };
   
