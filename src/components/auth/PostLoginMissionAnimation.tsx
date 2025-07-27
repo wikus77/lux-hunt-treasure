@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™  
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // 🔐 Codice blindato – Inserimento animazione solo in fase post-login autorizzata
 
 import { useState, useEffect } from 'react';
@@ -6,62 +6,97 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
 const PostLoginMissionAnimation = () => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
   const [showTrademark, setShowTrademark] = useState(false);
+  const [showStartDate, setShowStartDate] = useState(false);
   const { navigate } = useWouterNavigation();
 
   const finalText = 'M1SSION';
+  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   
-  console.log('🎬 [PostLoginMissionAnimation] Component mounted');
+  console.log('🎬 [PostLoginMissionAnimation] Component mounted - Starting numeric reveal');
 
   useEffect(() => {
-    console.log('🎬 [PostLoginMissionAnimation] Starting animation sequence');
+    console.log('🎬 [PostLoginMissionAnimation] Starting M1SSION numeric animation sequence');
     
-    let currentIndex = 0;
-    const interval = setInterval(() => {
-      if (currentIndex < finalText.length) {
-        setDisplayText(finalText.slice(0, currentIndex + 1));
-        currentIndex++;
-      } else {
-        clearInterval(interval);
-        
-        // Show slogan after M1SSION is complete
-        setTimeout(() => {
-          console.log('🎬 [PostLoginMissionAnimation] Showing slogan');
-          setShowSlogan(true);
+    let interval: NodeJS.Timeout;
+    
+    const startAnimation = () => {
+      interval = setInterval(() => {
+        if (currentIndex < finalText.length) {
+          // Create scrambled text with current position being revealed
+          const scrambledText = finalText.split('').map((char, index) => {
+            if (index < currentIndex) {
+              return char; // Already revealed
+            } else if (index === currentIndex) {
+              return char; // Currently being revealed
+            } else {
+              return chars[Math.floor(Math.random() * chars.length)]; // Still scrambling
+            }
+          }).join('');
           
-          // Show trademark after slogan
+          setDisplayText(scrambledText);
+          setCurrentIndex(prev => prev + 1);
+        } else {
+          clearInterval(interval);
+          
+          // Show complete M1SSION first
+          setDisplayText(finalText);
+          
+          // Show slogan after 500ms
           setTimeout(() => {
-            console.log('🎬 [PostLoginMissionAnimation] Showing trademark');
-            setShowTrademark(true);
+            console.log('🎬 [PostLoginMissionAnimation] Showing IT IS POSSIBLE');
+            setShowSlogan(true);
             
-            // Wait 1 second after trademark, then redirect
+            // Show trademark after 1s more
             setTimeout(() => {
-              console.log('🎬 [PostLoginMissionAnimation] Animation complete, redirecting to /home');
-              sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
-              navigate('/home');
+              console.log('🎬 [PostLoginMissionAnimation] Showing trademark');
+              setShowTrademark(true);
+              
+              // Show start date after 500ms more
+              setTimeout(() => {
+                console.log('🎬 [PostLoginMissionAnimation] Showing start date');
+                setShowStartDate(true);
+                
+                // Wait 1.5s more, then redirect (total: ~5.5s)
+                setTimeout(() => {
+                  console.log('🎬 [PostLoginMissionAnimation] Animation complete, setting session storage and redirecting to /home');
+                  sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                  navigate('/home');
+                }, 1500);
+              }, 500);
             }, 1000);
-          }, 1000);
-        }, 500);
-      }
-    }, 300);
+          }, 500);
+        }
+      }, 200); // 200ms per character reveal
+    };
 
-    return () => clearInterval(interval);
+    // Start animation after small delay
+    const startTimer = setTimeout(startAnimation, 300);
+
+    return () => {
+      clearTimeout(startTimer);
+      if (interval) clearInterval(interval);
+    };
   }, [navigate]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="text-center">
+        {/* M1SSION Text with numeric reveal effect */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-8xl md:text-9xl font-orbitron text-white tracking-wider"
-          style={{ fontWeight: 'normal' }}
+          className="text-8xl md:text-9xl font-orbitron text-white tracking-wider mb-6"
+          style={{ fontWeight: 'normal', fontFamily: 'Orbitron, monospace' }}
         >
-          {displayText}
+          <span className="text-[#00D1FF]">M1</span>
+          <span className="text-white">{displayText.slice(2)}</span>
         </motion.div>
         
+        {/* IT IS POSSIBLE */}
         <AnimatePresence>
           {showSlogan && (
             <motion.div
@@ -69,7 +104,7 @@ const PostLoginMissionAnimation = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.8 }}
-              className="mt-6 text-2xl md:text-3xl text-cyan-400 font-orbitron"
+              className="mt-6 text-3xl md:text-4xl text-cyan-400 font-orbitron tracking-widest"
               style={{ fontWeight: 'normal' }}
             >
               IT IS POSSIBLE
@@ -77,6 +112,7 @@ const PostLoginMissionAnimation = () => {
           )}
         </AnimatePresence>
         
+        {/* Trademark */}
         <AnimatePresence>
           {showTrademark && (
             <motion.div
@@ -87,6 +123,21 @@ const PostLoginMissionAnimation = () => {
               style={{ fontWeight: 'normal' }}
             >
               ™
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Start Date */}
+        <AnimatePresence>
+          {showStartDate && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mt-8 text-xl text-yellow-400 font-orbitron tracking-wider"
+              style={{ fontWeight: 'normal' }}
+            >
+              Inizio: 19-06-25
             </motion.div>
           )}
         </AnimatePresence>
