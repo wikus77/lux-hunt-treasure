@@ -7,7 +7,6 @@ import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
-import WouterPostLoginTransition from "@/components/transitions/WouterPostLoginTransition";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 
 // Static imports for Capacitor iOS compatibility
@@ -63,8 +62,7 @@ const WouterRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
-        <WouterPostLoginTransition>
-          <Switch>
+        <Switch>
           {/* Landing page - FIXED: Always show LandingPage to anonymous users */}
           <Route path="/">
             {isLoading ? (
@@ -235,8 +233,7 @@ const WouterRoutes: React.FC = () => {
               </div>
             </GlobalLayout>
           </Route>
-          </Switch>
-        </WouterPostLoginTransition>
+        </Switch>
       </IOSSafeAreaOverlay>
     </ErrorBoundary>
   );
