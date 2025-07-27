@@ -30,7 +30,7 @@ function App() {
   usePushNotificationProcessor();
 
   const handleAnimationComplete = () => {
-    console.log("🏁 M1SSION INTRO COMPLETED - Setting completion flag and navigating to home");
+    console.log("🏁 Redirect a /home in corso - Animation completed");
     console.log("🚫 Blocchi Home disattivati");
     
     try {
@@ -52,7 +52,7 @@ function App() {
   };
   
   const handleAuthenticated = (userId: string) => {
-    console.log("✅ APP LEVEL - User authenticated:", userId);
+    console.log("✅ Login completato - User authenticated:", userId);
     console.log("🎯 Fresh login detected - triggering M1SSION animation");
     
     // Clear any existing intro flag and trigger animation
@@ -63,7 +63,7 @@ function App() {
         
         // Trigger animation immediately
         setShowM1ssionAnimation(true);
-        console.log("🎬 M1SSION animation triggered after successful authentication");
+        console.log("🎬 Animazione M1SSION avviata");
       }
     } catch (error) {
       console.error("🎬 Error handling authentication:", error);
