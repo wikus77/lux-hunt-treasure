@@ -1,11 +1,8 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
-  ],
   "redirects": [
     {
-      "source": "https://www.m1ssion.com/:path*",
-      "destination": "https://m1ssion.com/:path*",
+      "source": "/:path*",
+      "destination": "https://m1ssion.vercel.app/:path*",
       "permanent": true
     }
   ],
