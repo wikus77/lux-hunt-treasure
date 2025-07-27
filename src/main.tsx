@@ -16,7 +16,7 @@ setupProductionLogging();
 enableProductionOptimizations();
 
 // Performance monitoring in development
-if (import.meta.env.DEV) {
+if (typeof window !== 'undefined' && import.meta.env?.DEV) {
   setTimeout(() => monitorPerformance(), 2000);
 }
 
