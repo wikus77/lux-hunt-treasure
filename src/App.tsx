@@ -25,49 +25,77 @@ function App() {
   
   // M1SSION Post-Login Animation State
   const [showM1ssionAnimation, setShowM1ssionAnimation] = useState(false);
-  const [justLoggedIn, setJustLoggedIn] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const { isAuthenticated, isLoading } = useUnifiedAuth();
   
   // Initialize push notification processor
   usePushNotificationProcessor();
+  
+  // Check authentication status and animation need
+  useEffect(() => {
+    console.log("🔐 AUTHENTICATION CHECK - Starting auth verification");
+    
+    if (isLoading) {
+      console.log("🔄 Auth still loading...");
+      return;
+    }
+    
+    if (!isAuthChecked) {
+      setIsAuthChecked(true);
+      console.log("✅ Auth check completed", { isAuthenticated });
+      
+      if (isAuthenticated) {
+        const hasSeenIntro = sessionStorage.getItem("hasSeenIntro");
+        console.log("🎬 POST-LOGIN ANIMATION CHECK", { 
+          isAuthenticated, 
+          hasSeenIntro,
+          shouldShowAnimation: !hasSeenIntro 
+        });
+        
+        if (!hasSeenIntro) {
+          console.log("🎯 TRIGGERING M1SSION ANIMATION - User authenticated, no intro seen");
+          setShowM1ssionAnimation(true);
+        } else {
+          console.log("⏭️ SKIPPING M1SSION ANIMATION - Already seen in session");
+        }
+      }
+    }
+  }, [isAuthenticated, isLoading, isAuthChecked]);
 
   const handleAnimationComplete = () => {
-    console.log("✅ M1SSION INTRO ESEGUITA - Animation completed, navigating to home");
+    console.log("🏁 M1SSION INTRO COMPLETED - Setting completion flag and navigating to home");
     console.log("🚫 Blocchi Home disattivati");
+    
     try {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem("hasSeenIntro", "true");
+        console.log("💾 hasSeenIntro flag set to true");
       }
     } catch (error) {
       console.error("🎬 Error setting animation completion flag:", error);
     }
-    setShowM1ssionAnimation(false);
-    setJustLoggedIn(false);
     
-    // Use timeout to ensure state updates before navigation
+    setShowM1ssionAnimation(false);
+    
+    // Use timeout to ensure clean state transition
     setTimeout(() => {
+      console.log("🏠 Navigating to /home after animation completion");
       window.location.href = '/home';
-    }, 100);
+    }, 200);
   };
   
   const handleAuthenticated = (userId: string) => {
     console.log("✅ APP LEVEL - User authenticated:", userId);
+    console.log("🎯 Fresh login detected - will trigger animation on next render");
     
-    // Check if animation should be shown
+    // Clear any existing intro flag to ensure animation shows for fresh logins
     try {
       if (typeof window !== 'undefined') {
-        const hasSeenIntro = sessionStorage.getItem("hasSeenIntro");
-        console.log("🎬 AUTH SUCCESS - Animation flag check:", hasSeenIntro);
-        
-        if (!hasSeenIntro) {
-          console.log("🎬 ✅ TRIGGERING M1SSION ANIMATION - User just logged in");
-          setJustLoggedIn(true);
-          setShowM1ssionAnimation(true);
-        } else {
-          console.log("🎬 ❌ SKIPPING M1SSION ANIMATION - Already seen in this session");
-        }
+        sessionStorage.removeItem("hasSeenIntro");
+        console.log("🗑️ Cleared hasSeenIntro to ensure animation shows");
       }
     } catch (error) {
-      console.error("🎬 Error checking animation flag on auth:", error);
+      console.error("🎬 Error clearing animation flag:", error);
     }
   };
   
@@ -80,10 +108,44 @@ function App() {
   };
   
   
-  // Show M1SSION animation if user just logged in and hasn't seen it
-  if (justLoggedIn && showM1ssionAnimation) {
-    console.log("🎬 RENDERING M1SSION ANIMATION OVERLAY");
+  // Manual trigger for testing - clear sessionStorage to see animation again
+  useEffect(() => {
+    // If we're on /home and user wants to test animation, clear the flag
+    const currentPath = window.location.pathname;
+    if (currentPath === '/home' && isAuthenticated) {
+      // Add a manual way to trigger animation for testing
+      const testTrigger = () => {
+        if (confirm("Vuoi vedere l'animazione M1SSION?")) {
+          sessionStorage.removeItem("hasSeenIntro");
+          window.location.reload();
+        }
+      };
+      
+      // Add keyboard shortcut for testing (Ctrl+M)
+      const handleKeyPress = (e: KeyboardEvent) => {
+        if (e.ctrlKey && e.key === 'm') {
+          testTrigger();
+        }
+      };
+      
+      window.addEventListener('keydown', handleKeyPress);
+      return () => window.removeEventListener('keydown', handleKeyPress);
+    }
+  }, [isAuthenticated]);
+
+  // Show M1SSION animation if user is authenticated and hasn't seen intro
+  if (isAuthChecked && showM1ssionAnimation) {
+    console.log("🎬 RENDERING M1SSION ANIMATION OVERLAY - BLOCKING ALL OTHER CONTENT");
     return <M1ssionRevealAnimation onComplete={handleAnimationComplete} />;
+  }
+  
+  // Show loading while checking auth
+  if (!isAuthChecked || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-white text-lg">Inizializzazione...</div>
+      </div>
+    );
   }
   
   return (
