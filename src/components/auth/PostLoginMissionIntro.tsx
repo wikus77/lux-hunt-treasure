@@ -16,7 +16,7 @@ const PostLoginMissionIntro = () => {
   const { navigate } = useWouterNavigation();
 
   const finalText = 'M1SSION';
-  const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  // Remove unused chars variable - no random generation needed
   
   console.log('🎬 [PostLoginMissionIntro] ======= STARTING ANIMATION SEQUENCE =======');
   
@@ -122,8 +122,11 @@ const PostLoginMissionIntro = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.8 }}
-              className="mt-6 text-3xl md:text-4xl text-cyan-400 font-orbitron tracking-widest"
-              style={{ fontWeight: 'normal' }}
+              className="mt-6 text-3xl md:text-4xl font-orbitron tracking-widest"
+              style={{ 
+                fontWeight: 'normal',
+                color: '#B8860B' // Dark yellow/gold color for better visibility
+              }}
             >
               IT IS POSSIBLE
             </motion.div>

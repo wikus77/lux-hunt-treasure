@@ -24,12 +24,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   React.useEffect(() => {
     if (!authLoading && !accessLoading) {
       if (!isAuthenticated && location !== '/login') {
+        console.log('🔄 [WouterProtectedRoute] Redirecting to login - user not authenticated');
         setLocation('/login');
       } else if (isAuthenticated && (!subscriptionPlan || subscriptionPlan === '') && location !== '/choose-plan') {
+        console.log('🔄 [WouterProtectedRoute] Redirecting to plan selection - no plan selected');
         setLocation('/choose-plan');
       }
     }
   }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation]);
+
+  // CRITICAL: Add logout state handling to prevent hooks error
+  React.useEffect(() => {
+    // Clear session storage on logout to prevent stale states
+    if (!isAuthenticated && !authLoading) {
+      console.log('🧹 [WouterProtectedRoute] Clearing session storage on logout');
+      sessionStorage.removeItem('hasSeenPostLoginIntro');
+    }
+  }, [isAuthenticated, authLoading]);
 
   // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
   if (user?.email === 'wikus77@hotmail.it') {
