@@ -25,7 +25,6 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
-import PostLoginMissionAnimation from "@/components/auth/PostLoginMissionAnimation";
 
 import Terms from "@/pages/Terms";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
@@ -40,6 +39,7 @@ import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
 import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
 import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
+import MissionIntroPage from "@/pages/MissionIntroPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -64,16 +64,7 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Post-login mission animation route */}
-          <Route path="/mission-intro">
-            {isAuthenticated ? (
-              <PostLoginMissionAnimation />
-            ) : (
-              <Login />
-            )}
-          </Route>
-          
-          {/* Landing page - Show Index for anonymous users */}
+          {/* Landing page - FIXED: Always show LandingPage to anonymous users */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">
@@ -224,6 +215,11 @@ const WouterRoutes: React.FC = () => {
             ) : (
               <Login />
             )}
+          </Route>
+
+          {/* Mission intro route - Post-login animation - NO ProtectedRoute to avoid loops */}
+          <Route path="/mission-intro">
+            <MissionIntroPage />
           </Route>
 
           {/* Auth routes */}

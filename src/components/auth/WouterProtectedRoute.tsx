@@ -17,15 +17,42 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { canAccess, isLoading: accessLoading, subscriptionPlan, accessStartDate, timeUntilAccess } = useAccessControl();
   const [location, setLocation] = useLocation();
 
-  // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
+  // Always call all hooks first - no conditional hook calls
   const user = getCurrentUser();
+
+  // Use effect for navigation to avoid conditional hook usage
+  React.useEffect(() => {
+    if (!authLoading && !accessLoading) {
+      if (!isAuthenticated && location !== '/login') {
+        console.log('🔄 [WouterProtectedRoute] Redirecting to login - user not authenticated');
+        setLocation('/login');
+      } else if (isAuthenticated && (!subscriptionPlan || subscriptionPlan === '') && location !== '/choose-plan') {
+        console.log('🔄 [WouterProtectedRoute] Redirecting to plan selection - no plan selected');
+        setLocation('/choose-plan');
+      }
+    }
+  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation]);
+
+  // CRITICAL: Add logout state handling to prevent hooks error
+  React.useEffect(() => {
+    // Clear session storage on logout to prevent stale states
+    if (!isAuthenticated && !authLoading) {
+      console.log('🧹 [WouterProtectedRoute] Clearing session storage on logout');
+      sessionStorage.removeItem('hasSeenPostLoginIntro');
+    }
+  }, [isAuthenticated, authLoading]);
+
+  // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
   if (user?.email === 'wikus77@hotmail.it') {
     console.log('🔓 DEVELOPER ACCESS - Bypassing all restrictions');
     return <>{children}</>;
   }
 
-  // Show loading while checking auth or access
-  if (authLoading || accessLoading) {
+  // CRITICAL FIX: Ensure user is always defined before conditional returns
+  if (!isAuthenticated || authLoading || accessLoading) {
+    if (!authLoading && !accessLoading && !isAuthenticated) {
+      return <Login />;
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Verifica accesso...</div>
@@ -33,24 +60,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    if (location !== '/login') {
-      setLocation('/login');
-    }
-    return <Login />;
-  }
-
   // Force plan selection if no subscription plan chosen
   if (!subscriptionPlan || subscriptionPlan === '') {
-    console.log('🛑 NO PLAN SELECTED - Forcing plan selection:', {
-      subscriptionPlan,
-      currentLocation: location
-    });
-    
-    if (location !== '/choose-plan') {
-      setLocation('/choose-plan');
-    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Reindirizzamento alla selezione piano...</div>
@@ -60,12 +71,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Block access if user doesn't have permission (post-registration control)
   if (!canAccess) {
-    console.log('🚫 ACCESS BLOCKED - User authenticated but access not enabled:', {
-      subscriptionPlan,
-      accessStartDate,
-      timeUntilAccess
-    });
-    
     return (
       <AccessBlockedView 
         subscriptionPlan={subscriptionPlan}
@@ -75,7 +80,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  console.log('✅ ACCESS GRANTED - User can access protected content');
   return <>{children}</>;
 };
 

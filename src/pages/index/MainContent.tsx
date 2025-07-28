@@ -1,9 +1,11 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// MainContent senza IntroManager
+
 import React from "react";
 import ParallaxContainer from "@/components/ui/parallax-container";
 import IndexContent from "@/components/index/IndexContent";
 import ModalManager from "@/components/index/ModalManager";
-import IntroManager from "@/components/index/IntroManager";
 import LoadingScreen from "@/components/index/LoadingScreen";
 import ErrorFallback from "./ErrorFallback";
 
@@ -25,7 +27,7 @@ interface MainContentProps {
 }
 
 /**
- * Main content component for the Index page
+ * Main content component for the Index page - Landing Page diretta
  */
 const MainContent: React.FC<MainContentProps> = ({
   pageLoaded,
@@ -43,7 +45,7 @@ const MainContent: React.FC<MainContentProps> = ({
   onCloseInviteFriend,
   onAgeVerified,
 }) => {
-  // MIGLIORAMENTO: Log di debug per la diagnostica di errori di render
+  // Log di debug per la diagnostica
   React.useEffect(() => {
     console.log("MainContent - stato render:", { 
       pageLoaded, 
@@ -58,41 +60,29 @@ const MainContent: React.FC<MainContentProps> = ({
     return <ErrorFallback error={error} onRetry={onRetry} />;
   }
 
-  // Se la pagina non è caricata o il contenuto non deve essere ancora renderizzato, mostra loading screen
+  // Se la pagina non è caricata, mostra loading screen
   if (!renderContent || !pageLoaded) {
     return <LoadingScreen />;
   }
 
-  // Mostra animazione intro se necessario
+  // Renderizza direttamente il contenuto principale senza IntroManager
   return (
-    <>
-      {pageLoaded && (
-        <IntroManager 
-          pageLoaded={pageLoaded} 
-          onIntroComplete={onIntroComplete}
-        />
-      )}
+    <ParallaxContainer>
+      <IndexContent 
+        countdownCompleted={countdownCompleted}
+        onRegisterClick={onRegisterClick}
+        openInviteFriend={openInviteFriend}
+      />
       
-      {/* Main content renderizzato quando la pagina è caricata */}
-      {renderContent && (
-        <ParallaxContainer>
-          <IndexContent 
-            countdownCompleted={countdownCompleted}
-            onRegisterClick={onRegisterClick}
-            openInviteFriend={openInviteFriend}
-          />
-          
-          {/* Modals */}
-          <ModalManager
-            showAgeVerification={showAgeVerification}
-            showInviteFriend={showInviteFriend}
-            onCloseAgeVerification={onCloseAgeVerification}
-            onCloseInviteFriend={onCloseInviteFriend}
-            onAgeVerified={onAgeVerified}
-          />
-        </ParallaxContainer>
-      )}
-    </>
+      {/* Modals */}
+      <ModalManager
+        showAgeVerification={showAgeVerification}
+        showInviteFriend={showInviteFriend}
+        onCloseAgeVerification={onCloseAgeVerification}
+        onCloseInviteFriend={onCloseInviteFriend}
+        onAgeVerified={onAgeVerified}
+      />
+    </ParallaxContainer>
   );
 };
 

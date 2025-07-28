@@ -116,20 +116,13 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // Login successful
-      console.log('[Login] Success → playing MissionIntro');
+      // NOTE: REDIRECT DISABLED IN use-login - handled by StandardLoginForm  
+      console.log('🚀 [use-login] LOGIN SUCCESS - redirect delegated to StandardLoginForm');
+      // sessionStorage and navigate calls removed to avoid conflicts
       
-      // Clear post-login intro flag to ensure animation plays
-      sessionStorage.removeItem("hasSeenPostLoginIntro");
-      
-      // Navigate to mission intro animation
-      setTimeout(() => {
-        navigate('/mission-intro');
-        
-        // Dispatch auth success event
-        const event = new CustomEvent('auth-success');
-        window.dispatchEvent(event);
-      }, 500);
+      // Dispatch auth success event
+      const event = new CustomEvent('auth-success');
+      window.dispatchEvent(event);
       
     } catch (error: any) {
       console.error('Errore login:', error);

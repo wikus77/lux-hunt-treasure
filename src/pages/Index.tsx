@@ -1,8 +1,6 @@
 
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Main Index Page - Refactored with Custom Hooks
- */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Landing Page diretta senza Laser Intro
 
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
@@ -91,9 +89,3 @@ const Index = () => {
 };
 
 export default Index;
-
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Index Page refactorizzato con Custom Hooks per iOS Capacitor
- * Problema TypeScript risolto: handleIntroComplete function signature
- */
