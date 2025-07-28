@@ -2053,6 +2053,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_credits: {
+        Row: {
+          free_buzz_credit: number
+          free_buzz_map_credit: number
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          free_buzz_credit?: number
+          free_buzz_map_credit?: number
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          free_buzz_credit?: number
+          free_buzz_map_credit?: number
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_logs: {
         Row: {
           action: string
@@ -2475,6 +2499,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_referrals: {
+        Row: {
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          status: Database["public"]["Enums"]["referral_status"]
+          updated_at: string
+          xp_awarded: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          status?: Database["public"]["Enums"]["referral_status"]
+          updated_at?: string
+          xp_awarded?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          status?: Database["public"]["Enums"]["referral_status"]
+          updated_at?: string
+          xp_awarded?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -2568,6 +2622,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_xp: {
+        Row: {
+          id: string
+          total_xp: number
+          updated_at: string
+          user_id: string
+          xp_since_reward: number
+        }
+        Insert: {
+          id?: string
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+          xp_since_reward?: number
+        }
+        Update: {
+          id?: string
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+          xp_since_reward?: number
+        }
+        Relationships: []
+      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
@@ -2610,6 +2688,10 @@ export type Database = {
       assign_area_radius: {
         Args: { p_mission_id: string }
         Returns: number
+      }
+      award_xp: {
+        Args: { p_user_id: string; p_xp_amount: number }
+        Returns: Json
       }
       block_ip: {
         Args: {
@@ -2690,6 +2772,10 @@ export type Database = {
       }
       consume_buzz_usage: {
         Args: { p_user_id: string }
+        Returns: boolean
+      }
+      consume_credit: {
+        Args: { p_user_id: string; p_credit_type: string }
         Returns: boolean
       }
       execute_sql: {
@@ -2800,6 +2886,10 @@ export type Database = {
         Returns: Json
       }
       get_user_weekly_buzz_status: {
+        Args: { p_user_id: string }
+        Returns: Json
+      }
+      get_user_xp_status: {
         Args: { p_user_id: string }
         Returns: Json
       }
@@ -2942,7 +3032,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      referral_status: "pending" | "registered"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3069,6 +3159,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      referral_status: ["pending", "registered"],
+    },
   },
 } as const
