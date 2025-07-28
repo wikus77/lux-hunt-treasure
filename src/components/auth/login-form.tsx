@@ -46,10 +46,8 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
           description: 'Benvenuto in M1SSION!'
         });
         
-        setTimeout(() => {
-          console.log('🔄 EXECUTING REDIRECT TO /home');
-          navigate('/home', { replace: true });
-        }, 1000);
+        // NOTE: Redirect is now handled by use-login hook which goes to /mission-intro
+        console.log('🔄 LOGIN SUCCESS - redirect handled by use-login hook');
       } else {
         console.error('❌ LOGIN FAILED:', result?.error);
         toast.error('Errore di login', {

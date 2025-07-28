@@ -39,10 +39,17 @@ const Login = () => {
       fallbackTimerRef.current = null;
     }
     
-    // Strategy 1: Try wouter navigate first - REDIRECT TO /home NOT /
+    // Strategy 1: Try wouter navigate first - REDIRECT TO /mission-intro for first time
     try {
-      navigate('/home');
-      console.log('✅ WOUTER NAVIGATE TO /home EXECUTED');
+      console.log('🚀 AUTHENTICATED USER REDIRECT - Checking hasSeenPostLoginIntro');
+      const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
+      if (hasSeenIntro === 'true') {
+        console.log('✅ WOUTER NAVIGATE TO /home (intro already seen)');
+        navigate('/home');
+      } else {
+        console.log('✅ WOUTER NAVIGATE TO /mission-intro (first time after login)');
+        navigate('/mission-intro');
+      }
     } catch (error) {
       console.error('❌ WOUTER NAVIGATE FAILED:', error);
     }
@@ -52,8 +59,10 @@ const Login = () => {
       console.log('📱 PWA STANDALONE DETECTED - Using window.location.href fallback');
       setTimeout(() => {
         if (window.location.pathname === '/login') {
-          console.log('🔄 WOUTER FAILED - Forcing window.location.href to /home');
-          window.location.href = '/home';
+          const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
+          const targetUrl = hasSeenIntro === 'true' ? '/home' : '/mission-intro';
+          console.log(`🔄 WOUTER FAILED - Forcing window.location.href to ${targetUrl}`);
+          window.location.href = targetUrl;
         }
       }, 500);
     }
@@ -90,13 +99,16 @@ const Login = () => {
         if (window.location.pathname === '/login' && isAuthenticated) {
           console.log('🚨 FALLBACK TIMER TRIGGERED - User stuck on login page');
           
-          // Final fallback: Hard reload to home
+          // Final fallback: Hard reload to appropriate route
+          const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
+          const fallbackUrl = hasSeenIntro === 'true' ? '/home' : '/mission-intro';
+          
           if (isPWAStandalone()) {
-            console.log('📱 PWA HARD REDIRECT TO /home');
-            window.location.replace('/home');
+            console.log(`📱 PWA HARD REDIRECT TO ${fallbackUrl}`);
+            window.location.replace(fallbackUrl);
           } else {
-            console.log('🌐 BROWSER HARD REDIRECT TO /home');
-            window.location.href = '/home';
+            console.log(`🌐 BROWSER HARD REDIRECT TO ${fallbackUrl}`);
+            window.location.href = fallbackUrl;
           }
         }
       }, 2000);
