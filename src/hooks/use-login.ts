@@ -116,14 +116,9 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // IMMEDIATE redirect to mission intro after successful login
-      console.log('🚀 ======= LOGIN SUCCESS =======');
-      console.log('🚀 LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
-      sessionStorage.removeItem("hasSeenPostLoginIntro");
-      
-      // IMMEDIATE redirect without delay to prevent auth state conflicts
-      console.log('🚀 LOGIN SUCCESS - IMMEDIATE redirect to /mission-intro');
-      navigate('/mission-intro');
+      // NOTE: REDIRECT DISABLED IN use-login - handled by StandardLoginForm  
+      console.log('🚀 [use-login] LOGIN SUCCESS - redirect delegated to StandardLoginForm');
+      // sessionStorage and navigate calls removed to avoid conflicts
       
       // Dispatch auth success event
       const event = new CustomEvent('auth-success');

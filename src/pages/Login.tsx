@@ -68,19 +68,19 @@ const Login = () => {
     }
   };
 
-  // 📡 LISTENER FOR AUTH SUCCESS EVENT
-  useEffect(() => {
-    const handleAuthSuccess = () => {
-      console.log('🎉 AUTH SUCCESS EVENT RECEIVED');
-      forceRedirectToHome('AUTH_SUCCESS_EVENT');
-    };
+  // 📡 LISTENER FOR AUTH SUCCESS EVENT - DISABLED to prevent conflicts with StandardLoginForm redirect
+  // useEffect(() => {
+  //   const handleAuthSuccess = () => {
+  //     console.log('🎉 AUTH SUCCESS EVENT RECEIVED');
+  //     forceRedirectToHome('AUTH_SUCCESS_EVENT');
+  //   };
 
-    window.addEventListener('auth-success', handleAuthSuccess);
+  //   window.addEventListener('auth-success', handleAuthSuccess);
     
-    return () => {
-      window.removeEventListener('auth-success', handleAuthSuccess);
-    };
-  }, []);
+  //   return () => {
+  //     window.removeEventListener('auth-success', handleAuthSuccess);
+  //   };
+  // }, []);
 
   // 🔄 REDIRECT AUTHENTICATED USERS - Enhanced
   useEffect(() => {

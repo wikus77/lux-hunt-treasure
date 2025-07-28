@@ -69,6 +69,8 @@ const PostLoginMissionIntro = () => {
                   console.log('🎬 [PostLoginMissionIntro] Setting sessionStorage hasSeenPostLoginIntro = true');
                   console.log('🎬 [PostLoginMissionIntro] Redirecting to /home in 3... 2... 1...');
                   sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                  
+                  console.log('🎬 [PostLoginMissionIntro] ======= EXECUTING NAVIGATE TO /home =======');
                   navigate('/home');
                   console.log('🎬 [PostLoginMissionIntro] ======= REDIRECT TO HOME EXECUTED =======');
                 }, 1500);

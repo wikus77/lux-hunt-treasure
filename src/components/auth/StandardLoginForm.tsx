@@ -60,10 +60,10 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       }));
       
       // MISSION POST-LOGIN SEQUENCE: Clear intro flag and redirect to mission-intro
-      console.log('🚀 LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
+      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
       sessionStorage.removeItem("hasSeenPostLoginIntro");
       
-      console.log('🚀 ATTEMPTING REDIRECT TO /mission-intro for M1SSION animation');
+      console.log('🚀 [StandardLoginForm] ATTEMPTING REDIRECT TO /mission-intro for M1SSION animation');
       navigate('/mission-intro');
       
       // PWA iOS Safari fallback
