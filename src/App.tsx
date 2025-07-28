@@ -6,6 +6,7 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
+import { XpSystemManager } from "./components/xp/XpSystemManager";
 import { HelmetProvider } from "./components/helmet/HelmetProvider";
 import SkipToContent from "./components/accessibility/SkipToContent";
 import OfflineIndicator from "./components/offline/OfflineIndicator";
@@ -76,6 +77,7 @@ function App() {
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
+            <XpSystemManager />
             </AuthProvider>
             <Toaster />
           </SoundProvider>
