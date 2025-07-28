@@ -4,12 +4,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 
 const PostLoginMissionIntro = () => {
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
   const [showStartDate, setShowStartDate] = useState(false);
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  
+  // 🔒 CRITICAL: Wouter navigation hook
+  const [location, setLocation] = useLocation();
   
   // 🔒 CRITICAL: Refs per evitare re-render e race conditions
   const mountedRef = useRef(true);
@@ -77,19 +81,17 @@ const PostLoginMissionIntro = () => {
                 // Sicurezza sessionStorage
                 sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                 
-                // 🚨 CLEAN REACT ROUTER ONLY
+                // 🚨 WOUTER ROUTER NAVIGATION - CORRETTO
                 try {
-                  // Use history API for smooth transition
-                  history.pushState(null, '', '/home');
-                  // Trigger router update
-                  window.dispatchEvent(new PopStateEvent('popstate'));
-                  console.log('✅ React Router navigation executed');
+                  console.log('🏠 Wouter navigation → /home');
+                  setLocation('/home');
+                  console.log('✅ Wouter navigation executed successfully');
                 } catch (error) {
-                  console.error('❌ Errore React Router redirect:', error);
-                  // 🚫 ZERO WINDOW.LOCATION POLICY - Use React Router only
+                  console.error('❌ Errore Wouter navigation:', error);
+                  // Fallback sicuro con timeout
                   setTimeout(() => {
-                    history.pushState(null, '', '/home');
-                    window.dispatchEvent(new PopStateEvent('popstate'));
+                    console.log('🔄 Fallback Wouter navigation → /home');
+                    setLocation('/home');
                   }, 100);
                 }
               }, 1500);
