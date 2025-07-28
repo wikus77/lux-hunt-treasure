@@ -2,7 +2,7 @@
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ – M1SSION™
 import React from 'react';
 import { Router } from 'wouter';
-import { Toaster } from "sonner";
+import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
@@ -76,8 +76,8 @@ function App() {
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
-            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
             </AuthProvider>
+            <Toaster />
           </SoundProvider>
         </Router>
       </HelmetProvider>
