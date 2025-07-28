@@ -15,6 +15,8 @@ import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import { useState, useEffect } from "react";
+import { OfflineManager } from "./components/offline/OfflineManager";
+import { InstallBanner } from "./components/pwa/InstallBanner";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
@@ -69,8 +71,10 @@ function App() {
               onEmailNotVerified={handleEmailNotVerified}
             />
             <BuzzPaymentMonitor />
+            <OfflineManager />
             <LegalOnboarding />
             <WouterRoutes />
+            <InstallBanner />
             <InstallPrompt />
             <PushSetup />
             <Toaster 
