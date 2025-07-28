@@ -114,7 +114,10 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
         <div className="space-y-3">
           {subscriptionPlan.toLowerCase() === 'base' && (
             <Button
-              onClick={() => navigate('/subscriptions')}
+              onClick={() => {
+                console.log('🚀 Navigating to subscriptions');
+                navigate('/subscriptions');
+              }}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
             >
               🚀 Aggiorna il tuo piano per accesso anticipato
@@ -123,7 +126,10 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
           
           <Button
             variant="outline"
-            onClick={() => navigate('/home')}
+            onClick={() => {
+              console.log('🏠 Navigating to home');
+              navigate('/home');
+            }}
             className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
           >
             ← Torna alla homepage

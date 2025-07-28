@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { ShieldAlert, RefreshCw, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 
 const AccessDenied = () => {
-  const navigate = useNavigate();
+  const { navigate, goBack } = useWouterNavigation();
   const { logout, userRole, getCurrentUser } = useAuthContext();
   
   const handleLogout = async () => {
@@ -52,7 +52,7 @@ const AccessDenied = () => {
         </Button>
         
         <Button 
-          onClick={() => navigate(-1)} 
+          onClick={goBack} 
           className="bg-m1ssion-blue flex items-center gap-2"
         >
           Torna indietro
