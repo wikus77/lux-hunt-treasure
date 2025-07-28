@@ -77,12 +77,17 @@ const PostLoginMissionIntro = () => {
                 // Sicurezza sessionStorage
                 sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                 
-                // Redirect sicuro senza navigate hook
+                // 🚨 CRITICAL: React Router invece di window.location
                 try {
-                  window.location.href = '/home';
+                  console.log('🏠 React Router redirect to /home');
+                  // Use history API for smooth transition
+                  history.pushState(null, '', '/home');
+                  // Trigger popstate to update router
+                  window.dispatchEvent(new PopStateEvent('popstate'));
                 } catch (error) {
-                  console.error('❌ Errore redirect:', error);
-                  window.location.replace('/home');
+                  console.error('❌ Errore React Router redirect:', error);
+                  // Fallback only if absolutely necessary
+                  window.location.href = '/home';
                 }
               }, 1500);
             }, 1000);

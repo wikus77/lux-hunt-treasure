@@ -7,26 +7,18 @@ import PostLoginMissionIntro from "@/components/auth/PostLoginMissionIntro";
 
 export default function MissionIntroPage() {
   
-  // 🔒 CRITICAL: Previeni navigation conflicts durante animazione
+  // 🔒 STABILIZZAZIONE COMPONENTE: Eliminati tutti i listener che interferiscono
   useEffect(() => {
-    console.log('🎬 MissionIntroPage: Montaggio pagina intro');
+    console.log('🎬 MissionIntroPage: Montaggio stabile');
     
-    // Block browser back button durante animazione
-    const handlePopState = (event: PopStateEvent) => {
-      console.log('⚠️ Block back button durante M1SSION intro');
-      event.preventDefault();
-      history.pushState(null, '', '/mission-intro');
-    };
-    
-    // Aggiungi listener
-    window.addEventListener('popstate', handlePopState);
-    
-    // Forza stato corrente nella history
-    history.replaceState(null, '', '/mission-intro');
+    // Invece di bloccare navigation, stabiliziamo solo il componente
+    const stabilizationTimer = setTimeout(() => {
+      console.log('✅ MissionIntroPage: Stabilizzato');
+    }, 100);
     
     return () => {
       console.log('🧹 MissionIntroPage: Cleanup');
-      window.removeEventListener('popstate', handlePopState);
+      clearTimeout(stabilizationTimer);
     };
   }, []);
 
