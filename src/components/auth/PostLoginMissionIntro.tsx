@@ -1,48 +1,48 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// POST-LOGIN REDIRECT HANDLER - REDIRECT A /mission-intro
+// POST-LOGIN REDIRECT SEMPLIFICATO
 // ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
 import { useEffect, useRef } from 'react';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
 const PostLoginMissionIntro = () => {
-  const { navigate } = useWouterNavigation();
-  const hasRedirectedRef = useRef(false);
+  console.log('🎬 [POST-LOGIN] Component initialized');
   
-  // 🚀 REDIRECT IMMEDIATO A /mission-intro
+  const { navigate } = useWouterNavigation();
+  const hasRedirected = useRef(false);
+  
   useEffect(() => {
-    console.log('🎬 PostLoginMissionIntro: Inizializzazione redirect');
+    console.log('🚀 [POST-LOGIN] useEffect triggered');
     
-    if (hasRedirectedRef.current) {
-      console.log('⚠️ Redirect già eseguito, skip...');
+    if (hasRedirected.current) {
+      console.log('⚠️ [POST-LOGIN] Already redirected, skipping');
       return;
     }
     
-    hasRedirectedRef.current = true;
+    hasRedirected.current = true;
+    console.log('🎯 [POST-LOGIN] Executing redirect to /mission-intro');
     
-    // Redirect immediato determinístico
-    const executeRedirect = () => {
+    setTimeout(() => {
       try {
-        console.log('🎯 [POST-LOGIN] Redirecting to /mission-intro');
         navigate('/mission-intro');
-        console.log('✅ [SUCCESS] Navigation to mission-intro executed');
+        console.log('✅ [POST-LOGIN] Redirect successful');
       } catch (error) {
-        console.error('❌ [ERROR] Navigation failed:', error);
-        // Emergency fallback
+        console.error('❌ [POST-LOGIN] Redirect failed:', error);
         window.location.href = '/mission-intro';
       }
-    };
-    
-    // Piccolo delay per stabilità
-    setTimeout(executeRedirect, 100);
+    }, 200);
     
   }, [navigate]);
 
+  console.log('🖼️ [POST-LOGIN] Rendering loading screen');
+
   return (
-    <div className="fixed inset-0 w-full h-full bg-black flex items-center justify-center"
-         style={{ zIndex: 9999 }}>
-      <div className="text-white text-lg font-orbitron">
-        Caricamento...
+    <div 
+      className="fixed inset-0 w-full h-full bg-black flex items-center justify-center"
+      style={{ zIndex: 9999 }}
+    >
+      <div className="text-white text-lg font-orbitron animate-pulse">
+        Inizializzazione M1SSION™...
       </div>
     </div>
   );

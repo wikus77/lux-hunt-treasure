@@ -1,236 +1,206 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// COMPONENTE MISSION INTRO AUTONOMO - ANIMAZIONE DETERMINISTICA
-// ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA BLINDATA
+// MISSION INTRO DA ZERO - SAFARI iOS COMPATIBILE
+// ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
 const MissionIntro = () => {
+  console.log('🎬 [MISSION INTRO] Component initialized');
+  
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
   const [showStartDate, setShowStartDate] = useState(false);
-  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const [animationComplete, setAnimationComplete] = useState(false);
   
   const { navigate } = useWouterNavigation();
-  
-  // 🔒 CRITICAL: Refs per controllo lifecycle determinístico
-  const mountedRef = useRef(true);
-  const animationInProgressRef = useRef(false);
-  const hasNavigatedRef = useRef(false);
-  const emergencyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasAnimatedOnce = useRef(false);
+  const isMounted = useRef(true);
   
   const animationSteps = ['M', 'M1', 'M1S', 'M1SS', 'M1SSI', 'M1SSIO', 'M1SSION', 'M1SSION™'];
   
-  // 🚀 NAVIGAZIONE DETERMINISTICA FINALE
-  const executeNavigation = () => {
-    if (hasNavigatedRef.current || !mountedRef.current) {
-      console.log('⚠️ Navigation already executed or component unmounted');
-      return;
-    }
-    
-    hasNavigatedRef.current = true;
-    console.log('🏠 [MISSION COMPLETE] Navigation to /home');
-    
-    try {
-      navigate('/home');
-      console.log('✅ [SUCCESS] Navigation executed successfully');
-    } catch (error) {
-      console.error('❌ [ERROR] Navigation failed:', error);
-      // EMERGENCY FALLBACK
-      window.location.href = '/home';
-    }
-  };
-
-  // 🎬 ANIMAZIONE PRINCIPALE BLINDATA
   useEffect(() => {
-    console.log('🎬 MissionIntro: Inizializzazione animazione deterministica');
+    console.log('🚀 [MISSION INTRO] useEffect triggered');
+    console.log('🔍 [MISSION INTRO] DOM ready check:', !!document.body);
+    console.log('🔍 [MISSION INTRO] hasAnimatedOnce:', hasAnimatedOnce.current);
     
-    if (animationInProgressRef.current) {
-      console.log('⚠️ Animazione già in corso, skip...');
+    if (hasAnimatedOnce.current) {
+      console.log('⚠️ [MISSION INTRO] Animation already started, skipping');
       return;
     }
     
-    animationInProgressRef.current = true;
+    hasAnimatedOnce.current = true;
+    console.log('✅ [MISSION INTRO] ANIMAZIONE START');
     
-    // 🚨 TIMEOUT DI EMERGENZA - Se l'animazione non completa in 6s, forza redirect
-    emergencyTimeoutRef.current = setTimeout(() => {
-      if (!hasNavigatedRef.current && mountedRef.current) {
-        console.log('🚨 [EMERGENCY] Animation timeout - forcing navigation');
-        executeNavigation();
-      }
-    }, 6000);
+    // Step 1: Animate M1SSION™ text
+    let stepIndex = 0;
     
-    let currentStep = 0;
-    
-    const animateStep = () => {
-      if (!mountedRef.current || currentStep >= animationSteps.length) {
+    const animateText = () => {
+      if (!isMounted.current || stepIndex >= animationSteps.length) {
+        console.log('⚠️ [MISSION INTRO] Animation stopped - component unmounted or finished');
         return;
       }
       
-      console.log(`🔤 Step ${currentStep}: ${animationSteps[currentStep]}`);
-      setDisplayText(animationSteps[currentStep]);
-      currentStep++;
+      const currentText = animationSteps[stepIndex];
+      console.log(`🔤 [MISSION INTRO] Step ${stepIndex}: "${currentText}"`);
+      setDisplayText(currentText);
+      stepIndex++;
       
-      if (currentStep < animationSteps.length) {
-        setTimeout(animateStep, 200);
+      if (stepIndex < animationSteps.length) {
+        setTimeout(animateText, 200);
       } else {
-        // 🎯 ANIMAZIONE M1SSION™ COMPLETATA
-        console.log('✅ Animazione M1SSION™ completata - starting final sequence');
-        
-        // SLOGAN "IT IS POSSIBLE"
+        console.log('✅ [MISSION INTRO] Text animation complete');
+        // Step 2: Show slogan
         setTimeout(() => {
-          if (!mountedRef.current) return;
-          console.log('💫 Mostra slogan "IT IS POSSIBLE"');
+          if (!isMounted.current) return;
+          console.log('💫 [MISSION INTRO] Showing slogan "IT IS POSSIBLE"');
           setShowSlogan(true);
           
-          // DATA INIZIO
+          // Step 3: Show start date
           setTimeout(() => {
-            if (!mountedRef.current) return;
-            console.log('📅 Mostra data inizio');
+            if (!isMounted.current) return;
+            console.log('📅 [MISSION INTRO] Showing start date');
             setShowStartDate(true);
             
-            // COMPLETAMENTO E REDIRECT FINALE
+            // Step 4: Complete and navigate
             setTimeout(() => {
-              if (!mountedRef.current) return;
-              console.log('🎯 Animazione completata - executing navigation');
-              setIsAnimationComplete(true);
+              if (!isMounted.current) return;
+              console.log('🏁 [MISSION INTRO] ANIMAZIONE END - Starting navigation');
+              setAnimationComplete(true);
               
-              // Salva il flag di completamento
+              // Save completion flag
               sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
               
-              // NAVIGAZIONE FINALE DETERMINISTICA
-              setTimeout(executeNavigation, 300);
+              // Navigate to home
+              setTimeout(() => {
+                if (!isMounted.current) return;
+                console.log('🏠 [MISSION INTRO] NAVIGATE /home');
+                
+                try {
+                  navigate('/home');
+                  console.log('✅ [MISSION INTRO] Navigation successful');
+                } catch (error) {
+                  console.error('❌ [MISSION INTRO] Navigation failed:', error);
+                  window.location.href = '/home';
+                }
+              }, 500);
               
-            }, 1500); // Tempo per vedere la data
-          }, 1000); // Tempo per vedere il slogan
-        }, 600); // Tempo dopo il completamento di M1SSION™
+            }, 1500); // Time to see the date
+          }, 1000); // Time to see the slogan
+        }, 800); // Time after M1SSION™ completes
       }
     };
     
-    // Avvia animazione dopo stabilizzazione
-    setTimeout(animateStep, 500);
+    // Start animation after small delay for DOM stability
+    setTimeout(() => {
+      console.log('🎯 [MISSION INTRO] Starting text animation');
+      animateText();
+    }, 300);
     
     return () => {
-      console.log('🧹 Cleanup MissionIntro');
-      mountedRef.current = false;
-      if (emergencyTimeoutRef.current) {
-        clearTimeout(emergencyTimeoutRef.current);
-      }
+      console.log('🧹 [MISSION INTRO] Cleanup');
+      isMounted.current = false;
     };
   }, [navigate]);
   
-  // 🚨 CRITICAL: Cleanup al unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      mountedRef.current = false;
-      animationInProgressRef.current = false;
+      isMounted.current = false;
     };
   }, []);
   
-  console.log('🖼️ Render MissionIntro:', { 
+  console.log('🖼️ [MISSION INTRO] Render:', { 
     displayText, 
     showSlogan, 
-    showStartDate,
-    isAnimationComplete 
+    showStartDate, 
+    animationComplete 
   });
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-black overflow-hidden flex items-center justify-center"
-         style={{ zIndex: 9999 }}>
+    <div 
+      className="fixed inset-0 w-full h-full bg-black flex items-center justify-center overflow-hidden"
+      style={{ 
+        zIndex: 9999,
+        minHeight: '100vh',
+        minWidth: '100vw'
+      }}
+    >
       <div className="relative w-full h-full flex items-center justify-center">
-        
-        {/* 🎯 M1SSION™ Text - POSIZIONAMENTO ASSOLUTO CHIRURGICO */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="text-7xl md:text-8xl lg:text-9xl font-orbitron tracking-wider"
+        {/* M1SSION™ Text */}
+        <div
+          className="absolute text-7xl md:text-8xl lg:text-9xl font-orbitron tracking-wider"
           style={{ 
             fontWeight: 'normal', 
             fontFamily: 'Orbitron, monospace',
-            position: 'absolute',
             top: '35%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             whiteSpace: 'nowrap',
-            zIndex: 50,
-            textAlign: 'center'
+            textAlign: 'center',
+            opacity: displayText ? 1 : 0,
+            transition: 'opacity 0.3s ease'
           }}
         >
           <span 
-            className="text-[#00D1FF]" 
             style={{
+              color: '#00D1FF',
               textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
             }}
           >
             {displayText.slice(0, 2)}
           </span>
           <span 
-            className="text-white" 
             style={{
+              color: 'white',
               textShadow: "0 0 5px rgba(255, 255, 255, 0.3)"
             }}
           >
             {displayText.slice(2)}
           </span>
-        </motion.div>
+        </div>
         
-        {/* 🎯 IT IS POSSIBLE - CENTRATO PERFETTO COLOR #BFA342 */}
-        <AnimatePresence mode="wait">
-          {showSlogan && (
-            <motion.div
-              key="slogan"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-xl md:text-2xl lg:text-3xl font-orbitron tracking-widest"
-              style={{ 
-                fontWeight: 'normal',
-                color: '#BFA342',
-                position: 'absolute',
-                top: '52%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                whiteSpace: 'nowrap',
-                zIndex: 40,
-                textShadow: "0 0 8px rgba(191, 163, 66, 0.4)",
-                textAlign: 'center'
-              }}
-            >
-              IT IS POSSIBLE
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* IT IS POSSIBLE */}
+        {showSlogan && (
+          <div
+            className="absolute text-xl md:text-2xl lg:text-3xl font-orbitron tracking-widest"
+            style={{ 
+              fontWeight: 'normal',
+              color: '#BFA342',
+              top: '52%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              whiteSpace: 'nowrap',
+              textAlign: 'center',
+              textShadow: "0 0 8px rgba(191, 163, 66, 0.4)",
+              opacity: showSlogan ? 1 : 0,
+              transition: 'opacity 0.8s ease'
+            }}
+          >
+            IT IS POSSIBLE
+          </div>
+        )}
         
-        {/* 🎯 Data di Inizio - CENTRATO PERFETTO */}
-        <AnimatePresence mode="wait">
-          {showStartDate && (
-            <motion.div
-              key="date"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="text-base md:text-lg lg:text-xl font-orbitron tracking-wider"
-              style={{ 
-                fontWeight: 'normal',
-                color: '#FFD700',
-                position: 'absolute',
-                top: '65%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                whiteSpace: 'nowrap',
-                zIndex: 30,
-                textShadow: "0 0 6px rgba(255, 215, 0, 0.4)",
-                textAlign: 'center'
-              }}
-            >
-              Inizio: 19-06-25
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Start Date */}
+        {showStartDate && (
+          <div
+            className="absolute text-base md:text-lg lg:text-xl font-orbitron tracking-wider"
+            style={{ 
+              fontWeight: 'normal',
+              color: '#FFD700',
+              top: '65%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              whiteSpace: 'nowrap',
+              textAlign: 'center',
+              textShadow: "0 0 6px rgba(255, 215, 0, 0.4)",
+              opacity: showStartDate ? 1 : 0,
+              transition: 'opacity 0.6s ease'
+            }}
+          >
+            Inizio: 19-06-25
+          </div>
+        )}
       </div>
     </div>
   );
