@@ -187,9 +187,9 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     switch (type) {
       case "Base":
         return [
-          { text: "Accesso gratuito agli eventi mensili" },
-          { text: "1 indizio incluso a settimana" },
-          { text: "Partecipazione alle estrazioni base" }
+          { text: "Accesso limitato con funzioni base" },
+          { text: "Funzionalità standard gratuite" },
+          { text: "Supporto email standard" }
         ];
       case "Silver":
         return [
@@ -277,43 +277,58 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         isDowngrade: plan === "Base" 
       });
       
-      if (plan === "Base") {
-        console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
+        if (plan === "Base") {
+          console.log(`⬇️ M1SSION™ DOWNGRADE: To Base plan`);
+          
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            console.log(`👤 M1SSION™ User authenticated:`, user.id);
+            
+            // Save selected plan to Supabase profiles
+            await supabase
+              .from('profiles')
+              .update({ subscription_plan: 'Base' })
+              .eq('id', user.id);
+            
+            // Call cancel-subscription edge function for Stripe cleanup
+            try {
+              console.log(`🔄 M1SSION™ Calling cancel-subscription function...`);
+              const { data: cancelData, error: cancelError } = await supabase.functions.invoke('cancel-subscription');
+              
+              if (cancelError) {
+                console.error('❌ M1SSION™ Cancel subscription error:', cancelError);
+              } else {
+                console.log('✅ M1SSION™ Cancel subscription response:', cancelData);
+              }
+            } catch (cancelStripeError) {
+              console.error('❌ M1SSION™ Cancel subscription failed:', cancelStripeError);
+            }
+            
+            // Force local updates
+            localStorage.setItem("userTier", "Base");
+            await upgradeSubscription("Base");
+            setSelected("Base");
+            
+            console.log(`✅ M1SSION™ Local state updated to Base`);
+          }
         
+          toast({
+            title: "✅ Piano Base attivato",
+            description: "Stai utilizzando il piano Base gratuito",
+            duration: 4000
+          });
+          
+        } else {
+        console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
+        
+        // Save selected plan to Supabase profiles before payment
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          console.log(`👤 M1SSION™ User authenticated:`, user.id);
-          
-          // Call cancel-subscription edge function for Stripe cleanup
-          try {
-            console.log(`🔄 M1SSION™ Calling cancel-subscription function...`);
-            const { data: cancelData, error: cancelError } = await supabase.functions.invoke('cancel-subscription');
-            
-            if (cancelError) {
-              console.error('❌ M1SSION™ Cancel subscription error:', cancelError);
-            } else {
-              console.log('✅ M1SSION™ Cancel subscription response:', cancelData);
-            }
-          } catch (cancelStripeError) {
-            console.error('❌ M1SSION™ Cancel subscription failed:', cancelStripeError);
-          }
-          
-          // Force local updates
-          localStorage.setItem("userTier", "Base");
-          await upgradeSubscription("Base");
-          setSelected("Base");
-          
-          console.log(`✅ M1SSION™ Local state updated to Base`);
+          await supabase
+            .from('profiles')
+            .update({ subscription_plan: plan })
+            .eq('id', user.id);
         }
-      
-        toast({
-          title: "✅ Downgrade completato",
-          description: "Sei tornato al piano Base gratuito",
-          duration: 4000
-        });
-        
-      } else {
-        console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
         
         // 🚀 CRITICAL: Use in-app checkout with centralized pricing
         console.log(`💳 M1SSION™ Opening in-app checkout for ${plan}`);

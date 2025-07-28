@@ -30,7 +30,7 @@ const plans = [
   {
     id: 'Gold',
     name: 'Gold',
-    price: '9.99',
+    price: '6.99',
     icon: <Crown className="w-8 h-8" />,
     earlyAccess: '24 ore prima',
     features: [
@@ -45,7 +45,7 @@ const plans = [
   {
     id: 'Black',
     name: 'Black',
-    price: '19.99',
+    price: '9.99',
     icon: <Zap className="w-8 h-8" />,
     earlyAccess: '48 ore prima',
     features: [
@@ -60,7 +60,7 @@ const plans = [
   {
     id: 'Titanium',
     name: 'Titanium',
-    price: '39.99',
+    price: '29.99',
     icon: <Star className="w-8 h-8" />,
     earlyAccess: '72 ore prima',
     features: [
@@ -96,6 +96,15 @@ const ChoosePlanPage: React.FC = () => {
     
     try {
       console.log('🛒 M1SSION™ Aprendo checkout in-app per piano:', planId);
+      
+      // Save selected plan to Supabase profiles
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ subscription_plan: planId })
+          .eq('id', user.id);
+      }
       
       // Process subscription with in-app Stripe modal
       await processSubscription(planId);

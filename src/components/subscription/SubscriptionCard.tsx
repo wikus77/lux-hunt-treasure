@@ -34,6 +34,8 @@ const SubscriptionCard = ({
 }: SubscriptionCardProps) => {
   const getGradient = () => {
     switch (type) {
+      case "Base":
+        return "from-green-400 to-green-600";
       case "Silver":
         return "from-gray-400 to-gray-600";
       case "Gold":
@@ -49,6 +51,8 @@ const SubscriptionCard = ({
 
   const getBadgeColor = () => {
     switch (type) {
+      case "Base":
+        return "bg-green-500";
       case "Silver":
         return "bg-gray-500";
       case "Gold":
