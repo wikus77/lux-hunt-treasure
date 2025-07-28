@@ -123,7 +123,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
           
           <Button
             variant="outline"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
             className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
           >
             ← Torna alla homepage
