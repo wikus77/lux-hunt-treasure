@@ -1,14 +1,11 @@
 
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Main Index Page - Refactored with Custom Hooks
- */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Landing Page diretta senza Laser Intro
 
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import LoadingManager from "./index/LoadingManager";
 import CountdownManager from "./index/CountdownManager";
 import MainContent from "./index/MainContent";
-import LaserIntroWithDate from "@/components/intro/LaserIntroWithDate";
 import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import {
@@ -19,7 +16,6 @@ import {
   useHealthMonitor,
   useIndexHandlers
 } from "./index/hooks";
-import { useState } from "react";
 
 const Index = () => {
   console.log("✅ LANDING MOUNTED - Index component rendering - PUBLIC LANDING PAGE - BY JOSEPH MULÈ");
@@ -39,16 +35,6 @@ const Index = () => {
     handleRetry
   } = useIndexHandlers();
 
-  // Check for first time visit laser intro
-  const [showLaserIntro, setShowLaserIntro] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const hasSeenLaserIntro = localStorage.getItem('hasSeenLaserIntro');
-      console.log('🚀 [Index] Checking laser intro flag:', hasSeenLaserIntro);
-      return !hasSeenLaserIntro;
-    }
-    return true;
-  });
-
   // Side effects hooks
   useMutationObserver();
   useHealthMonitor(renderContent, pageLoaded, setError);
@@ -63,19 +49,6 @@ const Index = () => {
     closeAgeVerification,
     closeInviteFriend
   } = useEventHandlers(countdownCompleted);
-
-  // Handle laser intro completion
-  const handleLaserIntroComplete = () => {
-    console.log('🚀 [Index] Laser intro completed, setting localStorage flag');
-    localStorage.setItem('hasSeenLaserIntro', 'true');
-    setShowLaserIntro(false);
-  };
-
-  // Show laser intro on first visit
-  if (showLaserIntro) {
-    console.log('🚀 [Index] Rendering laser intro for first time visit');
-    return <LaserIntroWithDate onComplete={handleLaserIntroComplete} />;
-  }
 
   // Show developer access screen for mobile users without access
   if (showDeveloperAccess) {
@@ -116,9 +89,3 @@ const Index = () => {
 };
 
 export default Index;
-
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Index Page refactorizzato con Custom Hooks per iOS Capacitor
- * Problema TypeScript risolto: handleIntroComplete function signature
- */
