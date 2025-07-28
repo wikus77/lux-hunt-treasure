@@ -6,7 +6,8 @@ import { toast } from 'sonner';
 
 interface XpStatus {
   total_xp: number;
-  xp_since_reward: number;
+  buzz_xp_progress: number;
+  map_xp_progress: number;
   free_buzz_credit: number;
   free_buzz_map_credit: number;
   next_buzz_reward: number;
@@ -17,7 +18,8 @@ export const useXpSystem = () => {
   const { user } = useAuthContext();
   const [xpStatus, setXpStatus] = useState<XpStatus>({
     total_xp: 0,
-    xp_since_reward: 0,
+    buzz_xp_progress: 0,
+    map_xp_progress: 0,
     free_buzz_credit: 0,
     free_buzz_map_credit: 0,
     next_buzz_reward: 100,

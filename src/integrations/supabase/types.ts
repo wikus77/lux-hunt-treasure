@@ -2624,21 +2624,27 @@ export type Database = {
       }
       user_xp: {
         Row: {
+          buzz_xp_progress: number | null
           id: string
+          map_xp_progress: number | null
           total_xp: number
           updated_at: string
           user_id: string
           xp_since_reward: number
         }
         Insert: {
+          buzz_xp_progress?: number | null
           id?: string
+          map_xp_progress?: number | null
           total_xp?: number
           updated_at?: string
           user_id: string
           xp_since_reward?: number
         }
         Update: {
+          buzz_xp_progress?: number | null
           id?: string
+          map_xp_progress?: number | null
           total_xp?: number
           updated_at?: string
           user_id?: string
@@ -2690,7 +2696,9 @@ export type Database = {
         Returns: number
       }
       award_xp: {
-        Args: { p_user_id: string; p_xp_amount: number }
+        Args:
+          | { p_user_id: string; p_xp_amount: number }
+          | { p_user_id: string; p_xp_amount: number; p_xp_type?: string }
         Returns: Json
       }
       block_ip: {
