@@ -5,9 +5,8 @@
 import PostLoginMissionIntro from "@/components/auth/PostLoginMissionIntro";
 
 export default function MissionIntroPage() {
-  
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-screen overflow-hidden">
       <PostLoginMissionIntro />
     </div>
   );

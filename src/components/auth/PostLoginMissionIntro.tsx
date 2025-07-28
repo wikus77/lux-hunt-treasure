@@ -10,7 +10,6 @@ const PostLoginMissionIntro = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
-  const [showTrademark, setShowTrademark] = useState(false);
   const [showStartDate, setShowStartDate] = useState(false);
   const { navigate } = useWouterNavigation();
 
@@ -19,7 +18,6 @@ const PostLoginMissionIntro = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     let startTimer: NodeJS.Timeout;
-    
     
     const startAnimation = () => {
       interval = setInterval(() => {
@@ -39,17 +37,13 @@ const PostLoginMissionIntro = () => {
                 setShowSlogan(true);
                 
                 setTimeout(() => {
-                  setShowTrademark(true);
+                  setShowStartDate(true);
                   
+                  // 🎯 REDIRECT FINALE DOPO 1.5s
                   setTimeout(() => {
-                    setShowStartDate(true);
-                    
-                    // 🎯 REDIRECT FINALE DOPO 1.5s
-                    setTimeout(() => {
-                      sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
-                      navigate('/home');
-                    }, 1500);
-                  }, 500);
+                    sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                    navigate('/home');
+                  }, 1500);
                 }, 1000);
               }, 500);
             }
@@ -143,7 +137,7 @@ const PostLoginMissionIntro = () => {
                 fontWeight: 'normal',
                 color: '#FFD700',
                 position: 'absolute',
-                top: '62%',
+                top: '65%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
                 whiteSpace: 'nowrap',
