@@ -25,66 +25,65 @@ const PostLoginMissionIntro = () => {
     console.log('🎬 [PostLoginMissionIntro] Starting M1SSION numeric reveal animation');
     
     let interval: NodeJS.Timeout;
+    let startTimer: NodeJS.Timeout;
     
     const startAnimation = () => {
+      console.log('🎬 [PostLoginMissionIntro] Starting reveal animation...');
+      
       interval = setInterval(() => {
-        if (currentIndex < finalText.length) {
-          // Rivela un carattere alla volta, mantenendo i già rivelati
-          const revealedText = finalText.slice(0, currentIndex + 1);
-          const paddingLength = finalText.length - revealedText.length;
+        setCurrentIndex(prevIndex => {
+          const newIndex = prevIndex + 1;
+          console.log(`🎬 [PostLoginMissionIntro] Revealing character ${newIndex}/${finalText.length}`);
           
-          // Crea padding con caratteri casuali per effetto scramble sulle posizioni vuote
-          const scramblePadding = Array.from({ length: paddingLength }, () => 
-            chars[Math.floor(Math.random() * chars.length)]
-          ).join('');
-          
-          setDisplayText(revealedText + scramblePadding);
-          setCurrentIndex(prev => prev + 1);
-          console.log(`🎬 [PostLoginMissionIntro] Revealing character ${currentIndex + 1}: "${revealedText}"`);
-        } else {
-          clearInterval(interval);
-          
-          // Mostra M1SSION completo
-          setDisplayText(finalText);
-          console.log('🎬 [PostLoginMissionIntro] Animation complete, showing full M1SSION');
-          
-          // Mostra slogan dopo 500ms
-          setTimeout(() => {
-            console.log('🎬 [PostLoginMissionIntro] Mostrando IT IS POSSIBLE');
-            setShowSlogan(true);
+          if (newIndex <= finalText.length) {
+            // Rivela un carattere alla volta: M → M1 → M1S → M1SS → M1SSI → M1SSIO → M1SSION
+            const revealedText = finalText.slice(0, newIndex);
+            setDisplayText(revealedText);
+            console.log(`🎬 [PostLoginMissionIntro] Current text: "${revealedText}"`);
             
-            // Mostra trademark dopo 1s
-            setTimeout(() => {
-              console.log('🎬 [PostLoginMissionIntro] Mostrando ™');
-              setShowTrademark(true);
+            if (newIndex === finalText.length) {
+              // Animazione completata
+              console.log('🎬 [PostLoginMissionIntro] ======= M1SSION REVEAL COMPLETED =======');
+              clearInterval(interval);
               
-              // Mostra data di inizio dopo 500ms
+              // Sequenza elementi successivi
               setTimeout(() => {
-                console.log('🎬 [PostLoginMissionIntro] Mostrando data inizio');
-                setShowStartDate(true);
+                console.log('🎬 [PostLoginMissionIntro] Showing IT IS POSSIBLE');
+                setShowSlogan(true);
                 
-                // Pausa finale 1.5s e redirect a /home
                 setTimeout(() => {
-                  console.log('🎬 [PostLoginMissionIntro] ======= ANIMATION SEQUENCE COMPLETED =======');
-                  console.log('🎬 [PostLoginMissionIntro] Setting sessionStorage hasSeenPostLoginIntro = true');
-                  console.log('🎬 [PostLoginMissionIntro] Redirecting to /home in 3... 2... 1...');
-                  sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                  console.log('🎬 [PostLoginMissionIntro] Showing ™');
+                  setShowTrademark(true);
                   
-                  console.log('🎬 [PostLoginMissionIntro] ======= EXECUTING NAVIGATE TO /home =======');
-                  navigate('/home');
-                  console.log('🎬 [PostLoginMissionIntro] ======= REDIRECT TO HOME EXECUTED =======');
-                }, 1500);
+                  setTimeout(() => {
+                    console.log('🎬 [PostLoginMissionIntro] Showing mission start date');
+                    setShowStartDate(true);
+                    
+                    // Redirect finale dopo 1.5s
+                    setTimeout(() => {
+                      console.log('🎬 [PostLoginMissionIntro] ======= FINAL REDIRECT TO /home =======');
+                      sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                      navigate('/home');
+                    }, 1500);
+                  }, 500);
+                }, 1000);
               }, 500);
-            }, 1000);
-          }, 500);
-        }
-      }, 200); // 200ms per carattere
+            }
+            
+            return newIndex;
+          } else {
+            clearInterval(interval);
+            return prevIndex;
+          }
+        });
+      }, 175); // 175ms per carattere per timing ottimale
     };
 
-    // Avvia animazione dopo piccolo delay
-    const startTimer = setTimeout(startAnimation, 300);
+    // Avvia animazione dopo delay iniziale
+    startTimer = setTimeout(startAnimation, 300);
 
     return () => {
+      console.log('🎬 [PostLoginMissionIntro] Cleanup: clearing timers');
       clearTimeout(startTimer);
       if (interval) clearInterval(interval);
     };

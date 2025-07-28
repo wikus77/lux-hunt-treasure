@@ -17,8 +17,21 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { canAccess, isLoading: accessLoading, subscriptionPlan, accessStartDate, timeUntilAccess } = useAccessControl();
   const [location, setLocation] = useLocation();
 
-  // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
+  // Always call all hooks first - no conditional hook calls
   const user = getCurrentUser();
+
+  // Use effect for navigation to avoid conditional hook usage
+  React.useEffect(() => {
+    if (!authLoading && !accessLoading) {
+      if (!isAuthenticated && location !== '/login') {
+        setLocation('/login');
+      } else if (isAuthenticated && (!subscriptionPlan || subscriptionPlan === '') && location !== '/choose-plan') {
+        setLocation('/choose-plan');
+      }
+    }
+  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation]);
+
+  // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
   if (user?.email === 'wikus77@hotmail.it') {
     console.log('🔓 DEVELOPER ACCESS - Bypassing all restrictions');
     return <>{children}</>;
@@ -35,9 +48,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    if (location !== '/login') {
-      setLocation('/login');
-    }
     return <Login />;
   }
 
@@ -48,9 +58,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       currentLocation: location
     });
     
-    if (location !== '/choose-plan') {
-      setLocation('/choose-plan');
-    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Reindirizzamento alla selezione piano...</div>
