@@ -12,9 +12,6 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
-import { ThemeToggle } from "./components/ui/theme-toggle";
-import { OfflineIndicator } from "./components/offline/OfflineIndicator";
-import { SkipToContent } from "./components/accessibility/SkipToContent";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import { useState, useEffect } from "react";
@@ -22,22 +19,25 @@ import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
-  // © 2025 Joseph MULÉ – M1SSION™ – Production optimized
+  console.log("🚀 App component rendering...");
+  console.log("🔍 App mount - checking for potential reload loops");
   
   // Initialize push notification processor
   usePushNotificationProcessor();
 
   const handleAuthenticated = (userId: string) => {
-    // User authenticated successfully
+    console.log("✅ APP LEVEL - User authenticated:", userId);
   };
   
   const handleNotAuthenticated = () => {
-    // User authentication required
+    console.log("❌ APP LEVEL - User not authenticated");
   };
   
   const handleEmailNotVerified = () => {
-    // Email verification required
+    console.log("📧 APP LEVEL - Email not verified");
   };
+  
+  console.log("🎬 RENDERING NORMAL APP");
   
   return (
     <ErrorBoundary fallback={
@@ -63,8 +63,6 @@ function App() {
       <Router>
         <SoundProvider>
           <AuthProvider>
-            <SkipToContent />
-            <OfflineIndicator />
             <AuthenticationManager 
               onAuthenticated={handleAuthenticated}
               onNotAuthenticated={handleNotAuthenticated}
@@ -75,16 +73,7 @@ function App() {
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
-            <Toaster 
-              position="top-center" 
-              richColors 
-              closeButton 
-              style={{ zIndex: 9999 }}
-              toastOptions={{
-                duration: 4000,
-                className: "!bg-black/90 !text-white !border-cyan-500/30"
-              }}
-            />
+            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
       </Router>

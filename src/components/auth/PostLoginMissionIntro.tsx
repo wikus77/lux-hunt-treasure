@@ -10,6 +10,7 @@ const PostLoginMissionIntro = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
+  const [showTrademark, setShowTrademark] = useState(false);
   const [showStartDate, setShowStartDate] = useState(false);
   const { navigate } = useWouterNavigation();
 
@@ -18,6 +19,9 @@ const PostLoginMissionIntro = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     let startTimer: NodeJS.Timeout;
+    
+    console.log('🎬 [PostLoginMissionIntro] ======= COMPONENT MOUNTED =======');
+    console.log('🎬 [PostLoginMissionIntro] ======= STARTING ANIMATION SEQUENCE =======');
     
     const startAnimation = () => {
       interval = setInterval(() => {
@@ -28,22 +32,35 @@ const PostLoginMissionIntro = () => {
             // 🎯 SEQUENZA NUMERICA RIVELAZIONE: M → M1 → M1S → M1SS → M1SSI → M1SSIO → M1SSION™
             const revealedText = finalText.slice(0, newIndex);
             setDisplayText(revealedText);
+            console.log(`🎬 [PostLoginMissionIntro] Revealing: "${revealedText}" (${newIndex}/${finalText.length})`);
             
             if (newIndex === finalText.length) {
+              console.log('🎬 [PostLoginMissionIntro] M1SSION™ ANIMATION COMPLETED');
               clearInterval(interval);
               
               // 🔄 SEQUENZA ELEMENTI SUCCESSIVI
               setTimeout(() => {
+                console.log('🎬 [PostLoginMissionIntro] Mostrando IT IS POSSIBLE');
                 setShowSlogan(true);
                 
                 setTimeout(() => {
-                  setShowStartDate(true);
+                  console.log('🎬 [PostLoginMissionIntro] Mostrando ™');
+                  setShowTrademark(true);
                   
-                  // 🎯 REDIRECT FINALE DOPO 1.5s
                   setTimeout(() => {
-                    sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
-                    navigate('/home');
-                  }, 1500);
+                    console.log('🎬 [PostLoginMissionIntro] Mostrando data inizio');
+                    setShowStartDate(true);
+                    
+                    // 🎯 REDIRECT FINALE DOPO 1.5s
+                    setTimeout(() => {
+                      console.log('🎬 [PostLoginMissionIntro] ======= ANIMATION SEQUENCE COMPLETED =======');
+                      console.log('🎬 [PostLoginMissionIntro] Setting sessionStorage hasSeenPostLoginIntro = true');
+                      sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                      console.log('🎬 [PostLoginMissionIntro] ======= EXECUTING NAVIGATE TO /home =======');
+                      navigate('/home');
+                      console.log('🎬 [PostLoginMissionIntro] ======= REDIRECT TO HOME EXECUTED =======');
+                    }, 1500);
+                  }, 500);
                 }, 1000);
               }, 500);
             }
@@ -68,22 +85,21 @@ const PostLoginMissionIntro = () => {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
-      <div className="relative w-full h-full flex items-center justify-center">
-        {/* 🎯 M1SSION™ Text with PERFECT center positioning */}
+      <div className="text-center">
+        {/* 🎯 M1SSION™ Text with EXACT numeric reveal effect */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-7xl md:text-8xl lg:text-9xl font-orbitron tracking-wider"
+          className="text-8xl md:text-9xl font-orbitron tracking-wider"
           style={{ 
             fontWeight: 'normal', 
             fontFamily: 'Orbitron, monospace',
-            position: 'absolute',
-            top: '35%',
+            position: 'fixed',
+            top: '40%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
             whiteSpace: 'nowrap',
-            zIndex: 50,
-            textAlign: 'center'
+            zIndex: 50
           }}
         >
           <span className="text-[#00D1FF]" style={{
@@ -98,26 +114,25 @@ const PostLoginMissionIntro = () => {
           </span>
         </motion.div>
         
-        {/* 🎯 IT IS POSSIBLE - PERFECT CENTER EXACT COLOR #BFA342 */}
+        {/* 🎯 IT IS POSSIBLE - EXACT COLOR #BFA342 */}
         <AnimatePresence>
           {showSlogan && (
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -30 }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-              className="text-xl md:text-2xl lg:text-3xl font-orbitron tracking-widest"
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.8 }}
+              className="text-2xl md:text-3xl font-orbitron tracking-widest"
               style={{ 
                 fontWeight: 'normal',
                 color: '#BFA342',
-                position: 'absolute',
-                top: '52%',
+                position: 'fixed',
+                top: '55%',
                 left: '50%',
-                transform: 'translate(-50%, -50%)',
+                transform: 'translateX(-50%)',
                 whiteSpace: 'nowrap',
                 zIndex: 40,
-                textShadow: "0 0 8px rgba(191, 163, 66, 0.4)",
-                textAlign: 'center'
+                textShadow: "0 0 8px rgba(191, 163, 66, 0.4)"
               }}
             >
               IT IS POSSIBLE
@@ -125,25 +140,24 @@ const PostLoginMissionIntro = () => {
           )}
         </AnimatePresence>
         
-        {/* 🎯 Data di Inizio - PERFECT CENTER */}
+        {/* 🎯 Data di Inizio */}
         <AnimatePresence>
           {showStartDate && (
             <motion.div
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: "easeOut" }}
-              className="text-base md:text-lg lg:text-xl font-orbitron tracking-wider"
+              transition={{ duration: 0.6 }}
+              className="text-lg md:text-xl font-orbitron tracking-wider"
               style={{ 
                 fontWeight: 'normal',
                 color: '#FFD700',
-                position: 'absolute',
+                position: 'fixed',
                 top: '65%',
                 left: '50%',
-                transform: 'translate(-50%, -50%)',
+                transform: 'translateX(-50%)',
                 whiteSpace: 'nowrap',
                 zIndex: 30,
-                textShadow: "0 0 6px rgba(255, 215, 0, 0.4)",
-                textAlign: 'center'
+                textShadow: "0 0 6px rgba(255, 215, 0, 0.4)"
               }}
             >
               Inizio: 19-06-25

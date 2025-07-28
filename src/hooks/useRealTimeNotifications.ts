@@ -9,12 +9,13 @@ export function useRealTimeNotifications() {
   const { createNotification, reloadNotifications } = useNotificationManager();
 
   useEffect(() => {
-    // © 2025 Joseph MULÉ – M1SSION™ – Real-time notifications setup
+    console.log("Setting up real-time notifications channel");
     
     // Create a channel for real-time notifications
     const channel = supabase
       .channel('notification-updates')
       .on('broadcast', { event: 'new-notification' }, (payload) => {
+        console.log('Received real-time notification:', payload);
         
         if (payload.payload && typeof payload.payload === 'object') {
           const { title, description } = payload.payload as { title: string; description: string };
@@ -31,11 +32,13 @@ export function useRealTimeNotifications() {
         }
       })
       .subscribe((status) => {
+        console.log('Real-time notification subscription status:', status);
         setIsConnected(status === 'SUBSCRIBED');
       });
 
     // Clean up on unmount
     return () => {
+      console.log("Cleaning up real-time notifications channel");
       supabase.removeChannel(channel);
     };
   }, [createNotification]);
@@ -43,15 +46,18 @@ export function useRealTimeNotifications() {
   // Function to broadcast a notification to all connected clients
   const broadcastNotification = async (title: string, description: string) => {
     try {
-      // Broadcast notification to all connected clients
+      console.log("Broadcasting notification:", { title, description });
+      
+      // Instead of accessing error directly, check the response status
       const response = await supabase.channel('notification-updates').send({
         type: 'broadcast',
         event: 'new-notification',
         payload: { title, description }
       });
 
-      // Check if the response is successful
+      // Check if the response is successful (checking for null/undefined instead of error property)
       if (!response) {
+        console.error("Error broadcasting notification: No response");
         return false;
       }
       
@@ -60,6 +66,7 @@ export function useRealTimeNotifications() {
       
       return true;
     } catch (error) {
+      console.error("Exception when broadcasting notification:", error);
       return false;
     }
   };

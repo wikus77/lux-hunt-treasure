@@ -13,15 +13,13 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
-import { FirstAccessLanding } from "@/components/onboarding/FirstAccessLanding";
 
 const AppHome = () => {
-  // © 2025 Joseph MULÉ – M1SSION™ – Production optimized
+  console.log("🏠 AppHome component rendering");
   
   // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [showFirstAccessLanding, setShowFirstAccessLanding] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
@@ -42,22 +40,27 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  // Check admin/developer access for Panel button - MOVED BEFORE EARLY RETURNS
-  const isAdmin = hasRole('admin');
-  const isDeveloper = hasRole('developer');
-  const showPanelButton = isAdmin || isDeveloper;
-
-  // 🔐 ALL EFFECTS MUST BE CALLED BEFORE CONDITIONAL RETURNS
-  // Check for first access landing page
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      const hasSeenLanding = localStorage.getItem('hasSeenLandingPage');
-      if (hasSeenLanding !== 'true') {
-        setShowFirstAccessLanding(true);
-      }
-    }
-  }, [isAuthenticated, user]);
+  // 🔐 CRITICAL DEBUG: Log received user state AFTER all hooks
+  console.log("🔍 AppHome received user state:", { 
+    userId: user?.id, 
+    userEmail: user?.email, 
+    isAuthenticated, 
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
+  
+  // 🔐 SAFE EARLY RETURN - Now all hooks are called above
+  if (!isAuthenticated || isLoading || !user) {
+    console.log("🚨 AppHome: User not ready yet", { isAuthenticated, isLoading, hasUser: !!user });
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/70">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Check for developer access and Capacitor environment
   useEffect(() => {
@@ -68,7 +71,10 @@ const AppHome = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
+      console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
+      
       // Allow access for all users since this is an internal authenticated route
+      // If users reach this page, they're already authenticated
       setHasAccess(true);
     };
     
@@ -83,7 +89,7 @@ const AppHome = () => {
   }, []);
 
   useEffect(() => {
-    // Real-time notifications connection monitoring
+    console.log("Real-time notification connection status:", isConnected);
   }, [isConnected]);
 
   useEffect(() => {
@@ -95,30 +101,18 @@ const AppHome = () => {
     }
   }, [error]);
 
-  // Handle first access landing completion
-  const handleFirstAccessComplete = () => {
-    localStorage.setItem('hasSeenLandingPage', 'true');
-    setShowFirstAccessLanding(false);
-  };
-  
-  // 🔐 SAFE EARLY RETURN - Now ALL hooks are called above
-  if (!isAuthenticated || isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070818]" role="main" aria-live="polite">
-        <div className="text-center">
-          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4" aria-label="Caricamento in corso"></div>
-          <p className="text-white/70">Caricamento...</p>
-        </div>
-      </div>
-    );
-  }
+  // Check admin/developer access for Panel button
+  const isAdmin = hasRole('admin');
+  const isDeveloper = hasRole('developer');
+  const showPanelButton = isAdmin || isDeveloper;
 
-  // Show first access landing if user hasn't seen it
-  if (showFirstAccessLanding) {
-    return <FirstAccessLanding onComplete={handleFirstAccessComplete} />;
-  }
-
-  // Panel access computed for authenticated users
+  console.log('🔍 Panel Button Debug:', { 
+    isAdmin, 
+    isDeveloper, 
+    showPanelButton,
+    userEmail: getCurrentUser()?.email,
+    hasRoleFunction: typeof hasRole
+  });
 
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
@@ -209,12 +203,9 @@ const AppHome = () => {
                       transition={{ delay: 0.8, duration: 0.6 }}
                       className="mt-8"
                     >
-                       <motion.button
-                         onClick={() => navigate('/panel-access')}
-                         className="w-full glass-card p-4 border border-[#4361ee]/30 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 rounded-xl group relative overflow-hidden"
-                         aria-label="Accedi al M1SSION Panel - Centro AI Generativo"
-                         role="button"
-                         tabIndex={0}
+                      <motion.button
+                        onClick={() => navigate('/panel-access')}
+                        className="w-full glass-card p-4 border border-[#4361ee]/30 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 rounded-xl group relative overflow-hidden"
                         whileHover={{ 
                           scale: 1.02,
                           borderColor: 'rgba(67, 97, 238, 0.6)'

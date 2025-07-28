@@ -21,24 +21,28 @@ export function useNotificationManager() {
   const pollingIntervalRef = useRef<number | null>(null);
   const isInitialLoadDone = useRef<boolean>(false);
   
-  // © 2025 Joseph MULÉ – M1SSION™ – Optimized notification polling
+  // FIXED: Setup notification polling every 5 seconds instead of 3 minutes
   useEffect(() => {
     const startPolling = () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
       
-      // Poll every 30 seconds for production optimization
+      // FIXED: Poll every 5 seconds instead of 180 seconds
       pollingIntervalRef.current = window.setInterval(() => {
         if (document.visibilityState === 'visible') {
+          console.log('🔄 NOTIFICATION_MANAGER: Polling for new notifications...');
           reloadNotifications();
+        } else {
+          console.log('⏸️ NOTIFICATION_MANAGER: Skipping polling - page not visible');
         }
-      }, 30000) as unknown as number; // 30 seconds - production optimized
+      }, 5000) as unknown as number; // 5 seconds
     };
     
     // Initial load
     if (!isInitialLoadDone.current) {
       reloadNotifications().then(() => {
+        console.log('📱 NOTIFICATION_MANAGER: Initial notifications loaded');
         isInitialLoadDone.current = true;
         startPolling();
       });
@@ -47,7 +51,6 @@ export function useNotificationManager() {
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
       }
     };
   }, [reloadNotifications]);
@@ -65,7 +68,8 @@ export function useNotificationManager() {
   // Handle opening notifications drawer
   const openNotificationsDrawer = useCallback(() => {
     setShowNotifications(true);
-    // Reload when drawer opens for fresh data
+    // FIXED: Always reload when drawer opens for fresh data
+    console.log('📱 NOTIFICATION_MANAGER: Drawer opened, reloading notifications');
     reloadNotifications();
   }, [setShowNotifications, reloadNotifications]);
 
@@ -73,11 +77,15 @@ export function useNotificationManager() {
   const closeNotificationsDrawer = useCallback(() => {
     setShowNotifications(false);
     // Mark notifications as read when drawer is closed
-    markAllAsRead();
+    markAllAsRead().then(() => {
+      console.log('✅ NOTIFICATION_MANAGER: All notifications marked as read on drawer close');
+    });
   }, [setShowNotifications, markAllAsRead]);
 
-  // © 2025 Joseph MULÉ – M1SSION™ – Optimized notification creation
+  // FIXED: Enhanced notification creation with immediate reload
   const createNotification = useCallback(async (title: string, description: string, type = NOTIFICATION_CATEGORIES.GENERIC) => {
+    console.log(`📝 NOTIFICATION_MANAGER: Creating notification of type ${type}:`, title);
+    
     // Use sonner toast to show notification
     toast(title, {
       description
@@ -92,14 +100,19 @@ export function useNotificationManager() {
       });
       
       if (result) {
-        // Reload after successful creation
+        console.log('✅ NOTIFICATION_MANAGER: Notification created successfully');
+        // FIXED: Force reload after successful creation
         setTimeout(() => {
+          console.log('🔄 NOTIFICATION_MANAGER: Reloading after notification creation');
           reloadNotifications();
         }, 500);
+      } else {
+        console.error("❌ NOTIFICATION_MANAGER: Failed to create notification");
       }
       
       return result;
     } catch (error) {
+      console.error("❌ NOTIFICATION_MANAGER: Error creating notification:", error);
       return false;
     }
   }, [addNotification, reloadNotifications]);
@@ -124,8 +137,9 @@ export function useNotificationManager() {
     return await createNotification(title, description, NOTIFICATION_CATEGORIES.WEEKLY);
   }, [createNotification]);
 
-  // Manual reload function
+  // FIXED: Manual reload function with immediate execution
   const manualReload = useCallback(async () => {
+    console.log("🔄 NOTIFICATION_MANAGER: Manual notification reload requested");
     return await reloadNotifications();
   }, [reloadNotifications]);
 
