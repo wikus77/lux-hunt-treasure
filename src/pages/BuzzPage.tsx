@@ -117,7 +117,7 @@ export const BuzzPage: React.FC = () => {
                   <p className="font-semibold">BUZZ oggi: {stats?.today_count || 0} (prezzo progressivo)</p>
                   <p className="font-semibold">BUZZ totali: {stats?.total_count || 0}/200 (target finale)</p>
                   <p className="text-[#00ffff]">Prossimo: €{currentPrice.toFixed(2)}</p>
-                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ - RESET COMPLETO 17/07/2025</p>
+                  <p className="text-xs text-white/60">⚠️ Pagamento Stripe obbligatorio per ogni BUZZ</p>
                 </div>
               </div>
             </div>

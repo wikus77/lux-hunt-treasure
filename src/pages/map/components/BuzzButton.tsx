@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
+import { useXpSystem } from '@/hooks/useXpSystem';
 import { toast } from 'sonner';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
@@ -30,6 +31,7 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { user } = useAuth();
   const { callBuzzApi } = useBuzzApi();
+  const { xpStatus } = useXpSystem();
 
   // CRITICAL: Calculate dynamic pricing based on generation count
   const [currentGeneration, setCurrentGeneration] = useState(1);
@@ -310,7 +312,9 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
             </motion.div>
           ) : (
             <>
-              <Zap className="text-white" size={28} />
+              <span className="text-xs text-white/90 mt-1 font-bold">
+                XP: {xpStatus.map_xp_progress}/250
+              </span>
               <span className="text-xs text-white/90 mt-1 font-bold">
                 €{dynamicPrice.toFixed(2)}
               </span>

@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
+import { useXpSystem } from '@/hooks/useXpSystem';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { useSoundEffects } from '@/hooks/use-sound-effects';
@@ -24,6 +25,7 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const { playSound } = useSoundEffects();
   const [isLocked, setIsLocked] = useState(false);
   const { currentWeekAreas } = useBuzzMapLogic();
+  const { xpStatus } = useXpSystem();
 
   const handleBuzzPress = () => {
     if (!isAuthenticated) {
@@ -68,11 +70,18 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
         whileTap={{ scale: canUseBuzz && isAuthenticated ? 0.9 : 1 }}
         aria-label="Premi il Buzz"
       >
-        <div className="absolute top-0 left-0 w-full h-full rounded-full flex items-center justify-center">
+        <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
           {isLocked ? (
-            <Lock className="text-white" size={32} />
+            <Lock className="text-white" size={24} />
           ) : (
-            <Zap className="text-white" size={32} />
+            <>
+              <span className="text-xs text-white/90 font-bold">
+                XP: {xpStatus.map_xp_progress}/250
+              </span>
+              <span className="text-xs text-white/70 leading-none mt-1">
+                BUZZ MAP
+              </span>
+            </>
           )}
         </div>
       </motion.button>

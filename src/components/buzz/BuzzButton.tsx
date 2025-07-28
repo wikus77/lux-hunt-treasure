@@ -2,7 +2,8 @@
 // M1SSION™ - BUZZ Button UI Component
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Zap, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { useXpSystem } from '@/hooks/useXpSystem';
 
 interface BuzzButtonProps {
   currentPrice: number;
@@ -17,6 +18,7 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
   buzzing,
   onClick
 }) => {
+  const { xpStatus } = useXpSystem();
   return (
     <motion.button
       whileTap={{ scale: 0.97 }}
@@ -34,7 +36,7 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
     >
       {buzzing ? (
         <div className="flex flex-col items-center space-y-3">
-          <Zap className="w-12 h-12 text-white" />
+          <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin" />
           <span className="text-lg font-semibold text-white">BUZZING...</span>
         </div>
       ) : isBlocked ? (
@@ -44,8 +46,10 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-2">
-          <Zap className="w-16 h-16 text-white" />
           <span className="text-3xl font-bold text-white">BUZZ</span>
+          <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-white">
+            XP: {xpStatus.buzz_xp_progress}/100
+          </div>
           <div className="text-sm font-medium bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm text-white">
             €{currentPrice.toFixed(2)}
           </div>
