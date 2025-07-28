@@ -12,7 +12,7 @@ import { useDynamicIsland } from "@/hooks/useDynamicIsland";
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useMissionManager } from "@/hooks/useMissionManager";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";

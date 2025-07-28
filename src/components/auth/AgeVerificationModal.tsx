@@ -1,8 +1,9 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 
 interface AgeVerificationModalProps {
@@ -19,7 +20,6 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
   const [day, setDay] = useState("");
   const [month, setMonth] = useState("");
   const [year, setYear] = useState("");
-  const { toast } = useToast();
 
   const calculateAge = (birthDate: Date) => {
     const today = new Date();
@@ -38,9 +38,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
     
     // Validations
     if (!day || !month || !year) {
-      toast({
-        variant: "destructive",
-        title: "Inserisci la data completa",
+      toast.error("Inserisci la data completa", {
         description: "Per favore inserisci giorno, mese e anno di nascita."
       });
       return;
@@ -50,9 +48,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
     
     // Check if date is valid
     if (isNaN(birthDate.getTime())) {
-      toast({
-        variant: "destructive",
-        title: "Data non valida",
+      toast.error("Data non valida", {
         description: "La data inserita non è valida."
       });
       return;
@@ -61,15 +57,12 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
     const age = calculateAge(birthDate);
     
     if (age >= 18) {
-      toast({
-        title: "Età verificata",
+      toast.success("Età verificata", {
         description: "Grazie per aver verificato la tua età."
       });
       onVerified();
     } else {
-      toast({
-        variant: "destructive",
-        title: "Età non sufficiente",
+      toast.error("Età non sufficiente", {
         description: "Devi avere almeno 18 anni per accedere a questo sito."
       });
     }

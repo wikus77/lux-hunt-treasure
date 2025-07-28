@@ -6,6 +6,9 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
+import { HelmetProvider } from "./components/helmet/HelmetProvider";
+import SkipToContent from "./components/accessibility/SkipToContent";
+import OfflineIndicator from "./components/offline/OfflineIndicator";
 import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
@@ -19,25 +22,22 @@ import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
-  console.log("🚀 App component rendering...");
-  console.log("🔍 App mount - checking for potential reload loops");
+  // Production-ready logging removed
   
   // Initialize push notification processor
   usePushNotificationProcessor();
 
   const handleAuthenticated = (userId: string) => {
-    console.log("✅ APP LEVEL - User authenticated:", userId);
+    // User authenticated successfully
   };
   
   const handleNotAuthenticated = () => {
-    console.log("❌ APP LEVEL - User not authenticated");
+    // User not authenticated
   };
   
   const handleEmailNotVerified = () => {
-    console.log("📧 APP LEVEL - Email not verified");
+    // Email verification required
   };
-  
-  console.log("🎬 RENDERING NORMAL APP");
   
   return (
     <ErrorBoundary fallback={
@@ -60,9 +60,12 @@ function App() {
       </div>
     }>
     <ProductionSafety>
-      <Router>
-        <SoundProvider>
-          <AuthProvider>
+      <HelmetProvider>
+        <SkipToContent />
+        <OfflineIndicator />
+        <Router>
+          <SoundProvider>
+            <AuthProvider>
             <AuthenticationManager 
               onAuthenticated={handleAuthenticated}
               onNotAuthenticated={handleNotAuthenticated}
@@ -74,9 +77,10 @@ function App() {
             <InstallPrompt />
             <PushSetup />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
-          </AuthProvider>
-        </SoundProvider>
-      </Router>
+            </AuthProvider>
+          </SoundProvider>
+        </Router>
+      </HelmetProvider>
     </ProductionSafety>
     </ErrorBoundary>
   );

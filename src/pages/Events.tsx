@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import EventsPage from "./EventsPage";
 import PublicLayout from "@/components/layout/PublicLayout";
 

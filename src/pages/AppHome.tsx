@@ -7,7 +7,7 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
@@ -15,7 +15,7 @@ import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 
 const AppHome = () => {
-  console.log("🏠 AppHome component rendering");
+  // AppHome component rendering
   
   // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ const AppHome = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
+      // Access check completed
       
       // Allow access for all users since this is an internal authenticated route
       // If users reach this page, they're already authenticated
@@ -68,7 +68,7 @@ const AppHome = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Real-time notification connection status:", isConnected);
+    // Real-time notification connection status updated
   }, [isConnected]);
 
   useEffect(() => {
@@ -80,14 +80,7 @@ const AppHome = () => {
     }
   }, [error]);
   
-  // 🔐 CRITICAL DEBUG: Log received user state AFTER all hooks
-  console.log("🔍 AppHome received user state:", { 
-    userId: user?.id, 
-    userEmail: user?.email, 
-    isAuthenticated, 
-    isLoading,
-    timestamp: new Date().toISOString()
-  });
+  // User state validated
   
   // 🔐 SAFE EARLY RETURN - Now all hooks are called above
   // CRITICAL FIX: Ensure consistent return to prevent hook count mismatch
@@ -120,13 +113,7 @@ const AppHome = () => {
   const isDeveloper = hasRole('developer');
   const showPanelButton = isAdmin || isDeveloper;
 
-  console.log('🔍 Panel Button Debug:', { 
-    isAdmin, 
-    isDeveloper, 
-    showPanelButton,
-    userEmail: getCurrentUser()?.email,
-    hasRoleFunction: typeof hasRole
-  });
+  // Panel access determined
 
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
@@ -190,14 +177,18 @@ const AppHome = () => {
                 </motion.div>
               )}
 
-              <div className="container mx-auto px-3">
+                  <div className="container mx-auto px-3">
                 <motion.div
                   className="text-center my-6"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
                 >
-                  <h1 className="text-4xl font-orbitron font-bold">
+                  <h1 
+                    className="text-4xl font-orbitron font-bold"
+                    role="banner"
+                    aria-label="M1SSION Centro di Comando Agente"
+                  >
                     <span className="text-[#00D1FF]" style={{ 
                       textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                     }}>M1</span>
@@ -206,7 +197,12 @@ const AppHome = () => {
                   <p className="text-gray-400 mt-2">Centro di Comando Agente</p>
                 </motion.div>
 
-                <main className="max-w-screen-xl mx-auto">
+                <main 
+                  id="main-content" 
+                  className="max-w-screen-xl mx-auto"
+                  role="main"
+                  aria-label="Contenuto principale"
+                >
                   <CommandCenterHome />
                   
                   {/* M1SSION PANEL™ Button - Only for Admin/Developer */}

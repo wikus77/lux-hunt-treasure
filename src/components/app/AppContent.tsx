@@ -1,11 +1,8 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useEffect, useState } from "react";
 import { ThemeProvider } from "../theme-provider";
 import { toast } from "sonner";
-import { Spinner } from "../ui/spinner";
-// by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx)
-// import { Toaster } from "sonner";
-import { Toaster as ShadcnToaster } from "../ui/toaster";
 import AppRoutes from "../../routes/AppRoutes";
 
 /**
@@ -80,11 +77,7 @@ function AppContent() {
       disableTransitionOnChange
     >
       {hydrated ? (
-        <>
-          <AppRoutes />
-          {/* by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx) */}
-          <ShadcnToaster />
-        </>
+        <AppRoutes />
       ) : (
         <div className="flex justify-center items-center min-h-screen bg-black text-white">
           <div className="loading-spinner text-center">

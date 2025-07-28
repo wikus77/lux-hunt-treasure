@@ -139,9 +139,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event, newSession) => {
         log(`Auth event: ${event}`, newSession?.user?.email || 'NO USER');
         
-        // Update stato sincrono
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        // CRITICAL FIX: Use functional updates to prevent setState during render
+        setSession(prevSession => newSession);
+        setUser(prevUser => newSession?.user ?? null);
         
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);

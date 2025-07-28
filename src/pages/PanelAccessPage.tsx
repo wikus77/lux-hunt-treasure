@@ -7,7 +7,7 @@ import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin } from 'lucide
 import { useAuthContext } from '@/contexts/auth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
-import { Helmet } from 'react-helmet';
+import { Helmet } from 'react-helmet-async';
 import AIContentGenerator from '@/components/panel/AIContentGenerator';
 import MissionControlPanel from '@/components/panel/MissionControlPanel';
 import { MissionResetSection } from '@/components/panel/MissionResetSection';
