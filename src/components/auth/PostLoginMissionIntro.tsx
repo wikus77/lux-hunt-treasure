@@ -81,19 +81,28 @@ const PostLoginMissionIntro = () => {
                 // Sicurezza sessionStorage
                 sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                 
-                // 🚨 WOUTER ROUTER NAVIGATION - CORRETTO
-                try {
-                  console.log('🏠 Wouter navigation → /home');
-                  setLocation('/home');
-                  console.log('✅ Wouter navigation executed successfully');
-                } catch (error) {
-                  console.error('❌ Errore Wouter navigation:', error);
-                  // Fallback sicuro con timeout
-                  setTimeout(() => {
-                    console.log('🔄 Fallback Wouter navigation → /home');
+                // 🚨 WOUTER DETERMINISTIC NAVIGATION
+                console.log('🔥 [MISSION COMPLETE] Starting navigation to /home');
+                setIsAnimationComplete(true);
+                
+                // DETERMINISTIC WOUTER NAVIGATION
+                setTimeout(() => {
+                  if (!mountedRef.current || hasRedirectedRef.current) {
+                    console.log('⚠️ Navigation blocked - component unmounted or already redirected');
+                    return;
+                  }
+                  
+                  try {
+                    console.log('🏠 [FINAL STEP] Wouter setLocation → /home');
                     setLocation('/home');
-                  }, 100);
-                }
+                    console.log('✅ [SUCCESS] Wouter navigation executed - App should show /home now');
+                  } catch (error) {
+                    console.error('❌ [ERROR] Wouter setLocation failed:', error);
+                    // EMERGENCY FALLBACK - Force window navigation as last resort
+                    console.log('🚨 [EMERGENCY] Using window.location as final fallback');
+                    window.location.href = '/home';
+                  }
+                }, 200); // Slight delay to ensure DOM is ready
               }, 1500);
             }, 1000);
           }, 500);
