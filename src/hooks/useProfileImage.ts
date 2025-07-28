@@ -3,34 +3,18 @@
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useProfileRealtime } from "@/hooks/useProfileRealtime";
 
 export const useProfileImage = () => {
   const [profileImage, setProfileImage] = useLocalStorage<string | null>('profileImage', null);
+  const { profileData: realtimeProfile } = useProfileRealtime();
   
-  // Load avatar from Supabase on mount
+  // Sync with realtime profile image updates
   useEffect(() => {
-    const loadAvatarFromSupabase = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('avatar_url')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (data?.avatar_url && !error) {
-            setProfileImage(data.avatar_url);
-          }
-        }
-      } catch (error) {
-        console.error("Error loading avatar from Supabase:", error);
-      }
-    };
-    
-    loadAvatarFromSupabase();
-  }, [setProfileImage]);
+    if (realtimeProfile?.avatar_url) {
+      setProfileImage(realtimeProfile.avatar_url);
+    }
+  }, [realtimeProfile?.avatar_url, setProfileImage]);
 
   // Save image to Supabase Storage
   const saveImageToStorage = async (file: File): Promise<string | null> => {
@@ -56,11 +40,8 @@ export const useProfileImage = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
-      // Update profile with new avatar URL
-      await supabase
-        .from('profiles')
-        .update({ avatar_url: publicUrl })
-        .eq('id', session.user.id);
+      // Update profile with new avatar URL (handled via realtime in calling component)
+      // This function is kept for backwards compatibility
 
       return publicUrl;
     } catch (error) {

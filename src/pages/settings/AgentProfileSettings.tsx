@@ -3,6 +3,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileData } from '@/hooks/useProfileData';
+import { useProfileRealtime } from '@/hooks/useProfileRealtime';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 const AgentProfileSettings: React.FC = () => {
   const { user } = useAuth();
   const { profileData, actions } = useProfileData();
+  const { updateProfile } = useProfileRealtime();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [agentName, setAgentName] = useState(profileData.name || '');
@@ -70,14 +72,10 @@ const AgentProfileSettings: React.FC = () => {
 
       console.log('Public URL:', publicUrl);
 
-      const { error: updateError } = await supabase.from('profiles').update({ 
-        avatar_url: publicUrl 
-      }).eq('id', user.id);
-
-      if (updateError) {
-        console.error('Profile update error:', updateError);
-        throw updateError;
-      }
+      // Use realtime update for immediate sync
+      await updateProfile({
+        avatar_url: publicUrl
+      });
 
       // Update profileData immediately for visual feedback
       actions.setProfileImage(publicUrl);
@@ -104,11 +102,13 @@ const AgentProfileSettings: React.FC = () => {
     
     setLoading(true);
     try {
-      await supabase.from('profiles').update({ 
-        full_name: agentName 
-      }).eq('id', user.id);
+      // Use realtime update for immediate sync
+      await updateProfile({
+        full_name: agentName
+      });
 
-      await actions.handleSaveProfile();
+      // Update local profile data for consistency
+      actions.setName(agentName);
       
       toast({
         title: "✅ Profilo salvato",
