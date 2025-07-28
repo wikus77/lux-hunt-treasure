@@ -19,44 +19,59 @@ const PostLoginMissionIntro = () => {
   useEffect(() => {
     let interval: NodeJS.Timeout;
     let startTimer: NodeJS.Timeout;
+    let mounted = true;
     
     const startAnimation = () => {
+      if (!mounted) return;
+      
       let stepIndex = 0;
       
       interval = setInterval(() => {
-        if (stepIndex < animationSteps.length) {
-          setDisplayText(animationSteps[stepIndex]);
-          stepIndex++;
-          
-          // Quando raggiungiamo l'ultimo step (M1SSION™)
-          if (stepIndex === animationSteps.length) {
-            clearInterval(interval);
-            
-            // 🔄 SEQUENZA ELEMENTI SUCCESSIVI
-            setTimeout(() => {
-              setShowSlogan(true);
-              
-              setTimeout(() => {
-                setShowStartDate(true);
-                
-                // 🎯 REDIRECT FINALE DOPO 1.5s
-                setTimeout(() => {
-                  sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
-                  navigate('/home');
-                }, 1500);
-              }, 1000);
-            }, 500);
-          }
-        } else {
+        if (!mounted || stepIndex >= animationSteps.length) {
           clearInterval(interval);
+          return;
+        }
+        
+        setDisplayText(animationSteps[stepIndex]);
+        stepIndex++;
+        
+        // Quando raggiungiamo l'ultimo step (M1SSION™)
+        if (stepIndex === animationSteps.length) {
+          clearInterval(interval);
+          
+          if (!mounted) return;
+          
+          // 🔄 SEQUENZA ELEMENTI SUCCESSIVI - ANTI-RACE CONDITIONS
+          setTimeout(() => {
+            if (!mounted) return;
+            setShowSlogan(true);
+            
+            setTimeout(() => {
+              if (!mounted) return;
+              setShowStartDate(true);
+              
+              // 🎯 REDIRECT FINALE DOPO 1.5s con protezione mounted
+              setTimeout(() => {
+                if (!mounted) return;
+                sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                console.log('🎬 Mission intro completata, redirect a /home');
+                navigate('/home');
+              }, 1500);
+            }, 1000);
+          }, 500);
         }
       }, 175);
     };
 
-    // Avvia animazione dopo delay iniziale
-    startTimer = setTimeout(startAnimation, 300);
+    // 🚨 CRITICAL: Delay per evitare conflitti con AuthProvider reload
+    startTimer = setTimeout(() => {
+      if (mounted) {
+        startAnimation();
+      }
+    }, 500);
 
     return () => {
+      mounted = false;
       clearTimeout(startTimer);
       if (interval) clearInterval(interval);
     };

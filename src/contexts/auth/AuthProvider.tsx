@@ -146,8 +146,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
           
-          // PWA iOS: Force reload once after login to stabilize
-          if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
+          // 🚨 CRITICAL FIX: Disabilita reload durante mission-intro per evitare flash bianco
+          const currentPath = window.location.pathname;
+          const isMissionIntro = currentPath === '/mission-intro';
+          
+          // PWA iOS: Force reload once after login to stabilize (but NOT during mission intro)
+          if (!isMissionIntro && ((window as any).Capacitor || navigator.userAgent.includes('Safari'))) {
             log("🔄 PWA iOS: Post-login cache refresh");
             setTimeout(() => {
               if (!sessionStorage.getItem('auth_reload_done')) {
@@ -155,6 +159,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 window.location.reload();
               }
             }, 1000);
+          } else if (isMissionIntro) {
+            log("🎬 SKIP reload durante mission-intro per evitare flash bianco");
+            sessionStorage.setItem('auth_reload_done', 'true');
           }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
