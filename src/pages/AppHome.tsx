@@ -17,7 +17,7 @@ import { Cpu } from "lucide-react";
 const AppHome = () => {
   console.log("🏠 AppHome component rendering");
   
-  // CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const { profileImage } = useProfileImage();
@@ -27,16 +27,7 @@ const AppHome = () => {
   const { hasRole, user, isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
   const [, navigate] = useLocation();
 
-  // CRITICAL DEBUG: Log received user state
-  console.log("🔍 AppHome received user state:", { 
-    userId: user?.id, 
-    userEmail: user?.email, 
-    isAuthenticated, 
-    isLoading,
-    timestamp: new Date().toISOString()
-  });
-  
-  // MOVED ALL HOOKS BEFORE CONDITIONAL RETURNS
+  // 🔐 ALL NOTIFICATION HOOKS CALLED BEFORE CONDITIONALS
   const {
     notifications,
     unreadCount,
@@ -48,8 +39,17 @@ const AppHome = () => {
   } = useNotificationManager();
 
   const { isConnected } = useRealTimeNotifications();
+
+  // 🔐 CRITICAL DEBUG: Log received user state AFTER all hooks
+  console.log("🔍 AppHome received user state:", { 
+    userId: user?.id, 
+    userEmail: user?.email, 
+    isAuthenticated, 
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
   
-  // Safety check to prevent rendering if user is not ready
+  // 🔐 SAFE EARLY RETURN - Now all hooks are called above
   if (!isAuthenticated || isLoading || !user) {
     console.log("🚨 AppHome: User not ready yet", { isAuthenticated, isLoading, hasUser: !!user });
     return (
