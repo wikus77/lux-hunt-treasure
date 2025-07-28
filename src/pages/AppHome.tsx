@@ -90,13 +90,25 @@ const AppHome = () => {
   });
   
   // 🔐 SAFE EARLY RETURN - Now all hooks are called above
-  if (!isAuthenticated || isLoading || !user) {
-    console.log("🚨 AppHome: User not ready yet", { isAuthenticated, isLoading, hasUser: !!user });
+  // CRITICAL FIX: Ensure consistent return to prevent hook count mismatch
+  if (!isAuthenticated || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#070818]">
         <div className="text-center">
           <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white/70">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // CRITICAL FIX: Second check for user without causing hook issues
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/70">Inizializzazione utente...</p>
         </div>
       </div>
     );

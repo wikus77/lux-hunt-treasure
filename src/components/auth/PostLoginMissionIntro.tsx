@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Sequenza post-login implementata secondo specifiche ufficiali  
+// SEQUENZA POST-LOGIN CHIRURGICA - ANIMAZIONE PERFETTA SENZA ERRORI
 // ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
 import { useState, useEffect } from 'react';
@@ -14,47 +14,43 @@ const PostLoginMissionIntro = () => {
   const { navigate } = useWouterNavigation();
 
   const finalText = 'M1SSION™';
+  const animationSteps = ['M', 'M1', 'M1S', 'M1SS', 'M1SSI', 'M1SSIO', 'M1SSION', 'M1SSION™'];
   
   useEffect(() => {
     let interval: NodeJS.Timeout;
     let startTimer: NodeJS.Timeout;
     
     const startAnimation = () => {
+      let stepIndex = 0;
+      
       interval = setInterval(() => {
-        setCurrentIndex(prevIndex => {
-          const newIndex = prevIndex + 1;
+        if (stepIndex < animationSteps.length) {
+          setDisplayText(animationSteps[stepIndex]);
+          stepIndex++;
           
-          if (newIndex <= finalText.length) {
-            // 🎯 SEQUENZA NUMERICA RIVELAZIONE: M → M1 → M1S → M1SS → M1SSI → M1SSIO → M1SSION™
-            const revealedText = finalText.slice(0, newIndex);
-            setDisplayText(revealedText);
-            
-            if (newIndex === finalText.length) {
-              clearInterval(interval);
-              
-              // 🔄 SEQUENZA ELEMENTI SUCCESSIVI
-              setTimeout(() => {
-                setShowSlogan(true);
-                
-                setTimeout(() => {
-                  setShowStartDate(true);
-                  
-                  // 🎯 REDIRECT FINALE DOPO 1.5s
-                  setTimeout(() => {
-                    sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
-                    navigate('/home');
-                  }, 1500);
-                }, 1000);
-              }, 500);
-            }
-            
-            return newIndex;
-          } else {
+          // Quando raggiungiamo l'ultimo step (M1SSION™)
+          if (stepIndex === animationSteps.length) {
             clearInterval(interval);
-            return prevIndex;
+            
+            // 🔄 SEQUENZA ELEMENTI SUCCESSIVI
+            setTimeout(() => {
+              setShowSlogan(true);
+              
+              setTimeout(() => {
+                setShowStartDate(true);
+                
+                // 🎯 REDIRECT FINALE DOPO 1.5s
+                setTimeout(() => {
+                  sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
+                  navigate('/home');
+                }, 1500);
+              }, 1000);
+            }, 500);
           }
-        });
-      }, 175); // 175ms per carattere per timing ottimale
+        } else {
+          clearInterval(interval);
+        }
+      }, 175);
     };
 
     // Avvia animazione dopo delay iniziale
@@ -64,7 +60,7 @@ const PostLoginMissionIntro = () => {
       clearTimeout(startTimer);
       if (interval) clearInterval(interval);
     };
-  }, [navigate, finalText.length]);
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
