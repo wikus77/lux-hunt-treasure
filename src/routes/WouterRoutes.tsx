@@ -39,6 +39,7 @@ import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
 import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
 import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
+import MissionIntroPage from "@/pages/MissionIntroPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -216,6 +217,10 @@ const WouterRoutes: React.FC = () => {
             )}
           </Route>
 
+          {/* Mission intro route - Post-login animation - NO ProtectedRoute to avoid loops */}
+          <Route path="/mission-intro">
+            <MissionIntroPage />
+          </Route>
 
           {/* Auth routes */}
           <Route path="/login" component={Login} />

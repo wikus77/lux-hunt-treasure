@@ -124,7 +124,10 @@ const LoginPage: React.FC = () => {
           return;
         }
 
-        // 🚫 TOAST REMOVED - Preventing duplicates, StandardLoginForm handles success feedback
+        toast({
+          title: 'Accesso Effettuato',
+          description: 'Benvenuto in M1SSION™'
+        });
         
         vibrate(100);
         

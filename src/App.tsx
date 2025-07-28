@@ -15,8 +15,6 @@ import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
 import { useState, useEffect } from "react";
-import { OfflineManager } from "./components/offline/OfflineManager";
-import { InstallBanner } from "./components/pwa/InstallBanner";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
@@ -71,27 +69,11 @@ function App() {
               onEmailNotVerified={handleEmailNotVerified}
             />
             <BuzzPaymentMonitor />
-            <OfflineManager />
             <LegalOnboarding />
             <WouterRoutes />
-            <InstallBanner />
             <InstallPrompt />
             <PushSetup />
-            <Toaster 
-              position="top-right" 
-              richColors 
-              closeButton 
-              duration={4000}
-              toastOptions={{
-                style: {
-                  background: 'rgba(0, 0, 0, 0.85)',
-                  color: 'white',
-                  border: '1px solid rgba(0, 209, 255, 0.3)',
-                  borderRadius: '8px',
-                },
-              }}
-              style={{ zIndex: 9999 }} 
-            />
+            <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
       </Router>

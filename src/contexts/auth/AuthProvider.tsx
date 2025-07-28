@@ -1,3 +1,4 @@
+
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
@@ -138,28 +139,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event, newSession) => {
         log(`Auth event: ${event}`, newSession?.user?.email || 'NO USER');
         
-        // PREVENT RENDER PHASE UPDATES: Use setTimeout to defer state updates
-        setTimeout(() => {
-          // Update stato sincrono
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
+        // Update stato sincrono
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        if (event === 'SIGNED_IN' && newSession) {
+          log("Utente autenticato", newSession.user.email);
           
-          if (event === 'SIGNED_IN' && newSession) {
-            log("Utente autenticato", newSession.user.email);
-            
-            // 🚨 ZERO RELOAD POLICY: No reload anywhere
-            log("🎬 AUTH SUCCESS - Zero reload policy active");
-            sessionStorage.setItem('auth_reload_done', 'true');
-          } else if (event === 'SIGNED_OUT') {
-            log("Utente disconnesso");
-            setUserRoles([]);
-            setIsRoleLoading(false);
-            sessionStorage.removeItem('auth_reload_done');
+          // PWA iOS: Force reload once after login to stabilize
+          if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
+            log("🔄 PWA iOS: Post-login cache refresh");
+            setTimeout(() => {
+              if (!sessionStorage.getItem('auth_reload_done')) {
+                sessionStorage.setItem('auth_reload_done', 'true');
+                window.location.reload();
+              }
+            }, 1000);
           }
-          
-          // Auth completata
-          setIsLoading(false);
-        }, 0);
+        } else if (event === 'SIGNED_OUT') {
+          log("Utente disconnesso");
+          setUserRoles([]);
+          setIsRoleLoading(false);
+          sessionStorage.removeItem('auth_reload_done');
+        }
+        
+        // Auth completata
+        setIsLoading(false);
       }
     );
 

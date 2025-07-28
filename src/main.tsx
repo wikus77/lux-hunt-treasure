@@ -88,7 +88,19 @@ const renderApp = () => {
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <App />
-          {/* 🚫 TOASTER REMOVED - App.tsx gestisce già Sonner Toaster */}
+          <Toaster 
+            position="top-right" 
+            richColors 
+            closeButton 
+            duration={4000}
+            toastOptions={{
+              style: {
+                background: 'rgba(0, 0, 0, 0.8)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              },
+            }}
+          />
         </QueryClientProvider>
       </React.StrictMode>
     );

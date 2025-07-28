@@ -49,22 +49,33 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         return;
       }
 
-      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - NO TOAST (preventing duplicates)');
-      // 🚫 TOAST REMOVED - AuthProvider will handle success feedback
+      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - Emitting auth-success event');
+      toast.success('Login effettuato con successo', {
+        description: 'Benvenuto in M1SSION™!'
+      });
       
       // Emit custom auth success event for PWA compatibility
       window.dispatchEvent(new CustomEvent('auth-success', { 
         detail: { email, timestamp: Date.now() } 
       }));
       
-      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Redirecting to /home');
-      // Direct redirect to home after successful login
-      navigate('/home');
+      // MISSION POST-LOGIN SEQUENCE: Clear intro flag and redirect to mission-intro
+      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
+      sessionStorage.removeItem("hasSeenPostLoginIntro");
       
-      // PWA iOS Safari compatibility event
+      console.log('🚀 [StandardLoginForm] ATTEMPTING REDIRECT TO /mission-intro for M1SSION animation');
+      navigate('/mission-intro');
+      
+      // PWA iOS Safari fallback
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as any).standalone === true) {
-        console.log('📱 PWA DETECTED - Auth flow will handle navigation');
+        console.log('📱 PWA DETECTED - Setting up fallback redirect to mission-intro');
+        setTimeout(() => {
+          if (window.location.pathname === '/login') {
+            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href to mission-intro');
+            window.location.href = '/mission-intro';
+          }
+        }, 800);
       }
     } catch (error: any) {
       console.error('💥 LOGIN EXCEPTION:', error);

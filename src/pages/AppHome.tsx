@@ -40,7 +40,28 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
-  // 🔐 ALL EFFECTS MUST BE CALLED BEFORE CONDITIONAL RETURNS
+  // 🔐 CRITICAL DEBUG: Log received user state AFTER all hooks
+  console.log("🔍 AppHome received user state:", { 
+    userId: user?.id, 
+    userEmail: user?.email, 
+    isAuthenticated, 
+    isLoading,
+    timestamp: new Date().toISOString()
+  });
+  
+  // 🔐 SAFE EARLY RETURN - Now all hooks are called above
+  if (!isAuthenticated || isLoading || !user) {
+    console.log("🚨 AppHome: User not ready yet", { isAuthenticated, isLoading, hasUser: !!user });
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white/70">Caricamento...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
@@ -79,41 +100,6 @@ const AppHome = () => {
       });
     }
   }, [error]);
-  
-  // 🔐 CRITICAL DEBUG: Log received user state AFTER all hooks
-  console.log("🔍 AppHome received user state:", { 
-    userId: user?.id, 
-    userEmail: user?.email, 
-    isAuthenticated, 
-    isLoading,
-    timestamp: new Date().toISOString()
-  });
-  
-  // 🔐 SAFE EARLY RETURN - Now all hooks are called above
-  // CRITICAL FIX: Ensure consistent return to prevent hook count mismatch
-  if (!isAuthenticated || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/70">Caricamento...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // CRITICAL FIX: Second check for user without causing hook issues
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
-        <div className="text-center">
-          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/70">Inizializzazione utente...</p>
-        </div>
-      </div>
-    );
-  }
-
 
   // Check admin/developer access for Panel button
   const isAdmin = hasRole('admin');
