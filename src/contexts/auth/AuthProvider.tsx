@@ -379,15 +379,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Supabase signOut - NO localStorage cleanup manuale
       await supabase.auth.signOut();
       
-      // Cleanup stato locale IMMEDIATO + sessionStorage
+      // Cleanup stato locale IMMEDIATO
       setUser(null);
       setSession(null);
       setUserRoles([]);
       setIsRoleLoading(false);
-      
-      // Clear mission intro session to force replay on next login
-      sessionStorage.removeItem('hasSeenPostLoginIntro');
-      console.log('🧹 [AuthProvider] Cleared hasSeenPostLoginIntro on logout');
       
       // 🚨 CRITICAL: Force redirect to login after logout + PWA iOS stability
       setTimeout(() => {

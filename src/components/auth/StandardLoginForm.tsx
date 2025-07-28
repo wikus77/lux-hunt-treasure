@@ -59,21 +59,18 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         detail: { email, timestamp: Date.now() } 
       }));
       
-      // MISSION POST-LOGIN SEQUENCE: Clear intro flag and redirect to mission-intro
-      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
-      sessionStorage.removeItem("hasSeenPostLoginIntro");
-      
-      console.log('🚀 [StandardLoginForm] ATTEMPTING REDIRECT TO /mission-intro for M1SSION animation');
-      navigate('/mission-intro');
+      // Primary redirect attempt
+      console.log('🚀 ATTEMPTING PRIMARY REDIRECT via navigate');
+      navigate('/');
       
       // PWA iOS Safari fallback
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as any).standalone === true) {
-        console.log('📱 PWA DETECTED - Setting up fallback redirect to mission-intro');
+        console.log('📱 PWA DETECTED - Setting up fallback redirect');
         setTimeout(() => {
           if (window.location.pathname === '/login') {
-            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href to mission-intro');
-            window.location.href = '/mission-intro';
+            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href');
+            window.location.href = '/';
           }
         }, 800);
       }

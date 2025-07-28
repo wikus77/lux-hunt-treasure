@@ -39,17 +39,10 @@ const Login = () => {
       fallbackTimerRef.current = null;
     }
     
-    // Strategy 1: Try wouter navigate first - REDIRECT TO /mission-intro for first time
+    // Strategy 1: Try wouter navigate first - REDIRECT TO /home NOT /
     try {
-      console.log('🚀 AUTHENTICATED USER REDIRECT - Checking hasSeenPostLoginIntro');
-      const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
-      if (hasSeenIntro === 'true') {
-        console.log('✅ WOUTER NAVIGATE TO /home (intro already seen)');
-        navigate('/home');
-      } else {
-        console.log('✅ WOUTER NAVIGATE TO /mission-intro (first time after login)');
-        navigate('/mission-intro');
-      }
+      navigate('/home');
+      console.log('✅ WOUTER NAVIGATE TO /home EXECUTED');
     } catch (error) {
       console.error('❌ WOUTER NAVIGATE FAILED:', error);
     }
@@ -59,28 +52,26 @@ const Login = () => {
       console.log('📱 PWA STANDALONE DETECTED - Using window.location.href fallback');
       setTimeout(() => {
         if (window.location.pathname === '/login') {
-          const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
-          const targetUrl = hasSeenIntro === 'true' ? '/home' : '/mission-intro';
-          console.log(`🔄 WOUTER FAILED - Forcing window.location.href to ${targetUrl}`);
-          window.location.href = targetUrl;
+          console.log('🔄 WOUTER FAILED - Forcing window.location.href to /home');
+          window.location.href = '/home';
         }
       }, 500);
     }
   };
 
-  // 📡 LISTENER FOR AUTH SUCCESS EVENT - DISABLED to prevent conflicts with StandardLoginForm redirect
-  // useEffect(() => {
-  //   const handleAuthSuccess = () => {
-  //     console.log('🎉 AUTH SUCCESS EVENT RECEIVED');
-  //     forceRedirectToHome('AUTH_SUCCESS_EVENT');
-  //   };
+  // 📡 LISTENER FOR AUTH SUCCESS EVENT
+  useEffect(() => {
+    const handleAuthSuccess = () => {
+      console.log('🎉 AUTH SUCCESS EVENT RECEIVED');
+      forceRedirectToHome('AUTH_SUCCESS_EVENT');
+    };
 
-  //   window.addEventListener('auth-success', handleAuthSuccess);
+    window.addEventListener('auth-success', handleAuthSuccess);
     
-  //   return () => {
-  //     window.removeEventListener('auth-success', handleAuthSuccess);
-  //   };
-  // }, []);
+    return () => {
+      window.removeEventListener('auth-success', handleAuthSuccess);
+    };
+  }, []);
 
   // 🔄 REDIRECT AUTHENTICATED USERS - Enhanced
   useEffect(() => {
@@ -99,16 +90,13 @@ const Login = () => {
         if (window.location.pathname === '/login' && isAuthenticated) {
           console.log('🚨 FALLBACK TIMER TRIGGERED - User stuck on login page');
           
-          // Final fallback: Hard reload to appropriate route
-          const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
-          const fallbackUrl = hasSeenIntro === 'true' ? '/home' : '/mission-intro';
-          
+          // Final fallback: Hard reload to home
           if (isPWAStandalone()) {
-            console.log(`📱 PWA HARD REDIRECT TO ${fallbackUrl}`);
-            window.location.replace(fallbackUrl);
+            console.log('📱 PWA HARD REDIRECT TO /home');
+            window.location.replace('/home');
           } else {
-            console.log(`🌐 BROWSER HARD REDIRECT TO ${fallbackUrl}`);
-            window.location.href = fallbackUrl;
+            console.log('🌐 BROWSER HARD REDIRECT TO /home');
+            window.location.href = '/home';
           }
         }
       }, 2000);

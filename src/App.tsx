@@ -14,7 +14,7 @@ import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
-import { useState, useEffect } from "react";
+import M1ssionFlowDebugger from "./components/debug/M1ssionFlowDebugger";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
@@ -24,7 +24,7 @@ function App() {
   
   // Initialize push notification processor
   usePushNotificationProcessor();
-
+  
   const handleAuthenticated = (userId: string) => {
     console.log("✅ APP LEVEL - User authenticated:", userId);
   };
@@ -36,8 +36,6 @@ function App() {
   const handleEmailNotVerified = () => {
     console.log("📧 APP LEVEL - Email not verified");
   };
-  
-  console.log("🎬 RENDERING NORMAL APP");
   
   return (
     <ErrorBoundary fallback={
@@ -73,6 +71,7 @@ function App() {
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
+            <M1ssionFlowDebugger />
             <Toaster position="top-center" richColors closeButton style={{ zIndex: 9999 }} />
           </AuthProvider>
         </SoundProvider>
