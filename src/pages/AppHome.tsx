@@ -15,7 +15,7 @@ import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
 
 const AppHome = () => {
-  console.log("🏠 AppHome component rendering");
+  // © 2025 Joseph MULÉ – M1SSION™ – Production optimized
   
   // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +50,7 @@ const AppHome = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      console.log('AppHome access check:', { isMobileDevice, isCapacitorApp });
+      // Access check completed for authenticated user
       
       // Allow access for all users since this is an internal authenticated route
       // If users reach this page, they're already authenticated
@@ -68,7 +68,7 @@ const AppHome = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Real-time notification connection status:", isConnected);
+    // Real-time notifications connection monitoring
   }, [isConnected]);
 
   useEffect(() => {
@@ -80,41 +80,27 @@ const AppHome = () => {
     }
   }, [error]);
   
-  // 🔐 CRITICAL DEBUG: Log received user state AFTER all hooks
-  console.log("🔍 AppHome received user state:", { 
-    userId: user?.id, 
-    userEmail: user?.email, 
-    isAuthenticated, 
-    isLoading,
-    timestamp: new Date().toISOString()
-  });
+  // User state validation completed
   
-  // 🔐 SAFE EARLY RETURN - Now all hooks are called above
+  // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Check admin/developer access for Panel button - MOVED BEFORE EARLY RETURNS
+  const isAdmin = hasRole('admin');
+  const isDeveloper = hasRole('developer');
+  const showPanelButton = isAdmin || isDeveloper;
+
+  // 🔐 SAFE EARLY RETURN - Now ALL hooks are called above
   if (!isAuthenticated || isLoading || !user) {
-    console.log("🚨 AppHome: User not ready yet", { isAuthenticated, isLoading, hasUser: !!user });
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#070818]">
+      <div className="min-h-screen flex items-center justify-center bg-[#070818]" role="main" aria-live="polite">
         <div className="text-center">
-          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-t-2 border-cyan-400 rounded-full animate-spin mx-auto mb-4" aria-label="Caricamento in corso"></div>
           <p className="text-white/70">Caricamento...</p>
         </div>
       </div>
     );
   }
 
-
-  // Check admin/developer access for Panel button
-  const isAdmin = hasRole('admin');
-  const isDeveloper = hasRole('developer');
-  const showPanelButton = isAdmin || isDeveloper;
-
-  console.log('🔍 Panel Button Debug:', { 
-    isAdmin, 
-    isDeveloper, 
-    showPanelButton,
-    userEmail: getCurrentUser()?.email,
-    hasRoleFunction: typeof hasRole
-  });
+  // Panel access computed for authenticated users
 
   // Show developer access screen for mobile users without access
   if (isMobile && !hasAccess) {
@@ -205,9 +191,12 @@ const AppHome = () => {
                       transition={{ delay: 0.8, duration: 0.6 }}
                       className="mt-8"
                     >
-                      <motion.button
-                        onClick={() => navigate('/panel-access')}
-                        className="w-full glass-card p-4 border border-[#4361ee]/30 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 rounded-xl group relative overflow-hidden"
+                       <motion.button
+                         onClick={() => navigate('/panel-access')}
+                         className="w-full glass-card p-4 border border-[#4361ee]/30 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 rounded-xl group relative overflow-hidden"
+                         aria-label="Accedi al M1SSION Panel - Centro AI Generativo"
+                         role="button"
+                         tabIndex={0}
                         whileHover={{ 
                           scale: 1.02,
                           borderColor: 'rgba(67, 97, 238, 0.6)'

@@ -3,9 +3,8 @@ import { useEffect, useState } from "react";
 import { ThemeProvider } from "../theme-provider";
 import { toast } from "sonner";
 import { Spinner } from "../ui/spinner";
-// by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx)
-// import { Toaster } from "sonner";
-import { Toaster as ShadcnToaster } from "../ui/toaster";
+// © 2025 Joseph MULÉ – M1SSION™ – REMOVED: Multiple Toaster instances
+// UNIFIED TOAST: Only sonner in App.tsx
 import AppRoutes from "../../routes/AppRoutes";
 
 /**
@@ -82,8 +81,7 @@ function AppContent() {
       {hydrated ? (
         <>
           <AppRoutes />
-          {/* by Joseph Mulé – M1SSION™ – REMOVED: Duplicate Toaster (already in App.tsx) */}
-          <ShadcnToaster />
+          {/* © 2025 Joseph MULÉ – M1SSION™ – UNIFIED TOAST: Only sonner in App.tsx */}
         </>
       ) : (
         <div className="flex justify-center items-center min-h-screen bg-black text-white">
