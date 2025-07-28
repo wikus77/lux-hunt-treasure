@@ -32,34 +32,9 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
     }
   }, [introCompleted, pageLoaded]);
   
-  // MIGLIORAMENTO: Verifica localStorage in modo sicuro con gestione errori
+  // Solo primo accesso - controllo rimosso per permettere intro ogni volta
   useEffect(() => {
-    try {
-      // Solo lato client dopo montaggio del componente
-      if (typeof window !== 'undefined') {
-        // Force the intro to show every time for now (for testing)
-        try {
-          localStorage.removeItem("hasSeenIntro");
-        } catch (e) {
-          console.warn("Non è stato possibile accedere a localStorage, ignoriamo:", e);
-        }
-        
-        setHasCheckedStorage(true);
-        
-        // Uncommenta questa parte per abilitare il salt dell'intro per gli utenti di ritorno
-        // const hasSeenIntro = localStorage.getItem("hasSeenIntro");
-        // if (hasSeenIntro === "true") {
-        //   console.log("User has already seen the intro, skipping...");
-        //   handleIntroComplete();
-        // }
-        // setHasCheckedStorage(true);
-      }
-    } catch (error) {
-      console.error("Error accessing localStorage:", error);
-      // In caso di errore con localStorage, consideriamo come check eseguito
-      setHasCheckedStorage(true);
-      setError(error as Error);
-    }
+    setHasCheckedStorage(true);
   }, []);
   
   // MIGLIORAMENTO: Gestione più robusta per prevenire scrolling durante intro
@@ -86,15 +61,6 @@ const IntroManager = ({ pageLoaded, onIntroComplete }: IntroManagerProps) => {
       if (timeoutId) window.clearTimeout(timeoutId);
       
       setIntroCompleted(true);
-      
-      // Store that the user has seen the intro
-      if (typeof window !== 'undefined') {
-        try {
-          localStorage.setItem("hasSeenIntro", "true");
-        } catch (e) {
-          console.warn("Non è stato possibile salvare su localStorage, ignoriamo:", e);
-        }
-      }
       
       // Restore scrolling
       try {
