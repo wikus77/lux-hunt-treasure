@@ -29,24 +29,24 @@ const PostLoginMissionIntro = () => {
     const startAnimation = () => {
       interval = setInterval(() => {
         if (currentIndex < finalText.length) {
-          // Crea testo con effetto scramble fino alla posizione corrente
-          const scrambledText = finalText.split('').map((char, index) => {
-            if (index < currentIndex) {
-              return char; // Già rivelato
-            } else if (index === currentIndex) {
-              return char; // Attualmente in rivelazione
-            } else {
-              return chars[Math.floor(Math.random() * chars.length)]; // Ancora in scramble
-            }
-          }).join('');
+          // Rivela un carattere alla volta, mantenendo i già rivelati
+          const revealedText = finalText.slice(0, currentIndex + 1);
+          const paddingLength = finalText.length - revealedText.length;
           
-          setDisplayText(scrambledText);
+          // Crea padding con caratteri casuali per effetto scramble sulle posizioni vuote
+          const scramblePadding = Array.from({ length: paddingLength }, () => 
+            chars[Math.floor(Math.random() * chars.length)]
+          ).join('');
+          
+          setDisplayText(revealedText + scramblePadding);
           setCurrentIndex(prev => prev + 1);
+          console.log(`🎬 [PostLoginMissionIntro] Revealing character ${currentIndex + 1}: "${revealedText}"`);
         } else {
           clearInterval(interval);
           
           // Mostra M1SSION completo
           setDisplayText(finalText);
+          console.log('🎬 [PostLoginMissionIntro] Animation complete, showing full M1SSION');
           
           // Mostra slogan dopo 500ms
           setTimeout(() => {
@@ -94,8 +94,14 @@ const PostLoginMissionIntro = () => {
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="text-center">
         {/* Debug indicator */}
-        <div className="fixed top-4 left-4 text-green-400 text-sm font-mono bg-black/50 p-2 rounded">
-          🎬 POST-LOGIN ANIMATION ACTIVE
+        <div className="fixed top-4 left-4 text-green-400 text-sm font-mono bg-black/50 p-2 rounded z-50">
+          🎬 POST-LOGIN ANIMATION ACTIVE<br/>
+          Debug: {displayText} | Index: {currentIndex}
+        </div>
+        
+        {/* SessionStorage debug */}
+        <div className="fixed bottom-4 left-4 text-yellow-400 text-xs font-mono bg-black/50 p-2 rounded z-50">
+          SessionStorage hasSeenPostLoginIntro: {sessionStorage.getItem('hasSeenPostLoginIntro') || 'null'}
         </div>
         
         {/* M1SSION Text with numeric reveal effect */}
@@ -105,7 +111,7 @@ const PostLoginMissionIntro = () => {
           className="text-8xl md:text-9xl font-orbitron text-white tracking-wider mb-6"
           style={{ fontWeight: 'normal', fontFamily: 'Orbitron, monospace' }}
         >
-          <span className="text-[#00D1FF]">M1</span>
+          <span className="text-[#00D1FF]">{displayText.slice(0, 2)}</span>
           <span className="text-white">{displayText.slice(2)}</span>
         </motion.div>
         
