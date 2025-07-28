@@ -1,89 +1,137 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// SEQUENZA POST-LOGIN CHIRURGICA - ANIMAZIONE PERFETTA SENZA ERRORI
+// SEQUENZA POST-LOGIN CHIRURGICA BLINDATA - ANIMAZIONE PERFETTA SENZA ERRORI
 // ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
 const PostLoginMissionIntro = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
   const [showStartDate, setShowStartDate] = useState(false);
-  const { navigate } = useWouterNavigation();
-
-  const finalText = 'M1SSION™';
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  
+  // 🔒 CRITICAL: Refs per evitare re-render e race conditions
+  const mountedRef = useRef(true);
+  const animationInProgressRef = useRef(false);
+  const hasRedirectedRef = useRef(false);
+  
   const animationSteps = ['M', 'M1', 'M1S', 'M1SS', 'M1SSI', 'M1SSIO', 'M1SSION', 'M1SSION™'];
   
+  // 🎬 ANIMAZIONE PRINCIPALE - BLINDATA E STABILE
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let startTimer: NodeJS.Timeout;
-    let mounted = true;
+    console.log('🎬 PostLoginMissionIntro: Inizializzazione animazione');
     
-    const startAnimation = () => {
-      if (!mounted) return;
+    // Previeni multiple esecuzioni
+    if (animationInProgressRef.current) {
+      console.log('⚠️ Animazione già in corso, skip...');
+      return;
+    }
+    
+    animationInProgressRef.current = true;
+    
+    let animationTimer: NodeJS.Timeout;
+    let sloganTimer: NodeJS.Timeout;
+    let dateTimer: NodeJS.Timeout;
+    let redirectTimer: NodeJS.Timeout;
+    
+    const executeAnimation = () => {
+      console.log('🎯 Esecuzione animazione M1SSION');
       
-      let stepIndex = 0;
-      
-      interval = setInterval(() => {
-        if (!mounted || stepIndex >= animationSteps.length) {
-          clearInterval(interval);
+      let currentStep = 0;
+      const animateStep = () => {
+        if (!mountedRef.current || currentStep >= animationSteps.length) {
           return;
         }
         
-        setDisplayText(animationSteps[stepIndex]);
-        stepIndex++;
+        console.log(`🔤 Step ${currentStep}: ${animationSteps[currentStep]}`);
+        setDisplayText(animationSteps[currentStep]);
+        currentStep++;
         
-        // Quando raggiungiamo l'ultimo step (M1SSION™)
-        if (stepIndex === animationSteps.length) {
-          clearInterval(interval);
+        if (currentStep < animationSteps.length) {
+          animationTimer = setTimeout(animateStep, 175);
+        } else {
+          // Animazione completata
+          console.log('✅ Animazione M1SSION™ completata');
           
-          if (!mounted) return;
-          
-          // 🔄 SEQUENZA ELEMENTI SUCCESSIVI - ANTI-RACE CONDITIONS
-          setTimeout(() => {
-            if (!mounted) return;
+          // SLOGAN "IT IS POSSIBLE"
+          sloganTimer = setTimeout(() => {
+            if (!mountedRef.current) return;
+            console.log('💫 Mostra slogan "IT IS POSSIBLE"');
             setShowSlogan(true);
             
-            setTimeout(() => {
-              if (!mounted) return;
+            // DATA INIZIO
+            dateTimer = setTimeout(() => {
+              if (!mountedRef.current) return;
+              console.log('📅 Mostra data inizio');
               setShowStartDate(true);
               
-              // 🎯 REDIRECT FINALE DOPO 1.5s con protezione mounted
-              setTimeout(() => {
-                if (!mounted) return;
+              // REDIRECT FINALE
+              redirectTimer = setTimeout(() => {
+                if (!mountedRef.current || hasRedirectedRef.current) return;
+                
+                console.log('🏠 Completamento animazione, redirect a /home');
+                hasRedirectedRef.current = true;
+                setIsAnimationComplete(true);
+                
+                // Sicurezza sessionStorage
                 sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
-                console.log('🎬 Mission intro completata, redirect a /home');
-                navigate('/home');
+                
+                // Redirect sicuro senza navigate hook
+                try {
+                  window.location.href = '/home';
+                } catch (error) {
+                  console.error('❌ Errore redirect:', error);
+                  window.location.replace('/home');
+                }
               }, 1500);
             }, 1000);
           }, 500);
         }
-      }, 175);
+      };
+      
+      // Avvia la prima step
+      animateStep();
     };
-
-    // 🚨 CRITICAL: Delay per evitare conflitti con AuthProvider reload
-    startTimer = setTimeout(() => {
-      if (mounted) {
-        startAnimation();
-      }
-    }, 500);
-
+    
+    // Delay iniziale per stabilità
+    const startTimer = setTimeout(executeAnimation, 300);
+    
+    // Cleanup function
     return () => {
-      mounted = false;
+      console.log('🧹 Cleanup animazione M1SSION');
+      mountedRef.current = false;
       clearTimeout(startTimer);
-      if (interval) clearInterval(interval);
+      clearTimeout(animationTimer);
+      clearTimeout(sloganTimer);
+      clearTimeout(dateTimer);
+      clearTimeout(redirectTimer);
     };
-  }, [navigate]);
+  }, []);
+  
+  // 🚨 CRITICAL: Cleanup al unmount
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+      animationInProgressRef.current = false;
+    };
+  }, []);
+  
+  console.log('🖼️ Render PostLoginMissionIntro:', { 
+    displayText, 
+    showSlogan, 
+    showStartDate,
+    isAnimationComplete 
+  });
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="relative w-full h-full flex items-center justify-center">
-        {/* 🎯 M1SSION™ Text with PERFECT center positioning */}
+        {/* 🎯 M1SSION™ Text - POSIZIONAMENTO FISSO CHIRURGICO */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className="text-7xl md:text-8xl lg:text-9xl font-orbitron tracking-wider"
           style={{ 
             fontWeight: 'normal', 
@@ -97,22 +145,29 @@ const PostLoginMissionIntro = () => {
             textAlign: 'center'
           }}
         >
-          <span className="text-[#00D1FF]" style={{
-            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-          }}>
+          <span 
+            className="text-[#00D1FF]" 
+            style={{
+              textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+            }}
+          >
             {displayText.slice(0, 2)}
           </span>
-          <span className="text-white" style={{
-            textShadow: "0 0 5px rgba(255, 255, 255, 0.3)"
-          }}>
+          <span 
+            className="text-white" 
+            style={{
+              textShadow: "0 0 5px rgba(255, 255, 255, 0.3)"
+            }}
+          >
             {displayText.slice(2)}
           </span>
         </motion.div>
         
-        {/* 🎯 IT IS POSSIBLE - PERFECT CENTER EXACT COLOR #BFA342 */}
-        <AnimatePresence>
+        {/* 🎯 IT IS POSSIBLE - CENTRATO PERFETTO COLOR #BFA342 */}
+        <AnimatePresence mode="wait">
           {showSlogan && (
             <motion.div
+              key="slogan"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -30 }}
@@ -136,12 +191,14 @@ const PostLoginMissionIntro = () => {
           )}
         </AnimatePresence>
         
-        {/* 🎯 Data di Inizio - PERFECT CENTER */}
-        <AnimatePresence>
+        {/* 🎯 Data di Inizio - CENTRATO PERFETTO */}
+        <AnimatePresence mode="wait">
           {showStartDate && (
             <motion.div
+              key="date"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.6, ease: "easeOut" }}
               className="text-base md:text-lg lg:text-xl font-orbitron tracking-wider"
               style={{ 

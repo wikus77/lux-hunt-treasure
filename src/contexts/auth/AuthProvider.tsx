@@ -146,22 +146,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
           
-          // 🚨 CRITICAL FIX: Disabilita reload durante mission-intro per evitare flash bianco
+          // 🚨 CRITICAL FIX: NO RELOAD mai durante mission-intro
           const currentPath = window.location.pathname;
           const isMissionIntro = currentPath === '/mission-intro';
           
-          // PWA iOS: Force reload once after login to stabilize (but NOT during mission intro)
-          if (!isMissionIntro && ((window as any).Capacitor || navigator.userAgent.includes('Safari'))) {
-            log("🔄 PWA iOS: Post-login cache refresh");
+          if (isMissionIntro) {
+            log("🎬 MISSION INTRO ATTIVA - DISABILITO completamente PWA reload");
+            sessionStorage.setItem('auth_reload_done', 'true');
+            return; // Exit early, no reload logic
+          }
+          
+          // PWA iOS: Force reload solo se NON siamo in mission intro
+          if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
+            log("🔄 PWA iOS: Post-login cache refresh (safe)");
             setTimeout(() => {
-              if (!sessionStorage.getItem('auth_reload_done')) {
+              if (!sessionStorage.getItem('auth_reload_done') && window.location.pathname !== '/mission-intro') {
                 sessionStorage.setItem('auth_reload_done', 'true');
                 window.location.reload();
               }
             }, 1000);
-          } else if (isMissionIntro) {
-            log("🎬 SKIP reload durante mission-intro per evitare flash bianco");
-            sessionStorage.setItem('auth_reload_done', 'true');
           }
         } else if (event === 'SIGNED_OUT') {
           log("Utente disconnesso");
