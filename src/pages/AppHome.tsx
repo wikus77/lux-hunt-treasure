@@ -13,6 +13,7 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
+import { FirstAccessLanding } from "@/components/onboarding/FirstAccessLanding";
 
 const AppHome = () => {
   // © 2025 Joseph MULÉ – M1SSION™ – Production optimized
@@ -20,6 +21,7 @@ const AppHome = () => {
   // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   const [error, setError] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showFirstAccessLanding, setShowFirstAccessLanding] = useState(false);
   const { profileImage } = useProfileImage();
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
@@ -40,7 +42,23 @@ const AppHome = () => {
 
   const { isConnected } = useRealTimeNotifications();
 
+  // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Check admin/developer access for Panel button - MOVED BEFORE EARLY RETURNS
+  const isAdmin = hasRole('admin');
+  const isDeveloper = hasRole('developer');
+  const showPanelButton = isAdmin || isDeveloper;
+
   // 🔐 ALL EFFECTS MUST BE CALLED BEFORE CONDITIONAL RETURNS
+  // Check for first access landing page
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const hasSeenLanding = localStorage.getItem('hasSeenLandingPage');
+      if (hasSeenLanding !== 'true') {
+        setShowFirstAccessLanding(true);
+      }
+    }
+  }, [isAuthenticated, user]);
+
   // Check for developer access and Capacitor environment
   useEffect(() => {
     const checkAccess = () => {
@@ -50,10 +68,7 @@ const AppHome = () => {
       const userAgent = navigator.userAgent;
       const isMobileDevice = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       
-      // Access check completed for authenticated user
-      
       // Allow access for all users since this is an internal authenticated route
-      // If users reach this page, they're already authenticated
       setHasAccess(true);
     };
     
@@ -79,15 +94,13 @@ const AppHome = () => {
       });
     }
   }, [error]);
-  
-  // User state validation completed
-  
-  // 🔐 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
-  // Check admin/developer access for Panel button - MOVED BEFORE EARLY RETURNS
-  const isAdmin = hasRole('admin');
-  const isDeveloper = hasRole('developer');
-  const showPanelButton = isAdmin || isDeveloper;
 
+  // Handle first access landing completion
+  const handleFirstAccessComplete = () => {
+    localStorage.setItem('hasSeenLandingPage', 'true');
+    setShowFirstAccessLanding(false);
+  };
+  
   // 🔐 SAFE EARLY RETURN - Now ALL hooks are called above
   if (!isAuthenticated || isLoading || !user) {
     return (
@@ -98,6 +111,11 @@ const AppHome = () => {
         </div>
       </div>
     );
+  }
+
+  // Show first access landing if user hasn't seen it
+  if (showFirstAccessLanding) {
+    return <FirstAccessLanding onComplete={handleFirstAccessComplete} />;
   }
 
   // Panel access computed for authenticated users

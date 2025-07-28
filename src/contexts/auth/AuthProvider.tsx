@@ -387,7 +387,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Clear mission intro session to force replay on next login
       sessionStorage.removeItem('hasSeenPostLoginIntro');
-      console.log('🧹 [AuthProvider] Cleared hasSeenPostLoginIntro on logout');
       
       // 🚨 CRITICAL: Force redirect to login after logout + PWA iOS stability
       setTimeout(() => {
