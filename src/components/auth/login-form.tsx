@@ -42,7 +42,7 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       if (result?.success) {
         console.log('✅ LOGIN SUCCESS - NO TOAST (handled by StandardLoginForm)');
         // NOTE: Toast removed to prevent duplicates
-        // NOTE: Redirect is now handled by use-login hook which goes to /mission-intro
+        // NOTE: Redirect is now handled by use-login hook which goes to /home
         console.log('🔄 LOGIN SUCCESS - redirect handled by use-login hook');
       } else {
         console.error('❌ LOGIN FAILED:', result?.error);

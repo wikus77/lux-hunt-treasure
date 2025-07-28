@@ -57,12 +57,9 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         detail: { email, timestamp: Date.now() } 
       }));
       
-      // MISSION POST-LOGIN SEQUENCE: Clear intro flag for post-login flow
-      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
-      sessionStorage.removeItem("hasSeenPostLoginIntro");
-      
-      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Delegating redirect to auth flow');
-      // NOTE: Redirect is now handled by AuthProvider or app routing logic
+      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Redirecting to /home');
+      // Direct redirect to home after successful login
+      navigate('/home');
       
       // PWA iOS Safari compatibility event
       if (window.matchMedia('(display-mode: standalone)').matches || 
