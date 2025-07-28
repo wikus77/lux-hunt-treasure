@@ -3,7 +3,7 @@
 // ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
 import { useEffect } from 'react';
-import PostLoginMissionIntro from "@/components/auth/PostLoginMissionIntro";
+import MissionIntro from "@/components/intro/MissionIntro";
 
 export default function MissionIntroPage() {
   
@@ -34,7 +34,7 @@ export default function MissionIntroPage() {
         bottom: 0
       }}
     >
-      <PostLoginMissionIntro />
+      <MissionIntro />
     </div>
   );
 }
