@@ -1,9 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// 🔐 Codice blindato – Animazione numerica post-login autorizzata
+// Sequenza post-login implementata secondo specifiche ufficiali  
+// ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
+import testMissionSequence from '@/utils/mission-sequence-tester';
 
 const PostLoginMissionIntro = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -17,9 +19,16 @@ const PostLoginMissionIntro = () => {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   
   console.log('🎬 [PostLoginMissionIntro] Iniziando animazione numerica M1SSION™');
+  
+  // Test the current sequence state
+  useEffect(() => {
+    testMissionSequence();
+  }, []);
 
   useEffect(() => {
-    console.log('🎬 [PostLoginMissionIntro] Avvio sequenza animazione numerica');
+    console.log('🎬 [PostLoginMissionIntro] ======= STARTING POST-LOGIN ANIMATION =======');
+    console.log('🎬 [PostLoginMissionIntro] Current route: /mission-intro');
+    console.log('🎬 [PostLoginMissionIntro] Starting M1SSION numeric reveal');
     
     let interval: NodeJS.Timeout;
     
@@ -62,7 +71,8 @@ const PostLoginMissionIntro = () => {
                 
                 // Pausa finale 1.5s e redirect a /home
                 setTimeout(() => {
-                  console.log('🎬 [PostLoginMissionIntro] Animazione completata - Redirect a /home');
+                  console.log('🎬 [PostLoginMissionIntro] ======= ANIMATION COMPLETED =======');
+                  console.log('🎬 [PostLoginMissionIntro] Setting sessionStorage and redirecting to /home');
                   sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                   navigate('/home');
                 }, 1500);

@@ -4,6 +4,8 @@
 import PostLoginMissionIntro from "@/components/auth/PostLoginMissionIntro";
 
 export default function MissionIntroPage() {
-  console.log('📄 [MissionIntroPage] Caricamento animazione post-login');
+  console.log('📄 [MissionIntroPage] ======= MISSION INTRO PAGE MOUNTED =======');
+  console.log('📄 [MissionIntroPage] Route: /mission-intro');
+  console.log('📄 [MissionIntroPage] Loading PostLoginMissionIntro component');
   return <PostLoginMissionIntro />;
 }

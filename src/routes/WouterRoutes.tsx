@@ -217,11 +217,9 @@ const WouterRoutes: React.FC = () => {
             )}
           </Route>
 
-          {/* Mission intro route - Post-login animation */}
+          {/* Mission intro route - Post-login animation - NO ProtectedRoute to avoid loops */}
           <Route path="/mission-intro">
-            <ProtectedRoute>
-              <MissionIntroPage />
-            </ProtectedRoute>
+            <MissionIntroPage />
           </Route>
 
           {/* Auth routes */}

@@ -117,9 +117,12 @@ export const useLogin = () => {
       });
 
       // Force redirect to mission intro after successful login
-      console.log('🚀 LOGIN SUCCESS - Redirecting to mission intro animation');
+      console.log('🚀 ======= LOGIN SUCCESS =======');
+      console.log('🚀 LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
+      console.log('🚀 LOGIN SUCCESS - Redirecting to /mission-intro in 500ms');
       sessionStorage.removeItem("hasSeenPostLoginIntro");
       setTimeout(() => {
+        console.log('🚀 LOGIN SUCCESS - Executing navigate to /mission-intro');
         navigate('/mission-intro');
         // Dispatch auth success event
         const event = new CustomEvent('auth-success');
