@@ -48,8 +48,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  // Show loading while checking auth or access
-  if (authLoading || accessLoading) {
+  // CRITICAL FIX: Ensure user is always defined before conditional returns
+  if (!isAuthenticated || authLoading || accessLoading) {
+    if (!authLoading && !accessLoading && !isAuthenticated) {
+      return <Login />;
+    }
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Verifica accesso...</div>
@@ -57,18 +60,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!isAuthenticated) {
-    return <Login />;
-  }
-
   // Force plan selection if no subscription plan chosen
   if (!subscriptionPlan || subscriptionPlan === '') {
-    console.log('🛑 NO PLAN SELECTED - Forcing plan selection:', {
-      subscriptionPlan,
-      currentLocation: location
-    });
-    
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Reindirizzamento alla selezione piano...</div>
@@ -78,12 +71,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Block access if user doesn't have permission (post-registration control)
   if (!canAccess) {
-    console.log('🚫 ACCESS BLOCKED - User authenticated but access not enabled:', {
-      subscriptionPlan,
-      accessStartDate,
-      timeUntilAccess
-    });
-    
     return (
       <AccessBlockedView 
         subscriptionPlan={subscriptionPlan}
@@ -93,7 +80,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  console.log('✅ ACCESS GRANTED - User can access protected content');
   return <>{children}</>;
 };
 
