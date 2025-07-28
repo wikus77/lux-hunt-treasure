@@ -49,10 +49,8 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         return;
       }
 
-      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - Emitting auth-success event');
-      toast.success('Login effettuato con successo', {
-        description: 'Benvenuto in M1SSION™!'
-      });
+      console.log('✅ LOGIN SUCCESS via DIRECT AuthContext - NO TOAST (preventing duplicates)');
+      // 🚫 TOAST REMOVED - AuthProvider will handle success feedback
       
       // Emit custom auth success event for PWA compatibility
       window.dispatchEvent(new CustomEvent('auth-success', { 
@@ -71,10 +69,11 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
           (window.navigator as any).standalone === true) {
         console.log('📱 PWA DETECTED - Setting up fallback redirect to mission-intro');
         setTimeout(() => {
-          if (window.location.pathname === '/login') {
-            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href to mission-intro');
-            window.location.href = '/mission-intro';
-          }
+        if (window.location.pathname === '/login') {
+          console.log('🔄 PRIMARY REDIRECT FAILED - Using React Router History API');
+          history.pushState(null, '', '/mission-intro');
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
         }, 800);
       }
     } catch (error: any) {

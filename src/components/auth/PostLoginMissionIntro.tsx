@@ -86,8 +86,11 @@ const PostLoginMissionIntro = () => {
                   console.log('✅ React Router navigation executed');
                 } catch (error) {
                   console.error('❌ Errore React Router redirect:', error);
-                  // Absolute fallback only if critical error
-                  window.location.href = '/home';
+                  // 🚫 ZERO WINDOW.LOCATION POLICY - Use React Router only
+                  setTimeout(() => {
+                    history.pushState(null, '', '/home');
+                    window.dispatchEvent(new PopStateEvent('popstate'));
+                  }, 100);
                 }
               }, 1500);
             }, 1000);
