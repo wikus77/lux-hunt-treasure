@@ -70,23 +70,23 @@ const PostLoginMissionIntro = () => {
               redirectTimer = setTimeout(() => {
                 if (!mountedRef.current || hasRedirectedRef.current) return;
                 
-                console.log('🏠 Completamento animazione, redirect a /home');
+                console.log('🏠 Completamento animazione, redirect React Router to /home');
                 hasRedirectedRef.current = true;
                 setIsAnimationComplete(true);
                 
                 // Sicurezza sessionStorage
                 sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                 
-                // 🚨 CRITICAL: React Router invece di window.location
+                // 🚨 CLEAN REACT ROUTER ONLY
                 try {
-                  console.log('🏠 React Router redirect to /home');
                   // Use history API for smooth transition
                   history.pushState(null, '', '/home');
-                  // Trigger popstate to update router
+                  // Trigger router update
                   window.dispatchEvent(new PopStateEvent('popstate'));
+                  console.log('✅ React Router navigation executed');
                 } catch (error) {
                   console.error('❌ Errore React Router redirect:', error);
-                  // Fallback only if absolutely necessary
+                  // Absolute fallback only if critical error
                   window.location.href = '/home';
                 }
               }, 1500);

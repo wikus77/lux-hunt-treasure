@@ -1,4 +1,3 @@
-
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
@@ -139,25 +138,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       async (event, newSession) => {
         log(`Auth event: ${event}`, newSession?.user?.email || 'NO USER');
         
-        // Update stato sincrono
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (event === 'SIGNED_IN' && newSession) {
-          log("Utente autenticato", newSession.user.email);
+        // PREVENT RENDER PHASE UPDATES: Use setTimeout to defer state updates
+        setTimeout(() => {
+          // Update stato sincrono
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
           
-          // 🚨 ZERO RELOAD POLICY: Eliminato completamente per evitare flash bianco
-          log("🎬 AUTH SUCCESS - No reload, clean React state management only");
-          sessionStorage.setItem('auth_reload_done', 'true');
-        } else if (event === 'SIGNED_OUT') {
-          log("Utente disconnesso");
-          setUserRoles([]);
-          setIsRoleLoading(false);
-          sessionStorage.removeItem('auth_reload_done');
-        }
-        
-        // Auth completata
-        setIsLoading(false);
+          if (event === 'SIGNED_IN' && newSession) {
+            log("Utente autenticato", newSession.user.email);
+            
+            // 🚨 ZERO RELOAD POLICY: No reload anywhere
+            log("🎬 AUTH SUCCESS - Zero reload policy active");
+            sessionStorage.setItem('auth_reload_done', 'true');
+          } else if (event === 'SIGNED_OUT') {
+            log("Utente disconnesso");
+            setUserRoles([]);
+            setIsRoleLoading(false);
+            sessionStorage.removeItem('auth_reload_done');
+          }
+          
+          // Auth completata
+          setIsLoading(false);
+        }, 0);
       }
     );
 

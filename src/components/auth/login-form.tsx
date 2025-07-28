@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { Button } from '@/components/ui/button';
@@ -41,11 +40,8 @@ export function LoginForm({ verificationStatus, onResendVerification }: LoginFor
       });
       
       if (result?.success) {
-        console.log('✅ LOGIN SUCCESS - redirecting to /home');
-        toast.success('Login effettuato con successo', {
-          description: 'Benvenuto in M1SSION!'
-        });
-        
+        console.log('✅ LOGIN SUCCESS - NO TOAST (handled by StandardLoginForm)');
+        // NOTE: Toast removed to prevent duplicates
         // NOTE: Redirect is now handled by use-login hook which goes to /mission-intro
         console.log('🔄 LOGIN SUCCESS - redirect handled by use-login hook');
       } else {
