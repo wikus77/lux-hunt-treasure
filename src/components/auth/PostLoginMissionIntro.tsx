@@ -5,9 +5,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
-import testMissionSequence from '@/utils/mission-sequence-tester';
 
 const PostLoginMissionIntro = () => {
+  console.log('🎬 [PostLoginMissionIntro] ======= COMPONENT MOUNTED =======');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
@@ -18,17 +18,11 @@ const PostLoginMissionIntro = () => {
   const finalText = 'M1SSION';
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   
-  console.log('🎬 [PostLoginMissionIntro] Iniziando animazione numerica M1SSION™');
+  console.log('🎬 [PostLoginMissionIntro] ======= STARTING ANIMATION SEQUENCE =======');
   
-  // Test the current sequence state
   useEffect(() => {
-    testMissionSequence();
-  }, []);
-
-  useEffect(() => {
-    console.log('🎬 [PostLoginMissionIntro] ======= STARTING POST-LOGIN ANIMATION =======');
-    console.log('🎬 [PostLoginMissionIntro] Current route: /mission-intro');
-    console.log('🎬 [PostLoginMissionIntro] Starting M1SSION numeric reveal');
+    console.log('🎬 [PostLoginMissionIntro] Animation useEffect triggered');
+    console.log('🎬 [PostLoginMissionIntro] Starting M1SSION numeric reveal animation');
     
     let interval: NodeJS.Timeout;
     
@@ -71,10 +65,12 @@ const PostLoginMissionIntro = () => {
                 
                 // Pausa finale 1.5s e redirect a /home
                 setTimeout(() => {
-                  console.log('🎬 [PostLoginMissionIntro] ======= ANIMATION COMPLETED =======');
-                  console.log('🎬 [PostLoginMissionIntro] Setting sessionStorage and redirecting to /home');
+                  console.log('🎬 [PostLoginMissionIntro] ======= ANIMATION SEQUENCE COMPLETED =======');
+                  console.log('🎬 [PostLoginMissionIntro] Setting sessionStorage hasSeenPostLoginIntro = true');
+                  console.log('🎬 [PostLoginMissionIntro] Redirecting to /home in 3... 2... 1...');
                   sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                   navigate('/home');
+                  console.log('🎬 [PostLoginMissionIntro] ======= REDIRECT TO HOME EXECUTED =======');
                 }, 1500);
               }, 500);
             }, 1000);
@@ -95,7 +91,12 @@ const PostLoginMissionIntro = () => {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center overflow-hidden">
       <div className="text-center">
-        {/* Testo M1SSION con effetto numerico */}
+        {/* Debug indicator */}
+        <div className="fixed top-4 left-4 text-green-400 text-sm font-mono bg-black/50 p-2 rounded">
+          🎬 POST-LOGIN ANIMATION ACTIVE
+        </div>
+        
+        {/* M1SSION Text with numeric reveal effect */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

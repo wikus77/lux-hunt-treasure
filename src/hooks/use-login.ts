@@ -116,18 +116,18 @@ export const useLogin = () => {
         duration: 2000
       });
 
-      // Force redirect to mission intro after successful login
+      // IMMEDIATE redirect to mission intro after successful login
       console.log('🚀 ======= LOGIN SUCCESS =======');
       console.log('🚀 LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
-      console.log('🚀 LOGIN SUCCESS - Redirecting to /mission-intro in 500ms');
       sessionStorage.removeItem("hasSeenPostLoginIntro");
-      setTimeout(() => {
-        console.log('🚀 LOGIN SUCCESS - Executing navigate to /mission-intro');
-        navigate('/mission-intro');
-        // Dispatch auth success event
-        const event = new CustomEvent('auth-success');
-        window.dispatchEvent(event);
-      }, 500);
+      
+      // IMMEDIATE redirect without delay to prevent auth state conflicts
+      console.log('🚀 LOGIN SUCCESS - IMMEDIATE redirect to /mission-intro');
+      navigate('/mission-intro');
+      
+      // Dispatch auth success event
+      const event = new CustomEvent('auth-success');
+      window.dispatchEvent(event);
       
     } catch (error: any) {
       console.error('Errore login:', error);
