@@ -57,24 +57,17 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         detail: { email, timestamp: Date.now() } 
       }));
       
-      // MISSION POST-LOGIN SEQUENCE: Clear intro flag and redirect to mission-intro
+      // MISSION POST-LOGIN SEQUENCE: Clear intro flag for post-login flow
       console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
       sessionStorage.removeItem("hasSeenPostLoginIntro");
       
-      console.log('🚀 [StandardLoginForm] ATTEMPTING REDIRECT TO /mission-intro for M1SSION animation');
-      navigate('/mission-intro');
+      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Delegating redirect to auth flow');
+      // NOTE: Redirect is now handled by AuthProvider or app routing logic
       
-      // PWA iOS Safari fallback
+      // PWA iOS Safari compatibility event
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as any).standalone === true) {
-        console.log('📱 PWA DETECTED - Setting up fallback redirect to mission-intro');
-        setTimeout(() => {
-        if (window.location.pathname === '/login') {
-          console.log('🔄 PRIMARY REDIRECT FAILED - Using React Router History API');
-          history.pushState(null, '', '/mission-intro');
-          window.dispatchEvent(new PopStateEvent('popstate'));
-        }
-        }, 800);
+        console.log('📱 PWA DETECTED - Auth flow will handle navigation');
       }
     } catch (error: any) {
       console.error('💥 LOGIN EXCEPTION:', error);

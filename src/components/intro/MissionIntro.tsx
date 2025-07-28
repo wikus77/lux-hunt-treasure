@@ -1,12 +1,12 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// MISSION INTRO DA ZERO - SAFARI iOS COMPATIBILE
+// MISSION INTRO RICREATA DA ZERO - SAFARI iOS ULTRA COMPATIBILE
 // ZERO TOLLERANZA – IMPLEMENTAZIONE CHIRURGICA COMPLETA
 
 import { useState, useEffect, useRef } from 'react';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
 const MissionIntro = () => {
-  console.log('🎬 [MISSION INTRO] Component initialized');
+  console.log('🎬 [MISSION INTRO] Component initialized - VERSIONE RICREATA');
   
   const [displayText, setDisplayText] = useState('');
   const [showSlogan, setShowSlogan] = useState(false);
@@ -14,29 +14,29 @@ const MissionIntro = () => {
   const [animationComplete, setAnimationComplete] = useState(false);
   
   const { navigate } = useWouterNavigation();
-  const hasAnimatedOnce = useRef(false);
-  const isMounted = useRef(true);
+  const mountedRef = useRef(true);
+  const animationInProgressRef = useRef(false);
   
   const animationSteps = ['M', 'M1', 'M1S', 'M1SS', 'M1SSI', 'M1SSIO', 'M1SSION', 'M1SSION™'];
   
   useEffect(() => {
-    console.log('🚀 [MISSION INTRO] useEffect triggered');
-    console.log('🔍 [MISSION INTRO] DOM ready check:', !!document.body);
-    console.log('🔍 [MISSION INTRO] hasAnimatedOnce:', hasAnimatedOnce.current);
+    console.log('🚀 [MISSION INTRO] useEffect triggered - DOM READY CHECK');
+    console.log('🔍 [MISSION INTRO] DOM ready:', !!document.body);
+    console.log('🔍 [MISSION INTRO] Animation in progress:', animationInProgressRef.current);
     
-    if (hasAnimatedOnce.current) {
+    if (animationInProgressRef.current) {
       console.log('⚠️ [MISSION INTRO] Animation already started, skipping');
       return;
     }
     
-    hasAnimatedOnce.current = true;
+    animationInProgressRef.current = true;
     console.log('✅ [MISSION INTRO] ANIMAZIONE START');
     
-    // Step 1: Animate M1SSION™ text
+    // Step 1: Animate M1SSION™ text with explicit timeouts
     let stepIndex = 0;
     
-    const animateText = () => {
-      if (!isMounted.current || stepIndex >= animationSteps.length) {
+    const animateTextStep = () => {
+      if (!mountedRef.current || stepIndex >= animationSteps.length) {
         console.log('⚠️ [MISSION INTRO] Animation stopped - component unmounted or finished');
         return;
       }
@@ -47,24 +47,24 @@ const MissionIntro = () => {
       stepIndex++;
       
       if (stepIndex < animationSteps.length) {
-        setTimeout(animateText, 200);
+        setTimeout(animateTextStep, 300); // Slower for Safari iOS
       } else {
         console.log('✅ [MISSION INTRO] Text animation complete');
         // Step 2: Show slogan
         setTimeout(() => {
-          if (!isMounted.current) return;
+          if (!mountedRef.current) return;
           console.log('💫 [MISSION INTRO] Showing slogan "IT IS POSSIBLE"');
           setShowSlogan(true);
           
           // Step 3: Show start date
           setTimeout(() => {
-            if (!isMounted.current) return;
+            if (!mountedRef.current) return;
             console.log('📅 [MISSION INTRO] Showing start date');
             setShowStartDate(true);
             
             // Step 4: Complete and navigate
             setTimeout(() => {
-              if (!isMounted.current) return;
+              if (!mountedRef.current) return;
               console.log('🏁 [MISSION INTRO] ANIMAZIONE END - Starting navigation');
               setAnimationComplete(true);
               
@@ -73,7 +73,7 @@ const MissionIntro = () => {
               
               // Navigate to home
               setTimeout(() => {
-                if (!isMounted.current) return;
+                if (!mountedRef.current) return;
                 console.log('🏠 [MISSION INTRO] NAVIGATE /home');
                 
                 try {
@@ -85,28 +85,41 @@ const MissionIntro = () => {
                 }
               }, 500);
               
-            }, 1500); // Time to see the date
-          }, 1000); // Time to see the slogan
-        }, 800); // Time after M1SSION™ completes
+            }, 2000); // Time to see the date
+          }, 1500); // Time to see the slogan
+        }, 1000); // Time after M1SSION™ completes
       }
     };
     
-    // Start animation after small delay for DOM stability
+    // Start animation immediately after small delay for DOM stability
     setTimeout(() => {
       console.log('🎯 [MISSION INTRO] Starting text animation');
-      animateText();
-    }, 300);
+      animateTextStep();
+    }, 500); // Longer delay for Safari iOS
+    
+    // Emergency fallback - redirect after 8 seconds no matter what
+    const emergencyFallback = setTimeout(() => {
+      if (mountedRef.current && !animationComplete) {
+        console.log('🚨 [MISSION INTRO] EMERGENCY FALLBACK - forcing navigation');
+        try {
+          navigate('/home');
+        } catch (error) {
+          window.location.href = '/home';
+        }
+      }
+    }, 8000);
     
     return () => {
       console.log('🧹 [MISSION INTRO] Cleanup');
-      isMounted.current = false;
+      mountedRef.current = false;
+      clearTimeout(emergencyFallback);
     };
   }, [navigate]);
   
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      isMounted.current = false;
+      mountedRef.current = false;
     };
   }, []);
   
@@ -129,7 +142,7 @@ const MissionIntro = () => {
       <div className="relative w-full h-full flex items-center justify-center">
         {/* M1SSION™ Text */}
         <div
-          className="absolute text-7xl md:text-8xl lg:text-9xl font-orbitron tracking-wider"
+          className="absolute text-6xl md:text-7xl lg:text-8xl font-orbitron tracking-wider"
           style={{ 
             fontWeight: 'normal', 
             fontFamily: 'Orbitron, monospace',
@@ -139,7 +152,7 @@ const MissionIntro = () => {
             whiteSpace: 'nowrap',
             textAlign: 'center',
             opacity: displayText ? 1 : 0,
-            transition: 'opacity 0.3s ease'
+            transition: 'opacity 0.5s ease'
           }}
         >
           <span 
@@ -163,7 +176,7 @@ const MissionIntro = () => {
         {/* IT IS POSSIBLE */}
         {showSlogan && (
           <div
-            className="absolute text-xl md:text-2xl lg:text-3xl font-orbitron tracking-widest"
+            className="absolute text-lg md:text-xl lg:text-2xl font-orbitron tracking-widest"
             style={{ 
               fontWeight: 'normal',
               color: '#BFA342',
@@ -184,7 +197,7 @@ const MissionIntro = () => {
         {/* Start Date */}
         {showStartDate && (
           <div
-            className="absolute text-base md:text-lg lg:text-xl font-orbitron tracking-wider"
+            className="absolute text-sm md:text-base lg:text-lg font-orbitron tracking-wider"
             style={{ 
               fontWeight: 'normal',
               color: '#FFD700',

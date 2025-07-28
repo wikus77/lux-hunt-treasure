@@ -20,17 +20,16 @@ const PostLoginMissionIntro = () => {
     }
     
     hasRedirected.current = true;
-    console.log('🎯 [POST-LOGIN] Executing redirect to /mission-intro');
+    console.log('🎯 [POST-LOGIN] Executing immediate redirect to /mission-intro');
     
-    setTimeout(() => {
-      try {
-        navigate('/mission-intro');
-        console.log('✅ [POST-LOGIN] Redirect successful');
-      } catch (error) {
-        console.error('❌ [POST-LOGIN] Redirect failed:', error);
-        window.location.href = '/mission-intro';
-      }
-    }, 200);
+    // Immediate redirect with replace to avoid back navigation issues
+    try {
+      navigate('/mission-intro', { replace: true });
+      console.log('✅ [POST-LOGIN] Redirect successful');
+    } catch (error) {
+      console.error('❌ [POST-LOGIN] Redirect failed:', error);
+      window.location.href = '/mission-intro';
+    }
     
   }, [navigate]);
 
