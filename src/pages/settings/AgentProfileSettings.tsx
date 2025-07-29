@@ -98,24 +98,31 @@ const AgentProfileSettings: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
-    if (!user) return;
+    if (!user || !agentName.trim()) return;
     
     setLoading(true);
     try {
+      console.log('🔄 M1SSION™ Saving agent name:', agentName);
+      
       // Use realtime update for immediate sync
       await updateProfile({
-        full_name: agentName
+        full_name: agentName.trim()
       });
 
       // Update local profile data for consistency
-      actions.setName(agentName);
+      actions.setName(agentName.trim());
+      
+      // Force localStorage update for immediate UI sync
+      localStorage.setItem('agentName', agentName.trim());
       
       toast({
         title: "✅ Profilo salvato",
-        description: "Le modifiche sono state applicate con successo."
+        description: "Il nome agente è stato aggiornato con successo."
       });
+      
+      console.log('✅ M1SSION™ Agent name saved successfully');
     } catch (error) {
-      console.error('Profile save error:', error);
+      console.error('❌ M1SSION™ Profile save error:', error);
       toast({
         title: "❌ Errore salvataggio",
         description: "Impossibile salvare le modifiche. Riprova.",

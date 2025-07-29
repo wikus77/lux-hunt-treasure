@@ -27,7 +27,10 @@ const Subscriptions = () => {
       <Button 
         variant="ghost" 
         size="icon"
-        onClick={() => window.history.back()} 
+        onClick={() => {
+          console.log('🧭 M1SSION™ Back button clicked from subscriptions');
+          setLocation('/home');
+        }} 
         className="mr-2"
       >
         <ArrowLeft className="h-5 w-5" />

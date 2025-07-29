@@ -1,11 +1,11 @@
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
- * Universal Subscription Sync Hook
+ * Universal Subscription Sync Hook - FIXED VERSION
  * Single source of truth for ALL subscription data across the entire app
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 
@@ -13,7 +13,7 @@ export const useUniversalSubscriptionSync = () => {
   const { getCurrentUser } = useAuthContext();
 
   // Force sync across all components when subscription changes
-  const triggerGlobalSync = (newPlan: string) => {
+  const triggerGlobalSync = useMemo(() => (newPlan: string) => {
     console.log('🔄 M1SSION™ UNIVERSAL SYNC TRIGGER:', newPlan);
     
     // Update localStorage for backwards compatibility
@@ -31,7 +31,7 @@ export const useUniversalSubscriptionSync = () => {
     window.dispatchEvent(new CustomEvent('subscription-sync', {
       detail: { plan: newPlan, timestamp: Date.now() }
     }));
-  };
+  }, []);
 
   // Listen for real-time subscription changes
   useEffect(() => {
@@ -86,7 +86,7 @@ export const useUniversalSubscriptionSync = () => {
       supabase.removeChannel(profilesChannel);
       supabase.removeChannel(subscriptionsChannel);
     };
-  }, [getCurrentUser]);
+  }, [getCurrentUser, triggerGlobalSync]);
 
   return { triggerGlobalSync };
 };

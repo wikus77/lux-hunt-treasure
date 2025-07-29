@@ -8,8 +8,10 @@ export const useNotificationsDynamicIsland = (notifications: Notification[]) => 
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
 
-  // Dynamic Island integration for NOTIFICATIONS
+  // Fixed Dynamic Island integration to prevent infinite loops
   useEffect(() => {
+    if (!notifications.length) return;
+    
     const unreadNotifications = notifications.filter(n => !n.read);
     
     if (unreadNotifications.length > 0) {
@@ -25,7 +27,7 @@ export const useNotificationsDynamicIsland = (notifications: Notification[]) => 
       console.log('📨 NOTIFICATIONS: All read, closing Dynamic Island');
       endActivity();
     }
-  }, [notifications, startActivity, endActivity]);
+  }, [notifications.length, notifications.filter(n => !n.read).length]);
 
   // Cleanup when component unmounts
   useEffect(() => {
