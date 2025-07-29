@@ -32,11 +32,6 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
             alt="M1SSION Lusso Foresta"
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
-          <span 
-            className="absolute bottom-2 right-2 text-white text-[14px] sm:text-[18px] font-medium bg-black/40 px-2 py-1 rounded-sm shadow-md"
-          >
-            Image for illustrative purposes only
-          </span>
         </div>
         
         {/* Progress bar */}

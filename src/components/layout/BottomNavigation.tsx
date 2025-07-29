@@ -22,7 +22,7 @@ const BottomNavigationComponent = () => {
     unreadCount
   });
 
-  // Enhanced navigation links with better organization
+  // Enhanced navigation links with uniform cyan color for active state
   const links = [
     { 
       icon: <Home className="h-6 w-6" />, 
@@ -34,14 +34,14 @@ const BottomNavigationComponent = () => {
       icon: <Map className="h-6 w-6" />, 
       label: "Mappa", 
       path: "/map",
-      color: "#4ADE80"
+      color: "#00D1FF"
     },
     {
       icon: <Circle strokeWidth={2} className="h-6 w-6" />,
       label: "Buzz",
       path: "/buzz",
       isSpecial: true,
-      color: "#F59E0B"
+      color: "#00D1FF"
     },
     { 
       icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
@@ -52,7 +52,7 @@ const BottomNavigationComponent = () => {
       </svg>, 
       label: "Intelligence", 
       path: "/intelligence",
-      color: "#8B5CF6"
+      color: "#00D1FF"
     },
     {
       icon: <Mail className="h-6 w-6" />,
@@ -60,7 +60,7 @@ const BottomNavigationComponent = () => {
       path: "/notifications",
       badge: unreadCount > 0,
       badgeCount: unreadCount,
-      color: "#EF4444"
+      color: "#00D1FF"
     },
     { 
       icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
@@ -68,7 +68,7 @@ const BottomNavigationComponent = () => {
       </svg>, 
       label: "Winners", 
       path: "/leaderboard",
-      color: "#F59E0B"
+      color: "#00D1FF"
     },
   ];
 
