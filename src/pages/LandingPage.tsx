@@ -133,7 +133,7 @@ const LandingPage = () => {
 
   return (
     <ParallaxContainer>
-      {/* Enhanced Dynamic Background with Animated Gradient + Nebula Particles */}
+      {/* Enhanced Dynamic Background with Animated Gradient + Nebula Particles + Volumetric Fog */}
       <div className="fixed inset-0 z-0 overflow-hidden">
         <motion.div 
           className="absolute inset-0"
@@ -147,8 +147,28 @@ const LandingPage = () => {
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
         
-        {/* Enhanced Nebula Particles */}
-        {[...Array(50)].map((_, i) => (
+        {/* Volumetric Fog Effect */}
+        <motion.div
+          className="absolute inset-0 opacity-5"
+          style={{
+            background: "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(0, 229, 255, 0.1) 0%, transparent 60%)",
+            filter: "blur(60px)"
+          }}
+          animate={{
+            x: [0, 30, -20, 15, 0],
+            y: [0, -20, 10, -15, 0],
+            scale: [1, 1.1, 0.9, 1.05, 1],
+            opacity: [0.03, 0.08, 0.05, 0.06, 0.03]
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Enhanced Nebula Particles with Scroll Sync */}
+        {[...Array(60)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full"
@@ -163,11 +183,11 @@ const LandingPage = () => {
             animate={{
               y: [0, -30, 0, 25, 0],
               x: [0, 15, -15, 10, 0],
-              opacity: [0.1, 0.15, 0.08, 0.15, 0.1],
+              opacity: [0.08, 0.15, 0.08, 0.12, 0.08],
               scale: [0.5, 1.2, 0.8, 1.5, 0.5]
             }}
             transition={{
-              duration: Math.random() * 20 + 15,
+              duration: Math.random() * 22 + 18,
               repeat: Infinity,
               ease: "easeInOut",
               delay: Math.random() * 8
@@ -212,14 +232,14 @@ const LandingPage = () => {
         </motion.div>
       </div>
 
-      {/* HERO SECTION - Enhanced with WOW Effects */}
+      {/* HERO SECTION - Enhanced with Cinematic WOW Effects */}
       <motion.section 
         className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        {/* Hero Background Layer */}
+        {/* Cinematic Background with Volumetric Light */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <motion.div 
             className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-[#111]"
@@ -233,8 +253,48 @@ const LandingPage = () => {
             transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
           />
           
-          {/* Enhanced Hero Particles */}
-          {[...Array(30)].map((_, i) => (
+          {/* Volumetric Light Beam with Soft Edges and Parallax */}
+          <motion.div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-full opacity-20"
+            style={{
+              background: "linear-gradient(180deg, rgba(0, 229, 255, 0.4) 0%, rgba(0, 229, 255, 0.1) 40%, transparent 100%)",
+              filter: "blur(40px)",
+              clipPath: "polygon(45% 0%, 55% 0%, 65% 100%, 35% 100%)"
+            }}
+            animate={{
+              x: [0, 10, -10, 5, 0],
+              opacity: [0.15, 0.25, 0.15, 0.3, 0.15],
+              scaleX: [1, 1.1, 0.9, 1.05, 1]
+            }}
+            transition={{
+              duration: 8,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          
+          {/* Noise Animation on Light Beam */}
+          <motion.div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-60 h-full opacity-10"
+            style={{
+              background: "radial-gradient(ellipse 100px 800px at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
+              filter: "blur(20px)"
+            }}
+            animate={{
+              y: [0, -50, 0, 30, 0],
+              opacity: [0.05, 0.15, 0.08, 0.12, 0.05],
+              scale: [1, 1.2, 0.8, 1.1, 1]
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 2
+            }}
+          />
+          
+          {/* Enhanced Hero Particles with Scroll Sync */}
+          {[...Array(35)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute rounded-full"
@@ -249,7 +309,7 @@ const LandingPage = () => {
               animate={{
                 y: [0, -40, 0, 30, 0],
                 x: [0, 20, -15, 10, 0],
-                opacity: [0.1, 0.3, 0.15, 0.25, 0.1],
+                opacity: [0.08, 0.25, 0.12, 0.2, 0.08],
                 scale: [0.5, 1.5, 0.8, 1.3, 0.5]
               }}
               transition={{
@@ -395,23 +455,29 @@ const LandingPage = () => {
         </motion.div>
       </motion.section>
 
-      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize con Neon Overlay e Parallax */}
+      {/* CONTAINER PREMI IN PALIO - Cinematic Scroll Zoom Effect */}
       <motion.section 
         className="relative py-20 px-4 bg-black"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         viewport={{ once: true }}
       >
         <div className="max-w-4xl mx-auto">
           <motion.div 
             className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10"
+            initial={{ scale: 0.95, rotateX: 5, rotateY: 2 }}
+            whileInView={{ scale: 1, rotateX: 0, rotateY: 0 }}
             whileHover={{ 
               scale: 1.03,
-              boxShadow: "0 0 40px rgba(255, 0, 255, 0.3), 0 0 80px rgba(0, 229, 255, 0.2)"
+              rotateX: 2,
+              rotateY: 2,
+              boxShadow: "0 0 50px rgba(255, 0, 255, 0.4), 0 0 100px rgba(0, 229, 255, 0.3)"
             }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             style={{
+              transformStyle: "preserve-3d",
+              perspective: "1000px",
               boxShadow: "0 0 30px rgba(0, 229, 255, 0.2)"
             }}
           >
@@ -495,38 +561,60 @@ const LandingPage = () => {
             <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> in arrivo
           </motion.h3>
           
-          <motion.div 
-            className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 mb-4"
-            initial={{ scale: 0.8, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <motion.div
-              className="h-full rounded-full relative overflow-hidden"
-              style={{
-                background: "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
-              }}
-              animate={{
-                background: [
-                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)",
-                  "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
-                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
-                ],
-                width: ["0%", "78%"]
-              }}
-              transition={{
-                background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                width: { duration: 2, ease: "easeOut" }
-              }}
-            />
-            
-            {/* Pulse Effect */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              animate={{ x: ["-100%", "100%"] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            />
-          </motion.div>
+           <motion.div 
+             className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 mb-4"
+             initial={{ scale: 0.8, opacity: 0 }}
+             whileInView={{ scale: 1, opacity: 1 }}
+             transition={{ duration: 0.6, delay: 0.4 }}
+           >
+             {/* Living Progress Bar with Wave Animation */}
+             <motion.div
+               className="h-full rounded-full relative overflow-hidden"
+               style={{
+                 background: "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+               }}
+               animate={{
+                 background: [
+                   "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)",
+                   "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
+                   "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+                 ],
+                 width: ["0%", "78%"],
+                 borderRadius: ["0px", "50px 50px 50px 50px", "0px"]
+               }}
+               transition={{
+                 background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                 width: { duration: 2, ease: "easeOut" },
+                 borderRadius: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+               }}
+             />
+             
+             {/* Wave Animation Effect */}
+             <motion.div
+               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+               animate={{ 
+                 x: ["-100%", "100%"],
+                 scaleY: [1, 1.2, 1, 0.8, 1]
+               }}
+               transition={{ 
+                 x: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                 scaleY: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+               }}
+             />
+             
+             {/* Pulse Glow Effect */}
+             <motion.div
+               className="absolute inset-0 rounded-full"
+               animate={{
+                 boxShadow: [
+                   "0 0 10px rgba(0, 229, 255, 0.3)",
+                   "0 0 20px rgba(255, 0, 255, 0.5)",
+                   "0 0 10px rgba(0, 229, 255, 0.3)"
+                 ]
+               }}
+               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+             />
+           </motion.div>
           
           <motion.p 
             className="text-white/70 text-sm"
@@ -578,21 +666,51 @@ const LandingPage = () => {
         </div>
       </motion.section>
 
-      {/* REGISTRATION FORM SECTION - Stile M1SSION Prize con Gradient Animato */}
+      {/* REGISTRATION FORM SECTION - Cinematic Split Reveal Effect */}
       <motion.section 
         className="relative py-20 px-4"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
         viewport={{ once: true }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40"></div>
         <div className="max-w-lg mx-auto relative z-10">
           <motion.div 
             className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10 text-center"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.3 }}
+            initial={{ 
+              clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)",
+              scale: 1.1
+            }}
+            whileInView={{ 
+              clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+              scale: 1
+            }}
+            whileHover={{ 
+              scale: 1.02,
+              boxShadow: "0 0 40px rgba(236, 72, 153, 0.4), 0 0 80px rgba(0, 229, 255, 0.3)"
+            }}
+            transition={{ 
+              clipPath: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] },
+              scale: { duration: 0.8, ease: "easeOut" }
+            }}
+            style={{
+              boxShadow: "0 0 30px rgba(236, 72, 153, 0.3)"
+            }}
           >
+            {/* Split Reveal Light Bands */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent"
+              initial={{ x: "-100%" }}
+              whileInView={{ x: "100%" }}
+              transition={{ duration: 1.5, ease: "easeInOut", delay: 0.2 }}
+            />
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-magenta-400/20 to-transparent"
+              initial={{ x: "100%" }}
+              whileInView={{ x: "-100%" }}
+              transition={{ duration: 1.5, ease: "easeInOut", delay: 0.4 }}
+            />
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
               Registrati per{" "}
               <span>
