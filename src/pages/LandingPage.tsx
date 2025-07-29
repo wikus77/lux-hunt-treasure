@@ -230,9 +230,11 @@ const LandingPage = () => {
           <div className="glass-card p-8 md:p-12 text-center relative overflow-hidden">
             <h3 className="text-2xl font-bold mb-6 text-yellow-400">🏆 Premi in Palio</h3>
             <div className="mb-6">
-              <div className="w-full h-64 bg-gray-900/50 rounded-lg border border-gray-700 flex items-center justify-center">
-                <p className="text-gray-400 text-lg">Immagine premio (da fornire)</p>
-              </div>
+              <img 
+                src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
+                alt="M1SSION PREMI IN PALIO - MISSIONE UOMO"
+                className="w-full h-64 object-cover rounded-lg border border-gray-700"
+              />
             </div>
             <p className="text-gray-300">Vinci premi di lusso partecipando alle missioni M1SSION™</p>
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
@@ -301,9 +303,9 @@ const LandingPage = () => {
               </p>
               <Button 
                 onClick={handleRegisterClick}
-                className="w-full bg-gradient-to-r from-yellow-400 to-red-500 text-black text-xl font-bold py-4 px-12 rounded-lg hover:from-yellow-500 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="w-full bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white text-xl font-bold py-4 px-12 rounded-xl hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                🚀 Registrati per M1SSION
+                START M1SSION
               </Button>
             </div>
           </div>
