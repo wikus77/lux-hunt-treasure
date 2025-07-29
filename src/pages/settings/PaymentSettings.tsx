@@ -267,10 +267,11 @@ const PaymentSettings: React.FC = () => {
   const getPlanBadge = () => {
     const plan = subscription.plan || 'Base';
     const planConfig = {
-      'Base': { label: 'Starter', color: 'bg-gray-600', price: 'Gratuito' },
-      'Silver': { label: 'Elite', color: 'bg-gray-400', price: '€2.99/mese' },
-      'Gold': { label: 'Elite+', color: 'bg-yellow-500', price: '€6.99/mese' },
-      'Black': { label: 'M1SSION+', color: 'bg-black border border-white', price: '€14.99/mese' }
+      'Base': { label: 'Base', color: 'bg-gray-600', price: '€0/mese' },
+      'Silver': { label: 'Silver', color: 'bg-gray-400', price: '€3.99/mese' },
+      'Gold': { label: 'Gold', color: 'bg-yellow-500', price: '€6.99/mese' },
+      'Black': { label: 'Black', color: 'bg-black border border-white', price: '€9.99/mese' },
+      'Titanium': { label: 'Titanium', color: 'bg-purple-600', price: '€29.99/mese' }
     };
     
     const config = planConfig[plan as keyof typeof planConfig] || planConfig.Base;

@@ -15,7 +15,7 @@ const FaqSection: React.FC<SectionProps> = ({ variants }) => {
         <div>
           <h3 className="text-xl font-semibold text-white mb-2">Quanto costa partecipare?</h3>
           <p className="text-white/70">
-            La registrazione è gratuita, ma per partecipare attivamente è necessario sottoscrivere un abbonamento. I piani partono da €3,99 al mese per il piano Silver e arrivano fino a €9,99 al mese per il piano Black.
+            La registrazione è gratuita con il piano Base. I piani premium partono da €3,99/mese (Silver) con accesso anticipato di 2 ore, €6,99/mese (Gold) con 12 ore di anticipo, €9,99/mese (Black) con 24 ore di anticipo VIP, fino a €29,99/mese (Titanium) con 48 ore di anticipo e supporto 24/7.
           </p>
         </div>
         

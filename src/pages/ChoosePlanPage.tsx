@@ -21,9 +21,10 @@ const plans = [
     icon: <Shield className="w-8 h-8" />,
     earlyAccess: '2 ore prima',
     features: [
-      'Accesso anticipato 2 ore',
-      'Supporto standard',
-      'Indizi settimanali illimitati'
+      'Tutti i vantaggi Base',
+      '3 indizi premium aggiuntivi a settimana',
+      'Accesso anticipato di 2 ore agli eventi',
+      'Badge Silver nel profilo'
     ],
     color: 'from-slate-400 to-slate-600'
   },
@@ -32,12 +33,13 @@ const plans = [
     name: 'Gold',
     price: '6.99',
     icon: <Crown className="w-8 h-8" />,
-    earlyAccess: '24 ore prima',
+    earlyAccess: '12 ore prima',
     features: [
-      'Accesso anticipato 24 ore',
-      'Supporto prioritario',
-      'Indizi settimanali illimitati',
-      'Badge esclusivo Gold'
+      'Tutti i vantaggi Silver',
+      '4 indizi premium aggiuntivi a settimana',
+      'Accesso anticipato di 12 ore agli eventi',
+      'Partecipazione alle estrazioni Gold',
+      'Badge Gold esclusivo nel profilo'
     ],
     popular: true,
     color: 'from-yellow-400 to-yellow-600'
@@ -47,13 +49,12 @@ const plans = [
     name: 'Black',
     price: '9.99',
     icon: <Zap className="w-8 h-8" />,
-    earlyAccess: '48 ore prima',
+    earlyAccess: '24 ore prima',
     features: [
-      'Accesso anticipato 48 ore',
-      'Supporto VIP',
-      'Indizi settimanali illimitati',
-      'Badge esclusivo Black',
-      'Contenuti esclusivi'
+      'Tutti i vantaggi Gold',
+      'Accesso VIP anticipato di 24 ore agli eventi',
+      '5 indizi premium aggiuntivi a settimana',
+      'Badge Black esclusivo'
     ],
     color: 'from-gray-800 to-black'
   },
@@ -62,14 +63,14 @@ const plans = [
     name: 'Titanium',
     price: '29.99',
     icon: <Star className="w-8 h-8" />,
-    earlyAccess: '72 ore prima',
+    earlyAccess: '48 ore prima',
     features: [
-      'Accesso anticipato 72 ore',
-      'Supporto dedicato 24/7',
-      'Indizi settimanali illimitati',
-      'Badge esclusivo Titanium',
-      'Contenuti esclusivi',
-      'Accesso beta features'
+      'Tutti i vantaggi Black',
+      '5 indizi premium aggiuntivi a settimana',
+      'Accesso VIP anticipato di 48 ore agli eventi',
+      'Supporto prioritario dedicato (24/7)',
+      'Eventi esclusivi M1SSION™',
+      'Badge Titanium esclusivo'
     ],
     premium: true,
     color: 'from-purple-400 to-purple-600'
