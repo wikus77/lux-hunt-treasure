@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
+import lussoForestImage from "@/assets/media/20250729_0829_LussoNellaForesta.png";
 
 interface PrizeVisionProps {
   progress: number;
@@ -24,13 +25,10 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
       </div>
       
       <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-        {/* Premium Porsche video - autoplay, muted, loop */}
-        <video
-          src="https://vkjrqirvdvjbemsfzxof.supabase.co/storage/v1/object/public/videos//20250612_0824_Rotating%20Porsche%20Showcase_simple_compose_01jxhcza4bfbatqkg8k84g20rj.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
+        {/* Luxury Forest Background Image */}
+        <img 
+          src={lussoForestImage}
+          alt="Luxury sports car in mystical forest"
           className="w-full h-full object-cover"
           style={{ borderRadius: '0' }}
         />
