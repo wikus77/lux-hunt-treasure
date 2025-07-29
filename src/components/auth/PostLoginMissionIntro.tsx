@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 const PostLoginMissionIntro = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -12,6 +13,17 @@ const PostLoginMissionIntro = () => {
   const [showSlogan, setShowSlogan] = useState(false);
   const [showStartDate, setShowStartDate] = useState(false);
   const { navigate } = useWouterNavigation();
+  const { getCurrentUser } = useUnifiedAuth();
+
+  // 🚀 ADMIN BYPASS - Skip intro immediately for admin
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (user?.email === 'wikus77@hotmail.it') {
+      console.log('🚀 ADMIN DETECTED in PostLoginMissionIntro - Skip intro, go to /home');
+      navigate('/home');
+      return;
+    }
+  }, [getCurrentUser, navigate]);
 
   const finalText = 'M1SSION™';
   const animationSteps = ['M', 'M1', 'M1S', 'M1SS', 'M1SSI', 'M1SSIO', 'M1SSION', 'M1SSION™'];
