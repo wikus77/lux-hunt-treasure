@@ -71,7 +71,7 @@ const WouterRoutes: React.FC = () => {
                 <div className="text-white">Caricamento...</div>
               </div>
             ) : !isAuthenticated ? (
-              <Index />
+              <LandingPage />
             ) : (
               <ProtectedRoute>
                 <GlobalLayout><AppHome /></GlobalLayout>
