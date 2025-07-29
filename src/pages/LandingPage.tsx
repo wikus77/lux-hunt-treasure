@@ -159,54 +159,109 @@ const LandingPage = () => {
       </div>
       
       {/* HERO SECTION - WELCOME TO M1SSION™ - RIDOTTA ALTEZZA */}
-      <section className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12">
-        {/* Static background */}
+      <motion.section 
+        className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+      >
+        {/* Dynamic Background with Particles */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
-          {/* Static dots */}
-          {[...Array(10)].map((_, i) => (
-            <div
+          {/* Animated Particles */}
+          {[...Array(40)].map((_, i) => (
+            <motion.div
               key={i}
               className="absolute rounded-full"
               style={{
-                width: `${Math.random() * 4 + 2}px`,
-                height: `${Math.random() * 4 + 2}px`,
-                background: i % 2 === 0 ? "#00E5FF" : "#8A2BE2",
+                width: `${Math.random() * 3 + 1}px`,
+                height: `${Math.random() * 3 + 1}px`,
+                background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#FF00FF" : "#FFC107",
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                opacity: 0.4,
                 filter: "blur(1px)"
+              }}
+              animate={{
+                y: [0, -20, 0, 20, 0],
+                x: [0, 10, -10, 5, 0],
+                opacity: [0.02, 0.08, 0.05, 0.08, 0.02],
+                scale: [0.5, 1, 0.8, 1.2, 0.5]
+              }}
+              transition={{
+                duration: Math.random() * 15 + 10,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: Math.random() * 5
               }}
             />
           ))}
         </div>
 
         {/* Content */}
-        <div className="z-10 max-w-5xl mx-auto">
-          {/* Main Title */}
-          <h1 className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4">
+        <motion.div 
+          className="z-10 max-w-5xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          {/* Main Title with Glow Animation */}
+          <motion.h1 
+            className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4 relative"
+            style={{
+              textShadow: "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
+            }}
+            animate={{
+              textShadow: [
+                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)",
+                "0 0 30px rgba(255, 0, 255, 0.7), 0 0 60px rgba(0, 229, 255, 0.4)",
+                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
+              ]
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          >
             WELCOME TO{" "}
             <span>
               <span className="text-[#00E5FF]">M1</span>
               <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
             </span>
-          </h1>
+          </motion.h1>
           
           {/* MISSION START */}
-          <p className="text-green-400 text-sm md:text-base font-orbitron tracking-widest mb-8">
+          <motion.p 
+            className="text-green-400 text-sm md:text-base font-orbitron tracking-widest mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
             MISSION START
-          </p>
+          </motion.p>
           
           {/* Description text */}
-          <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <motion.p 
+            className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
             Un premio attende chi sa vedere oltre.
             Gli indizi non sono nascosti: sono camuffati.
             Serve logica, freddezza e visione.
             La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>.
-          </p>
+          </motion.p>
           
-          <p className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10">
+          {/* IT IS POSSIBLE with Shimmer Effect */}
+          <motion.p 
+            className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10 relative overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+          >
+            <motion.span
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+            />
             IT IS POSSIBLE
-          </p>
+          </motion.p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <button 
@@ -221,39 +276,138 @@ const LandingPage = () => {
               LEARN MORE
             </button>
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
-      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize identico a "Registrati per M1SSION" */}
-      <section className="relative py-20 px-4 bg-black">
+      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize con Neon Overlay e Parallax */}
+      <motion.section 
+        className="relative py-20 px-4 bg-black"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        viewport={{ once: true }}
+      >
         <div className="max-w-4xl mx-auto">
-          <div className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10">
+          <motion.div 
+            className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-              <img 
+              <motion.img 
                 src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
                 alt="M1SSION PREMI IN PALIO - MISSIONE UOMO"
                 className="w-full h-full object-cover rounded-lg shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.5 }}
+              />
+              
+              {/* Neon Animated Overlay */}
+              <motion.div 
+                className="absolute inset-0 rounded-lg"
+                style={{
+                  background: "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
+                  mixBlendMode: "screen"
+                }}
+                animate={{
+                  background: [
+                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
+                    "linear-gradient(45deg, transparent 30%, rgba(255, 0, 255, 0.1) 50%, transparent 70%)",
+                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)"
+                  ]
+                }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
               
               {/* Disclaimer Overlay */}
-              <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
+              <motion.div 
+                className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium"
+                initial={{ opacity: 0.7 }}
+                whileHover={{ opacity: 1 }}
+              >
                 Image for illustrative purposes only
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* Launch Progress Bar */}
-      <LaunchProgressBar 
-        targetDate={new Date(2025, 5, 19, 12, 0, 0)}  
-        onCountdownComplete={() => {}}
-      />
+      {/* Launch Progress Bar - Animated */}
+      <motion.section 
+        className="relative py-16 px-4 bg-black"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        viewport={{ once: true }}
+      >
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.h3 
+            className="text-2xl md:text-3xl font-bold mb-6 text-white"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> in arrivo
+          </motion.h3>
+          
+          <motion.div 
+            className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 mb-4"
+            initial={{ scale: 0.8, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <motion.div
+              className="h-full rounded-full relative overflow-hidden"
+              style={{
+                background: "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+              }}
+              animate={{
+                background: [
+                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)",
+                  "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
+                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+                ],
+                width: ["0%", "78%"]
+              }}
+              transition={{
+                background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                width: { duration: 2, ease: "easeOut" }
+              }}
+            />
+            
+            {/* Pulse Effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
+          
+          <motion.p 
+            className="text-white/70 text-sm"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            78% completato - La caccia inizia presto
+          </motion.p>
+        </div>
+      </motion.section>
 
       {/* WELCOME TO M1SSION™ Text Section */}
-      <section className="relative py-20 px-4 bg-black">
+      <motion.section 
+        className="relative py-20 px-4 bg-black"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        viewport={{ once: true }}
+      >
         <div className="max-w-4xl mx-auto">
-          <div className="glass-card p-8 md:p-12 text-center relative overflow-hidden">
+          <motion.div 
+            className="glass-card p-8 md:p-12 text-center relative overflow-hidden"
+            whileHover={{ scale: 1.01 }}
+            transition={{ duration: 0.3 }}
+          >
             <h2 className="text-3xl md:text-4xl font-orbitron mb-8">
               WELCOME TO{" "}
               <span>
@@ -275,15 +429,25 @@ const LandingPage = () => {
             </p>
 
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      {/* REGISTRATION FORM SECTION - Stile M1SSION Prize, Container più grande */}
-      <section className="relative py-20 px-4">
+      {/* REGISTRATION FORM SECTION - Stile M1SSION Prize con Gradient Animato */}
+      <motion.section 
+        className="relative py-20 px-4"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        viewport={{ once: true }}
+      >
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40"></div>
         <div className="max-w-lg mx-auto relative z-10">
-          <div className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10 text-center">
+          <motion.div 
+            className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10 text-center"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.3 }}
+          >
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
               Registrati per{" "}
               <span>
@@ -297,19 +461,54 @@ const LandingPage = () => {
             </p>
             
             <div className="space-y-4">
-              <Button 
-                onClick={handleRegisterClick}
-                className="w-full bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white text-xl font-bold py-4 px-12 rounded-xl hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="relative overflow-hidden rounded-xl"
               >
-                START M1SSION
-              </Button>
+                <motion.div
+                  className="absolute inset-0"
+                  style={{
+                    background: "linear-gradient(45deg, #ec4899, #d946ef, #ec4899, #d946ef)"
+                  }}
+                  animate={{
+                    background: [
+                      "linear-gradient(45deg, #ec4899, #d946ef, #ec4899, #d946ef)",
+                      "linear-gradient(135deg, #d946ef, #ec4899, #d946ef, #ec4899)",
+                      "linear-gradient(45deg, #ec4899, #d946ef, #ec4899, #d946ef)"
+                    ]
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <Button 
+                  onClick={handleRegisterClick}
+                  className="relative w-full bg-transparent text-white text-xl font-bold py-4 px-12 hover:bg-transparent transition-all duration-300 shadow-lg hover:shadow-cyan-500/30"
+                  style={{
+                    boxShadow: "0 0 20px rgba(236, 72, 153, 0.3)"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = "0 0 30px rgba(0, 229, 255, 0.5), 0 0 60px rgba(236, 72, 153, 0.3)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = "0 0 20px rgba(236, 72, 153, 0.3)";
+                  }}
+                >
+                  START M1SSION
+                </Button>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
       {/* SCOPRI M1SSION SECTION - 4 Steps */}
-      <section className="py-20 px-4 bg-black">
+      <motion.section 
+        className="py-20 px-4 bg-black"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+        viewport={{ once: true }}
+      >
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center">
             Scopri <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span>
@@ -353,7 +552,7 @@ const LandingPage = () => {
             </Button>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* STAY UPDATED SECTION */}
       <section className="py-12 px-4 bg-black">
