@@ -4,7 +4,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
-import SubscriptionSection from '@/components/landing/SubscriptionSection';
 
 const LandingPage: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -112,9 +111,6 @@ const LandingPage: React.FC = () => {
           <p>© 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™</p>
         </motion.div>
       </motion.div>
-      
-      {/* Subscription Plans Section */}
-      <SubscriptionSection countdownCompleted={true} />
     </div>
   );
 };
