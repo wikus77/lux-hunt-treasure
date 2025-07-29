@@ -18,6 +18,7 @@ import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
+import { useGlobalProfileSync } from "./hooks/useGlobalProfileSync";
 import { useState, useEffect } from "react";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
@@ -27,6 +28,9 @@ function App() {
   
   // Initialize push notification processor
   usePushNotificationProcessor();
+  
+  // Initialize global profile sync for real-time updates across all components
+  useGlobalProfileSync();
 
   const handleAuthenticated = (userId: string) => {
     // User authenticated successfully

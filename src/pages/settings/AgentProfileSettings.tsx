@@ -1,9 +1,10 @@
 // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useProfileRealtime } from '@/hooks/useProfileRealtime';
+import { useGlobalProfileSync } from '@/hooks/useGlobalProfileSync';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,8 +20,31 @@ const AgentProfileSettings: React.FC = () => {
   const { updateProfile } = useProfileRealtime();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const globalProfile = useGlobalProfileSync();
   const [agentName, setAgentName] = useState(profileData.name || '');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync agentName with global profile updates and custom events
+  useEffect(() => {
+    if (globalProfile?.full_name) {
+      setAgentName(globalProfile.full_name);
+    }
+  }, [globalProfile?.full_name]);
+
+  // Listen for global profile sync events
+  useEffect(() => {
+    const handleProfileSync = (event: CustomEvent) => {
+      console.log('🔄 AgentProfileSettings received sync event:', event.detail);
+      if (event.detail?.full_name) {
+        setAgentName(event.detail.full_name);
+      }
+    };
+
+    window.addEventListener('profile-sync', handleProfileSync as EventListener);
+    return () => {
+      window.removeEventListener('profile-sync', handleProfileSync as EventListener);
+    };
+  }, []);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

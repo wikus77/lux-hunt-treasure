@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { useGlobalProfileSync } from "@/hooks/useGlobalProfileSync";
 import { useProfileRealtime } from "@/hooks/useProfileRealtime";
 
 export const useProfileBasicInfo = () => {
@@ -14,41 +15,47 @@ export const useProfileBasicInfo = () => {
   const [agentTitle, setAgentTitle] = useState("Decoder");
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const { toast } = useToast();
-  const { profileData: realtimeProfile, updateProfile } = useProfileRealtime();
+  const globalProfile = useGlobalProfileSync();
+  const { updateProfile } = useProfileRealtime();
 
-  // Sync with realtime profile data
+  // Sync with global profile data - prioritize real-time updates
   useEffect(() => {
-    if (realtimeProfile) {
-      if (realtimeProfile.full_name) setName(realtimeProfile.full_name);
-      if (realtimeProfile.bio) setBio(realtimeProfile.bio);
-      if (realtimeProfile.agent_code) setAgentCode(realtimeProfile.agent_code);
-      if (realtimeProfile.agent_title) setAgentTitle(realtimeProfile.agent_title);
-      if (realtimeProfile.avatar_url) setProfileImage(realtimeProfile.avatar_url);
+    if (globalProfile) {
+      console.log('📡 Global profile update received in useProfileBasicInfo:', globalProfile);
+      if (globalProfile.full_name) setName(globalProfile.full_name);
+      if (globalProfile.bio) setBio(globalProfile.bio);
+      if (globalProfile.agent_code) setAgentCode(globalProfile.agent_code);
+      if (globalProfile.agent_title) setAgentTitle(globalProfile.agent_title);
+      if (globalProfile.avatar_url) setProfileImage(globalProfile.avatar_url);
     }
-  }, [realtimeProfile]);
+  }, [globalProfile]);
 
-  // Load saved profile data from localStorage on component mount
+  // Load saved profile data from localStorage on component mount (only if no global data)
   useEffect(() => {
     const loadProfileBasicInfo = async () => {
-      // Load profile image
-      const savedProfileImage = localStorage.getItem('profileImage');
-      if (savedProfileImage) setProfileImage(savedProfileImage);
+      // Only load from localStorage if we don't have global profile data yet
+      if (!globalProfile) {
+        console.log('📂 Loading profile from localStorage fallback');
+        // Load profile image
+        const savedProfileImage = localStorage.getItem('profileImage');
+        if (savedProfileImage) setProfileImage(savedProfileImage);
 
-      // Load name
-      const savedName = localStorage.getItem('profileName');
-      if (savedName) setName(savedName);
+        // Load name
+        const savedName = localStorage.getItem('profileName');
+        if (savedName) setName(savedName);
 
-      // Load bio
-      const savedBio = localStorage.getItem('profileBio');
-      if (savedBio) setBio(savedBio);
-      
-      // Load agent code
-      const savedAgentCode = localStorage.getItem('agentCode');
-      if (savedAgentCode) setAgentCode(savedAgentCode);
+        // Load bio
+        const savedBio = localStorage.getItem('profileBio');
+        if (savedBio) setBio(savedBio);
+        
+        // Load agent code
+        const savedAgentCode = localStorage.getItem('agentCode');
+        if (savedAgentCode) setAgentCode(savedAgentCode);
+      }
     };
     
     loadProfileBasicInfo();
-  }, []);
+  }, [globalProfile]);
 
   // Handle saving profile data with realtime updates
   const handleSaveBasicInfo = async () => {
