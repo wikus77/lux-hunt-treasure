@@ -43,7 +43,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [isAuthenticated, authLoading]);
 
-  // 🔐 SECURE ADMIN CHECK - Use role-based authentication
+  // 🔐 SECURE ADMIN CHECK - Use role-based authentication + BYPASS ADMIN
+  const [isAdmin, setIsAdmin] = React.useState<boolean>(false);
+  
   React.useEffect(() => {
     const checkAdminAccess = async () => {
       if (user) {
@@ -54,7 +56,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
           .single();
         
         if (profile?.role === 'admin') {
-          console.log('🔓 ADMIN ACCESS - User has admin role');
+          console.log('🔓 ADMIN ACCESS - User has admin role - BYPASSING ALL CHECKS');
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
         }
       }
     };
@@ -72,6 +77,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <div className="text-white">Verifica accesso...</div>
       </div>
     );
+  }
+
+  // 🚨 ADMIN BYPASS - Admin users skip ALL access controls
+  if (isAdmin) {
+    console.log('🔓 ADMIN BYPASS ACTIVATED - Full access granted');
+    return <>{children}</>;
   }
 
   // Force plan selection if no subscription plan chosen
