@@ -1718,6 +1718,39 @@ export type Database = {
         }
         Relationships: []
       }
+      security_audit_log: {
+        Row: {
+          created_at: string | null
+          event_data: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          severity: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_data?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          severity?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       security_events: {
         Row: {
           created_at: string | null
@@ -2846,6 +2879,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_security_rate_limit: {
+        Args: {
+          endpoint_param: string
+          max_attempts?: number
+          window_minutes?: number
+        }
+        Returns: boolean
+      }
       cleanup_duplicate_subscriptions: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -2993,6 +3034,10 @@ export type Database = {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
       }
+      has_admin_role_secure: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       has_mission_started: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -3029,6 +3074,10 @@ export type Database = {
         Args: { p_email: string }
         Returns: boolean
       }
+      is_admin_secure: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_ip_blocked: {
         Args: { ip_addr: unknown }
         Returns: boolean
@@ -3036,6 +3085,15 @@ export type Database = {
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: {
+          event_type_param: string
+          user_id_param?: string
+          event_data_param?: Json
+          severity_param?: string
+        }
+        Returns: string
       }
       log_user_action: {
         Args: {
