@@ -18,24 +18,21 @@ const RoleSwitcher = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   
   useEffect(() => {
-    // Check if user is admin (only admins can use this component)
+    // Check if user is admin using secure server-side function
     const checkAdminRole = async () => {
       const user = getCurrentUser();
       if (!user) return;
       
       try {
         const { data, error } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
+          .rpc('is_admin', { user_id: user.id });
           
         if (error) {
           console.error("Error checking admin role:", error);
           return;
         }
         
-        setIsAdmin(data?.role === 'admin');
+        setIsAdmin(data === true);
       } catch (error) {
         console.error("Error checking admin role:", error);
       }

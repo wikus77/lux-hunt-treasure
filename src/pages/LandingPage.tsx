@@ -132,7 +132,7 @@ const LandingPage = () => {
   ];
 
   return (
-    <ParallaxContainer>
+    <div className="min-h-screen bg-black overflow-x-hidden">
       <BackgroundParallax />
       <UnifiedHeader />
       <div className="h-[72px] w-full" />
@@ -807,7 +807,7 @@ const LandingPage = () => {
           </motion.div>
         </div>
       )}
-    </ParallaxContainer>
+    </div>
   );
 };
 

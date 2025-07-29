@@ -10,8 +10,8 @@ import { useContext } from 'react';
 import AuthContext from '@/contexts/auth/AuthContext';
 import type { AuthContextType } from '@/contexts/auth/types';
 
-// Debug toggle for development - Enable for troubleshooting
-const DEBUG_AUTH = true;
+// Debug toggle for development - Disabled in production
+const DEBUG_AUTH = process.env.NODE_ENV === 'development';
 
 const log = (message: string, data?: any) => {
   if (DEBUG_AUTH) {
