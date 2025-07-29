@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
-import lussoForestImage from "@/assets/media/20250729_0829_LussoNellaForesta.png";
+import lussoForestImage from "@/assets/media/lusso-foresta-originale.png";
 
 interface PrizeVisionProps {
   progress: number;
