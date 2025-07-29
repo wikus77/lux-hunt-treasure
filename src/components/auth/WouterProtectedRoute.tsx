@@ -20,6 +20,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Always call all hooks first - no conditional hook calls
   const user = getCurrentUser();
+  
+  // 🚀 EMERGENCY INSTANT ADMIN CHECK - BEFORE ANY OTHER LOGIC
+  if (user?.email === 'wikus77@hotmail.it') {
+    console.log('🚀 INSTANT ADMIN BYPASS - Immediate /home redirect');
+    return <>{children}</>;
+  }
 
   // Use effect for navigation to avoid conditional hook usage
   React.useEffect(() => {
@@ -89,17 +95,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <>{children}</>;
   }
 
-  // 🚀 EMERGENCY HARDCODED ADMIN CHECK - During any loading
+  // 🚀 FINAL EMERGENCY CHECK - Before any verification screen
   if (user?.email === 'wikus77@hotmail.it') {
-    console.log('🚀 EMERGENCY HARDCODED ADMIN - Redirecting to /home');
-    window.location.replace('/home');
-    return null;
+    console.log('🚀 FINAL EMERGENCY ADMIN - Direct children render');
+    return <>{children}</>;
   }
 
   // CRITICAL FIX: Ensure user is always defined before conditional returns
   if (!isAuthenticated || authLoading || accessLoading) {
     if (!authLoading && !accessLoading && !isAuthenticated) {
       return <Login />;
+    }
+    
+    // 🚀 LAST CHANCE ADMIN BYPASS
+    if (user?.email === 'wikus77@hotmail.it') {
+      console.log('🚀 LAST CHANCE ADMIN BYPASS - Skip verification screen');
+      return <>{children}</>;
     }
     
     // 🚨 ADMIN EMERGENCY BYPASS - If admin detected, skip verification

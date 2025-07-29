@@ -25,6 +25,22 @@ export const useAccessControl = (): AccessControlState => {
   });
 
   useEffect(() => {
+    const user = getCurrentUser();
+    
+    // 🚀 EMERGENCY ADMIN BYPASS - IMMEDIATE ACCESS
+    if (user?.email === 'wikus77@hotmail.it') {
+      console.log('🚀 useAccessControl - EMERGENCY ADMIN BYPASS');
+      setState({
+        canAccess: true,
+        isLoading: false,
+        accessStartDate: new Date(),
+        subscriptionPlan: 'ADMIN',
+        status: 'admin_emergency_access',
+        timeUntilAccess: null
+      });
+      return;
+    }
+    
     if (!isAuthenticated) {
       setState(prev => ({ ...prev, isLoading: false, canAccess: false }));
       return;
