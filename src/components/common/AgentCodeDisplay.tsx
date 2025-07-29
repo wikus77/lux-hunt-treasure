@@ -16,7 +16,7 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
   const [isCodeVisible, setIsCodeVisible] = useState(false);
 
   // Special admin constants
-  const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
+  // Remove hardcoded email check - use role-based authentication
   const SPECIAL_ADMIN_CODE = 'X0197';
   
   // Helper function to generate a new agent code
@@ -58,9 +58,15 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
         const { data: { user } } = await supabase.auth.getUser();
         
         if (user) {
-          // Check if this is the special admin
-          if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
-            setAgentCode(SPECIAL_ADMIN_CODE);
+          // Check for admin role via secure function
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          
+          if (profile?.role === 'admin') {
+            setAgentCode(`AG-${SPECIAL_ADMIN_CODE}`);
             setIsLoading(false);
             return;
           }

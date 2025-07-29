@@ -47,7 +47,7 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
         
-        // Check for admin access
+        // Check for admin access using secure role check
         if (userProfile?.role === 'admin') {
           setState({
             canAccess: true,

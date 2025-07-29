@@ -53,7 +53,14 @@ const AgentBadge = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       // First check for special admin case
-      if (user?.email === "wikus77@hotmail.it") {
+      // Check for admin role via secure function
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.role === 'admin') {
         setAgentCode("X0197");
         return;
       }

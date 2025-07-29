@@ -5,6 +5,7 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useAccessControl } from '@/hooks/useAccessControl';
+import { supabase } from '@/integrations/supabase/client';
 import Login from '@/pages/Login';
 import AccessBlockedView from '@/components/auth/AccessBlockedView';
 
@@ -42,11 +43,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [isAuthenticated, authLoading]);
 
-  // 🔐 ECCEZIONE SVILUPPATORE - BYPASS COMPLETO
-  if (user?.email === 'wikus77@hotmail.it') {
-    console.log('🔓 DEVELOPER ACCESS - Bypassing all restrictions');
-    return <>{children}</>;
-  }
+  // 🔐 SECURE ADMIN CHECK - Use role-based authentication
+  React.useEffect(() => {
+    const checkAdminAccess = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile?.role === 'admin') {
+          console.log('🔓 ADMIN ACCESS - User has admin role');
+        }
+      }
+    };
+    
+    checkAdminAccess();
+  }, [user]);
 
   // CRITICAL FIX: Ensure user is always defined before conditional returns
   if (!isAuthenticated || authLoading || accessLoading) {

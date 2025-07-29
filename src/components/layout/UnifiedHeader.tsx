@@ -9,6 +9,8 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import { supabase } from "@/integrations/supabase/client";
 import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay";
 
 interface UnifiedHeaderProps {
@@ -39,6 +41,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
   const { profileImage } = useProfileImage();
+  const { user } = useUnifiedAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
 
@@ -47,7 +50,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   // Check for Capacitor environment and device type
   useEffect(() => {
-    const checkAccess = () => {
+    const checkAccess = async () => {
       // Detect Capacitor environment
       const isCapacitorApp = !!(window as any).Capacitor;
       setIsCapacitor(isCapacitorApp);
@@ -56,7 +59,17 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       const userAgent = navigator.userAgent;
       const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
       const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-      const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
+      
+      let isDeveloperUser = false;
+      // Use secure admin check instead of hardcoded email
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        isDeveloperUser = profile?.role === 'admin';
+      }
       
       console.log('UnifiedHeader access check:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
       
@@ -77,14 +90,24 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     };
     
     checkAccess();
-  }, []);
+  }, [user]);
 
-  const handleProfileClick = () => {
+  const handleProfileClick = async () => {
     const isCapacitorApp = !!(window as any).Capacitor;
     const userAgent = navigator.userAgent;
     const isMobile = /iPhone|iPad|iPod|Android|Mobile/i.test(userAgent) || isCapacitorApp;
     const hasStoredAccess = localStorage.getItem('developer_access') === 'granted';
-    const isDeveloperUser = localStorage.getItem('developer_user_email') === 'wikus77@hotmail.it';
+    
+    let isDeveloperUser = false;
+    // Use secure admin check instead of hardcoded email
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      isDeveloperUser = profile?.role === 'admin';
+    }
     
     console.log('Profile click - Capacitor:', { isMobile, hasStoredAccess, isCapacitorApp, isDeveloperUser });
     

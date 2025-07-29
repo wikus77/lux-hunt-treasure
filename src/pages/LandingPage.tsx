@@ -812,8 +812,3 @@ const LandingPage = () => {
 };
 
 export default LandingPage;
-
-/*
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
- * M1SSION™ Landing Page - Con modifiche chirurgiche applicate
- */
