@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ - Wouter-compatible ProtectedRoute Component with Access Control - CACHE INVALIDATED
+// M1SSION™ - Wouter-compatible ProtectedRoute Component with Access Control - V2.0 STABLE
+// 🚨 CRITICAL FIX: Infinite recursion RLS policies fixed, admin loop eliminated
 
 import React from 'react';
 import { useLocation } from 'wouter';
@@ -25,15 +26,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // 🚀 CRITICAL ADMIN BYPASS - Single state management
   const isAdminUser = user?.email === 'wikus77@hotmail.it';
 
-  // Use effect for navigation to avoid conditional hook usage
+  // 🚨 CRITICAL FIX: Remove redirect useEffect for admin to prevent loop
   React.useEffect(() => {
     if (!authLoading && !accessLoading) {
-      // 🚀 CRITICAL ADMIN BYPASS - Force redirect for admin
+      // Skip all redirects for admin - let component render directly
       if (isAdminUser) {
-        console.log('🚀 CRITICAL ADMIN DETECTED - Force redirect to /home');
-        if (location !== '/home') {
-          setLocation('/home');
-        }
+        console.log('🚀 ADMIN DETECTED - Skipping all redirects, direct render');
         return;
       }
       
