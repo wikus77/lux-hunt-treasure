@@ -16,7 +16,7 @@ const TitaniumPlanPage: React.FC = () => {
 
   const planFeatures = [
     "Tutti i vantaggi Black",
-    "5 indizi premium aggiuntivi a settimana",
+    "7 indizi premium aggiuntivi a settimana",
     "Accesso VIP anticipato di 48 ore agli eventi",
     "Supporto prioritario dedicato (24/7)",
     "Eventi esclusivi M1SSION™",
