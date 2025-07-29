@@ -4,6 +4,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'wouter';
+import { Check, X, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const LandingPage: React.FC = () => {
   const [, setLocation] = useLocation();
@@ -88,13 +90,138 @@ const LandingPage: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Subscription Plans - All aligned in one row */}
+        <motion.section 
+          className="w-full max-w-7xl mx-auto mb-12"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold inline-block">
+              <span className="text-yellow-400">M1</span><span className="text-white">SSION</span> Abbonamenti
+            </h2>
+            <p className="mt-4 text-gray-300 max-w-2xl mx-auto">
+              Scegli il piano più adatto a te e inizia la tua avventura
+            </p>
+          </motion.div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+            {[
+              {
+                title: 'Base – Gratis',
+                price: '€0',
+                period: '/mese',
+                features: [
+                  "Funzioni base",
+                  "Supporto email standard",
+                  "1 indizio settimanale"
+                ],
+                buttonText: 'Inizia Gratis',
+                buttonColor: 'bg-gradient-to-r from-cyan-400 to-cyan-600 text-black'
+              },
+              {
+                title: 'Silver',
+                price: '€3.99',
+                period: '/mese',
+                features: [
+                  "Tutti i vantaggi Base",
+                  "3 indizi premium",
+                  "Accesso anticipato 2h"
+                ],
+                buttonText: 'Scegli Silver',
+                buttonColor: 'bg-gradient-to-r from-gray-300 to-gray-500 text-black'
+              },
+              {
+                title: 'Gold',
+                price: '€6.99',
+                period: '/mese',
+                highlight: true,
+                features: [
+                  "Tutti i vantaggi Silver",
+                  "4 indizi premium",
+                  "Accesso anticipato 12h"
+                ],
+                buttonText: 'Scegli Gold',
+                buttonColor: 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black'
+              },
+              {
+                title: 'Black',
+                price: '€9.99',
+                period: '/mese',
+                features: [
+                  "Tutti i vantaggi Gold",
+                  "Accesso VIP 24h",
+                  "5 indizi premium"
+                ],
+                buttonText: 'Scegli Black',
+                buttonColor: 'bg-gradient-to-r from-gray-800 to-gray-900 text-white'
+              },
+              {
+                title: 'Titanium',
+                price: '€29.99',
+                period: '/mese',
+                features: [
+                  "Tutti i vantaggi Black",
+                  "7 indizi premium",
+                  "Accesso VIP 48h"
+                ],
+                buttonText: 'Scegli Titanium',
+                buttonColor: 'bg-gradient-to-r from-purple-600 to-purple-800 text-white'
+              }
+            ].map((sub, index) => (
+              <motion.div
+                key={index}
+                className={`rounded-lg relative p-4 ${sub.highlight ? 'bg-gray-900/70 border-2 border-yellow-400' : 'bg-gray-900/50 border border-gray-700'}`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1 + index * 0.1 }}
+                whileHover={{ y: -5 }}
+              >
+                {sub.highlight && (
+                  <div className="absolute -top-3 -right-3 bg-yellow-400 text-black text-xs font-bold py-1 px-3 rounded-full flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Consigliato
+                  </div>
+                )}
+                
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold text-white">{sub.title}</h3>
+                  <div className="mt-2">
+                    <span className="text-xl font-bold text-white">{sub.price}</span>
+                    {sub.period && <span className="text-gray-400 text-xs">{sub.period}</span>}
+                  </div>
+                </div>
+                
+                <div className="space-y-2 mb-4">
+                  {sub.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-center">
+                      <Check className="h-4 w-4 text-green-400 mr-2 flex-shrink-0" />
+                      <span className="text-gray-300 text-xs">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button className={`w-full text-xs py-2 ${sub.buttonColor}`}>
+                  {sub.buttonText}
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section>
+
         {/* CTA Button */}
         <motion.button
           onClick={handleStartMission}
           className="bg-gradient-to-r from-yellow-400 to-red-500 text-black text-xl font-bold py-4 px-12 rounded-lg hover:from-yellow-500 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.9 }}
+          transition={{ delay: 1.6 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
