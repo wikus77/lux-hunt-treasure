@@ -84,15 +84,8 @@ const ChoosePlanPage: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { getCurrentUser } = useUnifiedAuth();
   
-  // 🚀 ADMIN BYPASS - Redirect admin immediately
-  React.useEffect(() => {
-    const user = getCurrentUser();
-    if (user?.email === 'wikus77@hotmail.it') {
-      console.log('🚀 ADMIN DETECTED in ChoosePlan - Redirecting to /home');
-      setLocation('/home');
-      return;
-    }
-  }, [getCurrentUser, setLocation]);
+  // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
+  // No redirect needed - WouterProtectedRoute handles admin bypass
   
   const { 
     processSubscription, 

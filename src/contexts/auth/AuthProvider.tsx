@@ -147,13 +147,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
           
-          // 🚀 ADMIN AUTO-REDIRECT to /home - DEFINITIVE FALLBACK
+          // 🚨 ADMIN NO AUTO-REDIRECT - Let routing handle it
           if (newSession.user.email === 'wikus77@hotmail.it') {
-            log("🚀 ADMIN DETECTED - Auto redirect to /home");
-            setTimeout(() => {
-              window.location.replace('/home');
-            }, 500);
-            return;
+            log("🚀 ADMIN DETECTED - No auto redirect, let routing handle");
+            // Don't auto-redirect admin - let normal routing take over
           }
           
           // PWA iOS: Force reload once after login to stabilize
