@@ -19,16 +19,19 @@ export const useSecureAuth = () => {
 
   const logSecurityEvent = async (action: string, details: any = {}) => {
     try {
-      // Insert into admin_logs table for security events
+      // Log to new security_events table
       await supabase
-        .from('admin_logs')
+        .from('security_events')
         .insert({
           event_type: action,
-          note: JSON.stringify(details),
+          event_data: details,
           user_agent: navigator.userAgent
         });
     } catch (error) {
-      console.error('Failed to log security event:', error);
+      // Fail silently in production to avoid exposure
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to log security event:', error);
+      }
     }
   };
 

@@ -10,11 +10,12 @@ import { useContext } from 'react';
 import AuthContext from '@/contexts/auth/AuthContext';
 import type { AuthContextType } from '@/contexts/auth/types';
 
-// Debug toggle for development - Disabled in production
-const DEBUG_AUTH = process.env.NODE_ENV === 'development';
+// Debug COMPLETAMENTE disabilitato in produzione per sicurezza
+const DEBUG_AUTH = false;
 
 const log = (message: string, data?: any) => {
-  if (DEBUG_AUTH) {
+  // Completamente silenziato in produzione
+  if (process.env.NODE_ENV === 'development' && DEBUG_AUTH) {
     console.log(`🔐 [UnifiedAuth] ${message}`, data || '');
   }
 };

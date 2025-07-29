@@ -18,11 +18,12 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Debug toggle per sviluppo - DISABILITATO in produzione per sicurezza
-const DEBUG_UNIFIED_AUTH = process.env.NODE_ENV === 'development';
+// Debug COMPLETAMENTE disabilitato in produzione per sicurezza
+const DEBUG_UNIFIED_AUTH = false;
 
 const log = (message: string, data?: any) => {
-  if (DEBUG_UNIFIED_AUTH) {
+  // Completamente silenziato in produzione
+  if (process.env.NODE_ENV === 'development' && DEBUG_UNIFIED_AUTH) {
     console.log(`🔐 [UNIFIED AUTH] ${message}`, data || '');
   }
 };
