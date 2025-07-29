@@ -147,6 +147,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (event === 'SIGNED_IN' && newSession) {
           log("Utente autenticato", newSession.user.email);
           
+          // 🚀 ADMIN AUTO-REDIRECT to /home - DEFINITIVE FALLBACK
+          if (newSession.user.email === 'wikus77@hotmail.it') {
+            log("🚀 ADMIN DETECTED - Auto redirect to /home");
+            setTimeout(() => {
+              window.location.replace('/home');
+            }, 500);
+            return;
+          }
+          
           // PWA iOS: Force reload once after login to stabilize
           if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
             log("🔄 PWA iOS: Post-login cache refresh");

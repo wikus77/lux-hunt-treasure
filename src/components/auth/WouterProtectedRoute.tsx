@@ -49,6 +49,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   React.useEffect(() => {
     const checkAdminAccess = async () => {
       if (user) {
+        // 🚀 HARDCODED ADMIN FALLBACK - Immediate redirect for developer
+        if (user.email === 'wikus77@hotmail.it') {
+          console.log('🚀 HARDCODED ADMIN FALLBACK - Immediate redirect to /home');
+          window.location.replace('/home');
+          return;
+        }
+        
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
@@ -71,6 +78,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   if (isAdmin && isAuthenticated) {
     console.log('🚀 ADMIN HARD BYPASS - Skipping all verification screens');
     return <>{children}</>;
+  }
+
+  // 🚀 EMERGENCY HARDCODED ADMIN CHECK - During any loading
+  if (user?.email === 'wikus77@hotmail.it') {
+    console.log('🚀 EMERGENCY HARDCODED ADMIN - Redirecting to /home');
+    window.location.replace('/home');
+    return null;
   }
 
   // CRITICAL FIX: Ensure user is always defined before conditional returns
