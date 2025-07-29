@@ -23,85 +23,77 @@ interface SubscriptionPlan {
 const plans: SubscriptionPlan[] = [
   {
     id: 'base',
-    name: 'BASE',
+    name: 'Base – Gratis',
     price: 0,
     icon: Star,
     features: [
-      'Accesso al gioco base',
-      'Indizi limitati',
-      'Mappa standard',
-      'Community forum'
+      'Funzioni base (accesso alla missione con restrizioni)',
+      'Supporto email standard',
+      '1 indizio settimanale base'
     ],
     gradient: 'from-gray-600 to-gray-800',
     borderGlow: 'shadow-gray-500/20'
   },
   {
     id: 'silver',
-    name: 'SILVER',
+    name: 'Silver',
     price: 3.99,
     icon: Zap,
     earlyAccessHours: 2,
     features: [
-      'Accesso 2h prima',
-      'Indizi extra',
-      'Mappa avanzata',
-      'Support prioritario',
-      'Statistiche dettagliate'
+      'Tutti i vantaggi Base',
+      '3 indizi premium aggiuntivi a settimana',
+      'Accesso anticipato di 2 ore agli eventi',
+      'Badge Silver nel profilo'
     ],
     gradient: 'from-slate-400 to-slate-600',
     borderGlow: 'shadow-slate-400/30'
   },
   {
     id: 'gold',
-    name: 'GOLD',
+    name: 'Gold',
     price: 6.99,
     icon: Crown,
-    earlyAccessHours: 24,
+    earlyAccessHours: 12,
     highlighted: true,
     features: [
-      'Accesso 24h prima',
-      'Tutti gli indizi',
-      'Mappa premium',
-      'Chat support',
-      'Strumenti analisi',
-      'Badge esclusivo'
+      'Tutti i vantaggi Silver',
+      '4 indizi premium aggiuntivi a settimana',
+      'Accesso anticipato di 12 ore agli eventi',
+      'Partecipazione alle estrazioni Gold',
+      'Badge Gold esclusivo nel profilo'
     ],
     gradient: 'from-yellow-400 to-yellow-600',
     borderGlow: 'shadow-yellow-400/40'
   },
   {
     id: 'black',
-    name: 'BLACK',
+    name: 'Black',
     price: 9.99,
     icon: Diamond,
-    earlyAccessHours: 48,
+    earlyAccessHours: 24,
     features: [
-      'Accesso 48h prima',
-      'Indizi VIP',
-      'Mappa elite',
-      'Support 24/7',
-      'AI Assistant',
-      'Rewards premium',
-      'Eventi esclusivi'
+      'Tutti i vantaggi Gold',
+      'Accesso VIP anticipato di 24 ore agli eventi',
+      '5 indizi premium aggiuntivi a settimana',
+      'Badge Black esclusivo'
     ],
     gradient: 'from-gray-900 to-black',
     borderGlow: 'shadow-purple-500/40'
   },
   {
     id: 'titanium',
-    name: 'TITANIUM',
+    name: 'Titanium',
     price: 29.99,
     icon: Infinity,
-    earlyAccessHours: 72,
+    earlyAccessHours: 48,
     features: [
-      'Accesso 72h prima',
-      'Tutti i privilegi',
-      'Mappa illimitata',
-      'Support dedicato',
-      'Beta features',
-      'Coaching 1:1',
-      'Ricompense mega',
-      'Accesso founder'
+      'Tutti i vantaggi Black',
+      '5 indizi premium aggiuntivi a settimana',
+      'Accesso VIP anticipato di 48 ore agli eventi',
+      'Supporto prioritario dedicato (24/7)',
+      'Eventi esclusivi M1SSION™',
+      'Badge Titanium esclusivo'
     ],
     gradient: 'from-purple-600 via-pink-600 to-red-600',
     borderGlow: 'shadow-purple-600/60'

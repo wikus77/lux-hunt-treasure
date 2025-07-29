@@ -130,7 +130,11 @@ const PaymentGold = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
-                <span>Indizi illimitati durante l'evento</span>
+                <span>4 indizi premium aggiuntivi a settimana</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
+                <span>Accesso anticipato di 12 ore agli eventi</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
@@ -138,7 +142,7 @@ const PaymentGold = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
-                <span>Badge Gold nel profilo</span>
+                <span>Badge Gold esclusivo nel profilo</span>
               </li>
             </ul>
           </div>

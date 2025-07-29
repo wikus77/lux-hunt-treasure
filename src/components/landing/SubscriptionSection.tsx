@@ -9,8 +9,9 @@ interface SubscriptionSectionProps {
 const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSectionProps) => {
   const subscriptions = [
     {
-      title: 'Base',
-      price: 'Gratuito',
+      title: 'Base – Gratis',
+      price: '€0',
+      period: '/mese',
       highlight: false,
       features: [
         "Funzioni base (accesso alla missione con restrizioni)",

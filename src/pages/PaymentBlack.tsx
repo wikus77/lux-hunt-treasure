@@ -130,15 +130,15 @@ const PaymentBlack = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
-                <span>Accesso VIP ad eventi esclusivi</span>
+                <span>Accesso VIP anticipato di 24 ore agli eventi</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
-                <span>Premi misteriosi aggiuntivi</span>
+                <span>5 indizi premium aggiuntivi a settimana</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
-                <span>Badge Black nel profilo</span>
+                <span>Badge Black esclusivo</span>
               </li>
             </ul>
           </div>
