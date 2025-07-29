@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ Landing Page - VERSIONE IMPATTO ASSOLUTO + CINEMATICA INTRO
+// M1SSION™ Landing Page con modifiche chirurgiche richieste
 
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -11,24 +11,15 @@ import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import LandingFooter from "@/components/landing/LandingFooter";
 import ParallaxContainer from "@/components/ui/parallax-container";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const LandingPage = () => {
   const [, setLocation] = useLocation();
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
-  const [introComplete, setIntroComplete] = useState(false);
 
-  console.log('🌟 M1SSION™ LANDING PAGE - VERSIONE CINEMATICA - Showing to anonymous user');
-
-  // Cinematic intro timing
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIntroComplete(true);
-    }, 4000); // 4 second intro sequence
-    return () => clearTimeout(timer);
-  }, []);
+  console.log('🌟 M1SSION™ LANDING PAGE - Showing to anonymous user');
 
   const handleRegisterClick = () => {
     console.log('🚀 M1SSION™ User clicking register button - redirecting to /register');
@@ -142,416 +133,114 @@ const LandingPage = () => {
 
   return (
     <ParallaxContainer>
-      {/* Cinematic Intro Overlay */}
-      <AnimatePresence>
-        {!introComplete && (
-          <motion.div
-            className="fixed inset-0 z-[9999] bg-black flex items-center justify-center"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-          >
-            {/* Infinity Room Background */}
-            <div className="absolute inset-0 overflow-hidden">
-              {/* Volumetric Infinity Room */}
-              <motion.div
-                className="absolute inset-0"
-                style={{
-                  background: "radial-gradient(circle at center, rgba(0, 229, 255, 0.1) 0%, rgba(255, 0, 255, 0.05) 30%, transparent 70%)",
-                  filter: "blur(80px)"
-                }}
-                animate={{
-                  scale: [1, 1.5, 1.2, 1.8, 1],
-                  rotate: [0, 90, 180, 270, 360],
-                  opacity: [0.1, 0.3, 0.2, 0.4, 0.1]
-                }}
-                transition={{ duration: 4, ease: "easeInOut" }}
-              />
-              
-              {/* Rotating Light Rays */}
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute top-1/2 left-1/2 origin-left"
-                  style={{
-                    width: "100vw",
-                    height: "2px",
-                    background: `linear-gradient(90deg, transparent, ${i % 2 === 0 ? '#00E5FF' : '#FF00FF'}, transparent)`,
-                    transform: `rotate(${i * 30}deg)`,
-                    filter: "blur(1px)"
-                  }}
-                  animate={{
-                    rotate: [i * 30, i * 30 + 360],
-                    opacity: [0, 0.6, 0.3, 0.8, 0]
-                  }}
-                  transition={{
-                    duration: 4,
-                    ease: "linear",
-                    delay: i * 0.1
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Logo with Refraction Effect */}
-            <motion.div
-              className="relative z-10 text-center"
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 1.5, ease: "easeOut" }}
-            >
-              <motion.h1
-                className="text-6xl md:text-8xl font-orbitron font-light mb-4 relative"
-                style={{
-                  background: "linear-gradient(45deg, #00E5FF, #FF00FF, #00E5FF)",
-                  backgroundClip: "text",
-                  WebkitBackgroundClip: "text",
-                  color: "transparent",
-                  filter: "drop-shadow(0 0 20px rgba(0, 229, 255, 0.8))"
-                }}
-                animate={{
-                  textShadow: [
-                    "0 0 20px rgba(0, 229, 255, 0.6)",
-                    "0 0 40px rgba(255, 0, 255, 0.8)",
-                    "0 0 20px rgba(0, 229, 255, 0.6)"
-                  ]
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                M1SSION™
-              </motion.h1>
-              
-              {/* Animated "MISSION START" Text */}
-              <motion.p
-                className="text-green-400 text-lg font-orbitron tracking-widest"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 2 }}
-              >
-                MISSION START
-              </motion.p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Infinity Room Global Background */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
-        <motion.div 
-          className="absolute inset-0"
-          animate={{
-            background: [
-              "linear-gradient(135deg, rgba(0, 0, 0, 1) 0%, rgba(0, 20, 40, 0.95) 30%, rgba(20, 0, 40, 0.9) 60%, rgba(0, 0, 0, 1) 100%)",
-              "linear-gradient(135deg, rgba(20, 0, 40, 0.9) 0%, rgba(0, 0, 0, 1) 30%, rgba(0, 20, 40, 0.95) 60%, rgba(20, 0, 40, 0.9) 100%)",
-              "linear-gradient(135deg, rgba(0, 0, 0, 1) 0%, rgba(0, 20, 40, 0.95) 30%, rgba(20, 0, 40, 0.9) 60%, rgba(0, 0, 0, 1) 100%)"
-            ]
-          }}
-          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-        />
-        
-        {/* Enhanced Volumetric Fog with Depth Layers */}
-        <motion.div
-          className="absolute inset-0 opacity-8"
-          style={{
-            background: "radial-gradient(ellipse 60% 40% at 30% 30%, rgba(0, 229, 255, 0.12) 0%, transparent 50%)",
-            filter: "blur(120px)"
-          }}
-          animate={{
-            x: [0, 40, -30, 20, 0],
-            y: [0, -30, 20, -20, 0],
-            scale: [1, 1.3, 0.8, 1.2, 1],
-            opacity: [0.05, 0.12, 0.08, 0.15, 0.05]
-          }}
-          transition={{
-            duration: 30,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-        
-        <motion.div
-          className="absolute inset-0 opacity-6"
-          style={{
-            background: "radial-gradient(ellipse 40% 60% at 70% 70%, rgba(255, 0, 255, 0.1) 0%, transparent 60%)",
-            filter: "blur(100px)"
-          }}
-          animate={{
-            x: [0, -50, 40, -25, 0],
-            y: [0, 25, -40, 30, 0],
-            scale: [1, 0.9, 1.4, 1.1, 1],
-            opacity: [0.04, 0.1, 0.06, 0.12, 0.04]
-          }}
-          transition={{
-            duration: 35,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 5
-          }}
-        />
-        
-        {/* Synchronized Volumetric Particles */}
-        {[...Array(80)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full"
-            style={{
-              width: `${Math.random() * 6 + 2}px`,
-              height: `${Math.random() * 6 + 2}px`,
-              background: i % 4 === 0 ? "#00E5FF" : i % 4 === 1 ? "#FF00FF" : i % 4 === 2 ? "#FFC107" : "#FFFFFF",
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              filter: "blur(1.5px)",
-              boxShadow: `0 0 ${Math.random() * 10 + 5}px currentColor`
-            }}
-            animate={{
-              y: [0, -50, 0, 40, 0],
-              x: [0, 25, -20, 15, 0],
-              opacity: [0.1, 0.3, 0.15, 0.25, 0.1],
-              scale: [0.3, 1.8, 0.6, 1.5, 0.3]
-            }}
-            transition={{
-              duration: Math.random() * 25 + 20,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: Math.random() * 10
-            }}
-          />
-        ))}
-      </div>
-
       <BackgroundParallax />
       <UnifiedHeader />
       <div className="h-[72px] w-full" />
       
-      
-      {/* Enhanced Floating Action Buttons - Fixed position */}
+      {/* Floating Action Buttons - Fixed position */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
-        <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+        <Button 
+          onClick={() => setShowPrizeDetails(true)}
+          className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+          size="icon"
         >
-          <Button 
-            onClick={() => setShowPrizeDetails(true)}
-            className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:shadow-xl"
-            size="icon"
-          >
-            <Info className="h-6 w-6" />
-            <span className="sr-only">Dettagli premi</span>
-          </Button>
-        </motion.div>
+          <Info className="h-6 w-6" />
+          <span className="sr-only">Dettagli premi</span>
+        </Button>
         
-        <motion.div
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+        <Button 
+          onClick={openInviteFriend}
+          className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+          size="icon"
         >
-          <Button 
-            onClick={openInviteFriend}
-            className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:shadow-xl"
-            size="icon"
-          >
-            <UserPlus className="h-6 w-6" />
-            <span className="sr-only">Invita un amico</span>
-          </Button>
-        </motion.div>
+          <UserPlus className="h-6 w-6" />
+          <span className="sr-only">Invita un amico</span>
+        </Button>
       </div>
-
-      {/* HERO SECTION - Apple Style Cinematic Entrance */}
+      
+      {/* HERO SECTION - WELCOME TO M1SSION™ - RIDOTTA ALTEZZA */}
       <motion.section 
-        className="relative min-h-[80vh] w-full flex flex-col items-center justify-center text-center px-4 py-12 overflow-hidden"
-        initial={{ opacity: 0, scale: 1.05 }}
-        animate={{ 
-          opacity: introComplete ? 1 : 0, 
-          scale: introComplete ? 1 : 1.05 
-        }}
-        transition={{ 
-          duration: 1.5, 
-          ease: [0.25, 0.46, 0.45, 0.94],
-          delay: introComplete ? 0 : 3
-        }}
+        className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        {/* Cinematic Background with Volumetric Light */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <motion.div 
-            className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-[#111]"
-            animate={{
-              background: [
-                "linear-gradient(to bottom, #000000 0%, rgba(0,0,0,0.9) 50%, #111111 100%)",
-                "linear-gradient(to bottom, #000511 0%, rgba(0,20,40,0.9) 50%, #111111 100%)",
-                "linear-gradient(to bottom, #000000 0%, rgba(0,0,0,0.9) 50%, #111111 100%)"
-              ]
-            }}
-            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          />
-          
-          {/* Volumetric Light Beam with Soft Edges and Parallax */}
-          <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-full opacity-20"
-            style={{
-              background: "linear-gradient(180deg, rgba(0, 229, 255, 0.4) 0%, rgba(0, 229, 255, 0.1) 40%, transparent 100%)",
-              filter: "blur(40px)",
-              clipPath: "polygon(45% 0%, 55% 0%, 65% 100%, 35% 100%)"
-            }}
-            animate={{
-              x: [0, 10, -10, 5, 0],
-              opacity: [0.15, 0.25, 0.15, 0.3, 0.15],
-              scaleX: [1, 1.1, 0.9, 1.05, 1]
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-          
-          {/* Noise Animation on Light Beam */}
-          <motion.div
-            className="absolute top-0 left-1/2 -translate-x-1/2 w-60 h-full opacity-10"
-            style={{
-              background: "radial-gradient(ellipse 100px 800px at center, rgba(255, 255, 255, 0.1) 0%, transparent 70%)",
-              filter: "blur(20px)"
-            }}
-            animate={{
-              y: [0, -50, 0, 30, 0],
-              opacity: [0.05, 0.15, 0.08, 0.12, 0.05],
-              scale: [1, 1.2, 0.8, 1.1, 1]
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 2
-            }}
-          />
-          
-          {/* Enhanced Hero Particles with Scroll Sync */}
-          {[...Array(35)].map((_, i) => (
+        {/* Dynamic Background with Particles */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
+          {/* Animated Particles */}
+          {[...Array(40)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute rounded-full"
               style={{
-                width: `${Math.random() * 6 + 2}px`,
-                height: `${Math.random() * 6 + 2}px`,
+                width: `${Math.random() * 3 + 1}px`,
+                height: `${Math.random() * 3 + 1}px`,
                 background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#FF00FF" : "#FFC107",
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 filter: "blur(1px)"
               }}
               animate={{
-                y: [0, -40, 0, 30, 0],
-                x: [0, 20, -15, 10, 0],
-                opacity: [0.08, 0.25, 0.12, 0.2, 0.08],
-                scale: [0.5, 1.5, 0.8, 1.3, 0.5]
+                y: [0, -20, 0, 20, 0],
+                x: [0, 10, -10, 5, 0],
+                opacity: [0.02, 0.08, 0.05, 0.08, 0.02],
+                scale: [0.5, 1, 0.8, 1.2, 0.5]
               }}
               transition={{
-                duration: Math.random() * 18 + 12,
+                duration: Math.random() * 15 + 10,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: Math.random() * 6
+                delay: Math.random() * 5
               }}
             />
           ))}
         </div>
 
-        {/* Hero Content with Letter-by-Letter Animation */}
+        {/* Content */}
         <motion.div 
-          className="z-10 max-w-5xl mx-auto relative"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ 
-            opacity: introComplete ? 1 : 0, 
-            y: introComplete ? 0 : 40 
-          }}
-          transition={{ 
-            duration: 1, 
-            delay: introComplete ? 0.5 : 4.5,
-            ease: "easeOut"
-          }}
+          className="z-10 max-w-5xl mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {/* Logo with Glass Refraction Effect */}
-          <motion.div
-            className="mb-8"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
-              opacity: introComplete ? 1 : 0, 
-              scale: introComplete ? 1 : 0.8 
+          {/* Main Title with Glow Animation */}
+          <motion.h1 
+            className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4 relative"
+            style={{
+              textShadow: "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
             }}
-            transition={{ 
-              duration: 1.2, 
-              delay: introComplete ? 1 : 5,
-              ease: "easeOut"
+            animate={{
+              textShadow: [
+                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)",
+                "0 0 30px rgba(255, 0, 255, 0.7), 0 0 60px rgba(0, 229, 255, 0.4)",
+                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
+              ]
             }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
-            <motion.h1 
-              className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4 relative"
-              style={{
-                background: "linear-gradient(45deg, #00E5FF, #FFFFFF, #FF00FF, #00E5FF)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-                filter: "drop-shadow(0 0 30px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.4))"
-              }}
-              animate={{
-                backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                filter: [
-                  "drop-shadow(0 0 30px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.4))",
-                  "drop-shadow(0 0 40px rgba(255, 0, 255, 0.8)) drop-shadow(0 0 80px rgba(0, 229, 255, 0.6))",
-                  "drop-shadow(0 0 30px rgba(0, 229, 255, 0.6)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.4))"
-                ]
-              }}
-              transition={{ 
-                backgroundPosition: { duration: 3, repeat: Infinity, ease: "linear" },
-                filter: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-              }}
-            >
-              {"WELCOME TO M1SSION™".split("").map((char, index) => (
-                <motion.span
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ 
-                    opacity: introComplete ? 1 : 0, 
-                    y: introComplete ? 0 : 20 
-                  }}
-                  transition={{ 
-                    duration: 0.05, 
-                    delay: introComplete ? 1.5 + index * 0.05 : 6 + index * 0.05,
-                    ease: "easeOut"
-                  }}
-                  className={char === " " ? "mr-4" : ""}
-                >
-                  {char === " " ? "\u00A0" : char}
-                </motion.span>
-              ))}
-            </motion.h1>
-          </motion.div>
+            WELCOME TO{" "}
+            <span>
+              <span className="text-[#00E5FF]">M1</span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+            </span>
+          </motion.h1>
           
-          {/* Sequential Fade-in Subtitles with Enhanced Timing */}
+          {/* MISSION START */}
           <motion.p 
             className="text-green-400 text-sm md:text-base font-orbitron tracking-widest mb-8"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ 
-              opacity: introComplete ? 1 : 0, 
-              y: introComplete ? 0 : 15 
-            }}
-            transition={{ 
-              duration: 0.8, 
-              delay: introComplete ? 2.5 : 7.5,
-              ease: "easeOut"
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
             MISSION START
           </motion.p>
           
+          {/* Description text */}
           <motion.p 
-            className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ 
-              opacity: introComplete ? 1 : 0, 
-              y: introComplete ? 0 : 25 
-            }}
-            transition={{ 
-              duration: 0.8, 
-              delay: introComplete ? 3.0 : 8.0,
-              ease: "easeOut"
-            }}
+            className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
           >
             Un premio attende chi sa vedere oltre.
             Gli indizi non sono nascosti: sono camuffati.
@@ -559,229 +248,80 @@ const LandingPage = () => {
             La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>.
           </motion.p>
           
-          <motion.div 
+          {/* IT IS POSSIBLE with Shimmer Effect */}
+          <motion.p 
             className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10 relative overflow-hidden"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ 
-              opacity: introComplete ? 1 : 0, 
-              y: introComplete ? 0 : 15 
-            }}
-            transition={{ 
-              duration: 0.8, 
-              delay: introComplete ? 3.5 : 8.5,
-              ease: "easeOut"
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
           >
             <motion.span
-              className="relative z-10"
-              animate={{
-                textShadow: [
-                  "0 0 10px rgba(255, 255, 0, 0.5)",
-                  "0 0 20px rgba(255, 255, 0, 0.8), 0 0 30px rgba(255, 255, 255, 0.3)",
-                  "0 0 10px rgba(255, 255, 0, 0.5)"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            >
-              IT IS POSSIBLE
-            </motion.span>
-            
-            {/* Beam Animation on Text */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-yellow-300/40 to-transparent"
-              animate={{ 
-                x: ["-100%", "100%"],
-                scaleX: [0.5, 1.5, 0.5]
-              }}
-              transition={{ 
-                duration: 4, 
-                repeat: Infinity, 
-                ease: "easeInOut",
-                delay: introComplete ? 4 : 9
-              }}
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             />
-          </motion.div>
+            IT IS POSSIBLE
+          </motion.p>
           
-          {/* Action Buttons with Synchronized Entrance */}
-          <motion.div 
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ 
-              opacity: introComplete ? 1 : 0, 
-              y: introComplete ? 0 : 30 
-            }}
-            transition={{ 
-              duration: 1, 
-              delay: introComplete ? 4.0 : 9.0,
-              ease: "easeOut"
-            }}
-          >
-            <motion.div
-              whileHover={{ 
-                scale: 1.08,
-                y: -2
-              }}
-              whileTap={{ scale: 0.98 }}
-              className="relative overflow-hidden rounded-full group"
-              animate={{
-                y: [0, -3, 0, -2, 0]
-              }}
-              transition={{
-                y: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-              }}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <button 
+              className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+              onClick={handleRegisterClick}
             >
-              <motion.div
-                className="absolute inset-0"
-                animate={{
-                  background: [
-                    "linear-gradient(45deg, #00E5FF, #FF00FF, #FFC107, #00E5FF)",
-                    "linear-gradient(135deg, #FF00FF, #FFC107, #00E5FF, #FF00FF)",
-                    "linear-gradient(225deg, #FFC107, #00E5FF, #FF00FF, #FFC107)",
-                    "linear-gradient(45deg, #00E5FF, #FF00FF, #FFC107, #00E5FF)"
-                  ]
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <button 
-                className="relative px-10 py-4 text-black font-bold bg-transparent hover:bg-transparent transition-all duration-300 text-lg"
-                onClick={handleRegisterClick}
-                style={{
-                  textShadow: "0 0 10px rgba(0,0,0,0.9)"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.filter = "drop-shadow(0 0 30px rgba(0, 229, 255, 1)) drop-shadow(0 0 60px rgba(255, 0, 255, 0.8))";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.filter = "none";
-                }}
-              >
-                JOIN THE HUNT
-              </button>
-            </motion.div>
-            
-            <motion.button 
-              className="px-10 py-4 rounded-full text-white font-bold bg-black/40 border border-white/30 hover:bg-black/60 hover:border-white/50 transition-all duration-300 relative overflow-hidden text-lg"
-              whileHover={{ 
-                scale: 1.08,
-                y: -2,
-                boxShadow: "0 0 40px rgba(255, 255, 255, 0.3)"
-              }}
-              whileTap={{ scale: 0.98 }}
-              animate={{
-                y: [0, -2, 0, -1, 0]
-              }}
-              transition={{
-                y: { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.textShadow = "0 0 20px rgba(255, 255, 255, 1)";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.8)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.textShadow = "none";
-                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.3)";
-              }}
+              JOIN THE HUNT
+            </button>
+            <button 
+              className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
             >
-              <motion.span
-                className="absolute inset-0 border border-white/20 rounded-full"
-                animate={{
-                  borderColor: [
-                    "rgba(255, 255, 255, 0.2)",
-                    "rgba(255, 255, 255, 0.5)",
-                    "rgba(255, 255, 255, 0.2)"
-                  ],
-                  boxShadow: [
-                    "0 0 5px rgba(255, 255, 255, 0.1)",
-                    "0 0 20px rgba(255, 255, 255, 0.4)",
-                    "0 0 5px rgba(255, 255, 255, 0.1)"
-                  ]
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
               LEARN MORE
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         </motion.div>
       </motion.section>
 
-      {/* CONTAINER PREMI IN PALIO - Cinematic Scroll Zoom Effect */}
+      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize con Neon Overlay e Parallax */}
       <motion.section 
         className="relative py-20 px-4 bg-black"
-        initial={{ opacity: 0, scale: 0.9 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         viewport={{ once: true }}
       >
         <div className="max-w-4xl mx-auto">
           <motion.div 
             className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10"
-            initial={{ scale: 0.95, rotateX: 5, rotateY: 2 }}
-            whileInView={{ scale: 1, rotateX: 0, rotateY: 0 }}
-            whileHover={{ 
-              scale: 1.03,
-              rotateX: 2,
-              rotateY: 2,
-              boxShadow: "0 0 50px rgba(255, 0, 255, 0.4), 0 0 100px rgba(0, 229, 255, 0.3)"
-            }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            style={{
-              transformStyle: "preserve-3d",
-              perspective: "1000px",
-              boxShadow: "0 0 30px rgba(0, 229, 255, 0.2)"
-            }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.3 }}
           >
-            {/* Label "Premi M1SSION™" */}
-            <motion.div 
-              className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-[#00E5FF] text-sm font-bold border border-cyan-500/30"
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              Premi M1SSION™
-            </motion.div>
-            
-            <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden rounded-lg">
+            <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
               <motion.img 
                 src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
                 alt="M1SSION PREMI IN PALIO - MISSIONE UOMO"
-                className="w-full h-full object-cover shadow-lg"
+                className="w-full h-full object-cover rounded-lg shadow-lg"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.5 }}
               />
               
-              {/* Enhanced Neon Animated Overlay */}
+              {/* Neon Animated Overlay */}
               <motion.div 
-                className="absolute inset-0"
+                className="absolute inset-0 rounded-lg"
                 style={{
-                  background: "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.08) 50%, transparent 70%)",
+                  background: "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
                   mixBlendMode: "screen"
                 }}
                 animate={{
                   background: [
-                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.08) 50%, transparent 70%)",
-                    "linear-gradient(45deg, transparent 30%, rgba(255, 0, 255, 0.08) 50%, transparent 70%)",
-                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.08) 50%, transparent 70%)"
+                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
+                    "linear-gradient(45deg, transparent 30%, rgba(255, 0, 255, 0.1) 50%, transparent 70%)",
+                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)"
                   ]
                 }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
               
-              {/* Glowing Border Effect */}
-              <motion.div 
-                className="absolute inset-0 border-2 border-transparent rounded-lg"
-                animate={{
-                  borderColor: [
-                    "rgba(0, 229, 255, 0.3)",
-                    "rgba(255, 0, 255, 0.3)",
-                    "rgba(0, 229, 255, 0.3)"
-                  ]
-                }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              />
-              
               {/* Disclaimer Overlay */}
               <motion.div 
-                className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium border border-white/20"
+                className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium"
                 initial={{ opacity: 0.7 }}
                 whileHover={{ opacity: 1 }}
               >
@@ -810,60 +350,38 @@ const LandingPage = () => {
             <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> in arrivo
           </motion.h3>
           
-           <motion.div 
-             className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 mb-4"
-             initial={{ scale: 0.8, opacity: 0 }}
-             whileInView={{ scale: 1, opacity: 1 }}
-             transition={{ duration: 0.6, delay: 0.4 }}
-           >
-             {/* Living Progress Bar with Wave Animation */}
-             <motion.div
-               className="h-full rounded-full relative overflow-hidden"
-               style={{
-                 background: "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
-               }}
-               animate={{
-                 background: [
-                   "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)",
-                   "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
-                   "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
-                 ],
-                 width: ["0%", "78%"],
-                 borderRadius: ["0px", "50px 50px 50px 50px", "0px"]
-               }}
-               transition={{
-                 background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
-                 width: { duration: 2, ease: "easeOut" },
-                 borderRadius: { duration: 4, repeat: Infinity, ease: "easeInOut" }
-               }}
-             />
-             
-             {/* Wave Animation Effect */}
-             <motion.div
-               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-               animate={{ 
-                 x: ["-100%", "100%"],
-                 scaleY: [1, 1.2, 1, 0.8, 1]
-               }}
-               transition={{ 
-                 x: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-                 scaleY: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-               }}
-             />
-             
-             {/* Pulse Glow Effect */}
-             <motion.div
-               className="absolute inset-0 rounded-full"
-               animate={{
-                 boxShadow: [
-                   "0 0 10px rgba(0, 229, 255, 0.3)",
-                   "0 0 20px rgba(255, 0, 255, 0.5)",
-                   "0 0 10px rgba(0, 229, 255, 0.3)"
-                 ]
-               }}
-               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-             />
-           </motion.div>
+          <motion.div 
+            className="relative w-full h-3 bg-black/60 rounded-full overflow-hidden border border-white/20 mb-4"
+            initial={{ scale: 0.8, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <motion.div
+              className="h-full rounded-full relative overflow-hidden"
+              style={{
+                background: "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+              }}
+              animate={{
+                background: [
+                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)",
+                  "linear-gradient(90deg, #FF00FF, #00E5FF, #FF00FF)",
+                  "linear-gradient(90deg, #00E5FF, #FF00FF, #00E5FF)"
+                ],
+                width: ["0%", "78%"]
+              }}
+              transition={{
+                background: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                width: { duration: 2, ease: "easeOut" }
+              }}
+            />
+            
+            {/* Pulse Effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
           
           <motion.p 
             className="text-white/70 text-sm"
@@ -915,51 +433,21 @@ const LandingPage = () => {
         </div>
       </motion.section>
 
-      {/* REGISTRATION FORM SECTION - Cinematic Split Reveal Effect */}
+      {/* REGISTRATION FORM SECTION - Stile M1SSION Prize con Gradient Animato */}
       <motion.section 
         className="relative py-20 px-4"
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         viewport={{ once: true }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40"></div>
         <div className="max-w-lg mx-auto relative z-10">
           <motion.div 
             className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10 text-center"
-            initial={{ 
-              clipPath: "polygon(0 0, 0 0, 0 100%, 0 100%)",
-              scale: 1.1
-            }}
-            whileInView={{ 
-              clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
-              scale: 1
-            }}
-            whileHover={{ 
-              scale: 1.02,
-              boxShadow: "0 0 40px rgba(236, 72, 153, 0.4), 0 0 80px rgba(0, 229, 255, 0.3)"
-            }}
-            transition={{ 
-              clipPath: { duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] },
-              scale: { duration: 0.8, ease: "easeOut" }
-            }}
-            style={{
-              boxShadow: "0 0 30px rgba(236, 72, 153, 0.3)"
-            }}
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.3 }}
           >
-            {/* Split Reveal Light Bands */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/20 to-transparent"
-              initial={{ x: "-100%" }}
-              whileInView={{ x: "100%" }}
-              transition={{ duration: 1.5, ease: "easeInOut", delay: 0.2 }}
-            />
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-magenta-400/20 to-transparent"
-              initial={{ x: "100%" }}
-              whileInView={{ x: "-100%" }}
-              transition={{ duration: 1.5, ease: "easeInOut", delay: 0.4 }}
-            />
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
               Registrati per{" "}
               <span>
