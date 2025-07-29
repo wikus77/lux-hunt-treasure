@@ -216,6 +216,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
       case "Titanium":
         return [
           { text: "Tutti i vantaggi Black" },
+          { text: "5 indizi premium aggiuntivi a settimana" },
           { text: "Accesso VIP anticipato di 48 ore agli eventi" },
           { text: "Supporto prioritario dedicato (24/7)" },
           { text: "Eventi esclusivi M1SSION™" },

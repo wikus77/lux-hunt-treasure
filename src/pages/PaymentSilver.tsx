@@ -164,7 +164,7 @@ const PaymentSilver = () => {
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
-                <span>Accesso anticipato ai nuovi eventi</span>
+                <span>Accesso anticipato di 2 ore agli eventi</span>
               </li>
               <li className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-m1ssion-blue"></div>
