@@ -20,26 +20,38 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
   const { navigate } = useWouterNavigation();
   const { login } = useAuthContext();
 
-  // Internal access control
-  const isDeveloperEmail = (email: string) => {
-    return email.toLowerCase() === 'wikus77@hotmail.it';
+  // Input sanitization and validation utilities
+  const sanitizeEmail = (email: string) => {
+    return email.toLowerCase().trim().replace(/[^\w@.-]/g, '');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    // Input validation and sanitization
+    const cleanEmail = sanitizeEmail(email);
+    const cleanPassword = password.trim();
+    
+    if (!cleanEmail || !cleanPassword) {
       toast.error('Tutti i campi sono obbligatori');
+      return;
+    }
+
+    // Email format validation
+    if (!/\S+@\S+\.\S+/.test(cleanEmail)) {
+      toast.error('Formato email non valido');
       return;
     }
 
     setIsLoading(true);
     
     try {
-      console.log('🔐 STANDARD LOGIN ATTEMPT - Using DIRECT AuthContext for:', email);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔐 SECURE LOGIN ATTEMPT for:', cleanEmail);
+      }
       
-      // Use DIRECT AuthContext login method
-      const result = await login(email, password);
+      // Use DIRECT AuthContext login method with cleaned inputs
+      const result = await login(cleanEmail, cleanPassword);
 
       if (!result.success) {
         console.error('❌ LOGIN ERROR via DIRECT AuthContext:', result.error);

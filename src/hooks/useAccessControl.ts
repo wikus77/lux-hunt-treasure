@@ -35,14 +35,25 @@ export const useAccessControl = (): AccessControlState => {
         const user = getCurrentUser();
         if (!user) return;
 
-        // 🔐 ECCEZIONE SVILUPPATORE - ACCESSO COMPLETO
-        if (user.email === 'wikus77@hotmail.it') {
+        // Controllo sicuro tramite profili database - ottieni tutte le info necessarie
+        const { data: fullProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role, access_enabled, access_start_date, subscription_plan, status')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          return;
+        }
+        
+        if (fullProfile?.role === 'admin') {
           setState({
             canAccess: true,
             isLoading: false,
             accessStartDate: new Date(),
-            subscriptionPlan: 'DEV',
-            status: 'developer_access',
+            subscriptionPlan: 'ADMIN',
+            status: 'admin_access',
             timeUntilAccess: null
           });
           return;
@@ -57,19 +68,7 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
 
-        // Ottieni i dettagli del profilo
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('access_enabled, access_start_date, subscription_plan, status')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
-          return;
-        }
-
-        const accessStartDate = profile.access_start_date ? new Date(profile.access_start_date) : null;
+        const accessStartDate = fullProfile.access_start_date ? new Date(fullProfile.access_start_date) : null;
         const now = new Date();
         const timeUntilAccess = accessStartDate ? Math.max(0, accessStartDate.getTime() - now.getTime()) : null;
 
@@ -77,8 +76,8 @@ export const useAccessControl = (): AccessControlState => {
           canAccess: !!canAccessData,
           isLoading: false,
           accessStartDate,
-          subscriptionPlan: profile.subscription_plan || '',
-          status: profile.status || 'registered_pending',
+          subscriptionPlan: fullProfile.subscription_plan || '',
+          status: fullProfile.status || 'registered_pending',
           timeUntilAccess
         });
 

@@ -18,8 +18,8 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-// Debug toggle per sviluppo - ABILITATO per troubleshooting
-const DEBUG_UNIFIED_AUTH = true;
+// Debug toggle per sviluppo - DISABILITATO in produzione per sicurezza
+const DEBUG_UNIFIED_AUTH = process.env.NODE_ENV === 'development';
 
 const log = (message: string, data?: any) => {
   if (DEBUG_UNIFIED_AUTH) {
@@ -260,14 +260,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user?.id]);
 
-  // HAS ROLE - Check con developer bypass
+  // HAS ROLE - Check con sicurezza migliorata
   const hasRole = (role: string): boolean => {
-    // Developer bypass
-    if (user?.email === 'wikus77@hotmail.it') {
-      log(`Forced hasRole(${role}) = true per developer`);
-      return true;
-    }
-    
+    // Controllo sicuro basato sui ruoli nel database
     const result = userRoles.includes(role);
     log(`hasRole(${role}) = ${result}`, { userRoles, userEmail: user?.email });
     return result;
