@@ -64,17 +64,41 @@ const LandingPage: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* New Prize Container */}
+        <motion.div 
+          className="bg-gray-900/50 p-8 rounded-lg border border-gray-700 mb-12 relative overflow-hidden"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7 }}
+        >
+          <div className="relative">
+            <img 
+              src="/lovable-uploads/96f032a3-b4d8-4c1d-a838-4bb66a58194c.png" 
+              alt="M1SSION Luxury Prizes" 
+              className="w-full h-auto rounded-lg object-cover"
+            />
+            {/* Disclaimer */}
+            <div className="absolute bottom-2 right-2 bg-black/60 text-white text-sm md:text-lg px-2 py-1 rounded backdrop-blur-sm">
+              Image for illustrative purposes only
+            </div>
+          </div>
+          <div className="mt-6 text-center">
+            <h3 className="text-2xl font-bold mb-3 text-yellow-400">🏆 Premi in Palio</h3>
+            <p className="text-gray-300">Vinci premi di lusso partecipando alle missioni M1SSION™</p>
+          </div>
+        </motion.div>
+
         {/* CTA Button */}
         <motion.button
           onClick={handleStartMission}
           className="bg-gradient-to-r from-yellow-400 to-red-500 text-black text-xl font-bold py-4 px-12 rounded-lg hover:from-yellow-500 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.9 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          🚀 Inizia la Missione
+          🚀 Registrati per M1SSION
         </motion.button>
 
         {/* Footer */}

@@ -139,7 +139,7 @@ const ChoosePlanPage: React.FC = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <motion.div
               key={plan.id}

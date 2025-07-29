@@ -103,11 +103,11 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           </p>
         </motion.div>
         
-        <div className="flex flex-wrap justify-center gap-6 mb-12">{/* Tutti i piani orizzontali */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-12 max-w-7xl mx-auto">{/* Tutti i piani orizzontali */}
           {subscriptions.map((sub, index) => (
             <motion.div
               key={index}
-              className={`rounded-xl relative p-6 w-full max-w-[280px] ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
+              className={`rounded-xl relative p-4 w-full ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}
@@ -122,32 +122,32 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
                 </div>
               )}
               
-              <div className="mb-6">
-                <h3 className="text-xl font-bold text-white">{sub.title}</h3>
+              <div className="mb-4">
+                <h3 className="text-lg font-bold text-white">{sub.title}</h3>
                 <div className="mt-2">
-                  <span className="text-2xl font-bold text-white">{sub.price}</span>
-                  {sub.period && <span className="text-white/50 text-sm">{sub.period}</span>}
+                  <span className="text-xl font-bold text-white">{sub.price}</span>
+                  {sub.period && <span className="text-white/50 text-xs">{sub.period}</span>}
                 </div>
               </div>
               
-              <div className="space-y-4 mb-6">
-                {sub.features.map((feature, idx) => (
+              <div className="space-y-2 mb-4">
+                {sub.features.slice(0, 3).map((feature, idx) => (
                   <div key={idx} className="flex items-center">
-                    <Check className="h-5 w-5 text-green-400 mr-2 flex-shrink-0" />
-                    <span className="text-white/80 text-sm">{feature}</span>
+                    <Check className="h-4 w-4 text-green-400 mr-2 flex-shrink-0" />
+                    <span className="text-white/80 text-xs">{feature}</span>
                   </div>
                 ))}
                 
-                {sub.notIncluded?.map((feature, idx) => (
+                {sub.notIncluded?.slice(0, 2).map((feature, idx) => (
                   <div key={idx} className="flex items-center text-white/40">
-                    <X className="h-5 w-5 mr-2 flex-shrink-0" />
-                    <span className="text-sm">{feature}</span>
+                    <X className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="text-xs">{feature}</span>
                   </div>
                 ))}
               </div>
               
               <Button 
-                className={`w-full ${sub.buttonColor} ${!countdownCompleted ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full text-xs py-2 ${sub.buttonColor} ${!countdownCompleted ? 'opacity-70 cursor-not-allowed' : ''}`}
                 disabled={!countdownCompleted}
               >
                 {sub.buttonText}
