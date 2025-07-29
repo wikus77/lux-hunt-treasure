@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ - Wouter-compatible ProtectedRoute Component with Access Control
+// M1SSION™ - Wouter-compatible ProtectedRoute Component with Access Control - CACHE INVALIDATED
 
 import React from 'react';
 import { useLocation } from 'wouter';
