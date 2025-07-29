@@ -60,7 +60,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   
   // 🚨 INSTANT ADMIN BYPASS - Top priority
   if (isAdminUser) {
-    console.log('🚀 INSTANT ADMIN BYPASS - Direct children render');
+    console.log('🚀 INSTANT ADMIN BYPASS - Direct children render for:', user?.email);
     return <>{children}</>;
   }
 
