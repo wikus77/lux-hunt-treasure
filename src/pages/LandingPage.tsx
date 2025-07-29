@@ -158,8 +158,8 @@ const LandingPage = () => {
         </Button>
       </div>
       
-      {/* HERO SECTION - WELCOME TO M1SSION™ */}
-      <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-16">
+      {/* HERO SECTION - WELCOME TO M1SSION™ - RIDOTTA ALTEZZA */}
+      <section className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12">
         {/* Static background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
           {/* Static dots */}
@@ -224,20 +224,22 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* NUOVO CONTAINER EXTRA - Aggiunto come richiesto */}
+      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize */}
       <section className="relative py-20 px-4 bg-black">
         <div className="max-w-4xl mx-auto">
-          <div className="glass-card p-8 md:p-12 text-center relative overflow-hidden">
-            <h3 className="text-2xl font-bold mb-6 text-yellow-400">🏆 Premi in Palio</h3>
-            <div className="mb-6">
+          <div className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg">
+            <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
               <img 
                 src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
                 alt="M1SSION PREMI IN PALIO - MISSIONE UOMO"
-                className="w-full h-64 object-cover rounded-lg border border-gray-700"
+                className="w-full h-full object-cover rounded-lg shadow-lg"
               />
+              
+              {/* Disclaimer Overlay */}
+              <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
+                Image for illustrative purposes only
+              </div>
             </div>
-            <p className="text-gray-300">Vinci premi di lusso partecipando alle missioni M1SSION™</p>
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
           </div>
         </div>
       </section>
@@ -277,11 +279,11 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* REGISTRATION FORM SECTION - MODIFICATO: Pulsante attivo */}
+      {/* REGISTRATION FORM SECTION - Stile M1SSION Prize, Container più grande */}
       <section className="relative py-20 px-4">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-cyan-900/40 to-pink-900/40"></div>
-        <div className="max-w-md mx-auto relative z-10">
-          <div className="glass-card p-8 text-center">
+        <div className="max-w-lg mx-auto relative z-10">
+          <div className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-2">
               Registrati per{" "}
               <span>
@@ -295,12 +297,6 @@ const LandingPage = () => {
             </p>
             
             <div className="space-y-4">
-              <p className="text-yellow-400 text-lg font-semibold">
-                🔒 Registrazioni chiuse
-              </p>
-              <p className="text-white/60 text-sm">
-                Le registrazioni sono temporaneamente sospese in preparazione al lancio.
-              </p>
               <Button 
                 onClick={handleRegisterClick}
                 className="w-full bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white text-xl font-bold py-4 px-12 rounded-xl hover:from-pink-600 hover:to-fuchsia-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
