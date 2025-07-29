@@ -103,11 +103,11 @@ const SubscriptionSection = ({ countdownCompleted = false }: SubscriptionSection
           </p>
         </motion.div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
+        <div className="flex flex-wrap justify-center gap-6 mb-12">{/* Tutti i piani orizzontali */}
           {subscriptions.map((sub, index) => (
             <motion.div
               key={index}
-              className={`rounded-xl relative p-6 ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
+              className={`rounded-xl relative p-6 w-full max-w-[280px] ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1, duration: 0.5 }}

@@ -114,7 +114,7 @@ export const useStripePayment = () => {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           user_id: user.id,
-          plan,
+          plan: plan.toUpperCase(), // 🔥 CRITICAL: Convert to uppercase for edge function
           payment_method: paymentMethod || 'card',
           mode: 'live' // Force live mode for production
         }

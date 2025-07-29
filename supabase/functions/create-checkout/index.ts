@@ -116,9 +116,9 @@ serve(async (req) => {
     // Configurazione prezzi corretti M1SSION™ (in centesimi) - SINCRONIZZATI CON PRICING CONFIG
     const priceConfig = {
       'SILVER': { price: 399, name: 'M1SSION™ Silver', description: 'Piano Silver con vantaggi premium' },
-      'GOLD': { price: 999, name: 'M1SSION™ Gold', description: 'Piano Gold con accesso VIP' },
-      'BLACK': { price: 1999, name: 'M1SSION™ Black', description: 'Piano Black con badge esclusivo' },
-      'TITANIUM': { price: 3999, name: 'M1SSION™ Titanium VIP', description: 'Piano Titanium con accesso illimitato' }
+      'GOLD': { price: 699, name: 'M1SSION™ Gold', description: 'Piano Gold con accesso VIP' },
+      'BLACK': { price: 999, name: 'M1SSION™ Black', description: 'Piano Black con badge esclusivo' },
+      'TITANIUM': { price: 2999, name: 'M1SSION™ Titanium VIP', description: 'Piano Titanium con accesso illimitato' }
     };
 
     const tierConfig = priceConfig[plan as keyof typeof priceConfig];

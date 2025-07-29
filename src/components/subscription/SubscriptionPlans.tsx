@@ -343,7 +343,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
         const { data, error } = await supabase.functions.invoke('create-checkout', {
           body: {
             user_id: user?.id,
-            plan: plan,
+            plan: plan.toUpperCase(), // 🔥 CRITICAL: Convert to uppercase for edge function
             payment_method: 'card',
             mode: 'live'
           }
