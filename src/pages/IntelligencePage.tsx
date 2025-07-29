@@ -118,7 +118,7 @@ const IntelligencePage: React.FC = () => {
     <SafeAreaWrapper className="min-h-screen bg-background">
       <div className="flex flex-col min-h-[100dvh] w-full" style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)'
       }}>
         
         {/* Header */}
@@ -176,7 +176,7 @@ const IntelligencePage: React.FC = () => {
 
         {/* COLLAPSIBLE MODULES MENU - FIXED BOTTOM SECTION */}
         <div className="fixed bottom-0 left-0 right-0 z-40" style={{ 
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))'
         }}>
           {/* Module Selection Button */}
           <div className="bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">

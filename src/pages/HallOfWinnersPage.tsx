@@ -159,7 +159,7 @@ const HallOfWinnersPage: React.FC = () => {
     <SafeAreaWrapper className="h-full bg-background">
       <div className="flex flex-col h-[100dvh] w-full overflow-hidden" style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
+        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)'
       }}>
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-background/95 via-background/90 to-background/95 backdrop-blur-sm">
