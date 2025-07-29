@@ -14,6 +14,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  // 🚨 CRITICAL FIX: ALL HOOKS MUST BE CALLED BEFORE ANY RETURN
   const { isAuthenticated, isLoading: authLoading, getCurrentUser } = useUnifiedAuth();
   const { canAccess, isLoading: accessLoading, subscriptionPlan, accessStartDate, timeUntilAccess } = useAccessControl();
   const [location, setLocation] = useLocation();
@@ -21,17 +22,14 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Always call all hooks first - no conditional hook calls
   const user = getCurrentUser();
   
-  // 🚀 EMERGENCY INSTANT ADMIN CHECK - BEFORE ANY OTHER LOGIC
-  if (user?.email === 'wikus77@hotmail.it') {
-    console.log('🚀 INSTANT ADMIN BYPASS - Immediate /home redirect');
-    return <>{children}</>;
-  }
+  // 🚀 CRITICAL ADMIN BYPASS - Single state management
+  const isAdmin = user?.email === 'wikus77@hotmail.it';
 
   // Use effect for navigation to avoid conditional hook usage
   React.useEffect(() => {
     if (!authLoading && !accessLoading) {
-      // 🚀 CRITICAL ADMIN BYPASS - Check email first before any navigation
-      if (user?.email === 'wikus77@hotmail.it') {
+      // 🚀 CRITICAL ADMIN BYPASS - Force redirect for admin
+      if (isAdmin) {
         console.log('🚀 CRITICAL ADMIN DETECTED - Force redirect to /home');
         if (location !== '/home') {
           setLocation('/home');
@@ -47,7 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         setLocation('/choose-plan');
       }
     }
-  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation, user?.email]);
+  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation, isAdmin]);
 
   // CRITICAL: Add logout state handling to prevent hooks error
   React.useEffect(() => {
@@ -58,65 +56,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   }, [isAuthenticated, authLoading]);
 
-  // 🔐 SECURE ADMIN CHECK - Use role-based authentication + BYPASS ADMIN
-  const [isAdmin, setIsAdmin] = React.useState<boolean>(false);
+  // 🚀 RENDERING LOGIC - All hooks called, now handle render
   
-  React.useEffect(() => {
-    const checkAdminAccess = async () => {
-      if (user) {
-        // 🚀 HARDCODED ADMIN FALLBACK - Immediate redirect for developer
-        if (user.email === 'wikus77@hotmail.it') {
-          console.log('🚀 HARDCODED ADMIN FALLBACK - Immediate redirect to /home');
-          window.location.replace('/home');
-          return;
-        }
-        
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile?.role === 'admin') {
-          console.log('🔓 ADMIN ACCESS - User has admin role - BYPASSING ALL CHECKS');
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-        }
-      }
-    };
-    
-    checkAdminAccess();
-  }, [user]);
-
-  // 🚨 CRITICAL ADMIN BYPASS - Skip loading screens for admin
-  if (isAdmin && isAuthenticated) {
-    console.log('🚀 ADMIN HARD BYPASS - Skipping all verification screens');
+  // 🚨 INSTANT ADMIN BYPASS - Top priority
+  if (isAdmin) {
+    console.log('🚀 INSTANT ADMIN BYPASS - Direct children render');
     return <>{children}</>;
   }
 
-  // 🚀 FINAL EMERGENCY CHECK - Before any verification screen
-  if (user?.email === 'wikus77@hotmail.it') {
-    console.log('🚀 FINAL EMERGENCY ADMIN - Direct children render');
-    return <>{children}</>;
-  }
-
-  // CRITICAL FIX: Ensure user is always defined before conditional returns
+  // Handle authentication states
   if (!isAuthenticated || authLoading || accessLoading) {
     if (!authLoading && !accessLoading && !isAuthenticated) {
       return <Login />;
-    }
-    
-    // 🚀 LAST CHANCE ADMIN BYPASS
-    if (user?.email === 'wikus77@hotmail.it') {
-      console.log('🚀 LAST CHANCE ADMIN BYPASS - Skip verification screen');
-      return <>{children}</>;
-    }
-    
-    // 🚨 ADMIN EMERGENCY BYPASS - If admin detected, skip verification
-    if (isAdmin) {
-      console.log('🚨 ADMIN EMERGENCY BYPASS - Loading but admin detected');
-      return <>{children}</>;
     }
     
     return (
@@ -124,12 +75,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <div className="text-white">Verifica accesso...</div>
       </div>
     );
-  }
-
-  // 🚨 ADMIN FINAL BYPASS - Skip access control for admin  
-  if (isAdmin) {
-    console.log('🔓 ADMIN FINAL BYPASS - All access controls skipped');
-    return <>{children}</>;
   }
 
   // Block access if user doesn't have permission (post-registration control)

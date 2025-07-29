@@ -11,6 +11,7 @@ import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import LandingFooter from "@/components/landing/LandingFooter";
 import ParallaxContainer from "@/components/ui/parallax-container";
+import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
 import { motion } from "framer-motion";
 
 const LandingPage = () => {
@@ -18,6 +19,39 @@ const LandingPage = () => {
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
+  const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
+
+  // 🚨 EMERGENCY ADMIN ACCESS TRIGGER (Triple click logo)
+  const [logoClickCount, setLogoClickCount] = useState(0);
+  
+  const handleLogoClick = () => {
+    setLogoClickCount(prev => {
+      const newCount = prev + 1;
+      if (newCount === 3) {
+        console.log('🚨 EMERGENCY ACCESS ACTIVATED');
+        setShowEmergencyLogin(true);
+        return 0; // Reset counter
+      }
+      // Reset after 2 seconds
+      setTimeout(() => setLogoClickCount(0), 2000);
+      return newCount;
+    });
+  };
+
+  // 🚨 EMERGENCY ACCESS TRIGGER - Global keyboard listener
+  useEffect(() => {
+    const handleKeySequence = (e: KeyboardEvent) => {
+      // Ctrl + Shift + E = Emergency Admin Login
+      if (e.ctrlKey && e.shiftKey && e.key === 'E') {
+        console.log('🚨 EMERGENCY ACCESS TRIGGERED - Keyboard');
+        setShowEmergencyLogin(true);
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeySequence);
+    return () => document.removeEventListener('keydown', handleKeySequence);
+  }, []);
 
   console.log('🌟 M1SSION™ LANDING PAGE - Showing to anonymous user');
 
@@ -718,6 +752,11 @@ const LandingPage = () => {
 
       {/* Footer */}
       <LandingFooter />
+
+      {/* Emergency Admin Login Modal */}
+      {showEmergencyLogin && (
+        <AdminEmergencyLogin onClose={() => setShowEmergencyLogin(false)} />
+      )}
 
       {/* Modals */}
       {showPrizeDetails && (
