@@ -35,19 +35,20 @@ export const useAccessControl = (): AccessControlState => {
         const user = getCurrentUser();
         if (!user) return;
 
-        // Controllo sicuro tramite profili database - ottieni tutte le info necessarie
-        const { data: fullProfile, error: profileError } = await supabase
+        // Get user profile with all necessary fields
+        const { data: userProfile, error: fetchError } = await supabase
           .from('profiles')
           .select('role, access_enabled, access_start_date, subscription_plan, status')
           .eq('id', user.id)
           .single();
 
-        if (profileError) {
-          console.error('Error fetching profile:', profileError);
+        if (fetchError) {
+          console.error('Error fetching profile:', fetchError);
           return;
         }
         
-        if (fullProfile?.role === 'admin') {
+        // Check for admin access
+        if (userProfile?.role === 'admin') {
           setState({
             canAccess: true,
             isLoading: false,
@@ -59,7 +60,7 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
 
-        // Verifica con la funzione del database
+        // Check mission access via database function
         const { data: canAccessData, error: accessError } = await supabase
           .rpc('can_user_access_mission', { user_id: user.id });
 
@@ -68,7 +69,8 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
 
-        const accessStartDate = fullProfile.access_start_date ? new Date(fullProfile.access_start_date) : null;
+        // Calculate access timing
+        const accessStartDate = userProfile.access_start_date ? new Date(userProfile.access_start_date) : null;
         const now = new Date();
         const timeUntilAccess = accessStartDate ? Math.max(0, accessStartDate.getTime() - now.getTime()) : null;
 
@@ -76,8 +78,8 @@ export const useAccessControl = (): AccessControlState => {
           canAccess: !!canAccessData,
           isLoading: false,
           accessStartDate,
-          subscriptionPlan: fullProfile.subscription_plan || '',
-          status: fullProfile.status || 'registered_pending',
+          subscriptionPlan: userProfile.subscription_plan || '',
+          status: userProfile.status || 'registered_pending',
           timeUntilAccess
         });
 
