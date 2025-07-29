@@ -224,10 +224,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize */}
+      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize identico a "Registrati per M1SSION" */}
       <section className="relative py-20 px-4 bg-black">
         <div className="max-w-4xl mx-auto">
-          <div className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg">
+          <div className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10">
             <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
               <img 
                 src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
