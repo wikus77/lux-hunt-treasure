@@ -24,6 +24,15 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // Use effect for navigation to avoid conditional hook usage
   React.useEffect(() => {
     if (!authLoading && !accessLoading) {
+      // 🚀 CRITICAL ADMIN BYPASS - Check email first before any navigation
+      if (user?.email === 'wikus77@hotmail.it') {
+        console.log('🚀 CRITICAL ADMIN DETECTED - Force redirect to /home');
+        if (location !== '/home') {
+          setLocation('/home');
+        }
+        return;
+      }
+      
       if (!isAuthenticated && location !== '/login') {
         console.log('🔄 [WouterProtectedRoute] Redirecting to login - user not authenticated');
         setLocation('/login');
@@ -32,7 +41,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         setLocation('/choose-plan');
       }
     }
-  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation]);
+  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation, user?.email]);
 
   // CRITICAL: Add logout state handling to prevent hooks error
   React.useEffect(() => {

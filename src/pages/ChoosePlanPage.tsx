@@ -12,6 +12,7 @@ import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 const plans = [
   {
@@ -81,9 +82,21 @@ const ChoosePlanPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const { getCurrentUser } = useUnifiedAuth();
+  
+  // 🚀 ADMIN BYPASS - Redirect admin immediately
+  React.useEffect(() => {
+    const user = getCurrentUser();
+    if (user?.email === 'wikus77@hotmail.it') {
+      console.log('🚀 ADMIN DETECTED in ChoosePlan - Redirecting to /home');
+      setLocation('/home');
+      return;
+    }
+  }, [getCurrentUser, setLocation]);
+  
   const { 
     processSubscription, 
-    showCheckout, 
+    showCheckout,
     paymentConfig, 
     closeCheckout, 
     handlePaymentSuccess 
