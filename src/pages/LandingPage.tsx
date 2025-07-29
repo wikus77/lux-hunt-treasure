@@ -133,114 +133,176 @@ const LandingPage = () => {
 
   return (
     <ParallaxContainer>
+      {/* Enhanced Dynamic Background with Animated Gradient + Nebula Particles */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <motion.div 
+          className="absolute inset-0"
+          animate={{
+            background: [
+              "linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, rgba(255, 0, 255, 0.05) 50%, rgba(0, 229, 255, 0.05) 100%)",
+              "linear-gradient(135deg, rgba(255, 0, 255, 0.05) 0%, rgba(0, 229, 255, 0.05) 50%, rgba(255, 0, 255, 0.05) 100%)",
+              "linear-gradient(135deg, rgba(0, 229, 255, 0.05) 0%, rgba(255, 0, 255, 0.05) 50%, rgba(0, 229, 255, 0.05) 100%)"
+            ]
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+        />
+        
+        {/* Enhanced Nebula Particles */}
+        {[...Array(50)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${Math.random() * 4 + 1}px`,
+              height: `${Math.random() * 4 + 1}px`,
+              background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#FF00FF" : "#FFC107",
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              filter: "blur(1px)"
+            }}
+            animate={{
+              y: [0, -30, 0, 25, 0],
+              x: [0, 15, -15, 10, 0],
+              opacity: [0.1, 0.15, 0.08, 0.15, 0.1],
+              scale: [0.5, 1.2, 0.8, 1.5, 0.5]
+            }}
+            transition={{
+              duration: Math.random() * 20 + 15,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 8
+            }}
+          />
+        ))}
+      </div>
+
       <BackgroundParallax />
       <UnifiedHeader />
       <div className="h-[72px] w-full" />
       
-      {/* Floating Action Buttons - Fixed position */}
-      <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
-        <Button 
-          onClick={() => setShowPrizeDetails(true)}
-          className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
-          size="icon"
-        >
-          <Info className="h-6 w-6" />
-          <span className="sr-only">Dettagli premi</span>
-        </Button>
-        
-        <Button 
-          onClick={openInviteFriend}
-          className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
-          size="icon"
-        >
-          <UserPlus className="h-6 w-6" />
-          <span className="sr-only">Invita un amico</span>
-        </Button>
-      </div>
       
-      {/* HERO SECTION - WELCOME TO M1SSION™ - RIDOTTA ALTEZZA */}
+      {/* Enhanced Floating Action Buttons - Fixed position */}
+      <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Button 
+            onClick={() => setShowPrizeDetails(true)}
+            className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:shadow-xl"
+            size="icon"
+          >
+            <Info className="h-6 w-6" />
+            <span className="sr-only">Dettagli premi</span>
+          </Button>
+        </motion.div>
+        
+        <motion.div
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Button 
+            onClick={openInviteFriend}
+            className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:shadow-xl"
+            size="icon"
+          >
+            <UserPlus className="h-6 w-6" />
+            <span className="sr-only">Invita un amico</span>
+          </Button>
+        </motion.div>
+      </div>
+
+      {/* HERO SECTION - Enhanced with WOW Effects */}
       <motion.section 
-        className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12"
+        className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        {/* Dynamic Background with Particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
-          {/* Animated Particles */}
-          {[...Array(40)].map((_, i) => (
+        {/* Hero Background Layer */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-b from-black via-black/90 to-[#111]"
+            animate={{
+              background: [
+                "linear-gradient(to bottom, #000000 0%, rgba(0,0,0,0.9) 50%, #111111 100%)",
+                "linear-gradient(to bottom, #000511 0%, rgba(0,20,40,0.9) 50%, #111111 100%)",
+                "linear-gradient(to bottom, #000000 0%, rgba(0,0,0,0.9) 50%, #111111 100%)"
+              ]
+            }}
+            transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+          />
+          
+          {/* Enhanced Hero Particles */}
+          {[...Array(30)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute rounded-full"
               style={{
-                width: `${Math.random() * 3 + 1}px`,
-                height: `${Math.random() * 3 + 1}px`,
+                width: `${Math.random() * 6 + 2}px`,
+                height: `${Math.random() * 6 + 2}px`,
                 background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#FF00FF" : "#FFC107",
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
                 filter: "blur(1px)"
               }}
               animate={{
-                y: [0, -20, 0, 20, 0],
-                x: [0, 10, -10, 5, 0],
-                opacity: [0.02, 0.08, 0.05, 0.08, 0.02],
-                scale: [0.5, 1, 0.8, 1.2, 0.5]
+                y: [0, -40, 0, 30, 0],
+                x: [0, 20, -15, 10, 0],
+                opacity: [0.1, 0.3, 0.15, 0.25, 0.1],
+                scale: [0.5, 1.5, 0.8, 1.3, 0.5]
               }}
               transition={{
-                duration: Math.random() * 15 + 10,
+                duration: Math.random() * 18 + 12,
                 repeat: Infinity,
                 ease: "easeInOut",
-                delay: Math.random() * 5
+                delay: Math.random() * 6
               }}
             />
           ))}
         </div>
 
-        {/* Content */}
+        {/* Hero Content */}
         <motion.div 
-          className="z-10 max-w-5xl mx-auto"
+          className="z-10 max-w-5xl mx-auto relative"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {/* Main Title with Glow Animation */}
+          {/* Enhanced Main Title with Pulsing Glow */}
           <motion.h1 
             className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4 relative"
-            style={{
-              textShadow: "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
-            }}
             animate={{
               textShadow: [
-                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)",
-                "0 0 30px rgba(255, 0, 255, 0.7), 0 0 60px rgba(0, 229, 255, 0.4)",
-                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
+                "0 0 20px rgba(0, 229, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 229, 255, 0.2)",
+                "0 0 30px rgba(255, 0, 255, 0.8), 0 0 60px rgba(0, 229, 255, 0.5), 0 0 80px rgba(255, 0, 255, 0.3)",
+                "0 0 20px rgba(0, 229, 255, 0.6), 0 0 40px rgba(255, 0, 255, 0.4), 0 0 60px rgba(0, 229, 255, 0.2)"
               ]
             }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           >
             WELCOME TO{" "}
-            <span>
+            <span className="relative">
               <span className="text-[#00E5FF]">M1</span>
               <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
             </span>
           </motion.h1>
           
-          {/* MISSION START */}
+          {/* Sequential Fade-in Subtitles */}
           <motion.p 
             className="text-green-400 text-sm md:text-base font-orbitron tracking-widest mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
           >
             MISSION START
           </motion.p>
           
-          {/* Description text */}
           <motion.p 
-            className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+            className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.6, delay: 1.0 }}
           >
             Un premio attende chi sa vedere oltre.
             Gli indizi non sono nascosti: sono camuffati.
@@ -248,34 +310,88 @@ const LandingPage = () => {
             La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>.
           </motion.p>
           
-          {/* IT IS POSSIBLE with Shimmer Effect */}
           <motion.p 
             className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10 relative overflow-hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 1.5 }}
           >
             <motion.span
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
               animate={{ x: ["-100%", "100%"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 2 }}
             />
             IT IS POSSIBLE
           </motion.p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button 
-              className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
-              onClick={handleRegisterClick}
+          {/* Enhanced Action Buttons */}
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 2.0 }}
+          >
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className="relative overflow-hidden rounded-full"
             >
-              JOIN THE HUNT
-            </button>
-            <button 
-              className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  background: [
+                    "linear-gradient(45deg, #00E5FF, #FF00FF, #00E5FF)",
+                    "linear-gradient(135deg, #FF00FF, #00E5FF, #FF00FF)",
+                    "linear-gradient(45deg, #00E5FF, #FF00FF, #00E5FF)"
+                  ]
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <button 
+                className="relative px-8 py-3 text-black font-bold bg-transparent hover:bg-transparent transition-all duration-300"
+                onClick={handleRegisterClick}
+                style={{
+                  textShadow: "0 0 10px rgba(0,0,0,0.8)"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = "drop-shadow(0 0 20px rgba(0, 229, 255, 0.8))";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = "none";
+                }}
+              >
+                JOIN THE HUNT
+              </button>
+            </motion.div>
+            
+            <motion.button 
+              className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/20 hover:bg-black/50 hover:border-white/40 transition-all duration-300 relative overflow-hidden"
+              whileHover={{ 
+                scale: 1.05,
+                boxShadow: "0 0 25px rgba(255, 255, 255, 0.2)"
+              }}
+              whileTap={{ scale: 0.98 }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textShadow = "0 0 15px rgba(255, 255, 255, 0.8)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textShadow = "none";
+              }}
             >
+              <motion.span
+                className="absolute inset-0 border border-white/10 rounded-full"
+                animate={{
+                  boxShadow: [
+                    "0 0 5px rgba(255, 255, 255, 0.1)",
+                    "0 0 15px rgba(255, 255, 255, 0.3)",
+                    "0 0 5px rgba(255, 255, 255, 0.1)"
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
               LEARN MORE
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         </motion.div>
       </motion.section>
 
@@ -290,38 +406,67 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto">
           <motion.div 
             className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10"
-            whileHover={{ scale: 1.02 }}
+            whileHover={{ 
+              scale: 1.03,
+              boxShadow: "0 0 40px rgba(255, 0, 255, 0.3), 0 0 80px rgba(0, 229, 255, 0.2)"
+            }}
             transition={{ duration: 0.3 }}
+            style={{
+              boxShadow: "0 0 30px rgba(0, 229, 255, 0.2)"
+            }}
           >
-            <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
+            {/* Label "Premi M1SSION™" */}
+            <motion.div 
+              className="absolute top-4 left-4 bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-[#00E5FF] text-sm font-bold border border-cyan-500/30"
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              Premi M1SSION™
+            </motion.div>
+            
+            <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden rounded-lg">
               <motion.img 
                 src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
                 alt="M1SSION PREMI IN PALIO - MISSIONE UOMO"
-                className="w-full h-full object-cover rounded-lg shadow-lg"
+                className="w-full h-full object-cover shadow-lg"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.5 }}
               />
               
-              {/* Neon Animated Overlay */}
+              {/* Enhanced Neon Animated Overlay */}
               <motion.div 
-                className="absolute inset-0 rounded-lg"
+                className="absolute inset-0"
                 style={{
-                  background: "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
+                  background: "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.08) 50%, transparent 70%)",
                   mixBlendMode: "screen"
                 }}
                 animate={{
                   background: [
-                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
-                    "linear-gradient(45deg, transparent 30%, rgba(255, 0, 255, 0.1) 50%, transparent 70%)",
-                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)"
+                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.08) 50%, transparent 70%)",
+                    "linear-gradient(45deg, transparent 30%, rgba(255, 0, 255, 0.08) 50%, transparent 70%)",
+                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.08) 50%, transparent 70%)"
                   ]
                 }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
               
+              {/* Glowing Border Effect */}
+              <motion.div 
+                className="absolute inset-0 border-2 border-transparent rounded-lg"
+                animate={{
+                  borderColor: [
+                    "rgba(0, 229, 255, 0.3)",
+                    "rgba(255, 0, 255, 0.3)",
+                    "rgba(0, 229, 255, 0.3)"
+                  ]
+                }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              
               {/* Disclaimer Overlay */}
               <motion.div 
-                className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium"
+                className="absolute bottom-2 right-2 bg-black/80 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium border border-white/20"
                 initial={{ opacity: 0.7 }}
                 whileHover={{ opacity: 1 }}
               >
