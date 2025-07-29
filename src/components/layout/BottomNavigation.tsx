@@ -100,7 +100,7 @@ const BottomNavigationComponent = () => {
         left: 0,
         right: 0,
         bottom: "0px",
-        zIndex: 9999,
+        zIndex: 10000,
         paddingBottom: isCapacitor ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "12px",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
@@ -115,9 +115,9 @@ const BottomNavigationComponent = () => {
     >
       <motion.div
         className="backdrop-blur-xl border-t border-white/10 px-3 bottom-nav-hardware-acceleration rounded-t-lg"
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
         style={{
           position: "relative",
           zIndex: "inherit",
