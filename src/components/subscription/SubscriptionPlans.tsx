@@ -320,7 +320,7 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
           });
           
         } else {
-        console.log(`🚀 M1SSION™ PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
+        console.log(`🚀 M1SSION™ IN-APP PAYMENT: To ${plan} plan (upgrade/downgrade/re-checkout)`);
         
         // Save selected plan to Supabase profiles before payment
         const { data: { user } } = await supabase.auth.getUser();
@@ -332,42 +332,17 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
             .eq('id', user.id);
         }
         
-        // 🚀 FIXED: Use direct Stripe checkout instead of in-app modal
-        console.log(`💳 M1SSION™ Opening Stripe checkout for ${plan}`);
+        // 🔥 CRITICAL FIX: Use in-app checkout modal like BUZZ payments
+        console.log(`💳 M1SSION™ Opening in-app checkout modal for ${plan}`);
         
-        // Get pricing from centralized config
-        const planPriceCents = getPriceCents(plan);
-        console.log(`💰 M1SSION™ Plan ${plan} price: ${planPriceCents} cents`);
+        // Set up in-app checkout modal
+        setSelectedPlan(plan);
+        setShowInAppCheckout(true);
         
-        // Call edge function for Stripe checkout
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            user_id: user?.id,
-            plan: plan.toUpperCase(), // 🔥 CRITICAL: Convert to uppercase for edge function
-            payment_method: 'card',
-            mode: 'live'
-          }
+        toast({
+          title: "💳 Checkout in-app aperto",
+          description: `Completa il pagamento per il piano ${plan}`,
         });
-
-        if (error) {
-          console.error('❌ M1SSION™ Checkout error:', error);
-          toast({
-            title: "❌ Errore sistema pagamento",
-            description: "Impossibile avviare il checkout. Riprova.",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        if (data?.url) {
-          console.log('✅ M1SSION™ Opening Stripe checkout:', data.url);
-          // Open in new tab for better UX
-          window.open(data.url, '_blank');
-          toast({
-            title: "🚀 Checkout aperto",
-            description: "Completa il pagamento nella nuova scheda",
-          });
-        }
       }
       
     } catch (error) {
