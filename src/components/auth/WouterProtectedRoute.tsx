@@ -23,13 +23,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const user = getCurrentUser();
   
   // 🚀 CRITICAL ADMIN BYPASS - Single state management
-  const isAdmin = user?.email === 'wikus77@hotmail.it';
+  const isAdminUser = user?.email === 'wikus77@hotmail.it';
 
   // Use effect for navigation to avoid conditional hook usage
   React.useEffect(() => {
     if (!authLoading && !accessLoading) {
       // 🚀 CRITICAL ADMIN BYPASS - Force redirect for admin
-      if (isAdmin) {
+      if (isAdminUser) {
         console.log('🚀 CRITICAL ADMIN DETECTED - Force redirect to /home');
         if (location !== '/home') {
           setLocation('/home');
@@ -45,7 +45,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         setLocation('/choose-plan');
       }
     }
-  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation, isAdmin]);
+  }, [isAuthenticated, authLoading, accessLoading, subscriptionPlan, location, setLocation, isAdminUser]);
 
   // CRITICAL: Add logout state handling to prevent hooks error
   React.useEffect(() => {
@@ -59,7 +59,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // 🚀 RENDERING LOGIC - All hooks called, now handle render
   
   // 🚨 INSTANT ADMIN BYPASS - Top priority
-  if (isAdmin) {
+  if (isAdminUser) {
     console.log('🚀 INSTANT ADMIN BYPASS - Direct children render');
     return <>{children}</>;
   }
