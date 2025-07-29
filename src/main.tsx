@@ -8,7 +8,7 @@ import App from './App';
 import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
-import { Toaster } from 'sonner';
+import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
 
 // Initialize production optimizations
 setupProductionConsole();
@@ -87,20 +87,9 @@ const renderApp = () => {
     root.render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-          <App />
-          <Toaster 
-            position="top-right" 
-            richColors 
-            closeButton 
-            duration={4000}
-            toastOptions={{
-              style: {
-                background: 'rgba(0, 0, 0, 0.8)',
-                color: 'white',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          />
+          <EnhancedToastProvider>
+            <App />
+          </EnhancedToastProvider>
         </QueryClientProvider>
       </React.StrictMode>
     );
