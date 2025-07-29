@@ -13,6 +13,7 @@ import ClueArchive from '@/components/intelligence/ClueArchive';
 import FinalShotManager from '@/components/intelligence/FinalShotManager';
 import FinalShotPage from '@/components/intelligence/FinalShotPage';
 import WeeklyCluesIntegration from '@/components/intelligence/WeeklyCluesIntegration';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 const IntelligencePage: React.FC = () => {
   const [activeModule, setActiveModule] = useState<string | null>(null);
@@ -286,6 +287,9 @@ const IntelligencePage: React.FC = () => {
         </div>
 
       </div>
+      
+      {/* Bottom Navigation - Unified across all sections */}
+      <BottomNavigation />
     </SafeAreaWrapper>
   );
 };
