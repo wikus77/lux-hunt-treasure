@@ -22,7 +22,10 @@ export const useProfileBasicInfo = () => {
   useEffect(() => {
     if (globalProfile) {
       console.log('📡 Global profile update received in useProfileBasicInfo:', globalProfile);
-      if (globalProfile.full_name) setName(globalProfile.full_name);
+      if (globalProfile.full_name) {
+        setName(globalProfile.full_name);
+        console.log('🔄 useProfileBasicInfo: Updated name to:', globalProfile.full_name);
+      }
       if (globalProfile.bio) setBio(globalProfile.bio);
       if (globalProfile.agent_code) setAgentCode(globalProfile.agent_code);
       if (globalProfile.agent_title) setAgentTitle(globalProfile.agent_title);

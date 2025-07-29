@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
+import { useGlobalProfileSync } from '@/hooks/useGlobalProfileSync';
 
 interface UserSettings {
   notifications: {
@@ -47,6 +48,7 @@ const SettingsPage: React.FC = () => {
   const { user, updateProfile, logout } = useAuth();
   const { vibrate, playSound } = useCapacitorHardware();
   const { toast } = useToast();
+  const globalProfile = useGlobalProfileSync();
   
   const [settings, setSettings] = useState<UserSettings>({
     notifications: {
@@ -68,13 +70,29 @@ const SettingsPage: React.FC = () => {
       autoLogin: false
     },
     profile: {
-      displayName: user?.user_metadata?.full_name || '',
-      agentCode: user?.user_metadata?.agent_code || '',
-      avatar: user?.user_metadata?.avatar_url || ''
+      displayName: globalProfile?.full_name || user?.user_metadata?.full_name || '',
+      agentCode: globalProfile?.agent_code || user?.user_metadata?.agent_code || '',
+      avatar: globalProfile?.avatar_url || user?.user_metadata?.avatar_url || ''
     }
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync with global profile data in real-time
+  useEffect(() => {
+    if (globalProfile) {
+      console.log('🔄 SettingsPage: Syncing with global profile data:', globalProfile);
+      setSettings(prev => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          displayName: globalProfile.full_name || prev.profile.displayName,
+          agentCode: globalProfile.agent_code || prev.profile.agentCode,
+          avatar: globalProfile.avatar_url || prev.profile.avatar
+        }
+      }));
+    }
+  }, [globalProfile]);
 
   // Carica impostazioni dal localStorage
   useEffect(() => {

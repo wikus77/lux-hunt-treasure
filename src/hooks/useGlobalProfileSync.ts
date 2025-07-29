@@ -24,6 +24,7 @@ export const useGlobalProfileSync = () => {
       if (profileData.full_name) {
         localStorage.setItem('profileName', profileData.full_name);
         localStorage.setItem('agentName', profileData.full_name);
+        console.log('🌐 Global profile sync: Updated localStorage with name:', profileData.full_name);
       }
       if (profileData.bio) {
         localStorage.setItem('profileBio', profileData.bio);
@@ -34,6 +35,9 @@ export const useGlobalProfileSync = () => {
       if (profileData.avatar_url) {
         localStorage.setItem('profileImage', profileData.avatar_url);
       }
+      
+      // Force a storage event to update components that listen to localStorage
+      window.dispatchEvent(new Event('storage'));
     }
   }, [profileData]);
 
