@@ -46,9 +46,9 @@ export const useEnhancedNavigation = () => {
         await vibrate(30);
       }
       
-      const previousPath = goBack();
-      if (previousPath) {
-        navigate(previousPath);
+      // Use browser's native back navigation for better UX
+      if (typeof window !== 'undefined' && window.history.length > 1) {
+        window.history.back();
         
         // iOS scroll fix
         if (isCapacitor) {
@@ -56,9 +56,13 @@ export const useEnhancedNavigation = () => {
             window.scrollTo(0, 0);
           }, 100);
         }
+        
+        return true;
+      } else {
+        // Fallback to home if no history
+        navigate('/home');
+        return '/home';
       }
-      
-      return previousPath;
     },
     'goBackWithFeedback'
   );

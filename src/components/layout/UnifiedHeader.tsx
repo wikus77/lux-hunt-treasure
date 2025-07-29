@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™
 import { Link } from "wouter";
 import { useLocation } from "wouter";
-import { Bell, Settings, ArrowLeft } from "lucide-react";
+import { Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
@@ -160,24 +160,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Notifications */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClickMail || openNotificationsDrawer}
-              className="relative rounded-full hover:bg-white/10"
-              disabled={!hasAccess}
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-[#F059FF] rounded-full w-2 h-2"
-                  style={{
-                    boxShadow: "0 0 8px rgba(240, 89, 255, 0.5)"
-                  }}
-                ></span>
-              )}
-            </Button>
-
             {/* Settings - Always accessible for authenticated users */}
             <Link to="/settings">
               <Button

@@ -1,7 +1,7 @@
 
 // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
 import { useState, useEffect } from "react";
-import { Bell, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
@@ -38,21 +38,8 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
           <RealtimeStatusIndicator isConnected={isConnected} />
         </div>
         
-        {/* Right section with notifications and profile */}
+        {/* Right section with profile */}
         <div className="flex items-center gap-4">
-          {/* Notifications button */}
-          <button 
-            className="relative p-2 rounded-full hover:bg-purple-900/20 active:bg-purple-900/40 transition-colors"
-            onClick={onShowNotifications}
-          >
-            <Bell className="w-5 h-5 text-m1ssion-blue" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 bg-m1ssion-pink text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </button>
-          
           {/* Profile Dropdown - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
           <ProfileDropdown
             profileImage={profileImage}

@@ -208,7 +208,9 @@ const IntelligencePage: React.FC = () => {
           <div className={`transition-all duration-500 overflow-hidden ${
             modulesExpanded ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'
           }`}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-4 bg-black/90 backdrop-blur-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-4 pb-4 bg-black/90 backdrop-blur-xl max-h-[400px] overflow-y-auto" style={{
+              WebkitOverflowScrolling: 'touch'
+            }}>
               {modules.map((module) => {
                 const isCurrentlyActive = activeModule === module.id;
                 
