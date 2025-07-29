@@ -2,7 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
-import forestaImg from "@/assets/media/lusso-foresta.png";
+import forestImg from "@/assets/media/lusso-foresta.png";
 
 interface PrizeVisionProps {
   progress: number;
@@ -28,7 +28,7 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
         {/* Luxury Forest Background Image */}
         <div className="w-full h-full">
           <img 
-            src={forestaImg}
+            src={forestImg}
             alt="M1SSION Lusso Foresta"
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
