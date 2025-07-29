@@ -26,12 +26,17 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
       
       <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
         {/* Luxury Forest Background Image */}
-        <div className="w-full h-full">
+        <div className="relative w-full h-full">
           <img 
             src={forestImg}
             alt="M1SSION Lusso Foresta"
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
+          <span 
+            className="absolute bottom-2 right-2 text-white text-[14px] sm:text-[18px] font-medium bg-black/40 px-2 py-1 rounded-sm shadow-md"
+          >
+            Image for illustrative purposes only
+          </span>
         </div>
         
         {/* Progress bar */}
