@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
       if (!isAuthenticated && location !== '/login') {
         console.log('🔄 [WouterProtectedRoute] Redirecting to login - user not authenticated');
         setLocation('/login');
-      } else if (isAuthenticated && (!subscriptionPlan || subscriptionPlan === '') && location !== '/choose-plan') {
+      } else if (isAuthenticated && (!subscriptionPlan || subscriptionPlan === '') && location !== '/choose-plan' && subscriptionPlan !== 'ADMIN') {
         console.log('🔄 [WouterProtectedRoute] Redirecting to plan selection - no plan selected');
         setLocation('/choose-plan');
       }
@@ -67,11 +67,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     checkAdminAccess();
   }, [user]);
 
+  // 🚨 CRITICAL ADMIN BYPASS - Skip loading screens for admin
+  if (isAdmin && isAuthenticated) {
+    console.log('🚀 ADMIN HARD BYPASS - Skipping all verification screens');
+    return <>{children}</>;
+  }
+
   // CRITICAL FIX: Ensure user is always defined before conditional returns
   if (!isAuthenticated || authLoading || accessLoading) {
     if (!authLoading && !accessLoading && !isAuthenticated) {
       return <Login />;
     }
+    
+    // 🚨 ADMIN EMERGENCY BYPASS - If admin detected, skip verification
+    if (isAdmin) {
+      console.log('🚨 ADMIN EMERGENCY BYPASS - Loading but admin detected');
+      return <>{children}</>;
+    }
+    
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="text-white">Verifica accesso...</div>
@@ -79,19 +92,10 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // 🚨 ADMIN BYPASS - Admin users skip ALL access controls
+  // 🚨 ADMIN FINAL BYPASS - Skip access control for admin  
   if (isAdmin) {
-    console.log('🔓 ADMIN BYPASS ACTIVATED - Full access granted');
+    console.log('🔓 ADMIN FINAL BYPASS - All access controls skipped');
     return <>{children}</>;
-  }
-
-  // Force plan selection if no subscription plan chosen
-  if (!subscriptionPlan || subscriptionPlan === '') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white">Reindirizzamento alla selezione piano...</div>
-      </div>
-    );
   }
 
   // Block access if user doesn't have permission (post-registration control)
