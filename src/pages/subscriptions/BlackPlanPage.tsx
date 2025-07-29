@@ -15,13 +15,9 @@ const BlackPlanPage: React.FC = () => {
 
   const planFeatures = [
     "Tutti i vantaggi Gold",
-    "Accesso VIP ad eventi esclusivi",
-    "Premi misteriosi aggiuntivi",
-    "Badge Black nel profilo",
-    "Supporto concierge 24/7",
-    "Accesso beta alle nuove funzioni",
-    "Missioni Black esclusive",
-    "Priorità assoluta nelle code"
+    "Accesso VIP anticipato di 24 ore agli eventi",
+    "5 indizi premium aggiuntivi a settimana",
+    "Badge Black esclusivo"
   ];
 
   return (

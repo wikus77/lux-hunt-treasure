@@ -15,11 +15,10 @@ const GoldPlanPage: React.FC = () => {
 
   const planFeatures = [
     "Tutti i vantaggi Silver",
-    "Indizi illimitati durante l'evento",
+    "4 indizi premium aggiuntivi a settimana",
+    "Accesso anticipato di 12 ore agli eventi",
     "Partecipazione alle estrazioni Gold",
-    "Badge Gold nel profilo",
-    "Supporto VIP dedicato",
-    "Accesso a missioni esclusive"
+    "Badge Gold esclusivo nel profilo"
   ];
 
   return (

@@ -6,29 +6,76 @@
  * Questi sono i prezzi UFFICIALI che devono essere rispettati ovunque
  */
 export const PRICING_CONFIG = {
+  Base: {
+    priceEur: 0,
+    priceCents: 0,
+    displayPrice: "€0",
+    label: "Base - Gratis",
+    features: [
+      "Funzioni base (accesso alla missione con restrizioni)",
+      "Supporto email standard", 
+      "1 indizio settimanale base"
+    ],
+    limitations: [
+      "Nessun accesso anticipato agli eventi",
+      "Nessun badge esclusivo"
+    ],
+    earlyAccess: 0
+  },
   Silver: {
     priceEur: 3.99,
     priceCents: 399,
     displayPrice: "€3.99",
-    label: "Piano Silver"
+    label: "Silver",
+    features: [
+      "Tutti i vantaggi Base",
+      "3 indizi premium aggiuntivi a settimana",
+      "Accesso anticipato di 2 ore agli eventi", 
+      "Badge Silver nel profilo"
+    ],
+    earlyAccess: 2
   },
   Gold: {
     priceEur: 6.99,
     priceCents: 699,
     displayPrice: "€6.99",
-    label: "Piano Gold"
+    label: "Gold", 
+    features: [
+      "Tutti i vantaggi Silver",
+      "4 indizi premium aggiuntivi a settimana",
+      "Accesso anticipato di 12 ore agli eventi",
+      "Partecipazione alle estrazioni Gold",
+      "Badge Gold esclusivo nel profilo"
+    ],
+    earlyAccess: 12
   },
   Black: {
     priceEur: 9.99,
     priceCents: 999,
     displayPrice: "€9.99",
-    label: "Piano Black"
+    label: "Black",
+    features: [
+      "Tutti i vantaggi Gold",
+      "Accesso VIP anticipato di 24 ore agli eventi",
+      "5 indizi premium aggiuntivi a settimana", 
+      "Badge Black esclusivo"
+    ],
+    earlyAccess: 24
   },
   Titanium: {
     priceEur: 29.99,
     priceCents: 2999,
     displayPrice: "€29.99",
-    label: "Piano Titanium"
+    label: "Titanium",
+    features: [
+      "Tutti i vantaggi Black",
+      "5 indizi premium aggiuntivi a settimana",
+      "Accesso VIP anticipato di 48 ore agli eventi",
+      "Supporto prioritario dedicato (24/7)",
+      "Eventi esclusivi M1SSION™",
+      "Badge Titanium esclusivo"
+    ],
+    earlyAccess: 48
   }
 } as const;
 

@@ -187,39 +187,40 @@ export const SubscriptionPlans = ({ selected, setSelected }: SubscriptionPlansPr
     switch (type) {
       case "Base":
         return [
-          { text: "Accesso limitato con funzioni base" },
-          { text: "Funzionalità standard gratuite" },
-          { text: "Supporto email standard" }
+          { text: "Funzioni base (accesso alla missione con restrizioni)" },
+          { text: "Supporto email standard" },
+          { text: "1 indizio settimanale base" }
         ];
       case "Silver":
         return [
           { text: "Tutti i vantaggi Base" },
           { text: "3 indizi premium aggiuntivi a settimana" },
-          { text: "Accesso anticipato ai nuovi eventi" },
+          { text: "Accesso anticipato di 2 ore agli eventi" },
           { text: "Badge Silver nel profilo" }
         ];
       case "Gold":
         return [
           { text: "Tutti i vantaggi Silver" },
-          { text: "Indizi illimitati durante l'evento" },
+          { text: "4 indizi premium aggiuntivi a settimana" },
+          { text: "Accesso anticipato di 12 ore agli eventi" },
           { text: "Partecipazione alle estrazioni Gold" },
-          { text: "Badge Gold nel profilo" }
+          { text: "Badge Gold esclusivo nel profilo" }
         ];
       case "Black":
         return [
           { text: "Tutti i vantaggi Gold" },
-          { text: "Accesso VIP ad eventi esclusivi" },
-          { text: "Premi misteriosi aggiuntivi" },
-          { text: "Badge Black nel profilo" }
+          { text: "Accesso VIP anticipato di 24 ore agli eventi" },
+          { text: "5 indizi premium aggiuntivi a settimana" },
+          { text: "Badge Black esclusivo" }
         ];
       case "Titanium":
         return [
           { text: "Tutti i vantaggi Black" },
-          { text: "Indizi illimitati" },
-          { text: "Accesso anticipato (72h)" },
-          { text: "Supporto prioritario diretto" },
+          { text: "5 indizi premium aggiuntivi a settimana" },
+          { text: "Accesso VIP anticipato di 48 ore agli eventi" },
+          { text: "Supporto prioritario dedicato (24/7)" },
           { text: "Eventi esclusivi M1SSION™" },
-          { text: "Badge Titanium esclusivo neon" }
+          { text: "Badge Titanium esclusivo" }
         ];
       default:
         return [];

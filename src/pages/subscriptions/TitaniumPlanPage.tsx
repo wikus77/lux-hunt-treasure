@@ -16,14 +16,11 @@ const TitaniumPlanPage: React.FC = () => {
 
   const planFeatures = [
     "Tutti i vantaggi Black",
-    "Accesso illimitato a tutto",
-    "Badge Titanium esclusivo neon",
-    "Supporto prioritario 24/7",
-    "Eventi esclusivi Titanium VIP",
-    "Accesso beta alle nuove funzioni",
-    "Missioni Titanium esclusive",
-    "Priorità assoluta nelle code",
-    "Concierge personale dedicato"
+    "5 indizi premium aggiuntivi a settimana",
+    "Accesso VIP anticipato di 48 ore agli eventi",
+    "Supporto prioritario dedicato (24/7)",
+    "Eventi esclusivi M1SSION™",
+    "Badge Titanium esclusivo"
   ];
 
   return (

@@ -15,9 +15,8 @@ const SilverPlanPage: React.FC = () => {
   const planFeatures = [
     "Tutti i vantaggi Base",
     "3 indizi premium aggiuntivi a settimana",
-    "Accesso anticipato ai nuovi eventi",
-    "Badge Silver nel profilo",
-    "Supporto prioritario"
+    "Accesso anticipato di 2 ore agli eventi",
+    "Badge Silver nel profilo"
   ];
 
   return (
