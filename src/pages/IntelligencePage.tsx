@@ -116,10 +116,18 @@ const IntelligencePage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="min-h-screen bg-background">
-      <div className="flex flex-col min-h-[100dvh] w-full" style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)'
-      }}>
+      <div 
+        className="min-h-screen bg-[#070818]" 
+        style={{ 
+          paddingTop: '140px', 
+          paddingBottom: '120px',
+          width: '100vw',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <div className="container mx-auto px-3">
         
         {/* Header */}
         <div className="p-4 bg-gradient-to-r from-background/95 via-background/90 to-background/95 backdrop-blur-sm">
@@ -175,8 +183,8 @@ const IntelligencePage: React.FC = () => {
         </div>
 
         {/* COLLAPSIBLE MODULES MENU - FIXED BOTTOM SECTION */}
-        <div className="fixed bottom-0 left-0 right-0 z-40" style={{ 
-          paddingBottom: 'calc(100px + env(safe-area-inset-bottom, 0px))'
+        <div className="fixed bottom-0 left-0 right-0 z-30" style={{ 
+          paddingBottom: 'calc(120px + env(safe-area-inset-bottom, 0px))'
         }}>
           {/* Module Selection Button */}
           <div className="bg-black/90 backdrop-blur-xl border-t-2 border-cyan-500/20 p-4">
@@ -284,11 +292,29 @@ const IntelligencePage: React.FC = () => {
             </div>
           </div>
         </div>
-
+        </div>
       </div>
       
-      {/* Bottom Navigation - Unified across all sections */}
-      <BottomNavigation />
+      {/* Bottom Navigation - Uniform positioning like Home */}
+      <div 
+        id="mission-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          width: '100vw',
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
+      >
+        <BottomNavigation />
+      </div>
     </SafeAreaWrapper>
   );
 };

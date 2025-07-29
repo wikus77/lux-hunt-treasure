@@ -220,12 +220,21 @@ export const NotificationsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-x-hidden p-4 space-y-6" style={{
-      paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
-      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)',
-      paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
-      paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
-    }}>
+    <div 
+      className="min-h-screen bg-[#070818]" 
+      style={{ 
+        paddingTop: '140px', 
+        paddingBottom: '120px',
+        width: '100vw',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+        position: 'relative'
+      }}
+    >
+      <div className="container mx-auto px-3" style={{
+        paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
+        paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
+      }}>
       {/* Header */}
       <motion.div
         initial={{ y: 20, opacity: 0 }}
@@ -389,7 +398,28 @@ export const NotificationsPage: React.FC = () => {
       )}
       
       {/* Bottom Navigation - Unified across all sections */}
-      <BottomNavigation />
+      </div>
+      
+      {/* Bottom Navigation - Uniform positioning like Home */}
+      <div 
+        id="mission-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          width: '100vw',
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
+      >
+        <BottomNavigation />
+      </div>
     </div>
   );
 };

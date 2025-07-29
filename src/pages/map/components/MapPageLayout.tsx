@@ -47,7 +47,26 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
         </div>
       </main>
       
-      <BottomNavigation />
+      {/* Bottom Navigation - Uniform positioning like Home */}
+      <div 
+        id="mission-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          width: '100vw',
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
+      >
+        <BottomNavigation />
+      </div>
     </div>
   );
 };

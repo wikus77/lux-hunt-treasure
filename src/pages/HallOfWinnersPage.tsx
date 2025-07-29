@@ -157,10 +157,21 @@ const HallOfWinnersPage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-[100dvh] w-full overflow-hidden" style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 100px)'
-      }}>
+      <div 
+        className="min-h-screen bg-[#070818]" 
+        style={{ 
+          paddingTop: '140px', 
+          paddingBottom: '120px',
+          width: '100vw',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
+          position: 'relative'
+        }}
+      >
+        <div className="container mx-auto px-3" style={{
+          paddingLeft: 'max(16px, env(safe-area-inset-left, 16px))',
+          paddingRight: 'max(16px, env(safe-area-inset-right, 16px))'
+        }}>
         {/* Header */}
         <div className="p-6 bg-gradient-to-r from-background/95 via-background/90 to-background/95 backdrop-blur-sm">
           <div className="flex flex-col items-center text-center">
@@ -302,10 +313,29 @@ const HallOfWinnersPage: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
       
-      {/* Bottom Navigation - Unified across all sections */}
-      <BottomNavigation />
+      {/* Bottom Navigation - Uniform positioning like Home */}
+      <div 
+        id="mission-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          width: '100vw',
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
+      >
+        <BottomNavigation />
+      </div>
     </SafeAreaWrapper>
   );
 };
