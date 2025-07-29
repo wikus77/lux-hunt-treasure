@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ArrowRight } from "lucide-react";
+import lussoForestImage from "@/assets/media/20250729_0829_LussoNellaForesta.png";
 
 const stagger = {
   hidden: {},
@@ -26,9 +27,17 @@ const HeroSection = () => {
       className="min-h-screen w-full relative flex items-center justify-center overflow-hidden py-24 px-4"
       data-scroll-section
     >
-      {/* Static background instead of animated particles */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
-        {/* Static dots instead of animated particles */}
+      {/* Luxury Forest Background Image */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <img 
+          src={lussoForestImage}
+          alt="Luxury sports car in mystical forest"
+          className="w-full h-full object-cover"
+        />
+        {/* Dark overlay to maintain text readability */}
+        <div className="absolute inset-0 bg-black/40 bg-gradient-to-b from-black/30 via-black/40 to-black/60" />
+        
+        {/* Static dots for atmosphere */}
         {[...Array(10)].map((_, i) => (
           <div
             key={i}
@@ -39,7 +48,7 @@ const HeroSection = () => {
               background: i % 2 === 0 ? "#00E5FF" : "#8A2BE2",
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              opacity: 0.4,
+              opacity: 0.3,
               filter: "blur(1px)"
             }}
           />
