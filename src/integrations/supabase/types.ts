@@ -146,6 +146,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_roles: {
+        Row: {
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_generated_clues: {
         Row: {
           content: string
@@ -1589,6 +1613,36 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string
+          id: string
+          new_role: string
+          old_role: string | null
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by: string
+          id?: string
+          new_role: string
+          old_role?: string | null
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string
+          id?: string
+          new_role?: string
+          old_role?: string | null
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_notifications: {
         Row: {
           created_at: string
@@ -2936,6 +2990,10 @@ export type Database = {
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
+      }
+      is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
       }
       is_admin_email_safe: {
         Args: { p_email: string }
