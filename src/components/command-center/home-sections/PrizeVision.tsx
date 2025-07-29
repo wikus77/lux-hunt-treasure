@@ -32,6 +32,11 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
             alt="M1SSION Lusso Foresta"
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
+          
+          {/* Disclaimer Overlay */}
+          <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
+            Image for illustrative purposes only
+          </div>
         </div>
         
         {/* Progress bar */}

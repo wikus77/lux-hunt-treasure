@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 interface Winner {
   id: string;
@@ -302,6 +303,9 @@ const HallOfWinnersPage: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Bottom Navigation - Unified across all sections */}
+      <BottomNavigation />
     </SafeAreaWrapper>
   );
 };

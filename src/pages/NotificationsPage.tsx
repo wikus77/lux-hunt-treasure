@@ -21,6 +21,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
 import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
 import { toast } from 'sonner';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 interface Notification {
   id: string;
@@ -386,6 +387,9 @@ export const NotificationsPage: React.FC = () => {
           </p>
         </motion.div>
       )}
+      
+      {/* Bottom Navigation - Unified across all sections */}
+      <BottomNavigation />
     </div>
   );
 };
