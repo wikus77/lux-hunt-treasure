@@ -2880,11 +2880,7 @@ export type Database = {
         Returns: boolean
       }
       check_security_rate_limit: {
-        Args: {
-          endpoint_param: string
-          max_attempts?: number
-          window_minutes?: number
-        }
+        Args: { p_action: string; p_limit?: number; p_window_minutes?: number }
         Returns: boolean
       }
       cleanup_duplicate_subscriptions: {
@@ -3035,7 +3031,7 @@ export type Database = {
         Returns: undefined
       }
       has_admin_role_secure: {
-        Args: { user_id_param: string }
+        Args: Record<PropertyKey, never> | { user_id_param: string }
         Returns: boolean
       }
       has_mission_started: {
@@ -3087,12 +3083,14 @@ export type Database = {
         Returns: boolean
       }
       log_security_event: {
-        Args: {
-          event_type_param: string
-          user_id_param?: string
-          event_data_param?: Json
-          severity_param?: string
-        }
+        Args:
+          | {
+              event_type_param: string
+              user_id_param?: string
+              event_data_param?: Json
+              severity_param?: string
+            }
+          | { p_event_type: string; p_event_data?: Json }
         Returns: string
       }
       log_user_action: {
@@ -3104,6 +3102,10 @@ export type Database = {
           p_user_agent?: string
         }
         Returns: string
+      }
+      perform_security_check: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       process_stripe_webhook_completed: {
         Args: {
