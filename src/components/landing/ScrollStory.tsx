@@ -14,88 +14,123 @@ const ScrollStorySection = () => {
   const section3Ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Section 1 Animation
-      gsap.fromTo(section1Ref.current, 
-        { 
-          opacity: 0, 
-          y: 100,
-          clipPath: 'polygon(0 100%, 100% 100%, 100% 100%, 0 100%)'
-        },
-        {
-          opacity: 1,
-          y: 0,
-          clipPath: 'polygon(0 0%, 100% 0%, 100% 100%, 0 100%)',
-          duration: 1.5,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: section1Ref.current,
-            start: 'top 80%',
-            end: 'bottom 20%',
-            toggleActions: 'play none none reverse'
-          }
+    // Add a small delay to ensure DOM is fully ready
+    const timeoutId = setTimeout(() => {
+      try {
+      console.log("🎬 ScrollStory useEffect starting");
+      
+      // Check if all refs are available
+      if (!containerRef.current || !section1Ref.current || !section2Ref.current || !section3Ref.current) {
+        console.log("⚠️ ScrollStory refs not ready, skipping animations");
+        return;
+      }
+
+      console.log("✅ ScrollStory all refs ready, initializing GSAP");
+
+      const ctx = gsap.context(() => {
+        // Section 1 Animation
+        if (section1Ref.current) {
+          gsap.fromTo(section1Ref.current, 
+            { 
+              opacity: 0, 
+              y: 100,
+              clipPath: 'polygon(0 100%, 100% 100%, 100% 100%, 0 100%)'
+            },
+            {
+              opacity: 1,
+              y: 0,
+              clipPath: 'polygon(0 0%, 100% 0%, 100% 100%, 0 100%)',
+              duration: 1.5,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: section1Ref.current,
+                start: 'top 80%',
+                end: 'bottom 20%',
+                toggleActions: 'play none none reverse'
+              }
+            }
+          );
         }
-      );
 
-      // Section 2 Animation with parallax
-      gsap.fromTo(section2Ref.current,
-        {
-          opacity: 0,
-          x: -200,
-          skewX: 15
-        },
-        {
-          opacity: 1,
-          x: 0,
-          skewX: 0,
-          duration: 1.5,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: section2Ref.current,
-            start: 'top 80%',
-            end: 'bottom 20%',
-            toggleActions: 'play none none reverse'
-          }
+        // Section 2 Animation with parallax
+        if (section2Ref.current) {
+          gsap.fromTo(section2Ref.current,
+            {
+              opacity: 0,
+              x: -200,
+              skewX: 15
+            },
+            {
+              opacity: 1,
+              x: 0,
+              skewX: 0,
+              duration: 1.5,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: section2Ref.current,
+                start: 'top 80%',
+                end: 'bottom 20%',
+                toggleActions: 'play none none reverse'
+              }
+            }
+          );
         }
-      );
 
-      // Section 3 Animation with scale
-      gsap.fromTo(section3Ref.current,
-        {
-          opacity: 0,
-          scale: 0.8,
-          filter: 'blur(10px)'
-        },
-        {
-          opacity: 1,
-          scale: 1,
-          filter: 'blur(0px)',
-          duration: 1.5,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: section3Ref.current,
-            start: 'top 80%',
-            end: 'bottom 20%',
-            toggleActions: 'play none none reverse'
-          }
+        // Section 3 Animation with scale
+        if (section3Ref.current) {
+          gsap.fromTo(section3Ref.current,
+            {
+              opacity: 0,
+              scale: 0.8,
+              filter: 'blur(10px)'
+            },
+            {
+              opacity: 1,
+              scale: 1,
+              filter: 'blur(0px)',
+              duration: 1.5,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: section3Ref.current,
+                start: 'top 80%',
+                end: 'bottom 20%',
+                toggleActions: 'play none none reverse'
+              }
+            }
+          );
         }
-      );
 
-      // Parallax background effect
-      gsap.to('.parallax-bg', {
-        yPercent: -50,
-        ease: "none",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: 'top bottom',
-          end: 'bottom top',
-          scrub: true
+        // Parallax background effect
+        const parallaxElements = document.querySelectorAll('.parallax-bg');
+        if (parallaxElements.length > 0 && containerRef.current) {
+          gsap.to('.parallax-bg', {
+            yPercent: -50,
+            ease: "none",
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: true
+            }
+          });
         }
-      });
 
-    }, containerRef);
+        console.log("✅ ScrollStory GSAP animations initialized successfully");
+      }, containerRef);
 
-    return () => ctx.revert();
+      return () => {
+        console.log("🧹 ScrollStory cleaning up GSAP context");
+        ctx.revert();
+      };
+      } catch (error) {
+        console.error("❌ ScrollStory useEffect error:", error);
+        // Don't throw - just log and continue
+      }
+    }, 100); // 100ms delay
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (

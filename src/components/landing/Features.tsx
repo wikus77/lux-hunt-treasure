@@ -22,7 +22,12 @@ const Feature3D = ({ title, description, color }: {
       {/* 3D Background */}
       <div className="absolute inset-0">
         <Canvas camera={{ position: [0, 0, 3], fov: 50 }}>
-          <Suspense fallback={null}>
+          <Suspense fallback={
+            <mesh>
+              <boxGeometry args={[1, 1, 1]} />
+              <meshBasicMaterial color={color} />
+            </mesh>
+          }>
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
             <SimpleShape color={color} />
@@ -55,6 +60,8 @@ const Feature3D = ({ title, description, color }: {
 };
 
 const FeaturesSection = () => {
+  console.log("🎯 FeaturesSection component mounting");
+  
   const features = [
     {
       title: "Advanced AI",

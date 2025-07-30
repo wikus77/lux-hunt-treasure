@@ -10,27 +10,53 @@ const MinimalFooter = () => {
   const footerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.fromTo(footerRef.current,
-        {
-          opacity: 0,
-          y: 50
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: footerRef.current,
-            start: 'top 90%',
-            toggleActions: 'play none none reverse'
-          }
-        }
-      );
-    }, footerRef);
+    // Add a small delay to ensure DOM is fully ready  
+    const timeoutId = setTimeout(() => {
+      try {
+      console.log("🦶 Footer useEffect starting");
+      
+      if (!footerRef.current) {
+        console.log("⚠️ Footer ref not ready, skipping animation");
+        return;
+      }
 
-    return () => ctx.revert();
+      console.log("✅ Footer ref ready, initializing GSAP");
+
+      const ctx = gsap.context(() => {
+        gsap.fromTo(footerRef.current,
+          {
+            opacity: 0,
+            y: 50
+          },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: footerRef.current,
+              start: 'top 90%',
+              toggleActions: 'play none none reverse'
+            }
+          }
+        );
+        
+        console.log("✅ Footer GSAP animation initialized successfully");
+      }, footerRef);
+
+      return () => {
+        console.log("🧹 Footer cleaning up GSAP context");
+        ctx.revert();
+      };
+      } catch (error) {
+        console.error("❌ Footer useEffect error:", error);
+        // Don't throw - just log and continue
+      }
+    }, 50); // 50ms delay
+
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (

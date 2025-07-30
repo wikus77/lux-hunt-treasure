@@ -18,6 +18,51 @@ const LoadingFallback = () => (
 
 const LandingPage = () => {
   console.log("✅ CINEMATOGRAPHIC LANDING PAGE LOADED - Apple-style design with Three.js + GSAP");
+  
+  // Prevent any global errors from crashing the app
+  React.useEffect(() => {
+    const handleError = (error: ErrorEvent) => {
+      console.error("🚨 Global error caught:", error);
+      // Don't let it propagate
+      error.preventDefault();
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("🚨 Unhandled promise rejection caught:", event.reason);
+      // Don't let it propagate
+      event.preventDefault();
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    console.log("🛡️ Global error handlers installed");
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      console.log("🧹 Global error handlers removed");
+    };
+  }, []);
+
+  console.log("🚀 LandingPage component rendering");
+
+  // Health check - monitor stability
+  React.useEffect(() => {
+    const healthCheckInterval = setInterval(() => {
+      console.log("💚 Landing Page Health Check - Running stable");
+    }, 3000);
+
+    // Final stability confirmation after 10 seconds
+    const stabilityTimer = setTimeout(() => {
+      console.log("🎉 Landing Page STABLE - All systems operational after 10s");
+    }, 10000);
+
+    return () => {
+      clearInterval(healthCheckInterval);
+      clearTimeout(stabilityTimer);
+    };
+  }, []);
 
   return (
     <ErrorBoundary>

@@ -11,9 +11,13 @@ const M1ssionLogo3D = () => {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
-      groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
+    try {
+      if (groupRef.current) {
+        groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+        groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
+      }
+    } catch (error) {
+      console.error("❌ M1ssionLogo3D useFrame error:", error);
     }
   });
 
@@ -54,6 +58,11 @@ const M1ssionLogo3D = () => {
 const Hero3DScene = () => {
   console.log("🎬 Hero3DScene component mounting");
   
+  const handleCanvasError = (error: any) => {
+    console.error("❌ Canvas error caught:", error);
+    return null;
+  };
+  
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
       <Canvas
@@ -61,13 +70,15 @@ const Hero3DScene = () => {
         dpr={[1, 2]}
         performance={{ min: 0.5 }}
         className="absolute inset-0"
+        onError={handleCanvasError}
       >
         <Suspense fallback={
           <Html center>
             <div className="text-cyan-400 animate-spin text-3xl">⟳</div>
           </Html>
         }>
-          <Environment preset="night" />
+          <React.Fragment>
+            <Environment preset="night" />
           
           <directionalLight 
             position={[10, 10, 5]} 
@@ -90,19 +101,20 @@ const Hero3DScene = () => {
             color="#ffffff" 
           />
 
-          <M1ssionLogo3D />
+            <M1ssionLogo3D />
 
-          <EffectComposer>
-            <Bloom 
-              intensity={0.6}
-              luminanceThreshold={0.2}
-              luminanceSmoothing={0.9}
-            />
-            <Vignette 
-              offset={0.2}
-              darkness={0.3}
-            />
-          </EffectComposer>
+            <EffectComposer>
+              <Bloom 
+                intensity={0.6}
+                luminanceThreshold={0.2}
+                luminanceSmoothing={0.9}
+              />
+              <Vignette 
+                offset={0.2}
+                darkness={0.3}
+              />
+            </EffectComposer>
+          </React.Fragment>
         </Suspense>
       </Canvas>
 
