@@ -20,18 +20,8 @@ const M1ssionLogo3D = () => {
     <group ref={groupRef}>
       <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
         <Center>
-          <Text3D
-            font="/fonts/helvetiker_regular.typeface.json"
-            size={1.2}
-            height={0.1}
-            curveSegments={12}
-            bevelEnabled
-            bevelThickness={0.02}
-            bevelSize={0.02}
-            bevelOffset={0}
-            bevelSegments={5}
-          >
-            M1SSION™
+          <mesh>
+            <boxGeometry args={[2, 0.5, 0.2]} />
             <meshStandardMaterial 
               color="#00FFFF" 
               emissive="#00FFFF"
@@ -39,7 +29,7 @@ const M1ssionLogo3D = () => {
               metalness={0.8}
               roughness={0.2}
             />
-          </Text3D>
+          </mesh>
         </Center>
       </Float>
     </group>
