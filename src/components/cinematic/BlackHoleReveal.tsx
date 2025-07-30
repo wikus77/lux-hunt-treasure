@@ -10,7 +10,7 @@ interface BlackHoleRevealProps {
 const BlackHoleReveal: React.FC<BlackHoleRevealProps> = ({ onComplete }) => {
   return (
     <div className="absolute inset-0 flex items-center justify-center">
-      {/* Event Horizon */}
+      {/* Event Horizon - CSS Only */}
       <motion.div
         className="absolute w-64 h-64 rounded-full"
         style={{
@@ -30,12 +30,13 @@ const BlackHoleReveal: React.FC<BlackHoleRevealProps> = ({ onComplete }) => {
         }}
       />
 
-      {/* Accretion Disk */}
+      {/* Accretion Disk - CSS Only */}
       <motion.div
-        className="absolute w-96 h-96 rounded-full border-4"
+        className="absolute w-96 h-96 rounded-full"
         style={{
           background: "conic-gradient(from 0deg, transparent, rgba(0,229,255,0.4), transparent, rgba(138,43,226,0.4), transparent)",
-          borderImage: "linear-gradient(45deg, #00E5FF, #8A2BE2) 1",
+          border: "4px solid transparent",
+          backgroundClip: "padding-box"
         }}
         initial={{ scale: 0, opacity: 0, rotate: 0 }}
         animate={{ 
@@ -55,7 +56,7 @@ const BlackHoleReveal: React.FC<BlackHoleRevealProps> = ({ onComplete }) => {
         onAnimationComplete={onComplete}
       />
 
-      {/* Gravitational Lensing Effect */}
+      {/* Gravitational Lensing Effect - CSS Only */}
       <motion.div
         className="absolute w-80 h-80 rounded-full"
         style={{

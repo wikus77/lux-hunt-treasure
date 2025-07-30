@@ -10,6 +10,8 @@ const CinematicLandingPage: React.FC = () => {
   const [currentStage, setCurrentStage] = useState<'loading' | 'inkDrop' | 'blackHole' | 'textReveal'>('loading');
   const [showModal, setShowModal] = useState(false);
 
+  console.log("🎬 CINEMATIC LANDING PAGE LOADED - Current stage:", currentStage);
+
   useEffect(() => {
     // Start the ink drop effect after a brief delay
     const timer = setTimeout(() => {
