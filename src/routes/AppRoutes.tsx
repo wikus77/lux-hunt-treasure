@@ -70,14 +70,14 @@ const AppRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Routes>
-            {/* Landing page routing - Fixed for iOS */}
+            {/* Landing page routing - Xavier Cusso Style */}
             <Route 
               path="/" 
               element={
                 isCapacitorApp && isAuthenticated && !isLoading ? (
                   <Navigate to="/home" replace />
                 ) : (
-                  <CinematicHomePage />
+                  <Index />
                 )
               } 
             />

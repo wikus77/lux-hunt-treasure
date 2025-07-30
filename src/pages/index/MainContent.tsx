@@ -8,6 +8,7 @@ import IndexContent from "@/components/index/IndexContent";
 import ModalManager from "@/components/index/ModalManager";
 import LoadingScreen from "@/components/index/LoadingScreen";
 import ErrorFallback from "./ErrorFallback";
+import XavierStyleLandingPage from "@/components/landing/XavierStyleLandingPage";
 
 interface MainContentProps {
   pageLoaded: boolean;
@@ -65,11 +66,10 @@ const MainContent: React.FC<MainContentProps> = ({
     return <LoadingScreen />;
   }
 
-  // Renderizza direttamente il contenuto principale senza IntroManager
+  // Renderizza la nuova landing page in stile Xavier Cusso
   return (
-    <ParallaxContainer>
-      <IndexContent 
-        countdownCompleted={countdownCompleted}
+    <>
+      <XavierStyleLandingPage
         onRegisterClick={onRegisterClick}
         openInviteFriend={openInviteFriend}
       />
@@ -82,7 +82,7 @@ const MainContent: React.FC<MainContentProps> = ({
         onCloseInviteFriend={onCloseInviteFriend}
         onAgeVerified={onAgeVerified}
       />
-    </ParallaxContainer>
+    </>
   );
 };
 
