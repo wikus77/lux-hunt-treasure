@@ -3,13 +3,68 @@
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 
-const SimpleShape = ({ color }: { color: string }) => {
-  return (
-    <mesh>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color={color} />
-    </mesh>
-  );
+const SafeSimpleShape = ({ color }: { color: string }) => {
+  try {
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+    );
+  } catch (error) {
+    console.error("❌ SafeSimpleShape error:", error);
+    // Ultra-safe fallback
+    return (
+      <mesh>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color="#00FFFF" />
+      </mesh>
+    );
+  }
+};
+
+const SafeCanvas = ({ color, children }: { color: string; children?: React.ReactNode }) => {
+  const [hasError, setHasError] = React.useState(false);
+
+  if (hasError) {
+    // Static fallback if Canvas fails
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-6xl opacity-50" style={{ color }}>
+          ✦
+        </div>
+      </div>
+    );
+  }
+
+  try {
+    return (
+      <Canvas 
+        camera={{ position: [0, 0, 3], fov: 50 }}
+        onError={() => setHasError(true)}
+        fallback={
+          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+            <div className="text-4xl opacity-30" style={{ color }}>⟳</div>
+          </div>
+        }
+      >
+        <Suspense fallback={
+          <mesh>
+            <boxGeometry args={[1, 1, 1]} />
+            <meshBasicMaterial color={color} />
+          </mesh>
+        }>
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} />
+          <SafeSimpleShape color={color} />
+        </Suspense>
+      </Canvas>
+    );
+  } catch (error) {
+    console.error("❌ SafeCanvas error:", error);
+    setHasError(true);
+    return null;
+  }
 };
 
 const Feature3D = ({ title, description, color }: {
@@ -21,18 +76,7 @@ const Feature3D = ({ title, description, color }: {
     <div className="group relative h-96 bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-gray-700 hover:border-cyan-500/50 transition-all duration-500 overflow-hidden">
       {/* 3D Background */}
       <div className="absolute inset-0">
-        <Canvas camera={{ position: [0, 0, 3], fov: 50 }}>
-          <Suspense fallback={
-            <mesh>
-              <boxGeometry args={[1, 1, 1]} />
-              <meshBasicMaterial color={color} />
-            </mesh>
-          }>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <SimpleShape color={color} />
-          </Suspense>
-        </Canvas>
+        <SafeCanvas color={color} />
       </div>
 
       {/* Glassmorphism overlay */}

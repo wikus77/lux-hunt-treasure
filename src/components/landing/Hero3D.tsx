@@ -6,18 +6,18 @@ import { Center, Environment, Float, Html } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
-const M1ssionLogo3D = () => {
-  console.log("🚀 M1ssionLogo3D component mounting");
+const SafeM1ssionLogo3D = () => {
+  console.log("🚀 SafeM1ssionLogo3D component mounting");
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     try {
-      if (groupRef.current) {
+      if (groupRef.current && state?.clock?.elapsedTime !== undefined) {
         groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
         groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
       }
     } catch (error) {
-      console.error("❌ M1ssionLogo3D useFrame error:", error);
+      console.error("❌ SafeM1ssionLogo3D useFrame error:", error);
     }
   });
 
@@ -26,7 +26,7 @@ const M1ssionLogo3D = () => {
       <Float speed={1.5} rotationIntensity={0.2} floatIntensity={0.3}>
         <Center>
           <group>
-            {/* Main logo shape */}
+            {/* Fallback safe geometries - no external dependencies */}
             <mesh position={[-1, 0, 0]}>
               <boxGeometry args={[1.5, 0.4, 0.15]} />
               <meshStandardMaterial 
@@ -37,7 +37,6 @@ const M1ssionLogo3D = () => {
                 roughness={0.1}
               />
             </mesh>
-            {/* Secondary shape */}
             <mesh position={[1, 0, 0]}>
               <cylinderGeometry args={[0.3, 0.3, 0.4, 8]} />
               <meshStandardMaterial 
@@ -55,13 +54,61 @@ const M1ssionLogo3D = () => {
   );
 };
 
+// Safe postprocessing wrapper
+const SafePostProcessing = () => {
+  try {
+    return (
+      <EffectComposer>
+        <Bloom 
+          intensity={0.6}
+          luminanceThreshold={0.2}
+          luminanceSmoothing={0.9}
+        />
+        <Vignette 
+          offset={0.2}
+          darkness={0.3}
+        />
+      </EffectComposer>
+    );
+  } catch (error) {
+    console.error("❌ SafePostProcessing error:", error);
+    return null;
+  }
+};
+
 const Hero3DScene = () => {
   console.log("🎬 Hero3DScene component mounting");
+  const [hasError, setHasError] = React.useState(false);
   
   const handleCanvasError = (error: any) => {
     console.error("❌ Canvas error caught:", error);
-    return null;
+    setHasError(true);
   };
+
+  // If Canvas fails, show static fallback
+  if (hasError) {
+    console.log("🔄 Canvas failed, showing static fallback");
+    return (
+      <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+          <div className="text-center space-y-8 max-w-4xl px-6">
+            <h1 className="text-6xl md:text-8xl font-light tracking-wider text-white drop-shadow-2xl">
+              The Future
+              <span className="block font-thin text-4xl md:text-6xl mt-4 text-cyan-400 drop-shadow-lg">
+                Starts Here
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto leading-relaxed drop-shadow-lg">
+              Discover next-generation experiences with M1SSION™
+            </p>
+            <button className="group relative px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full text-lg font-medium overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/25">
+              <span className="relative z-10">Start Mission</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
@@ -71,6 +118,9 @@ const Hero3DScene = () => {
         performance={{ min: 0.5 }}
         className="absolute inset-0"
         onError={handleCanvasError}
+        fallback={
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-gray-800" />
+        }
       >
         <Suspense fallback={
           <Html center>
@@ -79,41 +129,31 @@ const Hero3DScene = () => {
         }>
           <React.Fragment>
             <Environment preset="night" />
-          
-          <directionalLight 
-            position={[10, 10, 5]} 
-            intensity={1.2} 
-            color="#ffffff"
-            castShadow
-          />
-          
-          <ambientLight intensity={0.6} color="#4a90e2" />
-          
-          <pointLight 
-            position={[0, 0, 5]} 
-            intensity={1.0} 
-            color="#00FFFF" 
-          />
-          
-          <pointLight 
-            position={[-5, 5, 0]} 
-            intensity={0.8} 
-            color="#ffffff" 
-          />
+            
+            <directionalLight 
+              position={[10, 10, 5]} 
+              intensity={1.2} 
+              color="#ffffff"
+              castShadow
+            />
+            
+            <ambientLight intensity={0.6} color="#4a90e2" />
+            
+            <pointLight 
+              position={[0, 0, 5]} 
+              intensity={1.0} 
+              color="#00FFFF" 
+            />
+            
+            <pointLight 
+              position={[-5, 5, 0]} 
+              intensity={0.8} 
+              color="#ffffff" 
+            />
 
-            <M1ssionLogo3D />
+            <SafeM1ssionLogo3D />
 
-            <EffectComposer>
-              <Bloom 
-                intensity={0.6}
-                luminanceThreshold={0.2}
-                luminanceSmoothing={0.9}
-              />
-              <Vignette 
-                offset={0.2}
-                darkness={0.3}
-              />
-            </EffectComposer>
+            <SafePostProcessing />
           </React.Fragment>
         </Suspense>
       </Canvas>
