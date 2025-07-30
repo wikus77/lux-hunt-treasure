@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import InkDropEffect from './InkDropEffect';
 import BlackHoleEffect from './BlackHoleEffect';
 import M1ssionTextReveal from './M1ssionTextReveal';
@@ -53,29 +53,22 @@ const CinematicLandingPage: React.FC = () => {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-radial from-gray-900 via-black to-black" />
       
-      {/* Loading fallback for Three.js */}
-      <Suspense fallback={
-        <div className="fixed inset-0 z-10 flex items-center justify-center">
-          <div className="text-white text-xl">Loading...</div>
-        </div>
-      }>
-        {/* Ink Drop Effect */}
-        {phase === 'inkdrop' && (
-          <InkDropEffect onComplete={handleInkDropComplete} />
-        )}
-        
-        {/* Black Hole Effect */}
-        <BlackHoleEffect 
-          isVisible={phase === 'blackhole'} 
-          onComplete={handleBlackHoleComplete} 
-        />
-        
-        {/* Text Reveal */}
-        <M1ssionTextReveal 
-          isVisible={phase === 'reveal' || phase === 'interactive'} 
-          onTextClick={handleTextClick}
-        />
-      </Suspense>
+      {/* Ink Drop Effect */}
+      {phase === 'inkdrop' && (
+        <InkDropEffect onComplete={handleInkDropComplete} />
+      )}
+      
+      {/* Black Hole Effect */}
+      <BlackHoleEffect 
+        isVisible={phase === 'blackhole'} 
+        onComplete={handleBlackHoleComplete} 
+      />
+      
+      {/* Text Reveal */}
+      <M1ssionTextReveal 
+        isVisible={phase === 'reveal' || phase === 'interactive'} 
+        onTextClick={handleTextClick}
+      />
       
       {/* Info Modal */}
       <M1ssionInfoModal 

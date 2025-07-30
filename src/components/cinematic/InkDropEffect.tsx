@@ -1,100 +1,89 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useRef, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Sphere } from '@react-three/drei';
-import * as THREE from 'three';
 import gsap from 'gsap';
 
 interface InkDropEffectProps {
   onComplete: () => void;
 }
 
-const InkDropShader = {
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform float uTime;
-    uniform float uProgress;
-    uniform vec2 uResolution;
-    varying vec2 vUv;
-    
-    float noise(vec2 st) {
-      return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-    }
-    
-    void main() {
-      vec2 st = vUv;
-      vec2 center = vec2(0.5, 0.5);
-      float dist = distance(st, center);
-      
-      // Ink drop expansion
-      float dropRadius = uProgress * 1.5;
-      float ripple = sin(dist * 20.0 - uTime * 10.0) * 0.1;
-      float ink = smoothstep(dropRadius + ripple, dropRadius - 0.1, dist);
-      
-      // Add noise for organic feel
-      float n = noise(st * 10.0 + uTime);
-      ink += n * 0.1 * uProgress;
-      
-      gl_FragColor = vec4(0.0, 0.0, 0.0, ink);
-    }
-  `
-};
-
-const InkDropMesh: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+const InkDropEffect: React.FC<InkDropEffectProps> = ({ onComplete }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // GSAP animation for ink drop
-    gsap.timeline()
-      .to(materialRef.current?.uniforms.uProgress, {
-        duration: 1.5,
-        value: 1,
-        ease: "power2.out",
-        onComplete
-      });
+    const canvas = canvasRef.current;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Ink drop animation with Canvas 2D
+    let progress = 0;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Create ink drop effect
+      const maxRadius = Math.max(canvas.width, canvas.height) * 0.8;
+      const currentRadius = progress * maxRadius;
+      
+      // Multiple ripples for organic effect
+      for (let i = 0; i < 3; i++) {
+        const rippleRadius = currentRadius - (i * 50);
+        if (rippleRadius > 0) {
+          const alpha = (1 - progress) * (1 - i * 0.3);
+          
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, rippleRadius, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(0, 0, 0, ${alpha * 0.8})`;
+          ctx.fill();
+        }
+      }
+      
+      // Main ink blob
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, currentRadius * 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.9})`;
+      ctx.fill();
+    };
+    
+    // GSAP animation
+    gsap.to({ progress: 0 }, {
+      duration: 1.5,
+      progress: 1,
+      ease: "power2.out",
+      onUpdate: function() {
+        progress = this.targets()[0].progress;
+        animate();
+      },
+      onComplete: () => {
+        setTimeout(onComplete, 200);
+      }
+    });
+    
+    // Initial render
+    animate();
+    
   }, [onComplete]);
-  
-  useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-    }
-  });
 
   return (
-    <mesh ref={meshRef} position={[0, 0, 0]}>
-      <planeGeometry args={[4, 4]} />
-      <shaderMaterial
-        ref={materialRef}
-        {...InkDropShader}
-        uniforms={{
-          uTime: { value: 0 },
-          uProgress: { value: 0 },
-          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
-        }}
-        transparent
-        depthWrite={false}
-      />
-    </mesh>
-  );
-};
-
-const InkDropEffect: React.FC<InkDropEffectProps> = ({ onComplete }) => {
-  return (
-    <div className="fixed inset-0 z-50 pointer-events-none">
-      <Canvas
-        camera={{ position: [0, 0, 2], fov: 75 }}
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 z-50 pointer-events-none"
+    >
+      <canvas 
+        ref={canvasRef}
+        className="w-full h-full"
         style={{ background: 'transparent' }}
-      >
-        <InkDropMesh onComplete={onComplete} />
-      </Canvas>
+      />
     </div>
   );
 };

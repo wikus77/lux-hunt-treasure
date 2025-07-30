@@ -1,8 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useRef, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import gsap from 'gsap';
 
 interface BlackHoleEffectProps {
@@ -10,124 +8,103 @@ interface BlackHoleEffectProps {
   onComplete: () => void;
 }
 
-const BlackHoleShader = {
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    uniform float uTime;
-    uniform float uIntensity;
-    uniform vec2 uResolution;
-    varying vec2 vUv;
-    
-    float noise(vec2 st) {
-      return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
-    }
-    
-    vec3 blackHole(vec2 uv, vec2 center, float intensity) {
-      vec2 dir = uv - center;
-      float dist = length(dir);
-      
-      // Event horizon
-      float horizon = 0.2 * intensity;
-      
-      // Accretion disk
-      float disk = smoothstep(horizon, horizon + 0.3, dist) * 
-                   smoothstep(0.8, 0.6, dist);
-      
-      // Gravitational lensing effect
-      float lensing = 1.0 - smoothstep(0.0, horizon * 2.0, dist);
-      
-      // Swirl effect
-      float angle = atan(dir.y, dir.x) + uTime * 2.0 + dist * 10.0;
-      float spiral = sin(angle * 5.0) * 0.5 + 0.5;
-      
-      // Combine effects
-      vec3 color = vec3(0.0);
-      color += vec3(0.0, 0.7, 1.0) * disk * spiral * 0.3; // Cyan accretion
-      color += vec3(1.0, 0.4, 0.0) * disk * (1.0 - spiral) * 0.2; // Orange glow
-      
-      // Black center
-      color *= (1.0 - smoothstep(0.0, horizon, dist));
-      
-      return color;
-    }
-    
-    void main() {
-      vec2 uv = vUv;
-      vec2 center = vec2(0.5, 0.5);
-      
-      vec3 color = blackHole(uv, center, uIntensity);
-      
-      // Add noise for realism
-      float n = noise(uv * 20.0 + uTime);
-      color += n * 0.1 * uIntensity;
-      
-      gl_FragColor = vec4(color, uIntensity);
-    }
-  `
-};
-
-const BlackHoleMesh: React.FC<{ isVisible: boolean; onComplete: () => void }> = ({ isVisible, onComplete }) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-  const materialRef = useRef<THREE.ShaderMaterial>(null);
+const BlackHoleEffect: React.FC<BlackHoleEffectProps> = ({ isVisible, onComplete }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const holeRef = useRef<HTMLDivElement>(null);
+  const accretionRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    if (isVisible && materialRef.current) {
-      gsap.timeline()
-        .to(materialRef.current.uniforms.uIntensity, {
-          duration: 2,
-          value: 1,
-          ease: "power2.inOut"
-        })
-        .to(materialRef.current.uniforms.uIntensity, {
-          duration: 1,
-          value: 0.3,
-          ease: "power2.out",
-          onComplete
-        });
+    if (isVisible && containerRef.current) {
+      console.log('🕳️ BLACK HOLE: Starting animation');
+      
+      // Set initial state
+      gsap.set([holeRef.current, accretionRef.current], {
+        scale: 0,
+        opacity: 0
+      });
+      
+      // Animate black hole appearance
+      const tl = gsap.timeline();
+      
+      tl.to(holeRef.current, {
+        duration: 1.5,
+        scale: 1,
+        opacity: 1,
+        ease: "power2.out"
+      })
+      .to(accretionRef.current, {
+        duration: 1,
+        scale: 1,
+        opacity: 0.8,
+        ease: "power2.out"
+      }, "-=1")
+      .to([holeRef.current, accretionRef.current], {
+        duration: 1,
+        scale: 0.3,
+        opacity: 0.3,
+        ease: "power2.out",
+        onComplete: () => {
+          console.log('🕳️ BLACK HOLE: Animation complete');
+          onComplete();
+        }
+      }, "+=0.5");
     }
   }, [isVisible, onComplete]);
   
-  useFrame((state) => {
-    if (materialRef.current) {
-      materialRef.current.uniforms.uTime.value = state.clock.elapsedTime;
-    }
-  });
-
   if (!isVisible) return null;
 
   return (
-    <mesh ref={meshRef} position={[0, 0, 0]}>
-      <planeGeometry args={[4, 4]} />
-      <shaderMaterial
-        ref={materialRef}
-        {...BlackHoleShader}
-        uniforms={{
-          uTime: { value: 0 },
-          uIntensity: { value: 0 },
-          uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+    <div 
+      ref={containerRef}
+      className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center"
+    >
+      {/* Accretion Disk */}
+      <div 
+        ref={accretionRef}
+        className="absolute w-96 h-96 rounded-full"
+        style={{
+          background: `
+            radial-gradient(
+              circle at center,
+              transparent 30%,
+              rgba(0, 255, 255, 0.3) 40%,
+              rgba(255, 100, 0, 0.4) 60%,
+              rgba(0, 255, 255, 0.2) 80%,
+              transparent 100%
+            )
+          `,
+          animation: 'rotate-slow 8s linear infinite'
         }}
-        transparent
-        blending={THREE.AdditiveBlending}
       />
-    </mesh>
-  );
-};
-
-const BlackHoleEffect: React.FC<BlackHoleEffectProps> = ({ isVisible, onComplete }) => {
-  return (
-    <div className="fixed inset-0 z-40 pointer-events-none">
-      <Canvas
-        camera={{ position: [0, 0, 2], fov: 75 }}
-        style={{ background: 'transparent' }}
-      >
-        <BlackHoleMesh isVisible={isVisible} onComplete={onComplete} />
-      </Canvas>
+      
+      {/* Black Hole Center */}
+      <div 
+        ref={holeRef}
+        className="absolute w-32 h-32 rounded-full"
+        style={{
+          background: `
+            radial-gradient(
+              circle at center,
+              rgba(0, 0, 0, 1) 0%,
+              rgba(0, 0, 0, 0.9) 70%,
+              rgba(0, 255, 255, 0.1) 100%
+            )
+          `,
+          boxShadow: `
+            inset 0 0 50px rgba(0, 255, 255, 0.3),
+            0 0 100px rgba(0, 0, 0, 0.8)
+          `
+        }}
+      />
+      
+      {/* Event Horizon Glow */}
+      <div 
+        className="absolute w-40 h-40 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, transparent 60%, rgba(0, 255, 255, 0.1) 100%)',
+          animation: 'pulse-glow 3s ease-in-out infinite alternate'
+        }}
+      />
     </div>
   );
 };
