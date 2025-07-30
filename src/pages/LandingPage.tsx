@@ -237,34 +237,31 @@ const LandingPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {/* Main Title with Glow Animation */}
+          {/* Main Title with Xavier Cusso Bold Typography */}
           <motion.h1 
-            className="text-4xl md:text-6xl xl:text-7xl font-orbitron font-light mb-4 relative"
-            style={{
-              textShadow: "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
-            }}
-            animate={{
-              textShadow: [
-                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)",
-                "0 0 30px rgba(255, 0, 255, 0.7), 0 0 60px rgba(0, 229, 255, 0.4)",
-                "0 0 20px rgba(0, 229, 255, 0.5), 0 0 40px rgba(255, 0, 255, 0.3)"
-              ]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="text-6xl md:text-8xl lg:text-9xl font-black leading-none"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
           >
-            WELCOME TO{" "}
-            <span>
-              <span className="text-[#00E5FF]">M1</span>
-              <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-            </span>
+            <div className="overflow-hidden">
+              <span className="text-cyan-400 glow-text block">
+                M1
+              </span>
+            </div>
+            <div className="overflow-hidden -mt-4">
+              <span className="text-white block">
+                SSION<span className="text-xs align-top">™</span>
+              </span>
+            </div>
           </motion.h1>
           
-          {/* MISSION START */}
+          {/* MISSION START - Xavier Cusso Style */}
           <motion.p 
-            className="text-green-400 text-sm md:text-base font-orbitron tracking-widest mb-8"
+            className="text-xl md:text-2xl text-gray-300 font-black tracking-wider mb-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
+            transition={{ duration: 0.6, delay: 1.5 }}
           >
             MISSION START
           </motion.p>
@@ -294,21 +291,25 @@ const LandingPage = () => {
               animate={{ x: ["-100%", "100%"] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             />
-            IT IS POSSIBLE
+             IT IS POSSIBLE
           </motion.p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button 
-              className="neon-button px-8 py-3 rounded-full text-black font-bold bg-gradient-to-r from-cyan-400 to-blue-600 hover:shadow-[0_0_15px_rgba(0,229,255,0.5)]"
+            <motion.button 
+              className="px-8 py-4 rounded-none bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 hover:scale-105"
               onClick={handleRegisterClick}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               JOIN THE HUNT
-            </button>
-            <button 
-              className="px-8 py-3 rounded-full text-white font-bold bg-black/30 border border-white/10 hover:bg-black/50 hover:border-white/20"
+            </motion.button>
+            <motion.button 
+              className="px-8 py-4 rounded-none text-white font-black bg-black/30 border border-white/20 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
               LEARN MORE
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       </motion.section>
