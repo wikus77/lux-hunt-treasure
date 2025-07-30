@@ -1,44 +1,20 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { Suspense, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Box, Sphere, Torus } from '@react-three/drei';
-import * as THREE from 'three';
+import React, { Suspense } from 'react';
+import { Canvas } from '@react-three/fiber';
 
-const FloatingShape = ({ geometry, position, color }: { 
-  geometry: 'box' | 'sphere' | 'torus', 
-  position: [number, number, number], 
-  color: string 
-}) => {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-      meshRef.current.rotation.y += 0.01;
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + position[0]) * 0.2;
-    }
-  });
-
-  const Shape = geometry === 'box' ? Box : geometry === 'sphere' ? Sphere : Torus;
-
+const SimpleShape = ({ color }: { color: string }) => {
   return (
-    <Shape ref={meshRef} position={position} args={geometry === 'torus' ? [0.5, 0.2, 16, 32] : [1, 1, 1]}>
-      <meshStandardMaterial 
-        color={color} 
-        transparent 
-        opacity={0.8}
-        metalness={0.6}
-        roughness={0.2}
-      />
-    </Shape>
+    <mesh>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshStandardMaterial color={color} />
+    </mesh>
   );
 };
 
-const Feature3D = ({ title, description, shape, color }: {
+const Feature3D = ({ title, description, color }: {
   title: string;
   description: string;
-  shape: 'box' | 'sphere' | 'torus';
   color: string;
 }) => {
   return (
@@ -49,7 +25,7 @@ const Feature3D = ({ title, description, shape, color }: {
           <Suspense fallback={null}>
             <ambientLight intensity={0.5} />
             <pointLight position={[10, 10, 10]} />
-            <FloatingShape geometry={shape} position={[0, 0, 0]} color={color} />
+            <SimpleShape color={color} />
           </Suspense>
         </Canvas>
       </div>
@@ -83,37 +59,31 @@ const FeaturesSection = () => {
     {
       title: "Advanced AI",
       description: "Intelligent systems that learn and adapt to provide personalized experiences for every user interaction.",
-      shape: "sphere" as const,
       color: "#00FFFF"
     },
     {
       title: "Real-time Sync",
       description: "Seamless synchronization across all devices with instant updates and collaborative features.",
-      shape: "box" as const,
       color: "#FF6B6B"
     },
     {
       title: "Immersive UI",
       description: "Next-generation interfaces that blur the line between digital and physical experiences.",
-      shape: "torus" as const,
       color: "#4ECDC4"
     },
     {
       title: "Cloud Native",
       description: "Built for the cloud with scalable architecture and global content delivery networks.",
-      shape: "sphere" as const,
       color: "#45B7D1"
     },
     {
       title: "Security First",
       description: "End-to-end encryption and privacy-focused design that keeps your data protected always.",
-      shape: "box" as const,
       color: "#96CEB4"
     },
     {
       title: "Open Platform",
       description: "Extensible ecosystem with powerful APIs and developer tools for unlimited possibilities.",
-      shape: "torus" as const,
       color: "#FFEAA7"
     }
   ];
@@ -137,7 +107,6 @@ const FeaturesSection = () => {
               key={index}
               title={feature.title}
               description={feature.description}
-              shape={feature.shape}
               color={feature.color}
             />
           ))}

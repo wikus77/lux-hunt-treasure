@@ -2,8 +2,7 @@
 
 import React, { Suspense, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Text3D, Center, Environment, Float, Html } from '@react-three/drei';
-import { EffectComposer, Bloom, Vignette, DepthOfField } from '@react-three/postprocessing';
+import { Center, Environment, Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
 const M1ssionLogo3D = () => {
@@ -47,24 +46,19 @@ const Hero3DScene = () => {
       >
         <Suspense fallback={
           <Html center>
-            <div className="text-primary animate-spin">⟳</div>
+            <div className="text-primary animate-spin text-2xl">⟳</div>
           </Html>
         }>
           <Environment preset="studio" />
           
-          {/* Soft directional light */}
           <directionalLight 
             position={[10, 10, 5]} 
             intensity={0.8} 
             castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
           />
           
-          {/* Ambient light */}
           <ambientLight intensity={0.4} />
           
-          {/* Point light for extra glow */}
           <pointLight 
             position={[0, 0, 5]} 
             intensity={0.5} 
@@ -72,23 +66,6 @@ const Hero3DScene = () => {
           />
 
           <M1ssionLogo3D />
-
-          <EffectComposer>
-            <Bloom 
-              intensity={0.4}
-              luminanceThreshold={0.3}
-              luminanceSmoothing={0.9}
-            />
-            <Vignette 
-              offset={0.3}
-              darkness={0.4}
-            />
-            <DepthOfField 
-              focusDistance={0.01}
-              focalLength={0.02}
-              bokehScale={2}
-            />
-          </EffectComposer>
         </Suspense>
       </Canvas>
 
