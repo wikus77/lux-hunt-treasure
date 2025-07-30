@@ -2,6 +2,15 @@
 
 import React, { Suspense } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import SafeModeController from '@/components/SafeModeController';
+
+// SAFE MODE Components
+import SafeModeHero3D from '@/components/landing/SafeModeHero3D';
+import SafeModeScrollStory from '@/components/landing/SafeModeScrollStory';
+import SafeModeFeatures from '@/components/landing/SafeModeFeatures';
+import SafeModeFooter from '@/components/landing/SafeModeFooter';
+
+// FULL Components (activated progressively)
 import Hero3DScene from '@/components/landing/Hero3D';
 import ScrollStorySection from '@/components/landing/ScrollStory';
 import FeaturesSection from '@/components/landing/Features';
@@ -17,8 +26,11 @@ const LoadingFallback = () => (
 );
 
 const LandingPage = () => {
-  console.log("✅ CINEMATOGRAPHIC LANDING PAGE LOADED - Apple-style design with Three.js + GSAP");
+  console.log("✅ CINEMATOGRAPHIC LANDING PAGE LOADED - Progressive Reactivation Mode");
   
+  // Get Safe Mode state
+  const safeMode = SafeModeController();
+
   // Prevent any global errors from crashing the app
   React.useEffect(() => {
     const handleError = (error: ErrorEvent) => {
@@ -45,59 +57,65 @@ const LandingPage = () => {
     };
   }, []);
 
-  console.log("🚀 LandingPage component rendering");
-
   // Extended health check - monitor stability for 20+ seconds
   React.useEffect(() => {
     let healthCheckCount = 0;
     
     const healthCheckInterval = setInterval(() => {
       healthCheckCount++;
-      console.log(`💚 Landing Page Health Check #${healthCheckCount} - Running stable`);
+      const mode = safeMode.isSafeMode ? 'SAFE MODE' : 'FULL MODE';
+      console.log(`💚 Landing Page Health Check #${healthCheckCount} - ${mode} - Running stable`);
       
       // Check if all major components are still mounted
       const heroExists = document.querySelector('.relative.h-screen');
-      const scrollExists = document.querySelector('[class*="ScrollStory"]');
-      const featuresExists = document.querySelector('[class*="Features"]');
+      const scrollExists = document.querySelector('[class*="ScrollStory"], [class*="SafeModeScrollStory"]');
+      const featuresExists = document.querySelector('[class*="Features"], [class*="SafeModeFeatures"]');
       const footerExists = document.querySelector('footer');
       
       console.log("🔍 Component Check:", {
         hero: !!heroExists,
         scroll: !!scrollExists,
         features: !!featuresExists,
-        footer: !!footerExists
+        footer: !!footerExists,
+        safeMode: safeMode.isSafeMode,
+        currentStep: safeMode.currentStep
       });
     }, 2000);
 
-    // Final stability confirmation after 20 seconds
-    const stabilityTimer = setTimeout(() => {
-      console.log("🎉🎉🎉 LANDING PAGE ULTRA-STABLE - All systems operational after 20s! 🎉🎉🎉");
-      console.log("✅ Hero3D, ScrollStory, Features, Footer all confirmed stable");
-      console.log("✅ Safari iOS and Chrome compatible");
-      console.log("✅ Zero crashes, ErrorBoundary not triggered");
-    }, 20000);
-
     return () => {
       clearInterval(healthCheckInterval);
-      clearTimeout(stabilityTimer);
     };
-  }, []);
+  }, [safeMode]);
+
+  console.log("🚀 LandingPage component rendering with Safe Mode:", safeMode);
 
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-white overflow-x-hidden">
         <Suspense fallback={<LoadingFallback />}>
-          {/* Hero Section with 3D WebGL */}
-          <Hero3DScene />
+          {/* Hero Section - Progressive */}
+          {safeMode.hero3DEnabled ? (
+            <Hero3DScene />
+          ) : (
+            <SafeModeHero3D />
+          )}
           
-          {/* Scroll-driven storytelling sections */}
-          <ScrollStorySection />
+          {/* Scroll-driven storytelling sections - Progressive */}
+          {safeMode.scrollStoryEnabled ? (
+            <ScrollStorySection />
+          ) : (
+            <SafeModeScrollStory />
+          )}
           
-          {/* Features with 3D elements */}
-          <FeaturesSection />
+          {/* Features with 3D elements - Progressive */}
+          {safeMode.featuresEnabled ? (
+            <FeaturesSection />
+          ) : (
+            <SafeModeFeatures />
+          )}
           
-          {/* Minimal footer */}
-          <MinimalFooter />
+          {/* Footer - Always safe mode initially */}
+          <SafeModeFooter />
         </Suspense>
       </div>
     </ErrorBoundary>
