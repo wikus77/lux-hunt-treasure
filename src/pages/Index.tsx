@@ -58,7 +58,7 @@ const Index = () => {
   console.log("✅ LANDING RENDER STATE:", { introCompleted, pageLoaded, renderContent, showDeveloperAccess });
 
   return (
-    <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
+    <div className="min-h-screen flex flex-col w-full bg-white overflow-x-hidden full-viewport smooth-scroll">
       <CookiebotInit />
       
       <LoadingManager onLoaded={handleLoaded} />
