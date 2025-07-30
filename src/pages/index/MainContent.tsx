@@ -67,7 +67,7 @@ const MainContent: React.FC<MainContentProps> = ({
 
   // Renderizza direttamente il contenuto principale senza IntroManager
   return (
-    <div className="w-full bg-white">
+    <ParallaxContainer>
       <IndexContent 
         countdownCompleted={countdownCompleted}
         onRegisterClick={onRegisterClick}
@@ -82,7 +82,7 @@ const MainContent: React.FC<MainContentProps> = ({
         onCloseInviteFriend={onCloseInviteFriend}
         onAgeVerified={onAgeVerified}
       />
-    </div>
+    </ParallaxContainer>
   );
 };
 

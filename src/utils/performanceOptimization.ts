@@ -1,8 +1,6 @@
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ Performance Optimization Utilities
 
-import React from 'react';
-
 export interface PerformanceMetrics {
   navigationTime: number;
   renderTime: number;
@@ -100,3 +98,6 @@ export const usePerformanceMonitor = (componentName: string) => {
   
   return { logPerformance };
 };
+
+// React import for useEffect
+import React from 'react';

@@ -48,10 +48,10 @@ const LoadingScreen = () => {
   };
   
   return (
-    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999]">
       <div className="loading-spinner text-center">
         <div className="w-16 h-16 border-4 border-t-cyan-400 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-        <p className="text-black mt-4 text-xl">Caricamento{dots}</p>
+        <p className="text-white mt-4 text-xl">Caricamento{dots}</p>
         
         {loadingDuration > 5 && (
           <p className="text-yellow-400 mt-1 text-xs">
@@ -60,7 +60,7 @@ const LoadingScreen = () => {
         )}
       </div>
       
-      <div className="mt-12 text-gray-600 text-sm">
+      <div className="mt-12 text-cyan-400/70 text-sm">
         M1SSION sta caricando...
       </div>
 

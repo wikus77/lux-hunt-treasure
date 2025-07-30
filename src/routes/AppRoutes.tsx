@@ -9,7 +9,7 @@ import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useAuth } from "@/hooks/use-auth";
 
 // Public routes
-import CinematicHomePage from "@/pages/CinematicHomePage";
+import Index from "@/pages/Index";
 
 // Main app routes - STATIC IMPORTS FOR CAPACITOR iOS COMPATIBILITY
 import AppHome from "@/pages/AppHome";
@@ -76,7 +76,7 @@ const AppRoutes: React.FC = () => {
                 isCapacitorApp && isAuthenticated && !isLoading ? (
                   <Navigate to="/home" replace />
                 ) : (
-                  <CinematicHomePage />
+                  <Index />
                 )
               } 
             />
