@@ -7,6 +7,7 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 
 const M1ssionLogo3D = () => {
+  console.log("🚀 M1ssionLogo3D component mounting");
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
@@ -51,6 +52,8 @@ const M1ssionLogo3D = () => {
 };
 
 const Hero3DScene = () => {
+  console.log("🎬 Hero3DScene component mounting");
+  
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-black to-gray-800">
       <Canvas
