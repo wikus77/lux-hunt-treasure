@@ -1,16 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// IndexContent completamente sostituito con nuovo design bianco
 
 import React, { useState, useEffect } from "react";
-import { Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award, X, Sparkles } from "lucide-react";
-import BackgroundParallax from "@/components/ui/background-parallax";
-import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
-import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sparkles, X, Info, UserPlus } from "lucide-react";
 import LandingFooter from "@/components/landing/LandingFooter";
-import NewLandingPage from "@/components/landing/NewLandingPage";
-import { motion } from "framer-motion";
+import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 
 interface IndexContentProps {
   countdownCompleted: boolean;
@@ -18,70 +15,43 @@ interface IndexContentProps {
   openInviteFriend: () => void;
 }
 
-const IndexContent = ({ 
-  countdownCompleted, 
-  onRegisterClick, 
-  openInviteFriend 
-}: IndexContentProps) => {
+const IndexContent = ({ onRegisterClick, openInviteFriend }: IndexContentProps) => {
+  const [showAnimation, setShowAnimation] = useState(true);
+  const [animationPhase, setAnimationPhase] = useState(0);
+  const [showModal, setShowModal] = useState(false);
   const [showPrizeDetails, setShowPrizeDetails] = useState(false);
-  const [contentLoaded, setContentLoaded] = useState(false);
 
-  // Assicuriamo che il contenuto sia caricato con una breve animazione
+  // Animation sequence: after 1 second start the ink drop animation
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setContentLoaded(true);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
-  // Fix per il problema di ricarica della pagina:
-  // Pulisci la cache di localStorage per forzare il ricaricamento dei contenuti
-  useEffect(() => {
-    // Rimuovi i flag che potrebbero impedire il caricamento completo
-    if (typeof window !== 'undefined') {
-      try {
-        // Rimuove solo i flag relativi all'intro e non altri dati importanti
-        localStorage.removeItem("skipIntro");
-        localStorage.removeItem("introStep");
-        localStorage.removeItem("introShown");
-        
-        // Non rimuovere informazioni di autenticazione o altre preferenze utente
-        console.log("Cache di navigazione pulita per garantire il corretto caricamento");
-      } catch (error) {
-        console.error("Errore nell'accesso a localStorage:", error);
-      }
-    }
-  }, []);
-  
-  // Se il contenuto non è ancora caricato, mostriamo un div vuoto e trasparente
-  if (!contentLoaded) {
-    return <div className="min-h-screen bg-black"></div>;
-  }
+    const timer1 = setTimeout(() => {
+      setAnimationPhase(1); // Start ink drop
+    }, 1000);
 
-  // Step data for "Scopri M1SSION" section
-  const steps = [
-    {
-      icon: <UserCheck className="w-8 h-8 text-[#00E5FF]" />,
-      title: "Registrazione",
-      description: "Crea il tuo account su M1SSION e preparati alla sfida"
-    },
-    {
-      icon: <Check className="w-8 h-8 text-[#00E5FF]" />,
-      title: "Ricevi Indizi", 
-      description: "Ogni settimana ricevi nuovi indizi via app ed email"
-    },
-    {
-      icon: <MapPin className="w-8 h-8 text-[#FFC107]" />,
-      title: "Risolvi la Missione",
-      description: "Analizza gli indizi e trova la posizione del premio"
-    },
-    {
-      icon: <Award className="w-8 h-8 text-[#FF00FF]" />,
-      title: "Vinci davvero",
-      description: "Se sei il primo a trovare il premio, diventa tuo!"
-    }
-  ];
+    const timer2 = setTimeout(() => {
+      setAnimationPhase(2); // Oil splash circle
+    }, 1500);
+
+    const timer3 = setTimeout(() => {
+      setAnimationPhase(3); // Swirling black hole
+    }, 2500);
+
+    const timer4 = setTimeout(() => {
+      setAnimationPhase(4); // "START M1SSION" appears
+    }, 3500);
+
+    const timer5 = setTimeout(() => {
+      setShowAnimation(false); // Hide animation
+      setShowModal(true); // Show subscription modal
+    }, 5000);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+      clearTimeout(timer4);
+      clearTimeout(timer5);
+    };
+  }, []);
 
   // Subscription plans data
   const subscriptions = [
@@ -162,11 +132,248 @@ const IndexContent = ({
 
   return (
     <>
-      {/* New White Landing Page Design */}
-      <NewLandingPage 
-        onRegisterClick={onRegisterClick}
-        openInviteFriend={openInviteFriend}
-      />
+      {/* Main Container with White Background */}
+      <div className="min-h-screen bg-white relative overflow-hidden">
+        {/* White Header */}
+        <header className="w-full h-20 bg-white flex items-center justify-center relative z-20">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-orbitron font-bold">
+              <span 
+                className="text-[#00FFFF]" 
+                style={{ 
+                  textShadow: "0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.3)" 
+                }}
+              >
+                M1
+              </span>
+              <span 
+                className="text-white"
+                style={{
+                  textShadow: "2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000"
+                }}
+              >
+                SSION
+              </span>
+            </h1>
+          </div>
+        </header>
+
+        {/* Floating Action Buttons - Fixed position */}
+        <div className="fixed bottom-8 right-8 z-50 flex flex-col gap-4">
+          <Button 
+            onClick={() => setShowPrizeDetails(true)}
+            className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
+            size="icon"
+          >
+            <Info className="h-6 w-6" />
+            <span className="sr-only">Dettagli premi</span>
+          </Button>
+          
+          <Button 
+            onClick={openInviteFriend}
+            className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
+            size="icon"
+          >
+            <UserPlus className="h-6 w-6" />
+            <span className="sr-only">Invita un amico</span>
+          </Button>
+        </div>
+
+        {/* Animation Overlay */}
+        <AnimatePresence>
+          {showAnimation && (
+            <motion.div 
+              className="fixed inset-0 z-30 flex items-center justify-center bg-white"
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+            >
+              {/* Ink Drop Animation */}
+              {animationPhase >= 1 && (
+                <motion.div
+                  className="absolute"
+                  style={{ 
+                    top: "10%", 
+                    left: "50%", 
+                    transform: "translateX(-50%)"
+                  }}
+                  initial={{ y: -100, scale: 0 }}
+                  animate={{ 
+                    y: animationPhase >= 2 ? 300 : 0,
+                    scale: animationPhase >= 2 ? [1, 0.5, 2, 4] : 1,
+                  }}
+                  transition={{ 
+                    duration: animationPhase >= 2 ? 1.5 : 1,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <div 
+                    className="w-8 h-8 bg-black rounded-full"
+                    style={{
+                      background: animationPhase >= 2 
+                        ? "radial-gradient(circle, #000 0%, #333 50%, #000 100%)"
+                        : "#000"
+                    }}
+                  />
+                </motion.div>
+              )}
+
+              {/* Oil Splash Circle */}
+              {animationPhase >= 2 && (
+                <motion.div
+                  className="absolute"
+                  style={{ 
+                    top: "50%", 
+                    left: "50%", 
+                    transform: "translate(-50%, -50%)"
+                  }}
+                  initial={{ scale: 0, rotate: 0 }}
+                  animate={{ 
+                    scale: animationPhase >= 3 ? [2, 4, 6] : [0, 1, 2],
+                    rotate: animationPhase >= 3 ? [0, 180, 360, 720] : 0,
+                  }}
+                  transition={{ 
+                    duration: animationPhase >= 3 ? 2 : 1,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <div 
+                    className="w-32 h-32 bg-black rounded-full"
+                    style={{
+                      background: animationPhase >= 3
+                        ? "conic-gradient(from 0deg, #000, #333, #000, #333, #000)"
+                        : "radial-gradient(circle, #000 0%, rgba(0,0,0,0.7) 70%, transparent 100%)",
+                      filter: animationPhase >= 3 
+                        ? "blur(2px) contrast(1.5)" 
+                        : "blur(1px)"
+                    }}
+                  />
+                </motion.div>
+              )}
+
+              {/* "START M1SSION" Text */}
+              {animationPhase >= 4 && (
+                <motion.div
+                  className="absolute text-center"
+                  style={{ 
+                    top: "50%", 
+                    left: "50%", 
+                    transform: "translate(-50%, -50%)"
+                  }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
+                  <h2 
+                    className="text-3xl md:text-4xl font-orbitron font-bold text-white"
+                    style={{
+                      textShadow: "2px 2px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000, 0 0 10px rgba(255,255,255,0.8)"
+                    }}
+                  >
+                    START M1SSION
+                  </h2>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex items-center justify-center min-h-[calc(100vh-80px)] p-8">
+          <div className="text-center max-w-4xl mx-auto">
+            <p className="text-gray-600 text-lg md:text-xl mb-8">
+              Un premio attende chi sa vedere oltre.
+              Gli indizi non sono nascosti: sono camuffati.
+              Serve logica, freddezza e visione.
+            </p>
+            <p className="text-gray-800 text-xl md:text-2xl font-semibold">
+              La sfida è iniziata. Questa è M1SSION™.
+            </p>
+          </div>
+        </div>
+
+        {/* Legal Information Section - Bottom */}
+        <div className="bg-white border-t border-gray-200">
+          <LandingFooter />
+        </div>
+      </div>
+
+      {/* Subscription Modal */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="max-w-7xl max-h-[90vh] overflow-y-auto bg-black text-white">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl md:text-3xl font-bold">
+              <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION</span> Abbonamenti
+            </DialogTitle>
+            <p className="mt-4 text-white/70 text-center max-w-2xl mx-auto">
+              Scegli il piano più adatto a te e inizia la tua avventura. Tutti i piani offrono la possibilità di vincere premi reali.
+            </p>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mt-8">
+            {subscriptions.map((sub, index) => (
+              <motion.div
+                key={index}
+                className={`rounded-xl relative p-6 ${sub.highlight ? 'bg-gradient-to-b from-[#00E5FF]/20 to-black/70 border border-[#00E5FF]/30' : 'bg-white/5 border border-white/10'}`}
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                {/* Badge per il piano consigliato */}
+                {sub.highlight && (
+                  <div className="absolute -top-3 -right-3 bg-[#00E5FF] text-black text-xs font-bold py-1 px-3 rounded-full flex items-center">
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    Consigliato
+                  </div>
+                )}
+                
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-white">{sub.title}</h3>
+                  <div className="mt-2">
+                    <span className="text-2xl font-bold text-white">{sub.price}</span>
+                    {sub.period && <span className="text-white/50 text-sm">{sub.period}</span>}
+                  </div>
+                </div>
+                
+                <div className="space-y-3 mb-6">
+                  {sub.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start text-sm">
+                      <span className="text-green-400 mr-2 mt-0.5">✓</span>
+                      <span className="text-white/80">{feature}</span>
+                    </div>
+                  ))}
+                  {sub.notIncluded?.map((feature, idx) => (
+                    <div key={idx} className="flex items-start text-sm">
+                      <X className="w-3 h-3 text-red-400 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-white/50">{feature}</span>
+                    </div>
+                  ))}
+                </div>
+                
+                <Button 
+                  className={`w-full ${sub.buttonColor} font-bold py-3 text-sm`}
+                  onClick={() => {
+                    setShowModal(false);
+                    onRegisterClick();
+                  }}
+                >
+                  {sub.buttonText}
+                </Button>
+              </motion.div>
+            ))}
+          </div>
+          
+          <div className="mt-8 text-center">
+            <Button 
+              onClick={() => setShowModal(false)}
+              variant="outline"
+              className="border-white/20 text-white hover:bg-white/10"
+            >
+              Continua a esplorare
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Prize Details Modal */}
       <PrizeDetailsModal
