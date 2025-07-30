@@ -18,7 +18,7 @@ const Feature3D = ({ title, description, color }: {
   color: string;
 }) => {
   return (
-    <div className="group relative h-96 bg-card/50 backdrop-blur-sm rounded-3xl border border-border/50 hover:border-primary/30 transition-all duration-500 overflow-hidden">
+    <div className="group relative h-96 bg-gray-800/30 backdrop-blur-sm rounded-3xl border border-gray-700 hover:border-cyan-500/50 transition-all duration-500 overflow-hidden">
       {/* 3D Background */}
       <div className="absolute inset-0">
         <Canvas camera={{ position: [0, 0, 3], fov: 50 }}>
@@ -31,25 +31,25 @@ const Feature3D = ({ title, description, color }: {
       </div>
 
       {/* Glassmorphism overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/50 to-transparent group-hover:from-background/95 transition-all duration-500"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/95 via-gray-800/60 to-transparent group-hover:from-gray-900/98 transition-all duration-500"></div>
 
       {/* Content */}
       <div className="relative h-full flex flex-col justify-end p-8 z-10">
-        <h3 className="text-2xl font-medium mb-4 text-foreground group-hover:text-primary transition-colors">
+        <h3 className="text-2xl font-medium mb-4 text-white group-hover:text-cyan-400 transition-colors">
           {title}
         </h3>
-        <p className="text-muted-foreground leading-relaxed">
+        <p className="text-gray-300 leading-relaxed">
           {description}
         </p>
         
         {/* Hover indicator */}
-        <div className="mt-6 w-8 h-8 rounded-full border-2 border-primary/30 flex items-center justify-center group-hover:border-primary group-hover:bg-primary/10 transition-all duration-300">
-          <span className="text-primary text-sm">→</span>
+        <div className="mt-6 w-8 h-8 rounded-full border-2 border-cyan-500/50 flex items-center justify-center group-hover:border-cyan-400 group-hover:bg-cyan-400/10 transition-all duration-300">
+          <span className="text-cyan-400 text-sm">→</span>
         </div>
       </div>
 
       {/* Glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-t from-primary/0 via-primary/0 to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-cyan-500/0 via-cyan-500/0 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
     </div>
   );
 };
@@ -89,14 +89,14 @@ const FeaturesSection = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-b from-background to-muted/20">
+    <section className="py-20 bg-gradient-to-b from-black via-gray-900 to-black">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl font-light mb-8 text-foreground">
+          <h2 className="text-5xl md:text-6xl font-light mb-8 text-white">
             Powerful
-            <span className="block text-muted-foreground">Features</span>
+            <span className="block text-cyan-400">Features</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             Discover the capabilities that make M1SSION™ the platform of choice for next-generation applications.
           </p>
         </div>
@@ -114,9 +114,9 @@ const FeaturesSection = () => {
 
         {/* Call to action */}
         <div className="text-center mt-16">
-          <button className="group relative px-12 py-4 bg-primary text-primary-foreground rounded-full text-lg font-medium overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+          <button className="group relative px-12 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full text-lg font-medium overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/25">
             <span className="relative z-10">Explore All Features</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-cyan-500 to-primary bg-size-200 bg-pos-0 group-hover:bg-pos-100 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           </button>
         </div>
       </div>

@@ -98,43 +98,43 @@ const ScrollStorySection = () => {
   }, []);
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative bg-gradient-to-b from-black via-gray-900 to-black">
       {/* Parallax background */}
-      <div className="parallax-bg absolute inset-0 bg-gradient-to-b from-background via-muted/50 to-background -z-10"></div>
+      <div className="parallax-bg absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-black -z-10"></div>
 
       {/* Section 1 - Innovation */}
       <section ref={section1Ref} className="min-h-screen flex items-center justify-center py-20">
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <h2 className="text-5xl md:text-7xl font-light mb-8 text-foreground">
+          <h2 className="text-5xl md:text-7xl font-light mb-8 text-white">
             Innovation
-            <span className="block text-2xl md:text-4xl font-thin text-muted-foreground mt-4">
+            <span className="block text-2xl md:text-4xl font-thin text-cyan-400 mt-4">
               Redefined
             </span>
           </h2>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             We push boundaries to create experiences that matter. Every detail crafted with precision and purpose.
           </p>
           <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="group p-8 rounded-2xl bg-card hover:bg-accent/5 transition-all duration-500 hover:scale-105">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <div className="group p-8 rounded-2xl bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:bg-gray-700/50 transition-all duration-500 hover:scale-105">
+              <div className="w-16 h-16 mx-auto mb-6 bg-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
                 <span className="text-2xl">⚡</span>
               </div>
-              <h3 className="text-xl font-medium mb-4">Performance</h3>
-              <p className="text-muted-foreground">Lightning-fast experiences optimized for every device.</p>
+              <h3 className="text-xl font-medium mb-4 text-white">Performance</h3>
+              <p className="text-gray-300">Lightning-fast experiences optimized for every device.</p>
             </div>
-            <div className="group p-8 rounded-2xl bg-card hover:bg-accent/5 transition-all duration-500 hover:scale-105">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <div className="group p-8 rounded-2xl bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:bg-gray-700/50 transition-all duration-500 hover:scale-105">
+              <div className="w-16 h-16 mx-auto mb-6 bg-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
                 <span className="text-2xl">🎨</span>
               </div>
-              <h3 className="text-xl font-medium mb-4">Design</h3>
-              <p className="text-muted-foreground">Beautiful interfaces that inspire and delight users.</p>
+              <h3 className="text-xl font-medium mb-4 text-white">Design</h3>
+              <p className="text-gray-300">Beautiful interfaces that inspire and delight users.</p>
             </div>
-            <div className="group p-8 rounded-2xl bg-card hover:bg-accent/5 transition-all duration-500 hover:scale-105">
-              <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <div className="group p-8 rounded-2xl bg-gray-800/50 backdrop-blur-sm border border-gray-700 hover:bg-gray-700/50 transition-all duration-500 hover:scale-105">
+              <div className="w-16 h-16 mx-auto mb-6 bg-cyan-500/20 rounded-2xl flex items-center justify-center group-hover:bg-cyan-500/30 transition-colors">
                 <span className="text-2xl">🚀</span>
               </div>
-              <h3 className="text-xl font-medium mb-4">Technology</h3>
-              <p className="text-muted-foreground">Cutting-edge solutions for tomorrow's challenges.</p>
+              <h3 className="text-xl font-medium mb-4 text-white">Technology</h3>
+              <p className="text-gray-300">Cutting-edge solutions for tomorrow's challenges.</p>
             </div>
           </div>
         </div>
@@ -145,33 +145,33 @@ const ScrollStorySection = () => {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-5xl md:text-6xl font-light mb-8 text-foreground">
+              <h2 className="text-5xl md:text-6xl font-light mb-8 text-white">
                 Immersive
-                <span className="block text-muted-foreground">Experiences</span>
+                <span className="block text-cyan-400">Experiences</span>
               </h2>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-xl text-gray-300 mb-8 leading-relaxed">
                 Step into a world where technology meets artistry. Our platform delivers experiences that engage, inspire, and transform.
               </p>
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-lg">Real-time 3D interactions</span>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <span className="text-lg text-white">Real-time 3D interactions</span>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-lg">Seamless cross-platform support</span>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <span className="text-lg text-white">Seamless cross-platform support</span>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <div className="w-2 h-2 bg-primary rounded-full"></div>
-                  <span className="text-lg">Advanced AI integration</span>
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full"></div>
+                  <span className="text-lg text-white">Advanced AI integration</span>
                 </div>
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-primary/20 via-cyan-500/20 to-primary/20 rounded-3xl backdrop-blur-sm border border-primary/20 flex items-center justify-center">
-                <div className="text-8xl opacity-30">🌟</div>
+              <div className="aspect-square bg-gradient-to-br from-cyan-500/20 via-blue-500/20 to-cyan-500/20 rounded-3xl backdrop-blur-sm border border-cyan-500/30 flex items-center justify-center">
+                <div className="text-8xl opacity-60 text-cyan-400">🌟</div>
               </div>
-              <div className="absolute -inset-4 bg-gradient-to-r from-primary via-cyan-500 to-primary rounded-3xl blur-3xl opacity-20 -z-10"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-cyan-500 rounded-3xl blur-3xl opacity-20 -z-10"></div>
             </div>
           </div>
         </div>
@@ -180,18 +180,18 @@ const ScrollStorySection = () => {
       {/* Section 3 - Future */}
       <section ref={section3Ref} className="min-h-screen flex items-center justify-center py-20">
         <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-5xl md:text-7xl font-light mb-8 text-foreground">
+          <h2 className="text-5xl md:text-7xl font-light mb-8 text-white">
             The Future
-            <span className="block text-2xl md:text-4xl font-thin text-muted-foreground mt-4">
+            <span className="block text-2xl md:text-4xl font-thin text-cyan-400 mt-4">
               Is Now
             </span>
           </h2>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-12 leading-relaxed">
+          <p className="text-xl md:text-2xl text-gray-300 mb-12 leading-relaxed">
             Join us in shaping tomorrow's digital landscape. Be part of the revolution.
           </p>
-          <button className="group relative px-16 py-6 bg-primary text-primary-foreground rounded-full text-xl font-medium overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+          <button className="group relative px-16 py-6 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-full text-xl font-medium overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-cyan-500/25">
             <span className="relative z-10">Get Started</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-primary via-cyan-500 to-primary bg-size-200 bg-pos-0 group-hover:bg-pos-100 transition-all duration-500"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 via-blue-500 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
           </button>
         </div>
       </section>
