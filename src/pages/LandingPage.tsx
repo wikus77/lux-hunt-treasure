@@ -1,18 +1,17 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// M1SSION™ Landing Page con modifiche chirurgiche richieste
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award, X, Sparkles } from "lucide-react";
-import BackgroundParallax from "@/components/ui/background-parallax";
+import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award, X, Sparkles, ArrowDown, Play, ChevronRight } from "lucide-react";
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
-import LaunchProgressBar from "@/components/landing/LaunchProgressBar";
-import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import LandingFooter from "@/components/landing/LandingFooter";
-import ParallaxContainer from "@/components/ui/parallax-container";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
 import { motion } from "framer-motion";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const LandingPage = () => {
   const [, setLocation] = useLocation();
@@ -20,6 +19,50 @@ const LandingPage = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
+  
+  // Refs for GSAP animations
+  const heroRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const sectionsRef = useRef<HTMLElement[]>([]);
+
+  console.log('🌟 M1SSION™ LANDING PAGE - Xavier Cusso Style - Showing to anonymous user');
+
+  // GSAP Animations setup
+  useEffect(() => {
+    const tl = gsap.timeline();
+    
+    // Hero entrance animation
+    if (titleRef.current) {
+      gsap.fromTo(titleRef.current.children, 
+        { y: 100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.2, stagger: 0.2, ease: "power2.out" }
+      );
+    }
+    
+    // Sections reveal on scroll
+    sectionsRef.current.forEach((section, index) => {
+      if (section) {
+        gsap.fromTo(section, 
+          { y: 50, opacity: 0 },
+          {
+            y: 0, 
+            opacity: 1, 
+            duration: 0.8,
+            scrollTrigger: {
+              trigger: section,
+              start: "top 80%",
+              end: "bottom 20%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      }
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, []);
 
   // 🚨 EMERGENCY ADMIN ACCESS TRIGGER (Triple click logo)
   const [logoClickCount, setLogoClickCount] = useState(0);
@@ -52,8 +95,6 @@ const LandingPage = () => {
     document.addEventListener('keydown', handleKeySequence);
     return () => document.removeEventListener('keydown', handleKeySequence);
   }, []);
-
-  console.log('🌟 M1SSION™ LANDING PAGE - Showing to anonymous user');
 
   const handleRegisterClick = () => {
     console.log('🚀 M1SSION™ User clicking register button - redirecting to /register');
@@ -166,206 +207,205 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black overflow-x-hidden">
-      <BackgroundParallax />
-      <UnifiedHeader />
-      <div className="h-[72px] w-full" />
-      
-      {/* Floating Action Buttons - Fixed position */}
+    <div className="min-h-screen bg-black overflow-x-hidden relative">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-80" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(0,229,255,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(255,0,255,0.1),transparent_50%)]" />
+        
+        {/* Floating Elements */}
+        {[...Array(30)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full opacity-20"
+            style={{
+              width: `${Math.random() * 4 + 2}px`,
+              height: `${Math.random() * 4 + 2}px`,
+              background: i % 2 === 0 ? "#00E5FF" : "#FF00FF",
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -30, 0],
+              x: [0, 15, -15, 0],
+              opacity: [0.1, 0.3, 0.1],
+            }}
+            transition={{
+              duration: Math.random() * 20 + 15,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: Math.random() * 10
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Floating Action Buttons */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col gap-4">
-        <Button 
+        <motion.button 
           onClick={() => setShowPrizeDetails(true)}
-          className="rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 p-4 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40"
-          size="icon"
+          className="p-4 rounded-full bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 text-cyan-400 hover:bg-cyan-500/30 transition-all duration-300"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
         >
           <Info className="h-6 w-6" />
-          <span className="sr-only">Dettagli premi</span>
-        </Button>
+        </motion.button>
         
-        <Button 
+        <motion.button 
           onClick={openInviteFriend}
-          className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-4 shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40"
-          size="icon"
+          className="p-4 rounded-full bg-purple-500/20 backdrop-blur-sm border border-purple-400/30 text-purple-400 hover:bg-purple-500/30 transition-all duration-300"
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
         >
           <UserPlus className="h-6 w-6" />
-          <span className="sr-only">Invita un amico</span>
-        </Button>
+        </motion.button>
       </div>
       
-      {/* HERO SECTION - WELCOME TO M1SSION™ - RIDOTTA ALTEZZA */}
-      <motion.section 
-        className="relative min-h-[70vh] w-full flex flex-col items-center justify-center text-center px-4 py-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+      {/* HERO SECTION - Xavier Cusso Style */}
+      <section 
+        ref={heroRef}
+        className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-20"
       >
-        {/* Dynamic Background with Particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-b from-black to-[#111]">
-          {/* Animated Particles */}
-          {[...Array(40)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute rounded-full"
-              style={{
-                width: `${Math.random() * 3 + 1}px`,
-                height: `${Math.random() * 3 + 1}px`,
-                background: i % 3 === 0 ? "#00E5FF" : i % 3 === 1 ? "#FF00FF" : "#FFC107",
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                filter: "blur(1px)"
-              }}
-              animate={{
-                y: [0, -20, 0, 20, 0],
-                x: [0, 10, -10, 5, 0],
-                opacity: [0.02, 0.08, 0.05, 0.08, 0.02],
-                scale: [0.5, 1, 0.8, 1.2, 0.5]
-              }}
-              transition={{
-                duration: Math.random() * 15 + 10,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: Math.random() * 5
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Content */}
-        <motion.div 
-          className="z-10 max-w-5xl mx-auto"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          {/* Main Title with Xavier Cusso Bold Typography */}
-          <motion.h1 
-            className="text-6xl md:text-8xl lg:text-9xl font-black leading-none"
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
+        {/* Main Title */}
+        <div className="z-10 max-w-6xl mx-auto">
+          <h1 
+            ref={titleRef}
+            className="text-8xl md:text-9xl lg:text-[12rem] font-black leading-none mb-6"
           >
             <div className="overflow-hidden">
-              <span className="text-cyan-400 glow-text block">
+              <span className="text-cyan-400 glow-text block drop-shadow-[0_0_30px_rgba(0,229,255,0.8)]">
                 M1
               </span>
             </div>
-            <div className="overflow-hidden -mt-4">
+            <div className="overflow-hidden -mt-8">
               <span className="text-white block">
-                SSION<span className="text-xs align-top">™</span>
+                SSION<span className="text-2xl align-top">™</span>
               </span>
             </div>
-          </motion.h1>
+          </h1>
           
-          {/* MISSION START - Xavier Cusso Style */}
           <motion.p 
-            className="text-xl md:text-2xl text-gray-300 font-black tracking-wider mb-8"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 1.5 }}
+            className="text-2xl md:text-3xl text-gray-300 font-black tracking-[0.3em] mb-12 uppercase"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.5 }}
           >
             MISSION START
           </motion.p>
           
-          {/* Description text */}
           <motion.p 
-            className="text-lg md:text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+            className="text-xl md:text-2xl text-gray-400 mb-16 max-w-4xl mx-auto leading-relaxed"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
+            transition={{ duration: 0.8, delay: 2 }}
           >
-            Un premio attende chi sa vedere oltre.
-            Gli indizi non sono nascosti: sono camuffati.
-            Serve logica, freddezza e visione.
-            La sfida è iniziata. Questa è <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>.
+            Un premio attende chi sa vedere oltre. Gli indizi non sono nascosti: sono camuffati. 
+            Serve logica, freddezza e visione. La sfida è iniziata.
           </motion.p>
           
-          {/* IT IS POSSIBLE with Shimmer Effect */}
-          <motion.p 
-            className="text-yellow-300 text-sm md:text-base font-orbitron tracking-widest mb-10 relative overflow-hidden"
+          <motion.div 
+            className="text-yellow-300 text-lg md:text-xl tracking-[0.5em] mb-16 relative overflow-hidden font-light"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
+            transition={{ duration: 0.8, delay: 2.5 }}
           >
             <motion.span
               className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
               animate={{ x: ["-100%", "100%"] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
             />
-             IT IS POSSIBLE
-          </motion.p>
+            IT IS POSSIBLE
+          </motion.div>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <motion.div 
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 3 }}
+          >
             <motion.button 
-              className="px-8 py-4 rounded-none bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] transition-all duration-300 hover:scale-105"
+              className="px-12 py-6 bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-500 relative overflow-hidden group"
               onClick={handleRegisterClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              JOIN THE HUNT
+              <span className="relative z-10">JOIN THE HUNT</span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              />
             </motion.button>
+            
             <motion.button 
-              className="px-8 py-4 rounded-none text-white font-black bg-black/30 border border-white/20 hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-300"
+              className="px-12 py-6 text-white font-black uppercase tracking-wider bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-cyan-400/50 hover:text-cyan-400 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               LEARN MORE
             </motion.button>
-          </div>
-        </motion.div>
-      </motion.section>
+          </motion.div>
+        </div>
 
-      {/* CONTAINER PREMI IN PALIO - Stile M1SSION Prize con Neon Overlay e Parallax */}
-      <motion.section 
-        className="relative py-20 px-4 bg-black"
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-        viewport={{ once: true }}
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-12 left-1/2 transform -translate-x-1/2"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <ArrowDown className="w-8 h-8 text-white/40" />
+        </motion.div>
+      </section>
+
+      {/* PREMI IN PALIO SECTION - Xavier Cusso Style */}
+      <section 
+        ref={(el) => el && (sectionsRef.current[0] = el)}
+        className="relative py-32 px-4 overflow-hidden"
       >
-        <div className="max-w-4xl mx-auto">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-cyan-900/20" />
+        
+        <div className="max-w-7xl mx-auto relative">
           <motion.div 
-            className="relative m1ssion-glass-card overflow-hidden bg-black/60 backdrop-blur-xl shadow-lg p-10"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.3 }}
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
           >
-            <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-              <motion.img 
-                src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
-                alt="M1SSION PREMI IN PALIO - MISSIONE UOMO"
-                className="w-full h-full object-cover rounded-lg shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                transition={{ duration: 0.5 }}
-              />
-              
-              {/* Neon Animated Overlay */}
-              <motion.div 
-                className="absolute inset-0 rounded-lg"
-                style={{
-                  background: "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
-                  mixBlendMode: "screen"
-                }}
-                animate={{
-                  background: [
-                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)",
-                    "linear-gradient(45deg, transparent 30%, rgba(255, 0, 255, 0.1) 50%, transparent 70%)",
-                    "linear-gradient(45deg, transparent 30%, rgba(0, 229, 255, 0.1) 50%, transparent 70%)"
-                  ]
-                }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              />
-              
-              {/* Disclaimer Overlay */}
-              <motion.div 
-                className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium"
-                initial={{ opacity: 0.7 }}
-                whileHover={{ opacity: 1 }}
-              >
-                Image for illustrative purposes only
-              </motion.div>
+            <h2 className="text-6xl md:text-7xl font-black mb-6 text-white leading-none">
+              PREMI<br />
+              <span className="text-cyan-400">REALI</span>
+            </h2>
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+              Non simulazioni. Non gettoni virtuali. Premi tangibili che puoi toccare, usare, possedere.
+            </p>
+          </motion.div>
+
+          <motion.div 
+            className="relative h-[60vh] rounded-3xl overflow-hidden bg-black/40 backdrop-blur-sm border border-white/10"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60" />
+            
+            <img 
+              src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
+              alt="M1SSION PREMI IN PALIO"
+              className="w-full h-full object-cover"
+            />
+            
+            {/* Animated scanner effect */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            />
+            
+            <div className="absolute bottom-6 right-6 px-4 py-2 bg-black/80 backdrop-blur-sm rounded-lg text-white/80 text-sm">
+              Immagine rappresentativa
             </div>
           </motion.div>
         </div>
-      </motion.section>
+      </section>
 
       {/* Launch Progress Bar - Animated */}
       <motion.section 
