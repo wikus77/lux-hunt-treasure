@@ -319,7 +319,7 @@ const LandingPage = () => {
           </motion.div>
           
           <motion.div 
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center overflow-visible"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 3 }}
@@ -372,8 +372,7 @@ const LandingPage = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-black mb-6 text-white leading-none">
-              PREMI<br />
-              <span className="text-cyan-400">REALI</span>
+              <span className="text-white">PREMI </span><span className="text-cyan-400">REALI</span>
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Non simulazioni. Non gettoni virtuali. Premi tangibili che puoi toccare, usare, possedere.
@@ -381,7 +380,7 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.div 
-            className="relative h-[60vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10"
+            className="relative h-[60vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
           >
@@ -401,7 +400,7 @@ const LandingPage = () => {
             />
             
             <div className="absolute bottom-6 right-6 px-4 py-2 bg-black/80 backdrop-blur-sm rounded-lg text-white/80 text-sm">
-              Immagine rappresentativa
+              Image for representation purposes
             </div>
           </motion.div>
         </div>
