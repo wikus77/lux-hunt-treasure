@@ -10,6 +10,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .font-orbitron {
+    font-family: "Orbitron", sans-serif;
+  }
+}
+
 @layer base {
   html, body {
     @apply bg-black text-white;
@@ -21,7 +27,8 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-orbitron font-semibold tracking-wide text-gradient-text;
+    font-family: "Orbitron", sans-serif;
+    @apply font-semibold tracking-wide text-gradient-text;
   }
 
   h1 { @apply text-3xl md:text-4xl mb-6; }

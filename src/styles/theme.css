@@ -80,7 +80,8 @@
 
 /* Mission heading - Updated to match landing page */
 .mission-heading {
-  @apply text-[#00D1FF] text-3xl sm:text-5xl font-orbitron font-light mb-6;
+  font-family: "Orbitron", sans-serif;
+  @apply text-[#00D1FF] text-3xl sm:text-5xl font-light mb-6;
   text-shadow: 0 0 15px rgba(0, 209, 255, 0.6), 0 0 30px rgba(0, 209, 255, 0.3);
   letter-spacing: 0.05em;
 }
@@ -192,7 +193,8 @@
 
 /* IT IS POSSIBLE motto */
 .mission-motto {
-  @apply text-xl sm:text-2xl text-yellow-400 font-orbitron font-light tracking-wider;
+  font-family: "Orbitron", sans-serif;
+  @apply text-xl sm:text-2xl text-yellow-400 font-light tracking-wider;
   text-shadow: 0 0 15px rgba(250, 204, 21, 0.5), 0 0 30px rgba(250, 204, 21, 0.3);
 }
 
