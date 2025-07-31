@@ -23,6 +23,7 @@ const LandingPage = () => {
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
   const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  const [imageLoaded, setImageLoaded] = useState(false);
   
   // Use landing page translations with device language detection
   const { t } = useLandingTranslations();
@@ -428,16 +429,21 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60" />
             
             <img 
-              src="/luxury-prizes.jpg" 
-              alt="M1SSION PREMI IN PALIO"
+              src="/lovable-uploads/eccb4710-0336-46f8-9137-906f61fbdebd.png" 
+              alt="M1SSION PREMI IN PALIO - Ferrari, Lamborghini, Rolex"
               className="w-full h-full object-cover object-center"
               style={{ 
                 objectFit: 'cover',
                 objectPosition: 'center',
                 aspectRatio: '16/9'
               }}
+              onLoad={() => {
+                console.log('✅ Immagine Premi in Palio caricata con successo');
+                setImageLoaded(true);
+              }}
               onError={(e) => {
-                console.log('❌ Immagine non trovata, caricamento fallback');
+                console.log('❌ Errore caricamento immagine, usando fallback');
+                setImageLoaded(false);
                 e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%23000'/%3E%3Ctext x='400' y='225' font-family='Arial, sans-serif' font-size='24' fill='%2300E5FF' text-anchor='middle' dy='.3em'%3EM1SSION PREMI IN PALIO%3C/text%3E%3C/svg%3E";
               }}
             />
@@ -449,9 +455,12 @@ const LandingPage = () => {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             
-            <div className="absolute bottom-4 right-4 text-white/90 text-sm font-medium bg-black/30 backdrop-blur-sm px-3 py-1 rounded-md border border-white/10">
-              {t('imageRepresentation')}
-            </div>
+            {/* Show text only if image not loaded or in case of error */}
+            {!imageLoaded && (
+              <div className="absolute bottom-4 right-4 text-white/90 text-sm font-medium bg-black/30 backdrop-blur-sm px-3 py-1 rounded-md border border-white/10">
+                {t('imageRepresentation')}
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
