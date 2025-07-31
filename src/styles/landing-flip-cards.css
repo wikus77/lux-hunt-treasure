@@ -37,10 +37,36 @@
   justify-content: center;
   text-align: center;
   padding: 1.5rem;
+  min-height: 16rem; /* h-64 = 256px = 16rem */
 }
 
 .mission-card-back {
   transform: rotateY(180deg);
+}
+
+/* Debug per verificare funzionamento */
+.mission-flip-card:hover {
+  cursor: pointer;
+}
+
+.mission-flip-card.is-flipped .mission-card-front {
+  opacity: 0;
+}
+
+.mission-flip-card.is-flipped .mission-card-back {
+  opacity: 1;
+}
+
+.mission-card-front {
+  opacity: 1;
+}
+
+.mission-card-back {
+  opacity: 0;
+}
+
+.mission-flip-card.is-flipped .mission-card-back {
+  opacity: 1;
 }
 
 /* Hover effects per desktop */

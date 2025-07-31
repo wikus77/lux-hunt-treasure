@@ -139,6 +139,7 @@ const LandingPage = () => {
 
   // Function to handle card flip - Solo una alla volta
   const handleCardClick = (index: number) => {
+    console.log(`🔄 Card ${index} clicked, current flipped:`, flippedCards);
     setFlippedCards(prev => 
       prev.includes(index) 
         ? [] // Se è già aperta, chiudi tutto
@@ -427,13 +428,17 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60" />
             
             <img 
-              src="/src/assets/luxury-prizes.jpg" 
+              src="/luxury-prizes.jpg" 
               alt="M1SSION PREMI IN PALIO"
               className="w-full h-full object-cover object-center"
               style={{ 
                 objectFit: 'cover',
                 objectPosition: 'center',
                 aspectRatio: '16/9'
+              }}
+              onError={(e) => {
+                console.log('❌ Immagine non trovata, caricamento fallback');
+                e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450' viewBox='0 0 800 450'%3E%3Crect width='800' height='450' fill='%23000'/%3E%3Ctext x='400' y='225' font-family='Arial, sans-serif' font-size='24' fill='%2300E5FF' text-anchor='middle' dy='.3em'%3EM1SSION PREMI IN PALIO%3C/text%3E%3C/svg%3E";
               }}
             />
             
@@ -643,42 +648,39 @@ const LandingPage = () => {
               return (
                 <motion.div
                   key={index}
-                  className="relative z-10"
+                  className="relative z-10 perspective-1000"
                   initial={{ y: 30, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <div className="mission-flip-card h-64 cursor-pointer" 
-                       onClick={() => handleCardClick(index)}>
-                    <motion.div
-                      className={`mission-flip-card ${isFlipped ? 'is-flipped' : ''}`}
-                      whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                    >
-                      <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-30">
-                        {index + 1}
-                      </span>
-                      
-                      {/* Front Side */}
-                      <div className="mission-card-front glass-card">
-                        <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
-                          {step.icon}
-                        </div>
-                        <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
-                        <p className="text-white/70 mb-4">{step.description}</p>
-                        <p className="text-cyan-400 text-sm">Clicca per saperne di più</p>
+                  <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-30">
+                    {index + 1}
+                  </span>
+                  
+                  <div 
+                    className={`mission-flip-card h-64 cursor-pointer ${isFlipped ? 'is-flipped' : ''}`}
+                    onClick={() => handleCardClick(index)}
+                  >
+                    {/* Front Side */}
+                    <div className="mission-card-front glass-card">
+                      <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
+                        {step.icon}
                       </div>
-                      
-                      {/* Back Side */}
-                      <div className="mission-card-back glass-card bg-gradient-to-br from-cyan-900/30 to-purple-900/30 border border-cyan-400/20">
-                        <div className="mb-3">
-                          {step.icon}
-                        </div>
-                        <h3 className="text-lg font-bold mb-3 text-cyan-400">{step.title}</h3>
-                        <p className="text-white/80 text-sm leading-relaxed">{step.details}</p>
-                        <p className="text-cyan-400 text-xs mt-4">Clicca per tornare indietro</p>
+                      <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
+                      <p className="text-white/70 mb-4 leading-relaxed">{step.description}</p>
+                      <p className="text-cyan-400 text-sm font-medium">Clicca per saperne di più</p>
+                    </div>
+                    
+                    {/* Back Side */}
+                    <div className="mission-card-back glass-card bg-gradient-to-br from-cyan-900/40 to-purple-900/40 border border-cyan-400/30">
+                      <div className="mb-3 p-2 rounded-full bg-cyan-400/20">
+                        {step.icon}
                       </div>
-                    </motion.div>
+                      <h3 className="text-lg font-bold mb-3 text-cyan-300">{step.title}</h3>
+                      <p className="text-white/90 text-sm leading-relaxed mb-4">{step.details}</p>
+                      <p className="text-cyan-300 text-xs font-medium">Clicca per tornare indietro</p>
+                    </div>
                   </div>
                 </motion.div>
               );
