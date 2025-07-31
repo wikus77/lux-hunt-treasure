@@ -20,39 +20,39 @@ const LandingPage = () => {
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
   
-  // Refs for GSAP animations
+  // Refs for GSAP animations and scroll-to-top
   const heroRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sectionsRef = useRef<HTMLElement[]>([]);
+  const [isTypingComplete, setIsTypingComplete] = useState(false);
 
   console.log('🌟 M1SSION™ LANDING PAGE - Xavier Cusso Style - Showing to anonymous user');
 
-  // GSAP Animations setup
+  // Optimized GSAP Animations setup
   useEffect(() => {
-    const tl = gsap.timeline();
-    
-    // Hero entrance animation
+    // Hero entrance animation with better performance
     if (titleRef.current) {
       gsap.fromTo(titleRef.current.children, 
         { y: 100, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.2, stagger: 0.2, ease: "power2.out" }
+        { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "power2.out" }
       );
     }
     
-    // Sections reveal on scroll
+    // Optimized sections reveal on scroll
     sectionsRef.current.forEach((section, index) => {
       if (section) {
         gsap.fromTo(section, 
-          { y: 50, opacity: 0 },
+          { y: 30, opacity: 0 },
           {
             y: 0, 
             opacity: 1, 
-            duration: 0.8,
+            duration: 0.6,
             scrollTrigger: {
               trigger: section,
-              start: "top 80%",
-              end: "bottom 20%",
-              toggleActions: "play none none reverse"
+              start: "top 85%",
+              end: "bottom 15%",
+              toggleActions: "play none none reverse",
+              fastScrollEnd: true
             }
           }
         );
@@ -61,6 +61,31 @@ const LandingPage = () => {
 
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+    };
+  }, []);
+
+  // Mobile scroll-to-top functionality
+  useEffect(() => {
+    const handleStatusBarTap = (e: TouchEvent) => {
+      // Detect tap on status bar area (top 44px of screen)
+      if (e.touches[0].clientY <= 44 && window.scrollY > 100) {
+        e.preventDefault();
+        window.scrollTo({ 
+          top: 0, 
+          behavior: 'smooth' 
+        });
+      }
+    };
+
+    // Add event listener for mobile devices
+    if ('ontouchstart' in window) {
+      document.addEventListener('touchstart', handleStatusBarTap, { passive: false });
+    }
+
+    return () => {
+      if ('ontouchstart' in window) {
+        document.removeEventListener('touchstart', handleStatusBarTap);
+      }
     };
   }, []);
 
@@ -305,34 +330,31 @@ const LandingPage = () => {
           </motion.p>
           
           <motion.div 
-            className="text-yellow-300 text-lg md:text-xl tracking-[0.5em] mb-16 relative overflow-hidden font-light"
+            className="text-yellow-300 text-lg md:text-xl tracking-[0.5em] mb-16 relative font-light"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 2.5 }}
           >
-            <motion.span
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-              animate={{ x: ["-100%", "100%"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            />
-            IT IS POSSIBLE
+            <TypingEffect text="IT IS POSSIBLE" onComplete={() => setIsTypingComplete(true)} />
           </motion.div>
           
           <motion.div 
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center overflow-visible"
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 3 }}
+            style={{ overflow: 'visible' }}
           >
             <motion.button 
-              className="px-12 py-6 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-500 relative overflow-hidden group"
+              className="px-12 py-6 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-300 relative group"
               onClick={handleRegisterClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              style={{ overflow: 'visible' }}
             >
               <span className="relative z-10">JOIN THE HUNT</span>
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"
               />
             </motion.button>
             
@@ -340,6 +362,7 @@ const LandingPage = () => {
               className="px-12 py-6 rounded-full text-white font-black uppercase tracking-wider bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-cyan-400/50 hover:text-cyan-400 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              style={{ overflow: 'visible' }}
             >
               LEARN MORE
             </motion.button>
@@ -399,7 +422,7 @@ const LandingPage = () => {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             
-            <div className="absolute bottom-6 right-6 px-4 py-2 bg-black/80 backdrop-blur-sm rounded-lg text-white/80 text-sm">
+            <div className="absolute bottom-6 right-6 text-white/80 text-sm font-medium">
               Image for representation purposes
             </div>
           </motion.div>
@@ -887,6 +910,38 @@ const LandingPage = () => {
         </div>
       )}
     </div>
+  );
+};
+
+// Typing Effect Component
+const TypingEffect: React.FC<{ text: string; onComplete?: () => void }> = ({ text, onComplete }) => {
+  const [displayText, setDisplayText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, 120); // Smooth typing speed
+      
+      return () => clearTimeout(timer);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [currentIndex, text, onComplete]);
+
+  return (
+    <span className="inline-block">
+      {displayText}
+      {currentIndex < text.length && (
+        <motion.span
+          className="inline-block w-0.5 h-6 bg-yellow-300 ml-1"
+          animate={{ opacity: [1, 0] }}
+          transition={{ duration: 0.5, repeat: Infinity, ease: "easeInOut" }}
+        />
+      )}
+    </span>
   );
 };
 
