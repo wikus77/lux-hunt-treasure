@@ -265,13 +265,13 @@ const LandingPage = () => {
       {/* HERO SECTION - Xavier Cusso Style */}
       <section 
         ref={heroRef}
-        className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-20"
+        className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-4 py-20 overflow-hidden"
       >
         {/* Main Title */}
         <div className="z-10 max-w-6xl mx-auto">
           <h1 
             ref={titleRef}
-            className="text-8xl md:text-9xl lg:text-[12rem] font-black leading-none mb-6"
+            className="text-6xl md:text-7xl lg:text-[8rem] font-black leading-none mb-6"
           >
             <div className="overflow-hidden">
               <span className="text-cyan-400 glow-text block drop-shadow-[0_0_30px_rgba(0,229,255,0.8)]">
@@ -325,7 +325,7 @@ const LandingPage = () => {
             transition={{ duration: 0.8, delay: 3 }}
           >
             <motion.button 
-              className="px-12 py-6 bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-500 relative overflow-hidden group"
+              className="px-12 py-6 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-500 relative overflow-hidden group"
               onClick={handleRegisterClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -337,7 +337,7 @@ const LandingPage = () => {
             </motion.button>
             
             <motion.button 
-              className="px-12 py-6 text-white font-black uppercase tracking-wider bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-cyan-400/50 hover:text-cyan-400 transition-all duration-300"
+              className="px-12 py-6 rounded-full text-white font-black uppercase tracking-wider bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-cyan-400/50 hover:text-cyan-400 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -359,7 +359,7 @@ const LandingPage = () => {
       {/* PREMI IN PALIO SECTION - Xavier Cusso Style */}
       <section 
         ref={(el) => el && (sectionsRef.current[0] = el)}
-        className="relative py-32 px-4 overflow-hidden"
+        className="relative py-32 px-4"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-cyan-900/20" />
         
@@ -371,7 +371,7 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-6xl md:text-7xl font-black mb-6 text-white leading-none">
+            <h2 className="text-4xl md:text-5xl font-black mb-6 text-white leading-none">
               PREMI<br />
               <span className="text-cyan-400">REALI</span>
             </h2>
@@ -381,7 +381,7 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.div 
-            className="relative h-[60vh] rounded-3xl overflow-hidden bg-black/40 backdrop-blur-sm border border-white/10"
+            className="relative h-[60vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
           >
@@ -643,7 +643,7 @@ const LandingPage = () => {
 
       {/* SUBSCRIPTION SECTION - MODIFICATO: Allineamento singola riga */}
       <section className="py-16 px-4 bg-black relative">
-        <div className="absolute inset-0 bg-[url('/public/images/grid-pattern.png')] opacity-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black opacity-80"></div>
         
         <div className="relative z-10 max-w-7xl mx-auto">
           <motion.div
