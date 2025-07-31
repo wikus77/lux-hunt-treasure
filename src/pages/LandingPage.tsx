@@ -7,9 +7,11 @@ import { UserPlus, Info, IdCard, UserCheck, Check, MapPin, Award, X, Sparkles, A
 import PrizeDetailsModal from "@/components/landing/PrizeDetailsModal";
 import LandingFooter from "@/components/landing/LandingFooter";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
+import CookieBanner from "@/components/gdpr/CookieBanner";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLandingTranslations } from "@/hooks/useLandingTranslations";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,6 +21,9 @@ const LandingPage = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
+  
+  // Use landing page translations with device language detection
+  const { t } = useLandingTranslations();
   
   // Refs for GSAP animations and scroll-to-top
   const heroRef = useRef<HTMLElement>(null);
@@ -311,12 +316,13 @@ const LandingPage = () => {
           </h1>
           
           <motion.p 
-            className="text-2xl md:text-3xl text-gray-300 font-black tracking-[0.3em] mb-12 uppercase"
+            className="text-2xl md:text-3xl font-light tracking-[0.3em] mb-12 uppercase"
+            style={{ color: '#00FF00' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1.5 }}
           >
-            MISSION START
+            M1SSION STARTS ON 19 AUGUST
           </motion.p>
           
           <motion.p 
@@ -325,8 +331,7 @@ const LandingPage = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 2 }}
           >
-            Un premio attende chi sa vedere oltre. Gli indizi non sono nascosti: sono camuffati. 
-            Serve logica, freddezza e visione. La sfida è iniziata.
+            {t('heroDescription')}
           </motion.p>
           
           <motion.div 
@@ -343,16 +348,14 @@ const LandingPage = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 3 }}
-            style={{ overflow: 'visible' }}
           >
             <motion.button 
               className="px-12 py-6 rounded-full bg-gradient-to-r from-cyan-400 to-purple-600 text-black text-xl font-black uppercase tracking-wider hover:shadow-[0_0_40px_rgba(34,211,238,0.8)] transition-all duration-300 relative group"
               onClick={handleRegisterClick}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{ overflow: 'visible' }}
             >
-              <span className="relative z-10">JOIN THE HUNT</span>
+              <span className="relative z-10">{t('joinTheHunt')}</span>
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-purple-600 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"
               />
@@ -362,9 +365,8 @@ const LandingPage = () => {
               className="px-12 py-6 rounded-full text-white font-black uppercase tracking-wider bg-white/5 border-2 border-white/20 hover:bg-white/10 hover:border-cyan-400/50 hover:text-cyan-400 transition-all duration-300"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              style={{ overflow: 'visible' }}
             >
-              LEARN MORE
+              {t('learnMore')}
             </motion.button>
           </motion.div>
         </div>
@@ -395,10 +397,10 @@ const LandingPage = () => {
             viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-black mb-6 text-white leading-none">
-              <span className="text-white">PREMI </span><span className="text-cyan-400">REALI</span>
+              {t('realPrizes')}
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Non simulazioni. Non gettoni virtuali. Premi tangibili che puoi toccare, usare, possedere.
+              {t('realPrizesDescription')}
             </p>
           </motion.div>
 
@@ -410,7 +412,7 @@ const LandingPage = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-transparent to-purple-500/20 opacity-60" />
             
             <img 
-              src="/lovable-uploads/12d4f02b-454c-41c7-b5b3-6aa5a5975086.png" 
+              src="/src/assets/luxury-prizes.jpg" 
               alt="M1SSION PREMI IN PALIO"
               className="w-full h-full object-cover"
             />
@@ -422,8 +424,8 @@ const LandingPage = () => {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             
-            <div className="absolute bottom-6 right-6 text-white/80 text-sm font-medium">
-              Image for representation purposes
+            <div className="absolute bottom-6 right-6 text-white/80 text-sm font-medium bg-black/20 backdrop-blur-sm px-2 py-1 rounded">
+              {t('imageRepresentation')}
             </div>
           </motion.div>
         </div>
@@ -815,6 +817,9 @@ const LandingPage = () => {
 
       {/* Footer */}
       <LandingFooter />
+      
+      {/* GDPR Cookie Banner */}
+      <CookieBanner />
 
       {/* Emergency Admin Login Modal */}
       {showEmergencyLogin && (
