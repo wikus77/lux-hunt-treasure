@@ -21,6 +21,7 @@ const LandingPage = () => {
   const [showAgeVerification, setShowAgeVerification] = useState(false);
   const [showInviteFriend, setShowInviteFriend] = useState(false);
   const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
   
   // Use landing page translations with device language detection
   const { t } = useLandingTranslations();
@@ -135,27 +136,40 @@ const LandingPage = () => {
     setShowInviteFriend(true);
   };
 
+  // Function to handle card flip
+  const handleCardClick = (index: number) => {
+    setFlippedCards(prev => 
+      prev.includes(index) 
+        ? prev.filter(i => i !== index)
+        : [...prev.filter(i => i !== index), index]
+    );
+  };
+
   // Step data for "Scopri M1SSION" section
   const steps = [
     {
       icon: <UserCheck className="w-8 h-8 text-[#00E5FF]" />,
       title: "Registrazione",
-      description: "Crea il tuo account su M1SSION e preparati alla sfida"
+      description: "Crea il tuo account su M1SSION e preparati alla sfida",
+      details: "Accesso gratuito con il piano Base. Scegli tra 5 piani di abbonamento per accedere a indizi premium, eventi esclusivi e vantaggi unici. La registrazione include verifica dell'identità per garantire sicurezza e conformità normativa."
     },
     {
       icon: <Check className="w-8 h-8 text-[#00E5FF]" />,
       title: "Ricevi Indizi", 
-      description: "Ogni settimana ricevi nuovi indizi via app ed email"
+      description: "Ogni settimana ricevi nuovi indizi via app ed email",
+      details: "Gli indizi arrivano attraverso notifiche push, email crittografate e aggiornamenti in-app. Ogni piano offre un numero diverso di indizi settimanali: dal piano Base (1 indizio) al Titanium (8 indizi totali)."
     },
     {
       icon: <MapPin className="w-8 h-8 text-[#FFC107]" />,
       title: "Risolvi la Missione",
-      description: "Analizza gli indizi e trova la posizione del premio"
+      description: "Analizza gli indizi e trova la posizione del premio",
+      details: "Usa la mappa interattiva, decrittografa i codici, analizza pattern e coordinate GPS. Gli indizi sono interconnessi e richiedono logica, intuito e capacità di analisi per rivelare la posizione finale del tesoro."
     },
     {
       icon: <Award className="w-8 h-8 text-[#FF00FF]" />,
       title: "Vinci davvero",
-      description: "Se sei il primo a trovare il premio, diventa tuo!"
+      description: "Se sei il primo a trovare il premio, diventa tuo!",
+      details: "I premi sono reali: auto di lusso, orologi, gioielli e altri oggetti di valore. Solo il primo che raggiunge la posizione esatta e completa la verifica finale ottiene il premio. Nessuna simulazione, solo vittorie concrete."
     }
   ];
 
@@ -405,7 +419,7 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.div 
-            className="relative h-[60vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden"
+            className="relative h-[60vh] md:h-[70vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
           >
@@ -414,7 +428,11 @@ const LandingPage = () => {
             <img 
               src="/src/assets/luxury-prizes.jpg" 
               alt="M1SSION PREMI IN PALIO"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
+              style={{ 
+                objectFit: 'cover',
+                aspectRatio: '16/9'
+              }}
             />
             
             {/* Animated scanner effect */}
@@ -617,28 +635,55 @@ const LandingPage = () => {
             {/* Linea connettore per desktop */}
             <div className="hidden lg:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[#00E5FF] via-[#FFC107] to-[#FF00FF] z-0"></div>
             
-            {steps.map((step, index) => (
-              <motion.div
-                key={index}
-                className="glass-card relative z-10"
-                initial={{ y: 30, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
-              >
-                <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-20">
-                  {index + 1}
-                </span>
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
-                  <p className="text-white/70">{step.description}</p>
-                </div>
-              </motion.div>
-            ))}
+            {steps.map((step, index) => {
+              const isFlipped = flippedCards.includes(index);
+              
+              return (
+                <motion.div
+                  key={index}
+                  className="relative z-10 perspective-1000"
+                  initial={{ y: 30, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <motion.div
+                    className="glass-card relative h-64 cursor-pointer transform-style-3d transition-transform duration-700"
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                    }}
+                    onClick={() => handleCardClick(index)}
+                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                  >
+                    <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-30">
+                      {index + 1}
+                    </span>
+                    
+                    {/* Front Side */}
+                    <div className="absolute inset-0 backface-hidden flex flex-col items-center text-center p-6 justify-center">
+                      <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
+                        {step.icon}
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
+                      <p className="text-white/70 mb-4">{step.description}</p>
+                      <p className="text-cyan-400 text-sm">Clicca per saperne di più</p>
+                    </div>
+                    
+                    {/* Back Side */}
+                    <div className="absolute inset-0 backface-hidden p-6 flex flex-col justify-center text-center bg-gradient-to-br from-cyan-900/30 to-purple-900/30 border border-cyan-400/20 rounded-xl"
+                         style={{ transform: 'rotateY(180deg)' }}>
+                      <div className="mb-3">
+                        {step.icon}
+                      </div>
+                      <h3 className="text-lg font-bold mb-3 text-cyan-400">{step.title}</h3>
+                      <p className="text-white/80 text-sm leading-relaxed">{step.details}</p>
+                      <p className="text-cyan-400 text-xs mt-4">Clicca per tornare indietro</p>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="text-center">
