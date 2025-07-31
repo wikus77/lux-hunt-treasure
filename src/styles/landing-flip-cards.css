@@ -1,0 +1,62 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* Landing Page Flip Cards - Fix per container interattivi */
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+.mission-flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s ease-in-out;
+  transform-style: preserve-3d;
+}
+
+.mission-flip-card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+.mission-card-front, .mission-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.mission-card-back {
+  transform: rotateY(180deg);
+}
+
+/* Hover effects per desktop */
+@media (hover: hover) {
+  .mission-flip-card:hover {
+    transform: scale(1.02);
+  }
+  
+  .mission-flip-card.is-flipped:hover {
+    transform: rotateY(180deg) scale(1.02);
+  }
+}
+
+/* Disable text selection per evitare glitch */
+.mission-flip-card, .mission-card-front, .mission-card-back {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}

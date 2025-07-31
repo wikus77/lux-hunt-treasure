@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useLandingTranslations } from "@/hooks/useLandingTranslations";
+import "../styles/landing-flip-cards.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -136,12 +137,12 @@ const LandingPage = () => {
     setShowInviteFriend(true);
   };
 
-  // Function to handle card flip
+  // Function to handle card flip - Solo una alla volta
   const handleCardClick = (index: number) => {
     setFlippedCards(prev => 
       prev.includes(index) 
-        ? prev.filter(i => i !== index)
-        : [...prev.filter(i => i !== index), index]
+        ? [] // Se è già aperta, chiudi tutto
+        : [index] // Altrimenti apri solo questa
     );
   };
 
@@ -419,7 +420,7 @@ const LandingPage = () => {
           </motion.div>
 
           <motion.div 
-            className="relative h-[60vh] md:h-[70vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden"
+            className="relative h-[40vh] md:h-[50vh] lg:h-[60vh] rounded-3xl bg-black/40 backdrop-blur-sm border border-white/10 overflow-hidden"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.5 }}
           >
@@ -431,6 +432,7 @@ const LandingPage = () => {
               className="w-full h-full object-cover object-center"
               style={{ 
                 objectFit: 'cover',
+                objectPosition: 'center',
                 aspectRatio: '16/9'
               }}
             />
@@ -442,7 +444,7 @@ const LandingPage = () => {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             
-            <div className="absolute bottom-6 right-6 text-white/80 text-sm font-medium bg-black/20 backdrop-blur-sm px-2 py-1 rounded">
+            <div className="absolute bottom-4 right-4 text-white/90 text-sm font-medium bg-black/30 backdrop-blur-sm px-3 py-1 rounded-md border border-white/10">
               {t('imageRepresentation')}
             </div>
           </motion.div>
@@ -641,46 +643,43 @@ const LandingPage = () => {
               return (
                 <motion.div
                   key={index}
-                  className="relative z-10 perspective-1000"
+                  className="relative z-10"
                   initial={{ y: 30, opacity: 0 }}
                   whileInView={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <motion.div
-                    className="glass-card relative h-64 cursor-pointer transform-style-3d transition-transform duration-700"
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
-                    }}
-                    onClick={() => handleCardClick(index)}
-                    whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                  >
-                    <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-30">
-                      {index + 1}
-                    </span>
-                    
-                    {/* Front Side */}
-                    <div className="absolute inset-0 backface-hidden flex flex-col items-center text-center p-6 justify-center">
-                      <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
-                        {step.icon}
+                  <div className="mission-flip-card h-64 cursor-pointer" 
+                       onClick={() => handleCardClick(index)}>
+                    <motion.div
+                      className={`mission-flip-card ${isFlipped ? 'is-flipped' : ''}`}
+                      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+                    >
+                      <span className="absolute -top-4 -left-4 w-10 h-10 rounded-full bg-black border border-white/10 flex items-center justify-center font-bold text-white z-30">
+                        {index + 1}
+                      </span>
+                      
+                      {/* Front Side */}
+                      <div className="mission-card-front glass-card">
+                        <div className="mb-4 p-3 rounded-full bg-black/50 border border-white/10">
+                          {step.icon}
+                        </div>
+                        <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
+                        <p className="text-white/70 mb-4">{step.description}</p>
+                        <p className="text-cyan-400 text-sm">Clicca per saperne di più</p>
                       </div>
-                      <h3 className="text-xl font-bold mb-2 text-white">{step.title}</h3>
-                      <p className="text-white/70 mb-4">{step.description}</p>
-                      <p className="text-cyan-400 text-sm">Clicca per saperne di più</p>
-                    </div>
-                    
-                    {/* Back Side */}
-                    <div className="absolute inset-0 backface-hidden p-6 flex flex-col justify-center text-center bg-gradient-to-br from-cyan-900/30 to-purple-900/30 border border-cyan-400/20 rounded-xl"
-                         style={{ transform: 'rotateY(180deg)' }}>
-                      <div className="mb-3">
-                        {step.icon}
+                      
+                      {/* Back Side */}
+                      <div className="mission-card-back glass-card bg-gradient-to-br from-cyan-900/30 to-purple-900/30 border border-cyan-400/20">
+                        <div className="mb-3">
+                          {step.icon}
+                        </div>
+                        <h3 className="text-lg font-bold mb-3 text-cyan-400">{step.title}</h3>
+                        <p className="text-white/80 text-sm leading-relaxed">{step.details}</p>
+                        <p className="text-cyan-400 text-xs mt-4">Clicca per tornare indietro</p>
                       </div>
-                      <h3 className="text-lg font-bold mb-3 text-cyan-400">{step.title}</h3>
-                      <p className="text-white/80 text-sm leading-relaxed">{step.details}</p>
-                      <p className="text-cyan-400 text-xs mt-4">Clicca per tornare indietro</p>
-                    </div>
-                  </motion.div>
+                    </motion.div>
+                  </div>
                 </motion.div>
               );
             })}
