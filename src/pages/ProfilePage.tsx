@@ -22,8 +22,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/use-auth';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { preserveFunctionName } from '@/utils/pwaStubs';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowRight } from 'lucide-react';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useAuth } from '@/hooks/use-auth';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

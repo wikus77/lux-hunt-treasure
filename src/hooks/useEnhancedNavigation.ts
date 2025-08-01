@@ -1,12 +1,12 @@
 // M1SSION™ - Enhanced Navigation Hook for iOS Capacitor
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { useCapacitorHardware } from './useCapacitorHardware';
-import { explicitNavigationHandler, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { usePWAHardware } from './usePWAHardware';
+import { pwaNavigationHandler, preserveFunctionName } from '@/utils/pwaStubs';
 
 export const useEnhancedNavigation = () => {
   const { navigate, currentPath: location } = useWouterNavigation();
-  const { isCapacitor, vibrate } = useCapacitorHardware();
+  const { isPWA, vibrate } = usePWAHardware();
   const { setCurrentTab, addToHistory, goBack } = useNavigationStore();
 
   // Enhanced navigation with haptic feedback and iOS optimizations
@@ -15,7 +15,7 @@ export const useEnhancedNavigation = () => {
       console.log('🧭 Enhanced navigation to:', path);
       
       // Haptic feedback on navigation (iOS)
-      if (options?.haptic !== false && isCapacitor) {
+      if (options?.haptic !== false && isPWA) {
         await vibrate(50);
       }
       
@@ -26,8 +26,8 @@ export const useEnhancedNavigation = () => {
       // Navigate using Wouter
       navigate(path, options);
       
-      // iOS scroll fix
-      if (isCapacitor) {
+      // PWA scroll fix
+      if (isPWA) {
         setTimeout(() => {
           window.scrollTo(0, 0);
         }, 100);
@@ -42,7 +42,7 @@ export const useEnhancedNavigation = () => {
       console.log('🧭 Enhanced back navigation');
       
       // Haptic feedback
-      if (options?.haptic !== false && isCapacitor) {
+      if (options?.haptic !== false && isPWA) {
         await vibrate(30);
       }
       
@@ -50,8 +50,8 @@ export const useEnhancedNavigation = () => {
       if (typeof window !== 'undefined' && window.history.length > 1) {
         window.history.back();
         
-        // iOS scroll fix
-        if (isCapacitor) {
+        // PWA scroll fix
+        if (isPWA) {
           setTimeout(() => {
             window.scrollTo(0, 0);
           }, 100);
@@ -100,7 +100,7 @@ export const useEnhancedNavigation = () => {
   const navigationState = {
     currentPath: location,
     currentTab: getCurrentTab(),
-    isCapacitor,
+    isPWA,
     canGoBack: window.history.length > 1,
   };
 

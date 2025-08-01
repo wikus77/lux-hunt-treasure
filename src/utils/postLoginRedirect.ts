@@ -1,7 +1,7 @@
 // M1SSION™ - Post Login Redirect Logic for iOS Capacitor
 import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { detectCapacitorEnvironment, preserveFunctionName } from '@/utils/iosCapacitorFunctions';
+import { detectPWAEnvironment, preserveFunctionName } from '@/utils/pwaStubs';
 
 export interface PostLoginOptions {
   navigate: NavigateFunction;
@@ -26,7 +26,7 @@ export interface ProfileData {
  */
 export const handlePostLoginRedirect = preserveFunctionName(async (options: PostLoginOptions) => {
   const { navigate, defaultRoute = '/home', skipProfileCheck = false, forceRoute } = options;
-  const isCapacitor = detectCapacitorEnvironment();
+  const isCapacitor = detectPWAEnvironment();
 
   console.log('🔄 Post-login redirect:', {
     defaultRoute,
@@ -263,7 +263,7 @@ const generateAgentCode = (): string => {
  * Handle logout redirect
  */
 export const handleLogoutRedirect = preserveFunctionName(async (navigate: NavigateFunction) => {
-  const isCapacitor = detectCapacitorEnvironment();
+  const isCapacitor = detectPWAEnvironment();
   
   console.log('🚪 Handling logout redirect');
   

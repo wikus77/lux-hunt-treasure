@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { explicitNavigationHandler } from '@/utils/iosCapacitorFunctions';
+import { pwaNavigationHandler } from '@/utils/pwaStubs';
 
 interface AppInitializationState {
   isInitialized: boolean;

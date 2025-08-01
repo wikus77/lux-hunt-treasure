@@ -20,8 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { preserveFunctionName } from '@/utils/pwaStubs';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 
 interface LeaderboardUser {

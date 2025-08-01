@@ -17,8 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { preserveFunctionName } from '@/utils/pwaStubs';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 
 interface Clue {
