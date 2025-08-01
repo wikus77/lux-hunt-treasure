@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { preserveFunctionName } from '@/utils/pwaStubs';
-import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 
 interface Clue {
@@ -42,7 +42,7 @@ export const ClueDetail: React.FC<ClueDetailProps> = ({
   open,
   onOpenChange
 }) => {
-  const { vibrate } = usePWAHardware();
+  const { vibrate } = usePWAHardwareStub();
 
   // Copy clue text to clipboard
   const copyClueText = preserveFunctionName(async () => {

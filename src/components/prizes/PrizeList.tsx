@@ -9,7 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { PrizeClueModal } from './PrizeClueModal';
 import { preserveFunctionName } from '@/utils/pwaStubs';
-import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 
 interface Prize {
   id: string;
@@ -33,7 +33,7 @@ export const PrizeList: React.FC = () => {
   const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
-  const { vibrate } = usePWAHardware();
+  const { vibrate } = usePWAHardwareStub();
 
   // Load prizes with clue information
   const loadPrizes = preserveFunctionName(async () => {

@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { preserveFunctionName } from '@/utils/pwaStubs';
-import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 
 interface HowItWorksStep {
   id: number;
@@ -90,7 +90,7 @@ const steps: HowItWorksStep[] = [
 export const HowItWorksPage: React.FC = () => {
   const [activeStep, setActiveStep] = useState(1);
   const { navigateWithFeedback } = useEnhancedNavigation();
-  const { vibrate } = usePWAHardware();
+  const { vibrate } = usePWAHardwareStub();
 
   // Handle step selection
   const handleStepSelect = preserveFunctionName(async (stepId: number) => {

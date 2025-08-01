@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { preserveFunctionName } from '@/utils/pwaStubs';
-import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 
 interface GameCard {
@@ -101,7 +101,7 @@ const gamesList: GameCard[] = [
 export const GamesPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState<GameCard | null>(null);
   const { navigateWithFeedback } = useEnhancedNavigation();
-  const { vibrate } = usePWAHardware();
+  const { vibrate } = usePWAHardwareStub();
 
   // Handle game selection
   const handleGameSelect = preserveFunctionName(async (game: GameCard) => {

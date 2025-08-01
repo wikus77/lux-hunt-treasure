@@ -23,7 +23,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useEnhancedNavigation } from '@/hooks/useEnhancedNavigation';
 import { supabase } from '@/integrations/supabase/client';
 import { preserveFunctionName } from '@/utils/pwaStubs';
-import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 import { useProfileSubscription } from '@/hooks/profile/useProfileSubscription';
 
@@ -53,7 +53,7 @@ export const ProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
   const { navigateWithFeedback, toHome } = useEnhancedNavigation();
-  const { vibrate } = usePWAHardware();
+  const { vibrate } = usePWAHardwareStub();
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase
   const { subscription } = useProfileSubscription();
 

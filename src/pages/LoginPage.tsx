@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, Mail, Lock, User, Shield, ArrowRight } from 'lucide-react';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useAuth } from '@/hooks/use-auth';
-import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +33,7 @@ const LoginPage: React.FC = () => {
   const { navigate } = useWouterNavigation();
   const searchParams = new URLSearchParams(window.location.search);
   const { login, register, user, isLoading: authLoading } = useAuth();
-  const { vibrate } = usePWAHardware();
+  const { vibrate } = usePWAHardwareStub();
   const { toast } = useToast();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
