@@ -96,22 +96,28 @@ const renderApp = () => {
     
     console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
     
-    // Hide Capacitor splash screen after React app is mounted
+    // Hide Capacitor splash screen only if actually in Capacitor environment
     const hideSplashScreen = async () => {
       try {
+        // STRICT CHECK: Only run if actually in Capacitor environment
         if (typeof window !== 'undefined' && 
-            (window.location.protocol === 'capacitor:' || (window as any).Capacitor)) {
+            window.location.protocol === 'capacitor:' && 
+            (window as any).Capacitor?.SplashScreen) {
           console.log("🔄 Hiding Capacitor splash screen...");
           await SplashScreen.hide();
           console.log("✅ Capacitor splash screen hidden successfully");
+        } else {
+          console.log("✅ Not Capacitor environment, skipping splash screen hide");
         }
       } catch (error) {
         console.warn("⚠️ Could not hide splash screen:", error);
       }
     };
     
-    // Hide splash screen with a small delay to ensure app is fully rendered
-    setTimeout(hideSplashScreen, 1000);
+    // Hide splash screen only in Capacitor
+    if (typeof window !== 'undefined' && window.location.protocol === 'capacitor:') {
+      setTimeout(hideSplashScreen, 1000);
+    }
   } catch (error) {
     console.error("💥 CRITICAL ERROR RENDERING APP:", error);
     
