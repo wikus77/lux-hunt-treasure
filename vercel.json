@@ -41,9 +41,8 @@
       ]
     }
   ],
-  "functions": {
-    "app/[[...routes]].tsx": {
-      "maxDuration": 30
-    }
-  }
+  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "installCommand": "npm install"
 }

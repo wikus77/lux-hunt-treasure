@@ -108,7 +108,7 @@ export default defineConfig(({ mode }) => ({
     outDir: 'dist',
     assetsDir: 'assets',
     target: 'es2020',
-    minify: mode === 'production' ? 'esbuild' : false,
+    minify: mode === 'production' ? 'terser' : false,
     sourcemap: mode === 'development',
     rollupOptions: {
       output: {
@@ -139,7 +139,7 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false,
     terserOptions: {
       compress: {
-        drop_console: mode === 'production',
+        drop_console: false, // Keep console for error debugging
         drop_debugger: true,
         pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
       },
