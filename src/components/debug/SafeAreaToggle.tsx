@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff } from 'lucide-react';
-import { detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
+import { detectPWAEnvironment } from '@/utils/pwaStubs';
 
 interface SafeAreaToggleProps {
   children: React.ReactNode;
@@ -17,7 +17,7 @@ export const SafeAreaToggle: React.FC<SafeAreaToggleProps> = ({
   initialVisible = false
 }) => {
   const [visible, setVisible] = useState(initialVisible);
-  const isCapacitor = detectCapacitorEnvironment();
+  const isCapacitor = detectPWAEnvironment();
 
   const handleToggle = () => {
     const newVisible = !visible;

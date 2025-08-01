@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 import { useAbuseProtection } from './useAbuseProtection';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';

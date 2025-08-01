@@ -1,7 +1,7 @@
 
 // M1SSION™ - iOS Safe Area Debug Overlay
 import React, { useEffect, useState } from 'react';
-import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
+import { getPWASafeAreaInsets, detectPWAEnvironment } from '@/utils/pwaStubs';
 
 interface IOSSafeAreaOverlayProps {
   children: React.ReactNode;
@@ -19,9 +19,9 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
 
   useEffect(() => {
     const updateSafeArea = () => {
-      const insets = getSafeAreaInsets();
+      const insets = getPWASafeAreaInsets();
       setSafeArea(insets);
-      setIsCapacitor(detectCapacitorEnvironment());
+      setIsCapacitor(detectPWAEnvironment());
     };
 
     updateSafeArea();

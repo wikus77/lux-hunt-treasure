@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { PrizeClueModal } from './PrizeClueModal';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { preserveFunctionName } from '@/utils/pwaStubs';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 
 interface Prize {
   id: string;

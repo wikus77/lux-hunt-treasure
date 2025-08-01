@@ -7,14 +7,14 @@ export { useToast } from './use-toast';
 export { useIsMobile } from './use-mobile';
 
 // Navigation hooks
-export { useCapacitorNavigation } from './useCapacitorNavigation';
+export { usePWANavigation } from './usePWANavigation';
 export { useEnhancedNavigation } from './useEnhancedNavigation';
 
 // App initialization
 export { useAppInitialization } from './useAppInitialization';
 
-// Hardware integration
-export { useCapacitorHardware } from './useCapacitorHardware';
+// Hardware integration  
+export { usePWAHardware } from './usePWAHardware';
 
 // Utilities
 export { useDebounce } from './useDebounce';

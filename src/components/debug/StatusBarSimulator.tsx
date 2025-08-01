@@ -1,7 +1,7 @@
 
 // M1SSION™ - Status Bar Simulator for Development
 import React, { useEffect, useState } from 'react';
-import { detectCapacitorEnvironment, getDeviceOrientation } from '@/utils/iosCapacitorFunctions';
+import { detectPWAEnvironment, getPWADeviceOrientation } from '@/utils/pwaStubs';
 
 interface StatusBarSimulatorProps {
   visible?: boolean;
@@ -14,11 +14,11 @@ export const StatusBarSimulator: React.FC<StatusBarSimulatorProps> = ({
 }) => {
   const [orientation, setOrientation] = useState('portrait');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const isCapacitor = detectCapacitorEnvironment();
+  const isCapacitor = detectPWAEnvironment();
 
   useEffect(() => {
     const updateOrientation = () => {
-      setOrientation(getDeviceOrientation());
+      setOrientation(getPWADeviceOrientation());
     };
 
     const updateTime = () => {

@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { SafeAreaWrapper } from "./SafeAreaWrapper";
 import UnifiedHeader from "./UnifiedHeader";
 import BottomNavigation from "./BottomNavigation";
-import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
+import { detectPWAEnvironment } from "@/utils/pwaStubs";
 import CookieBanner from "@/components/legal/CookieBanner";
 
 interface GlobalLayoutProps {
@@ -16,7 +16,7 @@ interface GlobalLayoutProps {
  */
 const GlobalLayout: React.FC<GlobalLayoutProps> = ({ children }) => {
   const [location] = useLocation();
-  const isCapacitor = detectCapacitorEnvironment();
+  const isCapacitor = detectPWAEnvironment();
   
   // Routes that should hide navigation
   const hideNavigationRoutes = [
