@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
-import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
 import { useAbuseProtection } from './useAbuseProtection';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
@@ -20,7 +20,7 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
   const [buzzing, setBuzzing] = useState(false);
   const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
-  const { vibrate } = useCapacitorHardware();
+  const { vibrate } = usePWAHardware();
   const { checkAbuseAndLog } = useAbuseProtection();
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();

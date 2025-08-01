@@ -31,5 +31,8 @@ export const usePWAHardwareStub = () => {
   };
 };
 
+// Main export
+export const usePWAHardware = usePWAHardwareStub;
+
 // Backward compatibility
 export const useCapacitorHardware = usePWAHardwareStub;

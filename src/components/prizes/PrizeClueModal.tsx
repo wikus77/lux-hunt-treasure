@@ -21,7 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { preserveFunctionName } from '@/utils/pwaStubs';
-import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
+import { usePWAHardware } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 import { ClueDetail } from './ClueDetail';
 
@@ -68,7 +68,7 @@ export const PrizeClueModal: React.FC<PrizeClueModalProps> = ({
   const [selectedClue, setSelectedClue] = useState<Clue | null>(null);
   const [unlockingClue, setUnlockingClue] = useState<string | null>(null);
   const { user } = useAuth();
-  const { vibrate } = useCapacitorHardware();
+  const { vibrate } = usePWAHardware();
 
   // Load clues for this prize
   const loadClues = preserveFunctionName(async () => {
