@@ -1,22 +1,28 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ - PWA Navigation Hook
+
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useWouterNavigation } from './useWouterNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
 
-export const useCapacitorNavigation = () => {
+export const usePWANavigation = () => {
   const [location] = useLocation();
   const { navigate } = useWouterNavigation();
   const { setCurrentTab, addToHistory } = useNavigationStore();
 
-  // Detect Capacitor environment
-  const isCapacitor = typeof window !== 'undefined' && 
-    (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
+  // Detect PWA environment
+  const isPWA = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://')
+  );
 
   // Log navigation changes for debugging
   useEffect(() => {
-    console.log('🧭 CAPACITOR NAVIGATION:', {
+    console.log('🧭 PWA NAVIGATION:', {
       currentPath: location,
-      isCapacitor,
+      isPWA,
       timestamp: new Date().toISOString()
     });
     
@@ -24,22 +30,22 @@ export const useCapacitorNavigation = () => {
     setCurrentTab(location);
     addToHistory(location);
     
-    // iOS-specific optimizations
-    if (isCapacitor) {
-      // Prevent iOS bounce scroll
+    // PWA-specific optimizations
+    if (isPWA) {
+      // Prevent bounce scroll
       document.body.style.overscrollBehavior = 'none';
-      (document.body.style as any).WebkitOverflowScrolling = 'touch';
+      document.body.style.touchAction = 'manipulation';
       
       // Force scroll to top for new routes
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
     }
-  }, [location, isCapacitor, setCurrentTab, addToHistory]);
+  }, [location, isPWA, setCurrentTab, addToHistory]);
 
-  // Capacitor-compatible navigation function
-  const navigateCapacitor = (path: string, options?: { replace?: boolean }) => {
-    console.log('🧭 Navigating to:', path, 'Capacitor:', isCapacitor);
+  // PWA-compatible navigation function
+  const navigatePWA = (path: string, options?: { replace?: boolean }) => {
+    console.log('🧭 Navigating to:', path, 'PWA:', isPWA);
     
     // Update store first
     setCurrentTab(path);
@@ -48,8 +54,8 @@ export const useCapacitorNavigation = () => {
     // Use React Router navigate
     navigate(path, { replace: options?.replace || false });
     
-    // iOS WebView scroll fix
-    if (isCapacitor) {
+    // PWA scroll fix
+    if (isPWA) {
       setTimeout(() => {
         window.scrollTo(0, 0);
       }, 100);
@@ -59,16 +65,16 @@ export const useCapacitorNavigation = () => {
   // Debug info
   const getNavigationInfo = () => ({
     currentPath: location,
-    isCapacitor,
+    isPWA,
     protocol: window.location.protocol,
     hostname: window.location.hostname,
     userAgent: navigator.userAgent,
-    hasCapacitorGlobal: !!(window as any).Capacitor
+    displayMode: window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'
   });
 
   return {
-    navigateCapacitor,
-    isCapacitor,
+    navigatePWA,
+    isPWA,
     currentPath: location,
     getNavigationInfo
   };

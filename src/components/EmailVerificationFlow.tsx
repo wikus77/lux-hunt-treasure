@@ -16,8 +16,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { preserveFunctionName } from '@/utils/iosCapacitorFunctions';
-import { useCapacitorHardware } from '@/hooks/useCapacitorHardware';
+import { preserveFunctionName } from '@/utils/pwaStubs';
+import { useCapacitorHardware } from '@/hooks/usePWAHardwareStub';
 import { toast } from 'sonner';
 
 interface EmailVerificationFlowProps {

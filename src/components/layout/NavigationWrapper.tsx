@@ -22,15 +22,15 @@ const NavigationWrapper: React.FC<NavigationWrapperProps> = ({ children }) => {
     });
   }, [location, setCurrentTab, addToHistory]);
 
-  // iOS Capacitor specific optimizations
+  // PWA specific optimizations
   useEffect(() => {
-    const isCapacitor = !!(window as any).Capacitor;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    const isMobile = /iPad|iPhone|iPod|Android|Mobile/i.test(navigator.userAgent);
     
-    if (isCapacitor && isIOS) {
-      // Prevent iOS bounce effect
+    if (isPWA || isMobile) {
+      // Prevent bounce effect
       document.body.style.overscrollBehavior = 'none';
-      (document.body.style as any).WebkitOverflowScrolling = 'touch';
+      document.body.style.touchAction = 'manipulation';
       
       // Fix viewport on orientation change
       const handleOrientationChange = () => {

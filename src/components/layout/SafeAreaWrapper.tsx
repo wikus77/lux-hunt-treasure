@@ -1,7 +1,8 @@
 
-// M1SSION™ - Safe Area Wrapper for iOS Capacitor
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ - Safe Area Wrapper for PWA
 import React, { useEffect, useState } from 'react';
-import { getSafeAreaInsets, detectCapacitorEnvironment } from '@/utils/iosCapacitorFunctions';
+import { getPWASafeAreaInsets } from '@/utils/pwaNativeFunctions';
 
 interface SafeAreaWrapperProps {
   children: React.ReactNode;
@@ -23,13 +24,13 @@ export const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
   debug = false
 }) => {
   const [safeArea, setSafeArea] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
-  const [isCapacitor, setIsCapacitor] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
 
   useEffect(() => {
     const updateSafeArea = () => {
-      const insets = getSafeAreaInsets();
+      const insets = getPWASafeAreaInsets();
       setSafeArea(insets);
-      setIsCapacitor(detectCapacitorEnvironment());
+      setIsPWA(window.matchMedia('(display-mode: standalone)').matches);
       
       if (debug) {
         console.log('📱 Safe Area Insets:', insets);
@@ -52,7 +53,7 @@ export const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
     };
   }, [debug]);
 
-  const paddingStyle = isCapacitor ? {
+  const paddingStyle = isPWA ? {
     paddingTop: top ? `${safeArea.top}px` : undefined,
     paddingBottom: bottom ? `${safeArea.bottom}px` : undefined,
     paddingLeft: left ? `${safeArea.left}px` : undefined,
@@ -64,7 +65,7 @@ export const SafeAreaWrapper: React.FC<SafeAreaWrapperProps> = ({
       className={`safe-area-wrapper ${className}`}
       style={paddingStyle}
     >
-      {debug && isCapacitor && (
+      {debug && isPWA && (
         <div className="fixed top-0 left-0 z-[10000] bg-red-500 text-white text-xs p-2">
           Safe Area: T:{safeArea.top} B:{safeArea.bottom} L:{safeArea.left} R:{safeArea.right}
         </div>

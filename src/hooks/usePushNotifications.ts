@@ -166,10 +166,9 @@ export const usePushNotifications = () => {
         console.log('🏝️ Starting Dynamic Island live activity...', activityData);
         
         // Call native Dynamic Island plugin if available
-        const { DynamicIsland } = await import('@/plugins/DynamicIslandPlugin');
-        
-        if (DynamicIsland) {
-          await DynamicIsland.startMissionActivity(activityData);
+        // PWA notification fallback
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('🎯 M1SSION™', { body: 'Nuova notifica disponibile' });
           console.log('✅ Dynamic Island activity started');
         }
       }

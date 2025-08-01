@@ -5,20 +5,18 @@ import { Mail, Map, Home, Award, User, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
-import { detectCapacitorEnvironment } from "@/utils/iosCapacitorFunctions";
-
-// Explicit function name for iOS Capacitor compatibility
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// PWA Navigation Component
 const BottomNavigationComponent = () => {
   const [currentPath] = useLocation();
   const { unreadCount } = useNotifications();
-  const { 
-    navigate, 
-    isCapacitor 
-  } = useWouterNavigation();
+  const { navigate } = useWouterNavigation();
+  const isPWA = typeof window !== 'undefined' && 
+    window.matchMedia('(display-mode: standalone)').matches;
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
-    isCapacitor,
+    isPWA,
     unreadCount
   });
 
@@ -72,24 +70,24 @@ const BottomNavigationComponent = () => {
     },
   ];
 
-  // iOS Capacitor compatible navigation handler with haptic feedback
-  const handleNavigationExplicit = async (link: typeof links[0], e: React.MouseEvent) => {
+  // PWA compatible navigation handler
+  const handleNavigationPWA = async (link: typeof links[0], e: React.MouseEvent) => {
     e.preventDefault();
     
-    console.log('🧭 Navigation clicked:', { path: link.path, isCapacitor });
+    console.log('🧭 Navigation clicked:', { path: link.path, isPWA });
     
     // Execute Wouter navigation
     navigate(link.path);
     
-    // iOS WebView scroll fix with explicit function
-    const applyIOSScrollFix = () => {
-      if (isCapacitor) {
+    // PWA scroll fix
+    const applyPWAScrollFix = () => {
+      if (isPWA) {
         setTimeout(() => {
           window.scrollTo(0, 0);
         }, 100);
       }
     };
-    applyIOSScrollFix();
+    applyPWAScrollFix();
   };
 
   return (
@@ -101,7 +99,7 @@ const BottomNavigationComponent = () => {
         right: 0,
         bottom: "0px",
         zIndex: 10000,
-        paddingBottom: isCapacitor ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "12px",
+        paddingBottom: isPWA ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "12px",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         backgroundColor: "rgba(0,0,0,0.95)",
@@ -138,7 +136,7 @@ const BottomNavigationComponent = () => {
             return (
               <motion.button
                 key={link.path}
-                onClick={(e) => handleNavigationExplicit(link, e)}
+                onClick={(e) => handleNavigationPWA(link, e)}
                 className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target cursor-pointer ${
                   isActive
                     ? "text-[#00D1FF]"
