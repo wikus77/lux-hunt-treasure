@@ -21,6 +21,9 @@
   transform-style: preserve-3d;
   will-change: transform;
   backface-visibility: hidden;
+  /* Ottimizzazione GPU per 60fps */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .mission-flip-card.is-flipped {

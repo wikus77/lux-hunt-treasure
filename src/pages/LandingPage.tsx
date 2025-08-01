@@ -455,12 +455,10 @@ const LandingPage = () => {
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
             
-            {/* Show text only if image not loaded or in case of error */}
-            {!imageLoaded && (
-              <div className="absolute bottom-4 right-4 text-white/90 text-sm font-medium bg-black/30 backdrop-blur-sm px-3 py-1 rounded-md border border-white/10">
-                {t('imageRepresentation')}
-              </div>
-            )}
+            {/* Caption always visible when image is loaded */}
+            <div className="absolute bottom-4 right-4 text-white/60 text-xs font-normal bg-black/20 backdrop-blur-sm px-2 py-1 rounded border border-white/10">
+              Image for illustration purposes only
+            </div>
           </motion.div>
         </div>
       </section>
