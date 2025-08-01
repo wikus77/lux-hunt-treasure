@@ -64,11 +64,11 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* Landing page - FIXED: Always show LandingPage to anonymous users */}
+          {/* Landing page - CRITICAL FIX: Direct LandingPage render */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">
-                <div className="text-white">Caricamento...</div>
+                <div className="text-white">🎯 M1SSION™ Loading...</div>
               </div>
             ) : !isAuthenticated ? (
               <LandingPage />
