@@ -1613,6 +1613,57 @@ export type Database = {
         }
         Relationships: []
       }
+      push_notification_logs: {
+        Row: {
+          apns_failed: number | null
+          apns_sent: number | null
+          created_at: string | null
+          devices_targeted: number | null
+          fcm_failed: number | null
+          fcm_sent: number | null
+          id: string
+          message: string
+          metadata: Json | null
+          sent_by: string | null
+          success: boolean | null
+          target_type: string
+          target_user_id: string | null
+          title: string
+        }
+        Insert: {
+          apns_failed?: number | null
+          apns_sent?: number | null
+          created_at?: string | null
+          devices_targeted?: number | null
+          fcm_failed?: number | null
+          fcm_sent?: number | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          sent_by?: string | null
+          success?: boolean | null
+          target_type: string
+          target_user_id?: string | null
+          title: string
+        }
+        Update: {
+          apns_failed?: number | null
+          apns_sent?: number | null
+          created_at?: string | null
+          devices_targeted?: number | null
+          fcm_failed?: number | null
+          fcm_sent?: number | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          sent_by?: string | null
+          success?: boolean | null
+          target_type?: string
+          target_user_id?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       role_change_audit: {
         Row: {
           changed_at: string | null
