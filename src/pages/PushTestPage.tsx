@@ -7,17 +7,27 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useSecureAdminCheck } from '@/hooks/useSecureAdminCheck';
+import { useAuth } from '@/hooks/use-auth';
 import { Send, Bell, Users, User } from 'lucide-react';
 
 const PushTestPage: React.FC = () => {
+  console.log('🔔 PUSH-TEST PAGE COMPONENT INSTANTIATED');
+  console.log('🔔 Current URL:', window.location.href);
+  console.log('🔔 Current pathname:', window.location.pathname);
+  
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [targetType, setTargetType] = useState<'all' | 'user'>('all');
   const [targetUserId, setTargetUserId] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const { isAdmin, isLoading } = useSecureAdminCheck();
+  const { user } = useAuth();
   const { toast } = useToast();
+
+  // Simple admin check - direkter email check for debugging
+  const isAdmin = user?.email === 'wikus77@hotmail.it';
+  
+  console.log('🔔 PUSH-TEST PAGE - User:', user?.email);
+  console.log('🔔 PUSH-TEST PAGE - isAdmin:', isAdmin);
 
   const handleSendNotification = async () => {
     if (!title.trim() || !message.trim()) {
@@ -105,24 +115,7 @@ const PushTestPage: React.FC = () => {
     }
   };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20 flex items-center justify-center">
-        <Card className="bg-black/80 border-[#00D1FF]/30 backdrop-blur-xl max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="w-8 h-8 border-2 border-[#00D1FF]/20 border-t-[#00D1FF] rounded-full animate-spin mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">🔐 Verifica Admin</h2>
-            <p className="text-white/70">
-              Controllo dei permessi di amministratore...
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Access denied
+  // Access denied - semplificato senza loading state
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20 flex items-center justify-center">

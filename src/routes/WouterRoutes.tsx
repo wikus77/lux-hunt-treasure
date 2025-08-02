@@ -173,9 +173,15 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           <Route path="/push-test">
-            <ProtectedRoute>
-              <PushTestPage />
-            </ProtectedRoute>
+            {(() => {
+              console.log('🔔 PUSH-TEST ROUTE HIT - Path:', window.location.pathname);
+              console.log('🔔 PUSH-TEST ROUTE HIT - Component loading...');
+              return (
+                <ProtectedRoute>
+                  <PushTestPage />
+                </ProtectedRoute>
+              );
+            })()}
           </Route>
 
           {/* Panel Access route */}
