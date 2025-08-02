@@ -7,14 +7,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { Send, Bell, Users, User, Shield, CheckCircle } from 'lucide-react';
 
 const PushTestPage: React.FC = () => {
   console.log('🔔 PUSH-TEST PAGE COMPONENT INSTANTIATED:', {
     url: window.location.href,
     pathname: window.location.pathname,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    userAgent: navigator.userAgent,
+    referrer: document.referrer
   });
   
   const [title, setTitle] = useState('');
@@ -22,7 +24,7 @@ const PushTestPage: React.FC = () => {
   const [targetType, setTargetType] = useState<'all' | 'user'>('all');
   const [targetUserId, setTargetUserId] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const { user } = useAuth();
+  const { user } = useUnifiedAuth();
   const { toast } = useToast();
 
   // Simple admin check - direkter email check for debugging

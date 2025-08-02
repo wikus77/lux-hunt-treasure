@@ -4,6 +4,7 @@ import { Mission } from "@/data/commandCenterData";
 import { motion } from "framer-motion";
 import { Map, AlertTriangle, Clock, Target } from "lucide-react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 
 interface MissionPanelProps {
   mission: Mission;
@@ -13,8 +14,8 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
   const { navigate } = useWouterNavigation();
   
   // 🔥 Check admin status for Push Test access
-  const currentUser = (window as any).supabaseUser;
-  const isAdmin = currentUser?.email === 'wikus77@hotmail.it';
+  const { user } = useUnifiedAuth();
+  const isAdmin = user?.email === 'wikus77@hotmail.it';
   
   const formatTimeRemaining = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
