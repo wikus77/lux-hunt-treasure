@@ -17,12 +17,16 @@ const Terms = () => {
 
   const loadLegalDocument = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('legal_documents')
         .select('*')
         .eq('type', 'terms_of_service')
         .eq('is_active', true)
-        .single();
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error loading terms document:', error);
+      }
 
       if (data) {
         setDocument(data);

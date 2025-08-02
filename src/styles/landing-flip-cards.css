@@ -47,9 +47,11 @@
   min-height: 16rem; /* h-64 = 256px = 16rem */
   will-change: transform;
   -webkit-backface-visibility: hidden;
-  /* Evita la scomparsa del contenuto */
-  opacity: 1;
-  visibility: visible;
+  /* CRITICAL FIX: Force visibility and prevent content disappearing */
+  opacity: 1 !important;
+  visibility: visible !important;
+  /* Ensure smooth transition */
+  transition: opacity 0.2s ease-in-out;
 }
 
 .mission-card-back {
