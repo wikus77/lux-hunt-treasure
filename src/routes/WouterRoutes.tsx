@@ -28,6 +28,7 @@ import PushTestPage from "@/pages/PushTestPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 
 import Terms from "@/pages/Terms";
+import Contact from "@/pages/Contact";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import SafeCreative from "@/pages/SafeCreative";
@@ -208,7 +209,7 @@ const WouterRoutes: React.FC = () => {
 
           {/* Contact route */}
           <Route path="/contact">
-            <GlobalLayout><Terms /></GlobalLayout>
+            <GlobalLayout><Contact /></GlobalLayout>
           </Route>
 
           {/* Plan selection route - accessible even without plan selected */}

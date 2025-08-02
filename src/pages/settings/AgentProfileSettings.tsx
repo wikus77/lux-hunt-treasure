@@ -129,15 +129,30 @@ const AgentProfileSettings: React.FC = () => {
       console.log('🔄 M1SSION™ Saving agent name:', agentName);
       
       // Use realtime update for immediate sync
-      await updateProfile({
+      const result = await updateProfile({
         full_name: agentName.trim()
       });
+
+      // Check if there was an error (updateProfile returns void on success)
+      if (result && typeof result === 'object' && 'error' in result && result.error) {
+        throw result.error;
+      }
 
       // Update local profile data for consistency
       actions.setName(agentName.trim());
       
       // Force localStorage update for immediate UI sync
       localStorage.setItem('agentName', agentName.trim());
+      localStorage.setItem('profileName', agentName.trim());
+      
+      // Trigger global sync event for real-time updates
+      const syncEvent = new CustomEvent('profile-sync', {
+        detail: { full_name: agentName.trim() }
+      });
+      window.dispatchEvent(syncEvent);
+      
+      // Also trigger storage event for components listening to localStorage
+      window.dispatchEvent(new Event('storage'));
       
       toast({
         title: "✅ Profilo salvato",
@@ -149,7 +164,7 @@ const AgentProfileSettings: React.FC = () => {
       console.error('❌ M1SSION™ Profile save error:', error);
       toast({
         title: "❌ Errore salvataggio",
-        description: "Impossibile salvare le modifiche. Riprova.",
+        description: `Impossibile salvare le modifiche: ${error?.message || 'Errore sconosciuto'}`,
         variant: "destructive"
       });
     } finally {

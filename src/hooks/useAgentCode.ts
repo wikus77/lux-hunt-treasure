@@ -22,9 +22,9 @@ export const useAgentCode = () => {
           return;
         }
 
-        // Special case for admin user
+        // Special case for admin user - AG-X0197
         const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
-        const SPECIAL_ADMIN_CODE = 'X0197';
+        const SPECIAL_ADMIN_CODE = 'AG-X0197';
 
         // First, check if the user is the admin
         if (user.email?.toLowerCase() === SPECIAL_ADMIN_EMAIL.toLowerCase()) {
