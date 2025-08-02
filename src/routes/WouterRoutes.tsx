@@ -172,17 +172,9 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* 🔥 PUSH TEST ROUTE - Direct access with admin check inside */}
+          {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
           <Route path="/push-test">
-            {(() => {
-              console.log('🔔 PUSH-TEST ROUTE HIT:', {
-                path: window.location.pathname,
-                isAuthenticated,
-                isLoading,
-                timestamp: new Date().toISOString()
-              });
-              return <PushTestPage />;
-            })()}
+            <PushTestPage />
           </Route>
 
           {/* Panel Access route */}
