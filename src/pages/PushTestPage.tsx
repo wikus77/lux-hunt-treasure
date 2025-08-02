@@ -11,9 +11,11 @@ import { useAuth } from '@/hooks/use-auth';
 import { Send, Bell, Users, User, Shield, CheckCircle } from 'lucide-react';
 
 const PushTestPage: React.FC = () => {
-  console.log('🔔 PUSH-TEST PAGE COMPONENT INSTANTIATED');
-  console.log('🔔 Current URL:', window.location.href);
-  console.log('🔔 Current pathname:', window.location.pathname);
+  console.log('🔔 PUSH-TEST PAGE COMPONENT INSTANTIATED:', {
+    url: window.location.href,
+    pathname: window.location.pathname,
+    timestamp: new Date().toISOString()
+  });
   
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');

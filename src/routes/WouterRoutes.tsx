@@ -172,11 +172,15 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* 🔥 PUSH TEST ROUTE - Direct access with admin check inside */}
           <Route path="/push-test">
             {(() => {
-              console.log('🔔 PUSH-TEST ROUTE HIT - Path:', window.location.pathname);
-              console.log('🔔 PUSH-TEST ROUTE HIT - Auth Status:', { isAuthenticated, isLoading });
-              console.log('🔔 PUSH-TEST ROUTE - Rendering PushTestPage directly with admin check inside');
+              console.log('🔔 PUSH-TEST ROUTE HIT:', {
+                path: window.location.pathname,
+                isAuthenticated,
+                isLoading,
+                timestamp: new Date().toISOString()
+              });
               return <PushTestPage />;
             })()}
           </Route>

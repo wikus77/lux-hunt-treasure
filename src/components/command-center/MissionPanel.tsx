@@ -12,6 +12,10 @@ interface MissionPanelProps {
 export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
   const { navigate } = useWouterNavigation();
   
+  // 🔥 Check admin status for Push Test access
+  const currentUser = (window as any).supabaseUser;
+  const isAdmin = currentUser?.email === 'wikus77@hotmail.it';
+  
   const formatTimeRemaining = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -108,7 +112,7 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
         ))}
       </div>
 
-      <div className="mt-4 flex">
+      <div className="mt-4 flex gap-3">
         <motion.button
           className="bg-cyan-800/30 hover:bg-cyan-700/50 text-cyan-300 px-4 py-2 rounded-lg text-sm flex items-center"
           whileHover={{ scale: 1.05 }}
@@ -118,6 +122,19 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
           <Map className="mr-2 h-4 w-4" />
           Visualizza mappa
         </motion.button>
+        
+        {/* 🔥 PUSH TEST BUTTON - Solo per Admin AG-X0197 */}
+        {isAdmin && (
+          <motion.button
+            className="bg-gradient-to-r from-orange-600/30 to-red-600/30 hover:from-orange-500/50 hover:to-red-500/50 text-orange-300 px-4 py-2 rounded-lg text-sm flex items-center border border-orange-500/30"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => window.open('/push-test', '_blank')}
+          >
+            <AlertTriangle className="mr-2 h-4 w-4" />
+            Push Test
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );
