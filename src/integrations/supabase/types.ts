@@ -2958,6 +2958,10 @@ export type Database = {
           email: string
         }[]
       }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_current_week_and_year: {
         Args: Record<PropertyKey, never>
         Returns: {
