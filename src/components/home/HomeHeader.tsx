@@ -1,9 +1,10 @@
 
 // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
 import { useState, useEffect } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Zap } from "lucide-react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
+import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
 import { Button } from "@/components/ui/button";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
@@ -19,6 +20,10 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { navigate } = useWouterNavigation();
   const { isConnected } = useRealTimeNotifications();
+  const { getCurrentUser } = useUnifiedAuth();
+  
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.email === 'wikus77@hotmail.it';
   
   return (
     <header className="fixed top-0 left-0 w-full z-50 backdrop-blur-md bg-gradient-to-r from-black/80 to-black/80 border-b border-m1ssion-deep-blue/30 header-safe-area">
@@ -41,6 +46,21 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         
         {/* Right section with profile */}
         <div className="flex items-center gap-4">
+          {/* Admin Push Test Link - Only visible to AG-X0197 */}
+          {isAdmin && (
+            <button
+              onClick={() => {
+                console.log('🔔 ADMIN: Navigating to /push-test');
+                navigate('/push-test');
+              }}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600/20 to-blue-600/20 hover:from-purple-600/30 hover:to-blue-600/30 border border-purple-500/30 rounded-lg transition-all duration-200"
+              title="Push Test (Admin Only)"
+            >
+              <Zap className="w-4 h-4 text-purple-400" />
+              <span className="text-xs text-purple-300 font-medium">Push Test</span>
+            </button>
+          )}
+          
           {/* Profile Dropdown - ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT */}
           <ProfileDropdown
             profileImage={profileImage}
@@ -70,6 +90,23 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
                 {isConnected ? 'Connesso in tempo reale' : 'Connessione in tempo reale non disponibile'}
               </span>
             </div>
+            
+            {/* Admin Push Test Link - Mobile */}
+            {isAdmin && (
+              <Button 
+                variant="ghost" 
+                className="w-full text-left justify-start text-purple-300 border border-purple-500/30" 
+                onClick={() => {
+                  console.log('🔔 ADMIN MOBILE: Navigating to /push-test');
+                  navigate('/push-test');
+                  setIsMenuOpen(false);
+                }}
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Push Test (Admin)
+              </Button>
+            )}
+            
             <Button 
               variant="ghost" 
               className="w-full text-left justify-start" 

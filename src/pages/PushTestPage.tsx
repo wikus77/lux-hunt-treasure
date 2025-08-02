@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { Send, Bell, Users, User } from 'lucide-react';
+import { Send, Bell, Users, User, Shield, CheckCircle } from 'lucide-react';
 
 const PushTestPage: React.FC = () => {
   console.log('🔔 PUSH-TEST PAGE COMPONENT INSTANTIATED');
@@ -28,6 +28,12 @@ const PushTestPage: React.FC = () => {
   
   console.log('🔔 PUSH-TEST PAGE - User:', user?.email);
   console.log('🔔 PUSH-TEST PAGE - isAdmin:', isAdmin);
+
+  useEffect(() => {
+    console.log('🔔 PUSH-TEST PAGE MOUNTED SUCCESSFULLY');
+    console.log('🔔 User state:', { email: user?.email, isAdmin });
+    console.log('🔔 Current timestamp:', new Date().toISOString());
+  }, [user, isAdmin]);
 
   const handleSendNotification = async () => {
     if (!title.trim() || !message.trim()) {
