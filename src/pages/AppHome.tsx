@@ -150,7 +150,7 @@ const AppHome = () => {
         <AnimatePresence>
           {isLoaded && (
             <motion.div
-              className="relative"
+              className="relative min-h-screen overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -177,7 +177,7 @@ const AppHome = () => {
                 </motion.div>
               )}
 
-                  <div className="container mx-auto px-3">
+                  <div className="container mx-auto px-3 pb-20">
                 <motion.div
                   className="text-center my-6"
                   initial={{ opacity: 0, y: -10 }}
