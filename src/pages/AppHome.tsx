@@ -203,8 +203,8 @@ const AppHome = () => {
                   role="main"
                   aria-label="Contenuto principale"
                 >
-                  {/* 🔥 OTTIMIZZAZIONE: Container con altezza aumentata per mostrare TUTTO il M1SSION PANEL */}
-                  <div className="min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-100px)]">
+                  {/* 🔥 OTTIMIZZAZIONE: Container con altezza MASSIMA per mostrare TUTTO il M1SSION PANEL */}
+                  <div className="min-h-[calc(100vh-60px)] md:min-h-[calc(100vh-80px)]">
                     <CommandCenterHome />
                   </div>
                   
