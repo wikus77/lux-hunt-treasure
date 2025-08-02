@@ -176,8 +176,12 @@ const WouterRoutes: React.FC = () => {
             {(() => {
               console.log('🔔 PUSH-TEST ROUTE HIT - Path:', window.location.pathname);
               console.log('🔔 PUSH-TEST ROUTE HIT - Component loading...');
-              console.log('🔔 PUSH-TEST ROUTE - Direct render without ProtectedRoute for debug');
-              return <PushTestPage />;
+              console.log('🔔 PUSH-TEST ROUTE - Using ProtectedRoute with admin bypass');
+              return (
+                <ProtectedRoute>
+                  <PushTestPage />
+                </ProtectedRoute>
+              );
             })()}
           </Route>
 

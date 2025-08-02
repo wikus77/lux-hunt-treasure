@@ -19,7 +19,7 @@ serve(async (req) => {
   }
 
   try {
-    const { title, body, data } = await req.json() as NotificationRequest;
+    const { title, body, data, targetUserId } = await req.json() as NotificationRequest & { targetUserId?: string };
 
     if (!title || !body) {
       return new Response(
@@ -33,14 +33,60 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get all active push subscriptions
-    const { data: deviceTokens, error: fetchError } = await supabase
+    // Determina target type
+    const targetType = targetUserId ? 'user' : 'all';
+
+    // Salva log iniziale
+    const { data: logData, error: logError } = await supabase
+      .from('push_notification_logs')
+      .insert({
+        title: title.trim(),
+        message: body.trim(),
+        target_type: targetType,
+        target_user_id: targetUserId || null,
+        status: 'pending',
+        metadata: {
+          data: data || {},
+          timestamp: new Date().toISOString(),
+          source: 'admin_push_test'
+        }
+      })
+      .select()
+      .single();
+
+    if (logError) {
+      console.error('Error creating push log:', logError);
+    }
+
+    const logId = logData?.id;
+
+    // Get device tokens based on target
+    let deviceTokensQuery = supabase
       .from('device_tokens')
       .select('token, user_id')
       .eq('device_type', 'web_push');
 
+    if (targetUserId) {
+      deviceTokensQuery = deviceTokensQuery.eq('user_id', targetUserId);
+    }
+
+    const { data: deviceTokens, error: fetchError } = await deviceTokensQuery;
+
     if (fetchError) {
       console.error('Error fetching device tokens:', fetchError);
+      
+      // Aggiorna log con errore
+      if (logId) {
+        await supabase
+          .from('push_notification_logs')
+          .update({
+            status: 'failed',
+            error_message: `Error fetching devices: ${fetchError.message}`,
+            devices_sent: 0
+          })
+          .eq('id', logId);
+      }
+
       return new Response(
         JSON.stringify({ error: 'Errore nel recupero dei dispositivi' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -48,8 +94,25 @@ serve(async (req) => {
     }
 
     if (!deviceTokens || deviceTokens.length === 0) {
+      // Aggiorna log con nessun dispositivo
+      if (logId) {
+        await supabase
+          .from('push_notification_logs')
+          .update({
+            status: 'sent',
+            devices_sent: 0,
+            sent_at: new Date().toISOString()
+          })
+          .eq('id', logId);
+      }
+
       return new Response(
-        JSON.stringify({ sent: 0, message: 'Nessun dispositivo registrato' }),
+        JSON.stringify({ 
+          sent: 0, 
+          message: 'Nessun dispositivo registrato',
+          targetType,
+          targetUserId: targetUserId || null
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -95,11 +158,27 @@ serve(async (req) => {
       }
     }
 
+    // Aggiorna log finale
+    if (logId) {
+      await supabase
+        .from('push_notification_logs')
+        .update({
+          status: sentCount > 0 ? 'sent' : 'failed',
+          devices_sent: sentCount,
+          error_message: errors.length > 0 ? errors.join('; ') : null,
+          sent_at: new Date().toISOString()
+        })
+        .eq('id', logId);
+    }
+
     return new Response(
       JSON.stringify({ 
         sent: sentCount,
         total: deviceTokens.length,
-        errors: errors.length > 0 ? errors : undefined
+        errors: errors.length > 0 ? errors : undefined,
+        targetType,
+        targetUserId: targetUserId || null,
+        logId
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
