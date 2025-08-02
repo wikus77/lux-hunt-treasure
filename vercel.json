@@ -13,8 +13,8 @@
   ],
   "redirects": [
     {
-      "source": "https://www.m1ssion.eu/:path*",
-      "destination": "https://m1ssion.eu/:path*",
+      "source": "https://m1ssion.eu/:path*",
+      "destination": "https://www.m1ssion.eu/:path*",
       "permanent": true
     }
   ],
