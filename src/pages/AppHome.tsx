@@ -203,18 +203,18 @@ const AppHome = () => {
                   role="main"
                   aria-label="Contenuto principale"
                 >
-                  {/* 🔥 OTTIMIZZAZIONE: Container con altezza MASSIMA per mostrare TUTTO il M1SSION PANEL */}
-                  <div className="min-h-[calc(100vh-60px)] md:min-h-[calc(100vh-80px)]">
+                  {/* 🔥 CONTAINER OTTIMIZZATO: Eliminato min-h per evitare overflow */}
+                  <div>
                     <CommandCenterHome />
                   </div>
                   
-                  {/* M1SSION PANEL™ Button - Only for Admin/Developer */}
+                  {/* M1SSION PANEL™ Button - Only for Admin/Developer - SENZA MARGINI */}
                   {showPanelButton && (
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.8, duration: 0.6 }}
-                      className="mt-8"
+                      className="mt-4"
                     >
                       <motion.button
                         onClick={() => navigate('/panel-access')}
