@@ -14,8 +14,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
   const { navigate } = useWouterNavigation();
   
   // 🔥 Check admin status for Push Test access
-  const { user } = useUnifiedAuth();
-  const isAdmin = user?.email === 'wikus77@hotmail.it';
+  const { getCurrentUser } = useUnifiedAuth();
+  const currentUser = getCurrentUser();
+  const isAdmin = currentUser?.email === 'wikus77@hotmail.it';
   
   const formatTimeRemaining = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
