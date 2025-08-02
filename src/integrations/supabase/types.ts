@@ -3078,6 +3078,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      is_admin_user: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_ip_blocked: {
         Args: { ip_addr: unknown }
         Returns: boolean

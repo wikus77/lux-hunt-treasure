@@ -22,7 +22,7 @@ export const useAgentCode = () => {
           return;
         }
 
-        // Special case for admin user - AG-X0197
+        // Special case for admin user - AG-X0197  
         const SPECIAL_ADMIN_EMAIL = 'wikus77@hotmail.it';
         const SPECIAL_ADMIN_CODE = 'AG-X0197';
 
