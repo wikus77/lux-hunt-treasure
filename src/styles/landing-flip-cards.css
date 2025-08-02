@@ -1,5 +1,5 @@
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
-/* Landing Page Flip Cards - Fix per container interattivi */
+/* Landing Page Flip Cards - Ottimizzate per PWA iOS/Desktop */
 
 .perspective-1000 {
   perspective: 1000px;
@@ -17,13 +17,15 @@
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   transform-style: preserve-3d;
   will-change: transform;
   backface-visibility: hidden;
   /* Ottimizzazione GPU per 60fps */
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
+  /* Garantisce visibilità continua */
+  overflow: visible;
 }
 
 .mission-flip-card.is-flipped {
@@ -45,10 +47,16 @@
   min-height: 16rem; /* h-64 = 256px = 16rem */
   will-change: transform;
   -webkit-backface-visibility: hidden;
+  /* Evita la scomparsa del contenuto */
+  opacity: 1;
+  visibility: visible;
 }
 
 .mission-card-back {
   transform: rotateY(180deg);
+  /* Mantiene il contenuto visibile durante il flip */
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Hover effects per desktop - ottimizzati per performance */

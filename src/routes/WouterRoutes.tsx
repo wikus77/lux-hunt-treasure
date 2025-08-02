@@ -24,6 +24,7 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
+import PushTestPage from "@/pages/PushTestPage";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 
 import Terms from "@/pages/Terms";
@@ -170,6 +171,12 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/push-test">
+            <ProtectedRoute>
+              <PushTestPage />
+            </ProtectedRoute>
+          </Route>
+
           {/* Panel Access route */}
           <Route path="/panel-access">
             <ProtectedRoute>
@@ -197,6 +204,11 @@ const WouterRoutes: React.FC = () => {
           
           <Route path="/game-rules">
             <GlobalLayout><GameRules /></GlobalLayout>
+          </Route>
+
+          {/* Contact route */}
+          <Route path="/contact">
+            <GlobalLayout><Terms /></GlobalLayout>
           </Route>
 
           {/* Plan selection route - accessible even without plan selected */}

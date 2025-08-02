@@ -7,6 +7,7 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import RealtimeStatusIndicator from "@/components/notifications/RealtimeStatusIndicator";
 import { Button } from "@/components/ui/button";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
+import AgentCodeDisplay from "@/components/layout/header/AgentCodeDisplay";
 
 interface HomeHeaderProps {
   profileImage: string | null;
@@ -32,9 +33,9 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
           </span>
         </div>
         
-        {/* Center section with real-time indicator */}
+        {/* Center section with real-time indicator and Agent Code */}
         <div className="flex sm:flex items-center gap-3">
-          {/* Removed M1-AGENT badge */}
+          <AgentCodeDisplay />
           <RealtimeStatusIndicator isConnected={isConnected} />
         </div>
         
