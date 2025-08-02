@@ -46,13 +46,13 @@ const HomeHeader = ({ profileImage, unreadCount, onShowNotifications }: HomeHead
         
         {/* Right section with profile */}
         <div className="flex items-center gap-4">
-          {/* Admin Push Test Link - Only visible to AG-X0197 */}
-          {isAdmin && (
-            <button
-              onClick={() => {
-                console.log('🔔 ADMIN: Navigating to /push-test');
-                navigate('/push-test');
-              }}
+           {/* Admin Push Test Link - Only visible to wikus77@hotmail.it */}
+           {isAdmin && (
+             <button
+               onClick={() => {
+                 console.log('🔔 ADMIN: Navigating to /push-test');
+                 window.location.href = '/push-test';
+               }}
               className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-600/20 to-blue-600/20 hover:from-purple-600/30 hover:to-blue-600/30 border border-purple-500/30 rounded-lg transition-all duration-200"
               title="Push Test (Admin Only)"
             >
