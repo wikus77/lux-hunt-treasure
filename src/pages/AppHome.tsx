@@ -203,8 +203,8 @@ const AppHome = () => {
                   role="main"
                   aria-label="Contenuto principale"
                 >
-                  {/* 🔥 OTTIMIZZAZIONE: Container con altezza ottimizzata per iOS Safari e PWA */}
-                  <div className="min-h-[calc(100vh-200px)] md:min-h-[calc(100vh-150px)]">
+                  {/* 🔥 OTTIMIZZAZIONE: Container con altezza aumentata per mostrare TUTTO il M1SSION PANEL */}
+                  <div className="min-h-[calc(100vh-120px)] md:min-h-[calc(100vh-100px)]">
                     <CommandCenterHome />
                   </div>
                   
