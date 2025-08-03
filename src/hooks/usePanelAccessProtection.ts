@@ -2,7 +2,7 @@
 // Blindatura di sicurezza avanzata per M1SSION PANEL™
 
 import { useEffect, useState } from 'react';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 
@@ -29,7 +29,7 @@ interface AccessAttempt {
 }
 
 export const usePanelAccessProtection = () => {
-  const { getCurrentUser, isAuthenticated } = useAuthContext();
+  const { user, isAuthenticated, isLoading } = useUnifiedAuth();
   const { navigate } = useWouterNavigation();
   const [isWhitelisted, setIsWhitelisted] = useState(false);
   const [isValidating, setIsValidating] = useState(true);
@@ -40,7 +40,7 @@ export const usePanelAccessProtection = () => {
     try {
       await supabase.from('admin_logs').insert({
         event_type: 'panel_access_attempt',
-        user_id: getCurrentUser()?.id || null,
+        user_id: user?.id || null,
         context: JSON.stringify({
           email: attempt.email,
           ip: attempt.ip,
@@ -68,30 +68,31 @@ export const usePanelAccessProtection = () => {
     setIsValidating(true);
     
     try {
-      const currentUser = getCurrentUser();
       const clientInfo = getClientInfo();
       
       console.log('🔐 PANEL ACCESS VALIDATION - DEBUG:', {
         isAuthenticated,
-        currentUser: currentUser,
-        email: currentUser?.email,
+        isLoading,
+        user: user,
+        email: user?.email,
         expectedEmail: AUTHORIZED_EMAIL,
         timestamp: new Date().toISOString()
       });
       
       // 1. Controllo autenticazione base
-      if (!isAuthenticated || !currentUser?.email) {
+      if (!isAuthenticated || !user?.email) {
         console.error('🚨 PANEL ACCESS DENIED - Not authenticated:', {
           isAuthenticated,
-          hasUser: !!currentUser,
-          hasEmail: !!currentUser?.email
+          isLoading,
+          hasUser: !!user,
+          hasEmail: !!user?.email
         });
         
         setAccessDeniedReason('Utente non autenticato');
         setIsWhitelisted(false);
         
         await logAccessAttempt({
-          email: currentUser?.email || 'anonymous',
+          email: user?.email || 'anonymous',
           ip: clientInfo.ip,
           userAgent: clientInfo.userAgent,
           timestamp: new Date().toISOString(),
@@ -102,18 +103,18 @@ export const usePanelAccessProtection = () => {
       }
 
       // 2. Controllo email esatto
-      if (currentUser.email !== AUTHORIZED_EMAIL) {
+      if (user.email !== AUTHORIZED_EMAIL) {
         console.error('🚨 PANEL ACCESS DENIED - Wrong email:', {
-          actualEmail: currentUser.email,
+          actualEmail: user.email,
           expectedEmail: AUTHORIZED_EMAIL,
-          match: currentUser.email === AUTHORIZED_EMAIL
+          match: user.email === AUTHORIZED_EMAIL
         });
         
         setAccessDeniedReason('Email non autorizzata');
         setIsWhitelisted(false);
         
         await logAccessAttempt({
-          email: currentUser.email,
+          email: user.email,
           ip: clientInfo.ip,
           userAgent: clientInfo.userAgent,
           timestamp: new Date().toISOString(),
@@ -124,13 +125,13 @@ export const usePanelAccessProtection = () => {
       }
 
       // 3. Verifica hash SHA-256
-      const emailHash = await calculateSHA256(currentUser.email);
+      const emailHash = await calculateSHA256(user.email);
       if (emailHash !== AUTHORIZED_EMAIL_HASH) {
         setAccessDeniedReason('Hash email non valido');
         setIsWhitelisted(false);
         
         await logAccessAttempt({
-          email: currentUser.email,
+          email: user.email,
           ip: clientInfo.ip,
           userAgent: clientInfo.userAgent,
           timestamp: new Date().toISOString(),
@@ -146,7 +147,7 @@ export const usePanelAccessProtection = () => {
       setAccessDeniedReason('');
       
       await logAccessAttempt({
-        email: currentUser.email,
+        email: user.email,
         ip: clientInfo.ip,
         userAgent: clientInfo.userAgent,
         timestamp: new Date().toISOString(),
@@ -166,7 +167,7 @@ export const usePanelAccessProtection = () => {
   // Effetto per validare l'accesso al caricamento
   useEffect(() => {
     validateAccess();
-  }, [isAuthenticated, getCurrentUser()?.email]);
+  }, [isAuthenticated, user?.email]);
 
   // Anti-bypass: blocco se si tenta di accedere senza validazione
   useEffect(() => {

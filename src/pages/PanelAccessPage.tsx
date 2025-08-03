@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin } from 'lucide-react';
-import { useAuthContext } from '@/contexts/auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import { Helmet } from 'react-helmet-async';
@@ -16,10 +16,10 @@ import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 
 const PanelAccessPage = () => {
-  const { getCurrentUser } = useAuthContext();
+  const { user } = useUnifiedAuth();
   const { profileImage } = useProfileImage();
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
-  const currentUser = getCurrentUser();
+  
   
   const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config'>('home');
 
@@ -49,10 +49,10 @@ const PanelAccessPage = () => {
           {/* DEBUG INFO per troubleshooting */}
           <div className="text-xs text-white/50 p-3 bg-black/30 rounded border border-white/10 mb-4">
             <strong>DEBUG INFO:</strong><br />
-            User: {currentUser?.email || 'NON_AUTENTICATO'}<br />
+            User: {user?.email || 'NON_AUTENTICATO'}<br />
             Required: wikus77@hotmail.it<br />
             Reason: {accessDeniedReason}<br />
-            Authenticated: {String(!!currentUser)}
+            Authenticated: {String(!!user)}
           </div>
           
           {accessDeniedReason && (
@@ -190,7 +190,7 @@ const PanelAccessPage = () => {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400">Utente Autorizzato:</span>
-                  <span className="text-green-400 font-mono">{currentUser?.email}</span>
+                  <span className="text-green-400 font-mono">{user?.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-gray-400">Clearance:</span>
@@ -277,7 +277,7 @@ const PanelAccessPage = () => {
                 </motion.div>
 
                 {/* 🔥 PUSH TEST BUTTON - Solo per Admin AG-X0197 */}
-                {currentUser?.email === 'wikus77@hotmail.it' && (
+                {user?.email === 'wikus77@hotmail.it' && (
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
