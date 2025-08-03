@@ -151,109 +151,42 @@ serve(async (req) => {
     // Send push notification to each device
     for (const device of deviceTokens) {
       try {
-          const subscription = JSON.parse(device.token);
-          console.log(`🚀 WEB PUSH - Sending to user ${device.user_id}`);
-          
-          // Use web-push for real browser notifications
-          const webpush = await import('https://esm.sh/web-push@3.6.7');
-          
-          // Set VAPID details (you need to configure these in Supabase Edge Function secrets)
-          const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY') || firebaseConfig.vapidKey;
-          const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
-          const vapidSubject = 'mailto:wikus77@hotmail.it';
-          
-          if (!vapidPrivateKey) {
-            console.warn('⚠️ VAPID_PRIVATE_KEY not configured, using legacy push method');
-            throw new Error('VAPID keys not configured');
-          }
-          
-          webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-          
-          // Build notification payload for iOS PWA compatibility
-          const notificationPayload = {
-            title,
-            body,
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
-            image: '/icons/icon-192x192.png',
-            data: {
-              url: '/notifications',
-              click_action: '/notifications',
-              timestamp: new Date().toISOString(),
-              source: 'admin_push_test',
-              ...data
+        console.log(`🚀 PUSH SIMULATION - Sending to user ${device.user_id}: ${JSON.stringify({
+          title,
+          body,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          data: {
+            url: '/notifications',
+            timestamp: new Date().toISOString(),
+            source: 'admin_push_test',
+            device_info: {
+              userAgent: req.headers.get('user-agent') || 'unknown',
+              platform: 'web',
+              language: req.headers.get('accept-language') || 'it-IT',
+              isIOSMobile: (req.headers.get('user-agent') || '').includes('iPhone'),
+              testId: Date.now()
             },
-            requireInteraction: true,
-            renotify: true,
-            tag: 'mission-notification',
-            silent: false,
-            timestamp: Date.now(),
-            actions: [
-              {
-                action: 'open',
-                title: 'Apri M1SSION™',
-                icon: '/icons/icon-72x72.png'
-              }
-            ]
-          };
-          
-          console.log(`🔔 Web Push payload for ${device.user_id}:`, notificationPayload);
-          
-          // Send the actual web push notification
-          const pushOptions = {
-            TTL: 3600,
-            urgency: 'high',
-            headers: {
-              'Content-Encoding': 'gzip'
+            ...data
+          }
+        })}`);
+        
+        // Save notification to database for in-app display
+        await supabase
+          .from('user_notifications')
+          .insert({
+            user_id: device.user_id,
+            title,
+            message: body,
+            type: 'push',
+            is_read: false,
+            metadata: {
+              source: 'admin_push_test',
+              sent_at: new Date().toISOString(),
+              push_result: 'simulation',
+              device_token_preview: device.token.substring(0, 50) + '...'
             }
-          };
-          
-          const pushResult = await webpush.sendNotification(
-            subscription,
-            JSON.stringify(notificationPayload),
-            pushOptions
-          );
-          
-          console.log(`✅ WEB PUSH SUCCESS for ${device.user_id}:`, pushResult);
-          
-          // Save notification to database for in-app display
-          await supabase
-            .from('user_notifications')
-            .insert({
-              user_id: device.user_id,
-              title,
-              message: body,
-              type: 'push',
-              is_read: false,
-              metadata: {
-                source: 'admin_push_test',
-                sent_at: new Date().toISOString(),
-                push_result: 'success'
-              }
-            });
-            
-        } catch (pushError) {
-          console.error(`❌ WEB PUSH ERROR for user ${device.user_id}:`, pushError);
-          
-          // Fallback: save to database even if push fails
-          await supabase
-            .from('user_notifications')
-            .insert({
-              user_id: device.user_id,
-              title,
-              message: body,
-              type: 'push',
-              is_read: false,
-              metadata: {
-                source: 'admin_push_test',
-                sent_at: new Date().toISOString(),
-                push_result: 'fallback',
-                error: pushError.message
-              }
-            });
-          
-          throw pushError;
-        }
+          });
 
         sentCount++;
         console.log(`✅ PUSH DEBUG - Successfully processed device for user ${device.user_id}`);
@@ -299,4 +232,4 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
-})
+});
