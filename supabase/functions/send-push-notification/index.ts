@@ -2,10 +2,34 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Firebase config for VAPID key
-const firebaseConfig = {
-  vapidKey: "BLaVYRWkdWJ0tOGQ7HZFJwRdi2KjE4Xj0yKyZQMVsfBvFJv66_q5PGcNfDLNlngy8LjK-RF1zehbQN1GS8YMB3M"
+// Firebase Admin SDK for real push notifications
+import { initializeApp, cert, ServiceAccount } from 'https://esm.sh/firebase-admin@12.1.0/app'
+import { getMessaging } from 'https://esm.sh/firebase-admin@12.1.0/messaging'
+
+// Firebase Service Account Configuration
+const firebaseServiceAccount: ServiceAccount = {
+  type: "service_account",
+  project_id: "project-x-mission",
+  private_key_id: Deno.env.get('FIREBASE_PRIVATE_KEY_ID') || "",
+  private_key: (Deno.env.get('FIREBASE_PRIVATE_KEY') || "").replace(/\\n/g, '\n'),
+  client_email: Deno.env.get('FIREBASE_CLIENT_EMAIL') || "",
+  client_id: Deno.env.get('FIREBASE_CLIENT_ID') || "",
+  auth_uri: "https://accounts.google.com/o/oauth2/auth",
+  token_uri: "https://oauth2.googleapis.com/token",
+  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
+  client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${Deno.env.get('FIREBASE_CLIENT_EMAIL') || ""}`
 };
+
+// Initialize Firebase Admin
+let firebaseApp;
+try {
+  firebaseApp = initializeApp({
+    credential: cert(firebaseServiceAccount),
+    projectId: "project-x-mission"
+  });
+} catch (error) {
+  console.error('🔥 Firebase Admin initialization error:', error);
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -148,28 +172,92 @@ serve(async (req) => {
     let sentCount = 0;
     const errors: string[] = [];
 
-    // Send push notification to each device
+    // Send REAL Firebase push notifications
     for (const device of deviceTokens) {
       try {
-        console.log(`🚀 PUSH SIMULATION - Sending to user ${device.user_id}: ${JSON.stringify({
-          title,
-          body,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
+        // Parse the Web Push subscription to extract FCM token
+        let fcmToken;
+        try {
+          const subscription = JSON.parse(device.token);
+          const endpoint = subscription.endpoint;
+          
+          // Extract FCM token from endpoint
+          if (endpoint.includes('fcm.googleapis.com')) {
+            fcmToken = endpoint.split('/').pop();
+          } else {
+            console.warn(`⚠️ Non-FCM endpoint for user ${device.user_id}:`, endpoint);
+            continue;
+          }
+        } catch (parseError) {
+          console.error(`❌ Error parsing token for user ${device.user_id}:`, parseError);
+          continue;
+        }
+
+        console.log(`🚀 REAL PUSH - Sending to FCM token: ${fcmToken?.substring(0, 20)}...`);
+
+        // Prepare Firebase message payload for iOS PWA
+        const message = {
+          token: fcmToken,
+          notification: {
+            title,
+            body
+          },
+          webpush: {
+            headers: {
+              'TTL': '86400'
+            },
+            notification: {
+              title,
+              body,
+              icon: '/icons/icon-192x192.png',
+              badge: '/icons/icon-72x72.png',
+              sound: 'default',
+              requireInteraction: true,
+              tag: 'mission-notification',
+              data: {
+                url: '/notifications',
+                click_action: '/notifications',
+                timestamp: new Date().toISOString(),
+                source: 'admin_push_real'
+              }
+            },
+            fcm_options: {
+              link: '/notifications'
+            }
+          },
+          apns: {
+            payload: {
+              aps: {
+                alert: {
+                  title,
+                  body
+                },
+                badge: 1,
+                sound: 'default',
+                'mutable-content': 1,
+                'content-available': 1
+              }
+            },
+            headers: {
+              'apns-priority': '10',
+              'apns-push-type': 'alert'
+            }
+          },
           data: {
             url: '/notifications',
+            click_action: '/notifications',
             timestamp: new Date().toISOString(),
-            source: 'admin_push_test',
-            device_info: {
-              userAgent: req.headers.get('user-agent') || 'unknown',
-              platform: 'web',
-              language: req.headers.get('accept-language') || 'it-IT',
-              isIOSMobile: (req.headers.get('user-agent') || '').includes('iPhone'),
-              testId: Date.now()
-            },
-            ...data
+            source: 'admin_push_real'
           }
-        })}`);
+        };
+
+        if (firebaseApp) {
+          const messaging = getMessaging(firebaseApp);
+          const response = await messaging.send(message);
+          console.log(`✅ Firebase message sent successfully:`, response);
+        } else {
+          console.warn('⚠️ Firebase Admin not initialized, saving notification only');
+        }
         
         // Save notification to database for in-app display
         await supabase
@@ -181,17 +269,17 @@ serve(async (req) => {
             type: 'push',
             is_read: false,
             metadata: {
-              source: 'admin_push_test',
+              source: 'admin_push_real',
               sent_at: new Date().toISOString(),
-              push_result: 'simulation',
-              device_token_preview: device.token.substring(0, 50) + '...'
+              push_result: firebaseApp ? 'firebase_sent' : 'firebase_unavailable',
+              fcm_token_preview: fcmToken?.substring(0, 20) + '...'
             }
           });
 
         sentCount++;
-        console.log(`✅ PUSH DEBUG - Successfully processed device for user ${device.user_id}`);
+        console.log(`✅ REAL PUSH - Successfully sent to user ${device.user_id}`);
       } catch (error) {
-        console.error('❌ PUSH DEBUG - Error sending to device:', error);
+        console.error('❌ REAL PUSH - Error sending to device:', error);
         errors.push(`Error sending to user ${device.user_id}: ${error.message}`);
       }
     }

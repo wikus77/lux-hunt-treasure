@@ -20,7 +20,7 @@ firebase.initializeApp(firebaseConfig);
 // Retrieve an instance of Firebase Messaging
 const messaging = firebase.messaging();
 
-// Handle background messages - iOS compatible
+// Handle background messages - iOS native push
 messaging.onBackgroundMessage((payload) => {
   console.log('🔔 M1SSION™ - Background message received:', payload);
 
@@ -29,19 +29,23 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification?.body || payload.data?.body || 'Nuova notifica disponibile',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
-    image: '/icons/icon-192x192.png', // iOS PWA large image
+    image: '/icons/icon-192x192.png',
+    sound: 'default', // iOS native sound
+    vibrate: [200, 100, 200], // iOS vibration pattern
     data: {
       url: payload.data?.url || '/notifications',
       click_action: payload.data?.url || '/notifications',
       ...payload.data
     },
     tag: 'mission-notification',
-    requireInteraction: true, // iOS lock screen compatibility
+    requireInteraction: true, // Critical for iOS lock screen
     silent: false,
-    renotify: true, // iOS notification update
+    renotify: true,
     timestamp: Date.now(),
     dir: 'ltr',
     lang: 'it',
+    // Enhanced for iOS PWA
+    showTrigger: new TimestampTrigger(Date.now()),
     actions: [
       {
         action: 'open',
@@ -56,9 +60,9 @@ messaging.onBackgroundMessage((payload) => {
     ]
   };
 
-  console.log('🔔 Showing notification:', notificationTitle, notificationOptions);
+  console.log('🔔 iOS NATIVE - Showing notification:', notificationTitle, notificationOptions);
   
-  // Force notification to appear even on iOS lock screen
+  // iOS lock screen compatibility - force show
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
