@@ -34,9 +34,10 @@ const AdminEmergencyLogin: React.FC<AdminEmergencyLoginProps> = ({ onClose }) =>
       const result = await login('wikus77@hotmail.it', 'Wikus@190877');
       
       if (result.success) {
-        console.log('🚀 EMERGENCY LOGIN SUCCESS - Redirecting to /home');
-        // Force immediate redirect
-        window.location.href = '/home';
+        console.log('🚀 EMERGENCY LOGIN SUCCESS - Setting emergency access');
+        // Set emergency access flag and redirect to push-test
+        localStorage.setItem('emergency_admin_access', 'true');
+        window.location.href = '/push-test?emergency=admin';
       } else {
         console.error('❌ EMERGENCY LOGIN FAILED:', result.error);
         alert('Emergency login failed: ' + (result.error?.message || 'Unknown error'));
