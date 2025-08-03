@@ -53,7 +53,20 @@ const PushTestPage: React.FC = () => {
   }, [user, isAdmin]);
 
   const handleSendNotification = async () => {
+    console.log('🔔 PUSH-TEST: Starting send process...');
+    console.log('🔔 PUSH-TEST: iPhone compatibility check:', {
+      userAgent: navigator.userAgent,
+      isIOSMobile: /iPhone|iPad|iPod/.test(navigator.userAgent),
+      isIOSSafari: /iPad|iPhone|iPod/.test(navigator.userAgent),
+      serviceWorkerSupported: 'serviceWorker' in navigator,
+      notificationSupported: 'Notification' in window,
+      pushSupported: 'PushManager' in window,
+      currentURL: window.location.href,
+      notificationPermission: typeof Notification !== 'undefined' ? Notification.permission : 'unavailable'
+    });
+    
     if (!title.trim() || !message.trim()) {
+      console.log('❌ PUSH-TEST: Missing title or message');
       toast({
         title: "⚠️ Campi obbligatori",
         description: "Inserisci titolo e messaggio.",
@@ -63,6 +76,7 @@ const PushTestPage: React.FC = () => {
     }
 
     if (!isAdmin && !emergencyBypass) {
+      console.log('❌ PUSH-TEST: Access denied - not admin');
       toast({
         title: "❌ Accesso negato",
         description: "Solo gli admin possono inviare notifiche.",
@@ -72,6 +86,7 @@ const PushTestPage: React.FC = () => {
     }
 
     if (targetType === 'user' && !targetUserId.trim()) {
+      console.log('❌ PUSH-TEST: Missing user ID for user target');
       toast({
         title: "⚠️ User ID richiesto",
         description: "Inserisci l'ID utente per l'invio singolo.",
@@ -81,59 +96,72 @@ const PushTestPage: React.FC = () => {
     }
 
     setIsSending(true);
+    console.log('🔔 PUSH-TEST: Setting sending state to true');
 
     try {
-      const body: any = {
+      const requestBody: any = {
         title: title.trim(),
         body: message.trim(),
         data: {
           url: '/notifications',
           timestamp: new Date().toISOString(),
-          source: 'admin_test'
+          source: 'admin_push_test',
+          device_info: {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            isIOSMobile: /iPhone|iPad|iPod/.test(navigator.userAgent),
+            testId: Date.now()
+          }
         }
       };
 
       // Add target user if specified
       if (targetType === 'user') {
-        body.targetUserId = targetUserId.trim();
+        requestBody.targetUserId = targetUserId.trim();
+        console.log('🎯 PUSH-TEST: Targeting specific user:', targetUserId.trim());
+      } else {
+        console.log('📢 PUSH-TEST: Broadcasting to all users');
       }
 
-      console.log('🚨 CRITICAL PUSH DEBUG - Request:', body);
+      console.log('🚨 CRITICAL PUSH DEBUG - iPhone Compatible Request:', requestBody);
+      console.log('🚨 CRITICAL PUSH DEBUG - About to invoke edge function...');
 
       // Call edge function to send push notifications
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
-        body
+        body: requestBody
       });
 
-      console.log('🚨 CRITICAL PUSH DEBUG - Edge Function Response:', {
-        data,
-        error,
-        success: data?.success,
-        sent: data?.sent,
-        total: data?.total,
-        message: data?.message
+      console.log('🚨 CRITICAL PUSH DEBUG - Raw Edge Function Response:', {
+        data: data,
+        error: error,
+        dataJSON: JSON.stringify(data, null, 2),
+        errorJSON: JSON.stringify(error, null, 2)
       });
 
       if (error) {
-        console.error('❌ Error sending push notification:', error);
+        console.error('❌ PUSH-TEST: Error from edge function:', error);
+        console.error('❌ PUSH-TEST: Error details:', JSON.stringify(error, null, 2));
         toast({
           title: "❌ Errore invio",
           description: error.message || "Impossibile inviare la notifica.",
           variant: "destructive"
         });
       } else {
-        console.log('✅ Push notification sent successfully:', data);
+        console.log('✅ PUSH-TEST: Success response from edge function:', data);
+        console.log('✅ PUSH-TEST: Devices found:', data?.total || 0);
+        console.log('✅ PUSH-TEST: Notifications sent:', data?.sent || 0);
+        console.log('✅ PUSH-TEST: Target type:', data?.targetType || 'unknown');
+        
         toast({
           title: "✅ Notifica inviata",
           description: targetType === 'all' 
-            ? `Inviata a ${data?.sent || 0} dispositivi` 
+            ? `Inviata a ${data?.sent || 0} dispositivi su ${data?.total || 0} totali` 
             : `Inviata all'utente ${targetUserId}`,
         });
         
-        // Reset form
-        setTitle('');
-        setMessage('');
-        setTargetUserId('');
+        // Keep form data for easier re-testing on iPhone
+        console.log('✅ PUSH-TEST: iPhone test completed successfully - form data preserved for retesting');
       }
     } catch (error) {
       console.error('❌ Error sending notification:', error);

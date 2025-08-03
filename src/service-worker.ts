@@ -63,61 +63,92 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Push notification handler
+// Push notification handler - iOS compatible
 self.addEventListener('push', (event) => {
-  if (!event.data) return;
+  console.log('🔔 SW: Push event received:', event);
+  
+  if (!event.data) {
+    console.log('🔔 SW: No data in push event');
+    return;
+  }
   
   try {
     const data = event.data.json();
-    const options = {
+    console.log('🔔 SW: Push data parsed:', data);
+    
+    const options: NotificationOptions = {
       body: data.body || 'Nuova notifica da M1SSION™',
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-72x72.png',
-      vibrate: [100, 50, 100],
-      data: data.data || {},
-      actions: data.actions || [],
-      tag: data.tag || 'default',
+      data: {
+        url: '/notifications',
+        ...data.data
+      },
+      tag: data.tag || 'mission-notification',
       silent: false,
-      requireInteraction: false
+      requireInteraction: true, // iOS compatibility
+      dir: 'ltr' as NotificationDirection,
+      lang: 'it'
     };
 
+    console.log('🔔 SW: Showing notification with options:', options);
+    
     event.waitUntil(
       self.registration.showNotification(data.title || 'M1SSION™', options)
+        .then(() => {
+          console.log('🔔 SW: Notification shown successfully');
+        })
+        .catch((error) => {
+          console.error('🔔 SW: Error showing notification:', error);
+        })
     );
   } catch (error) {
-    console.error('Push notification error:', error);
-    // Fallback notification
+    console.error('🔔 SW: Push notification parsing error:', error);
+    // Fallback notification with iOS compatibility
     event.waitUntil(
       self.registration.showNotification('M1SSION™', {
         body: 'Nuova notifica disponibile',
-        icon: '/icons/icon-192x192.png'
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/icon-72x72.png',
+        requireInteraction: true,
+        data: { url: '/notifications' }
       })
     );
   }
 });
 
-// Notification click handler
+// Notification click handler - iOS compatible
 self.addEventListener('notificationclick', (event) => {
+  console.log('🔔 SW: Notification clicked:', event);
+  
   event.notification.close();
   
-  const urlToOpen = event.notification.data?.url || '/';
+  const urlToOpen = event.notification.data?.url || '/notifications';
+  console.log('🔔 SW: Opening URL:', urlToOpen);
   
   event.waitUntil(
     self.clients.matchAll({
       type: 'window',
       includeUncontrolled: true
     }).then((clientList) => {
+      console.log('🔔 SW: Found clients:', clientList.length);
+      
       // Check if app is already open
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
+          console.log('🔔 SW: Focusing existing client and navigating to:', urlToOpen);
           client.navigate(urlToOpen);
           return client.focus();
         }
       }
+      
       // Open new window if app not open
       if (self.clients.openWindow) {
+        console.log('🔔 SW: Opening new window:', urlToOpen);
         return self.clients.openWindow(urlToOpen);
       }
+    }).catch((error) => {
+      console.error('🔔 SW: Error handling notification click:', error);
     })
   );
 });

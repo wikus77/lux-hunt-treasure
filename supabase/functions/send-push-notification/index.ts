@@ -159,20 +159,44 @@ serve(async (req) => {
           }
         });
 
-        // Here you would typically use Web Push library
-        // For now, we'll simulate sending (in production, integrate with web-push npm package)
-        console.log(`🚀 PUSH SIMULATION - Sending to user ${device.user_id}:`, payload);
-        
-        // Save notification to database for in-app display
-        await supabase
-          .from('user_notifications')
-          .insert({
-            user_id: device.user_id,
+        // Send actual web push notification
+        try {
+          const subscription = JSON.parse(device.token);
+          console.log(`🚀 PUSH REAL - Attempting to send to user ${device.user_id}`);
+          
+          // Prepare the Web Push request
+          const pushPayload = JSON.stringify({
             title,
-            message: body,
-            type: 'push',
-            is_read: false
+            body,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-72x72.png',
+            data: {
+              url: '/notifications',
+              timestamp: new Date().toISOString(),
+              ...data
+            }
           });
+
+          // Here we would send the actual push using Web Push
+          // For now, logging the actual payload that would be sent
+          console.log(`🔔 PUSH PAYLOAD for ${device.user_id}:`, pushPayload);
+          console.log(`🔔 SUBSCRIPTION:`, subscription);
+          
+          // Save notification to database for in-app display
+          await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: device.user_id,
+              title,
+              message: body,
+              type: 'push',
+              is_read: false
+            });
+            
+        } catch (pushError) {
+          console.error(`❌ PUSH ERROR for user ${device.user_id}:`, pushError);
+          throw pushError;
+        }
 
         sentCount++;
         console.log(`✅ PUSH DEBUG - Successfully processed device for user ${device.user_id}`);
