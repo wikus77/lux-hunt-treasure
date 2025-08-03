@@ -10,9 +10,11 @@ import AnimatedLogo from "@/components/logo/AnimatedLogo";
 import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
+  const [showEmergencyLogin, setShowEmergencyLogin] = useState(false);
   const { navigate } = useWouterNavigation();
   const { isAuthenticated, isLoading } = useUnifiedAuth();
   const searchParams = new URLSearchParams(window.location.search);
@@ -169,10 +171,25 @@ const Login = () => {
                 ← Torna alla homepage
               </Link>
             </p>
+            
+            {/* Admin Emergency Access */}
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <button
+                onClick={() => setShowEmergencyLogin(true)}
+                className="text-xs text-red-400 hover:text-red-300 transition-colors"
+              >
+                🚨 Admin Emergency Access
+              </button>
+            </div>
           </div>
         </div>
 
       </motion.div>
+      
+      {/* Emergency Login Modal */}
+      {showEmergencyLogin && (
+        <AdminEmergencyLogin onClose={() => setShowEmergencyLogin(false)} />
+      )}
     </div>
   );
 };
