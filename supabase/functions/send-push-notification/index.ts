@@ -2,33 +2,123 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Firebase Admin SDK for real push notifications
-import { initializeApp, cert, ServiceAccount } from 'https://esm.sh/firebase-admin@12.1.0/app'
-import { getMessaging } from 'https://esm.sh/firebase-admin@12.1.0/messaging'
+// Firebase REST API for push notifications
+async function getFirebaseAccessToken(): Promise<string> {
+  const privateKey = (Deno.env.get('FIREBASE_PRIVATE_KEY') || "").replace(/\\n/g, '\n');
+  const clientEmail = Deno.env.get('FIREBASE_CLIENT_EMAIL') || "";
+  
+  if (!privateKey || !clientEmail) {
+    throw new Error('Firebase credentials not configured');
+  }
 
-// Firebase Service Account Configuration
-const firebaseServiceAccount: ServiceAccount = {
-  type: "service_account",
-  project_id: "project-x-mission",
-  private_key_id: Deno.env.get('FIREBASE_PRIVATE_KEY_ID') || "",
-  private_key: (Deno.env.get('FIREBASE_PRIVATE_KEY') || "").replace(/\\n/g, '\n'),
-  client_email: Deno.env.get('FIREBASE_CLIENT_EMAIL') || "",
-  client_id: Deno.env.get('FIREBASE_CLIENT_ID') || "",
-  auth_uri: "https://accounts.google.com/o/oauth2/auth",
-  token_uri: "https://oauth2.googleapis.com/token",
-  auth_provider_x509_cert_url: "https://www.googleapis.com/oauth2/v1/certs",
-  client_x509_cert_url: `https://www.googleapis.com/robot/v1/metadata/x509/${Deno.env.get('FIREBASE_CLIENT_EMAIL') || ""}`
-};
+  // Create JWT
+  const header = btoa(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const now = Math.floor(Date.now() / 1000);
+  const payload = btoa(JSON.stringify({
+    iss: clientEmail,
+    scope: "https://www.googleapis.com/auth/firebase.messaging",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now,
+    exp: now + 3600
+  }));
 
-// Initialize Firebase Admin
-let firebaseApp;
-try {
-  firebaseApp = initializeApp({
-    credential: cert(firebaseServiceAccount),
-    projectId: "project-x-mission"
+  // Import private key
+  const keyData = privateKey.replace(/-----BEGIN PRIVATE KEY-----|\s|-----END PRIVATE KEY-----/g, '');
+  const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    "pkcs8",
+    binaryKey,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+
+  // Sign JWT
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    cryptoKey,
+    new TextEncoder().encode(`${header}.${payload}`)
+  );
+
+  const jwt = `${header}.${payload}.${btoa(String.fromCharCode(...new Uint8Array(signature)))}`;
+
+  // Exchange JWT for access token
+  const response = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`
   });
-} catch (error) {
-  console.error('🔥 Firebase Admin initialization error:', error);
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
+  }
+
+  return data.access_token;
+}
+
+async function sendFirebasePush(fcmToken: string, title: string, body: string): Promise<boolean> {
+  try {
+    const accessToken = await getFirebaseAccessToken();
+    
+    const message = {
+      message: {
+        token: fcmToken,
+        notification: { title, body },
+        webpush: {
+          notification: {
+            title,
+            body,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-72x72.png',
+            requireInteraction: true,
+            sound: 'default',
+            tag: 'mission-notification',
+            data: {
+              url: '/notifications',
+              click_action: '/notifications'
+            }
+          },
+          fcm_options: { link: '/notifications' }
+        },
+        apns: {
+          payload: {
+            aps: {
+              alert: { title, body },
+              badge: 1,
+              sound: 'default',
+              'content-available': 1
+            }
+          }
+        }
+      }
+    };
+
+    const response = await fetch(
+      `https://fcm.googleapis.com/v1/projects/project-x-mission/messages:send`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(message)
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Firebase push failed:', error);
+      return false;
+    }
+
+    console.log('✅ Firebase push sent successfully');
+    return true;
+  } catch (error) {
+    console.error('❌ Firebase push error:', error);
+    return false;
+  }
 }
 
 const corsHeaders = {
@@ -195,68 +285,12 @@ serve(async (req) => {
 
         console.log(`🚀 REAL PUSH - Sending to FCM token: ${fcmToken?.substring(0, 20)}...`);
 
-        // Prepare Firebase message payload for iOS PWA
-        const message = {
-          token: fcmToken,
-          notification: {
-            title,
-            body
-          },
-          webpush: {
-            headers: {
-              'TTL': '86400'
-            },
-            notification: {
-              title,
-              body,
-              icon: '/icons/icon-192x192.png',
-              badge: '/icons/icon-72x72.png',
-              sound: 'default',
-              requireInteraction: true,
-              tag: 'mission-notification',
-              data: {
-                url: '/notifications',
-                click_action: '/notifications',
-                timestamp: new Date().toISOString(),
-                source: 'admin_push_real'
-              }
-            },
-            fcm_options: {
-              link: '/notifications'
-            }
-          },
-          apns: {
-            payload: {
-              aps: {
-                alert: {
-                  title,
-                  body
-                },
-                badge: 1,
-                sound: 'default',
-                'mutable-content': 1,
-                'content-available': 1
-              }
-            },
-            headers: {
-              'apns-priority': '10',
-              'apns-push-type': 'alert'
-            }
-          },
-          data: {
-            url: '/notifications',
-            click_action: '/notifications',
-            timestamp: new Date().toISOString(),
-            source: 'admin_push_real'
-          }
-        };
-
-        if (firebaseApp) {
-          const messaging = getMessaging(firebaseApp);
-          const response = await messaging.send(message);
-          console.log(`✅ Firebase message sent successfully:`, response);
-        } else {
-          console.warn('⚠️ Firebase Admin not initialized, saving notification only');
+        // Send real Firebase push notification
+        const pushSuccess = await sendFirebasePush(fcmToken, title, body);
+        
+        if (!pushSuccess) {
+          console.warn(`⚠️ Firebase push failed for user ${device.user_id}`);
+          errors.push(`Firebase push failed for user ${device.user_id}`);
         }
         
         // Save notification to database for in-app display
@@ -271,7 +305,7 @@ serve(async (req) => {
             metadata: {
               source: 'admin_push_real',
               sent_at: new Date().toISOString(),
-              push_result: firebaseApp ? 'firebase_sent' : 'firebase_unavailable',
+              push_result: pushSuccess ? 'firebase_sent' : 'firebase_failed',
               fcm_token_preview: fcmToken?.substring(0, 20) + '...'
             }
           });
