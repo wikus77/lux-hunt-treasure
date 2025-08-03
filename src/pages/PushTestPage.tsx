@@ -27,11 +27,16 @@ const PushTestPage: React.FC = () => {
   const { user } = useUnifiedAuth();
   const { toast } = useToast();
 
-  // Simple admin check - direkter email check for debugging
-  const isAdmin = user?.email === 'wikus77@hotmail.it';
+  // CRITICAL FIX: Admin check aggressivo per wikus77@hotmail.it
+  const isAdmin = user?.email?.toLowerCase() === 'wikus77@hotmail.it';
   
-  console.log('🔔 PUSH-TEST PAGE - User:', user?.email);
-  console.log('🔔 PUSH-TEST PAGE - isAdmin:', isAdmin);
+  console.log('🔔 PUSH-TEST PAGE - CRITICAL DEBUG:', {
+    user: user,
+    userEmail: user?.email,
+    emailLower: user?.email?.toLowerCase(),
+    isAdmin: isAdmin,
+    authState: user ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED'
+  });
 
   useEffect(() => {
     console.log('🔔 PUSH-TEST PAGE MOUNTED SUCCESSFULLY');
@@ -125,16 +130,31 @@ const PushTestPage: React.FC = () => {
     }
   };
 
-  // Access denied - semplificato senza loading state
+  // CRITICAL FIX: Access denied con debug info dettagliato
   if (!isAdmin) {
+    console.error('🚨 ACCESS DENIED - DEBUG INFO:', {
+      user: user,
+      userEmail: user?.email,
+      expectedEmail: 'wikus77@hotmail.it',
+      emailMatch: user?.email?.toLowerCase() === 'wikus77@hotmail.it',
+      isAdmin: isAdmin,
+      timestamp: new Date().toISOString()
+    });
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20 flex items-center justify-center">
         <Card className="bg-black/80 border-red-500/30 backdrop-blur-xl max-w-md">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-bold text-red-400 mb-4">❌ Accesso Negato</h2>
-            <p className="text-white/70">
+            <p className="text-white/70 mb-4">
               Solo gli amministratori possono accedere a questa pagina.
             </p>
+            <div className="text-xs text-white/50 p-3 bg-black/30 rounded border border-white/10">
+              <strong>DEBUG INFO:</strong><br />
+              User: {user?.email || 'NON_AUTENTICATO'}<br />
+              Required: wikus77@hotmail.it<br />
+              Match: {user?.email?.toLowerCase() === 'wikus77@hotmail.it' ? 'YES' : 'NO'}
+            </div>
           </CardContent>
         </Card>
       </div>
