@@ -71,8 +71,22 @@ export const usePanelAccessProtection = () => {
       const currentUser = getCurrentUser();
       const clientInfo = getClientInfo();
       
+      console.log('🔐 PANEL ACCESS VALIDATION - DEBUG:', {
+        isAuthenticated,
+        currentUser: currentUser,
+        email: currentUser?.email,
+        expectedEmail: AUTHORIZED_EMAIL,
+        timestamp: new Date().toISOString()
+      });
+      
       // 1. Controllo autenticazione base
       if (!isAuthenticated || !currentUser?.email) {
+        console.error('🚨 PANEL ACCESS DENIED - Not authenticated:', {
+          isAuthenticated,
+          hasUser: !!currentUser,
+          hasEmail: !!currentUser?.email
+        });
+        
         setAccessDeniedReason('Utente non autenticato');
         setIsWhitelisted(false);
         
@@ -84,12 +98,17 @@ export const usePanelAccessProtection = () => {
           success: false
         });
         
-        navigate('/access-denied');
-        return;
+        return; // NON navigare, solo ritorna false
       }
 
       // 2. Controllo email esatto
       if (currentUser.email !== AUTHORIZED_EMAIL) {
+        console.error('🚨 PANEL ACCESS DENIED - Wrong email:', {
+          actualEmail: currentUser.email,
+          expectedEmail: AUTHORIZED_EMAIL,
+          match: currentUser.email === AUTHORIZED_EMAIL
+        });
+        
         setAccessDeniedReason('Email non autorizzata');
         setIsWhitelisted(false);
         
@@ -101,8 +120,7 @@ export const usePanelAccessProtection = () => {
           success: false
         });
         
-        navigate('/access-denied');
-        return;
+        return; // NON navigare, solo ritorna false
       }
 
       // 3. Verifica hash SHA-256

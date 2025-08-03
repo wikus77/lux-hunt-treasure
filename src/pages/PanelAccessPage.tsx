@@ -38,13 +38,23 @@ const PanelAccessPage = () => {
       );
     }
     
-    // Se validazione completata e accesso negato, mostra messaggio minimal
+    // Se validazione completata e accesso negato, mostra messaggio con debug
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818] flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-red-500 mb-2">⛔ Accesso Negato</h1>
-          <p className="text-gray-400">Clearance insufficiente per M1SSION PANEL™</p>
+          <p className="text-gray-400 mb-4">Solo gli amministratori possono accedere a questa pagina</p>
+          
+          {/* DEBUG INFO per troubleshooting */}
+          <div className="text-xs text-white/50 p-3 bg-black/30 rounded border border-white/10 mb-4">
+            <strong>DEBUG INFO:</strong><br />
+            User: {currentUser?.email || 'NON_AUTENTICATO'}<br />
+            Required: wikus77@hotmail.it<br />
+            Reason: {accessDeniedReason}<br />
+            Authenticated: {String(!!currentUser)}
+          </div>
+          
           {accessDeniedReason && (
             <p className="text-xs text-gray-600 mt-4">Codice: {accessDeniedReason}</p>
           )}
