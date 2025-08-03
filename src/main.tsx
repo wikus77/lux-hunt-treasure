@@ -234,14 +234,39 @@ if (typeof window !== 'undefined') {
     });
   }
   
-  // Register Firebase messaging service worker for push notifications
+  // Register service worker with Firebase messaging support
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
-      .then((registration) => {
-        console.log('🔥 Firebase messaging service worker registered:', registration);
-      })
-      .catch((error) => {
-        console.error('🔥 Firebase messaging service worker registration failed:', error);
+    // Unregister any existing service workers first
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister();
       });
+      
+      // Register the Firebase messaging service worker
+      navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' })
+        .then((registration) => {
+          console.log('🔥 Firebase messaging service worker registered:', registration);
+          
+          // Wait for service worker to be ready and active
+          if (registration.waiting) {
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+          
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // New service worker available, reload the page
+                  window.location.reload();
+                }
+              });
+            }
+          });
+        })
+        .catch((error) => {
+          console.error('🔥 Firebase messaging service worker registration failed:', error);
+        });
+    });
   }
 }

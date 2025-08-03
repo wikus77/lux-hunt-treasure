@@ -87,8 +87,15 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       return { success: false, reason: 'no-token' };
     }
 
-    // Save token to database
-    await saveTokenToDatabase(currentToken);
+    // Create proper Web Push subscription
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(firebaseConfig.vapidKey)
+    });
+
+    // Save real subscription to database
+    await saveSubscriptionToDatabase(subscription);
     
     return { success: true, token: currentToken };
   } catch (error) {
@@ -97,33 +104,41 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
   }
 };
 
-// Save token to database
-const saveTokenToDatabase = async (token: string) => {
+// Convert VAPID key to Uint8Array
+const urlBase64ToUint8Array = (base64String: string) => {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
+
+// Save real subscription to database
+const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      console.log('User not authenticated, not saving token');
+      console.log('User not authenticated, not saving subscription');
       return false;
     }
     
     const userId = session.user.id;
     
-    // Save the token to the "device_tokens" table in Supabase
-    // Create subscription object for web push
-    const subscription = {
-      endpoint: `https://fcm.googleapis.com/fcm/send/${token}`,
-      keys: {
-        auth: btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16)))),
-        p256dh: btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(65))))
-      }
-    };
+    console.log('🔔 Saving real subscription:', subscription);
     
     const { error } = await supabase
       .from('device_tokens')
       .upsert({
         user_id: userId,
-        token: JSON.stringify(subscription), // Store as subscription object
+        token: JSON.stringify(subscription), // Store real subscription object
         device_type: 'web_push',
         created_at: new Date().toISOString(),
         last_used: new Date().toISOString()
@@ -132,13 +147,14 @@ const saveTokenToDatabase = async (token: string) => {
       }) as any;
       
     if (error) {
-      console.error('Error saving token:', error);
+      console.error('Error saving subscription:', error);
       return false;
     }
     
+    console.log('✅ Real subscription saved successfully');
     return true;
   } catch (error) {
-    console.error('Error in saveTokenToDatabase:', error);
+    console.error('Error in saveSubscriptionToDatabase:', error);
     return false;
   }
 };

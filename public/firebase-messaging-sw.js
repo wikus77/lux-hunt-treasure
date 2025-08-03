@@ -29,16 +29,76 @@ messaging.onBackgroundMessage((payload) => {
     body: payload.notification?.body || payload.data?.body || 'Nuova notifica disponibile',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-72x72.png',
+    image: '/icons/icon-192x192.png', // iOS PWA large image
     data: {
       url: payload.data?.url || '/notifications',
+      click_action: payload.data?.url || '/notifications',
       ...payload.data
     },
     tag: 'mission-notification',
-    requireInteraction: true, // iOS compatibility
+    requireInteraction: true, // iOS lock screen compatibility
     silent: false,
+    renotify: true, // iOS notification update
+    timestamp: Date.now(),
     dir: 'ltr',
     lang: 'it',
-    vibrate: [200, 100, 200], // iOS doesn't support vibrate, but won't error
+    actions: [
+      {
+        action: 'open',
+        title: 'Apri M1SSION™',
+        icon: '/icons/icon-72x72.png'
+      },
+      {
+        action: 'close',
+        title: 'Chiudi',
+        icon: '/icons/icon-72x72.png'
+      }
+    ]
+  };
+
+  console.log('🔔 Showing notification:', notificationTitle, notificationOptions);
+  
+  // Force notification to appear even on iOS lock screen
+  return self.registration.showNotification(notificationTitle, notificationOptions);
+});
+
+// Handle push events directly (fallback for iOS)
+self.addEventListener('push', (event) => {
+  console.log('🔔 Direct push event received:', event);
+  
+  if (!event.data) {
+    console.log('🔔 No data in push event');
+    return;
+  }
+  
+  let payload;
+  try {
+    payload = event.data.json();
+  } catch (e) {
+    console.log('🔔 Push event data is not JSON, treating as text');
+    payload = { notification: { title: 'M1SSION™', body: event.data.text() || 'Nuova notifica' } };
+  }
+  
+  console.log('🔔 Push payload:', payload);
+  
+  const notificationTitle = payload.notification?.title || payload.title || 'M1SSION™';
+  const notificationOptions = {
+    body: payload.notification?.body || payload.body || 'Nuova notifica disponibile',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/icon-72x72.png',
+    image: '/icons/icon-192x192.png',
+    data: {
+      url: payload.data?.url || payload.url || '/notifications',
+      click_action: payload.data?.url || payload.url || '/notifications',
+      ...payload.data
+    },
+    tag: 'mission-notification',
+    requireInteraction: true,
+    silent: false,
+    renotify: true,
+    timestamp: Date.now(),
+    dir: 'ltr',
+    lang: 'it',
     actions: [
       {
         action: 'open',
@@ -47,9 +107,10 @@ messaging.onBackgroundMessage((payload) => {
       }
     ]
   };
-
-  console.log('🔔 Showing notification:', notificationTitle, notificationOptions);
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  
+  event.waitUntil(
+    self.registration.showNotification(notificationTitle, notificationOptions)
+  );
 });
 
 // Handle notification click - iOS compatible

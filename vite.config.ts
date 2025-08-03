@@ -33,9 +33,14 @@ export default defineConfig(({ mode }) => ({
       brotliSize: true,
     }),
     VitePWA({
+      // Disable automatic service worker registration to use custom Firebase SW
+      injectRegister: null,
       registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB - increased for large bundle
+        // Don't generate default service worker - we use firebase-messaging-sw.js
+        skipWaiting: true,
+        clientsClaim: true,
         globIgnores: [
           '**/lovable-uploads/**',
           '**/*.{png,jpg,jpeg}', // Exclude all images from precaching
