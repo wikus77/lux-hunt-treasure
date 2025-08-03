@@ -7,9 +7,9 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-comp
 // Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC71GUysMmPq8m3ZkUHvBYTDCRUaAo3mio",
-  authDomain: "project-x-mission.firebaseapp.com",
-  projectId: "project-x-mission",
-  storageBucket: "project-x-mission.appspot.com",
+  authDomain: "m1ssion-app.firebaseapp.com",
+  projectId: "m1ssion-app",
+  storageBucket: "m1ssion-app.appspot.com",
   messagingSenderId: "307707487376",
   appId: "1:307707487376:web:29a6c9f3a5ff3caf82cabc"
 };
@@ -45,7 +45,6 @@ messaging.onBackgroundMessage((payload) => {
     dir: 'ltr',
     lang: 'it',
     // Enhanced for iOS PWA
-    showTrigger: new TimestampTrigger(Date.now()),
     actions: [
       {
         action: 'open',

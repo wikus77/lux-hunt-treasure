@@ -96,7 +96,7 @@ async function sendFirebasePush(fcmToken: string, title: string, body: string): 
     };
 
     const response = await fetch(
-      `https://fcm.googleapis.com/v1/projects/project-x-mission/messages:send`,
+      `https://fcm.googleapis.com/v1/projects/m1ssion-app/messages:send`,
       {
         method: 'POST',
         headers: {
