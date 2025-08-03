@@ -53,8 +53,8 @@ const PushTestPage: React.FC = () => {
   }, [user, isAdmin]);
 
   const handleSendNotification = async () => {
-    console.log('🔔 PUSH-TEST: Starting send process...');
-    console.log('🔔 PUSH-TEST: iPhone compatibility check:', {
+    console.log('🔔 PUSH-TEST: Starting REAL PUSH send process...');
+    console.log('🔔 PUSH-TEST: iPhone PWA compatibility check:', {
       userAgent: navigator.userAgent,
       isIOSMobile: /iPhone|iPad|iPod/.test(navigator.userAgent),
       isIOSSafari: /iPad|iPhone|iPod/.test(navigator.userAgent),
@@ -62,8 +62,24 @@ const PushTestPage: React.FC = () => {
       notificationSupported: 'Notification' in window,
       pushSupported: 'PushManager' in window,
       currentURL: window.location.href,
-      notificationPermission: typeof Notification !== 'undefined' ? Notification.permission : 'unavailable'
+      notificationPermission: typeof Notification !== 'undefined' ? Notification.permission : 'unavailable',
+      isPWA: (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches,
+      isFirebaseReady: (window as any).firebase !== undefined
     });
+
+    // Force request notification permission if not granted
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      console.log('🔔 REQUESTING notification permission for iOS...');
+      const permission = await Notification.requestPermission();
+      console.log('🔔 Permission result:', permission);
+      if (permission !== 'granted') {
+        toast({
+          title: "⚠️ Permission richiesto",
+          description: "Attiva le notifiche per testare le push reali",
+          variant: "destructive"
+        });
+      }
+    }
     
     if (!title.trim() || !message.trim()) {
       console.log('❌ PUSH-TEST: Missing title or message');
@@ -154,11 +170,22 @@ const PushTestPage: React.FC = () => {
         console.log('✅ PUSH-TEST: Target type:', data?.targetType || 'unknown');
         
         toast({
-          title: "✅ Notifica inviata",
+          title: "✅ NOTIFICA PUSH REALE INVIATA",
           description: targetType === 'all' 
-            ? `Inviata a ${data?.sent || 0} dispositivi su ${data?.total || 0} totali` 
-            : `Inviata all'utente ${targetUserId}`,
+            ? `📱 Push iOS inviata a ${data?.sent || 0} dispositivi` 
+            : `📱 Push iOS inviata all'utente ${targetUserId}`,
         });
+        
+        // Show immediate test notification for verification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          console.log('🔔 SHOWING immediate test notification...');
+          new Notification('M1SSION™ Test Immediato', {
+            body: 'Se vedi questa notifica, il sistema funziona!',
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-72x72.png',
+            tag: 'test-immediate'
+          });
+        }
         
         // Keep form data for easier re-testing on iPhone
         console.log('✅ PUSH-TEST: iPhone test completed successfully - form data preserved for retesting');

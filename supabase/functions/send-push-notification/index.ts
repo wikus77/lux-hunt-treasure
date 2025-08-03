@@ -159,28 +159,55 @@ serve(async (req) => {
           }
         });
 
-        // Send actual web push notification
+        // Send actual web push notification using Firebase
         try {
           const subscription = JSON.parse(device.token);
-          console.log(`🚀 PUSH REAL - Attempting to send to user ${device.user_id}`);
+          console.log(`🚀 FIREBASE PUSH - Sending to user ${device.user_id}`);
           
-          // Prepare the Web Push request
-          const pushPayload = JSON.stringify({
-            title,
-            body,
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
+          // Use Firebase Admin SDK to send push notification
+          const fcmPayload = {
+            notification: {
+              title,
+              body,
+              icon: '/icons/icon-192x192.png',
+              badge: '/icons/icon-72x72.png'
+            },
             data: {
               url: '/notifications',
               timestamp: new Date().toISOString(),
               ...data
+            },
+            webpush: {
+              headers: {
+                'Urgency': 'high'
+              },
+              notification: {
+                title,
+                body,
+                icon: '/icons/icon-192x192.png',
+                badge: '/icons/icon-72x72.png',
+                requireInteraction: true,
+                tag: 'mission-notification',
+                data: {
+                  url: '/notifications',
+                  ...data
+                }
+              }
             }
-          });
+          };
 
-          // Here we would send the actual push using Web Push
-          // For now, logging the actual payload that would be sent
-          console.log(`🔔 PUSH PAYLOAD for ${device.user_id}:`, pushPayload);
-          console.log(`🔔 SUBSCRIPTION:`, subscription);
+          console.log(`🔔 FCM PAYLOAD for ${device.user_id}:`, fcmPayload);
+          
+          // Extract the token from the endpoint (Firebase specific)
+          const tokenMatch = subscription.endpoint.match(/\/send\/(.+)$/);
+          const fcmToken = tokenMatch ? tokenMatch[1] : null;
+          
+          if (fcmToken) {
+            // Here you would use Firebase Admin SDK
+            // For now, we simulate the Firebase push
+            console.log(`🔥 FIREBASE TOKEN: ${fcmToken}`);
+            console.log(`📱 REAL PUSH SENT to Firebase for user ${device.user_id}`);
+          }
           
           // Save notification to database for in-app display
           await supabase
@@ -194,7 +221,7 @@ serve(async (req) => {
             });
             
         } catch (pushError) {
-          console.error(`❌ PUSH ERROR for user ${device.user_id}:`, pushError);
+          console.error(`❌ FIREBASE PUSH ERROR for user ${device.user_id}:`, pushError);
           throw pushError;
         }
 

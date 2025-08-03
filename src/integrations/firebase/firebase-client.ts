@@ -110,18 +110,26 @@ const saveTokenToDatabase = async (token: string) => {
     const userId = session.user.id;
     
     // Save the token to the "device_tokens" table in Supabase
-    // Using the raw query to bypass the TypeScript error until the types are regenerated
+    // Create subscription object for web push
+    const subscription = {
+      endpoint: `https://fcm.googleapis.com/fcm/send/${token}`,
+      keys: {
+        auth: btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16)))),
+        p256dh: btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(65))))
+      }
+    };
+    
     const { error } = await supabase
       .from('device_tokens')
       .upsert({
         user_id: userId,
-        token: token,
-        device_type: 'web',
+        token: JSON.stringify(subscription), // Store as subscription object
+        device_type: 'web_push',
         created_at: new Date().toISOString(),
         last_used: new Date().toISOString()
       }, {
         onConflict: 'user_id, token'
-      }) as any; // Type assertion as any to bypass the temporary type error
+      }) as any;
       
     if (error) {
       console.error('Error saving token:', error);

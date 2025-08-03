@@ -121,7 +121,10 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
-  "gcm_sender_id": "103953800507",
+  "gcm_sender_id": "307707487376",
   "permissions": ["notifications", "push"],
-  "notification_permission": "ask"
+  "notification_permission": "ask",
+  "firebase": {
+    "messagingSenderId": "307707487376"
+  }
 }
