@@ -21,6 +21,13 @@ serve(async (req) => {
   try {
     const { title, body, data, targetUserId } = await req.json() as NotificationRequest & { targetUserId?: string };
 
+    console.log('🚨 PUSH DEBUG - Received request:', {
+      title,
+      body,
+      targetUserId,
+      timestamp: new Date().toISOString()
+    });
+
     if (!title || !body) {
       return new Response(
         JSON.stringify({ error: 'Titolo e messaggio sono obbligatori' }),
@@ -35,6 +42,8 @@ serve(async (req) => {
 
     // Determina target type
     const targetType = targetUserId ? 'user' : 'all';
+
+    console.log('🔍 PUSH DEBUG - Target info:', { targetType, targetUserId });
 
     // Salva log iniziale
     const { data: logData, error: logError } = await supabase
@@ -55,10 +64,11 @@ serve(async (req) => {
       .single();
 
     if (logError) {
-      console.error('Error creating push log:', logError);
+      console.error('🚨 Error creating push log:', logError);
     }
 
     const logId = logData?.id;
+    console.log('📝 PUSH DEBUG - Log created with ID:', logId);
 
     // Get device tokens based on target
     let deviceTokensQuery = supabase
@@ -70,10 +80,19 @@ serve(async (req) => {
       deviceTokensQuery = deviceTokensQuery.eq('user_id', targetUserId);
     }
 
+    console.log('🔍 PUSH DEBUG - Executing query for device tokens...');
     const { data: deviceTokens, error: fetchError } = await deviceTokensQuery;
 
+    console.log('🔍 PUSH DEBUG - Query results:', {
+      targetType,
+      targetUserId,
+      deviceTokensCount: deviceTokens?.length || 0,
+      deviceTokens: deviceTokens,
+      fetchError: fetchError?.message
+    });
+
     if (fetchError) {
-      console.error('Error fetching device tokens:', fetchError);
+      console.error('🚨 Error fetching device tokens:', fetchError);
       
       // Aggiorna log con errore
       if (logId) {
@@ -94,6 +113,8 @@ serve(async (req) => {
     }
 
     if (!deviceTokens || deviceTokens.length === 0) {
+      console.log('⚠️ PUSH DEBUG - No device tokens found');
+      
       // Aggiorna log con nessun dispositivo
       if (logId) {
         await supabase
@@ -111,12 +132,14 @@ serve(async (req) => {
           sent: 0, 
           message: 'Nessun dispositivo registrato',
           targetType,
-          targetUserId: targetUserId || null
+          targetUserId: targetUserId || null,
+          debug: 'No device tokens found in database'
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    console.log(`✅ PUSH DEBUG - Found ${deviceTokens.length} device tokens`);
     let sentCount = 0;
     const errors: string[] = [];
 
@@ -138,7 +161,7 @@ serve(async (req) => {
 
         // Here you would typically use Web Push library
         // For now, we'll simulate sending (in production, integrate with web-push npm package)
-        console.log(`Sending notification to user ${device.user_id}:`, payload);
+        console.log(`🚀 PUSH SIMULATION - Sending to user ${device.user_id}:`, payload);
         
         // Save notification to database for in-app display
         await supabase
@@ -152,11 +175,14 @@ serve(async (req) => {
           });
 
         sentCount++;
+        console.log(`✅ PUSH DEBUG - Successfully processed device for user ${device.user_id}`);
       } catch (error) {
-        console.error('Error sending to device:', error);
+        console.error('❌ PUSH DEBUG - Error sending to device:', error);
         errors.push(`Error sending to user ${device.user_id}: ${error.message}`);
       }
     }
+
+    console.log(`📊 PUSH DEBUG - Final results: ${sentCount}/${deviceTokens.length} sent successfully`);
 
     // Aggiorna log finale
     if (logId) {
@@ -178,15 +204,17 @@ serve(async (req) => {
         errors: errors.length > 0 ? errors : undefined,
         targetType,
         targetUserId: targetUserId || null,
-        logId
+        logId,
+        success: sentCount > 0,
+        message: `Notifica inviata a ${sentCount} dispositivi su ${deviceTokens.length} totali`
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Push notification error:', error);
+    console.error('🚨 PUSH ERROR - Unhandled exception:', error);
     return new Response(
-      JSON.stringify({ error: 'Errore interno del server' }),
+      JSON.stringify({ error: 'Errore interno del server', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

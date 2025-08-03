@@ -98,11 +98,20 @@ const PushTestPage: React.FC = () => {
         body.targetUserId = targetUserId.trim();
       }
 
-      console.log('🔔 Sending push notification:', body);
+      console.log('🚨 CRITICAL PUSH DEBUG - Request:', body);
 
       // Call edge function to send push notifications
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body
+      });
+
+      console.log('🚨 CRITICAL PUSH DEBUG - Edge Function Response:', {
+        data,
+        error,
+        success: data?.success,
+        sent: data?.sent,
+        total: data?.total,
+        message: data?.message
       });
 
       if (error) {
