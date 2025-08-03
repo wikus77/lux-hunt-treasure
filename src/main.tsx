@@ -233,4 +233,15 @@ if (typeof window !== 'undefined') {
       optimizePWATouchGestures();
     });
   }
+  
+  // Register Firebase messaging service worker for push notifications
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+      .then((registration) => {
+        console.log('🔥 Firebase messaging service worker registered:', registration);
+      })
+      .catch((error) => {
+        console.error('🔥 Firebase messaging service worker registration failed:', error);
+      });
+  }
 }
