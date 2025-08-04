@@ -105,6 +105,23 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       await navigator.serviceWorker.ready;
       console.log('✅ Service worker is ready');
       
+      // ✅ CRITICAL FIX: Send Firebase config to service worker
+      if (registration && registration.active) {
+        console.log('🔄 Sending Firebase config to service worker...');
+        registration.active.postMessage({
+          type: 'UPDATE_FIREBASE_CONFIG',
+          config: {
+            apiKey: firebaseConfig.apiKey,
+            authDomain: firebaseConfig.authDomain,
+            projectId: firebaseConfig.projectId,
+            storageBucket: firebaseConfig.storageBucket,
+            messagingSenderId: firebaseConfig.messagingSenderId,
+            appId: firebaseConfig.appId
+          }
+        });
+        console.log('✅ Firebase config sent to service worker');
+      }
+      
     } catch (swError) {
       console.error('❌ Service worker registration failed:', swError);
       return { success: false, reason: 'service-worker-failed', error: swError };

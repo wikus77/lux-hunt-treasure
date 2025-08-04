@@ -4,15 +4,32 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js');
 
-// ✅ CRITICAL FIX: Sync with firebase-config.ts
-const firebaseConfig = {
-  apiKey: "AIzaSyC71GUysMmPq8m3ZkUHvBYTDCRUaAo3mio",
-  authDomain: "m1ssion-app.firebaseapp.com",
-  projectId: "m1ssion-app",
-  storageBucket: "m1ssion-app.appspot.com",
-  messagingSenderId: "307707487376",
-  appId: "1:307707487376:web:29a6c9f3a5ff3caf82cabc"
+// ✅ SYNCHRONIZED: Using Supabase secrets (fetch from client at runtime)
+// Note: Service Workers cannot access process.env directly, config must be injected
+let firebaseConfig = {
+  apiKey: "placeholder", // Will be updated by client
+  authDomain: "placeholder",
+  projectId: "placeholder", 
+  storageBucket: "placeholder",
+  messagingSenderId: "placeholder",
+  appId: "placeholder"
 };
+
+// Listen for config updates from main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'UPDATE_FIREBASE_CONFIG') {
+    firebaseConfig = event.data.config;
+    console.log('🔄 Service Worker: Firebase config updated', firebaseConfig);
+    
+    // Reinitialize Firebase with new config
+    try {
+      firebase.initializeApp(firebaseConfig);
+      console.log('✅ Service Worker: Firebase reinitialized with new config');
+    } catch (error) {
+      console.error('❌ Service Worker: Firebase reinit failed:', error);
+    }
+  }
+});
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
