@@ -28,7 +28,133 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { token, title, body, data, sound = 'default', badge = 1 }: PushNotificationRequest = await req.json();
+    const requestBody = await req.json();
+    console.log('🔍 PUSH REQUEST: Received payload:', requestBody);
+
+    // ✅ FIX: Support both mass notifications and individual tokens
+    const { token, title, body, data, sound = 'default', badge = 1 } = requestBody;
+    
+    // If no token provided, send to all registered devices
+    if (!token) {
+      console.log('📢 MASS NOTIFICATION: Sending to all registered devices');
+      
+      // Get all active device tokens
+      const { data: deviceTokens, error: tokensError } = await supabase
+        .from('device_tokens')
+        .select('token, user_id, platform, device_type')
+        .eq('is_active', true)
+        .order('last_used', { ascending: false });
+
+      if (tokensError) {
+        console.error('❌ Error fetching device tokens:', tokensError);
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Failed to fetch device tokens',
+            timestamp: new Date().toISOString()
+          }),
+          { 
+            status: 500,
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        );
+      }
+
+      if (!deviceTokens || deviceTokens.length === 0) {
+        console.log('⚠️ No device tokens found');
+        return new Response(
+          JSON.stringify({
+            success: true,
+            sent: 0,
+            message: 'No registered devices found',
+            timestamp: new Date().toISOString()
+          }),
+          { 
+            headers: { 
+              ...corsHeaders, 
+              'Content-Type': 'application/json' 
+            } 
+          }
+        );
+      }
+
+      console.log(`📱 Found ${deviceTokens.length} device tokens to notify`);
+
+      let successCount = 0;
+      let failureCount = 0;
+      const results = [];
+
+      // Send to each device individually
+      for (const deviceToken of deviceTokens) {
+        try {
+          // Recursive call for each token
+          const individualResponse = await fetch(req.url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': req.headers.get('Authorization') || '',
+            },
+            body: JSON.stringify({
+              token: deviceToken.token,
+              title,
+              body,
+              data,
+              sound,
+              badge
+            })
+          });
+
+          const result = await individualResponse.json();
+          
+          if (result.success) {
+            successCount++;
+          } else {
+            failureCount++;
+          }
+          
+          results.push({
+            token: deviceToken.token.substring(0, 20) + '...',
+            user_id: deviceToken.user_id,
+            platform: deviceToken.platform,
+            success: result.success,
+            response: result.response
+          });
+
+        } catch (error) {
+          console.error(`❌ Failed to send to token ${deviceToken.token.substring(0, 20)}:`, error);
+          failureCount++;
+          results.push({
+            token: deviceToken.token.substring(0, 20) + '...',
+            user_id: deviceToken.user_id,
+            platform: deviceToken.platform,
+            success: false,
+            error: error.message
+          });
+        }
+      }
+
+      console.log(`✅ MASS NOTIFICATION COMPLETE: ${successCount} success, ${failureCount} failures`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sent: successCount,
+          failed: failureCount,
+          total: deviceTokens.length,
+          results,
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
 
     // ✅ CRITICAL FIX: Validate token exists before using substring
     if (!token) {
