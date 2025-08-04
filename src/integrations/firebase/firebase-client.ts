@@ -1,11 +1,12 @@
 
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
-import { firebaseConfig } from './firebase-config';
+import { getFirebaseConfig } from './firebase-config';
 import { supabase } from '@/integrations/supabase/client';
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase with dynamic config
+let app: any = null;
+let messaging: any = null;
 
 // Check if Firebase Messaging is supported
 const isFCMSupported = async () => {
@@ -21,7 +22,19 @@ const isFCMSupported = async () => {
 export const getMessagingInstance = async () => {
   if (await isFCMSupported()) {
     try {
-      return getMessaging(app);
+      // Initialize Firebase app with dynamic config if not already done
+      if (!app) {
+        const config = await getFirebaseConfig();
+        app = initializeApp(config);
+        console.log('✅ Firebase app initialized with dynamic config');
+      }
+      
+      if (!messaging) {
+        messaging = getMessaging(app);
+        console.log('✅ Firebase messaging instance created');
+      }
+      
+      return messaging;
     } catch (error) {
       console.error('Failed to get messaging instance:', error);
       return null;
@@ -107,19 +120,20 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       
       // ✅ CRITICAL FIX: Send Firebase config to service worker
       if (registration && registration.active) {
-        console.log('🔄 Sending Firebase config to service worker...');
+        console.log('🔄 Sending dynamic Firebase config to service worker...');
+        const currentConfig = await getFirebaseConfig();
         registration.active.postMessage({
           type: 'UPDATE_FIREBASE_CONFIG',
           config: {
-            apiKey: firebaseConfig.apiKey,
-            authDomain: firebaseConfig.authDomain,
-            projectId: firebaseConfig.projectId,
-            storageBucket: firebaseConfig.storageBucket,
-            messagingSenderId: firebaseConfig.messagingSenderId,
-            appId: firebaseConfig.appId
+            apiKey: currentConfig.apiKey,
+            authDomain: currentConfig.authDomain,
+            projectId: currentConfig.projectId,
+            storageBucket: currentConfig.storageBucket,
+            messagingSenderId: currentConfig.messagingSenderId,
+            appId: currentConfig.appId
           }
         });
-        console.log('✅ Firebase config sent to service worker');
+        console.log('✅ Dynamic Firebase config sent to service worker');
       }
       
     } catch (swError) {
@@ -127,13 +141,16 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       return { success: false, reason: 'service-worker-failed', error: swError };
     }
 
-    // ✅ Step 4: Get FCM token
+    // ✅ Step 4: Get FCM token with dynamic config
     let currentToken: string;
     try {
-      console.log('🔄 Requesting FCM token with VAPID key...');
+      console.log('🔄 Requesting FCM token with dynamic VAPID key...');
+      
+      // Get the current Firebase config
+      const currentConfig = await getFirebaseConfig();
       
       currentToken = await getToken(messaging, {
-        vapidKey: firebaseConfig.vapidKey,
+        vapidKey: currentConfig.vapidKey,
         serviceWorkerRegistration: await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
       });
       
