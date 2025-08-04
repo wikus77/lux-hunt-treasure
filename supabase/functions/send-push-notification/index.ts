@@ -107,11 +107,34 @@ async function sendFirebasePush(fcmToken: string, title: string, body: string): 
         apns: {
           payload: {
             aps: {
-              alert: { title, body },
+              alert: {
+                title,
+                body,
+                sound: 'default'
+              },
               badge: 1,
               sound: 'default',
-              'content-available': 1
+              'content-available': 1,
+              'mutable-content': 1
             }
+          },
+          fcm_options: {
+            image: '/icons/icon-192x192.png'
+          }
+        },
+        android: {
+          notification: {
+            title,
+            body,
+            icon: 'ic_notification',
+            sound: 'default',
+            priority: 'high',
+            visibility: 'public',
+            channel_id: 'mission_notifications'
+          },
+          priority: 'high',
+          data: {
+            click_action: '/notifications'
           }
         }
       }
