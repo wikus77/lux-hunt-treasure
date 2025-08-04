@@ -170,7 +170,16 @@ const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
     const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
     
     let deviceType = 'web_push';
-    let tokenData = JSON.stringify(subscription);
+    let tokenData: string;
+    
+    // Extract FCM token from Web Push subscription endpoint
+    if (subscription.endpoint?.includes('fcm.googleapis.com/fcm/send/')) {
+      tokenData = subscription.endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
+      console.log('🌐 Web FCM token extracted for device_tokens:', tokenData.substring(0, 20) + '...');
+    } else {
+      tokenData = JSON.stringify(subscription);
+      console.log('🌐 Web Push subscription saved as JSON fallback');
+    }
     
     // Handle native device types
     if (isCapacitor && isAndroid) {
