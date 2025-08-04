@@ -28,9 +28,25 @@ async function getFirebaseAccessToken(): Promise<string> {
     exp: now + 3600
   }));
 
-  // Import private key
-  const keyData = privateKey.replace(/-----BEGIN PRIVATE KEY-----|\s|-----END PRIVATE KEY-----/g, '');
-  const binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+  // Import private key - gestisci correttamente newline e spazi
+  const keyData = privateKey
+    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+    .replace(/-----END PRIVATE KEY-----/g, '')
+    .replace(/\\n/g, '\n')  // Converte \\n in veri newline
+    .replace(/\s+/g, '')    // Rimuove tutti gli spazi e newline
+    .replace(/\n/g, '');    // Rimuove tutti i newline rimanenti
+  
+  console.log(`🔍 Key processing - original length: ${privateKey.length}, processed length: ${keyData.length}`);
+  console.log(`🔍 Key starts with: ${keyData.substring(0, 50)}...`);
+  
+  let binaryKey;
+  try {
+    binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+    console.log(`✅ Key decode successful - binary length: ${binaryKey.length}`);
+  } catch (decodeError) {
+    console.error(`❌ Key decode failed:`, decodeError);
+    throw new Error(`Private key decode failed: ${decodeError.message}`);
+  }
   
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
@@ -113,13 +129,28 @@ async function sendFirebasePush(fcmToken: string, title: string, body: string): 
       }
     );
 
+    const responseText = await response.text();
+    
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Firebase push failed:', error);
+      console.error('❌ Firebase push failed:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: responseText
+      });
       return false;
     }
 
-    console.log('✅ Firebase push sent successfully');
+    try {
+      const responseData = JSON.parse(responseText);
+      console.log('✅ Firebase push sent successfully:', {
+        messageId: responseData.name,
+        response: responseData
+      });
+    } catch (e) {
+      console.log('✅ Firebase push sent successfully (non-JSON response):', responseText);
+    }
+    
     return true;
   } catch (error) {
     console.error('❌ Firebase push error:', error);
