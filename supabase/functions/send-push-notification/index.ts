@@ -120,53 +120,94 @@ async function sendSingleNotification(
     }
   }
 
-  // Web Push Notification
+  // Web Push Notification via FCM
   else {
-    console.log('🌐 Sending Web Push notification...');
+    console.log('🌐 Sending Web Push notification via FCM...');
     
     try {
-      const webpushLib = await import('https://esm.sh/web-push@3.6.7');
-      const vapidKey = Deno.env.get('VAPID_KEY');
+      const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
       
-      if (!vapidKey) {
-        console.error('❌ Missing VAPID_KEY for Web Push');
+      if (!fcmServerKey) {
+        console.error('❌ Missing FCM_SERVER_KEY for Web Push');
         success = false;
-        response = { platform: 'web', status: 'failed', error: 'Missing VAPID_KEY' };
+        response = { platform: 'web', status: 'failed', error: 'Missing FCM_SERVER_KEY' };
       } else {
         // Parse Web Push subscription
         let subscription;
         try {
           subscription = JSON.parse(parsedToken);
+          console.log('🔍 Parsed subscription:', { 
+            hasEndpoint: !!subscription.endpoint,
+            hasKeys: !!subscription.keys 
+          });
         } catch (e) {
           console.error('❌ Invalid Web Push subscription format:', e);
           success = false;
           response = { platform: 'web', status: 'failed', error: 'Invalid subscription format' };
         }
         
-        if (subscription && subscription.endpoint) {
-          const payload = JSON.stringify({
-            title: title,
-            body: body,
+        if (subscription && subscription.endpoint && subscription.endpoint.includes('fcm')) {
+          // Extract registration token from FCM endpoint
+          const urlParts = subscription.endpoint.split('/');
+          const registrationToken = urlParts[urlParts.length - 1];
+          
+          console.log(`🔍 Extracted FCM token: ${registrationToken.substring(0, 20)}...`);
+          
+          // Send FCM notification
+          const fcmPayload = {
+            to: registrationToken,
+            notification: {
+              title: title,
+              body: body,
+              icon: '/favicon.ico',
+              click_action: 'https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com/notifications'
+            },
             data: {
               url: '/notifications',
+              timestamp: new Date().toISOString(),
               ...data
             }
+          };
+          
+          console.log('🚀 Sending FCM request...');
+          
+          const fcmResponse = await fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+              'Authorization': `key=${fcmServerKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(fcmPayload)
           });
           
-          webpushLib.setVapidDetails(
-            'mailto:support@m1ssion.app',
-            vapidKey,
-            vapidKey
-          );
+          const fcmResult = await fcmResponse.json();
           
-          await webpushLib.sendNotification(subscription, payload);
-          success = true;
-          response = { 
-            platform: 'web', 
-            status: 'sent successfully',
-            endpoint: subscription.endpoint.substring(0, 50) + '...'
-          };
-          console.log('✅ Web push notification sent successfully');
+          console.log(`📡 FCM Response Status: ${fcmResponse.status}`);
+          console.log('📡 FCM Response Body:', fcmResult);
+          
+          if (fcmResponse.ok && fcmResult.success >= 1) {
+            success = true;
+            response = { 
+              platform: 'web', 
+              status: 'sent successfully via FCM',
+              fcm_message_id: fcmResult.results?.[0]?.message_id,
+              endpoint: subscription.endpoint.substring(0, 50) + '...'
+            };
+            console.log('✅ Web push notification sent successfully via FCM');
+          } else {
+            success = false;
+            response = { 
+              platform: 'web', 
+              status: 'failed', 
+              error: fcmResult.results?.[0]?.error || 'FCM send failed',
+              fcm_response: fcmResult
+            };
+            console.error('❌ FCM send failed:', fcmResult);
+          }
+        } else {
+          success = false;
+          response = { platform: 'web', status: 'failed', error: 'Invalid or non-FCM endpoint' };
+          console.error('❌ Invalid or non-FCM endpoint');
         }
       }
     } catch (webError) {
