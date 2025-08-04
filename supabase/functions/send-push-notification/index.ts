@@ -28,23 +28,38 @@ async function getFirebaseAccessToken(): Promise<string> {
     exp: now + 3600
   }));
 
-  // Import private key - gestisci correttamente newline e spazi
-  const keyData = privateKey
+  // Clean and format the private key properly
+  let cleanedKey = privateKey;
+  
+  // Handle both \\n and \n cases
+  if (privateKey.includes('\\n')) {
+    cleanedKey = privateKey.replace(/\\n/g, '\n');
+    console.log('🔧 Fixed \\n to actual newlines');
+  }
+  
+  // Ensure proper format with headers
+  if (!cleanedKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    cleanedKey = `-----BEGIN PRIVATE KEY-----\n${cleanedKey}\n-----END PRIVATE KEY-----`;
+    console.log('🔧 Added BEGIN/END headers');
+  }
+  
+  // Extract only the base64 content between headers
+  const keyContent = cleanedKey
     .replace(/-----BEGIN PRIVATE KEY-----/g, '')
     .replace(/-----END PRIVATE KEY-----/g, '')
-    .replace(/\\n/g, '\n')  // Converte \\n in veri newline
-    .replace(/\s+/g, '')    // Rimuove tutti gli spazi e newline
-    .replace(/\n/g, '');    // Rimuove tutti i newline rimanenti
+    .replace(/\s/g, '')  // Remove ALL whitespace including spaces, tabs, newlines
+    .replace(/\n/g, ''); // Remove any remaining newlines
   
-  console.log(`🔍 Key processing - original length: ${privateKey.length}, processed length: ${keyData.length}`);
-  console.log(`🔍 Key starts with: ${keyData.substring(0, 50)}...`);
+  console.log(`🔍 Key processing - original: ${privateKey.length}, cleaned: ${cleanedKey.length}, content: ${keyContent.length}`);
+  console.log(`🔍 Content starts with: ${keyContent.substring(0, 50)}...`);
   
   let binaryKey;
   try {
-    binaryKey = Uint8Array.from(atob(keyData), c => c.charCodeAt(0));
+    binaryKey = Uint8Array.from(atob(keyContent), c => c.charCodeAt(0));
     console.log(`✅ Key decode successful - binary length: ${binaryKey.length}`);
   } catch (decodeError) {
     console.error(`❌ Key decode failed:`, decodeError);
+    console.error(`Key content length: ${keyContent.length}, sample: ${keyContent.substring(0, 100)}`);
     throw new Error(`Private key decode failed: ${decodeError.message}`);
   }
   
@@ -206,7 +221,8 @@ async function sendFirebasePush(fcmToken: string, title: string, body: string): 
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-key',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 interface NotificationRequest {
@@ -383,7 +399,7 @@ serve(async (req) => {
         }
         
         // Save notification to database for in-app display
-        await supabase
+        const { data: notificationData, error: notificationError } = await supabase
           .from('user_notifications')
           .insert({
             user_id: device.user_id,
@@ -391,13 +407,24 @@ serve(async (req) => {
             message: body,
             type: 'push',
             is_read: false,
+            created_at: new Date().toISOString(),
             metadata: {
               source: 'admin_push_real',
               sent_at: new Date().toISOString(),
               push_result: pushSuccess ? 'firebase_sent' : 'firebase_failed',
-              fcm_token_preview: fcmToken?.substring(0, 20) + '...'
+              fcm_token_preview: fcmToken?.substring(0, 20) + '...',
+              device_type: device.device_type
             }
-          });
+          })
+          .select()
+          .single();
+
+        if (notificationError) {
+          console.error(`❌ NOTIFICATION SAVE ERROR for user ${device.user_id}:`, notificationError);
+          errors.push(`Notification save failed for user ${device.user_id}: ${notificationError.message}`);
+        } else {
+          console.log(`✅ NOTIFICATION SAVED for user ${device.user_id}, ID:`, notificationData?.id);
+        }
 
         sentCount++;
         console.log(`✅ REAL PUSH - Successfully sent to user ${device.user_id}`);
