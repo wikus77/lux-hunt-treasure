@@ -1,20 +1,80 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// Firebase REST API for push notifications
+// FIXED: Robust Firebase Access Token Generation
 async function getFirebaseAccessToken(): Promise<string> {
-  const privateKey = (Deno.env.get('FIREBASE_PRIVATE_KEY') || "").replace(/\\n/g, '\n');
+  const rawPrivateKey = Deno.env.get('FIREBASE_PRIVATE_KEY') || "";
   const clientEmail = Deno.env.get('FIREBASE_CLIENT_EMAIL') || "";
   
-  console.log('🔑 Checking Firebase credentials...');
-  console.log('📧 Client email:', clientEmail ? 'Present' : 'Missing');
-  console.log('🔐 Private key:', privateKey ? `Present (${privateKey.length} chars)` : 'Missing');
-  console.log('🔍 Email starts with:', clientEmail ? clientEmail.substring(0, 20) + '...' : 'N/A');
-  console.log('🔍 Key starts with:', privateKey ? privateKey.substring(0, 50) + '...' : 'N/A');
+  console.log('🔑 Firebase credentials check:');
+  console.log('  - Email:', clientEmail ? 'Present' : 'Missing');
+  console.log('  - Key length:', rawPrivateKey ? rawPrivateKey.length : 0);
   
-  if (!privateKey || !clientEmail) {
+  if (!rawPrivateKey || !clientEmail) {
     throw new Error('Firebase credentials not configured');
+  }
+
+  // FIXED: Handle ALL possible newline escape variations
+  let privateKey = rawPrivateKey.trim();
+  
+  // Process multiple escaping levels and formats
+  privateKey = privateKey
+    .replace(/\\\\n/g, '\n')     // Double escaped
+    .replace(/\\n/g, '\n')       // Single escaped
+    .replace(/\r\n/g, '\n')      // Windows CRLF
+    .replace(/\r/g, '\n')        // Mac CR
+    .trim();
+  
+  console.log('🔧 Key processing - Final length:', privateKey.length);
+  
+  // Ensure proper PEM format
+  if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    privateKey = `-----BEGIN PRIVATE KEY-----\n${privateKey}\n-----END PRIVATE KEY-----`;
+  }
+  
+  // Normalize PEM structure
+  privateKey = privateKey
+    .replace(/-----BEGIN PRIVATE KEY-----\s*/g, '-----BEGIN PRIVATE KEY-----\n')
+    .replace(/\s*-----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----')
+    .replace(/\n+/g, '\n');
+  
+  console.log('🔍 PEM structure preview:', privateKey.substring(0, 100) + '...');
+  
+  // Extract base64 content with strict validation
+  const pemMatch = privateKey.match(/-----BEGIN PRIVATE KEY-----\n([A-Za-z0-9+\/=\s]+)\n-----END PRIVATE KEY-----/);
+  if (!pemMatch || !pemMatch[1]) {
+    console.error('❌ PEM extraction failed');
+    throw new Error('Invalid PEM format');
+  }
+  
+  const base64Content = pemMatch[1].replace(/\s/g, '');
+  console.log(`🔍 Base64 content: ${base64Content.length} chars, valid: ${/^[A-Za-z0-9+\/]+=*$/.test(base64Content)}`);
+  
+  // Decode to binary
+  let binaryKey;
+  try {
+    binaryKey = Uint8Array.from(atob(base64Content), c => c.charCodeAt(0));
+    console.log(`✅ Base64 decode success: ${binaryKey.length} bytes`);
+  } catch (error) {
+    console.error('❌ Base64 decode failed:', error);
+    throw new Error(`Key decode failed: ${error.message}`);
+  }
+  
+  // Import crypto key
+  let cryptoKey;
+  try {
+    cryptoKey = await crypto.subtle.importKey(
+      "pkcs8",
+      binaryKey,
+      { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+      false,
+      ["sign"]
+    );
+    console.log('✅ Crypto key imported successfully');
+  } catch (error) {
+    console.error('❌ Crypto import failed:', error);
+    throw new Error(`Key import failed: ${error.message}`);
   }
 
   // Create JWT
@@ -28,66 +88,6 @@ async function getFirebaseAccessToken(): Promise<string> {
     exp: now + 3600
   }));
 
-  // Clean and format the private key properly
-  let cleanedKey = privateKey.trim();
-  
-  // Handle multiple newline formats
-  cleanedKey = cleanedKey
-    .replace(/\\n/g, '\n')      // Replace literal \n with actual newlines
-    .replace(/\r\n/g, '\n')     // Normalize Windows line endings  
-    .replace(/\r/g, '\n')       // Handle Mac line endings
-    .trim();
-  
-  console.log('🔧 Key after newline processing, length:', cleanedKey.length);
-  
-  // Ensure proper format with headers and newlines
-  if (!cleanedKey.includes('-----BEGIN PRIVATE KEY-----')) {
-    // If no headers, assume it's just the key content
-    cleanedKey = `-----BEGIN PRIVATE KEY-----\n${cleanedKey}\n-----END PRIVATE KEY-----`;
-    console.log('🔧 Added BEGIN/END headers');
-  } else {
-    // Ensure proper line breaks around headers
-    cleanedKey = cleanedKey
-      .replace(/-----BEGIN PRIVATE KEY-----\s*/g, '-----BEGIN PRIVATE KEY-----\n')
-      .replace(/\s*-----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----');
-  }
-  
-  console.log('🔍 Final formatted key preview:', cleanedKey.substring(0, 80) + '...');
-  
-  // Extract only the base64 content between headers
-  const keyMatch = cleanedKey.match(/-----BEGIN PRIVATE KEY-----\s*([A-Za-z0-9+/=\s]+)\s*-----END PRIVATE KEY-----/);
-  if (!keyMatch || !keyMatch[1]) {
-    console.error('❌ Could not extract key content from headers');
-    throw new Error('Invalid private key format - unable to extract content');
-  }
-  
-  const keyContent = keyMatch[1].replace(/\s/g, ''); // Remove all whitespace
-  console.log(`🔍 Extracted key content length: ${keyContent.length}, starts with: ${keyContent.substring(0, 50)}...`);
-  
-  // Validate base64 content
-  if (!/^[A-Za-z0-9+/]+=*$/.test(keyContent)) {
-    console.error('❌ Invalid base64 characters in key content');
-    throw new Error('Private key contains invalid base64 characters');
-  }
-  
-  let binaryKey;
-  try {
-    binaryKey = Uint8Array.from(atob(keyContent), c => c.charCodeAt(0));
-    console.log(`✅ Key decode successful - binary length: ${binaryKey.length}`);
-  } catch (decodeError) {
-    console.error(`❌ Key decode failed:`, decodeError);
-    console.error(`Key content length: ${keyContent.length}, sample: ${keyContent.substring(0, 100)}...`);
-    throw new Error(`Private key decode failed: ${decodeError.message}`);
-  }
-  
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    binaryKey,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
   // Sign JWT
   const signature = await crypto.subtle.sign(
     "RSASSA-PKCS1-v1_5",
@@ -97,7 +97,7 @@ async function getFirebaseAccessToken(): Promise<string> {
 
   const jwt = `${header}.${payload}.${btoa(String.fromCharCode(...new Uint8Array(signature)))}`;
 
-  // Exchange JWT for access token
+  // Exchange for access token
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -106,146 +106,143 @@ async function getFirebaseAccessToken(): Promise<string> {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(`Failed to get access token: ${JSON.stringify(data)}`);
+    console.error('❌ Token exchange failed:', data);
+    throw new Error(`Token exchange failed: ${JSON.stringify(data)}`);
   }
 
+  console.log('✅ Firebase access token obtained');
   return data.access_token;
 }
 
-async function sendFirebasePush(fcmToken: string, title: string, body: string): Promise<boolean> {
+// FIXED: OS-native push notification with iOS APNs and Android FCM
+async function sendFirebasePush(token: string, title: string, body: string, deviceType: string = 'unknown'): Promise<{ success: boolean, messageId?: string, error?: string }> {
   try {
     const accessToken = await getFirebaseAccessToken();
     
+    let fcmToken = token;
+    
+    // Extract FCM token from web push subscription
+    if (token.startsWith('{') && token.includes('endpoint')) {
+      try {
+        const subscription = JSON.parse(token);
+        if (subscription.endpoint?.includes('fcm.googleapis.com/fcm/send/')) {
+          fcmToken = subscription.endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
+          console.log(`🔑 FCM token extracted: ${fcmToken.substring(0, 30)}...`);
+        }
+      } catch (e) {
+        console.warn('⚠️ Token parsing failed, using as-is');
+      }
+    }
+    
+    console.log(`🚀 SENDING PUSH - Type: ${deviceType}, Token: ${fcmToken.substring(0, 25)}...`);
+    
+    // FIXED: OS-native notification payload
     const message = {
       message: {
         token: fcmToken,
-        notification: { 
-          title, 
-          body,
-          image: '/icons/icon-192x192.png'
+        notification: {
+          title: title,
+          body: body
         },
-        data: {
-          url: '/notifications',
-          click_action: '/notifications',
-          timestamp: new Date().toISOString(),
-          source: 'admin_push_notification'
-        },
-        webpush: {
-          notification: {
-            title,
-            body,
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
-            requireInteraction: true,
-            sound: 'default',
-            tag: 'mission-notification',
-            data: {
-              url: '/notifications',
-              click_action: '/notifications'
-            }
-          },
-          fcm_options: { 
-            link: '/notifications',
-            analytics_label: 'mission_push'
-          }
-        },
+        // iOS APNs payload - CRITICAL for lock screen notifications
         apns: {
           headers: {
             'apns-priority': '10',
-            'apns-push-type': 'alert'
+            'apns-push-type': 'alert',
+            'apns-topic': 'com.m1ssion.app'
           },
           payload: {
             aps: {
               alert: {
-                title,
-                body
+                title: title,
+                body: body,
+                subtitle: "M1SSION™"
               },
-              sound: 'default',
+              sound: "default",
               badge: 1,
               'content-available': 1,
               'mutable-content': 1,
-              category: 'MISSION_NOTIFICATION'
+              category: 'M1SSION_ALERT'
             },
-            data: {
-              url: '/notifications',
-              click_action: '/notifications'
+            customData: {
+              source: 'm1ssion',
+              url: '/notifications'
             }
           }
         },
+        // Android FCM payload - CRITICAL for system notifications  
         android: {
           priority: 'high',
+          ttl: '3600s',
           notification: {
-            title,
-            body,
+            title: title,
+            body: body,
             icon: 'ic_notification',
             sound: 'default',
-            click_action: '/notifications',
-            channel_id: 'mission_notifications',
+            channel_id: 'm1ssion_notifications',
             priority: 'high',
             visibility: 'public',
             default_sound: true,
             default_vibrate_timings: true,
-            default_light_settings: true
+            default_light_settings: true,
+            color: '#00D1FF',
+            tag: 'm1ssion-push'
           },
           data: {
+            source: 'm1ssion',
             url: '/notifications',
-            click_action: '/notifications'
+            click_action: 'FLUTTER_NOTIFICATION_CLICK'
+          }
+        },
+        // Web push fallback
+        webpush: {
+          notification: {
+            title: title,
+            body: body,
+            icon: '/icons/icon-192x192.png',
+            badge: '/icons/icon-72x72.png',
+            tag: 'm1ssion-notification',
+            requireInteraction: true,
+            vibrate: [200, 100, 200],
+            data: { url: '/notifications' }
+          },
+          headers: {
+            'TTL': '3600',
+            'Urgency': 'high'
           }
         }
       }
     };
 
-    const response = await fetch(
-      `https://fcm.googleapis.com/v1/projects/m1ssion-app/messages:send`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(message)
-      }
-    );
+    const response = await fetch(`https://fcm.googleapis.com/v1/projects/m1ssion-app/messages:send`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(message)
+    });
 
     const responseText = await response.text();
     
-    if (!response.ok) {
-      console.error('❌ Firebase push failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        body: responseText
-      });
-      return false;
-    }
-
-    try {
+    if (response.ok) {
       const responseData = JSON.parse(responseText);
-      console.log('✅ Firebase push sent successfully:', {
-        messageId: responseData.name,
-        response: responseData
-      });
-    } catch (e) {
-      console.log('✅ Firebase push sent successfully (non-JSON response):', responseText);
+      console.log(`✅ PUSH SUCCESS - ${deviceType.toUpperCase()}:`, responseData.name);
+      return { success: true, messageId: responseData.name };
+    } else {
+      console.error(`❌ PUSH FAILED - ${deviceType.toUpperCase()}:`, response.status, responseText);
+      return { success: false, error: responseText };
     }
-    
-    return true;
   } catch (error) {
-    console.error('❌ Firebase push error:', error);
-    return false;
+    console.error('❌ Push exception:', error);
+    return { success: false, error: error.message };
   }
 }
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-key',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-interface NotificationRequest {
-  title: string;
-  body: string;
-  data?: any;
 }
 
 serve(async (req) => {
@@ -254,9 +251,9 @@ serve(async (req) => {
   }
 
   try {
-    const { title, body, data, targetUserId } = await req.json() as NotificationRequest & { targetUserId?: string };
+    const { title, body, targetUserId } = await req.json();
 
-    console.log('🚨 PUSH DEBUG - Received request:', {
+    console.log('🚨 PUSH REQUEST:', {
       title,
       body,
       targetUserId,
@@ -265,196 +262,147 @@ serve(async (req) => {
 
     if (!title || !body) {
       return new Response(
-        JSON.stringify({ error: 'Titolo e messaggio sono obbligatori' }),
+        JSON.stringify({ error: 'Title and body required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create Supabase client
+    // Create Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Determina target type
     const targetType = targetUserId ? 'user' : 'all';
+    console.log('🔍 Target:', { targetType, targetUserId });
 
-    console.log('🔍 PUSH DEBUG - Target info:', { targetType, targetUserId });
-
-    // Salva log iniziale
-    const { data: logData, error: logError } = await supabase
+    // Log the push attempt
+    const { data: logData } = await supabase
       .from('push_notification_logs')
       .insert({
         title: title.trim(),
         message: body.trim(),
         target_type: targetType,
         target_user_id: targetUserId || null,
-        status: 'pending',
-        metadata: {
-          data: data || {},
-          timestamp: new Date().toISOString(),
-          source: 'admin_push_test'
-        }
+        status: 'pending'
       })
       .select()
       .single();
 
-    if (logError) {
-      console.error('🚨 Error creating push log:', logError);
-    }
+    console.log('📝 Log created:', logData?.id);
 
-    const logId = logData?.id;
-    console.log('📝 PUSH DEBUG - Log created with ID:', logId);
-
-    // Get device tokens based on target (iOS/Android + web_push)
+    // Get device tokens (prioritize iOS/Android over web_push)
     let deviceTokensQuery = supabase
       .from('device_tokens')
       .select('token, user_id, device_type')
-      .in('device_type', ['web_push', 'ios', 'android', 'mobile']);
-
-    console.log('🔍 PUSH DEBUG - Looking for device tokens with types: web_push, ios, android, mobile');
+      .in('device_type', ['ios', 'android', 'web_push', 'mobile']);
 
     if (targetUserId) {
       deviceTokensQuery = deviceTokensQuery.eq('user_id', targetUserId);
     }
 
-    console.log('🔍 PUSH DEBUG - Executing query for device tokens...');
     const { data: deviceTokens, error: fetchError } = await deviceTokensQuery;
 
-    console.log('🔍 PUSH DEBUG - Query results:', {
-      targetType,
-      targetUserId,
-      deviceTokensCount: deviceTokens?.length || 0,
-      deviceTokens: deviceTokens,
-      fetchError: fetchError?.message
+    console.log('🔍 Device tokens found:', {
+      count: deviceTokens?.length || 0,
+      types: deviceTokens?.map(d => d.device_type)
     });
 
     if (fetchError) {
-      console.error('🚨 Error fetching device tokens:', fetchError);
-      
-      // Aggiorna log con errore
-      if (logId) {
-        await supabase
-          .from('push_notification_logs')
-          .update({
-            status: 'failed',
-            error_message: `Error fetching devices: ${fetchError.message}`,
-            devices_sent: 0
-          })
-          .eq('id', logId);
-      }
-
+      console.error('❌ Device fetch error:', fetchError);
       return new Response(
-        JSON.stringify({ error: 'Errore nel recupero dei dispositivi' }),
+        JSON.stringify({ error: 'Device fetch failed' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     if (!deviceTokens || deviceTokens.length === 0) {
-      console.log('⚠️ PUSH DEBUG - No device tokens found');
+      console.log('⚠️ No devices found');
       
-      // Aggiorna log con nessun dispositivo
-      if (logId) {
+      // Update log
+      if (logData?.id) {
         await supabase
           .from('push_notification_logs')
-          .update({
-            status: 'sent',
-            devices_sent: 0,
-            sent_at: new Date().toISOString()
-          })
-          .eq('id', logId);
+          .update({ status: 'sent', devices_sent: 0 })
+          .eq('id', logData.id);
       }
 
       return new Response(
         JSON.stringify({ 
           sent: 0, 
-          message: 'Nessun dispositivo registrato',
+          message: 'No devices registered',
           targetType,
-          targetUserId: targetUserId || null,
-          debug: 'No device tokens found in database'
+          targetUserId: targetUserId || null
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`✅ PUSH DEBUG - Found ${deviceTokens.length} device tokens`);
     let sentCount = 0;
     const errors: string[] = [];
+    const results: any[] = [];
 
-    // Send REAL Firebase push notifications
+    // Send push notifications to all devices
     for (const device of deviceTokens) {
       try {
-        // Parse the Web Push subscription to extract FCM token
-        let fcmToken;
-        try {
-          const subscription = JSON.parse(device.token);
-          const endpoint = subscription.endpoint;
-          console.log('🔍 PUSH DEBUG - Raw endpoint:', endpoint);
-          
-          // Extract FCM token from endpoint
-          if (endpoint.includes('fcm.googleapis.com/fcm/send/')) {
-            // Estrai il token FCM completo dall'endpoint
-            const tokenPart = endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
-            fcmToken = tokenPart; // Il token è tutto quello che segue dopo /send/
-            console.log(`🔑 FCM token extracted (${fcmToken.length} chars):`, fcmToken.substring(0, 30) + '...');
-          } else {
-            console.warn(`⚠️ Non-FCM endpoint for user ${device.user_id}:`, endpoint);
-            continue;
-          }
-        } catch (parseError) {
-          console.error(`❌ Error parsing token for user ${device.user_id}:`, parseError);
-          continue;
-        }
-
-        console.log(`🚀 REAL PUSH - Sending to FCM token: ${fcmToken?.substring(0, 20)}...`);
-
-        // Send real Firebase push notification
-        const pushSuccess = await sendFirebasePush(fcmToken, title, body);
+        console.log(`🚀 Sending to user ${device.user_id} (${device.device_type})`);
         
-        if (!pushSuccess) {
-          console.warn(`⚠️ Firebase push failed for user ${device.user_id}`);
-          errors.push(`Firebase push failed for user ${device.user_id}`);
-        }
+        const pushResult = await sendFirebasePush(device.token, title, body, device.device_type);
         
-        // Save notification to database for in-app display
-        const { data: notificationData, error: notificationError } = await supabase
-          .from('user_notifications')
-          .insert({
-            user_id: device.user_id,
-            title,
-            message: body,
-            type: 'push',
-            is_read: false,
-            created_at: new Date().toISOString(),
-            metadata: {
-              source: 'admin_push_real',
-              sent_at: new Date().toISOString(),
-              push_result: pushSuccess ? 'firebase_sent' : 'firebase_failed',
-              fcm_token_preview: fcmToken?.substring(0, 20) + '...',
-              device_type: device.device_type
-            }
-          })
-          .select()
-          .single();
+        results.push({
+          user_id: device.user_id,
+          device_type: device.device_type,
+          success: pushResult.success,
+          messageId: pushResult.messageId,
+          error: pushResult.error
+        });
 
-        if (notificationError) {
-          console.error(`❌ NOTIFICATION SAVE ERROR for user ${device.user_id}:`, notificationError);
-          errors.push(`Notification save failed for user ${device.user_id}: ${notificationError.message}`);
+        if (pushResult.success) {
+          sentCount++;
+          console.log(`✅ Push sent to user ${device.user_id}`);
         } else {
-          console.log(`✅ NOTIFICATION SAVED for user ${device.user_id}, ID:`, notificationData?.id);
+          console.warn(`⚠️ Push failed for user ${device.user_id}:`, pushResult.error);
+          errors.push(`User ${device.user_id}: ${pushResult.error}`);
         }
 
-        sentCount++;
-        console.log(`✅ REAL PUSH - Successfully sent to user ${device.user_id}`);
+        // FIXED: Save notification to user_notifications for in-app sync
+        try {
+          const { data: notificationData, error: notificationError } = await supabase
+            .from('user_notifications')
+            .insert({
+              user_id: device.user_id,
+              title: title,
+              message: body,
+              type: 'push',
+              is_read: false,
+              metadata: {
+                push_sent: pushResult.success,
+                device_type: device.device_type,
+                message_id: pushResult.messageId,
+                timestamp: new Date().toISOString()
+              }
+            })
+            .select()
+            .single();
+
+          if (notificationError) {
+            console.error(`❌ Notification save error for user ${device.user_id}:`, notificationError);
+          } else {
+            console.log(`✅ Notification saved for user ${device.user_id}:`, notificationData?.id);
+          }
+        } catch (saveError) {
+          console.error(`❌ Notification save exception for user ${device.user_id}:`, saveError);
+        }
+
       } catch (error) {
-        console.error('❌ REAL PUSH - Error sending to device:', error);
-        errors.push(`Error sending to user ${device.user_id}: ${error.message}`);
+        console.error(`❌ Send error for user ${device.user_id}:`, error);
+        errors.push(`User ${device.user_id}: ${error.message}`);
       }
     }
 
-    console.log(`📊 PUSH DEBUG - Final results: ${sentCount}/${deviceTokens.length} sent successfully`);
+    console.log(`📊 Final results: ${sentCount}/${deviceTokens.length} sent successfully`);
 
-    // Aggiorna log finale
-    if (logId) {
+    // Update log with final status
+    if (logData?.id) {
       await supabase
         .from('push_notification_logs')
         .update({
@@ -463,7 +411,7 @@ serve(async (req) => {
           error_message: errors.length > 0 ? errors.join('; ') : null,
           sent_at: new Date().toISOString()
         })
-        .eq('id', logId);
+        .eq('id', logData.id);
     }
 
     return new Response(
@@ -471,19 +419,17 @@ serve(async (req) => {
         sent: sentCount,
         total: deviceTokens.length,
         errors: errors.length > 0 ? errors : undefined,
-        targetType,
-        targetUserId: targetUserId || null,
-        logId,
+        results: results,
         success: sentCount > 0,
-        message: `Notifica inviata a ${sentCount} dispositivi su ${deviceTokens.length} totali`
+        message: `Push sent to ${sentCount}/${deviceTokens.length} devices`
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('🚨 PUSH ERROR - Unhandled exception:', error);
+    console.error('🚨 Unhandled error:', error);
     return new Response(
-      JSON.stringify({ error: 'Errore interno del server', details: error.message }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
