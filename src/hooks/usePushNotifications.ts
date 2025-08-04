@@ -11,6 +11,7 @@ import {
   getMessagingInstance
 } from '@/integrations/firebase/firebase-client';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export const usePushNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -99,6 +100,33 @@ export const usePushNotifications = () => {
             
             // Register for push notifications
             await PushNotifications.register();
+            
+            // 🔥 CRITICAL: Save iOS token to database
+            PushNotifications.addListener('registration', async (token) => {
+              console.log('🍎 iOS Push registration info: ', token);
+              
+              // Save iOS token to device_tokens
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                const { error } = await supabase
+                  .from('device_tokens')
+                  .upsert({
+                    user_id: user.id,
+                    token: token.value,
+                    device_type: 'ios',
+                    last_used: new Date().toISOString()
+                  }, {
+                    onConflict: 'user_id,device_type'
+                  });
+                  
+                if (error) {
+                  console.error('❌ Error saving iOS token:', error);
+                } else {
+                  console.log('✅ iOS token saved to database');
+                  setToken(token.value);
+                }
+              }
+            });
             
             toast.success('✅ Notifiche push attivate!', {
               description: 'Riceverai aggiornamenti su missioni e premi',

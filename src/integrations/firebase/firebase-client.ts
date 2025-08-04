@@ -134,16 +134,34 @@ const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
     
     console.log('🔔 Saving real subscription:', subscription);
     
+    // Determine device type
+    const isCapacitor = (window as any).Capacitor?.isNativePlatform();
+    const isAndroid = (window as any).Capacitor?.getPlatform() === 'android';
+    const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
+    
+    let deviceType = 'web_push';
+    let tokenData = JSON.stringify(subscription);
+    
+    // Handle native device types
+    if (isCapacitor && isAndroid) {
+      deviceType = 'android';
+      // For Android, subscription contains FCM token
+      tokenData = subscription.endpoint ? subscription.endpoint : JSON.stringify(subscription);
+    } else if (isCapacitor && isIOS) {
+      deviceType = 'ios';
+      // For iOS, this will be handled by Capacitor listener
+    }
+    
     const { error } = await supabase
       .from('device_tokens')
       .upsert({
         user_id: userId,
-        token: JSON.stringify(subscription), // Store real subscription object
-        device_type: 'web_push',
+        token: tokenData,
+        device_type: deviceType,
         created_at: new Date().toISOString(),
         last_used: new Date().toISOString()
       }, {
-        onConflict: 'user_id, token'
+        onConflict: 'user_id, device_type'
       }) as any;
       
     if (error) {

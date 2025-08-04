@@ -2450,6 +2450,7 @@ export type Database = {
           is_read: boolean | null
           is_read_bool: boolean | null
           message: string
+          metadata: Json | null
           title: string
           type: string
           user_id: string
@@ -2461,6 +2462,7 @@ export type Database = {
           is_read?: boolean | null
           is_read_bool?: boolean | null
           message: string
+          metadata?: Json | null
           title: string
           type?: string
           user_id: string
@@ -2472,6 +2474,7 @@ export type Database = {
           is_read?: boolean | null
           is_read_bool?: boolean | null
           message?: string
+          metadata?: Json | null
           title?: string
           type?: string
           user_id?: string
