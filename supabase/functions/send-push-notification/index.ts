@@ -87,7 +87,17 @@ async function sendFirebasePush(fcmToken: string, title: string, body: string): 
     const message = {
       message: {
         token: fcmToken,
-        notification: { title, body },
+        notification: { 
+          title, 
+          body,
+          image: '/icons/icon-192x192.png'
+        },
+        data: {
+          url: '/notifications',
+          click_action: '/notifications',
+          timestamp: new Date().toISOString(),
+          source: 'admin_push_notification'
+        },
         webpush: {
           notification: {
             title,
@@ -102,38 +112,51 @@ async function sendFirebasePush(fcmToken: string, title: string, body: string): 
               click_action: '/notifications'
             }
           },
-          fcm_options: { link: '/notifications' }
+          fcm_options: { 
+            link: '/notifications',
+            analytics_label: 'mission_push'
+          }
         },
         apns: {
+          headers: {
+            'apns-priority': '10',
+            'apns-push-type': 'alert'
+          },
           payload: {
             aps: {
               alert: {
                 title,
-                body,
-                sound: 'default'
+                body
               },
-              badge: 1,
               sound: 'default',
+              badge: 1,
               'content-available': 1,
-              'mutable-content': 1
+              'mutable-content': 1,
+              category: 'MISSION_NOTIFICATION'
+            },
+            data: {
+              url: '/notifications',
+              click_action: '/notifications'
             }
-          },
-          fcm_options: {
-            image: '/icons/icon-192x192.png'
           }
         },
         android: {
+          priority: 'high',
           notification: {
             title,
             body,
             icon: 'ic_notification',
             sound: 'default',
+            click_action: '/notifications',
+            channel_id: 'mission_notifications',
             priority: 'high',
             visibility: 'public',
-            channel_id: 'mission_notifications'
+            default_sound: true,
+            default_vibrate_timings: true,
+            default_light_settings: true
           },
-          priority: 'high',
           data: {
+            url: '/notifications',
             click_action: '/notifications'
           }
         }
