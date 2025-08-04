@@ -52,16 +52,24 @@ const NotificationsSettings: React.FC = () => {
     if (!user) return;
     
     try {
+      console.log('🔍 Checking push tokens for user:', user.id);
+      
       const { data, error } = await supabase
         .from('device_tokens')
-        .select('id')
+        .select('id, device_type, token')
         .eq('user_id', user.id)
-        .in('device_type', ['ios', 'android', 'web_push'])
-        .limit(1);
+        .in('device_type', ['ios', 'android', 'web_push']);
 
+      console.log('📱 Push tokens found:', data);
+      
       if (!error && data && data.length > 0) {
+        console.log('✅ Push tokens exist - enabling toggle');
         setPushTokenExists(true);
         setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+      } else {
+        console.log('❌ No push tokens found');
+        setPushTokenExists(false);
+        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
       }
     } catch (error) {
       console.error('Error checking push token:', error);
@@ -142,26 +150,39 @@ const NotificationsSettings: React.FC = () => {
   };
 
   const handlePushNotificationsToggle = async (enabled: boolean) => {
+    console.log('🔄 Push toggle clicked:', enabled);
+    
     if (enabled) {
+      console.log('📱 Requesting push notification permission...');
+      setLoading(true);
+      
       // Request push notification permission
       const result = await requestPermission();
       
+      console.log('📋 Permission request result:', result);
+      
       if (result.success) {
-        setPushTokenExists(true);
-        setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+        console.log('✅ Permission granted - checking tokens again');
+        
+        // Re-check tokens after permission grant
+        await checkPushTokenExists();
+        
         toast({
           title: "✅ Notifiche Push Attivate",
           description: "Riceverai notifiche push su questo dispositivo."
         });
       } else {
+        console.log('❌ Permission denied or failed');
         setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
         toast({
           title: "❌ Permesso Negato",
-          description: "Le notifiche push non sono state autorizzate.",
+          description: result.reason || "Le notifiche push non sono state autorizzate.",
           variant: "destructive"
         });
       }
+      setLoading(false);
     } else {
+      console.log('🔕 Disabling push notifications');
       setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
       // Note: We keep the token in database for potential re-activation
       toast({
