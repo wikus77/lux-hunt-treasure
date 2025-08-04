@@ -182,13 +182,43 @@ const NotificationsSettings: React.FC = () => {
       }
       setLoading(false);
     } else {
-      console.log('🔕 Disabling push notifications');
-      setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-      // Note: We keep the token in database for potential re-activation
-      toast({
-        title: "🔕 Notifiche Push Disattivate",
-        description: "Non riceverai più notifiche push su questo dispositivo."
-      });
+      console.log('🔕 Disabling push notifications - removing tokens');
+      setLoading(true);
+      
+      try {
+        // Remove all push tokens for this user
+        const { error } = await supabase
+          .from('device_tokens')
+          .delete()
+          .eq('user_id', user?.id)
+          .in('device_type', ['ios', 'android', 'web_push']);
+          
+        if (error) {
+          console.error('❌ Error removing push tokens:', error);
+          toast({
+            title: "❌ Errore Disattivazione",
+            description: "Non è stato possibile disattivare le notifiche push.",
+            variant: "destructive"
+          });
+        } else {
+          console.log('✅ Push tokens removed successfully');
+          setPushTokenExists(false);
+          setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+          toast({
+            title: "🔕 Notifiche Push Disattivate",
+            description: "Non riceverai più notifiche push su questo dispositivo."
+          });
+        }
+      } catch (error) {
+        console.error('❌ Exception removing push tokens:', error);
+        toast({
+          title: "❌ Errore Disattivazione",
+          description: "Si è verificato un errore durante la disattivazione.",
+          variant: "destructive"
+        });
+      }
+      
+      setLoading(false);
     }
   };
 
