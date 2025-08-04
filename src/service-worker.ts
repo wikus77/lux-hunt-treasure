@@ -66,9 +66,20 @@ self.addEventListener('activate', (event) => {
 // Push notification handler - iOS compatible
 self.addEventListener('push', (event) => {
   console.log('🔔 SW: Push event received:', event);
+  console.log('🔔 SW: Event data available:', !!event.data);
   
   if (!event.data) {
-    console.log('🔔 SW: No data in push event');
+    console.log('🔔 SW: No data in push event - showing fallback notification');
+    event.waitUntil(
+      self.registration.showNotification('M1SSION™', {
+        body: 'Nuova notifica disponibile',
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
+        requireInteraction: true,
+        data: { url: '/notifications' },
+        tag: 'mission-fallback'
+      })
+    );
     return;
   }
   
@@ -76,12 +87,21 @@ self.addEventListener('push', (event) => {
     const data = event.data.json();
     console.log('🔔 SW: Push data parsed:', data);
     
+    // ✅ CRITICAL FIX: Handle both direct payload and nested data structures
+    const notificationData = data.notification || data;
+    const title = notificationData.title || data.title || 'M1SSION™';
+    const body = notificationData.body || data.body || 'Nuova notifica da M1SSION™';
+    
+    console.log(`🔔 SW: Extracted - Title: "${title}", Body: "${body}"`);
+    
     const options: NotificationOptions = {
-      body: data.body || 'Nuova notifica da M1SSION™',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/icon-72x72.png',
+      body: body,
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
       data: {
         url: '/notifications',
+        timestamp: new Date().toISOString(),
+        source: 'push_notification',
         ...data.data
       },
       tag: data.tag || 'mission-notification',
@@ -94,9 +114,18 @@ self.addEventListener('push', (event) => {
     console.log('🔔 SW: Showing notification with options:', options);
     
     event.waitUntil(
-      self.registration.showNotification(data.title || 'M1SSION™', options)
+      self.registration.showNotification(title, options)
         .then(() => {
           console.log('🔔 SW: Notification shown successfully');
+          // ✅ Send message to main thread to update UI
+          self.clients.matchAll().then(clients => {
+            clients.forEach(client => {
+              client.postMessage({
+                type: 'PUSH_NOTIFICATION_RECEIVED',
+                data: { title, body, timestamp: new Date().toISOString() }
+              });
+            });
+          });
         })
         .catch((error) => {
           console.error('🔔 SW: Error showing notification:', error);
@@ -108,10 +137,11 @@ self.addEventListener('push', (event) => {
     event.waitUntil(
       self.registration.showNotification('M1SSION™', {
         body: 'Nuova notifica disponibile',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-72x72.png',
+        icon: '/favicon.ico',
+        badge: '/favicon.ico',
         requireInteraction: true,
-        data: { url: '/notifications' }
+        data: { url: '/notifications' },
+        tag: 'mission-fallback'
       })
     );
   }
