@@ -1,4 +1,10 @@
 
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Settings Page with Push Test Integration
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
@@ -14,6 +20,8 @@ import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
+import { PushNotificationTest } from "@/components/admin/PushNotificationTest";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
@@ -66,63 +74,82 @@ const Settings = () => {
           <h1 className="text-2xl font-bold text-white">Impostazioni</h1>
         </div>
         
-        {/* Admin Role Switcher (only visible to admins) */}
-        <RoleSwitcher />
-        
-        {/* Account Settings */}
-        <AccountSection />
-        
-        {/* App Settings */}
-        <AppSection 
-          soundEffects={soundEffects}
-          language={language}
-          setSoundEffects={setSoundEffects}
-        />
-        
-        {/* Notification Settings */}
-        <NotificationSection 
-          pushNotifications={pushNotifications}
-          emailNotifications={emailNotifications}
-          setPushNotifications={setPushNotifications}
-          setEmailNotifications={setEmailNotifications}
-        />
-        
-        {/* Support & Help */}
-        <SupportSection />
-                
-        {/* Logout Button */}
-        <div className="mt-8">
-          {!showLogoutConfirm ? (
-            <Button 
-              variant="destructive" 
-              className="w-full" 
-              onClick={() => setShowLogoutConfirm(true)}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Esci dall'account
-            </Button>
-          ) : (
-            <div className="flex flex-col gap-3 p-4 border border-red-500/30 rounded-lg bg-red-950/20">
-              <p className="text-white text-center">Sei sicuro di voler uscire?</p>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  className="flex-1" 
-                  onClick={() => setShowLogoutConfirm(false)}
-                >
-                  Annulla
-                </Button>
+        <Tabs defaultValue="main" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border-zinc-700">
+            <TabsTrigger value="main" className="text-white data-[state=active]:bg-white data-[state=active]:text-black">
+              ⚙️ Impostazioni
+            </TabsTrigger>
+            <TabsTrigger value="push-test" className="text-white data-[state=active]:bg-white data-[state=active]:text-black">
+              🧪 Test Push
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="main" className="space-y-6 mt-6">
+            {/* Admin Role Switcher (only visible to admins) */}
+            <RoleSwitcher />
+            
+            {/* Account Settings */}
+            <AccountSection />
+            
+            {/* App Settings */}
+            <AppSection 
+              soundEffects={soundEffects}
+              language={language}
+              setSoundEffects={setSoundEffects}
+            />
+            
+            {/* Notification Settings */}
+            <NotificationSection 
+              pushNotifications={pushNotifications}
+              emailNotifications={emailNotifications}
+              setPushNotifications={setPushNotifications}
+              setEmailNotifications={setEmailNotifications}
+            />
+            
+            {/* Support & Help */}
+            <SupportSection />
+                    
+            {/* Logout Button */}
+            <div className="mt-8">
+              {!showLogoutConfirm ? (
                 <Button 
                   variant="destructive" 
-                  className="flex-1" 
-                  onClick={handleLogout}
+                  className="w-full" 
+                  onClick={() => setShowLogoutConfirm(true)}
                 >
-                  Conferma
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Esci dall'account
                 </Button>
-              </div>
+              ) : (
+                <div className="flex flex-col gap-3 p-4 border border-red-500/30 rounded-lg bg-red-950/20">
+                  <p className="text-white text-center">Sei sicuro di voler uscire?</p>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1" 
+                      onClick={() => setShowLogoutConfirm(false)}
+                    >
+                      Annulla
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      className="flex-1" 
+                      onClick={handleLogout}
+                    >
+                      Conferma
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          </TabsContent>
+
+          <TabsContent value="push-test" className="mt-6">
+            <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-700">
+              <PushNotificationTest />
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
       
       {/* Bottom Navigation - Uniform positioning like Home */}
@@ -148,5 +175,10 @@ const Settings = () => {
     </div>
   );
 };
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
 
 export default Settings;
