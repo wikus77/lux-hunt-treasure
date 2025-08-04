@@ -22,12 +22,18 @@ const NotificationSection = ({
   const [showPermissionDialog, setShowPermissionDialog] = useState(false);
   const { isSupported, permission } = usePushNotifications();
 
-  const handlePushToggle = (checked: boolean) => {
+  const handlePushToggle = async (checked: boolean) => {
+    console.log('🔄 NotificationSection: Toggle changed to:', checked);
+    console.log('🔍 Current permission state:', permission);
+    
     if (checked && permission !== 'granted') {
-      // If turning on and permission not granted, show dialog
+      console.log('🔄 Showing permission dialog...');
       setShowPermissionDialog(true);
+    } else if (checked && permission === 'granted') {
+      console.log('✅ Permission already granted, enabling notifications');
+      setPushNotifications(checked);
     } else {
-      // If turning off or permission already granted
+      console.log('❌ Disabling notifications');
       setPushNotifications(checked);
     }
   };
@@ -82,6 +88,10 @@ const NotificationSection = ({
       <PushNotificationRequest 
         open={showPermissionDialog} 
         onOpenChange={setShowPermissionDialog} 
+        onPermissionGranted={() => {
+          console.log('✅ NotificationSection: Permission granted callback - enabling notifications');
+          setPushNotifications(true);
+        }}
       />
     </section>
   );

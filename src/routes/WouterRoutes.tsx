@@ -25,6 +25,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PushTestPage from "@/pages/PushTestPage";
+import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 
 import Terms from "@/pages/Terms";
@@ -175,6 +176,11 @@ const WouterRoutes: React.FC = () => {
           {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
           <Route path="/push-test">
             <PushTestPage />
+          </Route>
+
+          {/* 🔍 NOTIFICATION DEBUG ROUTE */}
+          <Route path="/notifications-debug">
+            <NotificationDebug />
           </Route>
 
           {/* Panel Access route */}

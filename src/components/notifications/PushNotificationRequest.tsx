@@ -15,18 +15,34 @@ import {
 interface PushNotificationRequestProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onPermissionGranted?: () => void;
 }
 
 const PushNotificationRequest: React.FC<PushNotificationRequestProps> = ({
   open,
-  onOpenChange
+  onOpenChange,
+  onPermissionGranted
 }) => {
   const { isSupported, permission, loading, requestPermission } = usePushNotifications();
 
   const handleRequestPermission = async () => {
-    const result = await requestPermission();
-    if (result.success) {
-      onOpenChange(false);
+    console.log('🔄 PushNotificationRequest: Starting permission request...');
+    try {
+      const result = await requestPermission();
+      console.log('✅ PushNotificationRequest: Permission result:', result);
+      
+      if (result.success) {
+        console.log('✅ PushNotificationRequest: Success - closing dialog');
+        onOpenChange(false);
+        // Notify parent that permission was granted
+        if (onPermissionGranted) {
+          onPermissionGranted();
+        }
+      } else {
+        console.error('❌ PushNotificationRequest: Failed:', result.reason || result.error);
+      }
+    } catch (error) {
+      console.error('❌ PushNotificationRequest: Exception:', error);
     }
   };
 
