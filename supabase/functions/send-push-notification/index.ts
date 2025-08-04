@@ -30,6 +30,25 @@ serve(async (req) => {
 
     const { token, title, body, data, sound = 'default', badge = 1 }: PushNotificationRequest = await req.json();
 
+    // ✅ CRITICAL FIX: Validate token exists before using substring
+    if (!token) {
+      console.error('❌ ERROR: Token is missing or undefined');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Token is required',
+          timestamp: new Date().toISOString()
+        }),
+        { 
+          status: 400,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          } 
+        }
+      );
+    }
+
     console.log(`🔔 SENDING PUSH NOTIFICATION to token: ${token.substring(0, 20)}...`);
     console.log(`📱 Title: ${title}`);
     console.log(`📝 Body: ${body}`);
@@ -274,8 +293,8 @@ serve(async (req) => {
     const userId = deviceData?.user_id;
     console.log(`👤 User ID found for token: ${userId}`);
 
-    // ✅ CRITICAL FIX: Save notification to user_notifications table for /notifications UI
-    if (userId && success) {
+    // ✅ CRITICAL FIX: Save notification to user_notifications table ALWAYS (even if push fails)
+    if (userId) {
       const { error: notificationError } = await supabase
         .from('user_notifications')
         .insert({
