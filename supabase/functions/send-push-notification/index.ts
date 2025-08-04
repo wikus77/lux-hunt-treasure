@@ -16,7 +16,7 @@ interface PushNotificationRequest {
   badge?: number;
 }
 
-// ✅ CRITICAL FIX: Single notification function
+// ✅ CRITICAL FIX: Single notification function with proper token validation
 async function sendSingleNotification(
   supabase: any,
   token: string,
@@ -27,16 +27,47 @@ async function sendSingleNotification(
   sound: string = 'default',
   badge: number = 1
 ) {
-  console.log(`🔔 SENDING PUSH NOTIFICATION to token: ${token.substring(0, 20)}...`);
+  // ✅ CRITICAL: Validate token before using any string methods
+  if (!token || typeof token !== 'string' || token.length === 0) {
+    console.error('❌ INVALID TOKEN: Token is missing, null, undefined, or empty');
+    return {
+      success: false,
+      device_type: 'unknown',
+      response: { error: 'Invalid token provided', token_type: typeof token, token_value: token },
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // Safe token display for logging
+  const tokenDisplay = token.length > 20 ? `${token.substring(0, 20)}...` : token;
+  console.log(`🔔 SENDING PUSH NOTIFICATION to token: ${tokenDisplay}`);
   console.log(`📱 Title: ${title}`);
   console.log(`📝 Body: ${body}`);
 
-  // Determine if token is iOS, Android, or Web Push
   let deviceType = 'web_push';
-  if (token.length === 64 && /^[a-f0-9]{64}$/i.test(token)) {
-    deviceType = 'ios';
-  } else if (token.startsWith('e') || token.includes(':')) {
-    deviceType = 'android';
+  let parsedToken = token;
+  
+  // Try to parse JSON token for Web Push
+  try {
+    if (token.startsWith('{')) {
+      const tokenObj = JSON.parse(token);
+      if (tokenObj.endpoint) {
+        deviceType = 'web_push';
+        parsedToken = token; // Keep as JSON string for Web Push
+      }
+    } else if (token.length === 64 && /^[a-f0-9]{64}$/i.test(token)) {
+      deviceType = 'ios';
+    } else if (token.startsWith('e') || token.includes(':')) {
+      deviceType = 'android';
+    }
+  } catch (parseError) {
+    console.log('📱 Token is not JSON, treating as string token');
+    // Not JSON, continue with string detection
+    if (token.length === 64 && /^[a-f0-9]{64}$/i.test(token)) {
+      deviceType = 'ios';
+    } else if (token.startsWith('e') || token.includes(':')) {
+      deviceType = 'android';
+    }
   }
 
   console.log(`📱 Device type detected: ${deviceType}`);
@@ -94,16 +125,53 @@ async function sendSingleNotification(
     console.log('🌐 Sending Web Push notification...');
     
     try {
-      // For Web Push, mark as success - Service Worker handles display
-      success = true;
-      response = { 
-        platform: 'web', 
-        status: 'sent (via Service Worker)',
-        note: 'Web push notification sent to Service Worker'
-      };
-      console.log('✅ Web push notification sent to Service Worker');
+      const webpushLib = await import('https://esm.sh/web-push@3.6.7');
+      const vapidKey = Deno.env.get('VAPID_KEY');
+      
+      if (!vapidKey) {
+        console.error('❌ Missing VAPID_KEY for Web Push');
+        success = false;
+        response = { platform: 'web', status: 'failed', error: 'Missing VAPID_KEY' };
+      } else {
+        // Parse Web Push subscription
+        let subscription;
+        try {
+          subscription = JSON.parse(parsedToken);
+        } catch (e) {
+          console.error('❌ Invalid Web Push subscription format:', e);
+          success = false;
+          response = { platform: 'web', status: 'failed', error: 'Invalid subscription format' };
+        }
+        
+        if (subscription && subscription.endpoint) {
+          const payload = JSON.stringify({
+            title: title,
+            body: body,
+            data: {
+              url: '/notifications',
+              ...data
+            }
+          });
+          
+          webpushLib.setVapidDetails(
+            'mailto:support@m1ssion.app',
+            vapidKey,
+            vapidKey
+          );
+          
+          await webpushLib.sendNotification(subscription, payload);
+          success = true;
+          response = { 
+            platform: 'web', 
+            status: 'sent successfully',
+            endpoint: subscription.endpoint.substring(0, 50) + '...'
+          };
+          console.log('✅ Web push notification sent successfully');
+        }
+      }
     } catch (webError) {
       console.error('❌ Web push failed:', webError);
+      success = false;
       response = { platform: 'web', status: 'failed', error: webError.message };
     }
   }
@@ -259,8 +327,13 @@ serve(async (req) => {
             failureCount++;
           }
           
+          // Safe token display
+          const safeTokenDisplay = deviceToken.token && typeof deviceToken.token === 'string' && deviceToken.token.length > 20 
+            ? `${deviceToken.token.substring(0, 20)}...` 
+            : (deviceToken.token || 'invalid_token');
+          
           results.push({
-            token: deviceToken.token.substring(0, 20) + '...',
+            token: safeTokenDisplay,
             user_id: deviceToken.user_id,
             device_type: deviceToken.device_type,
             success: result.success,
@@ -268,10 +341,15 @@ serve(async (req) => {
           });
 
         } catch (error) {
-          console.error(`❌ Failed to send to token ${deviceToken.token.substring(0, 20)}:`, error);
+          // Safe token display for error logging
+          const safeTokenDisplay = deviceToken.token && typeof deviceToken.token === 'string' && deviceToken.token.length > 20 
+            ? `${deviceToken.token.substring(0, 20)}...` 
+            : (deviceToken.token || 'invalid_token');
+          
+          console.error(`❌ Failed to send to token ${safeTokenDisplay}:`, error);
           failureCount++;
           results.push({
-            token: deviceToken.token.substring(0, 20) + '...',
+            token: safeTokenDisplay,
             user_id: deviceToken.user_id,
             device_type: deviceToken.device_type,
             success: false,
