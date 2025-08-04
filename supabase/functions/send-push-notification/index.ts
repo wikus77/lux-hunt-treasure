@@ -276,10 +276,14 @@ serve(async (req) => {
         try {
           const subscription = JSON.parse(device.token);
           const endpoint = subscription.endpoint;
+          console.log('🔍 PUSH DEBUG - Raw endpoint:', endpoint);
           
           // Extract FCM token from endpoint
-          if (endpoint.includes('fcm.googleapis.com')) {
-            fcmToken = endpoint.split('/').pop();
+          if (endpoint.includes('fcm.googleapis.com/fcm/send/')) {
+            // Estrai il token FCM completo dall'endpoint
+            const tokenPart = endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
+            fcmToken = tokenPart; // Il token è tutto quello che segue dopo /send/
+            console.log(`🔑 FCM token extracted (${fcmToken.length} chars):`, fcmToken.substring(0, 30) + '...');
           } else {
             console.warn(`⚠️ Non-FCM endpoint for user ${device.user_id}:`, endpoint);
             continue;
