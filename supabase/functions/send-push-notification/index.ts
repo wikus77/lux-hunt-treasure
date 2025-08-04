@@ -272,11 +272,13 @@ serve(async (req) => {
     const logId = logData?.id;
     console.log('📝 PUSH DEBUG - Log created with ID:', logId);
 
-    // Get device tokens based on target
+    // Get device tokens based on target (iOS/Android + web_push)
     let deviceTokensQuery = supabase
       .from('device_tokens')
-      .select('token, user_id')
-      .eq('device_type', 'web_push');
+      .select('token, user_id, device_type')
+      .in('device_type', ['web_push', 'ios', 'android', 'mobile']);
+
+    console.log('🔍 PUSH DEBUG - Looking for device tokens with types: web_push, ios, android, mobile');
 
     if (targetUserId) {
       deviceTokensQuery = deviceTokensQuery.eq('user_id', targetUserId);
