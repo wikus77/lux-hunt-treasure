@@ -244,17 +244,45 @@ const NotificationsSettings: React.FC = () => {
                 Ricevi notifiche per nuovi indizi, premi e aggiornamenti dell'app.
               </p>
             </div>
-            <div className="flex items-center space-x-2">
-              {settings.notifications_enabled ? (
-                <Volume2 className="w-4 h-4 text-green-400" />
-              ) : (
-                <VolumeX className="w-4 h-4 text-red-400" />
-              )}
-              <Switch
+            
+            {/* Apple Style Toggle Switch */}
+            <div className="relative">
+              <input
+                type="checkbox"
                 checked={settings.notifications_enabled}
-                onCheckedChange={handleNotificationsToggle}
+                onChange={(e) => handleNotificationsToggle(e.target.checked)}
                 disabled={loading}
+                className="sr-only"
+                id="notifications-toggle"
               />
+              <label
+                htmlFor="notifications-toggle"
+                className={`
+                  relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF] focus:ring-offset-2 focus:ring-offset-black
+                  ${settings.notifications_enabled 
+                    ? 'bg-[#00D1FF]' 
+                    : 'bg-gray-600'
+                  }
+                  ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              >
+                <span
+                  className={`
+                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-lg
+                    ${settings.notifications_enabled 
+                      ? 'translate-x-6' 
+                      : 'translate-x-1'
+                    }
+                  `}
+                />
+              </label>
+              
+              {/* Loading indicator */}
+              {loading && (
+                <div className="absolute -right-8 top-1">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D1FF]"></div>
+                </div>
+              )}
             </div>
           </div>
 
