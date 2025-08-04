@@ -200,7 +200,9 @@ const saveFCMTokenToDatabase = async (token: string) => {
       console.log('🌐 Saving Web FCM token');
     }
     
-    const { error } = await supabase
+    console.log('🔄 Saving FCM token to database...', { userId, deviceType, tokenPreview: token.substring(0, 20) + '...' });
+    
+    const { data, error } = await supabase
       .from('device_tokens')
       .upsert({
         user_id: userId,
@@ -209,8 +211,10 @@ const saveFCMTokenToDatabase = async (token: string) => {
         created_at: new Date().toISOString(),
         last_used: new Date().toISOString()
       }, {
-        onConflict: 'user_id, device_type'
-      }) as any;
+        onConflict: 'user_id,device_type'  // ✅ FIXED: Correct syntax without spaces
+      });
+      
+    console.log('📊 Supabase upsert result:', { data, error });
       
     if (error) {
       console.error('❌ Error saving FCM token:', error);
