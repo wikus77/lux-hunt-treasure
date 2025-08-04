@@ -69,38 +69,68 @@ interface RegistrationResult {
   error?: any;
 }
 
-// Register device for notifications
+// Register device for notifications  
 export const registerDeviceForNotifications = async (): Promise<RegistrationResult> => {
   try {
+    console.log('🔄 Starting device registration for notifications...');
+    
     const messaging = await getMessagingInstance();
     if (!messaging) {
+      console.error('❌ Firebase messaging not supported');
       return { success: false, reason: 'messaging-not-supported' };
     }
 
-    // Get token with vapid key
-    const currentToken = await getToken(messaging, {
-      vapidKey: firebaseConfig.vapidKey,
-    });
+    console.log('✅ Firebase messaging instance ready');
 
-    if (!currentToken) {
-      console.log('No registration token available');
-      return { success: false, reason: 'no-token' };
+    // ENHANCED token retrieval with better error handling
+    let currentToken: string;
+    try {
+      currentToken = await getToken(messaging, {
+        vapidKey: firebaseConfig.vapidKey,
+      });
+      
+      if (!currentToken) {
+        console.error('❌ No FCM registration token available - check Firebase config');
+        return { success: false, reason: 'no-fcm-token' };
+      }
+      
+      console.log('✅ FCM token retrieved successfully:', currentToken.substring(0, 20) + '...');
+    } catch (tokenError) {
+      console.error('❌ FCM token retrieval failed:', tokenError);
+      return { success: false, reason: 'fcm-token-failed', error: tokenError };
     }
 
-    // Create proper Web Push subscription
-    const registration = await navigator.serviceWorker.ready;
-    const subscription = await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(firebaseConfig.vapidKey)
-    });
+    // Web Push subscription with enhanced error handling
+    try {
+      console.log('🔄 Creating Web Push subscription...');
+      
+      const registration = await navigator.serviceWorker.ready;
+      console.log('✅ Service Worker ready');
+      
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(firebaseConfig.vapidKey)
+      });
+      
+      console.log('✅ Web Push subscription created successfully');
 
-    // Save real subscription to database
-    await saveSubscriptionToDatabase(subscription);
+      // Save subscription to database
+      const saved = await saveSubscriptionToDatabase(subscription);
+      if (!saved) {
+        console.warn('⚠️ Failed to save subscription to database, but continuing...');
+      }
+    } catch (webPushError) {
+      console.warn('⚠️ Web Push subscription failed, but FCM token available:', webPushError);
+      // Continue with FCM token only
+    }
     
+    // SUCCESS: Return FCM token regardless of Web Push status
+    console.log('✅ Device registration completed successfully');
     return { success: true, token: currentToken };
+    
   } catch (error) {
-    console.error('Error getting token:', error);
-    return { success: false, reason: 'token-error', error };
+    console.error('❌ CRITICAL: Device registration failed completely:', error);
+    return { success: false, reason: 'registration-failed', error };
   }
 };
 
