@@ -101,11 +101,11 @@ export const usePushNotifications = () => {
             // Register for push notifications
             await PushNotifications.register();
             
-            // 🔥 CRITICAL: Save iOS token to database
+            // 🔥 CRITICAL: Setup iOS push registration listener ONCE
             PushNotifications.addListener('registration', async (token) => {
-              console.log('🍎 iOS Push registration info: ', token);
+              console.log('🍎 iOS Push registration token received:', token.value);
               
-              // Save iOS token to device_tokens
+              // Save iOS token to device_tokens immediately
               const { data: { user } } = await supabase.auth.getUser();
               if (user) {
                 const { error } = await supabase
@@ -114,18 +114,26 @@ export const usePushNotifications = () => {
                     user_id: user.id,
                     token: token.value,
                     device_type: 'ios',
-                    last_used: new Date().toISOString()
+                    last_used: new Date().toISOString(),
+                    created_at: new Date().toISOString()
                   }, {
                     onConflict: 'user_id,device_type'
                   });
                   
                 if (error) {
-                  console.error('❌ Error saving iOS token:', error);
+                  console.error('❌ Error saving iOS token to device_tokens:', error);
                 } else {
-                  console.log('✅ iOS token saved to database');
+                  console.log('✅ iOS token successfully saved to device_tokens table');
                   setToken(token.value);
                 }
+              } else {
+                console.warn('⚠️ No authenticated user found for iOS token registration');
               }
+            });
+            
+            // Setup error listener
+            PushNotifications.addListener('registrationError', (error: any) => {
+              console.error('❌ iOS push registration error:', error);
             });
             
             toast.success('✅ Notifiche push attivate!', {

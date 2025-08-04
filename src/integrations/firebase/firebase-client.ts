@@ -145,11 +145,17 @@ const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
     // Handle native device types
     if (isCapacitor && isAndroid) {
       deviceType = 'android';
-      // For Android, subscription contains FCM token
-      tokenData = subscription.endpoint ? subscription.endpoint : JSON.stringify(subscription);
+      // For Android FCM, extract token from endpoint
+      if (subscription.endpoint?.includes('fcm.googleapis.com/fcm/send/')) {
+        tokenData = subscription.endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
+        console.log('🤖 Android FCM token extracted for device_tokens');
+      } else {
+        tokenData = JSON.stringify(subscription);
+      }
     } else if (isCapacitor && isIOS) {
-      deviceType = 'ios';
-      // For iOS, this will be handled by Capacitor listener
+      // For iOS, token registration is handled by Capacitor listener in usePushNotifications
+      console.log('🍎 iOS detected - token will be saved by Capacitor registration listener');
+      return true; // Skip web registration for iOS
     }
     
     const { error } = await supabase

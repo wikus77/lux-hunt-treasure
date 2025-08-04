@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import DeviceTokenDebug from '@/components/DeviceTokenDebug';
 
 export default function PushTest() {
   const [title, setTitle] = useState('M1SSION™ Test');
@@ -91,6 +92,8 @@ export default function PushTest() {
             <li>🔔 Real-time sync immediato</li>
           </ul>
         </div>
+        
+        <DeviceTokenDebug />
       </div>
     </div>
   );
