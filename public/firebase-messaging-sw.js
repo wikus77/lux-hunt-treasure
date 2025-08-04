@@ -6,41 +6,60 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-comp
 
 // ✅ SYNCHRONIZED: Using Supabase secrets (fetch from client at runtime)
 // Note: Service Workers cannot access process.env directly, config must be injected
-let firebaseConfig = {
-  apiKey: "placeholder", // Will be updated by client
-  authDomain: "placeholder",
-  projectId: "placeholder", 
-  storageBucket: "placeholder",
-  messagingSenderId: "placeholder",
-  appId: "placeholder"
-};
+let firebaseConfig = null;
+let firebaseInitialized = false;
 
 // Listen for config updates from main thread
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'UPDATE_FIREBASE_CONFIG') {
     firebaseConfig = event.data.config;
-    console.log('🔄 Service Worker: Firebase config updated', firebaseConfig);
+    console.log('🔄 Service Worker: Firebase config updated', {
+      apiKey: firebaseConfig.apiKey?.substring(0, 10) + '...',
+      authDomain: firebaseConfig.authDomain,
+      projectId: firebaseConfig.projectId
+    });
     
-    // Reinitialize Firebase with new config
-    try {
-      firebase.initializeApp(firebaseConfig);
-      console.log('✅ Service Worker: Firebase reinitialized with new config');
-    } catch (error) {
-      console.error('❌ Service Worker: Firebase reinit failed:', error);
+    // Initialize Firebase with new config (only once)
+    if (!firebaseInitialized) {
+      try {
+        firebase.initializeApp(firebaseConfig);
+        firebaseInitialized = true;
+        console.log('✅ Service Worker: Firebase initialized with dynamic config');
+      } catch (error) {
+        console.error('❌ Service Worker: Firebase init failed:', error);
+      }
     }
   }
 });
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
+// Wait for config before initializing messaging
+let messaging = null;
 
-// Retrieve an instance of Firebase Messaging
-const messaging = firebase.messaging();
+// Initialize messaging after config is received
+const getMessaging = () => {
+  if (!messaging && firebaseInitialized) {
+    messaging = firebase.messaging();
+    console.log('✅ Service Worker: Firebase messaging ready');
+  }
+  return messaging;
+};
 
 // Handle background messages - iOS native push
-messaging.onBackgroundMessage((payload) => {
-  console.log('🔔 M1SSION™ - Background message received:', payload);
+// Initialize messaging listener when config is available
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'INIT_MESSAGING') {
+    const messagingInstance = getMessaging();
+    if (messagingInstance) {
+      messagingInstance.onBackgroundMessage((payload) => {
+        console.log('🔔 M1SSION™ - Background message received:', payload);
+        handleBackgroundMessage(payload);
+      });
+    }
+  }
+});
 
+// Background message handler
+function handleBackgroundMessage(payload) {
   const notificationTitle = payload.notification?.title || payload.data?.title || 'M1SSION™';
   const notificationOptions = {
     body: payload.notification?.body || payload.data?.body || 'Nuova notifica disponibile',
@@ -80,7 +99,7 @@ messaging.onBackgroundMessage((payload) => {
   
   // iOS lock screen compatibility - force show
   return self.registration.showNotification(notificationTitle, notificationOptions);
-});
+}
 
 // Handle push events directly (fallback for iOS)
 self.addEventListener('push', (event) => {

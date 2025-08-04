@@ -134,6 +134,9 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
           }
         });
         console.log('✅ Dynamic Firebase config sent to service worker');
+        
+        // Initialize messaging in service worker
+        registration.active.postMessage({ type: 'INIT_MESSAGING' });
       }
       
     } catch (swError) {
