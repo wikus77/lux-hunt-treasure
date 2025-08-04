@@ -202,26 +202,44 @@ const saveFCMTokenToDatabase = async (token: string) => {
     
     console.log('🔄 Saving FCM token to database...', { userId, deviceType, tokenPreview: token.substring(0, 20) + '...' });
     
-    const { data, error } = await supabase
+    // ✅ CRITICAL FIX: Use manual upsert logic instead of onConflict 
+    // First, try to update existing token
+    const { data: updateResult, error: updateError } = await supabase
       .from('device_tokens')
-      .upsert({
-        user_id: userId,
-        token: token, // Save as pure string - no JSON
-        device_type: deviceType,
-        created_at: new Date().toISOString(),
+      .update({
+        token: token,
         last_used: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,device_type'  // ✅ FIXED: Correct syntax without spaces
-      });
+      })
+      .eq('user_id', userId)
+      .eq('device_type', deviceType);
+    
+    console.log('🔄 Update attempt result:', { updateResult, updateError });
+    
+    // If no rows updated, insert new token
+    if (!updateError && !updateResult) {
+      console.log('🔄 No existing token found, inserting new one...');
+      const { data: insertResult, error: insertError } = await supabase
+        .from('device_tokens')
+        .insert({
+          user_id: userId,
+          token: token,
+          device_type: deviceType,
+          created_at: new Date().toISOString(),
+          last_used: new Date().toISOString()
+        });
       
-    console.log('📊 Supabase upsert result:', { data, error });
+      console.log('📊 Insert result:', { insertResult, insertError });
       
-    if (error) {
-      console.error('❌ Error saving FCM token:', error);
+      if (insertError) {
+        console.error('❌ Error inserting FCM token:', insertError);
+        return false;
+      }
+    } else if (updateError) {
+      console.error('❌ Error updating FCM token:', updateError);
       return false;
     }
     
-    console.log('✅ FCM token saved successfully');
+    console.log('✅ FCM token saved/updated successfully');
     return true;
   } catch (error) {
     console.error('❌ Error in saveFCMTokenToDatabase:', error);
