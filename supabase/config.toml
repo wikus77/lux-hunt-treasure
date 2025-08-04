@@ -34,3 +34,9 @@ verify_jwt = true
 
 [functions.notify-mission-access]
 verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = true
+
+[functions.send-push-notification-real]
+verify_jwt = false
