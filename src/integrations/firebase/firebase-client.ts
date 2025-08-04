@@ -69,34 +69,71 @@ interface RegistrationResult {
   error?: any;
 }
 
-// Register device for notifications  
+// ✅ CRITICAL FIX: Simplified and corrected token registration
 export const registerDeviceForNotifications = async (): Promise<RegistrationResult> => {
   try {
-    console.log('🔄 Starting device registration for notifications...');
+    console.log('🔄 Starting FCM token registration for notifications...');
     
+    // ✅ Step 1: Check Firebase messaging support
     const messaging = await getMessagingInstance();
     if (!messaging) {
-      console.error('❌ Firebase messaging not supported');
+      console.error('❌ Firebase messaging not supported on this browser');
       return { success: false, reason: 'messaging-not-supported' };
     }
 
     console.log('✅ Firebase messaging instance ready');
 
-    // Get FCM token directly - Firebase handles Service Worker registration
+    // ✅ Step 2: Check Service Worker registration 
+    if (!('serviceWorker' in navigator)) {
+      console.error('❌ Service Worker not supported');
+      return { success: false, reason: 'service-worker-not-supported' };
+    }
+
+    // ✅ Step 3: Register firebase-messaging-sw.js service worker
+    try {
+      let registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+      
+      if (!registration) {
+        console.log('🔄 Registering Firebase messaging service worker...');
+        registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        console.log('✅ Firebase messaging service worker registered');
+      } else {
+        console.log('✅ Firebase messaging service worker already registered');
+      }
+      
+      // Wait for service worker to be ready
+      await navigator.serviceWorker.ready;
+      console.log('✅ Service worker is ready');
+      
+    } catch (swError) {
+      console.error('❌ Service worker registration failed:', swError);
+      return { success: false, reason: 'service-worker-failed', error: swError };
+    }
+
+    // ✅ Step 4: Get FCM token
     let currentToken: string;
     try {
+      console.log('🔄 Requesting FCM token with VAPID key...');
+      
       currentToken = await getToken(messaging, {
         vapidKey: firebaseConfig.vapidKey,
+        serviceWorkerRegistration: await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
       });
       
       if (!currentToken) {
-        console.error('❌ No FCM registration token available');
+        console.error('❌ No FCM registration token available - Check permissions and VAPID key');
         return { success: false, reason: 'no-fcm-token' };
       }
       
-      console.log('✅ FCM token retrieved:', currentToken.substring(0, 20) + '...');
+      console.log('✅ FCM token retrieved successfully:', currentToken.substring(0, 20) + '...');
       
-      // Save FCM token directly to database (as string, not JSON)
+    } catch (tokenError) {
+      console.error('❌ FCM token retrieval failed:', tokenError);
+      return { success: false, reason: 'fcm-token-failed', error: tokenError };
+    }
+
+    // ✅ Step 5: Save token to database as pure string
+    try {
       const saved = await saveFCMTokenToDatabase(currentToken);
       if (!saved) {
         console.warn('⚠️ Failed to save FCM token to database');
@@ -104,10 +141,9 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       }
       
       console.log('✅ FCM token saved to database successfully');
-      
-    } catch (tokenError) {
-      console.error('❌ FCM token retrieval failed:', tokenError);
-      return { success: false, reason: 'fcm-token-failed', error: tokenError };
+    } catch (saveError) {
+      console.error('❌ Database save failed:', saveError);
+      return { success: false, reason: 'db-save-failed', error: saveError };
     }
     
     console.log('✅ Device registration completed successfully');
