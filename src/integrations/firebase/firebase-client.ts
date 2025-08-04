@@ -82,7 +82,7 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
 
     console.log('✅ Firebase messaging instance ready');
 
-    // ENHANCED token retrieval with better error handling
+    // Get FCM token directly - Firebase handles Service Worker registration
     let currentToken: string;
     try {
       currentToken = await getToken(messaging, {
@@ -90,41 +90,26 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       });
       
       if (!currentToken) {
-        console.error('❌ No FCM registration token available - check Firebase config');
+        console.error('❌ No FCM registration token available');
         return { success: false, reason: 'no-fcm-token' };
       }
       
-      console.log('✅ FCM token retrieved successfully:', currentToken.substring(0, 20) + '...');
+      console.log('✅ FCM token retrieved:', currentToken.substring(0, 20) + '...');
+      
+      // Save FCM token directly to database (as string, not JSON)
+      const saved = await saveFCMTokenToDatabase(currentToken);
+      if (!saved) {
+        console.warn('⚠️ Failed to save FCM token to database');
+        return { success: false, reason: 'save-failed' };
+      }
+      
+      console.log('✅ FCM token saved to database successfully');
+      
     } catch (tokenError) {
       console.error('❌ FCM token retrieval failed:', tokenError);
       return { success: false, reason: 'fcm-token-failed', error: tokenError };
     }
-
-    // Web Push subscription with enhanced error handling
-    try {
-      console.log('🔄 Creating Web Push subscription...');
-      
-      const registration = await navigator.serviceWorker.ready;
-      console.log('✅ Service Worker ready');
-      
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(firebaseConfig.vapidKey)
-      });
-      
-      console.log('✅ Web Push subscription created successfully');
-
-      // Save subscription to database
-      const saved = await saveSubscriptionToDatabase(subscription);
-      if (!saved) {
-        console.warn('⚠️ Failed to save subscription to database, but continuing...');
-      }
-    } catch (webPushError) {
-      console.warn('⚠️ Web Push subscription failed, but FCM token available:', webPushError);
-      // Continue with FCM token only
-    }
     
-    // SUCCESS: Return FCM token regardless of Web Push status
     console.log('✅ Device registration completed successfully');
     return { success: true, token: currentToken };
     
@@ -150,19 +135,17 @@ const urlBase64ToUint8Array = (base64String: string) => {
   return outputArray;
 };
 
-// Save real subscription to database
-const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
+// Save FCM token directly to database (clean string format)
+const saveFCMTokenToDatabase = async (token: string) => {
   try {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
-      console.log('User not authenticated, not saving subscription');
+      console.log('User not authenticated, not saving FCM token');
       return false;
     }
     
     const userId = session.user.id;
-    
-    console.log('🔔 Saving real subscription:', subscription);
     
     // Determine device type
     const isCapacitor = (window as any).Capacitor?.isNativePlatform();
@@ -170,38 +153,22 @@ const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
     const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
     
     let deviceType = 'web_push';
-    let tokenData: string;
     
-    // Extract FCM token from Web Push subscription endpoint
-    if (subscription.endpoint?.includes('fcm.googleapis.com/fcm/send/')) {
-      tokenData = subscription.endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
-      console.log('🌐 Web FCM token extracted for device_tokens:', tokenData.substring(0, 20) + '...');
-    } else {
-      tokenData = JSON.stringify(subscription);
-      console.log('🌐 Web Push subscription saved as JSON fallback');
-    }
-    
-    // Handle native device types
     if (isCapacitor && isAndroid) {
       deviceType = 'android';
-      // For Android FCM, extract token from endpoint
-      if (subscription.endpoint?.includes('fcm.googleapis.com/fcm/send/')) {
-        tokenData = subscription.endpoint.replace('https://fcm.googleapis.com/fcm/send/', '');
-        console.log('🤖 Android FCM token extracted for device_tokens');
-      } else {
-        tokenData = JSON.stringify(subscription);
-      }
+      console.log('🤖 Saving Android FCM token');
     } else if (isCapacitor && isIOS) {
-      // For iOS, token registration is handled by Capacitor listener in usePushNotifications
-      console.log('🍎 iOS detected - token will be saved by Capacitor registration listener');
-      return true; // Skip web registration for iOS
+      deviceType = 'ios';
+      console.log('🍎 Saving iOS FCM token');
+    } else {
+      console.log('🌐 Saving Web FCM token');
     }
     
     const { error } = await supabase
       .from('device_tokens')
       .upsert({
         user_id: userId,
-        token: tokenData,
+        token: token, // Save as pure string - no JSON
         device_type: deviceType,
         created_at: new Date().toISOString(),
         last_used: new Date().toISOString()
@@ -210,14 +177,14 @@ const saveSubscriptionToDatabase = async (subscription: PushSubscription) => {
       }) as any;
       
     if (error) {
-      console.error('Error saving subscription:', error);
+      console.error('❌ Error saving FCM token:', error);
       return false;
     }
     
-    console.log('✅ Real subscription saved successfully');
+    console.log('✅ FCM token saved successfully');
     return true;
   } catch (error) {
-    console.error('Error in saveSubscriptionToDatabase:', error);
+    console.error('❌ Error in saveFCMTokenToDatabase:', error);
     return false;
   }
 };
