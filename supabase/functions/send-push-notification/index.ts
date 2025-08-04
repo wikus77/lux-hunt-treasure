@@ -10,6 +10,8 @@ async function getFirebaseAccessToken(): Promise<string> {
   console.log('🔑 Checking Firebase credentials...');
   console.log('📧 Client email:', clientEmail ? 'Present' : 'Missing');
   console.log('🔐 Private key:', privateKey ? `Present (${privateKey.length} chars)` : 'Missing');
+  console.log('🔍 Email starts with:', clientEmail ? clientEmail.substring(0, 20) + '...' : 'N/A');
+  console.log('🔍 Key starts with:', privateKey ? privateKey.substring(0, 50) + '...' : 'N/A');
   
   if (!privateKey || !clientEmail) {
     throw new Error('Firebase credentials not configured');
