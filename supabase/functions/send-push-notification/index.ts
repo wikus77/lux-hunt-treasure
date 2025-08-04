@@ -29,29 +29,46 @@ async function getFirebaseAccessToken(): Promise<string> {
   }));
 
   // Clean and format the private key properly
-  let cleanedKey = privateKey;
+  let cleanedKey = privateKey.trim();
   
-  // Handle both \\n and \n cases
-  if (privateKey.includes('\\n')) {
-    cleanedKey = privateKey.replace(/\\n/g, '\n');
-    console.log('🔧 Fixed \\n to actual newlines');
-  }
+  // Handle multiple newline formats
+  cleanedKey = cleanedKey
+    .replace(/\\n/g, '\n')      // Replace literal \n with actual newlines
+    .replace(/\r\n/g, '\n')     // Normalize Windows line endings  
+    .replace(/\r/g, '\n')       // Handle Mac line endings
+    .trim();
   
-  // Ensure proper format with headers
+  console.log('🔧 Key after newline processing, length:', cleanedKey.length);
+  
+  // Ensure proper format with headers and newlines
   if (!cleanedKey.includes('-----BEGIN PRIVATE KEY-----')) {
+    // If no headers, assume it's just the key content
     cleanedKey = `-----BEGIN PRIVATE KEY-----\n${cleanedKey}\n-----END PRIVATE KEY-----`;
     console.log('🔧 Added BEGIN/END headers');
+  } else {
+    // Ensure proper line breaks around headers
+    cleanedKey = cleanedKey
+      .replace(/-----BEGIN PRIVATE KEY-----\s*/g, '-----BEGIN PRIVATE KEY-----\n')
+      .replace(/\s*-----END PRIVATE KEY-----/g, '\n-----END PRIVATE KEY-----');
   }
   
-  // Extract only the base64 content between headers
-  const keyContent = cleanedKey
-    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-    .replace(/-----END PRIVATE KEY-----/g, '')
-    .replace(/\s/g, '')  // Remove ALL whitespace including spaces, tabs, newlines
-    .replace(/\n/g, ''); // Remove any remaining newlines
+  console.log('🔍 Final formatted key preview:', cleanedKey.substring(0, 80) + '...');
   
-  console.log(`🔍 Key processing - original: ${privateKey.length}, cleaned: ${cleanedKey.length}, content: ${keyContent.length}`);
-  console.log(`🔍 Content starts with: ${keyContent.substring(0, 50)}...`);
+  // Extract only the base64 content between headers
+  const keyMatch = cleanedKey.match(/-----BEGIN PRIVATE KEY-----\s*([A-Za-z0-9+/=\s]+)\s*-----END PRIVATE KEY-----/);
+  if (!keyMatch || !keyMatch[1]) {
+    console.error('❌ Could not extract key content from headers');
+    throw new Error('Invalid private key format - unable to extract content');
+  }
+  
+  const keyContent = keyMatch[1].replace(/\s/g, ''); // Remove all whitespace
+  console.log(`🔍 Extracted key content length: ${keyContent.length}, starts with: ${keyContent.substring(0, 50)}...`);
+  
+  // Validate base64 content
+  if (!/^[A-Za-z0-9+/]+=*$/.test(keyContent)) {
+    console.error('❌ Invalid base64 characters in key content');
+    throw new Error('Private key contains invalid base64 characters');
+  }
   
   let binaryKey;
   try {
@@ -59,7 +76,7 @@ async function getFirebaseAccessToken(): Promise<string> {
     console.log(`✅ Key decode successful - binary length: ${binaryKey.length}`);
   } catch (decodeError) {
     console.error(`❌ Key decode failed:`, decodeError);
-    console.error(`Key content length: ${keyContent.length}, sample: ${keyContent.substring(0, 100)}`);
+    console.error(`Key content length: ${keyContent.length}, sample: ${keyContent.substring(0, 100)}...`);
     throw new Error(`Private key decode failed: ${decodeError.message}`);
   }
   
