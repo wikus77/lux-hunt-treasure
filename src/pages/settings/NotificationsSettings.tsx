@@ -9,23 +9,29 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, Volume2, VolumeX } from 'lucide-react';
+import { Bell, Volume2, VolumeX, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
   weekly_hints: 'all' | 'only-premium' | 'none';
   preferred_rewards: string[];
+  push_notifications_enabled: boolean;
 }
 
 const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [pushTokenExists, setPushTokenExists] = useState(false);
+  const { isSupported, permission, requestPermission, loading: pushLoading } = usePushNotifications();
+  
   const [settings, setSettings] = useState<NotificationSettings>({
     notifications_enabled: true,
     weekly_hints: 'all',
-    preferred_rewards: []
+    preferred_rewards: [],
+    push_notifications_enabled: false
   });
 
   const rewardOptions = [
@@ -39,7 +45,28 @@ const NotificationsSettings: React.FC = () => {
 
   useEffect(() => {
     loadNotificationSettings();
+    checkPushTokenExists();
   }, [user]);
+
+  const checkPushTokenExists = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('device_tokens')
+        .select('id')
+        .eq('user_id', user.id)
+        .in('device_type', ['ios', 'android', 'web_push'])
+        .limit(1);
+
+      if (!error && data && data.length > 0) {
+        setPushTokenExists(true);
+        setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+      }
+    } catch (error) {
+      console.error('Error checking push token:', error);
+    }
+  };
 
   const loadNotificationSettings = async () => {
     if (!user) return;
@@ -55,7 +82,8 @@ const NotificationsSettings: React.FC = () => {
         setSettings({
           notifications_enabled: profile.notifications_enabled ?? true,
           weekly_hints: (profile.weekly_hints as 'all' | 'only-premium' | 'none') || 'all',
-          preferred_rewards: profile.preferred_rewards || []
+          preferred_rewards: profile.preferred_rewards || [],
+          push_notifications_enabled: pushTokenExists
         });
       }
     } catch (error) {
@@ -113,6 +141,36 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ preferred_rewards: newPreferences });
   };
 
+  const handlePushNotificationsToggle = async (enabled: boolean) => {
+    if (enabled) {
+      // Request push notification permission
+      const result = await requestPermission();
+      
+      if (result.success) {
+        setPushTokenExists(true);
+        setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+        toast({
+          title: "✅ Notifiche Push Attivate",
+          description: "Riceverai notifiche push su questo dispositivo."
+        });
+      } else {
+        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+        toast({
+          title: "❌ Permesso Negato",
+          description: "Le notifiche push non sono state autorizzate.",
+          variant: "destructive"
+        });
+      }
+    } else {
+      setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+      // Note: We keep the token in database for potential re-activation
+      toast({
+        title: "🔕 Notifiche Push Disattivate",
+        description: "Non riceverai più notifiche push su questo dispositivo."
+      });
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -146,6 +204,43 @@ const NotificationsSettings: React.FC = () => {
                 onCheckedChange={handleNotificationsToggle}
                 disabled={loading}
               />
+            </div>
+          </div>
+
+          {/* Push Notifications Toggle */}
+          <div className="border-t border-white/10 pt-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <Label className="text-white font-medium flex items-center">
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  Notifiche Push
+                </Label>
+                <p className="text-white/70 text-sm">
+                  Ricevi notifiche push OS-native (iOS/Android) su questo dispositivo.
+                </p>
+                {!isSupported && (
+                  <p className="text-red-400 text-xs">
+                    ⚠️ Notifiche push non supportate su questo dispositivo
+                  </p>
+                )}
+                {permission === 'denied' && (
+                  <p className="text-red-400 text-xs">
+                    🚫 Permesso notifiche bloccato - modifica impostazioni browser
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center space-x-2">
+                {settings.push_notifications_enabled && pushTokenExists ? (
+                  <Volume2 className="w-4 h-4 text-green-400" />
+                ) : (
+                  <VolumeX className="w-4 h-4 text-red-400" />
+                )}
+                <Switch
+                  checked={settings.push_notifications_enabled && isSupported && permission !== 'denied'}
+                  onCheckedChange={handlePushNotificationsToggle}
+                  disabled={loading || pushLoading || !isSupported || permission === 'denied'}
+                />
+              </div>
             </div>
           </div>
         </CardContent>
