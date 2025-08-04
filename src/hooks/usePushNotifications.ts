@@ -98,16 +98,29 @@ export const usePushNotifications = () => {
           if (permResult.receive === 'granted') {
             setPermission('granted');
             
-            // Register for push notifications
+            // FORCE Register for iOS push notifications
+            console.log('🍎 FORCING iOS push registration...');
             await PushNotifications.register();
+            
+            // Force immediate token check
+            setTimeout(async () => {
+              try {
+                const tokens = await PushNotifications.getDeliveredNotifications();
+                console.log('🔍 iOS delivered notifications check:', tokens);
+              } catch (e) {
+                console.warn('iOS notification check failed:', e);
+              }
+            }, 2000);
             
             // 🔥 CRITICAL: Setup iOS push registration listener ONCE
             PushNotifications.addListener('registration', async (token) => {
               console.log('🍎 iOS Push registration token received:', token.value);
               
-              // Save iOS token to device_tokens immediately
+              // FORCE iOS token registration with immediate save
               const { data: { user } } = await supabase.auth.getUser();
               if (user) {
+                console.log('🔐 FORCING iOS token save for user:', user.id);
+                
                 const { error } = await supabase
                   .from('device_tokens')
                   .upsert({
@@ -121,13 +134,18 @@ export const usePushNotifications = () => {
                   });
                   
                 if (error) {
-                  console.error('❌ Error saving iOS token to device_tokens:', error);
+                  console.error('❌ CRITICAL ERROR saving iOS token:', error);
+                  toast.error('❌ Errore salvataggio token iOS');
                 } else {
-                  console.log('✅ iOS token successfully saved to device_tokens table');
+                  console.log('✅ iOS token FORCE SAVED to device_tokens:', token.value);
                   setToken(token.value);
+                  toast.success('✅ Token iOS registrato!', {
+                    description: 'Notifiche push iOS attive'
+                  });
                 }
               } else {
-                console.warn('⚠️ No authenticated user found for iOS token registration');
+                console.error('❌ No authenticated user for iOS token registration');
+                toast.error('❌ Utente non autenticato per iOS');
               }
             });
             
