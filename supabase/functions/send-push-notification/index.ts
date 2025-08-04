@@ -149,7 +149,7 @@ async function sendFirebasePush(token: string, title: string, body: string, devi
           headers: {
             'apns-priority': '10',
             'apns-push-type': 'alert',
-            'apns-topic': 'com.m1ssion.app'
+            'apns-topic': 'app.lovable.2716f91b957c47ba91e06f572f3ce00d'  // FIXED: Correct bundle ID from Capacitor config
           },
           payload: {
             aps: {
