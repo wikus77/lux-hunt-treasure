@@ -7,6 +7,10 @@ async function getFirebaseAccessToken(): Promise<string> {
   const privateKey = (Deno.env.get('FIREBASE_PRIVATE_KEY') || "").replace(/\\n/g, '\n');
   const clientEmail = Deno.env.get('FIREBASE_CLIENT_EMAIL') || "";
   
+  console.log('🔑 Checking Firebase credentials...');
+  console.log('📧 Client email:', clientEmail ? 'Present' : 'Missing');
+  console.log('🔐 Private key:', privateKey ? `Present (${privateKey.length} chars)` : 'Missing');
+  
   if (!privateKey || !clientEmail) {
     throw new Error('Firebase credentials not configured');
   }

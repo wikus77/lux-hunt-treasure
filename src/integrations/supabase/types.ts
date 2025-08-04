@@ -1618,13 +1618,17 @@ export type Database = {
           apns_failed: number | null
           apns_sent: number | null
           created_at: string | null
+          devices_sent: number | null
           devices_targeted: number | null
+          error_message: string | null
           fcm_failed: number | null
           fcm_sent: number | null
           id: string
           message: string
           metadata: Json | null
+          sent_at: string | null
           sent_by: string | null
+          status: string | null
           success: boolean | null
           target_type: string
           target_user_id: string | null
@@ -1634,13 +1638,17 @@ export type Database = {
           apns_failed?: number | null
           apns_sent?: number | null
           created_at?: string | null
+          devices_sent?: number | null
           devices_targeted?: number | null
+          error_message?: string | null
           fcm_failed?: number | null
           fcm_sent?: number | null
           id?: string
           message: string
           metadata?: Json | null
+          sent_at?: string | null
           sent_by?: string | null
+          status?: string | null
           success?: boolean | null
           target_type: string
           target_user_id?: string | null
@@ -1650,13 +1658,17 @@ export type Database = {
           apns_failed?: number | null
           apns_sent?: number | null
           created_at?: string | null
+          devices_sent?: number | null
           devices_targeted?: number | null
+          error_message?: string | null
           fcm_failed?: number | null
           fcm_sent?: number | null
           id?: string
           message?: string
           metadata?: Json | null
+          sent_at?: string | null
           sent_by?: string | null
+          status?: string | null
           success?: boolean | null
           target_type?: string
           target_user_id?: string | null
