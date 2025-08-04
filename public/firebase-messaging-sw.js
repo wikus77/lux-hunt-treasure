@@ -4,7 +4,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.1/firebase-messaging-compat.js');
 
-// Firebase configuration
+// ✅ CRITICAL FIX: Sync with firebase-config.ts
 const firebaseConfig = {
   apiKey: "AIzaSyC71GUysMmPq8m3ZkUHvBYTDCRUaAo3mio",
   authDomain: "m1ssion-app.firebaseapp.com",
