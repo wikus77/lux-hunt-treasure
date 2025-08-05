@@ -20,6 +20,13 @@ import HallOfWinnersPage from "@/pages/HallOfWinnersPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import SettingsPage from "@/pages/settings/SettingsPage";
+import AgentProfileSettings from "@/pages/settings/AgentProfileSettings";
+import SecuritySettings from "@/pages/settings/SecuritySettings";
+import MissionSettings from "@/pages/settings/MissionSettings";
+import NotificationsSettings from "@/pages/settings/NotificationsSettings";
+import PrivacySettings from "@/pages/settings/PrivacySettings";
+import LegalSettings from "@/pages/settings/LegalSettings";
+import AppInfoSettings from "@/pages/settings/AppInfoSettings";
 import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -129,9 +136,45 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          <Route path="/settings/:section">
+          <Route path="/settings/profile">
             <ProtectedRoute>
-              <GlobalLayout><SettingsPage /></GlobalLayout>
+              <GlobalLayout><AgentProfileSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/security">
+            <ProtectedRoute>
+              <GlobalLayout><SecuritySettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/mission">
+            <ProtectedRoute>
+              <GlobalLayout><MissionSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/notifications">
+            <ProtectedRoute>
+              <GlobalLayout><NotificationsSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/privacy">
+            <ProtectedRoute>
+              <GlobalLayout><PrivacySettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/legal">
+            <ProtectedRoute>
+              <GlobalLayout><LegalSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/info">
+            <ProtectedRoute>
+              <GlobalLayout><AppInfoSettings /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
