@@ -16,6 +16,12 @@ export const OneSignalSetup = ({ userId }: OneSignalSetupProps) => {
   useEffect(() => {
     const initializeOneSignal = async () => {
       try {
+        // Prevent double initialization
+        if ((window as any).OneSignalInitialized) {
+          console.log('🔔 OneSignal already initialized, skipping...');
+          return;
+        }
+
         console.log('🔔 Initializing OneSignal for M1SSION™...');
         
         // Initialize OneSignal with simplified config
@@ -25,6 +31,8 @@ export const OneSignalSetup = ({ userId }: OneSignalSetupProps) => {
           serviceWorkerPath: '/OneSignalSDKWorker.js',
           serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js'
         });
+
+        (window as any).OneSignalInitialized = true;
 
         console.log('✅ OneSignal initialized successfully');
 
