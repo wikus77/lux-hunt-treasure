@@ -29,12 +29,12 @@ const AgentProfileSettings: React.FC = () => {
 
   // Use global profile data with real-time updates
   useProfileRealtime();
-  const { globalProfile } = useGlobalProfileSync();
+  const globalProfile = useGlobalProfileSync();
 
   // Sync agent name with profile updates
   useEffect(() => {
-    if (profileData?.name) {
-      setAgentName(profileData.name);
+    if (profileData?.name || profileData?.personalInfo?.firstName) {
+      setAgentName(profileData?.name || profileData?.personalInfo?.firstName || '');
     }
   }, [profileData]);
 
@@ -135,7 +135,7 @@ const AgentProfileSettings: React.FC = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ 
-          agent_name: agentName.trim()
+          first_name: agentName.trim()
         })
         .eq('id', user.id);
 
@@ -149,7 +149,7 @@ const AgentProfileSettings: React.FC = () => {
 
       // Update localStorage for immediate feedback
       const localProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-      localProfile.agent_name = agentName.trim();
+      localProfile.first_name = agentName.trim();
       localStorage.setItem('userProfile', JSON.stringify(localProfile));
 
       // Dispatch global sync event
@@ -247,7 +247,7 @@ const AgentProfileSettings: React.FC = () => {
               <div className="flex flex-col items-center space-y-4">
                 <Avatar className="w-24 h-24 border-2 border-[#00D1FF]/30">
                   <AvatarImage 
-                    src={profileImage || globalProfile?.avatar_url || user?.user_metadata?.avatar_url} 
+                    src={profileImage || user?.user_metadata?.avatar_url} 
                     alt="Avatar agente" 
                   />
                   <AvatarFallback className="bg-[#00D1FF]/20 text-[#00D1FF] text-xl font-bold">
@@ -337,7 +337,7 @@ const AgentProfileSettings: React.FC = () => {
               <div className="space-y-2">
                 <Label className="text-white">Tier Attivo</Label>
                 <div className="flex items-center">
-                  {getTierBadge(profileData?.tier || 'starter')}
+                  {getTierBadge('starter')}
                 </div>
               </div>
 
