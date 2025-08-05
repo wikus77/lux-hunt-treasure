@@ -44,6 +44,24 @@ serve(async (req) => {
       );
     }
 
+    // ✅ CRITICAL: Validate Web API Key format (must be ~39 chars, NOT Service Account Key)
+    if (!firebaseConfig.apiKey || firebaseConfig.apiKey.length < 35 || firebaseConfig.apiKey.length > 45) {
+      console.error('❌ Invalid Web API Key format - Length:', firebaseConfig.apiKey?.length);
+      console.error('❌ Expected: 35-45 chars (Web API Key), Got:', firebaseConfig.apiKey?.length, 'chars');
+      console.error('❌ This appears to be a Service Account Key, not a Web API Key');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid Web API Key format', 
+          details: `Length: ${firebaseConfig.apiKey?.length} chars. Expected: 35-45 chars (Web API Key, not Service Account Key)`,
+          instruction: 'Get the correct Web API Key from Firebase Console → Project Settings → Web App → Config'
+        }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
     console.log('✅ Firebase config loaded successfully');
     console.log('🔧 Config preview:', {
       apiKey: firebaseConfig.apiKey?.substring(0, 10) + '...',
