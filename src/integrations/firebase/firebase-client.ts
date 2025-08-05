@@ -152,6 +152,23 @@ export const registerDeviceForNotifications = async (): Promise<RegistrationResu
       // Get the current Firebase config
       const currentConfig = await getFirebaseConfig();
       
+      // ✅ CRITICAL DEBUG: Log exact config being used for Firebase
+      console.log('🔧 FIREBASE CONFIG DEBUG:', {
+        apiKey: currentConfig.apiKey?.substring(0, 10) + '...' + currentConfig.apiKey?.substring(-10),
+        apiKeyLength: currentConfig.apiKey?.length,
+        authDomain: currentConfig.authDomain,
+        projectId: currentConfig.projectId,
+        vapidKey: currentConfig.vapidKey?.substring(0, 10) + '...',
+        vapidKeyLength: currentConfig.vapidKey?.length
+      });
+      
+      // ✅ CRITICAL: Validate API key format (Firebase Web API keys are ~39 chars)
+      if (!currentConfig.apiKey || currentConfig.apiKey.length > 50) {
+        console.error('❌ INVALID API KEY: Length=' + currentConfig.apiKey?.length + ', Expected ~39 chars for Web API Key');
+        console.error('❌ This appears to be a Service Account key, not a Web API key');
+        return { success: false, reason: 'invalid-api-key-format' };
+      }
+      
       currentToken = await getToken(messaging, {
         vapidKey: currentConfig.vapidKey,
         serviceWorkerRegistration: await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js')
