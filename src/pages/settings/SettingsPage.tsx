@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useProfileImage } from '@/hooks/useProfileImage';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import { User, Shield, Target, Bell, CreditCard, FileText } from 'lucide-react';
+import { User, Shield, Target, Bell, CreditCard, FileText, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AgentProfileSettings from './AgentProfileSettings';
@@ -16,8 +16,9 @@ import NotificationsSettings from './NotificationsSettings';
 import PaymentSettings from './PaymentSettings';
 import LegalSettings from './LegalSettings';
 import PrivacySettings from '@/components/settings/PrivacySettings';
+import AppInfoSettings from './AppInfoSettings';
 
-type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'payments' | 'privacy' | 'legal';
+type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'privacy' | 'legal' | 'info';
 
 const SettingsPage: React.FC = () => {
   const { user } = useAuth();
@@ -30,7 +31,7 @@ const SettingsPage: React.FC = () => {
     const path = location;
     if (path.includes('/settings/')) {
       const section = path.split('/settings/')[1] as SettingsSection;
-      const validSections: SettingsSection[] = ['profile', 'security', 'mission', 'notifications', 'payments', 'privacy', 'legal'];
+      const validSections: SettingsSection[] = ['profile', 'security', 'mission', 'notifications', 'privacy', 'legal', 'info'];
       if (validSections.includes(section)) {
         setActiveSection(section);
       }
@@ -69,12 +70,6 @@ const SettingsPage: React.FC = () => {
       description: 'Preferenze e alert'
     },
     { 
-      id: 'payments' as SettingsSection, 
-      label: 'Pagamenti', 
-      icon: CreditCard,
-      description: 'Metodi di pagamento e piani'
-    },
-    { 
       id: 'privacy' as SettingsSection, 
       label: 'Privacy', 
       icon: Shield,
@@ -85,6 +80,12 @@ const SettingsPage: React.FC = () => {
       label: 'Legale', 
       icon: FileText,
       description: 'Termini, privacy e account'
+    },
+    { 
+      id: 'info' as SettingsSection, 
+      label: 'Info App', 
+      icon: Info,
+      description: 'Versione, supporto e credits'
     },
   ];
 
@@ -98,12 +99,12 @@ const SettingsPage: React.FC = () => {
         return <MissionSettings />;
       case 'notifications':
         return <NotificationsSettings />;
-      case 'payments':
-        return <PaymentSettings />;
       case 'privacy':
         return <PrivacySettings />;
       case 'legal':
         return <LegalSettings />;
+      case 'info':
+        return <AppInfoSettings />;
       default:
         return <AgentProfileSettings />;
     }

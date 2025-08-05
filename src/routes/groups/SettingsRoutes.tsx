@@ -56,6 +56,62 @@ const SettingsRoutes = () => {
           </RoleBasedProtectedRoute>
         }
       />
+      <Route
+        path="/settings/profile"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/security"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/mission"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/notifications"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/privacy"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/legal"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/info"
+        element={
+          <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
+            <SettingsPage />
+          </RoleBasedProtectedRoute>
+        }
+      />
     </>
   );
 };
