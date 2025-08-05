@@ -48,7 +48,30 @@ export const OneSignalSetup = ({ userId }: OneSignalSetupProps) => {
           return;
         }
 
+        // Check if we're on production domain
+        const isProduction = window.location.hostname === 'm1ssion.eu';
+        const isDevelopment = window.location.hostname.includes('lovable') || 
+                             window.location.hostname.includes('localhost') ||
+                             window.location.hostname.includes('lovableproject.com');
+
         console.log('🔔 Initializing OneSignal for M1SSION™...');
+        console.log(`🌍 Environment: ${isProduction ? 'Production' : 'Development'} (${window.location.hostname})`);
+        
+        // Only initialize OneSignal on production domain
+        if (!isProduction) {
+          console.log('⚠️ OneSignal disabled in development environment');
+          console.log('🚀 For production testing, deploy to https://m1ssion.eu');
+          
+          // Mock OneSignal for development
+          (window as any).OneSignalInitialized = true;
+          (window as any).OneSignalUtils = {
+            requestPermission: () => Promise.resolve(true),
+            sendTag: () => Promise.resolve(),
+            getPlayerId: () => Promise.resolve('dev-player-id-' + userId),
+            isSubscribed: () => Promise.resolve(false)
+          };
+          return;
+        }
         
         // Initialize OneSignal with simplified config
         await OneSignal.init({
