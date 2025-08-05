@@ -1,4 +1,4 @@
-// ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';

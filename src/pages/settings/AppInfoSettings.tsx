@@ -1,5 +1,4 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Info, Mail, Phone, Globe, Heart } from 'lucide-react';
