@@ -10,6 +10,13 @@ import PrivacySecurity from "../../pages/PrivacySecurity";
 import LanguageSettings from "../../pages/LanguageSettings";
 import Notifications from "../../pages/Notifications";
 import SettingsPage from "../../pages/settings/SettingsPage";
+import AgentProfileSettings from "../../pages/settings/AgentProfileSettings";
+import SecuritySettings from "../../pages/settings/SecuritySettings";
+import MissionSettings from "../../pages/settings/MissionSettings";
+import NotificationsSettings from "../../pages/settings/NotificationsSettings";
+import PrivacySettings from "../../pages/settings/PrivacySettings";
+import LegalSettings from "../../pages/settings/LegalSettings";
+import AppInfoSettings from "../../pages/settings/AppInfoSettings";
 
 const SettingsRoutes = () => {
   const baseUserRoles = ['user', 'moderator', 'admin'];
@@ -60,7 +67,7 @@ const SettingsRoutes = () => {
         path="/settings/profile"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <AgentProfileSettings />
           </RoleBasedProtectedRoute>
         }
       />
@@ -68,7 +75,7 @@ const SettingsRoutes = () => {
         path="/settings/security"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <SecuritySettings />
           </RoleBasedProtectedRoute>
         }
       />
@@ -76,7 +83,7 @@ const SettingsRoutes = () => {
         path="/settings/mission"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <MissionSettings />
           </RoleBasedProtectedRoute>
         }
       />
@@ -84,7 +91,7 @@ const SettingsRoutes = () => {
         path="/settings/notifications"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <NotificationsSettings />
           </RoleBasedProtectedRoute>
         }
       />
@@ -92,7 +99,7 @@ const SettingsRoutes = () => {
         path="/settings/privacy"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <PrivacySettings />
           </RoleBasedProtectedRoute>
         }
       />
@@ -100,7 +107,7 @@ const SettingsRoutes = () => {
         path="/settings/legal"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <LegalSettings />
           </RoleBasedProtectedRoute>
         }
       />
@@ -108,7 +115,7 @@ const SettingsRoutes = () => {
         path="/settings/info"
         element={
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SettingsPage />
+            <AppInfoSettings />
           </RoleBasedProtectedRoute>
         }
       />

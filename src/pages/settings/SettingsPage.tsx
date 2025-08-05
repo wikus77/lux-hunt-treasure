@@ -89,9 +89,7 @@ const SettingsPage: React.FC = () => {
     },
   ];
 
-  // This page shows ONLY the settings navigation list
-
-  return (
+return (
     <div className="min-h-screen">
       <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
       
@@ -102,7 +100,7 @@ const SettingsPage: React.FC = () => {
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
-        {/* Settings Navigation */}
+        {/* Settings Navigation - Solo navigazione principale */}
         <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="text-white font-orbitron">Impostazioni</CardTitle>
@@ -110,18 +108,13 @@ const SettingsPage: React.FC = () => {
           <CardContent className="space-y-2">
             {settingsSections.map((section) => {
               const IconComponent = section.icon;
-              const isActive = activeSection === section.id;
               
               return (
                 <Button
                   key={section.id}
-                  variant={isActive ? "default" : "ghost"}
-                  onClick={() => handleSectionChange(section.id)}
-                  className={`w-full justify-start p-4 h-auto ${
-                    isActive 
-                      ? 'bg-[#00D1FF]/20 text-white border border-[#00D1FF]/30' 
-                      : 'text-white/70 hover:text-white hover:bg-white/5'
-                  }`}
+                  variant="ghost"
+                  onClick={() => navigate(`/settings/${section.id}`)}
+                  className="w-full justify-start p-4 h-auto text-white/70 hover:text-white hover:bg-white/5"
                 >
                   <div className="flex items-center space-x-3">
                     <IconComponent className="w-5 h-5" />
@@ -135,8 +128,6 @@ const SettingsPage: React.FC = () => {
             })}
           </CardContent>
         </Card>
-
-        {/* This page shows ONLY the navigation list - no content */}
       </div>
 
       {/* Bottom Navigation - Uniform positioning like Home */}
