@@ -5,11 +5,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
-import { 
-  requestNotificationPermission, 
-  setupMessageListener,
-  getMessagingInstance
-} from '@/integrations/firebase/firebase-client';
+import OneSignal from 'react-onesignal';
 import { useNotificationManager } from '@/hooks/useNotificationManager';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -34,44 +30,27 @@ export const usePushNotifications = () => {
       const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
       
       if (isCapacitor && isIOS) {
-        console.log('🍎 iOS Capacitor detected - Enhanced push notification support');
+        console.log('🍎 iOS Capacitor detected - Enhanced OneSignal support');
         setIsSupported(true);
       }
 
-      // Check if messaging is supported
-      const messaging = await getMessagingInstance();
-      if (!messaging) {
-        setIsSupported(false);
-      } else {
-        console.log('🔥 Firebase messaging initialized successfully');
-      }
+      // OneSignal is supported on all modern browsers
+      console.log('🔔 OneSignal push notifications supported');
     };
     
     checkSupport();
   }, []);
 
-  // Setup message listener
+  // Setup OneSignal message listener
   useEffect(() => {
     if (isSupported && permission === 'granted') {
-      setupMessageListener((payload) => {
-        console.log('📨 Foreground message received:', payload);
-        
-        // Create an in-app notification
-        if (payload.notification) {
-          const { title, body } = payload.notification;
-          createNotification(title || 'M1SSION™', body || 'Nuova notifica');
-          
-          // Show toast with M1SSION™ branding
-          toast(title || 'M1SSION™', {
-            description: body || 'Nuova notifica ricevuta',
-            duration: 5000,
-          });
-        }
-      });
+      // OneSignal handles background messages automatically
+      // For foreground messages, we can use notification event
+      console.log('🔔 OneSignal message listener ready');
     }
   }, [isSupported, permission, createNotification]);
 
-  // Request permission with iOS native support
+  // Request permission with OneSignal support
   const requestPermission = useCallback(async () => {
     if (!isSupported) {
       toast.error('Le notifiche push non sono supportate su questo dispositivo');
@@ -81,124 +60,63 @@ export const usePushNotifications = () => {
     setLoading(true);
     
     try {
-      // For iOS Capacitor, use native permission request
-      const isCapacitor = (window as any).Capacitor?.isNativePlatform();
-      const isIOS = (window as any).Capacitor?.getPlatform() === 'ios';
-
-      if (isCapacitor && isIOS) {
-        console.log('🍎 Requesting iOS native push permission...');
-        
-        try {
-          // Use Capacitor's native push notification plugin
-          const { PushNotifications } = await import('@capacitor/push-notifications');
-          
-          const permResult = await PushNotifications.requestPermissions();
-          console.log('📱 iOS permission result:', permResult);
-          
-          if (permResult.receive === 'granted') {
-            setPermission('granted');
-            
-            // FORCE Register for iOS push notifications
-            console.log('🍎 FORCING iOS push registration...');
-            await PushNotifications.register();
-            
-            // Force immediate token check
-            setTimeout(async () => {
-              try {
-                const tokens = await PushNotifications.getDeliveredNotifications();
-                console.log('🔍 iOS delivered notifications check:', tokens);
-              } catch (e) {
-                console.warn('iOS notification check failed:', e);
-              }
-            }, 2000);
-            
-            // 🔥 CRITICAL: Setup iOS push registration listener ONCE
-            PushNotifications.addListener('registration', async (token) => {
-              console.log('🍎 iOS Push registration token received:', token.value);
-              
-              // FORCE iOS token registration with immediate save
-              const { data: { user } } = await supabase.auth.getUser();
-              if (user) {
-                console.log('🔐 FORCING iOS token save for user:', user.id);
-                
-                const { error } = await supabase
-                  .from('device_tokens')
-                  .upsert({
-                    user_id: user.id,
-                    token: token.value,
-                    device_type: 'ios',
-                    last_used: new Date().toISOString(),
-                    created_at: new Date().toISOString()
-                  }, {
-                    onConflict: 'user_id,device_type'
-                  });
-                  
-                if (error) {
-                  console.error('❌ CRITICAL ERROR saving iOS token:', error);
-                  toast.error('❌ Errore salvataggio token iOS');
-                } else {
-                  console.log('✅ iOS token FORCE SAVED to device_tokens:', token.value);
-                  setToken(token.value);
-                  toast.success('✅ Token iOS registrato!', {
-                    description: 'Notifiche push iOS attive'
-                  });
-                }
-              } else {
-                console.error('❌ No authenticated user for iOS token registration');
-                toast.error('❌ Utente non autenticato per iOS');
-              }
-            });
-            
-            // Setup error listener
-            PushNotifications.addListener('registrationError', (error: any) => {
-              console.error('❌ iOS push registration error:', error);
-            });
-            
-            toast.success('✅ Notifiche push attivate!', {
-              description: 'Riceverai aggiornamenti su missioni e premi',
-            });
-            
-            setLoading(false);
-            return { success: true };
-          } else {
-            setPermission('denied');
-            toast.error('❌ Permesso notifiche negato');
-            setLoading(false);
-            return { success: false, reason: 'permission-denied' };
-          }
-        } catch (capacitorError) {
-          console.warn('Capacitor push notifications not available, falling back to web API');
-        }
-      }
-
-      // Fallback to web notification API
-      const result = await requestNotificationPermission();
+      console.log('🔔 Requesting OneSignal notification permission...');
       
-      if (result.success) {
+      // Request OneSignal permission
+      await OneSignal.Notifications.requestPermission();
+      console.log('🔔 OneSignal permission requested');
+      
+      // Check if permission was granted
+      const isOptedIn = await OneSignal.User.PushSubscription.optedIn;
+      if (isOptedIn) {
         setPermission('granted');
-        // Only set token if it exists in the result
-        if (result.token) {
-          setToken(result.token);
+        
+        // Get OneSignal Player ID
+        const playerId = await OneSignal.User.PushSubscription.id;
+        console.log('🔔 OneSignal Player ID:', playerId);
+        
+        if (playerId) {
+          setToken(playerId);
+          
+          // Save OneSignal Player ID to Supabase
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            console.log('🔐 Saving OneSignal Player ID for user:', user.id);
+            
+            const { error } = await supabase
+              .from('device_tokens')
+              .upsert({
+                user_id: user.id,
+                token: playerId,
+                device_type: 'onesignal',
+                last_used: new Date().toISOString(),
+                created_at: new Date().toISOString()
+              }, {
+                onConflict: 'user_id,device_type'
+              });
+              
+            if (error) {
+              console.error('❌ Error saving OneSignal Player ID:', error);
+              toast.error('❌ Errore salvataggio token OneSignal');
+            } else {
+              console.log('✅ OneSignal Player ID saved to device_tokens:', playerId);
+              toast.success('✅ Notifiche OneSignal attivate!', {
+                description: 'Riceverai aggiornamenti su missioni e premi'
+              });
+            }
+          }
         }
         
-        toast.success('✅ Notifiche push attivate!', {
-          description: 'Riceverai aggiornamenti su missioni e premi',
-        });
+        setLoading(false);
+        return { success: true, token: playerId };
       } else {
-        if (result.reason === 'permission-denied') {
-          setPermission('denied');
-          toast.error('❌ Permesso notifiche negato', {
-            description: 'Puoi attivare le notifiche dalle impostazioni del browser'
-          });
-        } else {
-          toast.error('Non è stato possibile attivare le notifiche');
-        }
+        setPermission('denied');
+        toast.error('❌ Permesso notifiche negato');
+        setLoading(false);
+        return { success: false, reason: 'permission-denied' };
       }
-      
-      setLoading(false);
-      return result;
     } catch (error) {
-      console.error('Error in requestPermission:', error);
+      console.error('❌ OneSignal permission request failed:', error);
       toast.error('Errore durante l\'attivazione delle notifiche');
       setLoading(false);
       return { success: false, error };

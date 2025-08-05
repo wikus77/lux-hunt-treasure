@@ -5,12 +5,38 @@
 
 import { useEffect } from 'react';
 import OneSignal from 'react-onesignal';
+import { supabase } from '@/integrations/supabase/client';
 
 const ONESIGNAL_APP_ID = "50cb75f7-f065-4626-9a63-ce5692fa7e70";
 
 interface OneSignalSetupProps {
   userId?: string;
 }
+
+// Save OneSignal Player ID to Supabase
+const savePlayerIdToSupabase = async (playerId: string, userId: string) => {
+  try {
+    const { error } = await supabase
+      .from('device_tokens')
+      .upsert({
+        user_id: userId,
+        token: playerId,
+        device_type: 'onesignal',
+        last_used: new Date().toISOString(),
+        created_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,device_type'
+      });
+      
+    if (error) {
+      console.error('❌ Error saving OneSignal Player ID:', error);
+    } else {
+      console.log('✅ OneSignal Player ID saved to Supabase:', playerId);
+    }
+  } catch (error) {
+    console.error('❌ Error in savePlayerIdToSupabase:', error);
+  }
+};
 
 export const OneSignalSetup = ({ userId }: OneSignalSetupProps) => {
   useEffect(() => {
@@ -46,10 +72,18 @@ export const OneSignalSetup = ({ userId }: OneSignalSetupProps) => {
           }
         }
 
-        // Get current subscription status
+        // Get current subscription status and save player ID
         try {
           const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
           console.log('🔔 OneSignal current subscription status:', isSubscribed);
+          
+          if (isSubscribed) {
+            const playerId = await OneSignal.User.PushSubscription.id;
+            if (playerId && userId) {
+              console.log('💾 Saving OneSignal Player ID:', playerId);
+              await savePlayerIdToSupabase(playerId, userId);
+            }
+          }
         } catch (error) {
           console.warn('⚠️ Could not check OneSignal subscription status:', error);
         }
