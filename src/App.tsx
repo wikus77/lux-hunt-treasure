@@ -14,6 +14,7 @@ import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
+import OneSignalSetup from "./components/push/OneSignalSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
@@ -81,6 +82,7 @@ function App() {
             <WouterRoutes />
             <InstallPrompt />
             <PushSetup />
+            <OneSignalSetup />
             <XpSystemManager />
             </AuthProvider>
             <Toaster />
