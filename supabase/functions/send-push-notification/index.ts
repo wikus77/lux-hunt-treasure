@@ -34,9 +34,15 @@ serve(async (req: Request) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get OneSignal config
-    const oneSignalAppId = "50cb75f7-f065-4626-9a63-ce5692fa7e70";
+    // Get OneSignal config from environment
+    const oneSignalAppId = Deno.env.get('ONESIGNAL_APP_ID') || "50cb75f7-f065-4626-9a63-ce5692fa7e70";
     const oneSignalRestApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY');
+
+    console.log('🔑 OneSignal Config:', {
+      appId: oneSignalAppId,
+      hasRestApiKey: !!oneSignalRestApiKey,
+      restApiKeyLength: oneSignalRestApiKey?.length || 0
+    });
 
     if (!oneSignalRestApiKey) {
       console.error('❌ OneSignal REST API Key not configured');
