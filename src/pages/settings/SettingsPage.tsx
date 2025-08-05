@@ -89,26 +89,7 @@ const SettingsPage: React.FC = () => {
     },
   ];
 
-  const renderSettingsContent = () => {
-    switch (activeSection) {
-      case 'profile':
-        return <AgentProfileSettings />;
-      case 'security':
-        return <SecuritySettings />;
-      case 'mission':
-        return <MissionSettings />;
-      case 'notifications':
-        return <NotificationsSettings />;
-      case 'privacy':
-        return <PrivacySettings />;
-      case 'legal':
-        return <LegalSettings />;
-      case 'info':
-        return <AppInfoSettings />;
-      default:
-        return <AgentProfileSettings />;
-    }
-  };
+  // This page shows ONLY the settings navigation list
 
   return (
     <div className="min-h-screen">
@@ -155,15 +136,7 @@ const SettingsPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Settings Content */}
-        <motion.div
-          key={activeSection}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {renderSettingsContent()}
-        </motion.div>
+        {/* This page shows ONLY the navigation list - no content */}
       </div>
 
       {/* Bottom Navigation - Uniform positioning like Home */}

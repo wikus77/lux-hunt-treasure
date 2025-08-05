@@ -1,70 +1,75 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/use-auth';
 import { useProfileData } from '@/hooks/useProfileData';
 import { useProfileRealtime } from '@/hooks/useProfileRealtime';
 import { useGlobalProfileSync } from '@/hooks/useGlobalProfileSync';
+import { useProfileImage } from '@/hooks/useProfileImage';
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Upload, Copy, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Copy, Upload, User, Mail, IdCard, ArrowLeft } from 'lucide-react';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
+import BottomNavigation from '@/components/layout/BottomNavigation';
 
 const AgentProfileSettings: React.FC = () => {
   const { user } = useAuth();
-  const { profileData, actions } = useProfileData();
-  const { updateProfile } = useProfileRealtime();
   const { toast } = useToast();
+  const { profileData } = useProfileData();
+  const { navigate } = useWouterNavigation();
+  const { profileImage } = useProfileImage();
+  const [agentName, setAgentName] = useState('');
   const [loading, setLoading] = useState(false);
-  const globalProfile = useGlobalProfileSync();
-  const [agentName, setAgentName] = useState(profileData.name || '');
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync agentName with global profile updates and custom events
+  // Use global profile data with real-time updates
+  useProfileRealtime();
+  const { globalProfile } = useGlobalProfileSync();
+
+  // Sync agent name with profile updates
   useEffect(() => {
-    if (globalProfile?.full_name) {
-      setAgentName(globalProfile.full_name);
+    if (profileData?.name) {
+      setAgentName(profileData.name);
     }
-  }, [globalProfile?.full_name]);
+  }, [profileData]);
 
-  // Listen for global profile sync events
+  // Listen for custom profile sync events
   useEffect(() => {
     const handleProfileSync = (event: CustomEvent) => {
-      console.log('🔄 AgentProfileSettings received sync event:', event.detail);
-      if (event.detail?.full_name) {
-        setAgentName(event.detail.full_name);
+      const { agentName: syncedAgentName } = event.detail;
+      if (syncedAgentName) {
+        setAgentName(syncedAgentName);
       }
     };
 
     window.addEventListener('profile-sync', handleProfileSync as EventListener);
-    return () => {
-      window.removeEventListener('profile-sync', handleProfileSync as EventListener);
-    };
+    return () => window.removeEventListener('profile-sync', handleProfileSync as EventListener);
   }, []);
 
   const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type and size for iOS compatibility
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    if (!validTypes.includes(file.type)) {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
       toast({
-        title: "Formato non supportato",
-        description: "Carica solo immagini JPG o PNG.",
+        title: "Errore",
+        description: "Per favore seleziona un file immagine valido.",
         variant: "destructive"
       });
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit for iOS compatibility
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "File troppo grande",
-        description: "L'immagine deve essere inferiore a 2MB.",
+        title: "Errore",
+        description: "L'immagine deve essere più piccola di 5MB.",
         variant: "destructive"
       });
       return;
@@ -72,48 +77,39 @@ const AgentProfileSettings: React.FC = () => {
 
     setLoading(true);
     try {
-      // Use correct file path format for Supabase storage
-      const fileName = `avatar.jpg`;
-      const filePath = `${user.id}/${fileName}`;
-
-      console.log('Uploading to path:', filePath);
-
-      const { error: uploadError } = await supabase.storage
+      // Upload to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}_${Date.now()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
-          upsert: true,
-          contentType: 'image/jpeg'
-        });
+        .upload(fileName, file, { upsert: true });
 
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
+      if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      // Get public URL
+      const { data: urlData } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(fileName);
 
-      console.log('Public URL:', publicUrl);
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('id', user.id);
 
-      // Use realtime update for immediate sync
-      await updateProfile({
-        avatar_url: publicUrl
-      });
-
-      // Update profileData immediately for visual feedback
-      actions.setProfileImage(publicUrl);
+      if (updateError) throw updateError;
 
       toast({
         title: "✅ Avatar aggiornato",
-        description: "La tua immagine profilo è stata salvata con successo."
+        description: "La tua immagine profilo è stata aggiornata con successo."
       });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Avatar upload error:', error);
       toast({
         title: "❌ Errore upload",
-        description: `Impossibile aggiornare l'avatar: ${error.message || 'Errore sconosciuto'}`,
+        description: error.message || "Impossibile caricare l'immagine. Riprova.",
         variant: "destructive"
       });
     } finally {
@@ -122,49 +118,55 @@ const AgentProfileSettings: React.FC = () => {
   };
 
   const handleSaveProfile = async () => {
-    if (!user || !agentName.trim()) return;
-    
+    if (!user) return;
+
+    // Validate agent name
+    if (!agentName.trim()) {
+      toast({
+        title: "❌ Nome obbligatorio",
+        description: "Inserisci un nome agente per salvare.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      console.log('🔄 M1SSION™ Saving agent name:', agentName);
-      
-      // Use realtime update for immediate sync
-      const result = await updateProfile({
-        full_name: agentName.trim()
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          agent_name: agentName.trim()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Trigger real-time update
+      const event = new CustomEvent('profile-update', {
+        detail: { agentName: agentName.trim() }
       });
+      window.dispatchEvent(event);
 
-      // Check if there was an error (updateProfile returns void on success)
-      if (result && typeof result === 'object' && 'error' in result && result.error) {
-        throw result.error;
-      }
+      // Update localStorage for immediate feedback
+      const localProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+      localProfile.agent_name = agentName.trim();
+      localStorage.setItem('userProfile', JSON.stringify(localProfile));
 
-      // Update local profile data for consistency
-      actions.setName(agentName.trim());
-      
-      // Force localStorage update for immediate UI sync
-      localStorage.setItem('agentName', agentName.trim());
-      localStorage.setItem('profileName', agentName.trim());
-      
-      // Trigger global sync event for real-time updates
+      // Dispatch global sync event
       const syncEvent = new CustomEvent('profile-sync', {
-        detail: { full_name: agentName.trim() }
+        detail: { agentName: agentName.trim() }
       });
       window.dispatchEvent(syncEvent);
-      
-      // Also trigger storage event for components listening to localStorage
-      window.dispatchEvent(new Event('storage'));
-      
+
       toast({
-        title: "✅ Profilo salvato",
-        description: "Il nome agente è stato aggiornato con successo."
+        title: "✅ Profilo aggiornato",
+        description: "I tuoi dati sono stati salvati con successo."
       });
-      
-      console.log('✅ M1SSION™ Agent name saved successfully');
-    } catch (error) {
-      console.error('❌ M1SSION™ Profile save error:', error);
+    } catch (error: any) {
+      console.error('Profile save error:', error);
       toast({
         title: "❌ Errore salvataggio",
-        description: `Impossibile salvare le modifiche: ${error?.message || 'Errore sconosciuto'}`,
+        description: error.message || "Impossibile salvare il profilo. Riprova.",
         variant: "destructive"
       });
     } finally {
@@ -177,130 +179,202 @@ const AgentProfileSettings: React.FC = () => {
       navigator.clipboard.writeText(user.id);
       toast({
         title: "✅ ID copiato",
-        description: "User ID copiato negli appunti."
+        description: "L'ID utente è stato copiato negli appunti."
       });
     }
   };
 
-  const getTierBadge = () => {
-    const tier = profileData.subscription?.plan || 'Base';
-    const tierColors = {
-      'Base': 'bg-gray-600',
-      'Silver': 'bg-gray-400',
-      'Gold': 'bg-yellow-500',
-      'Black': 'bg-black border border-white'
+  const getTierBadge = (tier: string) => {
+    const tierConfig = {
+      'starter': { 
+        bg: 'bg-gray-500/20 border-gray-500/30', 
+        text: 'text-gray-300',
+        label: 'Starter'
+      },
+      'premium': { 
+        bg: 'bg-yellow-500/20 border-yellow-500/30', 
+        text: 'text-yellow-300',
+        label: 'Premium'
+      },
+      'enterprise': { 
+        bg: 'bg-purple-500/20 border-purple-500/30', 
+        text: 'text-purple-300',
+        label: 'Enterprise'
+      }
     };
+
+    const config = tierConfig[tier as keyof typeof tierConfig] || tierConfig.starter;
     
     return (
-      <Badge className={`${tierColors[tier as keyof typeof tierColors]} text-white`}>
-        {tier === 'Base' ? 'Starter' : tier === 'Silver' ? 'Elite' : tier === 'Gold' ? 'Elite+' : 'M1SSION+'}
-      </Badge>
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${config.bg} ${config.text}`}>
+        {config.label}
+      </span>
     );
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white font-orbitron flex items-center">
-            <Camera className="w-5 h-5 mr-2" />
-            Profilo Agente
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Avatar Upload */}
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <img
-                src={profileData.profileImage || '/placeholder.svg'}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full border-2 border-[#00D1FF]/30 object-cover"
-              />
+    <div className="min-h-screen">
+      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
+      
+      <div 
+        className="px-4 space-y-6"
+        style={{ 
+          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+        }}
+      >
+        {/* Back Button */}
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/settings')}
+          className="text-white/70 hover:text-white hover:bg-white/5 p-2"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
+          Indietro
+        </Button>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-[#00D1FF] font-orbitron">Profilo Agente</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center space-y-4">
+                <Avatar className="w-24 h-24 border-2 border-[#00D1FF]/30">
+                  <AvatarImage 
+                    src={profileImage || globalProfile?.avatar_url || user?.user_metadata?.avatar_url} 
+                    alt="Avatar agente" 
+                  />
+                  <AvatarFallback className="bg-[#00D1FF]/20 text-[#00D1FF] text-xl font-bold">
+                    {agentName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'A'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="flex flex-col items-center space-y-2">
+                  <label htmlFor="avatar-upload" className="cursor-pointer">
+                    <Button
+                      variant="outline"
+                      className="border-[#00D1FF]/30 text-[#00D1FF] hover:bg-[#00D1FF]/10"
+                      asChild
+                    >
+                      <span>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Cambia Avatar
+                      </span>
+                    </Button>
+                  </label>
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                    disabled={loading}
+                  />
+                </div>
+              </div>
+
+              {/* Agent Name */}
+              <div className="space-y-2">
+                <Label htmlFor="agentName" className="text-white flex items-center">
+                  <User className="w-4 h-4 mr-2" />
+                  Nome Agente
+                </Label>
+                <Input
+                  id="agentName"
+                  type="text"
+                  value={agentName}
+                  onChange={(e) => setAgentName(e.target.value)}
+                  className="bg-black/20 border-white/20 text-white"
+                  placeholder="Inserisci il tuo nome agente"
+                />
+              </div>
+
+              {/* Email (Read-only) */}
+              <div className="space-y-2">
+                <Label className="text-white flex items-center">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Email
+                </Label>
+                <Input
+                  type="email"
+                  value={user?.email || ''}
+                  readOnly
+                  className="bg-black/10 border-white/10 text-white/70 cursor-not-allowed"
+                />
+              </div>
+
+              {/* User ID */}
+              <div className="space-y-2">
+                <Label className="text-white flex items-center">
+                  <IdCard className="w-4 h-4 mr-2" />
+                  User ID
+                </Label>
+                <div className="flex space-x-2">
+                  <Input
+                    type="text"
+                    value={user?.id || ''}
+                    readOnly
+                    className="bg-black/10 border-white/10 text-white/70 cursor-not-allowed flex-1"
+                  />
+                  <Button
+                    onClick={copyUserId}
+                    variant="outline"
+                    size="icon"
+                    className="border-[#00D1FF]/30 text-[#00D1FF] hover:bg-[#00D1FF]/10"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Active Tier */}
+              <div className="space-y-2">
+                <Label className="text-white">Tier Attivo</Label>
+                <div className="flex items-center">
+                  {getTierBadge(profileData?.tier || 'starter')}
+                </div>
+              </div>
+
+              {/* Save Button */}
               <Button
-                size="icon"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={handleSaveProfile}
                 disabled={loading}
-                className="absolute -bottom-2 -right-2 rounded-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black"
+                className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
               >
-                <Upload className="w-4 h-4" />
+                {loading ? 'Salvataggio...' : 'Salva Modifiche'}
               </Button>
-            </div>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png"
-              capture="environment"
-              onChange={handleAvatarUpload}
-              className="hidden"
-            />
-          </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
 
-          {/* Agent Name */}
-          <div className="space-y-2">
-            <Label htmlFor="agentName" className="text-white">Nome Agente</Label>
-            <Input
-              id="agentName"
-              value={agentName}
-              onChange={(e) => setAgentName(e.target.value)}
-              placeholder="Inserisci il tuo nome agente"
-              className="bg-black/20 border-white/20 text-white placeholder:text-white/50"
-            />
-          </div>
-
-          {/* Email (readonly) */}
-          <div className="space-y-2">
-            <Label className="text-white">Email</Label>
-            <Input
-              value={user?.email || ''}
-              readOnly
-              className="bg-black/20 border-white/20 text-white/70 cursor-not-allowed"
-            />
-          </div>
-
-          {/* User ID (readonly with copy) */}
-          <div className="space-y-2">
-            <Label className="text-white">User ID</Label>
-            <div className="flex items-center space-x-2">
-              <Input
-                value={user?.id ? `${user.id.substring(0, 8)}...` : ''}
-                readOnly
-                className="bg-black/20 border-white/20 text-white/70 cursor-not-allowed flex-1"
-              />
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={copyUserId}
-                className="border-white/20 hover:bg-white/10"
-              >
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Tier Badge */}
-          <div className="space-y-2">
-            <Label className="text-white">Tier Attivo</Label>
-            <div className="flex items-center">
-              {getTierBadge()}
-            </div>
-          </div>
-
-          {/* Save Button */}
-          <Button
-            onClick={handleSaveProfile}
-            disabled={loading}
-            className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
-          >
-            {loading ? 'Salvataggio...' : 'Salva Modifiche'}
-          </Button>
-        </CardContent>
-      </Card>
-    </motion.div>
+      {/* Bottom Navigation */}
+      <div 
+        id="settings-bottom-nav-container"
+        style={{ 
+          position: 'fixed', 
+          bottom: 0, 
+          left: 0, 
+          right: 0, 
+          width: '100vw',
+          zIndex: 10000,
+          isolation: 'isolate',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        } as React.CSSProperties}
+      >
+        <BottomNavigation />
+      </div>
+    </div>
   );
 };
 
