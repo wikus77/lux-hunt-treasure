@@ -154,16 +154,19 @@ const AppInfoSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="text-center space-y-2">
-            <p className="text-white font-medium">M1SSION™ PWA</p>
+            <p className="text-white font-medium">M1SSION™</p>
             <p className="text-white/60 text-sm">
-              Sviluppato con passione da Joseph MULÉ
-            </p>
-            <p className="text-white/60 text-sm">
-              CEO di NIYVORA KFT™
+              È un'applicazione di 
+              <button
+                onClick={() => window.open('https://niyvora.com', '_blank')}
+                className="text-[#00D1FF] hover:text-[#00A3CC] transition-colors underline ml-1"
+              >
+                NIYVORA KFT
+              </button>
             </p>
             <div className="pt-2">
               <p className="text-[#F213A4] text-xs font-medium">
-                © 2025 All Rights Reserved
+                LASCIA 2025 – All Rights Reserved
               </p>
             </div>
           </div>

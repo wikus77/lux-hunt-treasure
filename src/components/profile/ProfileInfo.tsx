@@ -8,6 +8,17 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Subscription plan ring colors
+const getSubscriptionRingColor = (plan: string) => {
+  switch (plan?.toLowerCase()) {
+    case 'silver': return '#C0C0C0';
+    case 'gold': return '#FFD700';
+    case 'black': return '#333333';
+    case 'titanium': return '#878787';
+    default: return '#444444'; // Base plan
+  }
+};
+
 interface ProfileInfoProps {
   profileImage: string | null;
   name: string;
@@ -63,7 +74,15 @@ const ProfileInfo = ({
   return (
     <div className="flex-shrink-0 flex flex-col items-center md:w-1/3">
       <div className="relative">
-        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20 cursor-pointer`}>
+        {/* Subscription plan ring */}
+        <div className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-offset-black"
+             style={{
+               '--ring-color': getSubscriptionRingColor('base'), // Default to base plan
+               borderColor: 'var(--ring-color)',
+               boxShadow: `0 0 12px var(--ring-color)80`
+             } as React.CSSProperties}
+        />
+        <Avatar className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} border-2 border-cyan-500 shadow-lg shadow-cyan-500/20 cursor-pointer relative z-10`}>
           <AvatarImage src={profileImage || ""} />
           <AvatarFallback className="bg-cyan-900/30">
             <User className={`${isMobile ? 'w-8 h-8' : 'w-12 h-12'} text-cyan-500`} />

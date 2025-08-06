@@ -172,15 +172,6 @@ const Login = () => {
               </Link>
             </p>
             
-            {/* Admin Emergency Access */}
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <button
-                onClick={() => setShowEmergencyLogin(true)}
-                className="text-xs text-red-400 hover:text-red-300 transition-colors"
-              >
-                🚨 Admin Emergency Access
-              </button>
-            </div>
           </div>
         </div>
 

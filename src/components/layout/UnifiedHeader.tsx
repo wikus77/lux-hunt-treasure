@@ -190,7 +190,21 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 size="icon"
                 className="rounded-full hover:bg-white/10"
               >
-                <Settings className="w-5 h-5" />
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 360],
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 8, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                  }}
+                  style={{
+                    filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))"
+                  }}
+                >
+                  <Settings className="w-5 h-5 text-[#00D1FF]" />
+                </motion.div>
               </Button>
             </Link>
 

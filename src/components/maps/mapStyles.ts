@@ -76,4 +76,6 @@ export const mapContainerStyle = {
   borderRadius: "1rem"
 };
 
-export const defaultCenter = { lat: 45.4642, lng: 9.19 }; // Milano
+// European continent view - centered and zoomed out to show entire Europe
+export const defaultCenter = { lat: 54.5260, lng: 15.2551 }; // Central Europe
+export const defaultZoom = 4; // Zoom level to show entire European continent

@@ -168,8 +168,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       }}
     >
       <MapContainer 
-        center={DEFAULT_LOCATION} 
-        zoom={15}
+        center={[54.5260, 15.2551]} 
+        zoom={4}
         style={{ 
           height: '100%', 
           width: '100%',

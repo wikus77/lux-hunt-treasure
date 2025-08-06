@@ -85,7 +85,7 @@ function App() {
             <OneSignalSetup />
             <XpSystemManager />
             </AuthProvider>
-            <Toaster />
+            
           </SoundProvider>
         </Router>
       </HelmetProvider>
