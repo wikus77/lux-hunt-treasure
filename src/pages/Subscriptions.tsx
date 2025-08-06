@@ -52,13 +52,20 @@ const Subscriptions = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const checkoutTier = urlParams.get('checkout');
     const tier = urlParams.get('tier');
+    const upgradeIntent = urlParams.get('upgrade');
+    const fromPage = urlParams.get('from');
+    const currentPlan = urlParams.get('current_plan');
     
     console.log('🔍 M1SSION™ URL PARAMS:', { 
       checkoutTier, 
       tier, 
+      upgradeIntent,
+      fromPage,
+      currentPlan,
       fullUrl: window.location.href,
       search: window.location.search,
-      hasParams: !!checkoutTier && !!tier
+      hasParams: !!checkoutTier && !!tier,
+      hasUpgradeIntent: upgradeIntent === 'true'
     });
     
     if (checkoutTier && tier) {
@@ -68,6 +75,20 @@ const Subscriptions = () => {
       // Immediato call senza delay
       console.log(`⚡ M1SSION™ CALLING IMMEDIATE processSubscription(${tier})`);
       handleStripeCheckout(tier);
+    } else if (upgradeIntent === 'true' && fromPage === 'access-blocked') {
+      console.log('🎯 M1SSION™ UPGRADE INTENT: User came from access blocked page');
+      // Show upgrade-focused UI or automatically suggest Silver plan
+      if (currentPlan === 'base') {
+        console.log('💡 M1SSION™ SUGGESTING: Silver plan for base user');
+        // Scroll to silver plan or highlight it
+        setTimeout(() => {
+          const silverElement = document.querySelector('[data-plan="Silver"]');
+          if (silverElement) {
+            silverElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            silverElement.classList.add('ring-2', 'ring-purple-500', 'ring-pulse');
+          }
+        }, 1000);
+      }
     } else {
       console.log('❌ M1SSION™ NO CHECKOUT PARAMS - checkoutTier:', checkoutTier, 'tier:', tier);
     }

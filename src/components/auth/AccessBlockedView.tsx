@@ -115,10 +115,10 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
           {subscriptionPlan.toLowerCase() === 'base' && (
             <Button
               onClick={() => {
-                console.log('🚀 Navigating to subscriptions');
-                navigate('/subscriptions');
+                console.log('🚀 M1SSION™ UPGRADE: Navigating to subscriptions with upgrade intent');
+                navigate('/subscriptions?upgrade=true&from=access-blocked&current_plan=' + encodeURIComponent(subscriptionPlan));
               }}
-              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+              className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
             >
               🚀 Aggiorna il tuo piano per accesso anticipato
             </Button>
