@@ -1284,6 +1284,41 @@ export type Database = {
         }
         Relationships: []
       }
+      personality_quiz_results: {
+        Row: {
+          assigned_description: string
+          assigned_type: string
+          completed_at: string
+          id: string
+          quiz_answers: Json
+          user_id: string
+        }
+        Insert: {
+          assigned_description: string
+          assigned_type: string
+          completed_at?: string
+          id?: string
+          quiz_answers: Json
+          user_id: string
+        }
+        Update: {
+          assigned_description?: string
+          assigned_type?: string
+          completed_at?: string
+          id?: string
+          quiz_answers?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personality_quiz_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pre_registered_users: {
         Row: {
           agent_code: string | null
@@ -1485,6 +1520,7 @@ export type Database = {
           device_token: string | null
           early_access_hours: number | null
           email: string | null
+          first_login_completed: boolean | null
           first_name: string | null
           full_name: string | null
           id: string
@@ -1533,6 +1569,7 @@ export type Database = {
           device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
+          first_login_completed?: boolean | null
           first_name?: string | null
           full_name?: string | null
           id: string
@@ -1581,6 +1618,7 @@ export type Database = {
           device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
+          first_login_completed?: boolean | null
           first_name?: string | null
           full_name?: string | null
           id?: string
@@ -3231,6 +3269,15 @@ export type Database = {
       sync_user_permissions: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      update_personality_quiz_result: {
+        Args: {
+          p_user_id: string
+          p_quiz_answers: Json
+          p_assigned_type: string
+          p_assigned_description: string
+        }
+        Returns: Json
       }
       update_user_plan_complete: {
         Args: {

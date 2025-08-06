@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import Login from "./Login";
-import ProfileQuiz from "@/components/profile/ProfileQuiz";
+import EnhancedPersonalityQuiz from "@/components/profile/EnhancedPersonalityQuiz";
 import { Spinner } from "@/components/ui/spinner";
 import VerificationPendingView from "@/components/auth/VerificationPendingView";
 import AccessBlockedView from "@/components/auth/AccessBlockedView";
@@ -84,62 +84,24 @@ const Auth = () => {
     setHasCompletedQuiz(false);
   };
 
-  const handleQuizComplete = async (profileType: string) => {
-    console.log("Quiz completed with profile type:", profileType);
+  const handleQuizComplete = async (playerType: any) => {
+    console.log("Enhanced quiz completed with player type:", playerType);
     setHasCompletedQuiz(true);
     
     // Update profile in local storage and session
-    localStorage.setItem("investigativeStyle", profileType === "comandante" ? 
-      "Ragionatore Strategico" : profileType === "assaltatore" ? 
-      "Forza d'Impatto" : "Tessitore di Reti");
-      
-    localStorage.setItem("investigativeStyleColor", profileType === "comandante" ? 
-      "bg-cyan-500" : profileType === "assaltatore" ? 
-      "bg-red-500" : "bg-purple-500");
+    localStorage.setItem("investigativeStyle", playerType.name);
+    localStorage.setItem("investigativeStyleColor", playerType.color);
+    localStorage.setItem("userProfileType", playerType.id);
     
-    // Save raw profile type for future references
-    localStorage.setItem("userProfileType", profileType);
+    // Navigate to home page
+    toast.success("Profilo completato!", {
+      description: `Benvenuto, ${playerType.name}!`
+    });
     
-    // Save investigative style to database
-    if (userId) {
-      try {
-        console.log("Saving profile data to database for user:", userId);
-        
-        // Update the profile with quiz results
-        const { error } = await supabase
-          .from('profiles')
-          .update({ 
-            investigative_style: profileType, 
-            // Initialize points to 0
-            credits: 0
-          })
-          .eq('id', userId);
-        
-        if (error) {
-          console.error("Error updating profile:", error);
-          toast.error("Errore", {
-            description: "Impossibile salvare il tuo profilo. Riprova più tardi."
-          });
-        } else {
-          console.log("Profile data saved successfully");
-          // Navigate to home page
-          toast.success("Profilo completato!", {
-            description: "Benvenuto nell'applicazione!"
-          });
-          
-          // Navigate to home page after a short delay
-          setTimeout(() => {
-            navigate("/home");
-          }, 1000);
-        }
-      } catch (error) {
-        console.error("Error saving profile data:", error);
-      }
-    } else {
-      console.error("No userId available, cannot save profile data");
-      // Navigate anyway to prevent user being stuck
+    // Navigate to home page after a short delay
+    setTimeout(() => {
       navigate("/home");
-    }
+    }, 1000);
   };
 
   // Add more debug information to help diagnose rendering issues
@@ -187,7 +149,7 @@ const Auth = () => {
           <h2 className="text-2xl font-bold text-white text-center pt-8 mb-4">
             Completa il tuo profilo
           </h2>
-          <ProfileQuiz onComplete={handleQuizComplete} userId={userId} />
+          <EnhancedPersonalityQuiz onComplete={handleQuizComplete} userId={userId!} />
         </div>
       ) : !accessControl.canAccess ? (
         // Nuovo: Controllo di accesso M1SSION

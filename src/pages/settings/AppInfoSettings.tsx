@@ -166,7 +166,7 @@ const AppInfoSettings: React.FC = () => {
             </p>
             <div className="pt-2">
               <p className="text-[#F213A4] text-xs font-medium">
-                LASCIA 2025 – All Rights Reserved
+                All Rights Reserved 2025 – All Rights Reserved
               </p>
             </div>
           </div>
