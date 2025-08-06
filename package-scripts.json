@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "clean-console": "node scripts/clean-console-logs.js",
+    "production-optimize": "npm run clean-console && npm run build",
+    "audit-performance": "lighthouse --output json --output html --form-factor mobile --throttling-method simulate4G --chrome-flags=\"--headless\" http://localhost:5173",
+    "test-quiz-debug": "echo 'Use WeeklyEventsManager.forceDebugEvent() in development console'",
+    "check-bundle-size": "npm run build && du -sh dist/"
+  }
+}

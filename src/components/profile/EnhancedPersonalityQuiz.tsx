@@ -327,16 +327,14 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
       });
 
       if (error) {
-        console.error('Error saving quiz result:', error);
-        toast.error('Errore nel salvare il risultato del quiz');
+        toast.error('Errore nel salvare il risultato del quiz. Riprova.');
         return;
       }
 
       toast.success(`Profilo assegnato: ${assignedPlayerType.name}!`);
       onComplete(assignedPlayerType);
     } catch (error) {
-      console.error('Error completing quiz:', error);
-      toast.error('Errore durante il completamento del quiz');
+      toast.error('Errore durante il completamento del quiz. Riprova.');
     } finally {
       setIsLoading(false);
     }

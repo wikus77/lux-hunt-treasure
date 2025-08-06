@@ -35,6 +35,7 @@ interface ProfileInfoProps {
   };
   credits: number;
   isEditing: boolean;
+  subscriptionPlan?: string;
   personalInfo?: {
     firstName: string;
     lastName: string;
@@ -62,6 +63,7 @@ const ProfileInfo = ({
   stats,
   credits,
   isEditing,
+  subscriptionPlan = 'base',
   personalInfo,
   setProfileImage,
   setName,
@@ -77,7 +79,7 @@ const ProfileInfo = ({
         {/* Subscription plan ring */}
         <div className="absolute inset-0 rounded-full ring-2 ring-offset-2 ring-offset-black"
              style={{
-               '--ring-color': getSubscriptionRingColor('base'), // Default to base plan
+               '--ring-color': getSubscriptionRingColor(subscriptionPlan),
                borderColor: 'var(--ring-color)',
                boxShadow: `0 0 12px var(--ring-color)80`
              } as React.CSSProperties}

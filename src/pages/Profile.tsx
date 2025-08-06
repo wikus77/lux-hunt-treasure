@@ -68,6 +68,7 @@ const Profile = () => {
                 }}
                 credits={profileData.credits}
                 isEditing={profileData.isEditing}
+                subscriptionPlan={profileData.subscription.plan}
                 personalInfo={profileData.personalInfo}
                 setProfileImage={actions.setProfileImage}
                 setName={actions.setName}
