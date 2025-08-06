@@ -28,9 +28,8 @@ const Subscriptions = () => {
         variant="ghost" 
         size="icon"
         onClick={() => {
-          console.log('🧭 M1SSION™ Back button clicked from subscriptions');
           setLocation('/home');
-        }} 
+        }}
         className="mr-2"
       >
         <ArrowLeft className="h-5 w-5" />
@@ -40,9 +39,10 @@ const Subscriptions = () => {
 
   // TASK 1 — Sincronizzazione Piano Attivo da Supabase + Checkout Handler
   useEffect(() => {
-    console.log('🔥 M1SSION™ SUBSCRIPTIONS PAGE MOUNTED');
-    console.log('🔥 M1SSION™ Current location:', window.location.href);
-    console.log('🔥 M1SSION™ Current subscription plan:', subscription.plan);
+    // Production: Remove debug logs
+    // console.log('🔥 M1SSION™ SUBSCRIPTIONS PAGE MOUNTED');
+    // console.log('🔥 M1SSION™ Current location:', window.location.href);
+    // console.log('🔥 M1SSION™ Current subscription plan:', subscription.plan);
     
     setProfileImage(localStorage.getItem('profileImage'));
     // Forza sincronizzazione con hook subscription
@@ -56,31 +56,19 @@ const Subscriptions = () => {
     const fromPage = urlParams.get('from');
     const currentPlan = urlParams.get('current_plan');
     
-    console.log('🔍 M1SSION™ URL PARAMS:', { 
-      checkoutTier, 
-      tier, 
-      upgradeIntent,
-      fromPage,
-      currentPlan,
-      fullUrl: window.location.href,
-      search: window.location.search,
-      hasParams: !!checkoutTier && !!tier,
-      hasUpgradeIntent: upgradeIntent === 'true'
-    });
+    // Production: Minimal logging only for critical flow
+    if (upgradeIntent === 'true' && fromPage === 'access-blocked') {
+      // Track upgrade intent for analytics
+      console.log('🎯 M1SSION™ UPGRADE INTENT: User from access blocked page');
+    }
     
     if (checkoutTier && tier) {
-      console.log(`🚀 M1SSION™ AUTO-CHECKOUT TRIGGER: ${tier}`);
-      console.log(`🔧 M1SSION™ processSubscription available:`, typeof processSubscription);
-      
-      // Immediato call senza delay
-      console.log(`⚡ M1SSION™ CALLING IMMEDIATE processSubscription(${tier})`);
+      // Auto-checkout triggered from external link
       handleStripeCheckout(tier);
     } else if (upgradeIntent === 'true' && fromPage === 'access-blocked') {
-      console.log('🎯 M1SSION™ UPGRADE INTENT: User came from access blocked page');
       // Show upgrade-focused UI or automatically suggest Silver plan
       if (currentPlan === 'base') {
-        console.log('💡 M1SSION™ SUGGESTING: Silver plan for base user');
-        // Scroll to silver plan or highlight it
+        // Scroll to silver plan and highlight it for base users
         setTimeout(() => {
           const silverElement = document.querySelector('[data-plan="Silver"]');
           if (silverElement) {
@@ -89,42 +77,25 @@ const Subscriptions = () => {
           }
         }, 1000);
       }
-    } else {
-      console.log('❌ M1SSION™ NO CHECKOUT PARAMS - checkoutTier:', checkoutTier, 'tier:', tier);
     }
   }, [subscription.plan, processSubscription]);
 
   const handleStripeCheckout = async (tier: string) => {
     try {
-      console.log(`💳 M1SSION™ STRIPE CHECKOUT START: ${tier}`);
-      console.log(`🔧 M1SSION™ processSubscription function:`, typeof processSubscription);
-      console.log(`👤 M1SSION™ stripeLoading state:`, stripeLoading);
-      
       if (!processSubscription) {
-        console.error('❌ M1SSION™ processSubscription not available');
         toast.error('Sistema di pagamento non disponibile');
         return;
       }
       
       if (stripeLoading) {
-        console.log('⏳ M1SSION™ Already processing Stripe checkout...');
-        return;
+        return; // Already processing
       }
       
-      console.log(`🔄 M1SSION™ Calling processSubscription for ${tier}...`);
-      console.log(`🚀 M1SSION™ About to call processSubscription('${tier}')`);
-      
       await processSubscription(tier);
-      
-      console.log(`✅ M1SSION™ processSubscription completed for ${tier}`);
       toast.success(`✅ Checkout ${tier} attivato - reindirizzamento in corso...`);
       
     } catch (error) {
-      console.error('❌ M1SSION™ Stripe checkout FAILED:', error);
-      console.error('❌ M1SSION™ Error details:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : 'No stack trace'
-      });
+      console.error('❌ M1SSION™ Stripe checkout error:', error);
       toast.error("❌ Errore nel sistema di pagamento. Contatta l'assistenza.");
     }
   };
