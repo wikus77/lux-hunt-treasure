@@ -3,6 +3,10 @@ import React from 'react';
 import MapPointsSection from '../MapPointsSection';
 import SearchAreasSection from '../SearchAreasSection';
 import { MapMarker } from '@/components/maps/types';
+import { QRMapIntegration } from '@/components/map/QRMapIntegration';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MapPin, Target, QrCode } from 'lucide-react';
 
 interface RightSidebarContentProps {
   mapPoints: MapMarker[];
@@ -29,30 +33,54 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
   isAddingSearchArea,
   deleteSearchArea
 }) => {
+  const { user } = useUnifiedAuth();
+  const isAdmin = user?.email === 'wikus77@hotmail.it';
+
   return (
-    <>
-      {/* Map points list section */}
+    <div className="space-y-4">
       <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
-        <MapPointsSection 
-          mapPoints={mapPoints}
-          isAddingMapPoint={isAddingMapPoint}
-          toggleAddingMapPoint={toggleAddingMapPoint}
-          setActiveMapPoint={setActiveMapPoint}
-          deleteMapPoint={deleteMapPoint}
-        />
+        <Tabs defaultValue="points" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="points" className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              Punti
+            </TabsTrigger>
+            <TabsTrigger value="areas" className="flex items-center gap-2">
+              <Target className="w-4 h-4" />
+              Aree
+            </TabsTrigger>
+            <TabsTrigger value="qr" className="flex items-center gap-2">
+              <QrCode className="w-4 h-4" />
+              QR
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="points" className="mt-4">
+            <MapPointsSection 
+              mapPoints={mapPoints}
+              isAddingMapPoint={isAddingMapPoint}
+              toggleAddingMapPoint={toggleAddingMapPoint}
+              setActiveMapPoint={setActiveMapPoint}
+              deleteMapPoint={deleteMapPoint}
+            />
+          </TabsContent>
+          
+          <TabsContent value="areas" className="mt-4">
+            <SearchAreasSection
+              searchAreas={searchAreas}
+              setActiveSearchArea={setActiveSearchArea}
+              handleAddArea={handleAddArea}
+              isAddingSearchArea={isAddingSearchArea}
+              deleteSearchArea={deleteSearchArea}
+            />
+          </TabsContent>
+          
+          <TabsContent value="qr" className="mt-4">
+            <QRMapIntegration isAdminMode={isAdmin} />
+          </TabsContent>
+        </Tabs>
       </div>
-      
-      {/* Search areas section - removed clearAllSearchAreas prop */}
-      <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
-        <SearchAreasSection
-          searchAreas={searchAreas}
-          setActiveSearchArea={setActiveSearchArea}
-          handleAddArea={handleAddArea}
-          isAddingSearchArea={isAddingSearchArea}
-          deleteSearchArea={deleteSearchArea}
-        />
-      </div>
-    </>
+    </div>
   );
 };
 

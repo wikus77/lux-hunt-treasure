@@ -187,6 +187,10 @@ export const QRControlPanel = () => {
         default: rewardTypeMapping = 'buzz_gratis';
       }
 
+      // 🔥 FIXED: Get actual user ID instead of email string
+      const { data: { user } } = await supabase.auth.getUser();
+      const creatorId = user?.id || 'system';
+
       // Insert QR reward
       const { error: insertError } = await supabase
         .from('qr_rewards')
@@ -200,7 +204,7 @@ export const QRControlPanel = () => {
           max_distance_meters: 100,
           attivo: true,
           scansioni: 0,
-          creato_da: 'wikus77@hotmail.it'
+          creato_da: creatorId
         });
 
       if (insertError) throw insertError;

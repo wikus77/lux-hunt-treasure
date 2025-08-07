@@ -36,6 +36,7 @@ import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 import { QRRedeemPage } from "@/pages/qr/QRRedeemPage";
 import { QRValidatePage } from "@/pages/qr/QRValidatePage";
+import { QRScannerPage } from "@/pages/qr/QRScannerPage";
 
 import Terms from "@/pages/Terms";
 import Contact from "@/pages/Contact";
@@ -236,8 +237,15 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           {/* QR Code Routes - NEW M1SSION™ QR System */}
+          {/* 🔥 CRITICAL: validate route MUST come before :code to avoid conflicts */}
           <Route path="/qr/validate">
             <QRValidatePage />
+          </Route>
+          
+          <Route path="/qr/scanner">
+            <ProtectedRoute>
+              <QRScannerPage />
+            </ProtectedRoute>
           </Route>
           
           <Route path="/qr/:code">
