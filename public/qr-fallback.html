@@ -126,26 +126,44 @@
         <p>• QR sistema funziona nel database</p>
         
         <div class="spinner"></div>
-        <p>Tentativo di redirect automatico...</p>
+        <p>Tentativo di apertura nell'app M1SSION...</p>
         
-        <a href="/home" class="btn">🏠 Torna alla Home</a>
-        <a href="/qr/scanner" class="btn">📱 Scanner QR</a>
+        <button id="openApp" class="btn">📱 Apri in M1SSION App</button>
+        <a href="/home" class="btn">🏠 Versione Web</a>
     </div>
     
     <script>
-        console.log('🚨 SAFARI iOS FALLBACK LOADED');
+        console.log('🚨 SAFARI iOS QR FALLBACK LOADED');
         console.log('📍 URL:', window.location.href);
-        console.log('🔍 QR ID from URL:', window.location.pathname.split('/').pop());
         
-        // Try to redirect to main app after 3 seconds
-        setTimeout(() => {
-            console.log('🔄 Attempting redirect to main app...');
-            try {
-                window.location.href = '/home';
-            } catch (e) {
-                console.error('Redirect failed:', e);
-            }
-        }, 3000);
+        const qrId = '4959a400-abae-45c9-bdc1-d3920bcb54f8';
+        
+        // Function to try opening the app
+        function tryOpenApp() {
+            console.log('🔄 Attempting to open M1SSION app...');
+            
+            // Try deep link to app - replace with your actual app scheme
+            const appScheme = `m1ssion://qr/${qrId}`;
+            const webFallback = `/home#qr=${qrId}`;
+            
+            // Create hidden iframe to try app launch
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = appScheme;
+            document.body.appendChild(iframe);
+            
+            // Fallback after 2 seconds
+            setTimeout(() => {
+                console.log('🔄 App launch timeout, redirecting to web...');
+                window.location.href = webFallback;
+            }, 2000);
+        }
+        
+        // Auto-try app opening
+        setTimeout(tryOpenApp, 1000);
+        
+        // Manual button
+        document.getElementById('openApp').addEventListener('click', tryOpenApp);
     </script>
 </body>
 </html>

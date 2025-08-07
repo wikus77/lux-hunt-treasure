@@ -2,6 +2,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 
 import { useState, useEffect } from "react";
+import { QRValidationModal } from "@/components/qr/QRValidationModal";
 import { motion, AnimatePresence } from "framer-motion";
 import CommandCenterHome from "@/components/command-center/CommandCenterHome";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,6 +28,8 @@ const Home = () => {
   const isMobile = useIsMobile();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCodeToValidate, setQRCodeToValidate] = useState<string | undefined>();
   const { startActivity, updateActivity, endActivity } = useDynamicIsland();
   const { currentMission } = useMissionManager();
   const {
@@ -44,8 +47,21 @@ const Home = () => {
   // Attiva il sistema di sicurezza Dynamic Island
   useDynamicIslandSafety();
 
-  // Check for developer access and Capacitor environment + PWA standalone mode
+  // Check for developer access and Capacitor environment + PWA standalone mode + QR handling
   useEffect(() => {
+    // Check for QR code in URL fragment (from Safari fallback)
+    const urlHash = window.location.hash;
+    if (urlHash.includes('qr=')) {
+      const qrId = urlHash.split('qr=')[1]?.split('&')[0];
+      if (qrId) {
+        console.log('🎯 QR DETECTED IN HOME:', qrId);
+        setQRCodeToValidate(qrId);
+        setShowQRModal(true);
+        // Clean URL
+        window.history.replaceState(null, '', '/home');
+      }
+    }
+    
     const checkAccess = () => {
       const isCapacitorApp = !!(window as any).Capacitor;
       const isPWAStandalone = window.matchMedia('(display-mode: standalone)').matches || 
@@ -292,6 +308,13 @@ const Home = () => {
       >
         <BottomNavigation />
       </div>
+
+      {/* QR Validation Modal */}
+      <QRValidationModal
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        qrCode={qrCodeToValidate}
+      />
     </>
   );
 };
