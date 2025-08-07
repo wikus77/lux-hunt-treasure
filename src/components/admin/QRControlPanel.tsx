@@ -169,7 +169,8 @@ export const QRControlPanel = () => {
     try {
       setIsCreating(true);
 
-      // 🔥 FIXED: Generate clean UUID with no special characters
+      // 🔥 FIXED: Generate proper UUID for database
+      const newId = crypto.randomUUID();
       const newCode = crypto.randomUUID().replace(/-/g, '').toUpperCase().substring(0, 8);
 
       // Prepare reward content
@@ -200,7 +201,7 @@ export const QRControlPanel = () => {
       const { error: insertError } = await supabase
         .from('qr_rewards')
         .insert({
-          id: newCode,
+          id: newId,
           reward_type: rewardTypeMapping,
           message: formData.rewardContent || 'Reward M1SSION™ sbloccato!',
           lat: lat,
@@ -246,7 +247,7 @@ export const QRControlPanel = () => {
   // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
   const generatePrintableQR = async (code: string, rewardMessage: string) => {
     // 🎯 CRITICAL FIX: Always use m1ssion.eu domain with clean URL format
-    const qrUrl = `https://m1ssion.eu/qr/${code}`;
+    const qrUrl = `https://m1ssion.eu/qr/validate?token=${code}`;
     
     try {
       // Generate QR Code with high quality

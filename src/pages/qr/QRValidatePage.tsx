@@ -99,13 +99,35 @@ export const QRValidatePage = () => {
     try {
       setIsValidating(true);
       
-      // 🔥 NEW: Query qr_rewards table instead of qr_buzz_codes
-      const { data: qrData, error: qrError } = await supabase
+      // 🔥 NEW: Query qr_rewards table - try exact token first, then fallback to code search
+      let qrData = null;
+      let qrError = null;
+      
+      // First try: exact UUID match
+      const { data: exactMatch, error: exactError } = await supabase
         .from('qr_rewards')
         .select('*')
         .eq('id', token)
         .eq('attivo', true)
         .maybeSingle();
+      
+      if (exactMatch) {
+        qrData = exactMatch;
+      } else {
+        // Second try: search for QR where the token might be the short code
+        const { data: codeMatch, error: codeError } = await supabase
+          .from('qr_rewards')
+          .select('*')
+          .eq('attivo', true)
+          .limit(50);
+        
+        if (codeMatch) {
+          // Look for a match where the UUID contains the token (for short codes)
+          qrData = codeMatch.find(qr => qr.id.replace(/-/g, '').toUpperCase().includes(token.toUpperCase()));
+        }
+        
+        qrError = exactError || codeError;
+      }
 
       if (qrError) {
         console.error('QR validation error:', qrError);

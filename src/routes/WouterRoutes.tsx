@@ -238,6 +238,10 @@ const WouterRoutes: React.FC = () => {
 
           {/* QR Code Routes - M1SSION™ QR System */}
           {/* 🔥 CRITICAL: Most specific routes first for Safari iOS compatibility */}
+          <Route path="/qr/test">
+            {React.createElement(React.lazy(() => import('@/pages/qr/QRTestPage').then(module => ({ default: module.QRTestPage }))))}
+          </Route>
+          
           <Route path="/qr/validate">
             <QRValidatePage />
           </Route>
