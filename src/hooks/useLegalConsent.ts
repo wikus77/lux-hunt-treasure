@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/use-auth';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useToast } from '@/hooks/use-toast';
 
 interface LegalConsentState {
@@ -12,7 +12,7 @@ interface LegalConsentState {
 }
 
 export const useLegalConsent = () => {
-  const { user } = useAuth();
+  const { user } = useUnifiedAuth();
   const { toast } = useToast();
   const [state, setState] = useState<LegalConsentState>({
     isAccepted: false,

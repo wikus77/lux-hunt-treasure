@@ -212,8 +212,8 @@ export const QRControlPanel = () => {
       loadQRCodes();
       loadStats();
 
-      // Show QR code for printing
-      showQRForPrinting(newCode, formData.locationName);
+      // Show QR code for printing with reward message
+      showQRForPrinting(newCode, formData);
 
     } catch (error) {
       console.error('Error creating QR code:', error);
@@ -223,9 +223,10 @@ export const QRControlPanel = () => {
     }
   };
 
-  // 🔥 NEW: Advanced QR Generation with Logo and PDF Export
-  const generatePrintableQR = async (code: string, location: string) => {
-    const qrUrl = `https://m1ssion.com/qr/${code}`;
+  // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
+  const generatePrintableQR = async (code: string, rewardMessage: string) => {
+    // 🎯 CRITICAL FIX: QR points to validation endpoint with token
+    const qrUrl = `https://m1ssion.eu/qr/validate?token=${code}`;
     
     try {
       // Generate QR Code with high quality
@@ -271,10 +272,10 @@ export const QRControlPanel = () => {
         const finalDataUrl = canvas.toDataURL('image/png');
         
         // Create PDF
-        generatePDF(finalDataUrl, code, location);
+        generatePDF(finalDataUrl, code, rewardMessage);
         
         // Show preview modal
-        showQRPreview(finalDataUrl, code, location);
+        showQRPreview(finalDataUrl, code, rewardMessage);
       };
       qrImg.src = qrDataUrl;
       
@@ -284,7 +285,7 @@ export const QRControlPanel = () => {
     }
   };
 
-  const generatePDF = (qrDataUrl: string, code: string, location: string) => {
+  const generatePDF = (qrDataUrl: string, code: string, rewardMessage: string) => {
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -312,10 +313,11 @@ export const QRControlPanel = () => {
     const qrY = 80;
     pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
 
-    // Location
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(16);
-    pdf.text(location, 105, qrY + qrSize + 20, { align: 'center' });
+    // Reward Message (no location shown)
+    pdf.setTextColor(0, 209, 255); // Cyan glow color
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(rewardMessage || 'REWARD CLASIFICATO', 105, qrY + qrSize + 20, { align: 'center' });
 
     // Code
     pdf.setTextColor(150, 150, 150);
@@ -339,7 +341,7 @@ export const QRControlPanel = () => {
     toast.success('PDF generato e scaricato!');
   };
 
-  const showQRPreview = (qrDataUrl: string, code: string, location: string) => {
+  const showQRPreview = (qrDataUrl: string, code: string, rewardMessage: string) => {
     const modal = document.createElement('div');
     modal.style.cssText = `
       position: fixed;
@@ -364,9 +366,11 @@ export const QRControlPanel = () => {
         max-width: 400px;
         box-shadow: 0 0 50px rgba(0, 163, 255, 0.5);
       ">
-        <h2 style="color: #00a3ff; margin-bottom: 20px; font-size: 24px;">🎯 M1SSION™ QR CODE</h2>
+        <h2 style="color: #00a3ff; margin-bottom: 20px; font-size: 24px;">
+          <span style="color: #00FFFF; text-shadow: 0 0 10px #00FFFF;">M1</span><span style="color: #FFFFFF;">SSION™</span> QR CODE
+        </h2>
         <img src="${qrDataUrl}" style="width: 300px; height: 300px; border-radius: 10px; margin-bottom: 20px;" />
-        <p style="color: #fff; font-size: 16px; margin-bottom: 5px;">${location}</p>
+        <p style="color: #00FFFF; font-size: 16px; margin-bottom: 5px; text-shadow: 0 0 5px #00FFFF;">${rewardMessage || 'REWARD CLASIFICATO'}</p>
         <p style="color: #999; font-size: 12px; font-family: monospace; margin-bottom: 20px;">${code}</p>
         <div style="display: flex; gap: 10px; justify-content: center;">
           <button id="printBtn" style="
@@ -407,9 +411,27 @@ export const QRControlPanel = () => {
     });
   };
 
-  const showQRForPrinting = (code: string, location: string) => {
-    // 🔥 USE NEW ADVANCED QR GENERATION
-    generatePrintableQR(code, location);
+  const showQRForPrinting = (code: string, formData: any) => {
+    // 🔥 FIXED: Generate reward message based on type
+    let rewardMessage = 'REWARD CLASIFICATO';
+    
+    switch (formData.rewardType) {
+      case 'buzz':
+        rewardMessage = '⚡ BUZZ GRATUITO';
+        break;
+      case 'clue':
+        rewardMessage = '🔍 INDIZIO SEGRETO';
+        break;
+      case 'enigma':
+        rewardMessage = '🧩 ENIGMA MISTERIOSO';
+        break;
+      case 'fake':
+        rewardMessage = '🌀 SORPRESA SPECIALE';
+        break;
+    }
+    
+    // 🔥 USE NEW ADVANCED QR GENERATION WITH REWARD MESSAGE
+    generatePrintableQR(code, rewardMessage);
   };
 
   const deactivateQR = async (id: string, code: string) => {
