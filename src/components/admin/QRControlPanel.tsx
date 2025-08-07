@@ -11,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QrCode, MapPin, Gift, AlertTriangle, Calendar, BarChart3, Printer } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import QRCodeLib from 'qrcode';
+import jsPDF from 'jspdf';
 
 interface QRCode {
   id: string;
@@ -221,92 +223,193 @@ export const QRControlPanel = () => {
     }
   };
 
-  const showQRForPrinting = (code: string, location: string) => {
+  // 🔥 NEW: Advanced QR Generation with Logo and PDF Export
+  const generatePrintableQR = async (code: string, location: string) => {
     const qrUrl = `https://m1ssion.com/qr/${code}`;
     
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      printWindow.document.write(`
-        <html>
-          <head>
-            <title>QR Code - ${code}</title>
-            <style>
-              body { 
-                font-family: Arial, sans-serif; 
-                text-align: center; 
-                padding: 20px;
-                background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
-                color: white;
-              }
-              .qr-container {
-                background: white;
-                padding: 20px;
-                border-radius: 15px;
-                display: inline-block;
-                margin: 20px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-              }
-              .qr-title {
-                color: #000;
-                font-size: 24px;
-                font-weight: bold;
-                margin-bottom: 10px;
-                background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-              }
-              .qr-subtitle {
-                color: #666;
-                font-size: 14px;
-                margin-bottom: 15px;
-              }
-              .qr-location {
-                color: #333;
-                font-size: 12px;
-                margin-top: 10px;
-              }
-              .qr-code {
-                font-family: monospace;
-                font-weight: bold;
-                color: #333;
-                margin-top: 5px;
-              }
-              .secret-warning {
-                color: #ff4444;
-                font-size: 11px;
-                margin-top: 10px;
-                font-weight: bold;
-              }
-              @media print {
-                body { background: white !important; color: black !important; }
-              }
-            </style>
-          </head>
-          <body>
-            <div class="qr-container">
-              <div class="qr-title">🎯 M1SSION™</div>
-              <div class="qr-subtitle">TOP SECRET QR CODE</div>
-              <div id="qrcode"></div>
-              <div class="qr-location">${location}</div>
-              <div class="qr-code">${code}</div>
-              <div class="secret-warning">⚠️ REWARD CLASSIFICATO</div>
-            </div>
-            <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-            <script>
-              QRCode.toCanvas(document.getElementById('qrcode'), '${qrUrl}', {
-                width: 200,
-                margin: 2,
-                color: { dark: '#000000', light: '#ffffff' }
-              }, function (error) {
-                if (error) console.error(error);
-                else setTimeout(() => window.print(), 1000);
-              });
-            </script>
-          </body>
-        </html>
-      `);
+    try {
+      // Generate QR Code with high quality
+      const qrDataUrl = await QRCodeLib.toDataURL(qrUrl, {
+        width: 512,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        },
+        errorCorrectionLevel: 'H' // High error correction for logo overlay
+      });
+
+      // Create canvas for logo overlay
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 512;
+      canvas.height = 512;
+
+      // Load QR code image
+      const qrImg = new Image();
+      qrImg.onload = () => {
+        // Draw QR code
+        ctx.drawImage(qrImg, 0, 0, 512, 512);
+        
+        // Draw M1 logo overlay (center)
+        const logoSize = 80;
+        const logoX = (512 - logoSize) / 2;
+        const logoY = (512 - logoSize) / 2;
+        
+        // White background for logo
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(logoX - 5, logoY - 5, logoSize + 10, logoSize + 10);
+        
+        // M1 text
+        ctx.fillStyle = '#000000';
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('M1', 256, 256);
+        
+        // Generate final image
+        const finalDataUrl = canvas.toDataURL('image/png');
+        
+        // Create PDF
+        generatePDF(finalDataUrl, code, location);
+        
+        // Show preview modal
+        showQRPreview(finalDataUrl, code, location);
+      };
+      qrImg.src = qrDataUrl;
+      
+    } catch (error) {
+      console.error('Error generating QR:', error);
+      toast.error('Errore nella generazione del QR Code');
     }
+  };
+
+  const generatePDF = (qrDataUrl: string, code: string, location: string) => {
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Background
+    pdf.setFillColor(0, 0, 0);
+    pdf.rect(0, 0, 210, 297, 'F');
+
+    // Title
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(28);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('M1SSION™', 105, 40, { align: 'center' });
+
+    // Subtitle
+    pdf.setTextColor(200, 200, 200);
+    pdf.setFontSize(14);
+    pdf.text('TOP SECRET QR CODE', 105, 55, { align: 'center' });
+
+    // QR Code (centered)
+    const qrSize = 120;
+    const qrX = (210 - qrSize) / 2;
+    const qrY = 80;
+    pdf.addImage(qrDataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+
+    // Location
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(16);
+    pdf.text(location, 105, qrY + qrSize + 20, { align: 'center' });
+
+    // Code
+    pdf.setTextColor(150, 150, 150);
+    pdf.setFontSize(12);
+    pdf.setFont('courier', 'bold');
+    pdf.text(code, 105, qrY + qrSize + 35, { align: 'center' });
+
+    // Warning
+    pdf.setTextColor(255, 100, 100);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('⚠️ REWARD CLASSIFICATO', 105, qrY + qrSize + 50, { align: 'center' });
+
+    // Border
+    pdf.setDrawColor(255, 255, 255);
+    pdf.setLineWidth(2);
+    pdf.rect(10, 10, 190, 277);
+
+    // Save
+    pdf.save(`M1SSION_QR_${code}.pdf`);
+    toast.success('PDF generato e scaricato!');
+  };
+
+  const showQRPreview = (qrDataUrl: string, code: string, location: string) => {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    modal.innerHTML = `
+      <div style="
+        background: #000;
+        border: 2px solid #00a3ff;
+        border-radius: 20px;
+        padding: 30px;
+        text-align: center;
+        max-width: 400px;
+        box-shadow: 0 0 50px rgba(0, 163, 255, 0.5);
+      ">
+        <h2 style="color: #00a3ff; margin-bottom: 20px; font-size: 24px;">🎯 M1SSION™ QR CODE</h2>
+        <img src="${qrDataUrl}" style="width: 300px; height: 300px; border-radius: 10px; margin-bottom: 20px;" />
+        <p style="color: #fff; font-size: 16px; margin-bottom: 5px;">${location}</p>
+        <p style="color: #999; font-size: 12px; font-family: monospace; margin-bottom: 20px;">${code}</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="printBtn" style="
+            background: #00a3ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+          ">🖨️ Stampa</button>
+          <button id="closeBtn" style="
+            background: #666;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+          ">Chiudi</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    modal.querySelector('#printBtn')?.addEventListener('click', () => {
+      window.print();
+    });
+
+    modal.querySelector('#closeBtn')?.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+  };
+
+  const showQRForPrinting = (code: string, location: string) => {
+    // 🔥 USE NEW ADVANCED QR GENERATION
+    generatePrintableQR(code, location);
   };
 
   const deactivateQR = async (id: string, code: string) => {
