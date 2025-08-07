@@ -8,6 +8,14 @@
     ],
     "rewrites": [
       {
+        "source": "/qr/validate",
+        "destination": "/index.html"
+      },
+      {
+        "source": "/qr/scanner",
+        "destination": "/index.html"
+      },
+      {
         "source": "/qr/**",
         "destination": "/index.html"
       },

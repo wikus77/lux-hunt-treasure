@@ -36,7 +36,7 @@ export const QRValidatePage = () => {
       return;
     }
 
-    // 🔥 FIX: Get token from URL params OR path parameter for both /qr/validate?token=X and /qr/X
+    // 🔥 FIXED: Enhanced token extraction for multiple URL formats
     const urlParams = new URLSearchParams(window.location.search);
     let token = urlParams.get('token');
     
@@ -46,6 +46,11 @@ export const QRValidatePage = () => {
       if (pathParts.length >= 3 && pathParts[1] === 'qr' && pathParts[2] !== 'validate' && pathParts[2] !== 'scanner') {
         token = pathParts[2];
       }
+    }
+    
+    // Clean token from any URL encoding or special characters
+    if (token) {
+      token = decodeURIComponent(token).trim();
     }
 
     if (token && token.trim()) {

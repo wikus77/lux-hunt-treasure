@@ -119,24 +119,34 @@ export const QRControlPanel = () => {
   };
 
   const generateQRCode = async () => {
-    // 🔥 FIX: Validazione corretta per form fields
+    // 🔥 FIXED: Enhanced validation with better error messages
     if (!formData.locationName.trim()) {
-      toast.error('⚠️ Inserisci un nome per la posizione');
+      toast.error('⚠️ Nome posizione obbligatorio');
       return;
     }
     
-    if (!formData.lat || isNaN(parseFloat(formData.lat))) {
-      toast.error('⚠️ Inserisci una latitudine valida');
+    if (!formData.lat || formData.lat.trim() === '') {
+      toast.error('⚠️ Latitudine obbligatoria');
       return;
     }
     
-    if (!formData.lng || isNaN(parseFloat(formData.lng))) {
-      toast.error('⚠️ Inserisci una longitudine valida');
+    if (!formData.lng || formData.lng.trim() === '') {
+      toast.error('⚠️ Longitudine obbligatoria');
       return;
     }
     
-    const lat = parseFloat(formData.lat);
-    const lng = parseFloat(formData.lng);
+    const lat = parseFloat(formData.lat.replace(',', '.'));
+    const lng = parseFloat(formData.lng.replace(',', '.'));
+    
+    if (isNaN(lat)) {
+      toast.error('⚠️ Latitudine non valida (es: 52.520008)');
+      return;
+    }
+    
+    if (isNaN(lng)) {
+      toast.error('⚠️ Longitudine non valida (es: 13.404954)');
+      return;
+    }
     
     if (lat < -90 || lat > 90) {
       toast.error('⚠️ Latitudine deve essere tra -90 e 90');
@@ -159,8 +169,8 @@ export const QRControlPanel = () => {
     try {
       setIsCreating(true);
 
-      // 🔥 FIX: Generate valid UUID directly instead of using generate_qr_code RPC
-      const newCode = crypto.randomUUID();
+      // 🔥 FIXED: Generate clean UUID with no special characters
+      const newCode = crypto.randomUUID().replace(/-/g, '').toUpperCase().substring(0, 8);
 
       // Prepare reward content
       let rewardContent = {};
@@ -235,8 +245,8 @@ export const QRControlPanel = () => {
 
   // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
   const generatePrintableQR = async (code: string, rewardMessage: string) => {
-    // 🎯 CRITICAL FIX: Always use m1ssion.eu domain for production QR codes
-    const qrUrl = `https://m1ssion.eu/qr/validate?token=${code}`;
+    // 🎯 CRITICAL FIX: Always use m1ssion.eu domain with clean URL format
+    const qrUrl = `https://m1ssion.eu/qr/${code}`;
     
     try {
       // Generate QR Code with high quality
@@ -554,11 +564,31 @@ export const QRControlPanel = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="z-50 max-h-[200px] overflow-y-auto bg-background border border-border shadow-lg">
-                  <SelectItem value="buzz">⚡ Buzz Gratuito</SelectItem>
-                  <SelectItem value="clue">🔍 Indizio</SelectItem>
-                  <SelectItem value="enigma">🧩 Enigma</SelectItem>
-                  <SelectItem value="fake">🌀 Depistaggio</SelectItem>
+                <SelectContent className="z-[100] max-h-[300px] overflow-y-auto bg-card border border-border shadow-xl backdrop-blur-md">
+                  <SelectItem value="buzz" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">⚡</span>
+                      <span>Buzz Gratuito</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="clue" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🔍</span>
+                      <span>Indizio Segreto</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="enigma" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🧩</span>
+                      <span>Enigma Misterioso</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="fake" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🌀</span>
+                      <span>Sorpresa Speciale</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
