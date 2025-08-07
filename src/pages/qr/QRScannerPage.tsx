@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { QRValidationModal } from '@/components/qr/QRValidationModal';
 import { toast } from 'sonner';
 import { QrCode, Camera, Type, Zap, AlertTriangle } from 'lucide-react';
 
@@ -15,6 +16,8 @@ export const QRScannerPage = () => {
   const { user } = useUnifiedAuth();
   const [manualCode, setManualCode] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCodeToValidate, setQRCodeToValidate] = useState<string | undefined>();
 
   useEffect(() => {
     if (!user) {
@@ -29,10 +32,10 @@ export const QRScannerPage = () => {
       return;
     }
 
-    // Redirect to validation page with token
-    const currentDomain = window.location.origin;
-    const validationUrl = `${currentDomain}/qr/validate?token=${manualCode.trim().toUpperCase()}`;
-    window.location.href = validationUrl;
+    // Open in-app modal instead of external navigation
+    setQRCodeToValidate(manualCode.trim().toUpperCase());
+    setShowQRModal(true);
+    setManualCode(''); // Clear input
   };
 
   const startCamera = async () => {
@@ -187,6 +190,13 @@ export const QRScannerPage = () => {
           Torna alla Mappa
         </Button>
       </div>
+
+      {/* QR Validation Modal */}
+      <QRValidationModal
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+        qrCode={qrCodeToValidate}
+      />
     </div>
   );
 };
