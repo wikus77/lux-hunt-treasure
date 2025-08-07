@@ -36,30 +36,46 @@ export const QRValidatePage = () => {
       return;
     }
 
-    // 🔥 FIXED: Enhanced token extraction for multiple URL formats
-    const urlParams = new URLSearchParams(window.location.search);
-    let token = urlParams.get('token');
-    
-    // If no token in params, try to extract from path (for /qr/:code routes)
-    if (!token) {
-      const pathParts = window.location.pathname.split('/');
-      if (pathParts.length >= 3 && pathParts[1] === 'qr' && pathParts[2] !== 'validate' && pathParts[2] !== 'scanner') {
-        token = pathParts[2];
+      // 🔥 CRITICAL iOS SAFARI FIX: Enhanced token extraction with debugging
+      console.log('🔍 QR VALIDATION DEBUG:', {
+        url: window.location.href,
+        pathname: window.location.pathname,
+        search: window.location.search,
+        userAgent: navigator.userAgent
+      });
+
+      const urlParams = new URLSearchParams(window.location.search);
+      let token = urlParams.get('token');
+      
+      // If no token in params, try to extract from path (for /qr/:code routes)
+      if (!token) {
+        const pathParts = window.location.pathname.split('/');
+        console.log('🔍 PATH PARTS:', pathParts);
+        if (pathParts.length >= 3 && pathParts[1] === 'qr' && pathParts[2] !== 'validate' && pathParts[2] !== 'scanner' && pathParts[2] !== 'test') {
+          token = pathParts[2];
+        }
       }
-    }
-    
-    // Clean token from any URL encoding or special characters
-    if (token) {
-      token = decodeURIComponent(token).trim();
-    }
+      
+      // Clean token from any URL encoding or special characters
+      if (token) {
+        token = decodeURIComponent(token).trim().replace(/[\n\r\t]/g, '');
+      }
+
+      console.log('🔥 EXTRACTED TOKEN:', token);
 
     if (token && token.trim()) {
+      console.log('✅ TOKEN FOUND, validating:', token.trim());
       getUserLocationAndValidate(token.trim());
     } else {
+      console.error('❌ NO TOKEN FOUND - URL DEBUG:', {
+        href: window.location.href,
+        pathname: window.location.pathname,
+        search: window.location.search
+      });
       setResult({
         success: false,
-        message: '',
-        error: 'Token QR non valido'
+        message: 'URL non contiene token QR valido',
+        error: `Token QR non trovato nell'URL: ${window.location.href}`
       });
     }
   }, [user]);

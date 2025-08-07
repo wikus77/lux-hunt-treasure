@@ -169,9 +169,9 @@ export const QRControlPanel = () => {
     try {
       setIsCreating(true);
 
-      // 🔥 FIXED: Generate proper UUID for database
+      // 🔥 CRITICAL FIX: Use UUID as both ID and QR code for consistency
       const newId = crypto.randomUUID();
-      const newCode = crypto.randomUUID().replace(/-/g, '').toUpperCase().substring(0, 8);
+      console.log('🔥 GENERATED UUID:', newId);
 
       // Prepare reward content
       let rewardContent = {};
@@ -217,7 +217,16 @@ export const QRControlPanel = () => {
 
       if (insertError) throw insertError;
 
-      toast.success(`QR Code ${newCode} creato con successo!`);
+      const shortCode = newId.replace(/-/g, '').toUpperCase().substring(0, 8);
+      toast.success(`QR Code ${shortCode} creato con successo!`);
+      
+      console.log('✅ QR SUCCESSFULLY CREATED:', {
+        id: newId,
+        shortCode: shortCode,
+        url: `https://m1ssion.eu/qr/${newId}`,
+        rewardType: rewardTypeMapping,
+        location: formData.locationName
+      });
       
       // Reset form
       setFormData({
@@ -233,8 +242,8 @@ export const QRControlPanel = () => {
       loadQRCodes();
       loadStats();
 
-      // Show QR code for printing with reward message
-      showQRForPrinting(newCode, formData);
+      // Show QR code for printing with reward message - use full UUID
+      showQRForPrinting(newId, formData);
 
     } catch (error) {
       console.error('Error creating QR code:', error);
@@ -246,8 +255,10 @@ export const QRControlPanel = () => {
 
   // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
   const generatePrintableQR = async (code: string, rewardMessage: string) => {
-    // 🎯 CRITICAL FIX: Always use m1ssion.eu domain with clean URL format
-    const qrUrl = `https://m1ssion.eu/qr/validate?token=${code}`;
+    // 🎯 CRITICAL FIX: Use UUID for both validate and direct routes - iOS Safari compatibility
+    const qrUrl = `https://m1ssion.eu/qr/${code}`;
+    
+    console.log('🔥 GENERATING QR FOR URL:', qrUrl);
     
     try {
       // Generate QR Code with high quality
