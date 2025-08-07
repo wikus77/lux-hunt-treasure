@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -14,6 +14,7 @@ import { MissionResetSection } from '@/components/panel/MissionResetSection';
 import { MissionConfigSection } from '@/components/panel/MissionConfigSection';
 import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
+import { QRControlPanel } from '@/components/admin/QRControlPanel';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -21,7 +22,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -125,6 +126,35 @@ const PanelAccessPage = () => {
               <h1 className="text-2xl font-bold text-white">Configura Missione</h1>
             </div>
             <MissionConfigSection />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'qr-control' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-6xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">🧿 QR Buzz Control</h1>
+              <p className="text-gray-400">Gestione, generazione e statistiche QR Code Buzz™</p>
+            </div>
+            <QRControlPanel />
           </div>
         </div>
       </div>
@@ -272,6 +302,24 @@ const PanelAccessPage = () => {
                     <div>
                       <h3 className="font-semibold text-white">Imposta Missione™</h3>
                       <p className="text-gray-400 text-sm">Configura manualmente i parametri missione</p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* 🧿 QR BUZZ CONTROL PANEL - Admin Only */}
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('qr-control')}
+                  className="glass-card p-4 border border-cyan-500/30 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <QrCode className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">🧿 QR Buzz Control</h3>
+                      <p className="text-gray-400 text-sm">Gestione, generazione e statistiche QR Code Buzz™</p>
                     </div>
                   </div>
                 </motion.div>
