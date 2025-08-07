@@ -234,7 +234,7 @@ export const QRValidatePage = () => {
           rewardMessage = qrData.message;
       }
 
-      // Update QR record
+      // Update QR record - CRITICAL FIX: Use qrData.id instead of token
       const { error: updateError } = await supabase
         .from('qr_rewards')
         .update({
@@ -242,7 +242,7 @@ export const QRValidatePage = () => {
           redeemed_by: [...(qrData.redeemed_by || []), user.id],
           updated_at: new Date().toISOString()
         })
-        .eq('id', token);
+        .eq('id', qrData.id);
 
       if (updateError) throw updateError;
 
