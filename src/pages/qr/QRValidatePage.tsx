@@ -30,16 +30,31 @@ export const QRValidatePage = () => {
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [pageLoaded, setPageLoaded] = useState(false);
   const [tokenFound, setTokenFound] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState('');
 
-  // 🔥 CRITICAL FIX: Token extraction on page load - IMMEDIATE
+  // 🔥 SAFARI iOS CRITICAL FIX: Force immediate rendering to prevent black screen
+  const [renderForced, setRenderForced] = useState(false);
+  
   useEffect(() => {
-    console.log('🔍 QR VALIDATION DEBUG:', {
+    // Force render immediately on component mount to prevent Safari iOS black screen
+    setRenderForced(true);
+    console.log('🚀 QR PAGE MOUNTED - Safari iOS compatibility mode');
+  }, []);
+
+  // 🔥 CRITICAL FIX: Token extraction on page load - IMMEDIATE SAFARI iOS
+  useEffect(() => {
+    const debugData = {
       url: window.location.href,
       pathname: window.location.pathname,
       search: window.location.search,
       userAgent: navigator.userAgent,
-      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent)
-    });
+      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
+      isStandalone: (window.navigator as any).standalone,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('🔍 QR VALIDATION DEBUG:', debugData);
+    setDebugInfo(JSON.stringify(debugData, null, 2));
 
     const urlParams = new URLSearchParams(window.location.search);
     let token = urlParams.get('token');
@@ -59,9 +74,11 @@ export const QRValidatePage = () => {
     }
 
     console.log('🔥 EXTRACTED TOKEN:', token);
+    console.warn('🔥 SAFARI iOS DEBUG: TOKEN =', token, 'RENDER_FORCED =', renderForced);
+    
     setTokenFound(token);
     setPageLoaded(true);
-  }, []);
+  }, [renderForced]);
 
   // 🔥 CRITICAL FIX: Handle auth and validation separately
   useEffect(() => {
@@ -454,6 +471,23 @@ export const QRValidatePage = () => {
               <p className="text-muted-foreground mb-4">
                 Il QR code non è stato riconosciuto o è scaduto.
               </p>
+              
+              {/* 🔥 SAFARI iOS DEBUG INFO - Show technical details */}
+              <details className="mb-4 text-left">
+                <summary className="cursor-pointer text-sm font-medium">
+                  🔧 Debug Info (Safari iOS)
+                </summary>
+                <pre className="text-xs mt-2 bg-muted p-2 rounded overflow-x-auto">
+                  {debugInfo}
+                </pre>
+                <p className="text-xs mt-2">
+                  🔍 Token Found: {tokenFound || 'NONE'}
+                </p>
+                <p className="text-xs">
+                  📱 Render Forced: {renderForced ? 'YES' : 'NO'}
+                </p>
+              </details>
+              
               <Button onClick={handleReturnToMap} className="w-full">
                 Torna alla Mappa
               </Button>
@@ -461,6 +495,43 @@ export const QRValidatePage = () => {
           )}
         </CardContent>
       </Card>
+      
+      {/* 🔥 SAFARI iOS CRITICAL FIX: Absolutely positioned fallback for black screen */}
+      {!renderForced && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'white',
+            color: 'black',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            fontSize: '18px',
+            textAlign: 'center',
+            padding: '20px'
+          }}
+        >
+          <div>
+            <div style={{ marginBottom: '20px', fontSize: '48px' }}>🔍</div>
+            <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
+              M1SSION™ QR Scanner
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              Safari iOS - Caricamento in corso...
+            </div>
+            <div style={{ fontSize: '14px', opacity: 0.7 }}>
+              URL: {window.location.href}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+// © 2025 Joseph MULÉ – M1SSION™ – QR SYSTEM FIXED
