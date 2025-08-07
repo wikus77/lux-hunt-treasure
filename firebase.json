@@ -16,6 +16,10 @@
         "destination": "/index.html"
       },
       {
+        "source": "/qr/4959a400-abae-45c9-bdc1-d3920bcb54f8",
+        "destination": "/qr-fallback.html"
+      },
+      {
         "source": "/qr/*",
         "destination": "/index.html"
       },

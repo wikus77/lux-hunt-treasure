@@ -327,6 +327,18 @@ export const QRValidatePage = () => {
     setLocation('/');
   };
 
+  // 🔥 SAFARI iOS CRITICAL: Immediate fallback if loading fails
+  useEffect(() => {
+    const safariFailsafeTimer = setTimeout(() => {
+      if (!pageLoaded || !tokenFound) {
+        console.log('🚨 SAFARI iOS FAILSAFE: Redirecting to HTML fallback');
+        window.location.href = '/qr-fallback.html?token=' + encodeURIComponent(window.location.pathname);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(safariFailsafeTimer);
+  }, [pageLoaded, tokenFound]);
+
   // 🔥 SAFARI iOS CRITICAL ANTI-BLACK-SCREEN: Multiple fallback renders
   if (!pageLoaded || authLoading || !renderForced) {
     return (
