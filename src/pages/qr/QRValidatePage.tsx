@@ -317,17 +317,32 @@ export const QRValidatePage = () => {
   // 🔥 CRITICAL FIX: Show loading state immediately on page load
   if (!pageLoaded || authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md">
+      <div 
+        className="min-h-screen bg-background flex items-center justify-center p-4"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 9999,
+          backgroundColor: 'hsl(var(--background))',
+          color: 'hsl(var(--foreground))'
+        }}
+      >
+        <Card className="w-full max-w-md bg-card border border-border">
           <CardContent className="p-6 text-center">
             <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 className="text-xl font-bold mb-2">🔍 Caricamento QR...</h2>
+            <h2 className="text-xl font-bold mb-2 text-foreground">🔍 Caricamento QR...</h2>
             <p className="text-muted-foreground">
               {!pageLoaded ? 'Analizzando token QR...' : 'Verificando autenticazione...'}
             </p>
             <p className="text-sm text-muted-foreground mt-2">
               📱 Safari iOS - M1SSION™
             </p>
+            <div className="mt-4 text-xs text-muted-foreground">
+              URL: {window.location.href}
+            </div>
           </CardContent>
         </Card>
       </div>
