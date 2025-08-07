@@ -159,13 +159,8 @@ export const QRControlPanel = () => {
     try {
       setIsCreating(true);
 
-      // Generate unique code
-      const { data: codeData, error: codeError } = await supabase
-        .rpc('generate_qr_code');
-
-      if (codeError) throw codeError;
-
-      const newCode = codeData;
+      // 🔥 FIX: Generate valid UUID directly instead of using generate_qr_code RPC
+      const newCode = crypto.randomUUID();
 
       // Prepare reward content
       let rewardContent = {};
@@ -191,20 +186,22 @@ export const QRControlPanel = () => {
       const { data: { user } } = await supabase.auth.getUser();
       const creatorId = user?.id || 'system';
 
-      // Insert QR reward
+      // 🔥 FIX: Insert QR reward with proper field structure
       const { error: insertError } = await supabase
         .from('qr_rewards')
         .insert({
           id: newCode,
           reward_type: rewardTypeMapping,
           message: formData.rewardContent || 'Reward M1SSION™ sbloccato!',
-          lat: parseFloat(formData.lat),
-          lon: parseFloat(formData.lng),
+          lat: lat,
+          lon: lng,
           location_name: formData.locationName,
           max_distance_meters: 100,
           attivo: true,
           scansioni: 0,
-          creato_da: creatorId
+          redeemed_by: [],
+          creato_da: creatorId,
+          expires_at: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null
         });
 
       if (insertError) throw insertError;
@@ -238,10 +235,8 @@ export const QRControlPanel = () => {
 
   // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
   const generatePrintableQR = async (code: string, rewardMessage: string) => {
-    // 🎯 CRITICAL FIX: QR points to validation endpoint with token 
-    // Use current domain to avoid DEPLOYMENT_NOT_FOUND errors
-    const currentDomain = window.location.origin;
-    const qrUrl = `${currentDomain}/qr/validate?token=${code}`;
+    // 🎯 CRITICAL FIX: Always use m1ssion.eu domain for production QR codes
+    const qrUrl = `https://m1ssion.eu/qr/validate?token=${code}`;
     
     try {
       // Generate QR Code with high quality

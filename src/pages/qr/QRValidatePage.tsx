@@ -36,12 +36,20 @@ export const QRValidatePage = () => {
       return;
     }
 
-    // Get token from URL
+    // 🔥 FIX: Get token from URL params OR path parameter for both /qr/validate?token=X and /qr/X
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    let token = urlParams.get('token');
+    
+    // If no token in params, try to extract from path (for /qr/:code routes)
+    if (!token) {
+      const pathParts = window.location.pathname.split('/');
+      if (pathParts.length >= 3 && pathParts[1] === 'qr' && pathParts[2] !== 'validate' && pathParts[2] !== 'scanner') {
+        token = pathParts[2];
+      }
+    }
 
-    if (token) {
-      getUserLocationAndValidate(token);
+    if (token && token.trim()) {
+      getUserLocationAndValidate(token.trim());
     } else {
       setResult({
         success: false,

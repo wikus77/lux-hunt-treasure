@@ -236,20 +236,20 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* QR Code Routes - NEW M1SSION™ QR System */}
-          {/* 🔥 CRITICAL: validate route MUST come before :code to avoid conflicts */}
+          {/* QR Code Routes - M1SSION™ QR System */}
+          {/* 🔥 CRITICAL: Most specific routes first for Safari iOS compatibility */}
           <Route path="/qr/validate">
             <QRValidatePage />
           </Route>
           
           <Route path="/qr/scanner">
             <ProtectedRoute>
-              <QRScannerPage />
+              <GlobalLayout><QRScannerPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
           
           <Route path="/qr/:code">
-            <QRRedeemPage />
+            <QRValidatePage />
           </Route>
 
           {/* Legal routes */}
