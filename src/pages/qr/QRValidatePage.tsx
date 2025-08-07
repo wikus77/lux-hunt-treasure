@@ -24,6 +24,8 @@ interface QRValidationResult {
 }
 
 export const QRValidatePage = () => {
+  console.log('🚨 QR VALIDATE PAGE COMPONENT LOADED - This confirms routing works!');
+  console.log('🚨 URL at component load:', window.location.href);
   const [, setLocation] = useLocation();
   const { user, isLoading: authLoading } = useUnifiedAuth();
   const [isValidating, setIsValidating] = useState(false);
@@ -38,16 +40,18 @@ export const QRValidatePage = () => {
   const [emergencyRender, setEmergencyRender] = useState(false);
   
   useEffect(() => {
-    // Force render immediately on component mount to prevent Safari iOS black screen
-    console.log('🚀 QR PAGE MOUNTED - Safari iOS compatibility mode');
+    // 🚨 SAFARI iOS CRITICAL FIX: Immediate visible rendering
+    console.log('🚀 QR PAGE MOUNTED - Safari iOS ANTI-BLACK-SCREEN mode');
     console.log('📱 URL:', window.location.href);
     console.log('📱 UserAgent:', navigator.userAgent);
+    console.log('📱 isIOS:', /iPad|iPhone|iPod/.test(navigator.userAgent));
     
+    // Force visible rendering IMMEDIATELY
     setRenderForced(true);
     
-    // Emergency render timeout for Safari iOS
+    // Show emergency UI if nothing renders in 1 second (Safari iOS issue)
     const emergencyTimer = setTimeout(() => {
-      console.log('🆘 EMERGENCY RENDER ACTIVATED');
+      console.log('🆘 EMERGENCY RENDER ACTIVATED - Safari iOS fallback');
       setEmergencyRender(true);
     }, 1000);
     
@@ -391,10 +395,16 @@ export const QRValidatePage = () => {
   useEffect(() => {
     const safariFailsafeTimer = setTimeout(() => {
       if (!pageLoaded || !tokenFound) {
-        console.log('🚨 SAFARI iOS FAILSAFE: Redirecting to HTML fallback');
-        window.location.href = '/qr-fallback.html?token=' + encodeURIComponent(window.location.pathname);
+        console.log('🚨 SAFARI iOS FAILSAFE: Page failed to load properly');
+        console.log('🚨 Redirecting to Home with QR in fragment...');
+        const qrId = window.location.pathname.split('/')[2];
+        if (qrId) {
+          window.location.href = `/home#qr=${qrId}`;
+        } else {
+          window.location.href = '/home';
+        }
       }
-    }, 2000);
+    }, 3000); // Increased timeout
     
     return () => clearTimeout(safariFailsafeTimer);
   }, [pageLoaded, tokenFound]);

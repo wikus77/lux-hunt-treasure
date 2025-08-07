@@ -278,31 +278,58 @@ const WouterRoutes: React.FC = () => {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                backgroundColor: '#000',
-                color: '#fff',
+                backgroundColor: '#0a0a0a',
+                color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '18px',
+                fontSize: '16px',
                 textAlign: 'center',
-                padding: '20px'
+                padding: '20px',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
               }}>
-                <div>
-                  <div style={{ marginBottom: '20px', fontSize: '48px' }}>🚨</div>
-                  <div style={{ marginBottom: '20px' }}>QR System Error</div>
+                <div style={{
+                  backgroundColor: '#1a1a1a',
+                  border: '1px solid #333',
+                  borderRadius: '12px',
+                  padding: '32px',
+                  maxWidth: '400px',
+                  width: '100%'
+                }}>
+                  <div style={{ marginBottom: '16px', fontSize: '48px' }}>🎯</div>
+                  <div style={{ marginBottom: '16px', fontSize: '20px', fontWeight: 'bold' }}>
+                    M1SSION™ QR Fallback
+                  </div>
+                  <div style={{ marginBottom: '24px', color: '#cccccc' }}>
+                    QR in caricamento... Se non si apre, prova il pulsante sotto.
+                  </div>
                   <button 
                     style={{
                       backgroundColor: '#0066ff',
                       color: 'white',
                       border: 'none',
                       padding: '12px 24px',
-                      borderRadius: '6px',
-                      cursor: 'pointer'
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: 'bold'
                     }}
-                    onClick={() => window.location.href = '/home'}
+                    onClick={() => {
+                      const qrId = window.location.pathname.split('/')[2];
+                      console.log('🎯 FALLBACK REDIRECT TO HOME WITH QR:', qrId);
+                      window.location.href = `/home#qr=${qrId}`;
+                    }}
                   >
-                    🏠 Back to Home
+                    🏠 Apri QR in App
                   </button>
+                  <div style={{ 
+                    marginTop: '16px', 
+                    fontSize: '12px', 
+                    color: '#666666',
+                    wordBreak: 'break-all'
+                  }}>
+                    QR: {window.location.pathname.split('/')[2]}
+                  </div>
                 </div>
               </div>
             }>
