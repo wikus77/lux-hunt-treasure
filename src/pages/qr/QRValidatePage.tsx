@@ -161,34 +161,46 @@ export const QRValidatePage = () => {
     try {
       setIsValidating(true);
       
-      // 🔥 NEW: Query qr_rewards table - try exact token first, then fallback to code search
+      // 🔥 CRITICAL FIX: Search BOTH tables (qr_rewards AND qr_buzz_codes)
+      console.log('🔍 SEARCHING QR TOKEN:', token);
       let qrData = null;
       let qrError = null;
       
-      // First try: exact UUID match
-      const { data: exactMatch, error: exactError } = await supabase
+      // First try: qr_rewards table (new system)
+      const { data: rewardsMatch, error: rewardsError } = await supabase
         .from('qr_rewards')
         .select('*')
         .eq('id', token)
         .eq('attivo', true)
         .maybeSingle();
       
-      if (exactMatch) {
-        qrData = exactMatch;
+      console.log('🔍 QR_REWARDS SEARCH:', { token, found: !!rewardsMatch, error: rewardsError });
+      
+      if (rewardsMatch) {
+        qrData = {
+          ...rewardsMatch,
+          source: 'qr_rewards'
+        };
+        console.log('✅ FOUND IN QR_REWARDS:', qrData);
       } else {
-        // Second try: search for QR where the token might be the short code
-        const { data: codeMatch, error: codeError } = await supabase
-          .from('qr_rewards')
+        // Second try: qr_buzz_codes table (legacy system)
+        const { data: buzzMatch, error: buzzError } = await supabase
+          .from('qr_buzz_codes')
           .select('*')
-          .eq('attivo', true)
-          .limit(50);
+          .eq('code', token.toUpperCase())
+          .maybeSingle();
         
-        if (codeMatch) {
-          // Look for a match where the UUID contains the token (for short codes)
-          qrData = codeMatch.find(qr => qr.id.replace(/-/g, '').toUpperCase().includes(token.toUpperCase()));
+        console.log('🔍 QR_BUZZ_CODES SEARCH:', { token: token.toUpperCase(), found: !!buzzMatch, error: buzzError });
+        
+        if (buzzMatch) {
+          qrData = {
+            ...buzzMatch,
+            source: 'qr_buzz_codes'
+          };
+          console.log('✅ FOUND IN QR_BUZZ_CODES:', qrData);
         }
         
-        qrError = exactError || codeError;
+        qrError = rewardsError || buzzError;
       }
 
       if (qrError) {
@@ -203,92 +215,140 @@ export const QRValidatePage = () => {
       }
 
       if (!qrData) {
+        console.error('❌ QR NOT FOUND IN ANY TABLE:', token);
         setResult({
           success: false,
-          message: '',
-          error: 'QR Code non valido o scaduto'
+          message: `QR Code "${token}" non trovato nel database M1SSION™`,
+          error: 'Verifica che il QR code sia corretto e attivo'
         });
         toast.error('QR Code non trovato');
         return;
       }
 
-      // Check if already redeemed by this user
-      if (qrData.redeemed_by && qrData.redeemed_by.includes(user.id)) {
+      console.log('✅ QR FOUND:', qrData);
+
+      // Check if already redeemed - handle both table formats
+      const isAlreadyRedeemed = qrData.source === 'qr_rewards' 
+        ? (qrData.redeemed_by && qrData.redeemed_by.includes(user.id))
+        : qrData.is_used;
+        
+      if (isAlreadyRedeemed) {
         setResult({
           success: false,
           message: '',
-          error: 'QR Code già riscattato da te'
+          error: 'QR Code già riscattato'
         });
         toast.error('QR Code già utilizzato');
         return;
       }
 
-      // Check distance if location is available
-      if (position) {
+      // Check distance if location is available - handle both table formats
+      if (position && qrData.lat && (qrData.lon || qrData.lng)) {
+        const qrLng = qrData.lon || qrData.lng; // Handle both table formats
         const distance = calculateDistance(
           position.lat,
           position.lng,
           qrData.lat,
-          qrData.lon
+          qrLng
         );
 
-        if (distance > qrData.max_distance_meters) {
+        const maxDistance = qrData.max_distance_meters || 100; // Default 100m for legacy QRs
+        if (distance > maxDistance) {
           setResult({
             success: false,
             message: '',
             error: `Devi essere più vicino al QR code. Distanza: ${distance}m`,
             distance: Math.round(distance),
-            maxDistance: qrData.max_distance_meters
+            maxDistance: maxDistance
           });
           toast.error('Troppo lontano dal QR code!');
           return;
         }
       }
 
-      // Process reward based on type
+      // Process reward based on type - handle both table formats
       let rewardMessage = '';
-      switch (qrData.reward_type) {
-        case 'buzz_gratis':
-          rewardMessage = '⚡ Buzz gratuito aggiunto al tuo account!';
-          break;
-        case 'indizio_segreto':
-          rewardMessage = `🔍 Indizio segreto: ${qrData.message}`;
-          break;
-        case 'enigma_misterioso':
-          rewardMessage = `🧩 Enigma: ${qrData.message}`;
-          break;
-        case 'sorpresa_speciale':
-          rewardMessage = `🌀 Sorpresa: ${qrData.message}`;
-          break;
-        default:
-          rewardMessage = qrData.message;
+      let updateError = null;
+      
+      if (qrData.source === 'qr_rewards') {
+        // New system: qr_rewards table
+        switch (qrData.reward_type) {
+          case 'buzz_gratis':
+            rewardMessage = '⚡ Buzz gratuito aggiunto al tuo account!';
+            break;
+          case 'indizio_segreto':
+            rewardMessage = `🔍 Indizio segreto: ${qrData.message}`;
+            break;
+          case 'enigma_misterioso':
+            rewardMessage = `🧩 Enigma: ${qrData.message}`;
+            break;
+          case 'sorpresa_speciale':
+            rewardMessage = `🌀 Sorpresa: ${qrData.message}`;
+            break;
+          default:
+            rewardMessage = qrData.message || 'Ricompensa M1SSION™ sbloccata!';
+        }
+
+        // Update qr_rewards record
+        const { error } = await supabase
+          .from('qr_rewards')
+          .update({
+            scansioni: qrData.scansioni + 1,
+            redeemed_by: [...(qrData.redeemed_by || []), user.id],
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', qrData.id);
+        updateError = error;
+      } else {
+        // Legacy system: qr_buzz_codes table
+        switch (qrData.reward_type) {
+          case 'buzz':
+            rewardMessage = '🎯 Fantastico! Hai trovato un BUZZ gratuito!';
+            break;
+          case 'clue':
+            rewardMessage = qrData.reward_content?.message || '🔍 Hai scoperto un indizio segreto!';
+            break;
+          case 'enigma':
+            rewardMessage = qrData.reward_content?.enigma || '🧩 Hai trovato un enigma misterioso!';
+            break;
+          case 'fake':
+            rewardMessage = qrData.reward_content?.fakeMessage || '🌀 Questo QR è un depistaggio... continua a cercare!';
+            break;
+          default:
+            rewardMessage = 'Ricompensa M1SSION™ sbloccata!';
+        }
+
+        // Update qr_buzz_codes record
+        const { error } = await supabase
+          .from('qr_buzz_codes')
+          .update({
+            is_used: true,
+            used_by: user.id,
+            used_at: new Date().toISOString()
+          })
+          .eq('id', qrData.id);
+        updateError = error;
       }
 
-      // Update QR record - CRITICAL FIX: Use qrData.id instead of token
-      const { error: updateError } = await supabase
-        .from('qr_rewards')
-        .update({
-          scansioni: qrData.scansioni + 1,
-          redeemed_by: [...(qrData.redeemed_by || []), user.id],
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', qrData.id);
+      if (updateError) {
+        console.error('QR update error:', updateError);
+        toast.error('Errore nell\'aggiornamento del QR');
+      }
 
-      if (updateError) throw updateError;
-
+      const qrLng = qrData.lon || qrData.lng; // Handle both formats
       setResult({
         success: true,
         message: rewardMessage,
         reward: {
           type: qrData.reward_type,
-          message: qrData.message
+          message: qrData.message || rewardMessage
         },
         location: qrData.location_name,
-        distance: position ? Math.round(calculateDistance(
+        distance: position && qrData.lat && qrLng ? Math.round(calculateDistance(
           position.lat,
           position.lng,
           qrData.lat,
-          qrData.lon
+          qrLng
         )) : undefined
       });
 
