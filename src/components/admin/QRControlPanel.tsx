@@ -16,18 +16,19 @@ import jsPDF from 'jspdf';
 
 interface QRCode {
   id: string;
-  code: string;
-  location_name: string;
-  lat: number;
-  lng: number;
   reward_type: string;
-  reward_content: any;
-  is_used: boolean;
-  expires_at: string | null;
-  created_by: string;
+  message: string;
+  lat: number;
+  lon: number;
+  location_name: string;
+  max_distance_meters: number;
+  attivo: boolean;
+  scansioni: number;
+  redeemed_by: string[];
+  expires_at?: string | null;
+  creato_da: string;
   created_at: string;
-  used_by?: string;
-  used_at?: string;
+  updated_at: string;
 }
 
 interface QRStats {
@@ -72,7 +73,7 @@ export const QRControlPanel = () => {
   const loadQRCodes = async () => {
     try {
       const { data, error } = await supabase
-        .from('qr_buzz_codes')
+        .from('qr_rewards')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -90,31 +91,27 @@ export const QRControlPanel = () => {
     try {
       // Get basic stats
       const { data: allCodes, error: codesError } = await supabase
-        .from('qr_buzz_codes')
-        .select('is_used, reward_type');
+        .from('qr_rewards')
+        .select('attivo, reward_type, scansioni');
 
       if (codesError) throw codesError;
 
-      // Get failed attempts
-      const { count: failedCount, error: failedError } = await supabase
-        .from('qr_redemption_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('success', false);
-
-      if (failedError) throw failedError;
-
-      const codes = allCodes || [];
-      const active = codes.filter(c => !c.is_used);
-      const redeemed = codes.filter(c => c.is_used);
+      // Calculate stats from qr_rewards
+      const totalActive = allCodes?.filter(c => c.attivo).length || 0;
+      const totalRedeemed = allCodes?.filter(c => !c.attivo || c.scansioni > 0).length || 0;
+      const buzzRewards = allCodes?.filter(c => c.reward_type === 'buzz_gratis').length || 0;
+      const enigmaRewards = allCodes?.filter(c => c.reward_type === 'enigma_misterioso').length || 0;
+      const fakeRewards = allCodes?.filter(c => c.reward_type === 'sorpresa_speciale').length || 0;
+      const clueRewards = allCodes?.filter(c => c.reward_type === 'indizio_segreto').length || 0;
 
       setStats({
-        totalActive: active.length,
-        totalRedeemed: redeemed.length,
-        buzzRewards: redeemed.filter(c => c.reward_type === 'buzz').length,
-        clueRewards: redeemed.filter(c => c.reward_type === 'clue').length,
-        enigmaRewards: redeemed.filter(c => c.reward_type === 'enigma').length,
-        fakeRewards: redeemed.filter(c => c.reward_type === 'fake').length,
-        failedAttempts: failedCount || 0
+        totalActive,
+        totalRedeemed,
+        buzzRewards,
+        clueRewards,
+        enigmaRewards,
+        fakeRewards,
+        failedAttempts: 0
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -180,18 +177,30 @@ export const QRControlPanel = () => {
         rewardContent = { fakeMessage: formData.rewardContent };
       }
 
-      // Insert QR code
+      // 🔥 FIXED: Insert into qr_rewards table with proper reward mapping
+      let rewardTypeMapping = '';
+      switch (formData.rewardType) {
+        case 'buzz': rewardTypeMapping = 'buzz_gratis'; break;
+        case 'clue': rewardTypeMapping = 'indizio_segreto'; break;
+        case 'enigma': rewardTypeMapping = 'enigma_misterioso'; break;
+        case 'fake': rewardTypeMapping = 'sorpresa_speciale'; break;
+        default: rewardTypeMapping = 'buzz_gratis';
+      }
+
+      // Insert QR reward
       const { error: insertError } = await supabase
-        .from('qr_buzz_codes')
+        .from('qr_rewards')
         .insert({
-          code: newCode,
-          location_name: formData.locationName,
+          id: newCode,
+          reward_type: rewardTypeMapping,
+          message: formData.rewardContent || 'Reward M1SSION™ sbloccato!',
           lat: parseFloat(formData.lat),
-          lng: parseFloat(formData.lng),
-          reward_type: formData.rewardType,
-          reward_content: rewardContent,
-          expires_at: formData.expiresAt || null,
-          created_by: 'wikus77@hotmail.it'
+          lon: parseFloat(formData.lng),
+          location_name: formData.locationName,
+          max_distance_meters: 100,
+          attivo: true,
+          scansioni: 0,
+          creato_da: 'wikus77@hotmail.it'
         });
 
       if (insertError) throw insertError;
@@ -225,8 +234,10 @@ export const QRControlPanel = () => {
 
   // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
   const generatePrintableQR = async (code: string, rewardMessage: string) => {
-    // 🎯 CRITICAL FIX: QR points to validation endpoint with token
-    const qrUrl = `https://m1ssion.eu/qr/validate?token=${code}`;
+    // 🎯 CRITICAL FIX: QR points to validation endpoint with token 
+    // Use current domain to avoid DEPLOYMENT_NOT_FOUND errors
+    const currentDomain = window.location.origin;
+    const qrUrl = `${currentDomain}/qr/validate?token=${code}`;
     
     try {
       // Generate QR Code with high quality
@@ -412,20 +423,27 @@ export const QRControlPanel = () => {
   };
 
   const showQRForPrinting = (code: string, formData: any) => {
-    // 🔥 FIXED: Generate reward message based on type
+    // 🔥 FIXED: Generate reward message based on type - handles both form data and QR record
     let rewardMessage = 'REWARD CLASIFICATO';
     
-    switch (formData.rewardType) {
+    // Handle both form data and existing QR record
+    const rewardType = formData.rewardType || formData.reward_type;
+    
+    switch (rewardType) {
       case 'buzz':
+      case 'buzz_gratis':
         rewardMessage = '⚡ BUZZ GRATUITO';
         break;
       case 'clue':
+      case 'indizio_segreto':
         rewardMessage = '🔍 INDIZIO SEGRETO';
         break;
       case 'enigma':
+      case 'enigma_misterioso':
         rewardMessage = '🧩 ENIGMA MISTERIOSO';
         break;
       case 'fake':
+      case 'sorpresa_speciale':
         rewardMessage = '🌀 SORPRESA SPECIALE';
         break;
     }
@@ -437,8 +455,8 @@ export const QRControlPanel = () => {
   const deactivateQR = async (id: string, code: string) => {
     try {
       const { error } = await supabase
-        .from('qr_buzz_codes')
-        .update({ is_used: true, used_at: new Date().toISOString() })
+        .from('qr_rewards')
+        .update({ attivo: false, updated_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) throw error;
@@ -454,20 +472,20 @@ export const QRControlPanel = () => {
 
   const getRewardIcon = (type: string) => {
     switch (type) {
-      case 'buzz': return '⚡';
-      case 'clue': return '🔍';
-      case 'enigma': return '🧩';
-      case 'fake': return '🌀';
+      case 'buzz_gratis': return '⚡';
+      case 'indizio_segreto': return '🔍';
+      case 'enigma_misterioso': return '🧩';
+      case 'sorpresa_speciale': return '🌀';
       default: return '❓';
     }
   };
 
   const getRewardColor = (type: string) => {
     switch (type) {
-      case 'buzz': return 'bg-green-100 text-green-800';
-      case 'clue': return 'bg-blue-100 text-blue-800';
-      case 'enigma': return 'bg-purple-100 text-purple-800';
-      case 'fake': return 'bg-orange-100 text-orange-800';
+      case 'buzz_gratis': return 'bg-green-100 text-green-800';
+      case 'indizio_segreto': return 'bg-blue-100 text-blue-800';
+      case 'enigma_misterioso': return 'bg-purple-100 text-purple-800';
+      case 'sorpresa_speciale': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -659,12 +677,14 @@ export const QRControlPanel = () => {
                 <div key={qr.id} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <span className="font-mono font-bold text-lg">{qr.code}</span>
+                      <span className="font-mono font-bold text-lg">{qr.id}</span>
                       <Badge className={getRewardColor(qr.reward_type)}>
                         {getRewardIcon(qr.reward_type)} {qr.reward_type.toUpperCase()}
                       </Badge>
-                      {qr.is_used ? (
-                        <Badge variant="secondary">USATO</Badge>
+                      {!qr.attivo ? (
+                        <Badge variant="secondary">DISATTIVATO</Badge>
+                      ) : qr.scansioni > 0 ? (
+                        <Badge variant="outline">SCANSIONATO ({qr.scansioni})</Badge>
                       ) : (
                         <Badge variant="default">ATTIVO</Badge>
                       )}
@@ -672,7 +692,7 @@ export const QRControlPanel = () => {
                     <div className="text-sm text-muted-foreground">
                       <div className="flex items-center gap-1 mb-1">
                         <MapPin className="w-4 h-4" />
-                        {qr.location_name} ({qr.lat.toFixed(6)}, {qr.lng.toFixed(6)})
+                        {qr.location_name} ({qr.lat.toFixed(6)}, {qr.lon.toFixed(6)})
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
@@ -683,9 +703,14 @@ export const QRControlPanel = () => {
                           </span>
                         )}
                       </div>
-                      {qr.used_at && (
+                      {qr.scansioni > 0 && (
                         <div className="text-green-600 mt-1">
-                          Riscattato: {new Date(qr.used_at).toLocaleDateString('it-IT')}
+                          Scansioni: {qr.scansioni} • Ultimo aggiornamento: {new Date(qr.updated_at).toLocaleDateString('it-IT')}
+                        </div>
+                      )}
+                      {qr.message && (
+                        <div className="text-blue-600 mt-1 text-xs">
+                          Messaggio: {qr.message}
                         </div>
                       )}
                     </div>
@@ -694,15 +719,15 @@ export const QRControlPanel = () => {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => showQRForPrinting(qr.code, qr.location_name)}
+                      onClick={() => showQRForPrinting(qr.id, { rewardType: qr.reward_type, locationName: qr.location_name })}
                     >
                       <Printer className="w-4 h-4" />
                     </Button>
-                    {!qr.is_used && (
+                    {qr.attivo && (
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => deactivateQR(qr.id, qr.code)}
+                        onClick={() => deactivateQR(qr.id, qr.id)}
                       >
                         <AlertTriangle className="w-4 h-4" />
                       </Button>

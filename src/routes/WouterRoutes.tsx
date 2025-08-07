@@ -236,12 +236,12 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           {/* QR Code Routes - NEW M1SSION™ QR System */}
-          <Route path="/qr/:code">
-            <QRRedeemPage />
-          </Route>
-          
           <Route path="/qr/validate">
             <QRValidatePage />
+          </Route>
+          
+          <Route path="/qr/:code">
+            <QRRedeemPage />
           </Route>
 
           {/* Legal routes */}
