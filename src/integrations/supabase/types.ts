@@ -1714,6 +1714,104 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_buzz_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_used: boolean
+          lat: number
+          lng: number
+          location_name: string
+          reward_content: Json | null
+          reward_type: string
+          usage_attempts: number | null
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          lat: number
+          lng: number
+          location_name: string
+          reward_content?: Json | null
+          reward_type: string
+          usage_attempts?: number | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          lat?: number
+          lng?: number
+          location_name?: string
+          reward_content?: Json | null
+          reward_type?: string
+          usage_attempts?: number | null
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
+      qr_redemption_logs: {
+        Row: {
+          created_at: string
+          distance_meters: number | null
+          failure_reason: string | null
+          id: string
+          qr_code_id: string
+          reward_granted: Json | null
+          success: boolean
+          user_id: string
+          user_lat: number | null
+          user_lng: number | null
+        }
+        Insert: {
+          created_at?: string
+          distance_meters?: number | null
+          failure_reason?: string | null
+          id?: string
+          qr_code_id: string
+          reward_granted?: Json | null
+          success: boolean
+          user_id: string
+          user_lat?: number | null
+          user_lng?: number | null
+        }
+        Update: {
+          created_at?: string
+          distance_meters?: number | null
+          failure_reason?: string | null
+          id?: string
+          qr_code_id?: string
+          reward_granted?: Json | null
+          success?: boolean
+          user_id?: string
+          user_lat?: number | null
+          user_lng?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_redemption_logs_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_buzz_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_change_audit: {
         Row: {
           changed_at: string | null
@@ -2950,6 +3048,10 @@ export type Database = {
         Args: { lat1: number; lng1: number; lat2: number; lng2: number }
         Returns: number
       }
+      calculate_qr_distance: {
+        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Returns: number
+      }
       can_use_intelligence_tool: {
         Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
         Returns: boolean
@@ -3024,6 +3126,10 @@ export type Database = {
         Returns: Json
       }
       generate_agent_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      generate_qr_code: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
