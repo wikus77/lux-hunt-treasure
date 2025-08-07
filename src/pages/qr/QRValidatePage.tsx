@@ -24,48 +24,64 @@ interface QRValidationResult {
 
 export const QRValidatePage = () => {
   const [, setLocation] = useLocation();
-  const { user } = useUnifiedAuth();
+  const { user, isLoading: authLoading } = useUnifiedAuth();
   const [isValidating, setIsValidating] = useState(false);
   const [result, setResult] = useState<QRValidationResult | null>(null);
   const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [pageLoaded, setPageLoaded] = useState(false);
+  const [tokenFound, setTokenFound] = useState<string | null>(null);
 
+  // 🔥 CRITICAL FIX: Token extraction on page load - IMMEDIATE
   useEffect(() => {
-    if (!user) {
-      toast.error('Devi essere loggato per riscattare un QR code');
-      setLocation('/auth');
+    console.log('🔍 QR VALIDATION DEBUG:', {
+      url: window.location.href,
+      pathname: window.location.pathname,
+      search: window.location.search,
+      userAgent: navigator.userAgent,
+      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent)
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let token = urlParams.get('token');
+    
+    // If no token in params, try to extract from path (for /qr/:code routes)
+    if (!token) {
+      const pathParts = window.location.pathname.split('/');
+      console.log('🔍 PATH PARTS:', pathParts);
+      if (pathParts.length >= 3 && pathParts[1] === 'qr' && pathParts[2] !== 'validate' && pathParts[2] !== 'scanner' && pathParts[2] !== 'test') {
+        token = pathParts[2];
+      }
+    }
+    
+    // Clean token from any URL encoding or special characters
+    if (token) {
+      token = decodeURIComponent(token).trim().replace(/[\n\r\t]/g, '');
+    }
+
+    console.log('🔥 EXTRACTED TOKEN:', token);
+    setTokenFound(token);
+    setPageLoaded(true);
+  }, []);
+
+  // 🔥 CRITICAL FIX: Handle auth and validation separately
+  useEffect(() => {
+    if (!pageLoaded) return;
+
+    if (authLoading) {
+      console.log('⏳ Auth still loading...');
       return;
     }
 
-      // 🔥 CRITICAL iOS SAFARI FIX: Enhanced token extraction with debugging
-      console.log('🔍 QR VALIDATION DEBUG:', {
-        url: window.location.href,
-        pathname: window.location.pathname,
-        search: window.location.search,
-        userAgent: navigator.userAgent
-      });
+    if (!user) {
+      console.log('❌ No user found, redirecting to auth');
+      toast.error('Devi essere loggato per riscattare un QR code');
+      setTimeout(() => setLocation('/auth'), 1000);
+      return;
+    }
 
-      const urlParams = new URLSearchParams(window.location.search);
-      let token = urlParams.get('token');
-      
-      // If no token in params, try to extract from path (for /qr/:code routes)
-      if (!token) {
-        const pathParts = window.location.pathname.split('/');
-        console.log('🔍 PATH PARTS:', pathParts);
-        if (pathParts.length >= 3 && pathParts[1] === 'qr' && pathParts[2] !== 'validate' && pathParts[2] !== 'scanner' && pathParts[2] !== 'test') {
-          token = pathParts[2];
-        }
-      }
-      
-      // Clean token from any URL encoding or special characters
-      if (token) {
-        token = decodeURIComponent(token).trim().replace(/[\n\r\t]/g, '');
-      }
-
-      console.log('🔥 EXTRACTED TOKEN:', token);
-
-    if (token && token.trim()) {
-      console.log('✅ TOKEN FOUND, validating:', token.trim());
-      getUserLocationAndValidate(token.trim());
+    if (tokenFound && tokenFound.trim()) {
+      console.log('✅ TOKEN FOUND, validating:', tokenFound.trim());
+      getUserLocationAndValidate(tokenFound.trim());
     } else {
       console.error('❌ NO TOKEN FOUND - URL DEBUG:', {
         href: window.location.href,
@@ -78,7 +94,7 @@ export const QRValidatePage = () => {
         error: `Token QR non trovato nell'URL: ${window.location.href}`
       });
     }
-  }, [user]);
+  }, [user, authLoading, pageLoaded, tokenFound]);
 
   const getUserLocationAndValidate = (token: string) => {
     if (navigator.geolocation) {
@@ -280,6 +296,26 @@ export const QRValidatePage = () => {
   const handleReturnHome = () => {
     setLocation('/');
   };
+
+  // 🔥 CRITICAL FIX: Show loading state immediately on page load
+  if (!pageLoaded || authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="p-6 text-center">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <h2 className="text-xl font-bold mb-2">🔍 Caricamento QR...</h2>
+            <p className="text-muted-foreground">
+              {!pageLoaded ? 'Analizzando token QR...' : 'Verificando autenticazione...'}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              📱 Safari iOS - M1SSION™
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
