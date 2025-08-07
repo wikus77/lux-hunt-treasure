@@ -237,13 +237,31 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           {/* QR Code Routes - M1SSION™ QR System */}
-          {/* 🔥 CRITICAL: Most specific routes first for Safari iOS compatibility */}
+          {/* 🔥 CRITICAL: Safari iOS BLACK SCREEN FIX - Force immediate render */}
           <Route path="/qr/test">
             {React.createElement(React.lazy(() => import('@/pages/qr/QRTestPage').then(module => ({ default: module.QRTestPage }))))}
           </Route>
           
           <Route path="/qr/validate">
-            <QRValidatePage />
+            <ErrorBoundary fallback={
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: '#000',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px'
+              }}>
+                🔍 QR Validation Error - Contact Support
+              </div>
+            }>
+              <QRValidatePage />
+            </ErrorBoundary>
           </Route>
           
           <Route path="/qr/scanner">
@@ -253,7 +271,43 @@ const WouterRoutes: React.FC = () => {
           </Route>
           
           <Route path="/qr/:code">
-            <QRValidatePage />
+            <ErrorBoundary fallback={
+              <div style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: '#000',
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '18px',
+                textAlign: 'center',
+                padding: '20px'
+              }}>
+                <div>
+                  <div style={{ marginBottom: '20px', fontSize: '48px' }}>🚨</div>
+                  <div style={{ marginBottom: '20px' }}>QR System Error</div>
+                  <button 
+                    style={{
+                      backgroundColor: '#0066ff',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => window.location.href = '/home'}
+                  >
+                    🏠 Back to Home
+                  </button>
+                </div>
+              </div>
+            }>
+              <QRValidatePage />
+            </ErrorBoundary>
           </Route>
 
           {/* Legal routes */}

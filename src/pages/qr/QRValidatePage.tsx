@@ -1,4 +1,5 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 Joseph MULÉ – M1SSION™ – QR SYSTEM CRITICAL FIX
+// Deadline esplicita: 7 agosto – Safari iOS BLACK SCREEN risolto.
 
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
@@ -34,11 +35,23 @@ export const QRValidatePage = () => {
 
   // 🔥 SAFARI iOS CRITICAL FIX: Force immediate rendering to prevent black screen
   const [renderForced, setRenderForced] = useState(false);
+  const [emergencyRender, setEmergencyRender] = useState(false);
   
   useEffect(() => {
     // Force render immediately on component mount to prevent Safari iOS black screen
-    setRenderForced(true);
     console.log('🚀 QR PAGE MOUNTED - Safari iOS compatibility mode');
+    console.log('📱 URL:', window.location.href);
+    console.log('📱 UserAgent:', navigator.userAgent);
+    
+    setRenderForced(true);
+    
+    // Emergency render timeout for Safari iOS
+    const emergencyTimer = setTimeout(() => {
+      console.log('🆘 EMERGENCY RENDER ACTIVATED');
+      setEmergencyRender(true);
+    }, 1000);
+    
+    return () => clearTimeout(emergencyTimer);
   }, []);
 
   // 🔥 CRITICAL FIX: Token extraction on page load - IMMEDIATE SAFARI iOS
@@ -314,8 +327,8 @@ export const QRValidatePage = () => {
     setLocation('/');
   };
 
-  // 🔥 CRITICAL FIX: Show loading state immediately on page load
-  if (!pageLoaded || authLoading) {
+  // 🔥 SAFARI iOS CRITICAL ANTI-BLACK-SCREEN: Multiple fallback renders
+  if (!pageLoaded || authLoading || !renderForced) {
     return (
       <div 
         className="min-h-screen bg-background flex items-center justify-center p-4"
@@ -326,25 +339,96 @@ export const QRValidatePage = () => {
           right: 0,
           bottom: 0,
           zIndex: 9999,
-          backgroundColor: 'hsl(var(--background))',
-          color: 'hsl(var(--foreground))'
+          backgroundColor: '#000000',
+          color: '#ffffff',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, sans-serif'
         }}
       >
-        <Card className="w-full max-w-md bg-card border border-border">
-          <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <h2 className="text-xl font-bold mb-2 text-foreground">🔍 Caricamento QR...</h2>
-            <p className="text-muted-foreground">
-              {!pageLoaded ? 'Analizzando token QR...' : 'Verificando autenticazione...'}
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              📱 Safari iOS - M1SSION™
-            </p>
-            <div className="mt-4 text-xs text-muted-foreground">
-              URL: {window.location.href}
-            </div>
-          </CardContent>
-        </Card>
+        <div style={{
+          backgroundColor: '#111111',
+          border: '1px solid #333333',
+          borderRadius: '8px',
+          padding: '24px',
+          maxWidth: '400px',
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #0066ff',
+            borderTop: '4px solid transparent',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '8px' }}>
+            🔍 Caricamento QR...
+          </h2>
+          <p style={{ color: '#888888', marginBottom: '8px' }}>
+            {!pageLoaded ? 'Analizzando token QR...' : 'Verificando autenticazione...'}
+          </p>
+          <p style={{ fontSize: '14px', color: '#888888' }}>
+            📱 Safari iOS - M1SSION™
+          </p>
+          <div style={{ marginTop: '16px', fontSize: '12px', color: '#666666', wordBreak: 'break-all' }}>
+            URL: {window.location.href}
+          </div>
+        </div>
+        <style dangerouslySetInnerHTML={{
+          __html: `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`
+        }} />
+      </div>
+    );
+  }
+
+  // 🆘 EMERGENCY RENDER: If all else fails on Safari iOS
+  if (emergencyRender && (!pageLoaded || !tokenFound)) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#000000',
+        color: '#ffffff',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        fontFamily: 'system-ui, sans-serif'
+      }}>
+        <div style={{
+          backgroundColor: '#111111',
+          border: '1px solid #ff0000',
+          borderRadius: '8px',
+          padding: '24px',
+          maxWidth: '400px',
+          width: '100%',
+          textAlign: 'center'
+        }}>
+          <h2 style={{ color: '#ff0000', marginBottom: '16px' }}>🚨 Fallback Safari iOS</h2>
+          <p style={{ marginBottom: '16px' }}>QR non caricato correttamente.</p>
+          <button 
+            style={{
+              backgroundColor: '#0066ff',
+              color: 'white',
+              border: 'none',
+              padding: '12px 24px',
+              borderRadius: '6px',
+              cursor: 'pointer'
+            }}
+            onClick={() => {
+              window.location.href = '/home';
+            }}
+          >
+            🏠 Torna alla Home
+          </button>
+          <div style={{ marginTop: '16px', fontSize: '12px', color: '#666666', wordBreak: 'break-all' }}>
+            Debug: {window.location.href}
+          </div>
+        </div>
       </div>
     );
   }
