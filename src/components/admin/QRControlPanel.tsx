@@ -120,10 +120,42 @@ export const QRControlPanel = () => {
   };
 
   const generateQRCode = async () => {
-    if (!formData.locationName || !formData.lat || !formData.lng) {
-      toast.error('Compila tutti i campi obbligatori');
+    // 🔥 FIX: Validazione corretta per form fields
+    if (!formData.locationName.trim()) {
+      toast.error('⚠️ Inserisci un nome per la posizione');
       return;
     }
+    
+    if (!formData.lat || isNaN(parseFloat(formData.lat))) {
+      toast.error('⚠️ Inserisci una latitudine valida');
+      return;
+    }
+    
+    if (!formData.lng || isNaN(parseFloat(formData.lng))) {
+      toast.error('⚠️ Inserisci una longitudine valida');
+      return;
+    }
+    
+    const lat = parseFloat(formData.lat);
+    const lng = parseFloat(formData.lng);
+    
+    if (lat < -90 || lat > 90) {
+      toast.error('⚠️ Latitudine deve essere tra -90 e 90');
+      return;
+    }
+    
+    if (lng < -180 || lng > 180) {
+      toast.error('⚠️ Longitudine deve essere tra -180 e 180');
+      return;
+    }
+    
+    console.log('🔥 QR GENERATION DEBUG:', {
+      locationName: formData.locationName,
+      lat: lat,
+      lng: lng,
+      rewardType: formData.rewardType,
+      rewardContent: formData.rewardContent
+    });
 
     try {
       setIsCreating(true);
@@ -388,26 +420,54 @@ export const QRControlPanel = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="lat">Latitudine *</Label>
+              <Label htmlFor="lat">Latitudine * <span className="text-xs text-gray-500">(-90 a +90)</span></Label>
               <Input
                 id="lat"
                 type="number"
                 step="any"
                 value={formData.lat}
                 onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                placeholder="52.520008"
+                placeholder="52.520008 (Berlin)"
+                className={!formData.lat || isNaN(parseFloat(formData.lat)) ? 'border-red-300' : 'border-green-300'}
               />
+              {formData.lat && isNaN(parseFloat(formData.lat)) && (
+                <div className="text-xs text-red-500 mt-1">⚠️ Valore non valido</div>
+              )}
             </div>
             <div>
-              <Label htmlFor="lng">Longitudine *</Label>
+              <Label htmlFor="lng">Longitudine * <span className="text-xs text-gray-500">(-180 a +180)</span></Label>
               <Input
                 id="lng"
                 type="number"
                 step="any"
                 value={formData.lng}
                 onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                placeholder="13.404954"
+                placeholder="13.404954 (Berlin)"
+                className={!formData.lng || isNaN(parseFloat(formData.lng)) ? 'border-red-300' : 'border-green-300'}
               />
+              {formData.lng && isNaN(parseFloat(formData.lng)) && (
+                <div className="text-xs text-red-500 mt-1">⚠️ Valore non valido</div>
+              )}
+            </div>
+          </div>
+          
+          {/* 🔥 COORDINATE HELPER */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <h4 className="text-sm font-semibold text-blue-800 mb-2">📍 Coordinate Esempio:</h4>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <strong>Berlin:</strong> 52.520008, 13.404954<br/>
+                <strong>Milano:</strong> 45.464664, 9.188540<br/>
+                <strong>Roma:</strong> 41.902782, 12.496365
+              </div>
+              <div>
+                <strong>Parigi:</strong> 48.856614, 2.352222<br/>
+                <strong>Monaco:</strong> 43.740070, 7.426540<br/>
+                <strong>Monaco:</strong> 48.137154, 11.576124
+              </div>
+            </div>
+            <div className="mt-2 text-xs text-blue-600">
+              💡 Usa Google Maps per ottenere coordinate precise: click destro → "Cosa c'è qui?"
             </div>
           </div>
 
