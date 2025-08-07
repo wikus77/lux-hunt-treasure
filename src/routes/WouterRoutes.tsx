@@ -34,6 +34,7 @@ import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import { QRRedeemPage } from "@/pages/qr/QRRedeemPage";
 
 import Terms from "@/pages/Terms";
 import Contact from "@/pages/Contact";
@@ -233,6 +234,10 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* QR Code redemption route */}
+          <Route path="/qr/:code">
+            <QRRedeemPage />
+          </Route>
 
           {/* Legal routes */}
           <Route path="/terms">
