@@ -1812,6 +1812,57 @@ export type Database = {
           },
         ]
       }
+      qr_rewards: {
+        Row: {
+          attivo: boolean
+          created_at: string
+          creato_da: string | null
+          expires_at: string | null
+          id: string
+          lat: number
+          location_name: string
+          lon: number
+          max_distance_meters: number
+          message: string
+          redeemed_by: string[] | null
+          reward_type: string
+          scansioni: number
+          updated_at: string
+        }
+        Insert: {
+          attivo?: boolean
+          created_at?: string
+          creato_da?: string | null
+          expires_at?: string | null
+          id?: string
+          lat: number
+          location_name: string
+          lon: number
+          max_distance_meters?: number
+          message?: string
+          redeemed_by?: string[] | null
+          reward_type: string
+          scansioni?: number
+          updated_at?: string
+        }
+        Update: {
+          attivo?: boolean
+          created_at?: string
+          creato_da?: string | null
+          expires_at?: string | null
+          id?: string
+          lat?: number
+          location_name?: string
+          lon?: number
+          max_distance_meters?: number
+          message?: string
+          redeemed_by?: string[] | null
+          reward_type?: string
+          scansioni?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       role_change_audit: {
         Row: {
           changed_at: string | null
