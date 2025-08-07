@@ -16,6 +16,7 @@ import BuzzMapAreas from './BuzzMapAreas';
 import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
+import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import L from 'leaflet';
 import { 
   handleMapMove, 
@@ -74,6 +75,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   setShowHelpDialog = () => {}
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -81,6 +83,28 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   
   // Use Zustand store for consistent state management
   const { isAddingMapPoint, mapStatus } = useMapStore();
+
+  // Get user location for QR proximity
+  React.useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.log('Could not get user location for QR proximity:', error);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      );
+    }
+  }, []);
 
   // CRITICAL: Debug logging for BUZZ areas
   React.useEffect(() => {
@@ -212,6 +236,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         
         {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
         <BuzzMapAreas areas={currentWeekAreas} />
+        
+        {/* QR Map Display - Show QR codes on map */}
+        <QRMapDisplay userLocation={userLocation} />
         
         {/* Display search areas */}
         <SearchAreaMapLayer 

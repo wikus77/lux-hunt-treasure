@@ -451,21 +451,25 @@ export const QRControlPanel = () => {
     generatePrintableQR(code, rewardMessage);
   };
 
-  const deactivateQR = async (id: string, code: string) => {
+  const deleteQR = async (id: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questo QR Code? Questa azione non può essere annullata.')) {
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('qr_rewards')
-        .update({ attivo: false, updated_at: new Date().toISOString() })
+        .delete()
         .eq('id', id);
 
       if (error) throw error;
 
-      toast.success(`QR Code ${code} disattivato`);
+      toast.success(`QR Code ${id} eliminato con successo`);
       loadQRCodes();
       loadStats();
     } catch (error) {
-      console.error('Error deactivating QR:', error);
-      toast.error('Errore nella disattivazione');
+      console.error('Error deleting QR:', error);
+      toast.error('Errore nell\'eliminazione del QR code');
     }
   };
 
@@ -550,7 +554,7 @@ export const QRControlPanel = () => {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 max-h-[200px] overflow-y-auto bg-background border border-border shadow-lg">
                   <SelectItem value="buzz">⚡ Buzz Gratuito</SelectItem>
                   <SelectItem value="clue">🔍 Indizio</SelectItem>
                   <SelectItem value="enigma">🧩 Enigma</SelectItem>
@@ -722,15 +726,14 @@ export const QRControlPanel = () => {
                     >
                       <Printer className="w-4 h-4" />
                     </Button>
-                    {qr.attivo && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => deactivateQR(qr.id, qr.id)}
-                      >
-                        <AlertTriangle className="w-4 h-4" />
-                      </Button>
-                    )}
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteQR(qr.id)}
+                      title="Elimina QR Code"
+                    >
+                      <AlertTriangle className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))}

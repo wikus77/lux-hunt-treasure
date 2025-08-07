@@ -100,15 +100,26 @@ export const QRValidatePage = () => {
         .select('*')
         .eq('id', token)
         .eq('attivo', true)
-        .single();
+        .maybeSingle();
 
-      if (qrError || !qrData) {
+      if (qrError) {
+        console.error('QR validation error:', qrError);
+        setResult({
+          success: false,
+          message: '',
+          error: 'Errore nella validazione del QR Code'
+        });
+        toast.error('Errore nel sistema QR');
+        return;
+      }
+
+      if (!qrData) {
         setResult({
           success: false,
           message: '',
           error: 'QR Code non valido o scaduto'
         });
-        toast.error('QR Code non valido');
+        toast.error('QR Code non trovato');
         return;
       }
 
