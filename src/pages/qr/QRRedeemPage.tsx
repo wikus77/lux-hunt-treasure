@@ -55,6 +55,7 @@ export const QRRedeemPage = () => {
             lng: position.coords.longitude
           };
           setUserPosition(pos);
+          console.log('QR_REDEEM • geo position', pos);
           redeemQRCode(pos);
         },
         (error) => {
@@ -79,14 +80,19 @@ export const QRRedeemPage = () => {
 
     try {
       setIsRedeeming(true);
-      
+      console.log('QR_REDEEM • request', {
+        code: code.toUpperCase(),
+        userLat: position?.lat,
+        userLng: position?.lng,
+      });
       const { data, error } = await supabase.functions.invoke('qr-redeem', {
         body: {
           code: code.toUpperCase(),
           userLat: position?.lat,
-          userLng: position?.lng
-        }
+          userLng: position?.lng,
+        },
       });
+      console.log('QR_REDEEM • response', { data, error });
 
       if (error) throw error;
 

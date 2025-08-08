@@ -11,6 +11,7 @@ import { StandardLoginForm } from "@/components/auth/StandardLoginForm";
 import BackgroundParticles from "@/components/ui/background-particles";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import AdminEmergencyLogin from "@/components/auth/AdminEmergencyLogin";
+import { postLoginRedirectFixed } from "@/utils/postLoginRedirectFixed";
 
 const Login = () => {
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null);
@@ -84,11 +85,11 @@ const Login = () => {
   //   };
   // }, []);
 
-  // 🔄 REDIRECT AUTHENTICATED USERS - Enhanced
   useEffect(() => {
     if (isAuthenticated && !isLoading && !redirectAttemptedRef.current) {
-      console.log('🔄 LOGIN PAGE: User already authenticated, initiating redirect');
-      forceRedirectToHome('USER_ALREADY_AUTHENTICATED');
+      console.log('🔄 LOGIN PAGE: User already authenticated, initiating redirect (POST_LOGIN_REDIRECT)');
+      redirectAttemptedRef.current = true;
+      postLoginRedirectFixed(navigate);
     }
   }, [isAuthenticated, isLoading]);
 

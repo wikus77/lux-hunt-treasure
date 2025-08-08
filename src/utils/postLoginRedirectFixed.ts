@@ -1,45 +1,24 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Fixed Post-Login Redirect Logic for M1SSION™
+// Post-Login Redirect Helper (stable across PWA/iOS/Safari)
 
-import { useLocation } from 'wouter';
+export const KEY = 'post_login_redirect';
 
-export const usePostLoginRedirect = () => {
-  const [, setLocation] = useLocation();
-
-  const redirectAfterLogin = () => {
-    console.log('🏠 POST-LOGIN REDIRECT: Navigating to /home');
-    
-    // Force navigate to home
-    try {
-      setLocation('/home');
-      console.log('✅ Wouter navigation executed');
-    } catch (error) {
-      console.error('❌ Wouter navigation failed:', error);
-      // Fallback to window.location
-      window.location.href = '/home';
-    }
-
-    // Dispatch custom event for auth success
-    const event = new CustomEvent('auth-success', {
-      detail: { redirected: true, timestamp: Date.now() }
-    });
-    window.dispatchEvent(event);
-  };
-
-  return { redirectAfterLogin };
-};
-
-// Standalone function for use outside hooks
-export const forceRedirectToHome = () => {
-  console.log('🏠 FORCE REDIRECT TO HOME');
-  
-  // Method 1: Try programmatic navigation
+export function consumePostLoginRedirect(): string | null {
   try {
-    window.history.pushState(null, '', '/home');
-    window.location.reload();
-  } catch (error) {
-    console.error('❌ History API failed:', error);
-    // Method 2: Direct navigation
-    window.location.href = '/home';
+    const target = localStorage.getItem(KEY);
+    if (target) localStorage.removeItem(KEY);
+    return target;
+  } catch {
+    return null;
   }
-};
+}
+
+export function postLoginRedirectFixed(navigate: (path: string) => void) {
+  const target = consumePostLoginRedirect() || '/home';
+  console.log('🚀 POST_LOGIN_REDIRECT →', target);
+  try {
+    navigate(target);
+  } catch {
+    window.location.href = target;
+  }
+}
