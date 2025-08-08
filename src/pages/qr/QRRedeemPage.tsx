@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Clock, Gift, AlertTriangle, Zap } from 'lucide-react';
+import { KEY as POST_LOGIN_KEY } from '@/utils/postLoginRedirectFixed';
 
 interface QRRedemptionResult {
   success: boolean;
@@ -36,7 +37,10 @@ export const QRRedeemPage = () => {
   useEffect(() => {
     if (!user) {
       toast.error('Devi essere loggato per riscattare un QR code');
-      setLocation('/auth');
+      if (code) {
+        try { localStorage.setItem(POST_LOGIN_KEY, `/qr/${code}`); } catch {}
+      }
+      setLocation(`/login${code ? `?redirect=${encodeURIComponent(`/qr/${code}`)}` : ''}`);
       return;
     }
 
@@ -128,7 +132,7 @@ export const QRRedeemPage = () => {
   };
 
   const handleReturnHome = () => {
-    setLocation('/');
+    setLocation('/home');
   };
 
   if (!user) {
@@ -141,7 +145,7 @@ export const QRRedeemPage = () => {
             <p className="text-muted-foreground mb-4">
               Devi essere loggato per riscattare i QR code
             </p>
-            <Button onClick={() => setLocation('/auth')} className="w-full">
+            <Button onClick={() => setLocation('/login')} className="w-full">
               Accedi
             </Button>
           </CardContent>

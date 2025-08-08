@@ -15,7 +15,7 @@ export function consumePostLoginRedirect(): string | null {
 
 export function postLoginRedirectFixed(navigate: (path: string) => void) {
   const target = consumePostLoginRedirect() || '/home';
-  console.log('🚀 POST_LOGIN_REDIRECT →', target);
+  console.log('🚀 postLoginRedirectFixed →', target);
   try {
     navigate(target);
   } catch {

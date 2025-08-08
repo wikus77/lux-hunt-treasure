@@ -20,19 +20,23 @@ const QRValidatePage: React.FC = () => {
     if (actedRef.current) return;
     if (isLoading) return; // wait auth to settle
 
+    // Always store target for post-login deep-link recovery
+    const target = `/qr/${encodeURIComponent(code)}`;
+    try {
+      localStorage.setItem(POST_LOGIN_KEY, target);
+    } catch {}
+
     if (!isAuthenticated) {
-      try {
-        localStorage.setItem(POST_LOGIN_KEY, `/qr/${code}`);
-      } catch {}
       console.log('QR_VALIDATE • not auth → /login, saved redirect');
       actedRef.current = true;
-      navigate('/login');
+      const loginUrl = `/login?redirect=${encodeURIComponent(target)}`;
+      navigate(loginUrl);
       return;
     }
 
     console.log('QR_VALIDATE • auth → /qr/redeem/' + code);
     actedRef.current = true;
-    navigate(`/qr/redeem/${code}`);
+    navigate(`/qr/redeem/${encodeURIComponent(code)}`);
   }, [code, isAuthenticated, isLoading, navigate]);
 
   return (

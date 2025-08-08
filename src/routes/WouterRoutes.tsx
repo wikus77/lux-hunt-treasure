@@ -77,6 +77,10 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
+          {/* ✅ QR routes must come before landing */}
+          <Route path="/qr/:code"><QRValidatePage /></Route>
+          <Route path="/qr/redeem/:code"><QRRedeemPage /></Route>
+
           {/* Landing page - CRITICAL FIX: Direct LandingPage render */}
           <Route path="/">
             {isLoading ? (

@@ -33,7 +33,7 @@ const Login = () => {
     if (redirectAttemptedRef.current) return;
     
     console.log(`🏠 FORCE REDIRECT TO HOME: ${reason}`);
-    console.log('✅ ROUTE: Login → /home (authenticated user)');
+    console.log('✅ ROUTE: Login → using postLoginRedirectFixed (authenticated user)');
     redirectAttemptedRef.current = true;
     
     // Clear any existing fallback timer
@@ -42,32 +42,12 @@ const Login = () => {
       fallbackTimerRef.current = null;
     }
     
-    // Strategy 1: Try wouter navigate first - REDIRECT TO /mission-intro for first time
     try {
-      console.log('🚀 AUTHENTICATED USER REDIRECT - Checking hasSeenPostLoginIntro');
-      const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
-      if (hasSeenIntro === 'true') {
-        console.log('✅ WOUTER NAVIGATE TO /home (intro already seen)');
-        navigate('/home');
-      } else {
-        console.log('✅ WOUTER NAVIGATE TO /mission-intro (first time after login)');
-        navigate('/mission-intro');
-      }
+      postLoginRedirectFixed(navigate);
     } catch (error) {
-      console.error('❌ WOUTER NAVIGATE FAILED:', error);
-    }
-    
-    // Strategy 2: PWA iOS fallback with window.location.href
-    if (isPWAStandalone()) {
-      console.log('📱 PWA STANDALONE DETECTED - Using window.location.href fallback');
-      setTimeout(() => {
-        if (window.location.pathname === '/login') {
-          const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
-          const targetUrl = hasSeenIntro === 'true' ? '/home' : '/mission-intro';
-          console.log(`🔄 WOUTER FAILED - Forcing window.location.href to ${targetUrl}`);
-          window.location.href = targetUrl;
-        }
-      }, 500);
+      console.error('❌ postLoginRedirectFixed failed, forcing location replace:', error);
+      const target = '/home';
+      window.location.replace(target);
     }
   };
 
@@ -101,18 +81,8 @@ const Login = () => {
       fallbackTimerRef.current = setTimeout(() => {
         if (window.location.pathname === '/login' && isAuthenticated) {
           console.log('🚨 FALLBACK TIMER TRIGGERED - User stuck on login page');
-          
-          // Final fallback: Hard reload to appropriate route
-          const hasSeenIntro = sessionStorage.getItem('hasSeenPostLoginIntro');
-          const fallbackUrl = hasSeenIntro === 'true' ? '/home' : '/mission-intro';
-          
-          if (isPWAStandalone()) {
-            console.log(`📱 PWA HARD REDIRECT TO ${fallbackUrl}`);
-            window.location.replace(fallbackUrl);
-          } else {
-            console.log(`🌐 BROWSER HARD REDIRECT TO ${fallbackUrl}`);
-            window.location.href = fallbackUrl;
-          }
+          // Use the unified post-login redirect to honor saved target
+          postLoginRedirectFixed(navigate);
         }
       }, 2000);
       
