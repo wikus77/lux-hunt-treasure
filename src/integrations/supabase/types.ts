@@ -1765,6 +1765,106 @@ export type Database = {
         }
         Relationships: []
       }
+      qr_code_claims: {
+        Row: {
+          claimed_at: string
+          id: string
+          qr_code_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          id?: string
+          qr_code_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          id?: string
+          qr_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_code_claims_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_code_discoveries: {
+        Row: {
+          discovered_at: string
+          id: string
+          qr_code_id: string
+          user_id: string
+        }
+        Insert: {
+          discovered_at?: string
+          id?: string
+          qr_code_id: string
+          user_id: string
+        }
+        Update: {
+          discovered_at?: string
+          id?: string
+          qr_code_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_code_discoveries_qr_code_id_fkey"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          is_hidden: boolean
+          lat: number | null
+          lng: number | null
+          reward_type: string
+          reward_value: number
+          title: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_hidden?: boolean
+          lat?: number | null
+          lng?: number | null
+          reward_type: string
+          reward_value?: number
+          title: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          is_hidden?: boolean
+          lat?: number | null
+          lng?: number | null
+          reward_type?: string
+          reward_value?: number
+          title?: string
+        }
+        Relationships: []
+      }
       qr_redemption_logs: {
         Row: {
           created_at: string
@@ -3384,6 +3484,10 @@ export type Database = {
           p_amount_total: number
         }
         Returns: boolean
+      }
+      qr_redeem: {
+        Args: { code: string }
+        Returns: Json
       }
       record_intelligence_tool_usage: {
         Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }

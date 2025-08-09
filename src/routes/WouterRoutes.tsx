@@ -37,6 +37,7 @@ import PanelAccessPage from "@/pages/PanelAccessPage";
 import QRValidatePage from "@/pages/qr/QRValidatePage";
 import { QRRedeemPage } from "@/pages/qr/QRRedeemPage";
 import { QRScannerPage } from "@/pages/qr/QRScannerPage";
+import { QRQueryRedeemPage } from "@/pages/qr/QRQueryRedeemPage"; // © 2025 NIYVORA KFT –Joseph MULÉ – M1SSION™
 
 import Terms from "@/pages/Terms";
 import Contact from "@/pages/Contact";
@@ -243,7 +244,11 @@ const WouterRoutes: React.FC = () => {
           {/* QR Code Routes - M1SSION™ QR System */}
           {/* 🔥 CRITICAL: Safari iOS BLACK SCREEN FIX - Force immediate render */}
           <Route path="/qr/test">
-            {React.createElement(React.lazy(() => import('@/pages/qr/QRTestPage').then(module => ({ default: module.QRTestPage }))))}
+            {React.createElement(React.lazy(() => import('@/pages/qr/QRTestPage').then(module => ({ default: module.QRTestPage })) ))}
+          </Route>
+          {/* New query-based QR redeem: /qr?code=... */}
+          <Route path="/qr">
+            <QRQueryRedeemPage />
           </Route>
           
           <Route path="/qr/validate">
