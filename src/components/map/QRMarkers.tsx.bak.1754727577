@@ -1,4 +1,3 @@
-import { getQrBlinkIcon } from "./icons/qrBlinkIcon";
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React from 'react';
@@ -41,7 +40,7 @@ export const QRMarkers = () => {
           onClick={() => handleQRClick(marker.code, marker.isInRange)}
           title={`QR: ${marker.location_name} (${marker.distance}m)`}
         >
-          
+          {getQRMarkerIcon(marker.reward_type)}
         </div>
       ))}
     </>
