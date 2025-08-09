@@ -26,6 +26,7 @@ export const useQRMapIntegration = () => {
   const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [claimedSet, setClaimedSet] = useState<Set<string>>(new Set());
 
   // Constants
   const QR_DETECTION_RADIUS_METERS = 100;
@@ -35,6 +36,31 @@ export const useQRMapIntegration = () => {
     if (user) {
       getUserLocation();
       loadNearbyQRCodes();
+      loadUserClaims();
+      // Realtime: update markers when this user redeems a QR
+      const channel = supabase
+        .channel(`qr_redemption_logs_user_${user.id}`)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'qr_redemption_logs', filter: `user_id=eq.${user.id}` }, (payload) => {
+          try {
+            const row: any = payload.new;
+            const code: string | undefined = row?.qr_code || row?.code;
+            const qrId: string | undefined = row?.qr_id || row?.qr_code_id || row?.qrCodeId;
+            setClaimedSet(prev => {
+              const next = new Set(prev);
+              if (code) next.add(code);
+              if (qrId) next.add(qrId);
+              return next;
+            });
+            // Optionally refresh proximity flags
+            loadNearbyQRCodes();
+          } catch (e) {
+            console.warn('Realtime QR claim payload parse error', e);
+          }
+        })
+        .subscribe();
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
@@ -103,22 +129,25 @@ export const useQRMapIntegration = () => {
           );
 
           // Only show QR codes within display radius
-          if (distance <= QR_DISPLAY_RADIUS_KM * 1000) {
-            isInRange = distance <= QR_DETECTION_RADIUS_METERS;
-            
-            markers.push({
-              id: qr.id,
-              code: qr.code,
-              lat: qr.lat,
-              lng: qr.lng,
-              location_name: qr.location_name,
-              reward_type: qr.reward_type,
-              distance,
-              isInRange
-            });
+            if (distance <= QR_DISPLAY_RADIUS_KM * 1000) {
+              isInRange = distance <= QR_DETECTION_RADIUS_METERS;
+              const isClaimed = claimedSet.has(qr.code) || claimedSet.has(qr.id);
+              markers.push({
+                id: qr.id,
+                code: qr.code,
+                lat: qr.lat,
+                lng: qr.lng,
+                location_name: qr.location_name,
+                reward_type: qr.reward_type,
+                distance,
+                isInRange,
+                // @ts-ignore
+                claimed: isClaimed
+              });
           }
         } else {
           // If no location, show all QR codes but mark as not in range
+          const isClaimed = claimedSet.has(qr.code) || claimedSet.has(qr.id);
           markers.push({
             id: qr.id,
             code: qr.code,
@@ -127,7 +156,9 @@ export const useQRMapIntegration = () => {
             location_name: qr.location_name,
             reward_type: qr.reward_type,
             distance: 0,
-            isInRange: false
+            isInRange: false,
+            // @ts-ignore
+            claimed: isClaimed
           });
         }
       }
@@ -189,7 +220,7 @@ export const useQRMapIntegration = () => {
     return R * c; // Distance in meters
   };
 
-  const getQRMarkerStyle = (marker: QRMapMarker) => {
+  const getQRMarkerStyle = (marker: QRMapMarker & { claimed?: boolean }) => {
     const baseStyle = {
       width: '32px',
       height: '32px',
@@ -202,7 +233,19 @@ export const useQRMapIntegration = () => {
       cursor: 'pointer',
       border: '2px solid',
       transition: 'all 0.3s ease'
-    };
+    } as const;
+
+    // Greyed out if already claimed by this user
+    if (marker.claimed) {
+      return {
+        ...baseStyle,
+        background: 'linear-gradient(135deg, #94a3b8, #64748b)',
+        borderColor: '#334155',
+        color: 'white',
+        opacity: 0.6,
+        filter: 'grayscale(0.6)'
+      } as const;
+    }
 
     if (marker.isInRange) {
       return {
@@ -212,16 +255,16 @@ export const useQRMapIntegration = () => {
         color: 'white',
         animation: 'pulse 2s infinite',
         boxShadow: '0 0 20px rgba(34, 197, 94, 0.6)'
-      };
-    } else {
-      return {
-        ...baseStyle,
-        background: 'linear-gradient(135deg, #64748b, #475569)',
-        borderColor: '#374151',
-        color: 'white',
-        opacity: 0.7
-      };
+      } as const;
     }
+
+    return {
+      ...baseStyle,
+      background: 'linear-gradient(135deg, #64748b, #475569)',
+      borderColor: '#374151',
+      color: 'white',
+      opacity: 0.7
+    } as const;
   };
 
   const getQRMarkerIcon = (rewardType: string) => {
@@ -233,6 +276,26 @@ export const useQRMapIntegration = () => {
       default: return '❓';
     }
   };
+
+  async function loadUserClaims() {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('qr_redemption_logs')
+        .select('qr_id, qr_code, code')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      const next = new Set<string>();
+      (data || []).forEach((row: any) => {
+        if (row.qr_code) next.add(row.qr_code);
+        if (row.code) next.add(row.code);
+        if (row.qr_id) next.add(row.qr_id);
+      });
+      setClaimedSet(next);
+    } catch (e) {
+      console.warn('Failed to load user QR claims', e);
+    }
+  }
 
   return {
     qrMarkers,

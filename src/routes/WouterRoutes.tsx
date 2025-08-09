@@ -79,8 +79,7 @@ const WouterRoutes: React.FC = () => {
       <IOSSafeAreaOverlay>
         <Switch>
           {/* ✅ QR routes must come before landing */}
-          <Route path="/qr/:code"><QRValidatePage /></Route>
-          <Route path="/qr/redeem/:code"><QRRedeemPage /></Route>
+          <Route path="/qr/:code"><QRRedeemPage /></Route>
 
           {/* Landing page - CRITICAL FIX: Direct LandingPage render */}
           <Route path="/">
@@ -280,75 +279,9 @@ const WouterRoutes: React.FC = () => {
           </Route>
           
           <Route path="/qr/:code">
-            <ErrorBoundary fallback={
-              <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: '#0a0a0a',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '16px',
-                textAlign: 'center',
-                padding: '20px',
-                fontFamily: 'system-ui, -apple-system, sans-serif'
-              }}>
-                <div style={{
-                  backgroundColor: '#1a1a1a',
-                  border: '1px solid #333',
-                  borderRadius: '12px',
-                  padding: '32px',
-                  maxWidth: '400px',
-                  width: '100%'
-                }}>
-                  <div style={{ marginBottom: '16px', fontSize: '48px' }}>🎯</div>
-                  <div style={{ marginBottom: '16px', fontSize: '20px', fontWeight: 'bold' }}>
-                    M1SSION™ QR Fallback
-                  </div>
-                  <div style={{ marginBottom: '24px', color: '#cccccc' }}>
-                    QR in caricamento... Se non si apre, prova il pulsante sotto.
-                  </div>
-                  <button 
-                    style={{
-                      backgroundColor: '#0066ff',
-                      color: 'white',
-                      border: 'none',
-                      padding: '12px 24px',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '16px',
-                      fontWeight: 'bold'
-                    }}
-                    onClick={() => {
-                      const qrId = window.location.pathname.split('/')[2];
-                      console.log('🎯 FALLBACK REDIRECT TO HOME WITH QR:', qrId);
-                      window.location.href = `/home#qr=${qrId}`;
-                    }}
-                  >
-                    🏠 Apri QR in App
-                  </button>
-                  <div style={{ 
-                    marginTop: '16px', 
-                    fontSize: '12px', 
-                    color: '#666666',
-                    wordBreak: 'break-all'
-                  }}>
-                    QR: {window.location.pathname.split('/')[2]}
-                  </div>
-                </div>
-              </div>
-            }>
-              <QRValidatePage />
-            </ErrorBoundary>
-          </Route>
-
-          <Route path="/qr/redeem/:code">
             <QRRedeemPage />
           </Route>
+
 
           {/* Legal routes */}
           <Route path="/terms">
