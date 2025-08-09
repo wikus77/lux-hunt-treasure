@@ -3,24 +3,18 @@
 import React, { useEffect, useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import { supabase } from '@/integrations/supabase/client';
-import { QrCode, MapPin, Gift } from 'lucide-react';
+import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import L from 'leaflet';
 
 interface QRMapItem {
   id: string;
+  code: string;
   lat: number;
-  lon: number;
-  location_name: string;
+  lng: number;
+  title?: string | null;
   reward_type: string;
-  message: string;
-  attivo: boolean;
-  scansioni: number;
-  max_distance_meters: number;
-  redeemed_by: string[];
 }
 
 interface QRMapDisplayProps {
@@ -28,7 +22,6 @@ interface QRMapDisplayProps {
 }
 
 export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
-  const { user } = useUnifiedAuth();
   const [qrCodes, setQrCodes] = useState<QRMapItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -39,9 +32,9 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
   const loadQRCodes = async () => {
     try {
       const { data, error } = await supabase
-        .from('qr_rewards')
-        .select('*')
-        .eq('attivo', true)
+        .from('qr_codes')
+        .select('id, code, lat, lng, title, reward_type, created_at, is_active')
+        .eq('is_active', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -70,38 +63,36 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
       userLocation.lat,
       userLocation.lng,
       qr.lat,
-      qr.lon
+      qr.lng
     );
-    return distance <= qr.max_distance_meters;
+    const DETECTION_RADIUS = 100; // meters
+    return distance <= DETECTION_RADIUS;
   };
 
   const isUserAlreadyRedeemed = (qr: QRMapItem): boolean => {
-    return user ? qr.redeemed_by.includes(user.id) : false;
+    return false;
   };
 
   const handleQRRedeem = (qrCode: string) => {
-    // 🔥 CRITICAL: Use current domain for QR redirect
     const currentDomain = window.location.origin;
-    const qrUrl = `${currentDomain}/qr/validate?token=${qrCode}`;
+    const qrUrl = `${currentDomain}/qr?code=${encodeURIComponent(qrCode)}`;
     window.open(qrUrl, '_blank');
   };
 
   const getRewardIcon = (type: string) => {
     switch (type) {
-      case 'buzz_gratis': return '⚡';
-      case 'indizio_segreto': return '🔍';
-      case 'enigma_misterioso': return '🧩';
-      case 'sorpresa_speciale': return '🌀';
+      case 'buzz_credit': return '⚡';
+      case 'buzz_map_credit': return '🗺️';
+      case 'custom': return '🎁';
       default: return '❓';
     }
   };
 
   const getRewardColor = (type: string) => {
     switch (type) {
-      case 'buzz_gratis': return '#10b981'; // green
-      case 'indizio_segreto': return '#3b82f6'; // blue
-      case 'enigma_misterioso': return '#8b5cf6'; // purple
-      case 'sorpresa_speciale': return '#f59e0b'; // orange
+      case 'buzz_credit': return '#10b981'; // green
+      case 'buzz_map_credit': return '#06b6d4'; // cyan
+      case 'custom': return '#f59e0b'; // orange
       default: return '#6b7280'; // gray
     }
   };
@@ -156,7 +147,7 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
         return (
           <Marker
             key={qr.id}
-            position={[qr.lat, qr.lon]}
+            position={[qr.lat, qr.lng]}
             icon={createQRIcon(qr)}
           >
             <Popup>
@@ -167,7 +158,7 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
                 </div>
                 
                 <div>
-                  <p className="font-semibold text-base">{qr.location_name}</p>
+                  <p className="font-semibold text-base">{qr.title || 'QR scoperto'}</p>
                   <Badge 
                     className="mt-1"
                     style={{ 
@@ -179,26 +170,21 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
                   </Badge>
                 </div>
 
-                <div className="text-xs text-gray-600 space-y-1">
-                  <div className="flex items-center gap-1 justify-center">
-                    <MapPin className="w-3 h-3" />
-                    <span>Raggio: {qr.max_distance_meters}m</span>
-                  </div>
-                  <div className="flex items-center gap-1 justify-center">
-                    <Gift className="w-3 h-3" />
-                    <span>Scansioni: {qr.scansioni}</span>
-                  </div>
-                  {userLocation && (
-                    <div>
-                      Distanza: {Math.round(calculateDistance(
-                        userLocation.lat,
-                        userLocation.lng,
-                        qr.lat,
-                        qr.lon
-                      ))}m
+                {userLocation && (
+                  <div className="text-xs text-gray-600">
+                    <div className="flex items-center gap-1 justify-center">
+                      <MapPin className="w-3 h-3" />
+                      <span>
+                        Distanza: {Math.round(calculateDistance(
+                          userLocation.lat,
+                          userLocation.lng,
+                          qr.lat,
+                          qr.lng
+                        ))}m
+                      </span>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {isRedeemed ? (
                   <Badge variant="secondary" className="w-full">
@@ -206,7 +192,7 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
                   </Badge>
                 ) : isInRange ? (
                   <Button 
-                    onClick={() => handleQRRedeem(qr.id)}
+                    onClick={() => handleQRRedeem(qr.code)}
                     className="w-full bg-green-600 hover:bg-green-700"
                     size="sm"
                   >
