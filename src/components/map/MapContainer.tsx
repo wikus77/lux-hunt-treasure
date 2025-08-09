@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MapContainer as LeafletMapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { MapContainer as LeafletMapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import { useLocation } from 'wouter';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -13,15 +13,17 @@ import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { userDotIcon } from '@/components/map/userDotIcon';
+import { toast } from 'sonner';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
 
-// Centers map on user once and shows a user location marker
+// Centers map on user once and shows a user location marker + accuracy circle
 const CenterOnUserOnce: React.FC = () => {
   const map = useMap();
   const didCenter = useRef(false);
-  const { position } = useGeolocation();
+  const didToast = useRef(false);
+  const { position, accuracy, error } = useGeolocation();
 
   useEffect(() => {
     if (position && !didCenter.current) {
@@ -30,9 +32,27 @@ const CenterOnUserOnce: React.FC = () => {
     }
   }, [position, map]);
 
-  return position ? (
-    <Marker icon={userDotIcon} position={[position.lat, position.lng]} />
-  ) : null;
+  useEffect(() => {
+    if (error && !didToast.current) {
+      didToast.current = true;
+      try { toast.error(error); } catch {}
+    }
+  }, [error]);
+
+  if (!position) return null;
+
+  return (
+    <>
+      <Marker icon={userDotIcon} position={[position.lat, position.lng]} />
+      {typeof accuracy === 'number' && accuracy > 0 && accuracy < 5000 && (
+        <Circle
+          center={[position.lat, position.lng]}
+          radius={accuracy}
+          pathOptions={{ color: '#4ea1ff', fillColor: '#4ea1ff', fillOpacity: 0.1 }}
+        />
+      )}
+    </>
+  );
 };
 
 interface MapContainerProps {

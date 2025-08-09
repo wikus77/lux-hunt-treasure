@@ -1,6 +1,6 @@
 // © 2025 NIYVORA KFT –Joseph MULÉ – M1SSION™
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useRoute } from 'wouter';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
@@ -12,15 +12,18 @@ export const QRQueryRedeemPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code')?.toUpperCase();
+    const searchParams = new URLSearchParams(window.location.search);
+    const [, routeParams] = useRoute('/qr/:code') || ([] as any);
+    const pathCode = (routeParams && (routeParams as any).code ? String((routeParams as any).code) : undefined)?.toUpperCase();
+    const queryCode = searchParams.get('code')?.toUpperCase();
+    const code = pathCode || queryCode;
 
     if (!user) {
       // Save redirect and go to login
       if (code) {
-        try { localStorage.setItem('post_login_redirect', `/qr?code=${code}`); } catch {}
+        try { localStorage.setItem('post_login_redirect', `/qr/${code}`); } catch {}
       }
-      setLocation(`/login${code ? `?redirect=${encodeURIComponent(`/qr?code=${code}`)}` : ''}`);
+      setLocation(`/login${code ? `?redirect=${encodeURIComponent(`/qr/${code}`)}` : ''}`);
       return;
     }
 
