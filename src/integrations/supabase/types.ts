@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          operationName?: string
-          query?: string
-          variables?: Json
-          extensions?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       abuse_alerts: {
@@ -3511,7 +3486,9 @@ export type Database = {
         Returns: boolean
       }
       qr_redeem: {
-        Args: { p_code: string }
+        Args:
+          | { p_code: string }
+          | { p_code: string; p_lat?: number; p_lon?: number }
         Returns: Json
       }
       record_intelligence_tool_usage: {
@@ -3721,9 +3698,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       referral_status: ["pending", "registered"],
