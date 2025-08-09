@@ -13,29 +13,12 @@ import { QrCode, MapPin, Target, Plus } from 'lucide-react';
 import L from 'leaflet';
 
 // Custom QR marker icon
-const qrMarkerIcon = new L.DivIcon({
-  html: `
-    <div style="
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, #4ade80, #22c55e);
-      border: 2px solid #16a34a;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      animation: pulse 2s infinite;
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
-      color: white;
-      font-weight: bold;
-    ">
-      📱
-    </div>
-  `,
-  className: '',
-  iconSize: [32, 32],
-  iconAnchor: [16, 16]
+import "@/styles/qr-pulse.css";const qrMarkerIcon = new L.DivIcon({
+  className: "",
+  html: '<div class="qr-pulse"><span class="pulse-dot"></span></div>',
+  iconSize: [20,20],
+  iconAnchor: [10,10],
+  popupAnchor: [0,-10]
 });
 
 interface QRLocation {
@@ -255,12 +238,6 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
                   <div style="
                     width: 24px;
                     height: 24px;
-                    background: #ff4444;
-                    border: 2px solid white;
-                    border-radius: 50%;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
                     animation: bounce 1s infinite;
                   ">
                     <span style="color: white; font-size: 12px;">+</span>
