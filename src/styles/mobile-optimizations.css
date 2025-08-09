@@ -1,5 +1,8 @@
 
 /* iOS Mobile Optimizations - Safe Area and Responsive Design */
+// © 2025 Joseph MULÉ – M1SSION™
+
+/* iOS Mobile Optimizations - Safe Area and Responsive Design */
 
 /* Safe Area Support for iOS devices */
 @supports (padding: max(0px)) {
@@ -158,3 +161,8 @@ html, body {
     -webkit-text-size-adjust: none;
   }
 }
+
+/* © 2025 Joseph MULÉ – M1SSION™ — Header safe-area fill */
+:root { --header-bg: #0b1220; }
+.app-header { position: sticky; top: 0; padding-top: env(safe-area-inset-top); background-color: var(--header-bg); z-index: 50; }
+.app-content { padding-top: 0; }

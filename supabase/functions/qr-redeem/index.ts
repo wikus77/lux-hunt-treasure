@@ -20,7 +20,7 @@ interface QRCode {
   location_name: string;
   lat: number;
   lng: number;
-  reward_type: 'buzz' | 'clue' | 'enigma' | 'fake';
+  reward_type: 'buzz' | 'buzz_gratis' | 'clue' | 'enigma' | 'fake';
   reward_content: any;
   is_used: boolean;
   expires_at: string | null;
@@ -131,28 +131,39 @@ Deno.serve(async (req) => {
     // Process reward based on type
     let rewardMessage = '';
     let rewardGranted: any = {};
+    let creditsAfter: number | undefined = undefined; // © 2025 Joseph MULÉ – M1SSION™
 
     switch (qr.reward_type) {
       case 'buzz':
+      case 'buzz_gratis': {
         // Grant free buzz credit
-        const { error: creditError } = await supabase
+        // Read current credits
+        const { data: existingCredits, error: readErr } = await supabase
           .from('user_credits')
-          .upsert({
-            user_id: user.id,
-            free_buzz_credit: 1
-          }, {
-            onConflict: 'user_id',
-            update: { free_buzz_credit: 'user_credits.free_buzz_credit + 1' }
-          });
-
-        if (creditError) {
-          console.error('Credit grant error:', creditError);
-          rewardMessage = 'Buzz trovato! (Errore nell\'aggiunta del credito)';
-        } else {
-          rewardMessage = '🎯 Fantastico! Hai trovato un BUZZ gratuito!';
-          rewardGranted = { type: 'buzz', value: 1 };
+          .select('free_buzz_credit')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (readErr) {
+          console.error('Credit read error:', readErr);
         }
+        const newValue = (existingCredits?.free_buzz_credit || 0) + 1;
+        if (existingCredits) {
+          const { error: updErr } = await supabase
+            .from('user_credits')
+            .update({ free_buzz_credit: newValue, updated_at: new Date().toISOString() })
+            .eq('user_id', user.id);
+          if (updErr) console.error('Credit update error:', updErr);
+        } else {
+          const { error: insErr } = await supabase
+            .from('user_credits')
+            .insert({ user_id: user.id, free_buzz_credit: 1 });
+          if (insErr) console.error('Credit insert error:', insErr);
+        }
+        creditsAfter = newValue || 1;
+        rewardMessage = '🎯 Fantastico! Hai trovato un BUZZ gratuito!';
+        rewardGranted = { type: 'buzz', value: 1, credits_after: creditsAfter };
         break;
+      }
 
       case 'clue':
         rewardMessage = qr.reward_content?.message || '🔍 Hai scoperto un indizio segreto!';
@@ -199,7 +210,8 @@ Deno.serve(async (req) => {
         message: rewardMessage,
         reward: rewardGranted,
         location: qr.location_name,
-        distance: Math.round(distance)
+        distance: Math.round(distance),
+        credits_after: creditsAfter
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

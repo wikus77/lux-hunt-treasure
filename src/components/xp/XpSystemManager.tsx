@@ -18,6 +18,8 @@ export const XpSystemManager: React.FC<XpSystemManagerProps> = ({
   const [, setLocation] = useLocation();
   
   const [rewardModalOpen, setRewardModalOpen] = useState(false);
+  // © 2025 Joseph MULÉ – M1SSION™
+  const [consumedThisSession, setConsumedThisSession] = useState(false);
   const [creditConfirmModal, setCreditConfirmModal] = useState<{
     open: boolean;
     type: 'buzz' | 'buzz_map' | null;
@@ -29,10 +31,10 @@ export const XpSystemManager: React.FC<XpSystemManagerProps> = ({
 
   // Show reward modal when new rewards are available
   useEffect(() => {
-    if (hasNewRewards && (xpStatus.free_buzz_credit > 0 || xpStatus.free_buzz_map_credit > 0)) {
+    if (hasNewRewards && !consumedThisSession && (xpStatus.free_buzz_credit > 0 || xpStatus.free_buzz_map_credit > 0)) {
       setRewardModalOpen(true);
     }
-  }, [hasNewRewards, xpStatus.free_buzz_credit, xpStatus.free_buzz_map_credit]);
+  }, [hasNewRewards, xpStatus.free_buzz_credit, xpStatus.free_buzz_map_credit, consumedThisSession]);
 
   // Notify parent components about credit availability
   useEffect(() => {
@@ -67,14 +69,21 @@ export const XpSystemManager: React.FC<XpSystemManagerProps> = ({
   const handleRewardModalClose = () => {
     setRewardModalOpen(false);
     markRewardsAsSeen();
+    setConsumedThisSession(true); // © 2025 Joseph MULÉ – M1SSION™
   };
 
   const handleRedirectToBuzz = () => {
-    setLocation('/buzz');
+    markRewardsAsSeen(); // © 2025 Joseph MULÉ – M1SSION™
+    setConsumedThisSession(true);
+    setRewardModalOpen(false);
+    setLocation('/buzz?free=1&reward=1');
   };
 
   const handleRedirectToBuzzMap = () => {
-    setLocation('/map');
+    markRewardsAsSeen(); // © 2025 Joseph MULÉ – M1SSION™
+    setConsumedThisSession(true);
+    setRewardModalOpen(false);
+    setLocation('/map?free=1&reward=1');
   };
 
   const handleCreditConfirm = async () => {

@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Action Button with Progressive Pricing & Universal Stripe In-App Payment
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { BuzzButton } from './BuzzButton';
 import { ShockwaveAnimation } from './ShockwaveAnimation';
@@ -10,6 +10,8 @@ import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { toast } from 'sonner';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 import { validateBuzzPrice } from '@/lib/constants/buzzPricing';
+import { supabase } from '@/integrations/supabase/client'; // © 2025 Joseph MULÉ – M1SSION™
+import { v4 as uuidv4 } from 'uuid'; // © 2025 Joseph MULÉ – M1SSION™
 
 interface BuzzActionButtonProps {
   isBlocked: boolean;
@@ -49,6 +51,76 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   });
 
   // © 2025 Joseph MULÉ – M1SSION™ – Progressive BUZZ Pricing Handler
+  // Free reward auto-consumption flow (query: free=1&reward=1)
+  const processedFree = useRef(false);
+
+  const removeFreeQueryParams = () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('free');
+      url.searchParams.delete('reward');
+      window.history.replaceState({}, '', url.pathname + (url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''));
+    } catch {}
+  };
+
+  const redeemFreeBuzz = async () => {
+    if (!user) {
+      toast.error('Devi essere loggato per usare il BUZZ gratuito');
+      return;
+    }
+    try {
+      // 1) Consume a free buzz credit via RPC
+      const { data: consumed, error: consumeErr } = await supabase.rpc('consume_credit', {
+        p_user_id: user.id,
+        p_credit_type: 'buzz'
+      });
+      if (consumeErr || !consumed) {
+        console.error('consume_credit error', consumeErr);
+        toast.error('Nessun credito BUZZ disponibile');
+        return;
+      }
+
+      // 2) Notify backend pipeline like a successful payment (free branch)
+      const freeIntentId = `FREE_${uuidv4()}`;
+      const { data: hbps, error: hbpsErr } = await supabase.functions.invoke('handle-buzz-payment-success', {
+        body: {
+          payment_intent_id: freeIntentId,
+          user_id: user.id,
+          amount: 0,
+          is_buzz_map: false,
+          metadata: { free: true, source: 'qr_reward_or_xp_reward' }
+        }
+      });
+      if (hbpsErr) {
+        console.warn('handle-buzz-payment-success warning', hbpsErr);
+      }
+
+      // 3) Run the usual BUZZ success flow (generate clue, UI, counters)
+      await updateDailyBuzzCounter();
+      await handleBuzz();
+      onSuccess();
+      toast.success('BUZZ gratuito utilizzato!');
+    } catch (e) {
+      console.error('redeemFreeBuzz exception', e);
+      toast.error('Errore durante il riscatto gratuito');
+    } finally {
+      removeFreeQueryParams();
+    }
+  };
+
+  useEffect(() => {
+    if (processedFree.current) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isFree = params.get('free') === '1';
+      if (isFree) {
+        processedFree.current = true;
+        redeemFreeBuzz();
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
   const handleStripePayment = async () => {
     console.log('🔥 M1SSION™ PROGRESSIVE BUZZ: Initiating payment', { 
       dailyCount: dailyBuzzCounter,
