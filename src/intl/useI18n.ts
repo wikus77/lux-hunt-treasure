@@ -37,12 +37,14 @@ async function loadTranslations(lang: SupportedLanguage): Promise<TranslationObj
   }
 
   try {
-    const response = await import(`./${lang}.json`);
-    const translations = response.default || response;
+    // © 2025 Joseph MULÉ – M1SSION™ — avoid bundler dynamic import issues
+    const res = await fetch(`/locales/${lang}.json`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const translations = await res.json();
     translationCache[lang] = translations;
     return translations;
   } catch (error) {
-    console.warn(`Failed to load translations for ${lang}, fallback to en`);
+    console.warn(`Failed to load translations for ${lang}, fallback to en`, error);
     if (lang !== 'en') {
       return loadTranslations('en');
     }
