@@ -1,29 +1,33 @@
 .qr-pulse {
+  position: relative;
   width: 20px;
   height: 20px;
-  transform: translate(-10px, -10px); /* centra l'icona */
 }
-.qr-pulse .pulse-dot {
-  position: relative;
-  display: block;
+
+.pulse-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 12px;
   height: 12px;
-  margin: 4px;                /* 20-12=8 -> centrato */
+  background-color: red;
   border-radius: 50%;
-  background: #ff3b30;        /* rosso iOS */
-  box-shadow: 0 0 8px rgba(255,59,48,0.8);
-  animation: qr-pulse 1.5s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 5px rgba(255, 0, 0, 0.7);
+  animation: pulse 1.5s infinite;
 }
-.qr-pulse .pulse-dot::after {
-  content: "";
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,59,48,0.6);
-  animation: qr-pulse-ring 1.5s ease-out infinite;
-}
-@keyframes qr-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
-@keyframes qr-pulse-ring {
-  0% { opacity: .7; transform: scale(.8); }
-  80%,100% { opacity: 0; transform: scale(1.5); }
+
+@keyframes pulse {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
 }
