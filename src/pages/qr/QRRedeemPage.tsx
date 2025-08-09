@@ -89,28 +89,68 @@ export const QRRedeemPage = () => {
         userLat: position?.lat,
         userLng: position?.lng,
       });
-      const { data, error } = await supabase.functions.invoke('qr-redeem', {
-        body: {
-          code: code.toUpperCase(),
-          userLat: position?.lat,
-          userLng: position?.lng,
-        },
+      const { data, error } = await supabase.rpc('qr_redeem', {
+        p_code: code.toUpperCase(),
+        p_lat: position?.lat ?? null,
+        p_lon: position?.lng ?? null,
       });
-      console.log('QR_REDEEM • response', { data, error });
+      console.log('QR_REDEEM • rpc response', { data, error });
 
       if (error) throw error;
 
-      setResult(data);
+      // Map RPC payload to local UI model
+      const payload: any = data as any;
+      const status = payload?.status as string | undefined;
+      let mapped: QRRedemptionResult;
+      switch (status) {
+        case 'ok':
+          mapped = {
+            success: true,
+            message: payload?.message || 'QR riscattato!',
+            reward: { type: payload?.reward_type },
+            location: (payload?.lat && payload?.lng) ? `${payload.lat}, ${payload.lng}` : undefined,
+            distance: payload?.distance_m ?? undefined,
+            maxDistance: payload?.max_distance_meters ?? undefined,
+          };
+          break;
+        case 'already_claimed':
+          mapped = {
+            success: false,
+            message: payload?.message || 'QR già riscattato',
+            error: 'already_claimed',
+          };
+          break;
+        case 'out_of_range':
+          mapped = {
+            success: false,
+            message: payload?.message || 'Sei fuori raggio dal QR',
+            error: 'out_of_range',
+            distance: payload?.distance_m ?? undefined,
+            maxDistance: payload?.max_distance_meters ?? undefined,
+          };
+          break;
+        case 'inactive':
+          mapped = { success: false, message: 'QR inattivo', error: 'inactive' };
+          break;
+        case 'not_found':
+          mapped = { success: false, message: 'QR non trovato', error: 'not_found' };
+          break;
+        case 'error':
+          mapped = { success: false, message: '', error: payload?.message || 'Errore' };
+          break;
+        default:
+          mapped = { success: false, message: '', error: 'Errore sconosciuto' };
+      }
 
-      if (data.success) {
-        toast.success(data.message);
-        
-        // Show specific reward notifications
-        if (data.reward?.type === 'buzz') {
+      setResult(mapped);
+
+      if (mapped.success) {
+        toast.success(mapped.message || 'QR riscattato!');
+        if (mapped.reward?.type === 'buzz') {
           toast.success('🎯 Buzz gratuito aggiunto al tuo account!');
         }
       } else {
-        toast.error(data.error || 'Errore nel riscatto del QR code');
+        toast.error(mapped.error || 'Errore nel riscatto del QR code');
       }
 
     } catch (error) {

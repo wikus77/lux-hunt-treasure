@@ -246,9 +246,6 @@ const WouterRoutes: React.FC = () => {
             {React.createElement(React.lazy(() => import('@/pages/qr/QRTestPage').then(module => ({ default: module.QRTestPage })) ))}
           </Route>
           {/* New query-based QR redeem: /qr?code=... */}
-          <Route path="/qr">
-            <QRQueryRedeemPage />
-          </Route>
           
           <Route path="/qr/validate">
             <ErrorBoundary fallback={
@@ -278,9 +275,6 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
           
-          <Route path="/qr/:code">
-            <QRRedeemPage />
-          </Route>
 
 
           {/* Legal routes */}

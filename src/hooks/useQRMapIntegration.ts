@@ -282,14 +282,12 @@ export const useQRMapIntegration = () => {
     try {
       const { data, error } = await supabase
         .from('qr_redemption_logs')
-        .select('qr_id, qr_code, code')
+        .select('qr_code_id')
         .eq('user_id', user.id);
       if (error) throw error;
       const next = new Set<string>();
       (data || []).forEach((row: any) => {
-        if (row.qr_code) next.add(row.qr_code);
-        if (row.code) next.add(row.code);
-        if (row.qr_id) next.add(row.qr_id);
+        if (row.qr_code_id) next.add(row.qr_code_id);
       });
       setClaimedSet(next);
     } catch (e) {
