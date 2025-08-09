@@ -6,8 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import L from 'leaflet';
-
+import { redPulseIcon } from './redPulseIcon';
 interface QRMapItem {
   id: string;
   code: string;
@@ -97,45 +96,6 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
     }
   };
 
-  // Custom icon for QR markers
-  const createQRIcon = (qr: QRMapItem) => {
-    const isInRange = isUserInRange(qr);
-    const isRedeemed = isUserAlreadyRedeemed(qr);
-    const color = getRewardColor(qr.reward_type);
-    const icon = getRewardIcon(qr.reward_type);
-
-    return L.divIcon({
-      html: `
-        <div style="
-          background: ${isRedeemed ? '#6b7280' : color};
-          color: white;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          border: 3px solid ${isInRange ? '#00ff00' : '#ffffff'};
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          ${isInRange ? 'animation: pulse 2s infinite;' : ''}
-        ">
-          ${icon}
-        </div>
-        <style>
-          @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 255, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 0, 0); }
-          }
-        </style>
-      `,
-      className: 'custom-qr-marker',
-      iconSize: [40, 40],
-      iconAnchor: [20, 20],
-    });
-  };
-
   if (isLoading) return null;
 
   return (
@@ -148,7 +108,7 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
           <Marker
             key={qr.id}
             position={[qr.lat, qr.lng]}
-            icon={createQRIcon(qr)}
+            icon={redPulseIcon}
           >
             <Popup>
               <div className="text-center space-y-3 min-w-[200px]">

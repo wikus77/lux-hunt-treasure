@@ -10,16 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { QrCode, MapPin, Target, Plus } from 'lucide-react';
-import L from 'leaflet';
-
-// Custom QR marker icon
-import "@/styles/qr-pulse.css";const qrMarkerIcon = new L.DivIcon({
-  className: "",
-  html: '<div class="qr-pulse"><span class="pulse-dot"></span></div>',
-  iconSize: [20,20],
-  iconAnchor: [10,10],
-  popupAnchor: [0,-10]
-});
+import { redPulseIcon } from './redPulseIcon';
 
 interface QRLocation {
   id: string;
@@ -198,7 +189,7 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
             <Marker
               key={qr.id}
               position={[qr.lat, qr.lon]}
-              icon={qrMarkerIcon}
+              icon={redPulseIcon}
               eventHandlers={{
                 click: () => handleQRClick(qr)
               }}
@@ -233,20 +224,7 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
           {selectedPosition && (
             <Marker
               position={[selectedPosition.lat, selectedPosition.lng]}
-              icon={L.divIcon({
-                html: `
-                  <div style="
-                    width: 24px;
-                    height: 24px;
-                    animation: bounce 1s infinite;
-                  ">
-                    <span style="color: white; font-size: 12px;">+</span>
-                  </div>
-                `,
-                className: '',
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-              })}
+              icon={redPulseIcon}
             >
               <Popup>
                 <div className="p-2">

@@ -2,8 +2,10 @@
   position: relative;
   width: 20px;
   height: 20px;
+  z-index: 600;
 }
 
+.leaflet-pane .qr-pulse { filter: drop-shadow(0 0 4px rgba(255,59,48,.7)); }
 .pulse-dot {
   position: absolute;
   top: 50%;

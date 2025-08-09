@@ -33,7 +33,7 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.rpc('qr_redeem', { code });
+        const { data, error } = await supabase.rpc('qr_redeem', { p_code: code });
         if (error) throw error;
 
         const resp = (data as unknown) as { status?: string; reward_type?: string; reward_value?: number };
