@@ -3486,7 +3486,7 @@ export type Database = {
         Returns: boolean
       }
       qr_redeem: {
-        Args: { code: string }
+        Args: { p_code: string }
         Returns: Json
       }
       record_intelligence_tool_usage: {
