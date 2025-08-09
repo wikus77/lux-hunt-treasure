@@ -182,20 +182,37 @@ export const useQRMapIntegration = () => {
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('qr-redeem', {
-        body: {
-          code: code.toUpperCase(),
-          userLat: userLocation?.lat,
-          userLng: userLocation?.lng
-        }
+      const { data, error } = await supabase.rpc('qr_redeem', {
+        p_code: code.toUpperCase(),
+        p_lat: userLocation?.lat ?? null,
+        p_lon: userLocation?.lng ?? null
       });
 
       if (error) throw error;
 
-      // Reload QR codes after redemption
+      // Normalize RPC payload into a predictable shape
+      const payload: any = (data && typeof data === 'object') ? data : {};
+      const status: string | undefined = payload?.status;
+      const success = status === 'ok';
+
+      // Reload QR codes after redemption attempt to refresh proximity/claimed
       await loadNearbyQRCodes();
 
-      return data;
+      const message = payload?.message ||
+        (status === 'ok' ? 'QR riscattato con successo' :
+         status === 'already_claimed' ? 'Hai già riscattato questo QR' :
+         status === 'inactive' ? 'QR disattivato' :
+         status === 'not_found' ? 'QR non valido' :
+         status === 'out_of_range' ? 'Sei troppo lontano dal QR' :
+         'Errore nel riscatto del QR');
+
+      return {
+        success,
+        status,
+        ...(payload as Record<string, any>),
+        message,
+        error: success ? undefined : message
+      };
 
     } catch (error) {
       console.error('QR redemption error:', error);
