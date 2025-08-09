@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
+import { MapContainer as LeafletMapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { useLocation } from 'wouter';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -11,9 +11,29 @@ import BuzzMapButton from '@/components/map/BuzzMapButton';
 import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { userDotIcon } from '@/components/map/userDotIcon';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
+
+// Centers map on user once and shows a user location marker
+const CenterOnUserOnce: React.FC = () => {
+  const map = useMap();
+  const didCenter = useRef(false);
+  const { position } = useGeolocation();
+
+  useEffect(() => {
+    if (position && !didCenter.current) {
+      didCenter.current = true;
+      map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 13), { animate: true });
+    }
+  }, [position, map]);
+
+  return position ? (
+    <Marker icon={userDotIcon} position={[position.lat, position.lng]} />
+  ) : null;
+};
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -146,6 +166,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
+        <CenterOnUserOnce />
         
         {/* Map Content */}
         <MapContent

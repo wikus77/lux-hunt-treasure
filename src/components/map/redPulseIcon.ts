@@ -2,7 +2,7 @@
 import L from 'leaflet';
 
 export const redPulseIcon = new L.DivIcon({
-  className: '',
+  className: 'qr-divicon',
   html: '<div class="qr-pulse"><span class="pulse-dot"></span></div>',
   iconSize: [20, 20],
   iconAnchor: [10, 10],

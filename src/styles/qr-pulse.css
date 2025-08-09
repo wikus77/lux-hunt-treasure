@@ -33,3 +33,23 @@
     opacity: 1;
   }
 }
+
+/* Rimuovi quadrato e bordo del DivIcon solo per i QR */
+.qr-divicon {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* User dot styles */
+.user-divicon {
+  background: transparent !important;
+  border: none !important;
+}
+.user-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #4ea1ff;
+  box-shadow: 0 0 0 6px rgba(78, 161, 255, 0.25);
+}
