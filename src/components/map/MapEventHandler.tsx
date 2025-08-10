@@ -1,6 +1,8 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
+const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
+let __eventFallbackWarned = false;
 
 interface MapEventHandlerProps {
   isAddingSearchArea: boolean;
@@ -42,11 +44,16 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
   useEffect(() => {
     if (!map) return;
     
-    const handleMapClick = (e: L.LeafletMouseEvent) => {
+    const handleMapClick = (e: any) => {
+      const hasLatLng = e && e.latlng && typeof e.latlng.lat === 'number' && typeof e.latlng.lng === 'number';
+      const lat = hasLatLng ? e.latlng.lat : FALLBACK_MILAN.lat;
+      const lng = hasLatLng ? e.latlng.lng : FALLBACK_MILAN.lng;
+      if (!hasLatLng && !__eventFallbackWarned) { console.warn('geoloc unavailable – fallback Milano'); __eventFallbackWarned = true; }
+
       if (isAddingSearchArea) {
-        handleMapClickArea(e);
+        handleMapClickArea({ ...e, latlng: { lat, lng } });
       } else if (isAddingMapPoint) {
-        onMapPointClick(e.latlng.lat, e.latlng.lng);
+        onMapPointClick(lat, lng);
       }
     };
     

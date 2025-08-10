@@ -1,9 +1,11 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
 
-export const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
+export const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
+const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
+let __geolocWarned = false;
 
 export const useMapLogic = () => {
   const [isAddingPoint, setIsAddingPoint] = useState(false);
@@ -46,6 +48,7 @@ export const useMapLogic = () => {
           toast.success("Posizione rilevata");
         },
         (error) => {
+          if (!__geolocWarned) { console.warn('geoloc unavailable – fallback Milano'); __geolocWarned = true; }
           console.error("Error getting location:", error);
           toast.error("Errore nel rilevare la posizione");
         }
@@ -60,22 +63,26 @@ export const useMapLogic = () => {
   };
 
   const handleMapClickArea = (e) => {
-    if (isAddingSearchArea) {
-      const { lat, lng } = e.latlng;
-      if (pendingRadius !== null) {
-        const newArea = {
-          id: String(Date.now()),
-          lat,
-          lng,
-          radius: pendingRadius,
-        };
-        handleAddArea(newArea);
-        setPendingRadius(null);
-        setIsAddingSearchArea(false);
-        toast.success('Area di ricerca aggiunta!');
-      } else {
-        toast.error('Definisci prima il raggio di ricerca.'); // Changed from warn to error
-      }
+    if (!isAddingSearchArea) return;
+
+    const hasLatLng = e && e.latlng && typeof e.latlng.lat === 'number' && typeof e.latlng.lng === 'number';
+    const lat = hasLatLng ? e.latlng.lat : FALLBACK_MILAN.lat;
+    const lng = hasLatLng ? e.latlng.lng : FALLBACK_MILAN.lng;
+    if (!hasLatLng && !__geolocWarned) { console.warn('geoloc unavailable – fallback Milano'); __geolocWarned = true; }
+
+    if (pendingRadius !== null) {
+      const newArea = {
+        id: String(Date.now()),
+        lat,
+        lng,
+        radius: pendingRadius,
+      };
+      handleAddArea(newArea);
+      setPendingRadius(null);
+      setIsAddingSearchArea(false);
+      toast.success('Area di ricerca aggiunta!');
+    } else {
+      toast.error('Definisci prima il raggio di ricerca.');
     }
   };
 

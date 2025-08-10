@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React from 'react';
@@ -27,23 +27,28 @@ export const QRMarkers = () => {
 
   return (
     <>
-      {qrMarkers.map((marker) => (
-        <div
-          key={marker.id}
-          style={{
-            position: 'absolute',
-            left: `${marker.lng}%`,
-            top: `${marker.lat}%`,
-            transform: 'translate(-50%, -50%)',
-            zIndex: 1000,
-            ...getQRMarkerStyle(marker)
-          }}
-          onClick={() => handleQRClick(marker.code, marker.isInRange)}
-          title={`QR: ${marker.location_name} (${marker.distance}m)`}
-        >
-          
-        </div>
-      ))}
+      {qrMarkers.map((marker) => {
+        const top = typeof (marker as any)?.lat === 'number' ? (marker as any).lat : 0;
+        const left = typeof (marker as any)?.lng === 'number' ? (marker as any).lng : 0;
+        const inRange = Boolean((marker as any)?.isInRange);
+        return (
+          <div
+            key={marker.id}
+            style={{
+              position: 'absolute',
+              left: `${left}%`,
+              top: `${top}%`,
+              transform: 'translate(-50%, -50%)',
+              zIndex: 1000,
+              ...getQRMarkerStyle(marker)
+            }}
+            onClick={() => handleQRClick(marker.code, inRange)}
+            title={`QR: ${marker.location_name} (${marker.distance}m)`}
+          >
+            
+          </div>
+        );
+      })}
     </>
   );
 };

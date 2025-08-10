@@ -1,7 +1,9 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import { useState, useCallback, useRef } from 'react';
 import L from 'leaflet';
 import { toast } from 'sonner';
+const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
+let __mapFallbackWarned = false;
 
 export const useMapInitialization = (
   isAddingMapPoint: boolean,
@@ -26,19 +28,15 @@ export const useMapInitialization = (
     
     // Add direct click handler to the map as a fallback mechanism
     map.on('click', (e: L.LeafletMouseEvent) => {
-      console.log("🔍 DIRECT MAP CLICK via mapRef", {
-        isAdding: isAddingMapPoint || isAddingPoint,
-        isAddingArea: isAddingSearchArea,
-        latlng: e.latlng
-      });
-      
-      // Only handle if in adding mode
+      const hasLatLng = e && (e as any).latlng && typeof (e as any).latlng.lat === 'number' && typeof (e as any).latlng.lng === 'number';
+      const lat = hasLatLng ? (e as any).latlng.lat : FALLBACK_MILAN.lat;
+      const lng = hasLatLng ? (e as any).latlng.lng : FALLBACK_MILAN.lng;
+      if (!hasLatLng && !__mapFallbackWarned) { console.warn('geoloc unavailable – fallback Milano'); __mapFallbackWarned = true; }
+
       if (isAddingMapPoint || isAddingPoint) {
-        console.log("✅ Processing direct map click for point");
-        hookHandleMapPointClick(e.latlng.lat, e.latlng.lng);
+        hookHandleMapPointClick(lat, lng);
       } else if (isAddingSearchArea) {
-        console.log("✅ Processing direct map click for search area");
-        handleMapClickArea(e);
+        handleMapClickArea({ ...(e as any), latlng: { lat, lng } });
       }
     });
     
