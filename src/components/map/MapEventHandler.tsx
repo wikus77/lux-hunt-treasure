@@ -1,8 +1,7 @@
-// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
+// © 2025 All Rights Reserved – M1MISSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
-let __eventFallbackWarned = false;
+import { safeLatLng } from '@/pages/map/utils/safeLatLng';
 
 interface MapEventHandlerProps {
   isAddingSearchArea: boolean;
@@ -22,48 +21,39 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
   onMapPointClick
 }) => {
   const map = useMap();
-  
-  // Handle cursor style based on mode
+
   useEffect(() => {
     if (!map) return;
-    
+
     const mapContainer = map.getContainer();
-    
-    if (isAddingMapPoint || isAddingSearchArea) {
-      mapContainer.style.cursor = 'crosshair';
-    } else {
-      mapContainer.style.cursor = 'grab';
-    }
-    
+
+    mapContainer.style.cursor = isAddingMapPoint || isAddingSearchArea ? 'crosshair' : 'grab';
     return () => {
       mapContainer.style.cursor = 'grab';
     };
   }, [map, isAddingMapPoint, isAddingSearchArea]);
-  
-  // Handle map click events
+
   useEffect(() => {
     if (!map) return;
-    
+
     const handleMapClick = (e: any) => {
-      const hasLatLng = e && e.latlng && typeof e.latlng.lat === 'number' && typeof e.latlng.lng === 'number';
-      const lat = hasLatLng ? e.latlng.lat : FALLBACK_MILAN.lat;
-      const lng = hasLatLng ? e.latlng.lng : FALLBACK_MILAN.lng;
-      if (!hasLatLng && !__eventFallbackWarned) { console.warn('geoloc unavailable – fallback Milano'); __eventFallbackWarned = true; }
+      const ll = safeLatLng(e);
+      if (!ll) return; // early exit, provider handles fallback separately
 
       if (isAddingSearchArea) {
-        handleMapClickArea({ ...e, latlng: { lat, lng } });
+        handleMapClickArea({ ...e, latlng: { lat: ll.lat, lng: ll.lng } });
       } else if (isAddingMapPoint) {
-        onMapPointClick(lat, lng);
+        onMapPointClick(ll.lat, ll.lng);
       }
     };
-    
+
     map.on('click', handleMapClick);
-    
+
     return () => {
       map.off('click', handleMapClick);
     };
   }, [map, isAddingSearchArea, isAddingMapPoint, handleMapClickArea, onMapPointClick]);
-  
+
   return null;
 };
 

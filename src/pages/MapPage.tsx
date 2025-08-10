@@ -1,10 +1,11 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import MapContainer from './map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import MapDebugger from './map/components/MapDebugger';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
+import { MapStateProvider } from './map/MapStateProvider';
 
 const MapPage: React.FC = () => {
   
@@ -62,46 +63,47 @@ const MapPage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-[100dvh] w-full overflow-hidden" style={{
+      <div className="flex flex-col h-[100dvh] w/full overflow-hidden" style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
       }}>
         <MapPageHeader />
-        
-        <div 
-          className="flex-1 relative w-full"
-          style={{
-            minHeight: '400px',
-            height: 'calc(100dvh - 152px)',
-            maxWidth: '100vw',
-            overflow: 'hidden'
-          }}
-        >
-          <MapContainer
-            isAddingPoint={isAddingPoint}
-            setIsAddingPoint={setIsAddingPoint}
-            addNewPoint={addNewPoint}
-            mapPoints={mapPoints}
-            activeMapPoint={activeMapPoint}
-            setActiveMapPoint={setActiveMapPoint}
-            handleUpdatePoint={updateMapPoint}
-            deleteMapPoint={deleteMapPoint}
-            newPoint={newPoint}
-            handleSaveNewPoint={savePoint}
-            handleCancelNewPoint={() => {
-              console.log('🗺️ Map point creation cancelled');
+        <MapStateProvider>
+          <div 
+            className="flex-1 relative w-full"
+            style={{
+              minHeight: '400px',
+              height: 'calc(100dvh - 152px)',
+              maxWidth: '100vw',
+              overflow: 'hidden'
             }}
-            handleBuzz={handleBuzz}
-            isAddingSearchArea={isAddingSearchArea}
-            handleMapClickArea={handleMapClickArea}
-            searchAreas={searchAreas}
-            setActiveSearchArea={setActiveSearchArea}
-            deleteSearchArea={deleteSearchArea}
-            setPendingRadius={setPendingRadius}
-            requestLocationPermission={requestLocationPermission}
-            toggleAddingSearchArea={toggleAddingSearchArea}
-          />
-        </div>
+          >
+            <MapContainer
+              isAddingPoint={isAddingPoint}
+              setIsAddingPoint={setIsAddingPoint}
+              addNewPoint={addNewPoint}
+              mapPoints={mapPoints}
+              activeMapPoint={activeMapPoint}
+              setActiveMapPoint={setActiveMapPoint}
+              handleUpdatePoint={updateMapPoint}
+              deleteMapPoint={deleteMapPoint}
+              newPoint={newPoint}
+              handleSaveNewPoint={savePoint}
+              handleCancelNewPoint={() => {
+                console.log('🗺️ Map point creation cancelled');
+              }}
+              handleBuzz={handleBuzz}
+              isAddingSearchArea={isAddingSearchArea}
+              handleMapClickArea={handleMapClickArea}
+              searchAreas={searchAreas}
+              setActiveSearchArea={setActiveSearchArea}
+              deleteSearchArea={deleteSearchArea}
+              setPendingRadius={setPendingRadius}
+              requestLocationPermission={requestLocationPermission}
+              toggleAddingSearchArea={toggleAddingSearchArea}
+            />
+          </div>
+        </MapStateProvider>
       </div>
 
       {/* Debug component for development */}
