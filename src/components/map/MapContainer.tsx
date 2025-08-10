@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
 import { useLocation } from 'wouter';
@@ -15,8 +15,8 @@ import { useGeolocation } from '@/hooks/useGeolocation';
 import { userDotIcon } from '@/components/map/userDotIcon';
 import { toast } from 'sonner';
 
-// Default location (Rome)
-const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
+// Default location (Milan)
+const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
 
 // Centers map on user once and shows a user location marker + accuracy circle
 const CenterOnUserOnce: React.FC = () => {
