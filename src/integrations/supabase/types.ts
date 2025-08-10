@@ -1825,40 +1825,58 @@ export type Database = {
       }
       qr_codes: {
         Row: {
+          center_lat: number | null
+          center_lon: number | null
           code: string
           created_at: string
           created_by: string | null
+          expires_at: string | null
           id: string
           is_active: boolean
           is_hidden: boolean
           lat: number | null
           lng: number | null
+          max_uses_per_user: number | null
+          max_uses_total: number | null
+          radius_m: number | null
           reward_type: string
           reward_value: number
           title: string
         }
         Insert: {
+          center_lat?: number | null
+          center_lon?: number | null
           code: string
           created_at?: string
           created_by?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           is_hidden?: boolean
           lat?: number | null
           lng?: number | null
+          max_uses_per_user?: number | null
+          max_uses_total?: number | null
+          radius_m?: number | null
           reward_type: string
           reward_value?: number
           title: string
         }
         Update: {
+          center_lat?: number | null
+          center_lon?: number | null
           code?: string
           created_at?: string
           created_by?: string | null
+          expires_at?: string | null
           id?: string
           is_active?: boolean
           is_hidden?: boolean
           lat?: number | null
           lng?: number | null
+          max_uses_per_user?: number | null
+          max_uses_total?: number | null
+          radius_m?: number | null
           reward_type?: string
           reward_value?: number
           title?: string
@@ -1909,6 +1927,47 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "qr_buzz_codes"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      qr_redemptions: {
+        Row: {
+          code: string
+          id: string
+          lat: number | null
+          lon: number | null
+          redeemed_at: string
+          reward_type: string
+          reward_value: number
+          user_id: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          redeemed_at?: string
+          reward_type: string
+          reward_value: number
+          user_id: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          lat?: number | null
+          lon?: number | null
+          redeemed_at?: string
+          reward_type?: string
+          reward_value?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qr_redemptions_code_fk"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["code"]
           },
         ]
       }
@@ -2196,6 +2255,24 @@ export type Database = {
           status?: string
           tier?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_balances: {
+        Row: {
+          buzz_credit: number
+          buzz_map_credit: number
+          user_id: string
+        }
+        Insert: {
+          buzz_credit?: number
+          buzz_map_credit?: number
+          user_id: string
+        }
+        Update: {
+          buzz_credit?: number
+          buzz_map_credit?: number
           user_id?: string
         }
         Relationships: []
@@ -2540,6 +2617,33 @@ export type Database = {
           free_buzz_map_credit?: number
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_custom_rewards: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          reward_value: number | null
+          title: string | null
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          reward_value?: number | null
+          title?: string | null
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          reward_value?: number | null
+          title?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2931,6 +3035,7 @@ export type Database = {
           created_at: string | null
           email: string | null
           id: string
+          is_admin: boolean
           name: string | null
           nome: string | null
           numero_civico: string | null
@@ -2946,6 +3051,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id: string
+          is_admin?: boolean
           name?: string | null
           nome?: string | null
           numero_civico?: string | null
@@ -2961,6 +3067,7 @@ export type Database = {
           created_at?: string | null
           email?: string | null
           id?: string
+          is_admin?: boolean
           name?: string | null
           nome?: string | null
           numero_civico?: string | null
@@ -3361,6 +3468,10 @@ export type Database = {
           agent_code: string
         }[]
       }
+      get_my_balance: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_user_by_email: {
         Args: { email_param: string }
         Returns: unknown[]
@@ -3411,6 +3522,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: boolean
       }
+      haversine_m: {
+        Args: { lat1: number; lon1: number; lat2: number; lon2: number }
+        Returns: number
+      }
       increment_buzz_counter: {
         Args: { p_user_id: string }
         Returns: number
@@ -3446,6 +3561,19 @@ export type Database = {
       is_ip_blocked: {
         Args: { ip_addr: unknown }
         Returns: boolean
+      }
+      list_my_redemptions: {
+        Args: { limit_rows?: number; offset_rows?: number }
+        Returns: {
+          code: string
+          id: string
+          lat: number | null
+          lon: number | null
+          redeemed_at: string
+          reward_type: string
+          reward_value: number
+          user_id: string
+        }[]
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
@@ -3485,10 +3613,24 @@ export type Database = {
         }
         Returns: boolean
       }
+      qr_admin_upsert: {
+        Args: {
+          p_code: string
+          p_title: string
+          p_reward_type: string
+          p_reward_value: number
+          p_days_valid?: number
+          p_max_total?: number
+          p_max_per_user?: number
+          p_center_lat?: number
+          p_center_lon?: number
+          p_radius_m?: number
+          p_is_active?: boolean
+        }
+        Returns: Json
+      }
       qr_redeem: {
-        Args:
-          | { p_code: string }
-          | { p_code: string; p_lat?: number; p_lon?: number }
+        Args: { p_code: string; p_lat?: number; p_lon?: number }
         Returns: Json
       }
       record_intelligence_tool_usage: {
