@@ -1,8 +1,9 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import { useState, useCallback } from 'react';
 import { useAuthContext } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { safeLatLng } from '@/pages/map/utils/safeLatLng';
 
 export const useNewMapPage = () => {
   const { user } = useAuthContext();
@@ -112,10 +113,13 @@ export const useNewMapPage = () => {
   const handleMapClickArea = useCallback((e: any) => {
     if (!isAddingSearchArea || !user) return;
 
+    const ll = safeLatLng(e);
+    if (!ll) return; // early return, provider handles fallback
+
     const area = {
       id: `area-${Date.now()}`,
-      lat: e.latlng.lat,
-      lng: e.latlng.lng,
+      lat: ll.lat,
+      lng: ll.lng,
       radius: pendingRadius,
       label: `Area ${searchAreas.length + 1}`
     };

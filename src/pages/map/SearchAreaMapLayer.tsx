@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
@@ -23,13 +23,19 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   setActiveSearchArea,
   deleteSearchArea
 }) => {
-  if (searchAreas.length === 0) {
+  if (!searchAreas || searchAreas.length === 0) {
+    return null;
+  }
+
+  const validAreas = searchAreas.filter(a => Number.isFinite(a?.lat) && Number.isFinite(a?.lng) && Number.isFinite(a?.radius));
+  if (validAreas.length === 0) {
+    if (import.meta.env.DEV) console.warn('Layer skipped: missing lat/lng', { comp: 'SearchAreaMapLayer' });
     return null;
   }
 
   return (
     <>
-      {searchAreas.map((area) => (
+      {validAreas.map((area) => (
         <Circle
           key={area.id}
           center={[area.lat, area.lng]}

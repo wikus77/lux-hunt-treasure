@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useRef, useEffect } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
@@ -11,6 +11,7 @@ import MapZoomControls from './components/MapZoomControls';
 import HelpDialog from './components/HelpDialog';
 import FinalShotButton from '@/components/map/FinalShotButton';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+import { useMapState } from './MapStateProvider';
 
 // Default location (Rome)
 const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
@@ -70,6 +71,16 @@ const MapContainer: React.FC<MapContainerProps> = ({
   
   // Get BUZZ areas
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
+  
+  // Map state provider
+  const { status, center } = useMapState();
+
+  // Keep local tuple in sync for controls that require [number, number]
+  useEffect(() => {
+    if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) {
+      setMapCenter([center.lat, center.lng]);
+    }
+  }, [center]);
 
   // Handle map ready with iOS-specific optimizations
   const handleMapReady = (map: L.Map) => {
@@ -135,6 +146,21 @@ const MapContainer: React.FC<MapContainerProps> = ({
 
   console.log('🗺️ Rendering MapContainer with', currentWeekAreas.length, 'BUZZ areas');
 
+  // Conditional render: do not mount map until center is ready
+  if (!center) {
+    return (
+      <div 
+        className="map-container-wrapper flex items-center justify-center"
+        style={{ height: '100%', width: '100%', position: 'relative', minHeight: '400px' }}
+      >
+        <div className="flex flex-col items-center justify-center gap-3 z-10">
+          <div className="h-8 w-8 rounded-full border-2 border-muted-foreground/30 border-t-foreground animate-spin" />
+          <p className="text-sm text-muted-foreground">Mappa in caricamento…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="map-container-wrapper"
@@ -146,7 +172,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
       }}
     >
       <LeafletMapContainer 
-        center={DEFAULT_LOCATION} 
+        center={mapCenter} 
         zoom={13}
         style={mapContainerStyle}
         className="map-container z-10"

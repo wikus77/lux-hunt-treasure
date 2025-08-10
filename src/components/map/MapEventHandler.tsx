@@ -1,4 +1,4 @@
-// © 2025 All Rights Reserved – M1MISSION™ – NIYVORA KFT Joseph MULÉ
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import { safeLatLng } from '@/pages/map/utils/safeLatLng';

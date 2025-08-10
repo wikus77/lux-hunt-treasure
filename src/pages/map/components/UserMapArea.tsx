@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
 import { Circle, Popup } from 'react-leaflet';
 
@@ -19,11 +19,13 @@ interface UserMapAreasProps {
 const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
   console.log('🗺️ UserMapAreas - Rendering areas:', areas.length);
 
-  if (areas.length === 0) {
+  const validAreas = (areas || []).filter(a => Number.isFinite(a?.lat) && Number.isFinite(a?.lng) && Number.isFinite(a?.radius_km));
+  if (validAreas.length === 0) {
+    if (import.meta.env.DEV) console.warn('Layer skipped: missing lat/lng', { comp: 'UserMapAreas' });
     return null;
   }
 
-  const latestArea = areas.reduce((latest, current) => {
+  const latestArea = validAreas.reduce((latest, current) => {
     const latestTime = new Date(latest.created_at).getTime();
     const currentTime = new Date(current.created_at).getTime();
     return currentTime > latestTime ? current : latest;

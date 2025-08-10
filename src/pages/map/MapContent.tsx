@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import UserMapAreas from './components/UserMapArea';

@@ -1,3 +1,4 @@
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
@@ -44,62 +45,70 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
   return (
     <>
       {/* Existing map points */}
-      {mapPoints.map(point => (
-        <Marker 
-          key={point.id} 
-          position={[point.lat || point.latitude, point.lng || point.longitude]} 
-          icon={createMarkerIcon()}
-          eventHandlers={{
-            click: () => {
-              setActiveMapPoint(point.id);
-              setEditTitle(point.title || '');
-              setEditNote(point.note || '');
-            }
-          }}
-        >
-          {activeMapPoint === point.id && (
-            <Popup 
+      {mapPoints
+        .map(point => {
+          const lat = typeof point.lat === 'number' ? point.lat : (typeof point.latitude === 'number' ? point.latitude : null);
+          const lng = typeof point.lng === 'number' ? point.lng : (typeof point.longitude === 'number' ? point.longitude : null);
+          if (!Number.isFinite(lat as number) || !Number.isFinite(lng as number)) {
+            return null;
+          }
+          return (
+            <Marker 
+              key={point.id} 
+              position={[lat as number, lng as number]} 
+              icon={createMarkerIcon()}
               eventHandlers={{
-                popupclose: () => setActiveMapPoint(null)
+                click: () => {
+                  setActiveMapPoint(point.id);
+                  setEditTitle(point.title || '');
+                  setEditNote(point.note || '');
+                }
               }}
             >
-              <div className="p-2 space-y-2">
-                <Input 
-                  value={editTitle} 
-                  onChange={e => setEditTitle(e.target.value)} 
-                  placeholder="Titolo punto" 
-                  className="mb-2"
-                />
-                <Textarea 
-                  value={editNote} 
-                  onChange={e => setEditNote(e.target.value)}
-                  placeholder="Note aggiuntive"
-                  className="mb-2"
-                  rows={3}
-                />
-                <div className="flex space-x-2">
-                  <Button 
-                    size="sm" 
-                    onClick={() => handleUpdatePoint(point.id, editTitle, editNote)}
-                  >
-                    Salva
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="destructive"
-                    onClick={() => deleteMapPoint(point.id)}
-                  >
-                    Elimina
-                  </Button>
-                </div>
-              </div>
-            </Popup>
-          )}
-        </Marker>
-      ))}
+              {activeMapPoint === point.id && (
+                <Popup 
+                  eventHandlers={{
+                    popupclose: () => setActiveMapPoint(null)
+                  }}
+                >
+                  <div className="p-2 space-y-2">
+                    <Input 
+                      value={editTitle} 
+                      onChange={e => setEditTitle(e.target.value)} 
+                      placeholder="Titolo punto" 
+                      className="mb-2"
+                    />
+                    <Textarea 
+                      value={editNote} 
+                      onChange={e => setEditNote(e.target.value)}
+                      placeholder="Note aggiuntive"
+                      className="mb-2"
+                      rows={3}
+                    />
+                    <div className="flex space-x-2">
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleUpdatePoint(point.id, editTitle, editNote)}
+                      >
+                        Salva
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => deleteMapPoint(point.id)}
+                      >
+                        Elimina
+                      </Button>
+                    </div>
+                  </div>
+                </Popup>
+              )}
+            </Marker>
+          );
+        })}
 
       {/* New point being added */}
-      {newPoint && (
+      {newPoint && Number.isFinite(newPoint?.lat) && Number.isFinite(newPoint?.lng) && (
         <Marker 
           position={[newPoint.lat, newPoint.lng]}
           icon={createMarkerIcon()}

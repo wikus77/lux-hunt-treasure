@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useEffect } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,6 +16,7 @@ interface Prize {
 const PrizeAreaOverlay: React.FC = () => {
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [loading, setLoading] = useState(true);
+  let warnedOnce = false;
 
   useEffect(() => {
     const fetchPrizes = async () => {
@@ -36,10 +37,15 @@ const PrizeAreaOverlay: React.FC = () => {
 
         // 🚨 ADDITIONAL VALIDATION: Filter out invalid coordinates
         const validPrizes = (data || []).filter(prize => 
-          prize.lat && prize.lng && 
+          Number.isFinite(prize?.lat) && Number.isFinite(prize?.lng) &&
           prize.lat !== 0 && prize.lng !== 0 &&
           Math.abs(prize.lat) <= 90 && Math.abs(prize.lng) <= 180
         );
+
+        if (import.meta.env.DEV && !warnedOnce && (data?.length ?? 0) !== validPrizes.length) {
+          console.warn('Layer skipped: missing/invalid lat/lng', { comp: 'PrizeAreaOverlay' });
+          warnedOnce = true;
+        }
 
         console.log('🗺️ PrizeAreaOverlay: Valid prizes found:', validPrizes.length);
         setPrizes(validPrizes);
@@ -54,9 +60,10 @@ const PrizeAreaOverlay: React.FC = () => {
     fetchPrizes();
   }, []);
 
-  if (loading || prizes.length === 0) {
-    return null;
-  }
+  if (loading) return null;
+
+  const renderable = prizes.filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lng));
+  if (renderable.length === 0) return null;
 
   return (
     <>
