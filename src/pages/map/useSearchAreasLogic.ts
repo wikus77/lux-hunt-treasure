@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { SearchArea } from "@/components/maps/types";
@@ -9,7 +9,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { clues } from "@/data/cluesData";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { supabase } from "@/integrations/supabase/client";
-
+import { safeLatLng } from "@/pages/map/utils/safeLatLng";
 export function useSearchAreasLogic(defaultLocation: [number, number]) {
   const [storageAreas, setStorageAreas] = useLocalStorage<SearchArea[]>("map-search-areas", []);
   const [searchAreas, setSearchAreas] = useState<SearchArea[]>(storageAreas || []);
@@ -104,96 +104,71 @@ export function useSearchAreasLogic(defaultLocation: [number, number]) {
   };
 
   const handleMapClickArea = async (e: any) => {
-    console.log("Map click event received:", e);
-    console.log("isAddingSearchArea state:", isAddingSearchArea);
+    if (!isAddingSearchArea) {
+      if (import.meta.env.DEV) console.log("Not in adding search area mode");
+      return;
+    }
 
-    if (isAddingSearchArea && e.latlng) {
-      try {
-        // Extract coordinates from the event
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-        const radius = pendingRadiusRef.current;
-        
-        console.log("Coordinate selezionate:", lat, lng);
-        console.log("Raggio utilizzato:", radius);
+    const ll = safeLatLng(e);
+    if (!ll) {
+      if (import.meta.env.DEV) console.warn('Layer skipped: missing lat/lng', { comp: 'useSearchAreasLogic (root).handleMapClickArea' });
+      return;
+    }
 
-        // Get the current user session
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (!sessionData?.session?.user) {
-          console.error("User not authenticated");
-          toast.error("Utente non autenticato");
-          setIsAddingSearchArea(false);
-          return;
-        }
-        
-        const userId = sessionData.session.user.id;
-        
-        // Create new search area object
-        const newArea: SearchArea = {
-          id: uuidv4(),
-          lat, 
+    try {
+      const lat = ll.lat;
+      const lng = ll.lng;
+      const radius = pendingRadiusRef.current;
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user) {
+        console.error("User not authenticated");
+        toast.error("Utente non autenticato");
+        setIsAddingSearchArea(false);
+        return;
+      }
+
+      const userId = sessionData.session.user.id;
+
+      const newArea: SearchArea = {
+        id: uuidv4(),
+        lat,
+        lng,
+        radius,
+        label: `Area di ricerca ${searchAreasThisWeek + 1}`,
+        color: "#00f0ff",
+        position: { lat, lng }
+      };
+
+      const { data, error } = await supabase
+        .from('search_areas')
+        .insert({
+          user_id: userId,
+          lat,
           lng,
           radius,
-          label: `Area di ricerca ${searchAreasThisWeek + 1}`,
-          color: "#00f0ff",
-          position: { lat, lng }
-        };
-        
-        console.log("Area generata:", newArea);
+          label: newArea.label
+        })
+        .select();
 
-        // Save to Supabase
-        const { data, error } = await supabase
-          .from('search_areas')
-          .insert({
-            user_id: userId,
-            lat: lat,
-            lng: lng,
-            radius: radius,
-            label: newArea.label
-          })
-          .select();
-
-        if (error) {
-          console.error("Error saving search area:", error);
-          toast.error("Si è verificato un errore nel salvare l'area di ricerca");
-          setIsAddingSearchArea(false);
-          return;
-        }
-
-        console.log("Area saved to Supabase:", data);
-        
-        // Update the newArea ID with the one from Supabase
-        if (data && data[0]) {
-          newArea.id = data[0].id;
-        }
-
-        // Update search areas count
-        setSearchAreasThisWeek(prev => prev + 1);
-
-        // Update state with the new area
-        setSearchAreas(prevAreas => {
-          console.log("Aree precedenti:", prevAreas);
-          const newAreas = [...prevAreas, newArea];
-          console.log("Aree aggiornate:", newAreas);
-          return newAreas;
-        });
-
-        // Set the newly created area as active
-        setActiveSearchArea(newArea.id);
-        
-        // Reset adding state
+      if (error) {
+        console.error("Error saving search area:", error);
+        toast.error("Si è verificato un errore nel salvare l'area di ricerca");
         setIsAddingSearchArea(false);
-        console.log("Modalità aggiunta area disattivata, cursore ripristinato");
-        
-        toast.success("Area di ricerca aggiunta alla mappa");
-      } catch (error) {
-        console.error("Error adding search area:", error);
-        setIsAddingSearchArea(false);
-        toast.error("Si è verificato un errore nell'aggiunta dell'area");
+        return;
       }
-    } else {
-      console.log("Not in adding search area mode or latLng is missing");
+
+      if (data && data[0]) newArea.id = data[0].id;
+
+      setSearchAreasThisWeek(prev => prev + 1);
+      setSearchAreas(prevAreas => [...prevAreas, newArea]);
+      setActiveSearchArea(newArea.id);
+      setIsAddingSearchArea(false);
+      toast.success("Area di ricerca aggiunta alla mappa");
+    } catch (error) {
+      console.error("Error adding search area:", error);
+      setIsAddingSearchArea(false);
+      toast.error("Si è verificato un errore nell'aggiunta dell'area");
     }
   };
 

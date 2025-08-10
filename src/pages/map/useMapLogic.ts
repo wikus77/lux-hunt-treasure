@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
-
+import { safeLatLng } from '@/pages/map/utils/safeLatLng';
 export const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
 const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
 let __geolocWarned = false;
@@ -65,16 +65,17 @@ export const useMapLogic = () => {
   const handleMapClickArea = (e) => {
     if (!isAddingSearchArea) return;
 
-    const hasLatLng = e && e.latlng && typeof e.latlng.lat === 'number' && typeof e.latlng.lng === 'number';
-    const lat = hasLatLng ? e.latlng.lat : FALLBACK_MILAN.lat;
-    const lng = hasLatLng ? e.latlng.lng : FALLBACK_MILAN.lng;
-    if (!hasLatLng && !__geolocWarned) { console.warn('geoloc unavailable – fallback Milano'); __geolocWarned = true; }
+    const ll = safeLatLng(e);
+    if (!ll) {
+      if (!__geolocWarned) { console.warn('Layer skipped: missing lat/lng', { comp: 'useMapLogic.handleMapClickArea' }); __geolocWarned = true; }
+      return;
+    }
 
     if (pendingRadius !== null) {
       const newArea = {
         id: String(Date.now()),
-        lat,
-        lng,
+        lat: ll.lat,
+        lng: ll.lng,
         radius: pendingRadius,
       };
       handleAddArea(newArea);
