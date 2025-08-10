@@ -1922,6 +1922,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "qr_redemption_logs_qr_code_fk"
+            columns: ["qr_code_id"]
+            isOneToOne: false
+            referencedRelation: "qr_codes"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "qr_redemption_logs_qr_code_id_fkey"
             columns: ["qr_code_id"]
             isOneToOne: false
