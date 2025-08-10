@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 import React, { useState, useEffect } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,14 +36,13 @@ const PrizeAreaOverlay: React.FC = () => {
         }
 
         // 🚨 CRITICAL: Filter out prizes without proper location coordinates
-        const validPrizes = (data || []).filter(prize => {
-          const hasValidCoords = prize.lat !== null && prize.lng !== null && 
-                                prize.lat !== 0 && prize.lng !== 0;
-          
-          if (!hasValidCoords) {
-            console.warn('🚨 PrizeAreaOverlay: Prize without valid coordinates filtered out:', prize.id);
+        const validPrizes = (data || []).filter((prize: any) => {
+          const hasValidCoords = Number.isFinite(prize?.lat) && Number.isFinite(prize?.lng);
+          if (!hasValidCoords && import.meta.env.DEV) {
+            console.groupCollapsed('[MAP] invalid lat/lng filtered in PrizeAreaOverlay');
+            console.log('prizeId:', prize?.id, 'lat:', prize?.lat, 'lng:', prize?.lng);
+            console.groupEnd();
           }
-          
           return hasValidCoords;
         });
 

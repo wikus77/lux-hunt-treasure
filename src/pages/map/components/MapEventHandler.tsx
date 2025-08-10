@@ -1,4 +1,4 @@
-// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
+// © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import { safeLatLng } from '@/pages/map/utils/safeLatLng';
@@ -45,6 +45,8 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
   useEffect(() => {
     if (!map) return;
 
+    const CLICK_KEY = '__m1_click_bound__';
+
     const handleMapClick = (e: any) => {
       const ll = safeLatLng(e);
       if (import.meta.env.DEV) {
@@ -64,10 +66,18 @@ const MapEventHandler: React.FC<MapEventHandlerProps> = ({
       }
     };
 
+    if ((map as any)[CLICK_KEY]) {
+      if (import.meta.env.DEV) console.groupCollapsed('[MAP] click handler already bound');
+      if (import.meta.env.DEV) console.groupEnd();
+      return;
+    }
+    (map as any)[CLICK_KEY] = true;
+
     map.on('click', handleMapClick);
 
     return () => {
       map.off('click', handleMapClick);
+      try { delete (map as any)[CLICK_KEY]; } catch {}
       if (import.meta.env.DEV) console.log('🗑️ Map click listener removed');
     };
   }, [map, isAddingSearchArea, isAddingMapPoint, handleMapClickArea, onMapPointClick]);

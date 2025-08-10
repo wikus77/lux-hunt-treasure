@@ -1,4 +1,4 @@
-
+// © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 import React, { useState } from 'react';
 import { Circle, Popup } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,18 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
 }) => {
   const [hoveredArea, setHoveredArea] = useState<string | null>(null);
 
+  const validAreas = (searchAreas || []).filter((a) =>
+    Number.isFinite(a?.lat) && Number.isFinite(a?.lng) && Number.isFinite(a?.radius)
+  );
+  if (import.meta.env.DEV) {
+    const filtered = (searchAreas || []).length - validAreas.length;
+    if (filtered > 0) {
+      console.groupCollapsed('[MAP] invalid lat/lng filtered in SearchAreaMapLayer');
+      console.log('discarded:', filtered);
+      console.groupEnd();
+    }
+  }
+
   const handleDelete = async (areaId: string, areaLabel: string) => {
     try {
       const success = await deleteSearchArea(areaId);
@@ -30,14 +42,14 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
 
   return (
     <>
-      {searchAreas.map((area) => {
+      {validAreas.map((area) => {
         const isHovered = hoveredArea === area.id;
         
         return (
           <Circle
             key={`search-area-${area.id}`}
-            center={[area.lat, area.lng]}
-            radius={area.radius}
+            center={[area.lat as number, area.lng as number]}
+            radius={area.radius as number}
             className="search-area-pulse"
             pathOptions={{
               color: "#00f0ff",
@@ -61,7 +73,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
             <Popup>
               <div className="p-1">
                 <div className="font-medium mb-2">{area.label || "Area di ricerca"}</div>
-                <div className="text-sm mb-3">Raggio: {(area.radius/1000).toFixed(1)} km</div>
+                <div className="text-sm mb-3">Raggio: {((area.radius as number)/1000).toFixed(1)} km</div>
                 <div className="flex gap-2">
                   <Button 
                     size="sm" 

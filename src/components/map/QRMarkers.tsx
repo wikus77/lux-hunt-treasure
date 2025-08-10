@@ -1,5 +1,4 @@
-// © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 
 import React from 'react';
 import { useQRMapIntegration } from '@/hooks/useQRMapIntegration';
@@ -28,9 +27,17 @@ export const QRMarkers = () => {
   return (
     <>
       {qrMarkers.map((marker) => {
-        const top = typeof (marker as any)?.lat === 'number' ? (marker as any).lat : 0;
-        const left = typeof (marker as any)?.lng === 'number' ? (marker as any).lng : 0;
+        const top = Number.isFinite((marker as any)?.lat) ? (marker as any).lat : null;
+        const left = Number.isFinite((marker as any)?.lng) ? (marker as any).lng : null;
         const inRange = Boolean((marker as any)?.isInRange);
+        if (top === null || left === null) {
+          if (import.meta.env.DEV) {
+            console.groupCollapsed('[MAP] invalid lat/lng filtered in QRMarkers');
+            console.log(marker);
+            console.groupEnd();
+          }
+          return null;
+        }
         return (
           <div
             key={marker.id}
@@ -45,7 +52,7 @@ export const QRMarkers = () => {
             onClick={() => handleQRClick(marker.code, inRange)}
             title={`QR: ${marker.location_name} (${marker.distance}m)`}
           >
-            
+            {getQRMarkerIcon(marker.reward_type)}
           </div>
         );
       })}

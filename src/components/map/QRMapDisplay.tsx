@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 
 import React, { useEffect, useState } from 'react';
 import { Marker, Popup } from 'react-leaflet';
@@ -98,9 +98,19 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
 
   if (isLoading) return null;
 
+  const validQRCodes = (qrCodes || []).filter((qr: any) => {
+    const ok = Number.isFinite(qr?.lat) && Number.isFinite(qr?.lng);
+    if (!ok && import.meta.env.DEV) {
+      console.groupCollapsed('[MAP] invalid lat/lng filtered in QRMapDisplay');
+      console.log('qrId:', qr?.id, 'lat:', qr?.lat, 'lng:', qr?.lng);
+      console.groupEnd();
+    }
+    return ok;
+  });
+
   return (
     <>
-      {qrCodes.map((qr) => {
+      {validQRCodes.map((qr) => {
         const isInRange = isUserInRange(qr);
         const isRedeemed = isUserAlreadyRedeemed(qr);
         
