@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "m1ssion-eu",
+    "public": "dist",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "redirects": [
+      { "source": "/**", "destination": "https://m1ssion.eu/:splat", "type": 301 }
+    ]
+  }
+}
