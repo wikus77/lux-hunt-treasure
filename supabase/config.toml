@@ -14,3 +14,6 @@ port = 54322
 enabled = true
 port = 54323
 
+[functions.create_qr_code]
+# Keep JWT verification enabled (authenticated admin only)
+verify_jwt = true

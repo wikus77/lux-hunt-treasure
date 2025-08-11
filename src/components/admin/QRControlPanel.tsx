@@ -13,6 +13,7 @@ import { QrCode, MapPin, Gift, AlertTriangle, Calendar, BarChart3, Printer } fro
 import { Badge } from '@/components/ui/badge';
 import QRCodeLib from 'qrcode';
 import jsPDF from 'jspdf';
+import { QRInlineMap } from './QRInlineMap';
 
 interface QRCode {
   id: string;
@@ -55,15 +56,18 @@ export const QRControlPanel = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   
-  // Form state
+// Form state
   const [formData, setFormData] = useState({
     locationName: '',
-    lat: '',
-    lng: '',
-    rewardType: 'buzz' as 'buzz' | 'clue' | 'enigma' | 'fake',
+    lat: '', // UI display (6 decimals)
+    lng: '', // UI display (6 decimals)
+    rewardType: 'buzz_credit' as 'buzz_credit' | 'custom',
     rewardContent: '',
     expiresAt: ''
   });
+  // Full-precision coordinates kept separately
+  const [latFull, setLatFull] = useState<number | null>(null);
+  const [lngFull, setLngFull] = useState<number | null>(null);
 
   useEffect(() => {
     loadQRCodes();
@@ -118,135 +122,86 @@ export const QRControlPanel = () => {
     }
   };
 
-  const generateQRCode = async () => {
-    // 🔥 FIXED: Enhanced validation with better error messages
+const generateQRCode = async () => {
+    // Validazioni base
     if (!formData.locationName.trim()) {
-      toast.error('⚠️ Nome posizione obbligatorio');
+      toast.error('⚠️ Titolo/Nome posizione obbligatorio');
       return;
     }
-    
-    if (!formData.lat || formData.lat.trim() === '') {
-      toast.error('⚠️ Latitudine obbligatoria');
+
+    const latNum = (latFull ?? (formData.lat ? parseFloat(formData.lat.replace(',', '.')) : NaN));
+    const lngNum = (lngFull ?? (formData.lng ? parseFloat(formData.lng.replace(',', '.')) : NaN));
+
+    if (!isFinite(latNum)) {
+      toast.error('⚠️ Latitudine non valida (es: 45.464664)');
       return;
     }
-    
-    if (!formData.lng || formData.lng.trim() === '') {
-      toast.error('⚠️ Longitudine obbligatoria');
+    if (!isFinite(lngNum)) {
+      toast.error('⚠️ Longitudine non valida (es: 9.188540)');
       return;
     }
-    
-    const lat = parseFloat(formData.lat.replace(',', '.'));
-    const lng = parseFloat(formData.lng.replace(',', '.'));
-    
-    if (isNaN(lat)) {
-      toast.error('⚠️ Latitudine non valida (es: 52.520008)');
-      return;
-    }
-    
-    if (isNaN(lng)) {
-      toast.error('⚠️ Longitudine non valida (es: 13.404954)');
-      return;
-    }
-    
-    if (lat < -90 || lat > 90) {
+    if (latNum < -90 || latNum > 90) {
       toast.error('⚠️ Latitudine deve essere tra -90 e 90');
       return;
     }
-    
-    if (lng < -180 || lng > 180) {
+    if (lngNum < -180 || lngNum > 180) {
       toast.error('⚠️ Longitudine deve essere tra -180 e 180');
       return;
     }
-    
-    console.log('🔥 QR GENERATION DEBUG:', {
-      locationName: formData.locationName,
-      lat: lat,
-      lng: lng,
-      rewardType: formData.rewardType,
-      rewardContent: formData.rewardContent
-    });
+    if (!formData.rewardType) {
+      toast.error('⚠️ Tipo reward obbligatorio');
+      return;
+    }
+    if (formData.rewardType === 'custom' && !formData.rewardContent.trim()) {
+      toast.warning('⚠️ Nessun messaggio personalizzato: proseguo comunque');
+    }
 
     try {
       setIsCreating(true);
 
-      // 🔥 CRITICAL FIX: Use UUID as both ID and QR code for consistency
-      const newId = crypto.randomUUID();
-      console.log('🔥 GENERATED UUID:', newId);
+      const payload = {
+        title: formData.locationName || 'QR Manuale',
+        reward_type: formData.rewardType,
+        lat: latNum,
+        lng: lngNum,
+        message: formData.rewardContent || null,
+        expires_at: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null,
+      };
 
-      // Prepare reward content
-      let rewardContent = {};
-      if (formData.rewardType === 'clue' && formData.rewardContent) {
-        rewardContent = { message: formData.rewardContent };
-      } else if (formData.rewardType === 'enigma' && formData.rewardContent) {
-        rewardContent = { enigma: formData.rewardContent };
-      } else if (formData.rewardType === 'fake' && formData.rewardContent) {
-        rewardContent = { fakeMessage: formData.rewardContent };
-      }
+      const { data, error } = await supabase.functions.invoke('create_qr_code', { body: payload });
+      if (error) throw new Error(error.message || 'Errore funzione');
+      const created = data as any;
 
-      // 🔥 FIXED: Insert into qr_rewards table with proper reward mapping
-      let rewardTypeMapping = '';
-      switch (formData.rewardType) {
-        case 'buzz': rewardTypeMapping = 'buzz_gratis'; break;
-        case 'clue': rewardTypeMapping = 'indizio_segreto'; break;
-        case 'enigma': rewardTypeMapping = 'enigma_misterioso'; break;
-        case 'fake': rewardTypeMapping = 'sorpresa_speciale'; break;
-        default: rewardTypeMapping = 'buzz_gratis';
-      }
-
-      // 🔥 FIXED: Get actual user ID instead of email string
-      const { data: { user } } = await supabase.auth.getUser();
-      const creatorId = user?.id || 'system';
-
-      // 🔥 FIX: Insert QR reward with proper field structure
-      const { error: insertError } = await supabase
-        .from('qr_rewards')
-        .insert({
-          id: newId,
-          reward_type: rewardTypeMapping,
-          message: formData.rewardContent || 'Reward M1SSION™ sbloccato!',
-          lat: lat,
-          lon: lng,
-          location_name: formData.locationName,
+      // Aggiorna lista locale (no refetch pesante)
+      setQrCodes((prev) => [
+        {
+          id: created.code, // usiamo il code come id visualizzato/di stampa
+          reward_type: created.reward_type,
+          message: created.message || '',
+          lat: created.lat,
+          lon: created.lng,
+          location_name: created.title || payload.title,
           max_distance_meters: 100,
-          attivo: true,
+          attivo: created.is_active ?? true,
           scansioni: 0,
           redeemed_by: [],
-          creato_da: creatorId,
-          expires_at: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null
-        });
+          expires_at: created.expires_at,
+          creato_da: 'me',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        } as QRCode,
+        ...prev,
+      ]);
 
-      if (insertError) throw insertError;
+      // Reset form (mantieni mappa pulita)
+      setFormData({ locationName: '', lat: '', lng: '', rewardType: 'buzz_credit', rewardContent: '', expiresAt: '' });
+      setLatFull(null);
+      setLngFull(null);
 
-      const shortCode = newId.replace(/-/g, '').toUpperCase().substring(0, 8);
-      toast.success(`QR Code ${shortCode} creato con successo!`);
-      
-      console.log('✅ QR SUCCESSFULLY CREATED:', {
-        id: newId,
-        shortCode: shortCode,
-        url: `https://m1ssion.eu/qr/${newId}`,
-        rewardType: rewardTypeMapping,
-        location: formData.locationName
-      });
-      
-      // Reset form
-      setFormData({
-        locationName: '',
-        lat: '',
-        lng: '',
-        rewardType: 'buzz',
-        rewardContent: '',
-        expiresAt: ''
-      });
-
-      // Reload data
-      loadQRCodes();
-      loadStats();
-
-      // Show QR code for printing with reward message - use full UUID
-      showQRForPrinting(newId, formData);
-
-    } catch (error) {
-      console.error('Error creating QR code:', error);
+      // Apri modale stampa esistente con il nuovo codice
+      showQRForPrinting(created.code, { rewardType: created.reward_type, locationName: created.title });
+    } catch (e: any) {
+      console.error('Error creating QR code:', e);
       toast.error('Errore nella creazione del QR code');
     } finally {
       setIsCreating(false);
@@ -443,16 +398,14 @@ export const QRControlPanel = () => {
     });
   };
 
-  const showQRForPrinting = (code: string, formData: any) => {
-    // 🔥 FIXED: Generate reward message based on type - handles both form data and QR record
+const showQRForPrinting = (code: string, formData: any) => {
     let rewardMessage = 'REWARD CLASIFICATO';
-    
-    // Handle both form data and existing QR record
     const rewardType = formData.rewardType || formData.reward_type;
-    
+
     switch (rewardType) {
       case 'buzz':
       case 'buzz_gratis':
+      case 'buzz_credit':
         rewardMessage = '⚡ BUZZ GRATUITO';
         break;
       case 'clue':
@@ -467,9 +420,10 @@ export const QRControlPanel = () => {
       case 'sorpresa_speciale':
         rewardMessage = '🌀 SORPRESA SPECIALE';
         break;
+      case 'custom':
+        rewardMessage = '🎁 REWARD PERSONALIZZATO';
+        break;
     }
-    
-    // 🔥 USE NEW ADVANCED QR GENERATION WITH REWARD MESSAGE
     generatePrintableQR(code, rewardMessage);
   };
 
@@ -495,22 +449,26 @@ export const QRControlPanel = () => {
     }
   };
 
-  const getRewardIcon = (type: string) => {
+const getRewardIcon = (type: string) => {
     switch (type) {
-      case 'buzz_gratis': return '⚡';
+      case 'buzz_gratis':
+      case 'buzz_credit': return '⚡';
       case 'indizio_segreto': return '🔍';
       case 'enigma_misterioso': return '🧩';
       case 'sorpresa_speciale': return '🌀';
+      case 'custom': return '🎁';
       default: return '❓';
     }
   };
 
-  const getRewardColor = (type: string) => {
+const getRewardColor = (type: string) => {
     switch (type) {
-      case 'buzz_gratis': return 'bg-green-100 text-green-800';
+      case 'buzz_gratis':
+      case 'buzz_credit': return 'bg-green-100 text-green-800';
       case 'indizio_segreto': return 'bg-blue-100 text-blue-800';
       case 'enigma_misterioso': return 'bg-purple-100 text-purple-800';
-      case 'sorpresa_speciale': return 'bg-orange-100 text-orange-800';
+      case 'sorpresa_speciale':
+      case 'custom': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -571,34 +529,22 @@ export const QRControlPanel = () => {
               />
             </div>
             <div>
-              <Label htmlFor="rewardType">Tipo Reward *</Label>
+<Label htmlFor="rewardType">Tipo Reward *</Label>
               <Select value={formData.rewardType} onValueChange={(value: any) => setFormData({ ...formData, rewardType: value })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="z-[100] max-h-[300px] overflow-y-auto bg-card border border-border shadow-xl backdrop-blur-md">
-                  <SelectItem value="buzz" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                  <SelectItem value="buzz_credit" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">⚡</span>
-                      <span>Buzz Gratuito</span>
+                      <span>Buzz Credit</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="clue" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                  <SelectItem value="custom" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">🔍</span>
-                      <span>Indizio Segreto</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="enigma" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">🧩</span>
-                      <span>Enigma Misterioso</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="fake" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">🌀</span>
-                      <span>Sorpresa Speciale</span>
+                      <span className="text-lg">🎁</span>
+                      <span>Custom</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -608,14 +554,19 @@ export const QRControlPanel = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="lat">Latitudine * <span className="text-xs text-gray-500">(-90 a +90)</span></Label>
+<Label htmlFor="lat">Latitudine * <span className="text-xs text-gray-500">(-90 a +90)</span></Label>
               <Input
                 id="lat"
                 type="number"
                 step="any"
                 value={formData.lat}
-                onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-                placeholder="52.520008 (Berlin)"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFormData({ ...formData, lat: v });
+                  const num = parseFloat(v);
+                  if (isFinite(num)) setLatFull(num);
+                }}
+                placeholder="45.464664 (Milano)"
                 className={!formData.lat || isNaN(parseFloat(formData.lat)) ? 'border-red-300' : 'border-green-300'}
               />
               {formData.lat && isNaN(parseFloat(formData.lat)) && (
@@ -629,8 +580,13 @@ export const QRControlPanel = () => {
                 type="number"
                 step="any"
                 value={formData.lng}
-                onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-                placeholder="13.404954 (Berlin)"
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFormData({ ...formData, lng: v });
+                  const num = parseFloat(v);
+                  if (isFinite(num)) setLngFull(num);
+                }}
+                placeholder="9.188540 (Milano)"
                 className={!formData.lng || isNaN(parseFloat(formData.lng)) ? 'border-red-300' : 'border-green-300'}
               />
               {formData.lng && isNaN(parseFloat(formData.lng)) && (
@@ -639,7 +595,7 @@ export const QRControlPanel = () => {
             </div>
           </div>
           
-          {/* 🔥 COORDINATE HELPER */}
+{/* 🔥 COORDINATE HELPER */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <h4 className="text-sm font-semibold text-blue-800 mb-2">📍 Coordinate Esempio:</h4>
             <div className="grid grid-cols-2 gap-2 text-xs">
@@ -659,22 +615,25 @@ export const QRControlPanel = () => {
             </div>
           </div>
 
-          {(formData.rewardType === 'clue' || formData.rewardType === 'enigma' || formData.rewardType === 'fake') && (
+          {/* Inline Map for picking coordinates */}
+          <QRInlineMap
+            lat={latFull ?? (formData.lat ? parseFloat(formData.lat) : undefined)}
+            lng={lngFull ?? (formData.lng ? parseFloat(formData.lng) : undefined)}
+            onChange={(la, lo) => {
+              setLatFull(la);
+              setLngFull(lo);
+              setFormData((s) => ({ ...s, lat: la.toFixed(6), lng: lo.toFixed(6) }));
+            }}
+          />
+
+{(formData.rewardType === 'custom') && (
             <div>
-              <Label htmlFor="rewardContent">
-                {formData.rewardType === 'clue' && 'Testo Indizio'}
-                {formData.rewardType === 'enigma' && 'Testo Enigma'}
-                {formData.rewardType === 'fake' && 'Messaggio Depistaggio'}
-              </Label>
+              <Label htmlFor="rewardContent">Messaggio (opzionale)</Label>
               <Textarea
                 id="rewardContent"
                 value={formData.rewardContent}
                 onChange={(e) => setFormData({ ...formData, rewardContent: e.target.value })}
-                placeholder={
-                  formData.rewardType === 'clue' ? 'Inserisci il testo dell\'indizio...' :
-                  formData.rewardType === 'enigma' ? 'Inserisci il testo dell\'enigma...' :
-                  'Inserisci il messaggio di depistaggio...'
-                }
+                placeholder={'Inserisci il messaggio personalizzato...'}
                 rows={3}
               />
             </div>
