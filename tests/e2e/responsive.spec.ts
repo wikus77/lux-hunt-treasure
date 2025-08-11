@@ -7,11 +7,9 @@ for (const [name, viewport] of Object.entries(viewports)) {
     const page = await context.newPage();
 
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.waitForSelector('body', { state: 'visible', timeout: 10000 });
 
-    // Fai un check minimale che la home si carichi
     await expect(page.locator('body')).toBeVisible();
-
     await context.close();
   });
 }
