@@ -17,21 +17,38 @@ type QRRow = {
 
 export default function QRRedeemPage() {
   const [, params] = useRoute<{ code: string }>('/qr/:code');
-  const code = (params?.code ?? '').toUpperCase();
+  const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const raw = (params?.code ?? search.get('c') ?? '').trim();
+  const code = raw.toUpperCase();
   const [row, setRow] = useState<QRRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [done, setDone] = useState(false);
 
   useEffect(() => {
     (async () => {
-      if (!code) return setLoading(false);
-      const { data, error } = await supabase.from('qr_codes')
-        .select('code,reward_type,title,is_active,lat,lng,message')
-        .eq('code', code)
-        .maybeSingle();
-      if (error) toast.error('QR non valido');
-      setRow((data as any) || null);
-      setLoading(false);
+      if (!code) { setLoading(false); return; }
+      try {
+        const envBase = (import.meta as any).env?.VITE_QR_VALIDATE_URL as string | undefined;
+        const base = envBase || 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/validate-qr';
+        const res = await fetch(`${base}?c=${encodeURIComponent(code)}`, { method: 'GET' });
+        if (!res.ok) throw new Error('validate_failed');
+        const j = await res.json();
+        if (j?.valid) {
+          setRow({
+            code,
+            reward_type: j?.reward?.type || 'buzz_credit',
+            title: j?.title ?? null,
+            is_active: true,
+            lat: j?.lat ?? null,
+            lng: j?.lng ?? null,
+            message: j?.message ?? null,
+          });
+        } else {
+          setRow(null); toast.error('QR non valido');
+        }
+      } catch {
+        setRow(null); toast.error('QR non valido');
+      } finally { setLoading(false); }
     })();
   }, [code]);
 

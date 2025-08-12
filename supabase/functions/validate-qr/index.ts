@@ -49,14 +49,15 @@ Deno.serve(async (req) => {
     // Read minimal fields known to exist
     const { data: qr, error } = await s
       .from('qr_codes')
-      .select('code,is_active,reward_type,title')
+      .select('code,is_active,reward_type,title,lat,lng,message,expires_at,reward_buzz')
       .eq('code', code)
       .maybeSingle()
 
     if (error) throw error
 
-    if (!qr || qr.is_active !== true) {
-      console.log({ op: 'validate', code, valid: false, reason: 'not_found_or_inactive' })
+    const expired = qr?.expires_at ? new Date(qr.expires_at as any) <= new Date() : false
+    if (!qr || qr.is_active !== true || expired) {
+      console.log({ op: 'validate', code, valid: false, reason: 'not_found_inactive_or_expired' })
       return new Response(JSON.stringify({ valid: false }), {
         status: 404,
         headers: { ...corsHeaders, 'content-type': 'application/json' },
@@ -65,10 +66,13 @@ Deno.serve(async (req) => {
 
     const payload = {
       valid: true,
-      reward: { buzz: 1 }, // valore placeholder, la logica ricompense rimane lato server
+      reward: { type: 'buzz_credit', buzz: Number((qr as any).reward_buzz ?? 1) },
       one_time: true,
       tag: qr.reward_type || 'buzz_credit',
       title: qr.title || null,
+      lat: (qr as any).lat ?? null,
+      lng: (qr as any).lng ?? null,
+      message: (qr as any).message ?? null,
     }
 
     console.log({ op: 'validate', code, valid: true })

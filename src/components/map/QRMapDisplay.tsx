@@ -90,7 +90,7 @@ return (
               icon={icon(qr.is_active)}
               eventHandlers={{
                 click: () => {
-                  const url = `/qr?c=${encodeURIComponent(qr.code)}`;
+                  const url = `/qr/${encodeURIComponent(qr.code)}`;
                   if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
                   window.location.href = url;
                 }
@@ -116,7 +116,7 @@ return (
                   )}
                   {(qr.is_active && userLocation) && (inRange ? (
                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
-                      const url = `/qr?c=${encodeURIComponent(qr.code)}`;
+                      const url = `/qr/${encodeURIComponent(qr.code)}`;
                       if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
                       window.location.href = url;
                     }}>🎯 Riscatta</Button>
