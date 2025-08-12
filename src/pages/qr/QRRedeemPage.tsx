@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { KEY as POST_LOGIN_KEY } from '@/utils/postLoginRedirectFixed';
+import { validateQR, redeemQR } from '@/lib/qr/api';
 
 const TRACE_ID = 'M1QR-TRACE';
 const FUNCTIONS_BASE = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
@@ -35,22 +36,15 @@ useEffect(() => {
   (async () => {
     if (!code) { setLoading(false); return; }
     try {
-      const envBase = (import.meta as any).env?.VITE_QR_VALIDATE_URL as string | undefined;
-      const base = envBase || `${FUNCTIONS_BASE}/validate-qr`;
-      const url = `${base}?c=${encodeURIComponent(code)}`;
       if (import.meta.env.DEV) {
-        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:start', code, url, ts: Date.now() });
-        console.debug(TRACE_ID, { tag:'M1QR', step:'endpoints', VITE_QR_VALIDATE_URL: envBase || null, VITE_QR_REDEEM_URL: (import.meta as any).env?.VITE_QR_REDEEM_URL || null, functions_base: FUNCTIONS_BASE, origin: (typeof window!=='undefined'?window.location.origin:undefined) });
+        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:start', code, ts: Date.now() });
       }
-      const res = await fetch(url, { method: 'GET' });
-      const status = res.status;
-      const ok = res.ok;
-      let j: any = null;
-      try { j = ok ? await res.json() : null; } catch {}
+      const r = await validateQR(code);
       if (import.meta.env.DEV) {
-        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, url, status, ok, allow_origin: res.headers.get('access-control-allow-origin') || null, ts: Date.now() });
+        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, status: r.status, ok: r.ok, allow_origin: r.allow, ts: Date.now() });
       }
-      if (ok && j?.valid === true) {
+      const j: any = r.body;
+      if (r.ok && j?.valid === true) {
         setRow({
           code,
           reward_type: j?.reward?.type || 'buzz_credit',
@@ -60,17 +54,16 @@ useEffect(() => {
           lng: j?.lng ?? null,
           message: j?.message ?? null,
         });
-      } else if (ok && j && j.valid === false) {
+      } else if (r.status === 404 || (r.ok && j && j.valid === false)) {
         setRow(null); toast.error('QR non valido');
-      } else if (status === 404) {
-        setRow(null); toast.error('QR non valido');
-      } else if (status === 401 || status === 403) {
+      } else if (r.status === 401 || r.status === 403) {
         setRow(null); toast.error('Permessi insufficienti');
       } else {
         setRow(null); toast.error('Problema di rete o permessi');
       }
-    } catch {
+    } catch (e) {
       setRow(null); toast.error('Problema di rete o permessi');
+      if (import.meta.env.DEV) console.debug(TRACE_ID, { tag:'M1QR', step:'validate:error', code, error: String((e as any)?.message || e) });
     } finally { setLoading(false); }
   })();
 }, [code]);
@@ -97,14 +90,10 @@ const redeem = async () => {
   if (import.meta.env.DEV) {
     console.debug(TRACE_ID, { tag:'M1QR', step:'redeem:start', code, url: redeemUrl, ts: Date.now() });
   }
-  const attempt = async () => {
-    const { error } = await supabase.functions.invoke('redeem_qr', { body: { code } });
-    if (error) throw error;
-  };
   let tries = 0; const delays = [250, 500, 1000];
   while (tries < 3) {
     try {
-      await attempt();
+      await redeemQR(code);
       toast.success('Riscatto completato!');
       setDone(true);
       if (import.meta.env.DEV) console.debug(TRACE_ID, { tag:'M1QR', step:'redeem:end', code, status: 200, ts: Date.now() });
