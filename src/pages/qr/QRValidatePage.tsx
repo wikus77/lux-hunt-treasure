@@ -34,9 +34,9 @@ const QRValidatePage: React.FC = () => {
       return;
     }
 
-    console.log('QR_VALIDATE • auth → /qr/redeem/' + code);
+    console.log('QR_VALIDATE • auth → /qr/' + code);
     actedRef.current = true;
-    navigate(`/qr/redeem/${encodeURIComponent(code)}`);
+    navigate(`/qr/${encodeURIComponent(code)}`);
   }, [code, isAuthenticated, isLoading, navigate]);
 
   return (

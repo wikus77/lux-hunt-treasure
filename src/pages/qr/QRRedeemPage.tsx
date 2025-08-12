@@ -4,6 +4,7 @@ import { useRoute } from 'wouter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { KEY as POST_LOGIN_KEY } from '@/utils/postLoginRedirectFixed';
 
 const TRACE_ID = 'M1QR-TRACE';
 const FUNCTIONS_BASE = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
@@ -24,9 +25,11 @@ export default function QRRedeemPage() {
   const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
   const raw = (p1?.code ?? p2?.code ?? search.get('c') ?? '').trim();
   const code = raw.toUpperCase();
-  const [row, setRow] = useState<QRRow | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [done, setDone] = useState(false);
+const [row, setRow] = useState<QRRow | null>(null);
+const [loading, setLoading] = useState(true);
+const [done, setDone] = useState(false);
+const [hasSession, setHasSession] = useState<boolean>(false);
+const [authLoading, setAuthLoading] = useState<boolean>(true);
 
 useEffect(() => {
   (async () => {
@@ -37,15 +40,17 @@ useEffect(() => {
       const url = `${base}?c=${encodeURIComponent(code)}`;
       if (import.meta.env.DEV) {
         console.debug(TRACE_ID, { tag:'M1QR', step:'validate:start', code, url, ts: Date.now() });
-        console.debug(TRACE_ID, { tag:'M1QR', step:'endpoints', VITE_QR_VALIDATE_URL: envBase || null, VITE_QR_REDEEM_URL: (import.meta as any).env?.VITE_QR_REDEEM_URL || null, functions_base: FUNCTIONS_BASE, functions_url_note: 'protected' });
+        console.debug(TRACE_ID, { tag:'M1QR', step:'endpoints', VITE_QR_VALIDATE_URL: envBase || null, VITE_QR_REDEEM_URL: (import.meta as any).env?.VITE_QR_REDEEM_URL || null, functions_base: FUNCTIONS_BASE, origin: (typeof window!=='undefined'?window.location.origin:undefined) });
       }
       const res = await fetch(url, { method: 'GET' });
+      const status = res.status;
       const ok = res.ok;
-      const j = ok ? await res.json() : null;
+      let j: any = null;
+      try { j = ok ? await res.json() : null; } catch {}
       if (import.meta.env.DEV) {
-        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, url, status: res.status, ok, allow_origin: res.headers.get('access-control-allow-origin') || null, ts: Date.now() });
+        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, url, status, ok, allow_origin: res.headers.get('access-control-allow-origin') || null, ts: Date.now() });
       }
-      if (ok && j?.valid) {
+      if (ok && j?.valid === true) {
         setRow({
           code,
           reward_type: j?.reward?.type || 'buzz_credit',
@@ -57,6 +62,10 @@ useEffect(() => {
         });
       } else if (ok && j && j.valid === false) {
         setRow(null); toast.error('QR non valido');
+      } else if (status === 404) {
+        setRow(null); toast.error('QR non valido');
+      } else if (status === 401 || status === 403) {
+        setRow(null); toast.error('Permessi insufficienti');
       } else {
         setRow(null); toast.error('Problema di rete o permessi');
       }
@@ -66,8 +75,24 @@ useEffect(() => {
   })();
 }, [code]);
 
+useEffect(() => {
+  (async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setHasSession(!!session);
+      if (import.meta.env.DEV) console.debug(TRACE_ID, { tag:'M1QR', step:'auth:session', hasSession: !!session, ts: Date.now() });
+    } finally { setAuthLoading(false); }
+  })();
+}, []);
+
+const goToLogin = () => {
+  const target = `/qr/${encodeURIComponent(code)}`;
+  try { localStorage.setItem(POST_LOGIN_KEY, target); } catch {}
+  const loginUrl = `/login?redirect=${encodeURIComponent(target)}`;
+  window.location.href = loginUrl;
+};
+
 const redeem = async () => {
-  if (!code) return;
   const redeemUrl = `${FUNCTIONS_BASE}/redeem_qr`;
   if (import.meta.env.DEV) {
     console.debug(TRACE_ID, { tag:'M1QR', step:'redeem:start', code, url: redeemUrl, ts: Date.now() });
@@ -110,8 +135,12 @@ const redeem = async () => {
         <h1 className="text-2xl font-bold mb-2">M1SSION™ QR</h1>
         <div className="font-mono text-sm text-muted-foreground mb-4">{code}</div>
 
-        {active ? (
-          <Button className="w-full" onClick={redeem}>🎯 Riscatta</Button>
+{active ? (
+          hasSession ? (
+            <Button className="w-full" onClick={redeem}>🎯 Riscatta</Button>
+          ) : (
+            !authLoading && <Button className="w-full" variant="secondary" onClick={goToLogin}>🔐 Accedi per riscattare</Button>
+          )
         ) : (
           <div className="text-green-500 font-semibold">✅ Già riscattato</div>
         )}
