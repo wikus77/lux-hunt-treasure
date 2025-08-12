@@ -9,9 +9,11 @@ import { useNewMapPage } from './map/hooks/useNewMapPage';
 import { useDynamicIsland } from '@/hooks/useDynamicIsland';
 import { useMissionManager } from '@/hooks/useMissionManager';
 import { useMapPageEffects } from './map/hooks/useMapPageEffects';
+import { useDeepLinkQR } from '@/hooks/useDeepLinkQR';
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  useDeepLinkQR();
   const { updateActivity, endActivity } = useDynamicIsland();
   const { currentMission, updateMissionProgress } = useMissionManager();
   

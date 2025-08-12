@@ -1,12 +1,12 @@
 // © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 
 import React, { useEffect, useState } from 'react';
-import { Marker, Popup } from 'react-leaflet';
+import { Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { redPulseIcon } from './redPulseIcon';
 interface QRMapItem {
   id: string;
   code: string;
@@ -14,6 +14,8 @@ interface QRMapItem {
   lng: number;
   title?: string | null;
   reward_type: string;
+  is_active?: boolean;
+  status?: string | null;
 }
 
 interface QRMapDisplayProps {
