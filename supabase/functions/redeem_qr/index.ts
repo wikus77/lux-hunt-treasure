@@ -51,14 +51,20 @@ Deno.serve(async (req) => {
       return new Response('Not found', { status: 404, headers: corsHeaders })
     }
 
-    // mark as used (idempotent)
-    if (qr.is_active) {
-      const { error: ue } = await s
-        .from('qr_codes')
-        .update({ is_active: false })
-        .eq('code', code)
-      if (ue) throw ue
+// mark as used (idempotent)
+    if (!qr.is_active) {
+      console.log({ op: 'redeem', code, result: 'already_redeemed' })
+      return new Response(JSON.stringify({ error: 'already_redeemed' }), {
+        status: 409,
+        headers: { ...corsHeaders, 'content-type': 'application/json' },
+      })
     }
+
+    const { error: ue } = await s
+      .from('qr_codes')
+      .update({ is_active: false })
+      .eq('code', code)
+    if (ue) throw ue
 
     // optional notification entry
     await s.from('user_notifications').insert({
@@ -67,6 +73,7 @@ Deno.serve(async (req) => {
       type: 'general',
     })
 
+    console.log({ op: 'redeem', code, result: 'ok' })
     return new Response(JSON.stringify({ ok: true, code }), {
       headers: { ...corsHeaders, 'content-type': 'application/json' },
     })

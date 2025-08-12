@@ -30,7 +30,7 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers: corsHeaders })
   }
 
-  try {
+try {
     const url = new URL(req.url)
     const raw = url.searchParams.get('c')
     if (!raw) {
@@ -40,24 +40,24 @@ Deno.serve(async (req) => {
       })
     }
 
-    const code = decodeURIComponent(raw).trim()
+    const up = decodeURIComponent(raw).trim().toUpperCase()
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const s = createClient(supabaseUrl, serviceKey)
 
-    // Read minimal fields known to exist
+    // Read minimal fields known to exist (case-insensitive code match)
     const { data: qr, error } = await s
       .from('qr_codes')
       .select('code,is_active,reward_type,title,lat,lng,message,expires_at,reward_buzz')
-      .eq('code', code)
+      .ilike('code', up)
       .maybeSingle()
 
     if (error) throw error
 
     const expired = qr?.expires_at ? new Date(qr.expires_at as any) <= new Date() : false
     if (!qr || qr.is_active !== true || expired) {
-      console.log({ op: 'validate', code, valid: false, reason: 'not_found_inactive_or_expired' })
+      console.log({ op: 'validate', code: up, valid: false, reason: 'not_found_inactive_or_expired' })
       return new Response(JSON.stringify({ valid: false }), {
         status: 404,
         headers: { ...corsHeaders, 'content-type': 'application/json' },
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
       message: (qr as any).message ?? null,
     }
 
-    console.log({ op: 'validate', code, valid: true })
+    console.log({ op: 'validate', code: up, valid: true })
     return new Response(JSON.stringify(payload), {
       headers: { ...corsHeaders, 'content-type': 'application/json' },
     })

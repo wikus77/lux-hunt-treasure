@@ -7,6 +7,8 @@ import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import '@/styles/qr-markers.css';
+import { useGeoWatcher } from '@/hooks/useGeoWatcher';
+import { toast } from 'sonner';
 
 type Item = {
   code: string;
@@ -24,6 +26,10 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const map = useMap();
   const MIN_ZOOM = 17;
   const RADIUS_M = 500;
+  const NEAR_M = 75;
+  const watcher = useGeoWatcher();
+  const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
+  const TRACE_ID = 'M1QR-TRACE';
 
   const icon = (active:boolean) => L.divIcon({
     className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
@@ -88,10 +94,12 @@ return (
               key={qr.code}
               position={[qr.lat, qr.lng]}
               icon={icon(qr.is_active)}
-              eventHandlers={{
+eventHandlers={{
                 click: () => {
                   const url = `/qr/${encodeURIComponent(qr.code)}`;
-                  if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
+                  if (import.meta.env.DEV) {
+                    console.debug(TRACE_ID, { tag:'M1QR', step:'map:click', code: qr.code, url, ts: Date.now() });
+                  }
                   window.location.href = url;
                 }
               }}
