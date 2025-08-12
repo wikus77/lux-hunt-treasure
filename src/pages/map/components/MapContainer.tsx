@@ -78,8 +78,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   setShowHelpDialog = () => {}
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-const { status, position, enable, disable } = useGeolocation();
-const geoEnabled = status === 'granted';
+const { status, position, enable, disable, enabled } = useGeolocation();
+const geoEnabled = enabled && status === 'granted';
   const mapRef = useRef<L.Map | null>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -111,12 +111,14 @@ const geoEnabled = status === 'granted';
     });
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
-  // Toast on geolocation denied/error
-  React.useEffect(() => {
-    if (status === 'denied' || status === 'error') {
-      try { toast.error('Geolocalizzazione non disponibile. Abilitala nelle impostazioni del browser.'); } catch {}
-    }
-  }, [status]);
+// Toast su denied/error solo una volta
+const didToast = React.useRef(false);
+React.useEffect(() => {
+  if ((status === 'denied' || status === 'error') && !didToast.current) {
+    didToast.current = true;
+    try { toast.error('Geolocalizzazione non disponibile. Abilitala nelle impostazioni del browser.'); } catch {}
+  }
+}, [status]);
 
   // Listen for BUZZ area creation events and auto-center map
   React.useEffect(() => {
@@ -259,9 +261,9 @@ const geoEnabled = status === 'granted';
       </MapContainer>
 
       {/* Geo Toggle overlay */}
-      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 bg-black/50 text-white px-2 py-1 rounded">
+<div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 bg-black/50 text-white px-2 py-1 rounded">
         <span className="text-xs">Geolocalizzazione</span>
-        <GeoToggle enabled={geoEnabled} onChange={(v)=> v ? enable() : disable()} />
+        <GeoToggle enabled={enabled} onChange={(v)=> v ? enable() : disable()} />
       </div>
 
       {/* Use the LocationButton component */}

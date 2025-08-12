@@ -36,7 +36,7 @@ import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 import QRValidatePage from "@/pages/qr/QRValidatePage";
-import { QRRedeemPage } from "@/pages/qr/QRRedeemPage";
+import QRRedeemPage from "@/pages/qr/QRRedeemPage";
 import { QRScannerPage } from "@/pages/qr/QRScannerPage";
 import { QRQueryRedeemPage } from "@/pages/qr/QRQueryRedeemPage"; // © 2025 NIYVORA KFT –Joseph MULÉ – M1SSION™
 

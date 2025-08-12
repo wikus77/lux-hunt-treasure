@@ -1,78 +1,52 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+// © M1SSION™
+import { useEffect, useRef, useState } from 'react';
 
-type GeoStatus = 'idle'|'prompt'|'granted'|'denied'|'blocked'|'error';
-type Position = { lat:number; lng:number; accuracy?:number|null } | null;
+type Status = 'idle' | 'prompt' | 'granted' | 'denied' | 'error';
 
-const LS_KEY = 'm1.geo.enabled';
+const LS_KEY = 'geo.enabled.v1';
 
 export function useGeolocation() {
-  const [status, setStatus] = useState<GeoStatus>('idle');
-  const [position, setPosition] = useState<Position>(null);
+  const [enabled, setEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem(LS_KEY) === '1'; } catch { return false; }
+  });
+  const [status, setStatus] = useState<Status>('idle');
+  const [position, setPosition] = useState<{lat:number; lng:number} | null>(null);
   const watchId = useRef<number | null>(null);
 
-  const stop = useCallback(() => {
-    if (watchId.current != null && 'geolocation' in navigator) {
+  const clearWatch = () => {
+    if (watchId.current !== null && navigator.geolocation) {
       try { navigator.geolocation.clearWatch(watchId.current); } catch {}
+      watchId.current = null;
     }
-    watchId.current = null;
-  }, []);
+  };
 
-  const onError = useCallback((err: GeolocationPositionError) => {
-    // Chrome “blocked after dismiss” ⇒ treat as blocked
-    if (err?.code === 1) setStatus('denied');
-    else setStatus('error');
-  }, []);
-
-  const start = useCallback(() => {
-    if (!('geolocation' in navigator)) { setStatus('error'); return; }
-    setStatus('prompt');
+  const startWatch = () => {
+    if (!navigator.geolocation) { setStatus('error'); return; }
     try {
+      setStatus('prompt');
       watchId.current = navigator.geolocation.watchPosition(
         (pos) => {
           setStatus('granted');
-          setPosition({
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            accuracy: pos.coords.accuracy ?? null
-          });
+          setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
-        onError,
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+        (err) => {
+          setPosition(null);
+          setStatus(err.code === 1 ? 'denied' : 'error');
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
       );
-    } catch {
-      setStatus('error');
-    }
-  }, [onError]);
+    } catch { setStatus('error'); }
+  };
 
-  const enable = useCallback(() => {
-    try { localStorage.setItem(LS_KEY, '1'); } catch {}
-    start();
-  }, [start]);
-
-  const disable = useCallback(() => {
-    try { localStorage.setItem(LS_KEY, '0'); } catch {}
-    stop();
-    setPosition(null);
-    setStatus('idle');
-  }, [stop]);
-
-  // restore persisted choice
   useEffect(() => {
-    const want = typeof window !== 'undefined' ? localStorage.getItem(LS_KEY) : null;
-    if (want === '1') start();
-  }, [start]);
+    if (!enabled) { clearWatch(); setStatus('idle'); setPosition(null); return; }
+    startWatch();
+    return () => clearWatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]);
 
-  // when tab hidden, reduce noise
-  useEffect(() => {
-    const onVis = () => {
-      if (document.hidden) return;
-      // re-kick if enabled but no watch running
-      const want = localStorage.getItem(LS_KEY) === '1';
-      if (want && watchId.current == null) start();
-    };
-    document.addEventListener('visibilitychange', onVis);
-    return () => document.removeEventListener('visibilitychange', onVis);
-  }, [start]);
+  const enable = () => { try { localStorage.setItem(LS_KEY, '1'); } catch {} setEnabled(true); };
+  const disable = () => { try { localStorage.removeItem(LS_KEY); } catch {} setEnabled(false); };
 
-  return { status, position, enable, disable };
+  return { status, position, enable, disable, enabled };
 }
