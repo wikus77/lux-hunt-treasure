@@ -19,9 +19,10 @@ type QRRow = {
 };
 
 export default function QRRedeemPage() {
-  const [, params] = useRoute<{ code: string }>('/qr/:code');
+  const [, p1] = useRoute<{ code: string }>('/qr/:code');
+  const [, p2] = useRoute<{ code: string }>('/qr/redeem/:code');
   const search = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const raw = (params?.code ?? search.get('c') ?? '').trim();
+  const raw = (p1?.code ?? p2?.code ?? search.get('c') ?? '').trim();
   const code = raw.toUpperCase();
   const [row, setRow] = useState<QRRow | null>(null);
   const [loading, setLoading] = useState(true);
