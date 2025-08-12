@@ -1,5 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
+// © M1SSION™
 import React, { useEffect, useState } from 'react';
 import { useRoute } from 'wouter';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,59 +7,50 @@ import { toast } from 'sonner';
 
 type QRRow = {
   code: string;
-  reward_type: 'buzz_credit' | 'custom' | string;
+  reward_type: string;
   title: string | null;
-  message?: string | null;
   is_active: boolean;
   lat: number | null;
   lng: number | null;
+  message?: string | null;
 };
 
-export const QRRedeemPage: React.FC = () => {
-  const [, routeParams] = useRoute<{ code: string }>('/qr/:code');
-  const code = (routeParams?.code ?? '').toUpperCase();
+export default function QRRedeemPage() {
+  const [, params] = useRoute<{ code: string }>('/qr/:code');
+  const code = (params?.code ?? '').toUpperCase();
   const [row, setRow] = useState<QRRow | null>(null);
   const [loading, setLoading] = useState(true);
-  const [redeemed, setRedeemed] = useState(false);
+  const [done, setDone] = useState(false);
 
   useEffect(() => {
     (async () => {
       if (!code) return setLoading(false);
-      try {
-        const { data, error } = await supabase
-          .from('qr_codes')
-          .select('code,reward_type,title,is_active,lat,lng')
-          .eq('code', code)
-          .maybeSingle();
-        if (error) throw error;
-        if (!data) {
-          toast.error('QR non valido');
-        }
-        setRow(data as QRRow | null);
-      } catch (e) {
-        toast.error('QR non valido');
-      } finally {
-        setLoading(false);
-      }
+      const { data, error } = await supabase.from('qr_codes')
+        .select('code,reward_type,title,is_active,lat,lng,message')
+        .eq('code', code)
+        .maybeSingle();
+      if (error) toast.error('QR non valido');
+      setRow((data as any) || null);
+      setLoading(false);
     })();
   }, [code]);
 
   const redeem = async () => {
-    if (!row) return;
+    if (!code) return;
     try {
-      const { data, error } = await supabase.functions.invoke('redeem_qr', {
-        body: { code }
-      });
+      const { error } = await supabase.functions.invoke('redeem_qr', { body: { code } });
       if (error) throw error;
-      setRedeemed(true);
       toast.success('Riscatto completato!');
-    } catch (e: any) {
-      toast.error(e?.message || 'Errore nel riscatto');
+      setDone(true);
+    } catch (e:any) {
+      toast.error(e?.message || 'Errore Edge Function');
     }
   };
 
   if (loading) return <div className="p-6 text-center">Caricamento…</div>;
   if (!row) return <div className="p-6 text-center">QR inesistente</div>;
+
+  const active = row.is_active && !done;
 
   return (
     <div className="min-h-[60vh] flex items-center justify-center">
@@ -68,12 +58,10 @@ export const QRRedeemPage: React.FC = () => {
         <h1 className="text-2xl font-bold mb-2">M1SSION™ QR</h1>
         <div className="font-mono text-sm text-muted-foreground mb-4">{code}</div>
 
-        {redeemed ? (
-          <div className="text-green-500 font-semibold">✅ Riscattato</div>
-        ) : row.is_active ? (
+        {active ? (
           <Button className="w-full" onClick={redeem}>🎯 Riscatta</Button>
         ) : (
-          <div className="text-yellow-500">Questo QR non è attivo</div>
+          <div className="text-green-500 font-semibold">✅ Già riscattato</div>
         )}
 
         {row.reward_type === 'custom' && row.message && (
@@ -85,5 +73,4 @@ export const QRRedeemPage: React.FC = () => {
       </div>
     </div>
   );
-};
-export default QRRedeemPage;
+}
