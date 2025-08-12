@@ -13,6 +13,7 @@ import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useLocation } from "wouter";
 import { Cpu } from "lucide-react";
+import { useDeepLinkQR } from "@/hooks/useDeepLinkQR";
 
 const AppHome = () => {
   // AppHome component rendering
@@ -38,7 +39,10 @@ const AppHome = () => {
     closeNotificationsBanner
   } = useNotificationManager();
 
-  const { isConnected } = useRealTimeNotifications();
+const { isConnected } = useRealTimeNotifications();
+
+  // Deep link QR handler (runs once on mount)
+  useDeepLinkQR();
 
   // 🔐 ALL EFFECTS MUST BE CALLED BEFORE CONDITIONAL RETURNS
   // Check for developer access and Capacitor environment
