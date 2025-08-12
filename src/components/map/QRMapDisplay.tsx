@@ -1,6 +1,6 @@
-// © M1SSION™
+// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
 import React, { useEffect, useMemo, useState } from 'react';
-import { Marker, Popup, useMap } from 'react-leaflet';
+import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
@@ -20,8 +20,9 @@ type Item = {
 export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } | null }> = ({ userLocation }) => {
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showLayer, setShowLayer] = useState(false);
   const map = useMap();
-  const MIN_ZOOM = 9;
+  const MIN_ZOOM = 17;
   const RADIUS_M = 500;
 
   const icon = (active:boolean) => L.divIcon({
@@ -59,51 +60,76 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
     return 2*R*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa));
   };
 
-  const all = useMemo(()=>items,[items]);
+const all = useMemo(()=>items,[items]);
 
-  if (isLoading) return null;
-  const z = map?.getZoom?.() ?? 3;
-  if (z < MIN_ZOOM) return null;
+if (isLoading) return null;
 
-  return (
-    <>
-      {all.map((qr) => {
-        const inRange = !!userLocation && distance(userLocation, {lat:qr.lat,lng:qr.lng}) <= RADIUS_M;
-        return (
-          <Marker
-            key={qr.code}
-            position={[qr.lat, qr.lng]}
-            icon={icon(qr.is_active)}
-            eventHandlers={{ click: () => { window.location.href = `/qr/${encodeURIComponent(qr.code)}`; } }}
-          >
-            <Popup>
-              <div className="text-center space-y-3 min-w-[200px]">
-                <div className="flex items-center gap-2 justify-center">
-                  <QrCode className="w-5 h-5 text-primary" />
-                  <h3 className="font-bold text-lg">M1SSION™ QR</h3>
-                </div>
-                <div>
-                  <p className="font-semibold text-base">{qr.title || 'QR'}</p>
-                  <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }}>
-                    {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
-                  </Badge>
-                </div>
-                {userLocation && (
-                  <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
+// Toggle layer visibility on zoom changes
+useEffect(() => {
+  if (!map) return;
+  const update = () => {
+    const z = map.getZoom?.() ?? 0;
+    setShowLayer(z >= MIN_ZOOM);
+    if (import.meta.env.DEV) console.debug('[QR] layer toggle', { z, show: z >= MIN_ZOOM });
+  };
+  update();
+  map.on('zoomend', update);
+  return () => { map.off('zoomend', update); };
+}, [map]);
+
+return (
+  <>
+    {showLayer && (
+      <LayerGroup>
+        {all.map((qr) => {
+          const inRange = !!userLocation && distance(userLocation, {lat:qr.lat,lng:qr.lng}) <= RADIUS_M;
+          return (
+            <Marker
+              key={qr.code}
+              position={[qr.lat, qr.lng]}
+              icon={icon(qr.is_active)}
+              eventHandlers={{
+                click: () => {
+                  const url = `/qr?c=${encodeURIComponent(qr.code)}`;
+                  if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
+                  window.location.href = url;
+                }
+              }}
+            >
+              <Popup>
+                <div className="text-center space-y-3 min-w-[200px]">
+                  <div className="flex items-center gap-2 justify-center">
+                    <QrCode className="w-5 h-5 text-primary" />
+                    <h3 className="font-bold text-lg">M1SSION™ QR</h3>
                   </div>
-                )}
-                {(qr.is_active && userLocation) && (inRange ? (
-                  <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>window.location.href=`/qr/${encodeURIComponent(qr.code)}`}>🎯 Riscatta</Button>
-                ) : (
-                  <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
-                ))}
-              </div>
-            </Popup>
-          </Marker>
-        );
-      })}
-    </>
-  );
+                  <div>
+                    <p className="font-semibold text-base">{qr.title || 'QR'}</p>
+                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }}>
+                      {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
+                    </Badge>
+                  </div>
+                  {userLocation && (
+                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
+                    </div>
+                  )}
+                  {(qr.is_active && userLocation) && (inRange ? (
+                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
+                      const url = `/qr?c=${encodeURIComponent(qr.code)}`;
+                      if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
+                      window.location.href = url;
+                    }}>🎯 Riscatta</Button>
+                  ) : (
+                    <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
+                  ))}
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      </LayerGroup>
+    )}
+  </>
+);
 };
