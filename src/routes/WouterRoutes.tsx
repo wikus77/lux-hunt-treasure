@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
@@ -57,6 +58,7 @@ import MissionIntroPage from "@/pages/MissionIntroPage";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
+  useQueryQRRedirect();
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
