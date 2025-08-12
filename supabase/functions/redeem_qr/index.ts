@@ -4,8 +4,8 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 // CORS allowlist handling (dynamic, supports previews)
 const STATIC = new Set([
-  'https://m1ssion.com',
-  'https://www.m1ssion.com',
+  'https://m1ssion.eu',
+  'https://www.m1ssion.eu',
   'https://m1ssion.pages.dev',
   'http://localhost:5173',
 ])
@@ -27,7 +27,7 @@ function buildCorsHeaders(origin: string | null) {
   const o = allowOrigin(origin)
   return {
     'Access-Control-Allow-Origin': o,
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
     'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('Origin')
   const corsHeaders = buildCorsHeaders(origin)
   try { console.log({ op: 'cors', origin, allow: corsHeaders['Access-Control-Allow-Origin'] }) } catch {}
-
+  try { console.log(JSON.stringify({ tag: 'M1QR', fn: 'redeem_qr', method: req.method, origin })) } catch {}
 
   // Preflight
   if (req.method === 'OPTIONS') {
