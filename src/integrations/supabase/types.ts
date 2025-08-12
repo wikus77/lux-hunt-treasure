@@ -1838,10 +1838,13 @@ export type Database = {
           lng: number | null
           max_uses_per_user: number | null
           max_uses_total: number | null
+          message: string | null
           radius_m: number | null
           reward_type: string
           reward_value: number
+          status: string
           title: string
+          type: string | null
         }
         Insert: {
           center_lat?: number | null
@@ -1857,10 +1860,13 @@ export type Database = {
           lng?: number | null
           max_uses_per_user?: number | null
           max_uses_total?: number | null
+          message?: string | null
           radius_m?: number | null
           reward_type: string
           reward_value?: number
+          status?: string
           title: string
+          type?: string | null
         }
         Update: {
           center_lat?: number | null
@@ -1876,10 +1882,13 @@ export type Database = {
           lng?: number | null
           max_uses_per_user?: number | null
           max_uses_total?: number | null
+          message?: string | null
           radius_m?: number | null
           reward_type?: string
           reward_value?: number
+          status?: string
           title?: string
+          type?: string | null
         }
         Relationships: []
       }
@@ -1981,6 +1990,13 @@ export type Database = {
             columns: ["code"]
             isOneToOne: false
             referencedRelation: "qr_codes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "qr_redemptions_code_fk"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "qr_codes_map"
             referencedColumns: ["code"]
           },
         ]
@@ -3275,7 +3291,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      qr_codes_map: {
+        Row: {
+          code: string | null
+          is_active: boolean | null
+          lat: number | null
+          lng: number | null
+          reward_type: string | null
+          title: string | null
+        }
+        Insert: {
+          code?: string | null
+          is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          reward_type?: string | null
+          title?: never
+        }
+        Update: {
+          code?: string | null
+          is_active?: boolean | null
+          lat?: number | null
+          lng?: number | null
+          reward_type?: string | null
+          title?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_referral_credits: {
