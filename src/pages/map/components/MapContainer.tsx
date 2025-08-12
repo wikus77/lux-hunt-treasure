@@ -110,6 +110,13 @@ const geoEnabled = status === 'granted';
     });
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
+  // Toast on geolocation denied/error
+  React.useEffect(() => {
+    if (status === 'denied' || status === 'error') {
+      try { toast.error('Geolocalizzazione non disponibile. Abilitala nelle impostazioni del browser.'); } catch {}
+    }
+  }, [status]);
+
   // Listen for BUZZ area creation events and auto-center map
   React.useEffect(() => {
     const handleBuzzAreaCreated = (event: CustomEvent) => {
