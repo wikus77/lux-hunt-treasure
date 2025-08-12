@@ -36,7 +36,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const loadQRCodes = async () => {
     try {
       // usa vista snella: qr_codes_map
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('qr_codes_map')
         .select('code, lat, lng, title, reward_type, is_active');
       if (error) throw error;

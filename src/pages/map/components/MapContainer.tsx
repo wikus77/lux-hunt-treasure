@@ -141,9 +141,10 @@ const geoEnabled = status === 'granted';
     // Auto-center and zoom map to show the new area after a short delay
     setTimeout(() => {
       if (import.meta.env.DEV) console.debug('📍 MapContainer - Auto-centering map on new area');
-        const zoom = radiusKm <= 5 ? 12 : radiusKm <= 10 ? 11 : 10;
-        
-        // Set view to area center with appropriate zoom
+      const zoom = radiusKm <= 5 ? 12 : radiusKm <= 10 ? 11 : 10;
+      
+      // Set view to area center with appropriate zoom
+      if (mapRef.current) {
         mapRef.current.setView([lat, lng], zoom);
         
         // Also create bounds to ensure the entire area is visible
