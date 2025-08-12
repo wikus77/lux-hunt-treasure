@@ -1,4 +1,4 @@
-// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
+
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -79,8 +79,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   setShowHelpDialog = () => {}
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-  const { status, position, enable, disable } = useGeolocation();
-  const geoEnabled = status === 'granted';
+const { status, position, enable, disable, enabled } = useGeolocation();
+const geoEnabled = enabled && status === 'granted';
   const mapRef = useRef<L.Map | null>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -264,12 +264,7 @@ React.useEffect(() => {
       {/* Geo Toggle overlay */}
       <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 bg-black/50 text-white px-2 py-1 rounded">
         <span className="text-xs">Geolocalizzazione</span>
-        <GeoToggle enabled={status==='granted'} onChange={(v)=> v ? enable() : disable()} />
-        {status==='denied' && (
-          <button onClick={()=>{ try{ toast.message('Per sbloccare: clicca sull’icona vicino alla URL → Permessi → Posizione: Consenti'); }catch{} }} className="text-[10px] underline opacity-80">
-            Sblocca?
-          </button>
-        )}
+        <GeoToggle enabled={enabled} onChange={(v)=> v ? enable() : disable()} />
       </div>
       {/* Dev-only geo debug */}
       {import.meta.env.DEV && <GeoDebugOverlay />}

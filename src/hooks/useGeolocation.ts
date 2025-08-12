@@ -1,60 +1,52 @@
-// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
-import React from 'react';
+// © M1SSION™
+import { useEffect, useRef, useState } from 'react';
+
+type Status = 'idle' | 'prompt' | 'granted' | 'denied' | 'error';
+
+const LS_KEY = 'geo.enabled.v1';
 
 export function useGeolocation() {
-  const [status, setStatus] = React.useState<'idle'|'prompt'|'granted'|'denied'|'error'>('idle');
-  const [position, setPosition] = React.useState<{lat:number; lng:number} | null>(null);
-  const watchId = React.useRef<number | null>(null);
-  const enabledRef = React.useRef<boolean>(false);
+  const [enabled, setEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem(LS_KEY) === '1'; } catch { return false; }
+  });
+  const [status, setStatus] = useState<Status>('idle');
+  const [position, setPosition] = useState<{lat:number; lng:number} | null>(null);
+  const watchId = useRef<number | null>(null);
 
-  // Initialize from localStorage
-  React.useEffect(() => {
-    try { enabledRef.current = localStorage.getItem('geo_enabled') === '1'; } catch {}
-  }, []);
-
-  const stop = () => {
-    if (watchId.current != null && 'geolocation' in navigator) {
+  const clearWatch = () => {
+    if (watchId.current !== null && navigator.geolocation) {
       try { navigator.geolocation.clearWatch(watchId.current); } catch {}
       watchId.current = null;
     }
   };
 
-  const handle = () => {
-    if (!('geolocation' in navigator)) { setStatus('error'); return; }
+  const startWatch = () => {
+    if (!navigator.geolocation) { setStatus('error'); return; }
     try {
       setStatus('prompt');
       watchId.current = navigator.geolocation.watchPosition(
-        (p) => {
+        (pos) => {
           setStatus('granted');
-          setPosition({ lat: p.coords.latitude, lng: p.coords.longitude });
-          if (import.meta.env.DEV) console.debug('[GEO] status=granted, position=', { lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy });
+          setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
-        (e) => {
-          setStatus(e.code === 1 ? 'denied' : 'error');
-          if (import.meta.env.DEV) console.debug('[GEO] status=', e.code === 1 ? 'denied' : 'error');
+        (err) => {
+          setPosition(null);
+          setStatus(err.code === 1 ? 'denied' : 'error');
         },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 10_000 }
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
       );
     } catch { setStatus('error'); }
   };
 
-  const enable = () => {
-    enabledRef.current = true;
-    try { localStorage.setItem('geo_enabled', '1'); } catch {}
-    handle();
-  };
+  useEffect(() => {
+    if (!enabled) { clearWatch(); setStatus('idle'); setPosition(null); return; }
+    startWatch();
+    return () => clearWatch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]);
 
-  const disable = () => {
-    enabledRef.current = false;
-    try { localStorage.setItem('geo_enabled', '0'); } catch {}
-    stop();
-    setStatus('idle');
-  };
+  const enable = () => { try { localStorage.setItem(LS_KEY, '1'); } catch {} setEnabled(true); };
+  const disable = () => { try { localStorage.removeItem(LS_KEY); } catch {} setEnabled(false); };
 
-  React.useEffect(() => {
-    if (enabledRef.current) handle();
-    return stop;
-  }, []);
-
-  return { status, position, enable, disable };
+  return { status, position, enable, disable, enabled };
 }

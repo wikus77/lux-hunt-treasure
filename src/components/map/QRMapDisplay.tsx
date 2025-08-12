@@ -20,14 +20,14 @@ type Item = {
 export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } | null }> = ({ userLocation }) => {
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const showLayer = true;
+  const [showLayer, setShowLayer] = useState(false);
   const map = useMap();
   const MIN_ZOOM = 17;
   const RADIUS_M = 500;
 
-  const icon = (active:boolean, inRange:boolean) => L.divIcon({
-    className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'} ${inRange && active ? 'qr--pulse' : ''}`,
-    iconSize: [18,18]
+  const icon = (active:boolean) => L.divIcon({
+    className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
+    iconSize: [16,16]
   });
 
   useEffect(() => {
@@ -48,7 +48,6 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
           }))
           .filter((r:Item)=>Number.isFinite(r.lat)&&Number.isFinite(r.lng));
         setItems(rows);
-        if (import.meta.env.DEV) console.debug('[QR] loaded', rows.length, 'from qr_codes_map');
       } catch(e) {
         if (import.meta.env.DEV) console.debug('[qr map] load error', e);
       } finally { setIsLoading(false); }
@@ -66,13 +65,14 @@ const all = useMemo(() => items, [items]);
 // Toggle layer visibility on zoom changes (must run regardless of loading to keep hooks order)
 useEffect(() => {
   if (!map) return;
-  const logZoom = () => {
+  const update = () => {
     const z = map.getZoom?.() ?? 0;
-    if (import.meta.env.DEV) console.debug('[QR] zoom', z);
+    setShowLayer(z >= MIN_ZOOM);
+    if (import.meta.env.DEV) console.debug('[QR] layer toggle', { z, show: z >= MIN_ZOOM });
   };
-  logZoom();
-  map.on('zoomend', logZoom);
-  return () => { map.off('zoomend', logZoom); };
+  update();
+  map.on('zoomend', update);
+  return () => { map.off('zoomend', update); };
 }, [map]);
 
 if (isLoading) return null;
@@ -87,7 +87,7 @@ return (
             <Marker
               key={qr.code}
               position={[qr.lat, qr.lng]}
-              icon={icon(qr.is_active, inRange)}
+              icon={icon(qr.is_active)}
               eventHandlers={{
                 click: () => {
                   const url = `/qr/${encodeURIComponent(qr.code)}`;
