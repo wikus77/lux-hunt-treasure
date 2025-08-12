@@ -28,10 +28,10 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const map = useMap();
   const MIN_ZOOM = 9;
-  const getIcon = (active: boolean) =>
+  const getIcon = (active: boolean, inRange: boolean) =>
     L.divIcon({
-      className: `qr-marker ${active ? 'qr-marker--active' : 'qr-marker--redeemed'}`,
-      iconSize: [12, 12],
+      className: `qr-marker ${active ? (inRange ? 'qr--active' : 'qr--hidden') : 'qr--redeemed'}`,
+      iconSize: [10, 10],
     });
 
   useEffect(() => {
@@ -111,6 +111,11 @@ if (zoom < MIN_ZOOM) {
   return null;
 }
 
+// Require user location to show nearby QR markers
+if (!userLocation) {
+  return null;
+}
+
 const validQRCodes = (qrCodes || []).filter((qr: any) => {
   const ok = Number.isFinite(qr?.lat) && Number.isFinite(qr?.lng);
   if (!ok && import.meta.env.DEV) {
@@ -121,9 +126,11 @@ const validQRCodes = (qrCodes || []).filter((qr: any) => {
   return ok;
 });
 
+const nearbyQRCodes = validQRCodes.filter((qr: any) => isUserInRange(qr));
+
   return (
     <>
-{validQRCodes.map((qr) => {
+{nearbyQRCodes.map((qr) => {
   const isInRange = isUserInRange(qr);
   const isRedeemed = isUserAlreadyRedeemed(qr);
   const isActive = qr.is_active === true;
@@ -132,7 +139,7 @@ const validQRCodes = (qrCodes || []).filter((qr: any) => {
     <Marker
       key={qr.id}
       position={[qr.lat, qr.lng]}
-      icon={getIcon(isActive)}
+      icon={getIcon(isActive, isInRange)}
       eventHandlers={{ click: () => { window.location.href = `/qr/${encodeURIComponent(qr.code)}`; } }}
     >
             <Popup>
