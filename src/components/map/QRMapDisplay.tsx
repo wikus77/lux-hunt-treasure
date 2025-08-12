@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { redPulseIcon } from './redPulseIcon';
 interface QRMapItem {
   id: string;
   code: string;
