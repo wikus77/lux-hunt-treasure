@@ -19,8 +19,9 @@ function canNotify(code:string){
 function markNotified(code:string){ try{ localStorage.setItem(`qr-notified:${code}`, String(Date.now())); }catch{} }
 
 export const GeoDebugOverlay: React.FC = () => {
-  if (!import.meta.env.DEV) return null;
+  const dev = !!import.meta.env.DEV;
   const { granted, coords, ts, error, requestPermissions } = useGeoWatcher();
+  if (!dev) return null;
 
   const ageSec = useMemo(()=> ts ? Math.round((Date.now()-ts)/1000) : undefined, [ts]);
 
