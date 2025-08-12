@@ -23,7 +23,7 @@ const CenterOnUserOnce: React.FC = () => {
   const map = useMap();
   const didCenter = useRef(false);
   const didToast = useRef(false);
-  const { position, accuracy, error } = useGeolocation();
+  const { status, position } = useGeolocation();
 
   useEffect(() => {
     if (position && !didCenter.current) {
@@ -33,24 +33,17 @@ const CenterOnUserOnce: React.FC = () => {
   }, [position, map]);
 
   useEffect(() => {
-    if (error && !didToast.current) {
+    if ((status === 'denied' || status === 'error') && !didToast.current) {
       didToast.current = true;
-      try { toast.error(error); } catch {}
+      try { toast.error('Geolocalizzazione non disponibile'); } catch {}
     }
-  }, [error]);
+  }, [status]);
 
   if (!position) return null;
 
   return (
     <>
       <Marker icon={userDotIcon} position={[position.lat, position.lng]} />
-      {typeof accuracy === 'number' && accuracy > 0 && accuracy < 5000 && (
-        <Circle
-          center={[position.lat, position.lng]}
-          radius={accuracy}
-          pathOptions={{ color: '#4ea1ff', fillColor: '#4ea1ff', fillOpacity: 0.1 }}
-        />
-      )}
     </>
   );
 };
