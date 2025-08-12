@@ -47,7 +47,13 @@ Deno.serve(async (req) => {
 
 try {
     const url = new URL(req.url)
-    const raw = url.searchParams.get('c')
+    let raw = url.searchParams.get('c')
+    if (!raw && req.method !== 'GET') {
+      try {
+        const body = await req.json().catch(() => null)
+        raw = (body?.c ?? body?.code ?? null)
+      } catch {}
+    }
     if (!raw) {
       return new Response(JSON.stringify({ valid: false, reason: 'missing_code' }), {
         status: 400,
@@ -55,7 +61,7 @@ try {
       })
     }
 
-    const up = decodeURIComponent(raw).trim().toUpperCase()
+    const up = decodeURIComponent(String(raw)).trim().toUpperCase()
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
