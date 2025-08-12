@@ -60,11 +60,9 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
     return 2*R*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa));
   };
 
-const all = useMemo(()=>items,[items]);
+const all = useMemo(() => items, [items]);
 
-if (isLoading) return null;
-
-// Toggle layer visibility on zoom changes
+// Toggle layer visibility on zoom changes (must run regardless of loading to keep hooks order)
 useEffect(() => {
   if (!map) return;
   const update = () => {
@@ -76,6 +74,8 @@ useEffect(() => {
   map.on('zoomend', update);
   return () => { map.off('zoomend', update); };
 }, [map]);
+
+if (isLoading) return null;
 
 return (
   <>
