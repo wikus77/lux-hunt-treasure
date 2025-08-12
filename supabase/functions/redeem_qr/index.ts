@@ -1,60 +1,38 @@
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+Deno.serve(async (req) => {
   try {
     const { code } = await req.json();
-    if (!code) return new Response(JSON.stringify({ error: 'missing code' }), { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    if (!code) return new Response('Missing code', { status: 400 });
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-    );
+    const url = Deno.env.get('SUPABASE_URL')!;
+    const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const s = createClient(url, key);
 
-    // 1) prendi il QR
-    const { data: qr, error: qrErr } = await supabase
-      .from('qr_codes')
-      .select('code,reward_type,message,is_active')
-      .eq('code', code)
-      .maybeSingle();
-    if (qrErr) throw qrErr;
-    if (!qr) return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    // load qr
+    const { data:qr, error:qe } = await s.from('qr_codes')
+      .select('code,is_active,reward_type,title')
+      .eq('code', code).maybeSingle();
+    if (qe) throw qe;
+    if (!qr) return new Response('Not found', { status: 404 });
 
-    // 2) se già non attivo → ok idempotente
-    if (qr.is_active === false) {
-      return new Response(JSON.stringify({ ok: true, already: true }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    // mark as used (idempotent)
+    if (qr.is_active) {
+      const { error:ue } = await s.from('qr_codes')
+        .update({ is_active: false }).eq('code', code);
+      if (ue) throw ue;
     }
 
-    // 3) marca come usato
-    const { error: upErr } = await supabase
-      .from('qr_codes')
-      .update({ is_active: false })
-      .eq('code', code);
-    if (upErr) throw upErr;
+    // optional notification entry
+    await s.from('user_notifications').insert({
+      title: 'QR riscattato',
+      content: `Hai riscattato ${qr.title || code}`,
+      type: 'general',
+    });
 
-    // 4) se reward_type === 'custom' → crea notifica generale
-    if ((qr.reward_type || '').toLowerCase() === 'custom') {
-      await supabase
-        .from('notifications')
-        .insert({
-          title: 'Nuovo Messaggio M1SSION™',
-          body: qr.message || 'Hai trovato un messaggio segreto.',
-          type: 'general',
-          is_read: false
-        });
-    }
-
-    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } });
-  } catch (e:any) {
-    return new Response(JSON.stringify({ error: e?.message || String(e) }), { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } });
+    return new Response(JSON.stringify({ ok:true, code }), { headers: { 'content-type':'application/json' }});
+  } catch (e) {
+    return new Response(String(e?.message || e), { status: 500 });
   }
 });
