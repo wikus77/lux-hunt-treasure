@@ -11,48 +11,38 @@ export interface NewsletterSubscriptionData {
 
 export const saveSubscriber = async (data: NewsletterSubscriptionData): Promise<void> => {
   try {
-    // First, check if user already exists
-    const { data: existingSubscribers } = await supabase
-      .from('newsletter_subscribers')
-      .select('id')
-      .eq('email', data.email)
-      .limit(1);
-    
-    if (existingSubscribers && existingSubscribers.length > 0) {
-      console.log("Email already registered to newsletter:", data.email);
-      
-      // Still send the confirmation email
-      await sendRegistrationEmail({
-        email: data.email,
-        name: data.name,
-        formType: "newsletter"
-      });
-      
-      return;
-    }
-    
-    // Insert new subscriber
+    // Insert without pre-check to avoid exposing data via public SELECT
+    const email = data.email.trim();
+    let isDuplicate = false;
+
     const { error } = await supabase.from('newsletter_subscribers').insert([
       {
         name: data.name,
-        email: data.email,
+        email,
         campaign: data.campaign || 'website',
-        referrer: data.referrer
+        referrer: data.referrer || null
       }
     ]);
-    
+
     if (error) {
-      throw error;
+      // Handle unique email conflict gracefully
+      if ((error as any).code === '23505') {
+        isDuplicate = true;
+      } else {
+        throw error;
+      }
     }
-    
-    // Send confirmation email
+
+    // Send confirmation email in both cases (new or existing)
     await sendRegistrationEmail({
-      email: data.email,
+      email,
       name: data.name,
       formType: "newsletter"
     });
-    
-    console.log("New subscriber added to newsletter:", data.email);
+
+    if (import.meta.env.DEV) {
+      console.debug(isDuplicate ? "Newsletter: email already subscribed" : "Newsletter: new subscriber added", email);
+    }
   } catch (error) {
     console.error("Error saving newsletter subscriber:", error);
     throw error;
