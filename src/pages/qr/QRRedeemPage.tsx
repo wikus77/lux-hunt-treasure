@@ -42,7 +42,7 @@ useEffect(() => {
       const ok = res.ok;
       const j = ok ? await res.json() : null;
       if (import.meta.env.DEV) {
-        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, url, status: res.status, ok, ts: Date.now() });
+        console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, url, status: res.status, ok, allow_origin: res.headers.get('access-control-allow-origin') || null, ts: Date.now() });
       }
       if (ok && j?.valid) {
         setRow({
