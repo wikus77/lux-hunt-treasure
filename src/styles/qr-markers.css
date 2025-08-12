@@ -1,0 +1,4 @@
+.qr-marker{width:14px;height:14px;border-radius:50%;box-shadow:0 0 8px rgba(0,0,0,.6)}
+.qr-marker--active{background:#2ecc71;animation:pulse 1.2s infinite}
+.qr-marker--redeemed{background:#e74c3c}
+@keyframes pulse{0%{transform:scale(.9)}50%{transform:scale(1.15)}100%{transform:scale(.9)}}
