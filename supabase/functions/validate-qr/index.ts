@@ -6,8 +6,11 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 const ALLOWED_ORIGINS = new Set([
   'https://m1ssion.com',
   'https://www.m1ssion.com',
+  'https://m1ssion.eu',
+  'https://www.m1ssion.eu',
   'https://m1ssion.pages.dev',
   'http://localhost:5173',
+  'http://127.0.0.1:5173',
 ])
 
 function buildCorsHeaders(origin: string | null) {
