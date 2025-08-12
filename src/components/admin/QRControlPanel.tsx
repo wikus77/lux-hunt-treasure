@@ -74,53 +74,70 @@ export const QRControlPanel = () => {
     loadStats();
   }, []);
 
-  const loadQRCodes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('qr_rewards')
-        .select('*')
-        .order('created_at', { ascending: false });
+const loadQRCodes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .select('code, reward_type, lat, lng, title, is_active, expires_at, created_at, updated_at')
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setQrCodes(data || []);
-    } catch (error) {
-      console.error('Error loading QR codes:', error);
-      toast.error('Errore nel caricamento dei QR code');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    if (error) throw error;
 
-  const loadStats = async () => {
-    try {
-      // Get basic stats
-      const { data: allCodes, error: codesError } = await supabase
-        .from('qr_rewards')
-        .select('attivo, reward_type, scansioni');
+    const mapped: QRCode[] = (data || []).map((row: any) => ({
+      id: row.code,
+      reward_type: row.reward_type,
+      message: '',
+      lat: row.lat,
+      lon: row.lng,
+      location_name: row.title || '',
+      max_distance_meters: 100,
+      attivo: row.is_active ?? true,
+      scansioni: row.is_active ? 0 : 1,
+      redeemed_by: [],
+      expires_at: row.expires_at,
+      creato_da: '',
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
 
-      if (codesError) throw codesError;
+    setQrCodes(mapped);
+  } catch (error) {
+    console.error('Error loading QR codes:', error);
+    toast.error('Errore nel caricamento dei QR code');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-      // Calculate stats from qr_rewards
-      const totalActive = allCodes?.filter(c => c.attivo).length || 0;
-      const totalRedeemed = allCodes?.filter(c => !c.attivo || c.scansioni > 0).length || 0;
-      const buzzRewards = allCodes?.filter(c => c.reward_type === 'buzz_gratis').length || 0;
-      const enigmaRewards = allCodes?.filter(c => c.reward_type === 'enigma_misterioso').length || 0;
-      const fakeRewards = allCodes?.filter(c => c.reward_type === 'sorpresa_speciale').length || 0;
-      const clueRewards = allCodes?.filter(c => c.reward_type === 'indizio_segreto').length || 0;
+const loadStats = async () => {
+  try {
+    // Get basic stats from qr_codes
+    const { data: allCodes, error: codesError } = await supabase
+      .from('qr_codes')
+      .select('is_active, reward_type');
 
-      setStats({
-        totalActive,
-        totalRedeemed,
-        buzzRewards,
-        clueRewards,
-        enigmaRewards,
-        fakeRewards,
-        failedAttempts: 0
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
+    if (codesError) throw codesError;
+
+    const totalActive = allCodes?.filter((c: any) => c.is_active === true).length || 0;
+    const totalRedeemed = allCodes?.filter((c: any) => c.is_active !== true).length || 0;
+    const buzzRewards = allCodes?.filter((c: any) => c.reward_type === 'buzz_credit').length || 0;
+    const clueRewards = 0;
+    const enigmaRewards = 0;
+    const fakeRewards = allCodes?.filter((c: any) => c.reward_type === 'custom').length || 0;
+
+    setStats({
+      totalActive,
+      totalRedeemed,
+      buzzRewards,
+      clueRewards,
+      enigmaRewards,
+      fakeRewards,
+      failedAttempts: 0
+    });
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+};
 
 const generateQRCode = async () => {
     // Validazioni base

@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { redPulseIcon } from './redPulseIcon';
+import '@/styles/qr-markers.css';
 interface QRMapItem {
   id: string;
   code: string;
@@ -26,27 +26,33 @@ interface QRMapDisplayProps {
 export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
   const [qrCodes, setQrCodes] = useState<QRMapItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const map = useMap();
+  const MIN_ZOOM = 9;
+  const getIcon = (active: boolean) =>
+    L.divIcon({
+      className: `qr-marker ${active ? 'qr-marker--active' : 'qr-marker--redeemed'}`,
+      iconSize: [14, 14],
+    });
 
   useEffect(() => {
     loadQRCodes();
   }, []);
 
-  const loadQRCodes = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('qr_codes')
-        .select('id, code, lat, lng, title, reward_type, created_at, is_active')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
+const loadQRCodes = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('qr_codes')
+      .select('id, code, lat, lng, title, reward_type, is_active, created_at')
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setQrCodes(data || []);
-    } catch (error) {
-      console.error('Error loading QR codes for map:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    if (error) throw error;
+    setQrCodes(data || []);
+  } catch (error) {
+    console.error('Error loading QR codes for map:', error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
     const R = 6371000; // Earth radius in meters
@@ -75,11 +81,10 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
     return false;
   };
 
-  const handleQRRedeem = (qrCode: string) => {
-    const currentDomain = window.location.origin;
-    const qrUrl = `${currentDomain}/qr?code=${encodeURIComponent(qrCode)}`;
-    window.open(qrUrl, '_blank');
-  };
+const handleQRRedeem = (qrCode: string) => {
+  const qrUrl = `/qr/${encodeURIComponent(qrCode)}`;
+  window.location.href = qrUrl;
+};
 
   const getRewardIcon = (type: string) => {
     switch (type) {
@@ -99,30 +104,36 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
     }
   };
 
-  if (isLoading) return null;
+if (isLoading) return null;
 
-  const validQRCodes = (qrCodes || []).filter((qr: any) => {
-    const ok = Number.isFinite(qr?.lat) && Number.isFinite(qr?.lng);
-    if (!ok && import.meta.env.DEV) {
-      console.groupCollapsed('[MAP] invalid lat/lng filtered in QRMapDisplay');
-      console.log('qrId:', qr?.id, 'lat:', qr?.lat, 'lng:', qr?.lng);
-      console.groupEnd();
-    }
-    return ok;
-  });
+const zoom = map?.getZoom?.() ?? 3;
+if (zoom < MIN_ZOOM) {
+  return null;
+}
+
+const validQRCodes = (qrCodes || []).filter((qr: any) => {
+  const ok = Number.isFinite(qr?.lat) && Number.isFinite(qr?.lng);
+  if (!ok && import.meta.env.DEV) {
+    console.groupCollapsed('[MAP] invalid lat/lng filtered in QRMapDisplay');
+    console.log('qrId:', qr?.id, 'lat:', qr?.lat, 'lng:', qr?.lng);
+    console.groupEnd();
+  }
+  return ok;
+});
 
   return (
     <>
-      {validQRCodes.map((qr) => {
-        const isInRange = isUserInRange(qr);
-        const isRedeemed = isUserAlreadyRedeemed(qr);
-        
-        return (
-          <Marker
-            key={qr.id}
-            position={[qr.lat, qr.lng]}
-            icon={redPulseIcon}
-          >
+{validQRCodes.map((qr) => {
+  const isInRange = isUserInRange(qr);
+  const isRedeemed = isUserAlreadyRedeemed(qr);
+  const isActive = qr.is_active === true;
+  
+  return (
+    <Marker
+      key={qr.id}
+      position={[qr.lat, qr.lng]}
+      icon={getIcon(isActive)}
+    >
             <Popup>
               <div className="text-center space-y-3 min-w-[200px]">
                 <div className="flex items-center gap-2 justify-center">
