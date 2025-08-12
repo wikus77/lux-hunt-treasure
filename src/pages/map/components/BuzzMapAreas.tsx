@@ -31,11 +31,13 @@ const BuzzMapAreas: React.FC<BuzzMapAreasProps> = ({ areas }) => {
     console.log('🔄 BuzzMapAreas - Areas updated, forcing re-render:', areas.length);
   }, [areas]);
 
-  // 🚨 ABSOLUTE BLOCK: No rendering without areas
-  if (areas.length === 0) {
-    console.warn('🚨 BuzzMapAreas BLOCK: NO AREAS - PREVENTING ALL RENDERS');
-    return null;
+// 🚨 ABSOLUTE BLOCK: No rendering without areas
+if (areas.length === 0) {
+  if (import.meta.env.DEV) {
+    console.debug('BuzzMapAreas: no areas, skip render');
   }
+  return null;
+}
 
   // CRITICAL: Show only the LATEST area (most recent by creation date)
   const latestArea = areas.reduce((latest, current) => {

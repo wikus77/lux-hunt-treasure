@@ -113,7 +113,11 @@ if (zoom < MIN_ZOOM) {
 
 // Require user location to show nearby QR markers
 if (!userLocation) {
-  return null;
+  return (
+    <div className="absolute left-1/2 top-4 -translate-x-1/2 z-[400] text-xs px-3 py-1 rounded bg-black/60 text-white">
+      📍 Attiva la geolocalizzazione per vedere i QR vicini (≤250 m)
+    </div>
+  );
 }
 
 const validQRCodes = (qrCodes || []).filter((qr: any) => {
@@ -130,18 +134,18 @@ const nearbyQRCodes = validQRCodes.filter((qr: any) => isUserInRange(qr));
 
   return (
     <>
-{nearbyQRCodes.map((qr) => {
-  const isInRange = isUserInRange(qr);
-  const isRedeemed = isUserAlreadyRedeemed(qr);
-  const isActive = qr.is_active === true;
-  
-  return (
-    <Marker
-      key={qr.id}
-      position={[qr.lat, qr.lng]}
-      icon={getIcon(isActive, isInRange)}
-      eventHandlers={{ click: () => { window.location.href = `/qr/${encodeURIComponent(qr.code)}`; } }}
-    >
+      {nearbyQRCodes.map((qr) => {
+        const isInRange = isUserInRange(qr);
+        const isRedeemed = isUserAlreadyRedeemed(qr);
+        const isActive = qr.is_active === true;
+        
+        return (
+          <Marker
+            key={qr.id}
+            position={[qr.lat, qr.lng]}
+            icon={getIcon(isActive, isInRange)}
+            eventHandlers={{ click: () => { window.location.href = `/qr/${encodeURIComponent(qr.code)}`; } }}
+          >
             <Popup>
               <div className="text-center space-y-3 min-w-[200px]">
                 <div className="flex items-center gap-2 justify-center">
