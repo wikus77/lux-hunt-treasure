@@ -17,8 +17,8 @@ type QRRow = {
 };
 
 export const QRRedeemPage: React.FC = () => {
-  const [, params] = useRoute('/qr/:code');
-  const code = (params?.code || '').toUpperCase();
+  const [, routeParams] = useRoute<{ code: string }>('/qr/:code');
+  const code = (routeParams?.code ?? '').toUpperCase();
   const [row, setRow] = useState<QRRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [redeemed, setRedeemed] = useState(false);
