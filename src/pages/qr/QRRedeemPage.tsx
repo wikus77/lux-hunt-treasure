@@ -28,7 +28,7 @@ export default function QRRedeemPage() {
     (async () => {
       if (!code) { setLoading(false); return; }
       try {
-        const base = (import.meta as any).env?.VITE_QR_VALIDATE_URL as string | undefined || 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/validate-qr';
+        const base = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/validate-qr';
         const res = await fetch(`${base}?c=${encodeURIComponent(code)}`, { method: 'GET' });
         if (!res.ok) throw new Error('validate_failed');
         const j = await res.json();
