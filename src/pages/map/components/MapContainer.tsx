@@ -20,6 +20,7 @@ import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { GeoToggle } from '@/components/ui/GeoToggle';
 import L from 'leaflet';
+import { toast } from 'sonner';
 import { 
   handleMapMove, 
   handleMapReady, 
