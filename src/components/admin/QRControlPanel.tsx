@@ -96,7 +96,7 @@ const loadQRCodes = async () => {
   try {
     const { data, error } = await supabase
       .from('qr_codes')
-      .select('code, reward_type, lat, lng, title, is_active, expires_at, created_at, updated_at')
+      .select('code, reward_type, lat, lng, title, is_active, is_hidden, expires_at, created_at')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -115,7 +115,7 @@ const loadQRCodes = async () => {
       expires_at: row.expires_at,
       creato_da: '',
       created_at: row.created_at,
-      updated_at: row.updated_at,
+      updated_at: row.created_at,
     }));
 
     setQrCodes(mapped);
@@ -470,9 +470,9 @@ const showQRForPrinting = (code: string, formData: any) => {
     
     try {
       const { error } = await supabase
-        .from('qr_rewards')
+        .from('qr_codes')
         .delete()
-        .eq('id', id);
+        .eq('code', id);
 
       if (error) throw error;
 
