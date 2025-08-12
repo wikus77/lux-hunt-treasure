@@ -17,3 +17,7 @@ port = 54323
 [functions.create_qr_code]
 # Keep JWT verification enabled (authenticated admin only)
 verify_jwt = true
+
+[functions.redeem_qr]
+# Publicly callable, function uses service role internally
+verify_jwt = false
