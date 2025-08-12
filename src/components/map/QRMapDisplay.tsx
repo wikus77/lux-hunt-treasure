@@ -73,7 +73,7 @@ const loadQRCodes = async () => {
       qr.lat,
       qr.lng
     );
-    const DETECTION_RADIUS = 100; // meters
+    const DETECTION_RADIUS = 250; // meters
     return distance <= DETECTION_RADIUS;
   };
 

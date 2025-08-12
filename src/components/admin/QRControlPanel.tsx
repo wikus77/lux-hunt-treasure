@@ -56,6 +56,9 @@ export const QRControlPanel = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   
+  // Safe formatter for coordinates (avoids crashes on null)
+  const fmt = (n: any) => (Number.isFinite(n) ? Number(n).toFixed(6) : '—');
+  
 // Form state
   const [formData, setFormData] = useState({
     locationName: '',
@@ -101,22 +104,28 @@ const loadQRCodes = async () => {
 
     if (error) throw error;
 
-    const mapped: QRCode[] = (data || []).map((row: any) => ({
-      id: row.code,
-      reward_type: row.reward_type,
-      message: '',
-      lat: row.lat,
-      lon: row.lng,
-      location_name: row.title || '',
-      max_distance_meters: 100,
-      attivo: row.is_active ?? true,
-      scansioni: row.is_active ? 0 : 1,
-      redeemed_by: [],
-      expires_at: row.expires_at,
-      creato_da: '',
-      created_at: row.created_at,
-      updated_at: row.created_at,
-    }));
+    const mapped: QRCode[] = (data || [])
+      .map((row: any) => {
+        const latNum = typeof row.lat === 'number' ? row.lat : Number(row.lat);
+        const lngNum = typeof row.lng === 'number' ? row.lng : Number(row.lng);
+        return {
+          id: row.code,
+          reward_type: row.reward_type,
+          message: row.message || '',
+          lat: latNum,
+          lon: lngNum,
+          location_name: row.title || '',
+          max_distance_meters: 100,
+          attivo: row.is_active ?? true,
+          scansioni: row.is_active ? 0 : 1,
+          redeemed_by: [],
+          expires_at: row.expires_at,
+          creato_da: '',
+          created_at: row.created_at,
+          updated_at: row.created_at,
+        } as QRCode;
+      })
+      .filter((row: QRCode) => Number.isFinite(row.lat) && Number.isFinite(row.lon));
 
     setQrCodes(mapped);
     try { localStorage.setItem('qr_admin_list', JSON.stringify(mapped)); } catch {}
@@ -732,7 +741,7 @@ const getRewardColor = (type: string) => {
                     <div className="text-sm text-muted-foreground">
                       <div className="flex items-center gap-1 mb-1">
                         <MapPin className="w-4 h-4" />
-                        {qr.location_name} ({qr.lat.toFixed(6)}, {qr.lon.toFixed(6)})
+                        {qr.location_name} ({fmt(qr.lat)}, {fmt(qr.lon)})
                       </div>
                       <div className="flex items-center gap-1">
                         <Calendar className="w-4 h-4" />
