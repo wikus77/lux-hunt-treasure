@@ -53,6 +53,25 @@ Deno.serve(async (req) => {
 
     const url = Deno.env.get('SUPABASE_URL')!
     const key = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+    // Require JWT: validate Authorization header via Supabase Auth
+    const authHeader = req.headers.get('authorization') || req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'content-type': 'application/json' },
+      })
+    }
+
+    const sAuth = createClient(url, key, { global: { headers: { Authorization: authHeader } } })
+    const { data: authData, error: authError } = await sAuth.auth.getUser()
+    if (authError || !authData?.user) {
+      return new Response(JSON.stringify({ error: 'forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'content-type': 'application/json' },
+      })
+    }
+
     const s = createClient(url, key)
 
     // load qr
