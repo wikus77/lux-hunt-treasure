@@ -17,6 +17,8 @@ import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { GeoToggle } from '@/components/ui/GeoToggle';
 import L from 'leaflet';
 import { 
   handleMapMove, 
@@ -75,7 +77,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   setShowHelpDialog = () => {}
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+const { status, position, enable, disable } = useGeolocation();
+const geoEnabled = status === 'granted';
   const mapRef = useRef<L.Map | null>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -85,30 +88,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const { isAddingMapPoint, mapStatus } = useMapStore();
 
   // Get user location for QR proximity
-  React.useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.log('Could not get user location for QR proximity:', error);
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 10000,
-          maximumAge: 300000
-        }
-      );
-    }
-  }, []);
-
   // CRITICAL: Debug logging for BUZZ areas
   React.useEffect(() => {
-    console.log("🗺️ MapContainer - BUZZ areas updated:", {
+    if (import.meta.env.DEV) console.debug("🗺️ MapContainer - BUZZ areas updated:", {
       areasCount: currentWeekAreas.length,
       loading: areasLoading,
       areas: currentWeekAreas.map(area => ({
@@ -121,7 +103,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
   // Debug logging for point addition state
   React.useEffect(() => {
-    console.log("🔄 MapContainer - State from Zustand:", { 
+    if (import.meta.env.DEV) console.debug("🔄 MapContainer - State from Zustand:", { 
       isAddingPoint, 
       isAddingMapPoint, 
       mapStatus 
@@ -131,7 +113,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   // Listen for BUZZ area creation events and auto-center map
   React.useEffect(() => {
     const handleBuzzAreaCreated = (event: CustomEvent) => {
-      console.log('📍 MapContainer - Received BUZZ area creation event:', event.detail);
+      if (import.meta.env.DEV) console.debug('📍 MapContainer - Received BUZZ area creation event:', event.detail);
       if (event.detail && mapRef.current) {
         const { lat, lng, radius_km } = event.detail;
         handleAreaGeneratedCallback(lat, lng, radius_km);
@@ -151,17 +133,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   
   // CRITICAL: Enhanced area generation callback with auto-zoom
   const handleAreaGeneratedCallback = (lat: number, lng: number, radiusKm: number) => {
-    console.log('🎯 MapContainer - Area generated, auto-centering map:', { lat, lng, radiusKm });
+    if (import.meta.env.DEV) console.debug('🎯 MapContainer - Area generated, auto-centering map:', { lat, lng, radiusKm });
     
     // FORCE reload areas first
     reloadAreas();
     
     // Auto-center and zoom map to show the new area after a short delay
     setTimeout(() => {
-      if (mapRef.current) {
-        console.log('📍 MapContainer - Auto-centering map on new area');
-        
-        // Calculate appropriate zoom level for 8km radius
+      if (import.meta.env.DEV) console.debug('📍 MapContainer - Auto-centering map on new area');
         const zoom = radiusKm <= 5 ? 12 : radiusKm <= 10 ? 11 : 10;
         
         // Set view to area center with appropriate zoom
@@ -238,7 +217,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         <BuzzMapAreas areas={currentWeekAreas} />
         
         {/* QR Map Display - Show QR codes on map */}
-        <QRMapDisplay userLocation={userLocation} />
+        <QRMapDisplay userLocation={geoEnabled ? position : null} />
         
         {/* Display search areas */}
         <SearchAreaMapLayer 
@@ -269,6 +248,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           onMapPointClick={handleAddNewPointCallback}
         />
       </MapContainer>
+
+      {/* Geo Toggle overlay */}
+      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 bg-black/50 text-white px-2 py-1 rounded">
+        <span className="text-xs">Geolocalizzazione</span>
+        <GeoToggle enabled={geoEnabled} onChange={(v)=> v ? enable() : disable()} />
+      </div>
 
       {/* Use the LocationButton component */}
       <LocationButton requestLocationPermission={requestLocationPermission} />
