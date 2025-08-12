@@ -2,18 +2,31 @@
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
-// CORS allowlist handling
-const ALLOWED_ORIGINS = new Set([
+// CORS allowlist handling (dynamic, supports previews)
+const STATIC = new Set([
   'https://m1ssion.com',
   'https://www.m1ssion.com',
   'https://m1ssion.pages.dev',
   'http://localhost:5173',
 ])
 
+function allowOrigin(origin: string | null) {
+  if (!origin) return 'https://m1ssion.com'
+  try {
+    const h = new URL(origin).hostname
+    if (STATIC.has(origin)) return origin
+    if (h.endsWith('.lovable.dev') || h === 'lovable.dev') return origin
+    if (h.endsWith('.lovableproject.com') || h === 'lovableproject.com') return origin
+    return 'https://m1ssion.com'
+  } catch {
+    return 'https://m1ssion.com'
+  }
+}
+
 function buildCorsHeaders(origin: string | null) {
-  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'https://m1ssion.com'
+  const o = allowOrigin(origin)
   return {
-    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Origin': o,
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
     'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info',
     'Access-Control-Max-Age': '86400',
@@ -24,6 +37,8 @@ function buildCorsHeaders(origin: string | null) {
 Deno.serve(async (req) => {
   const origin = req.headers.get('Origin')
   const corsHeaders = buildCorsHeaders(origin)
+  try { console.log({ op: 'cors', origin, allow: corsHeaders['Access-Control-Allow-Origin'] }) } catch {}
+
 
   // Preflight
   if (req.method === 'OPTIONS') {
