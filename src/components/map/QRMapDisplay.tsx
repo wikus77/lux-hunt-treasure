@@ -31,7 +31,7 @@ export const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation }) => {
   const getIcon = (active: boolean) =>
     L.divIcon({
       className: `qr-marker ${active ? 'qr-marker--active' : 'qr-marker--redeemed'}`,
-      iconSize: [14, 14],
+      iconSize: [12, 12],
     });
 
   useEffect(() => {
@@ -133,6 +133,7 @@ const validQRCodes = (qrCodes || []).filter((qr: any) => {
       key={qr.id}
       position={[qr.lat, qr.lng]}
       icon={getIcon(isActive)}
+      eventHandlers={{ click: () => { window.location.href = `/qr/${encodeURIComponent(qr.code)}`; } }}
     >
             <Popup>
               <div className="text-center space-y-3 min-w-[200px]">

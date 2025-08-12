@@ -70,9 +70,27 @@ export const QRControlPanel = () => {
   const [lngFull, setLngFull] = useState<number | null>(null);
 
   useEffect(() => {
+    try {
+      const cached = localStorage.getItem('qr_admin_list');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setQrCodes(parsed);
+          setIsLoading(false);
+        }
+      }
+    } catch {}
+
     loadQRCodes();
     loadStats();
   }, []);
+
+  // Persist current list on unmount for quick return
+  useEffect(() => {
+    return () => {
+      try { localStorage.setItem('qr_admin_list', JSON.stringify(qrCodes)); } catch {}
+    };
+  }, [qrCodes]);
 
 const loadQRCodes = async () => {
   try {
@@ -101,6 +119,7 @@ const loadQRCodes = async () => {
     }));
 
     setQrCodes(mapped);
+    try { localStorage.setItem('qr_admin_list', JSON.stringify(mapped)); } catch {}
   } catch (error) {
     console.error('Error loading QR codes:', error);
     toast.error('Errore nel caricamento dei QR code');
@@ -189,26 +208,26 @@ const generateQRCode = async () => {
       if (error) throw new Error(error.message || 'Errore funzione');
       const created = data as any;
 
-      // Aggiorna lista locale (no refetch pesante)
-      setQrCodes((prev) => [
-        {
-          id: created.code, // usiamo il code come id visualizzato/di stampa
-          reward_type: created.reward_type,
-          message: created.message || '',
-          lat: created.lat,
-          lon: created.lng,
-          location_name: created.title || payload.title,
-          max_distance_meters: 100,
-          attivo: created.is_active ?? true,
-          scansioni: 0,
-          redeemed_by: [],
-          expires_at: created.expires_at,
-          creato_da: 'me',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as QRCode,
-        ...prev,
-      ]);
+      // Aggiorna lista locale (no refetch pesante) + cache
+      const newItem: QRCode = {
+        id: created.code, // usiamo il code come id visualizzato/di stampa
+        reward_type: created.reward_type,
+        message: created.message || '',
+        lat: created.lat,
+        lon: created.lng,
+        location_name: created.title || payload.title,
+        max_distance_meters: 100,
+        attivo: created.is_active ?? true,
+        scansioni: 0,
+        redeemed_by: [],
+        expires_at: created.expires_at,
+        creato_da: 'me',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as QRCode;
+      const updatedList = [newItem, ...qrCodes];
+      setQrCodes(updatedList);
+      try { localStorage.setItem('qr_admin_list', JSON.stringify(updatedList)); } catch {}
 
       // Reset form (mantieni mappa pulita)
       setFormData({ locationName: '', lat: '', lng: '', rewardType: 'buzz_credit', rewardContent: '', expiresAt: '' });
