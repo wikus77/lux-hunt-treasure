@@ -1,4 +1,4 @@
-// © M1SSION™
+// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
 import React, { useEffect, useState } from 'react';
 import { useRoute } from 'wouter';
 import { supabase } from '@/integrations/supabase/client';
@@ -37,13 +37,27 @@ export default function QRRedeemPage() {
 
   const redeem = async () => {
     if (!code) return;
-    try {
+    const attempt = async () => {
       const { error } = await supabase.functions.invoke('redeem_qr', { body: { code } });
       if (error) throw error;
-      toast.success('Riscatto completato!');
-      setDone(true);
-    } catch (e:any) {
-      toast.error(e?.message || 'Errore Edge Function');
+    };
+    let tries = 0; const delays = [250, 500, 1000];
+    while (tries < 3) {
+      try {
+        await attempt();
+        toast.success('Riscatto completato!');
+        setDone(true);
+        return;
+      } catch (e:any) {
+        const msg = String(e?.message || 'Errore Edge Function');
+        if (++tries >= 3 || !/(429|5\d\d)/.test(msg)) {
+          if (/already_redeemed/i.test(msg)) toast.info('Hai già riscattato questo QR');
+          else if (/forbidden|401|403/i.test(msg)) toast.error('Permessi insufficienti');
+          else toast.error(msg);
+          break;
+        }
+        await new Promise(r => setTimeout(r, delays[tries-1]));
+      }
     }
   };
 
