@@ -123,11 +123,9 @@ export const QRValidationModal: React.FC<QRValidationModalProps> = ({
     setError(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke('qr-redeem', {
+      const { data, error } = await supabase.functions.invoke('redeem-qr', {
         body: {
-          code: qrData.code,
-          userLat: null, // Skip location check for in-app modal
-          userLng: null
+          code: qrData.code
         }
       });
 

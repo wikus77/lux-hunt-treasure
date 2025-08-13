@@ -182,10 +182,10 @@ export const useQRMapIntegration = () => {
     }
 
     try {
-      const { data, error } = await supabase.rpc('qr_redeem', {
-        p_code: code.toUpperCase(),
-        p_lat: userLocation?.lat ?? null,
-        p_lon: userLocation?.lng ?? null
+      const { data, error } = await supabase.functions.invoke('redeem-qr', {
+        body: {
+          code: code.toUpperCase()
+        }
       });
 
       if (error) throw error;
