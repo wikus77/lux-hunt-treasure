@@ -261,11 +261,6 @@ React.useEffect(() => {
         />
       </MapContainer>
 
-      {/* Geo Toggle overlay */}
-      <div className="absolute top-3 right-3 z-[1000] flex items-center gap-2 bg-black/50 text-white px-2 py-1 rounded">
-        <span className="text-xs">Geolocalizzazione</span>
-        <GeoToggle enabled={enabled} onChange={(v)=> v ? enable() : disable()} />
-      </div>
       {/* Dev-only geo debug */}
       {import.meta.env.DEV && <GeoDebugOverlay />}
 
