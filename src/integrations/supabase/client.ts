@@ -6,11 +6,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Prefer environment variables; fallback to defaults only if missing (with warning)
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://vkjrqirvdvjbemsfzxof.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
-if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-  console.warn("M1QR-TRACE", { step: 'env:missing:client', usingFallback: true });
+// Strict env-only (no hardcoded fallbacks)
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error("M1QR-TRACE", { step: 'env:missing:client', SUPABASE_URL: !!SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: !!SUPABASE_PUBLISHABLE_KEY });
+  throw new Error('missing_env');
 }
 
 // Import the supabase client like this:
