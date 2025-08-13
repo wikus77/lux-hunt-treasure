@@ -17,6 +17,8 @@ import PaymentSettings from './PaymentSettings';
 import LegalSettings from './LegalSettings';
 import PrivacySettings from '@/components/settings/PrivacySettings';
 import AppInfoSettings from './AppInfoSettings';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { supabase } from '@/integrations/supabase/client';
 
 type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'privacy' | 'legal' | 'info';
 
@@ -25,6 +27,7 @@ const SettingsPage: React.FC = () => {
   const { profileImage } = useProfileImage();
   const [location, navigate] = useLocation();
   const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+  const geo = useGeolocation();
 
   // Handle URL-based section routing
   useEffect(() => {
@@ -126,6 +129,47 @@ return (
                 </Button>
               );
             })}
+          </CardContent>
+        </Card>
+
+        {/* Privacy & Permessi */}
+        <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm mt-6">
+          <CardHeader>
+            <CardTitle className="text-white font-orbitron">Privacy & Permessi</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between py-2">
+              <div>
+                <div className="font-medium text-white">Geolocalizzazione</div>
+                <div className="text-xs text-white/60">
+                  {geo.enabled ? (geo.status==='granted' ? 'Attiva (granted)' : 'Attiva (in attesa permesso)') : 'Disattivata'}
+                </div>
+              </div>
+              <button
+                onClick={geo.enabled ? geo.disable : geo.enable}
+                className={`px-4 py-2 rounded-full ${geo.enabled ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
+                {geo.enabled ? 'Disattiva' : 'Attiva'}
+              </button>
+            </div>
+            {geo.enabled && geo.status==='denied' && (
+              <p className="text-xs mt-2 text-white/70">Permessi negati. Apri le impostazioni del browser/sistema e consenti l’accesso alla posizione.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Diagnostica */}
+        <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm mt-6">
+          <CardHeader>
+            <CardTitle className="text-white font-orbitron">Diagnostica</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="text-xs whitespace-pre-wrap text-white/80">{JSON.stringify({
+  VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+  VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+}, null, 2)}</pre>
+            <Button className="mt-2" variant="secondary" onClick={async()=>{ const {data:{session}}=await supabase.auth.getSession(); alert(session?`Logged: ${session.user.id}`:'Non loggato'); }}>
+              Verifica sessione
+            </Button>
           </CardContent>
         </Card>
       </div>
