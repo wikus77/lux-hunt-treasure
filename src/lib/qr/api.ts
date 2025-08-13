@@ -36,7 +36,7 @@ export async function redeemQR(code:string){
   assertEnv();
   const c = code.trim().toUpperCase();
   console.debug(TRACE,{op:'redeem:start', c});
-  const { data, error } = await supabase.functions.invoke('redeem_qr',{ body:{ code:c }});
+  const { data, error } = await supabase.functions.invoke('redeem-qr',{ body:{ code:c }});
   const status=(error as any)?.status|| (data?200:500);
   console.debug(TRACE,{op:'redeem:end', status, error: (error as any)?.message});
   return error ? { ok:false, status, body:{ error:String((error as any).message||'edge_error') } } as const
