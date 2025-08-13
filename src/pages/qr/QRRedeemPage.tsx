@@ -4,8 +4,8 @@ import { useRoute } from 'wouter';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { validateQR_GET, redeemQR } from '@/lib/qr/api';
 import { KEY as POST_LOGIN_KEY } from '@/utils/postLoginRedirectFixed';
+import { validateQR, redeemQR } from '@/lib/qr/api';
 
 const TRACE_ID = 'M1QR-TRACE';
 const FUNCTIONS_BASE = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
@@ -39,7 +39,7 @@ useEffect(() => {
       if (import.meta.env.DEV) {
         console.debug(TRACE_ID, { tag:'M1QR', step:'validate:start', code, ts: Date.now() });
       }
-      const r = await validateQR_GET(code);
+      const r = await validateQR(code);
       if (import.meta.env.DEV) {
         console.debug(TRACE_ID, { tag:'M1QR', step:'validate:end', code, status: r.status, ok: r.ok, allow_origin: r.allow, ts: Date.now() });
       }

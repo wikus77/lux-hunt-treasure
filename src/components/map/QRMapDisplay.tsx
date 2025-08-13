@@ -24,15 +24,17 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
   const map = useMap();
-  const MIN_ZOOM = 0;
+  const MIN_ZOOM = 17;
   const RADIUS_M = 500;
   const NEAR_M = 75;
   const watcher = useGeoWatcher();
   const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
   const TRACE_ID = 'M1QR-TRACE';
 
-  // icon computed per-marker within render based on inRange
-
+  const icon = (active:boolean) => L.divIcon({
+    className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
+    iconSize: [16,16]
+  });
 
   useEffect(() => {
     (async () => {
@@ -91,11 +93,7 @@ return (
             <Marker
               key={qr.code}
               position={[qr.lat, qr.lng]}
-              icon={L.divIcon({
-                className: `qr-marker ${qr.is_active ? 'qr--active' : 'qr--redeemed'} ${inRange && qr.is_active ? 'qr--pulse' : ''}`,
-                iconSize: [16,16]
-              })}
-
+              icon={icon(qr.is_active)}
 eventHandlers={{
                 click: () => {
                   const url = `/qr/${encodeURIComponent(qr.code)}`;

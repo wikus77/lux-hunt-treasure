@@ -3,6 +3,3 @@
 .qr--active{background:#22c55e; /* verde */ box-shadow:0 0 16px rgba(34,197,94,.6)}
 .qr--redeemed{background:#ef4444; /* rosso */ opacity:.95; box-shadow:0 0 12px rgba(239,68,68,.55)}
 .qr--hidden{background:#94a3b8; opacity:.6}
-.qr--pulse{position:relative}
-.qr--pulse::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid rgba(34,197,94,.5);animation:qr-pulse 1.5s ease-out infinite}
-@keyframes qr-pulse{0%{transform:scale(.9);opacity:.8}70%{transform:scale(1.4);opacity:0}100%{opacity:0}}
