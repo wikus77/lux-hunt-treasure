@@ -18,9 +18,13 @@ port = 54323
 # Keep JWT verification enabled (authenticated admin only)
 verify_jwt = true
 
-[functions.redeem_qr]
-# Publicly callable, function uses service role internally
+[functions.validate-qr]
+# Public validation (no JWT required)
 verify_jwt = false
+
+[functions.redeem_qr]
+# Requires user JWT; function also validates Authorization header internally
+verify_jwt = true
 
 [functions.nearby_qr_notify]
 # Publicly callable, function uses service role internally
