@@ -39,6 +39,7 @@ import QRValidatePage from "@/pages/qr/QRValidatePage";
 import QRRedeemPage from "@/pages/qr/QRRedeemPage";
 import { QRScannerPage } from "@/pages/qr/QRScannerPage";
 import { QRQueryRedeemPage } from "@/pages/qr/QRQueryRedeemPage"; // © 2025 NIYVORA KFT –Joseph MULÉ – M1SSION™
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
 import Terms from "@/pages/Terms";
 import Contact from "@/pages/Contact";
@@ -331,6 +332,7 @@ const WouterRoutes: React.FC = () => {
           {/* Auth routes */}
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
+          <Route path="/auth/reset" component={ResetPasswordPage} />
 
           {/* 404 fallback */}
           <Route>
