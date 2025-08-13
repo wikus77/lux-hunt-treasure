@@ -1,52 +1,39 @@
-// © M1SSION™
-import { useEffect, useRef, useState } from 'react';
+// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-type Status = 'idle' | 'prompt' | 'granted' | 'denied' | 'error';
+type GeoStatus = 'idle'|'prompt'|'granted'|'denied'|'error';
+type Pos = { lat:number; lng:number; acc?:number|null };
 
-const LS_KEY = 'geo.enabled.v1';
+// Compatibilità: leggiamo sia 'geo.enabled.v1' (vecchio) sia 'geo_enabled' (nuovo)
+const LS_KEYS = ['geo.enabled.v1','geo_enabled'];
 
-export function useGeolocation() {
-  const [enabled, setEnabled] = useState<boolean>(() => {
-    try { return localStorage.getItem(LS_KEY) === '1'; } catch { return false; }
-  });
-  const [status, setStatus] = useState<Status>('idle');
-  const [position, setPosition] = useState<{lat:number; lng:number} | null>(null);
-  const watchId = useRef<number | null>(null);
+function readEnabled(): boolean {
+  try { return LS_KEYS.some(k => localStorage.getItem(k) === '1'); } catch { return false; }
+}
+function writeEnabled(v: boolean) {
+  try { LS_KEYS.forEach(k => v ? localStorage.setItem(k,'1') : localStorage.removeItem(k)); } catch {}
+}
 
-  const clearWatch = () => {
-    if (watchId.current !== null && navigator.geolocation) {
-      try { navigator.geolocation.clearWatch(watchId.current); } catch {}
-      watchId.current = null;
-    }
-  };
+export function useGeolocation(){
+  const [status,setStatus]=useState<GeoStatus>('idle');
+  const [enabled,setEnabled]=useState<boolean>(()=>readEnabled());
+  const [position,setPosition]=useState<Pos|undefined>(undefined);
+  const watchId=useRef<number|undefined>();
 
-  const startWatch = () => {
-    if (!navigator.geolocation) { setStatus('error'); return; }
-    try {
-      setStatus('prompt');
-      watchId.current = navigator.geolocation.watchPosition(
-        (pos) => {
-          setStatus('granted');
-          setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
-        (err) => {
-          setPosition(null);
-          setStatus(err.code === 1 ? 'denied' : 'error');
-        },
-        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
-      );
-    } catch { setStatus('error'); }
-  };
+  const enable=useCallback(()=>{ writeEnabled(true); setEnabled(true); },[]);
+  const disable=useCallback(()=>{ writeEnabled(false); setEnabled(false); setStatus('idle'); if(watchId.current!=null) navigator.geolocation.clearWatch(watchId.current); },[]);
 
-  useEffect(() => {
-    if (!enabled) { clearWatch(); setStatus('idle'); setPosition(null); return; }
-    startWatch();
-    return () => clearWatch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(()=> {
+    if (!enabled) return;
+    if (!('geolocation' in navigator)) { setStatus('error'); return; }
+    setStatus('prompt');
+    watchId.current = navigator.geolocation.watchPosition(
+      p => { setStatus('granted'); setPosition({ lat:p.coords.latitude, lng:p.coords.longitude, acc:p.coords.accuracy }); },
+      e => { setStatus(e.code === e.PERMISSION_DENIED ? 'denied' : 'error'); },
+      { enableHighAccuracy:true, maximumAge:0, timeout:10000 }
+    );
+    return () => { if (watchId.current!=null) navigator.geolocation.clearWatch(watchId.current); };
   }, [enabled]);
 
-  const enable = () => { try { localStorage.setItem(LS_KEY, '1'); } catch {} setEnabled(true); };
-  const disable = () => { try { localStorage.removeItem(LS_KEY); } catch {} setEnabled(false); };
-
-  return { status, position, enable, disable, enabled };
+  return { status, enabled, position, enable, disable };
 }
