@@ -32,24 +32,3 @@ export async function redeemQR(code: string) {
   if (error) throw error;
   return data;
 }
-
-// GET helper with explicit apikey for validate-qr (also supports POST via invoke)
-export async function validateQR_GET(code: string): Promise<ValidateResult> {
-  const up = code.trim().toUpperCase();
-  const url = `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/validate-qr?c=${encodeURIComponent(up)}`;
-  const res = await fetch(url, {
-    headers: {
-      'accept': 'application/json',
-      // Public anon key - safe to expose
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
-    }
-  });
-  let body: any = null;
-  try { body = await res.json(); } catch {}
-  return {
-    ok: res.ok,
-    status: res.status,
-    body,
-    allow: res.headers.get('access-control-allow-origin')
-  };
-}
