@@ -21,13 +21,38 @@ Deno.serve(async(req)=>{
 
     const url=Deno.env.get('SUPABASE_URL')!, key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Idempotenza via tabella qr_redemptions (unique code)
-    const chk=new URL(`${url}/rest/v1/qr_redemptions`); chk.searchParams.set('select','id'); chk.searchParams.set('code',`eq.${up}`);
+    // Verifica se questo USER ha già riscattato questo codice
+    const chk=new URL(`${url}/rest/v1/qr_redemptions`); 
+    chk.searchParams.set('select','id'); 
+    chk.searchParams.set('code',`eq.${up}`);
+    chk.searchParams.set('user_id',`eq.${s}`);
     const cr=await fetch(chk.toString(),{headers:{apikey:key,authorization:`Bearer ${key}`}});
     const cj=await cr.json().catch(()=>[]) as any[];
     if(Array.isArray(cj)&&cj.length>0) return new Response(JSON.stringify({status:'already_redeemed'}),{status:409,headers:{...C(origin),'content-type':'application/json'}});
 
-    const ins=await fetch(`${url}/rest/v1/qr_redemptions`,{ method:'POST', headers:{apikey:key,authorization:`Bearer ${key}`,'content-type':'application/json'}, body:JSON.stringify({ code:up, user_id:s, meta:{} }) });
+    // Verifica che il QR code esista e sia attivo
+    const qrCheck=new URL(`${url}/rest/v1/qr_codes`);
+    qrCheck.searchParams.set('select','id,reward_type,reward_value,lat,lng,is_active');
+    qrCheck.searchParams.set('code',`eq.${up}`);
+    qrCheck.searchParams.set('is_active',`eq.true`);
+    const qrRes=await fetch(qrCheck.toString(),{headers:{apikey:key,authorization:`Bearer ${key}`}});
+    const qrData=await qrRes.json().catch(()=>[]) as any[];
+    if(!Array.isArray(qrData)||qrData.length===0) return new Response(JSON.stringify({error:'invalid_or_inactive_code'}),{status:404,headers:{...C(origin),'content-type':'application/json'}});
+    
+    const qr=qrData[0];
+    const ins=await fetch(`${url}/rest/v1/qr_redemptions`,{ 
+      method:'POST', 
+      headers:{apikey:key,authorization:`Bearer ${key}`,'content-type':'application/json'}, 
+      body:JSON.stringify({ 
+        code:up, 
+        user_id:s, 
+        reward_type:qr.reward_type||'buzz_credit',
+        reward_value:qr.reward_value||1,
+        lat:qr.lat,
+        lon:qr.lng,
+        redeemed_at:new Date().toISOString()
+      }) 
+    });
     if(!ins.ok){ const txt=await ins.text(); return new Response(JSON.stringify({error:'insert_failed',detail:txt}),{status:500,headers:{...C(origin),'content-type':'application/json'}}); }
 
     return new Response(JSON.stringify({status:'ok'}),{status:200,headers:{...C(origin),'content-type':'application/json'}});
