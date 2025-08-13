@@ -18,7 +18,7 @@ import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { GeoToggle } from '@/components/ui/GeoToggle';
+
 import L from 'leaflet';
 import { toast } from 'sonner';
 import { GeoDebugOverlay } from '@/components/map/GeoDebugOverlay';
