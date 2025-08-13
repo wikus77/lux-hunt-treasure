@@ -3,7 +3,7 @@ import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
 const OK=(o:string|null)=> allow(o)?o:'https://www.m1ssion.eu';
 function allow(o:string|null){ if(!o) return false; try{ const {hostname}=new URL(o); return [
   'www.m1ssion.eu','m1ssion.eu','m1ssion.pages.dev','localhost','127.0.0.1'
-].includes(hostname) || hostname.endsWith('lovable.dev') || hostname.endsWith('lovableproject.com'); }catch{ return false; } }
+].includes(hostname) || hostname.endsWith('lovable.dev') || hostname.endsWith('lovableproject.com') || hostname.endsWith('lovable.app'); }catch{ return false; } }
 const C=(o:string|null)=>({'Access-Control-Allow-Origin':OK(o),'Vary':'Origin','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Max-Age':'86400'});
 
 Deno.serve(async(req)=>{
