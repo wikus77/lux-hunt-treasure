@@ -11,20 +11,23 @@ export const QRQueryRedeemPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Move useRoute to top-level (fix Rules of Hooks violation)
+  const [match, params] = useRoute('/qr/:code');
+  
+  // Calculate code from path and query parameters
+  const searchParams = new URLSearchParams(window.location.search);
+  const pathCode = match ? String((params as any).code || '').toUpperCase() : undefined;
+  const queryCode = (searchParams.get('c') ?? searchParams.get('code') ?? '').trim().toUpperCase();
+  const code = pathCode || queryCode || '';
+
   useEffect(() => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const [, routeParams] = useRoute('/qr/:code') || ([] as any);
-    const pathCode = (routeParams && (routeParams as any).code ? String((routeParams as any).code) : undefined)?.toUpperCase();
-    const raw = searchParams.get('c') ?? searchParams.get('code') ?? '';
-    const queryCode = raw.trim().toUpperCase();
-    const code = pathCode || queryCode;
 
     if (!user) {
       // Save redirect and go to login
       if (code) {
         try { localStorage.setItem('post_login_redirect', `/qr/${code}`); } catch {}
       }
-      setLocation(`/login${code ? `?redirect=${encodeURIComponent(`/qr/${code}`)}` : ''}`);
+      setLocation(`/login?redirect=${encodeURIComponent(`/qr/${code}`)}`);
       return;
     }
 
@@ -37,13 +40,19 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.functions.invoke('redeem-qr', { body: { code } });
+        const { data, error } = await supabase.functions.invoke('redeem-qr', { 
+          body: { code: code.toUpperCase() } 
+        });
         
         if (error) {
           // Extract detailed error from Supabase Functions context
-          const detail = (error as any)?.context ? JSON.stringify((error as any).context) : error.message;
+          const detail = (error as any)?.context?.error || error.message;
           console.error('redeem-qr error', error, detail);
-          setError(`Redeem fallito: ${detail}`);
+          if (detail === 'invalid_or_inactive_code') {
+            setError('Codice QR non valido o disattivato');
+          } else {
+            setError(`Redeem fallito: ${detail}`);
+          }
           return;
         }
 
@@ -83,7 +92,7 @@ export const QRQueryRedeemPage: React.FC = () => {
     };
 
     redeem();
-  }, [user]);
+  }, [user, code]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">

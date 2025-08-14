@@ -1,0 +1,30 @@
+begin;
+
+-- 1) qr_codes: SELECT/INSERT per utenti autenticati (già fatto? ripeti idempotente)
+drop policy if exists qr_codes_select_auth on public.qr_codes;
+create policy qr_codes_select_auth
+on public.qr_codes
+for select
+to authenticated
+using (true);
+
+drop policy if exists qr_codes_insert_auth on public.qr_codes;
+create policy qr_codes_insert_auth
+on public.qr_codes
+for insert
+to authenticated
+with check (true);
+
+-- 2) Redemption logs: gli utenti possono leggere SOLO i propri
+drop policy if exists qr_redemption_logs_select_own on public.qr_redemption_logs;
+create policy qr_redemption_logs_select_own
+on public.qr_redemption_logs
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+-- 3) Indici univoci (idempotenti)
+create unique index if not exists uq_qr_codes_code on public.qr_codes(code);
+create unique index if not exists uq_qr_redemptions_user_code on public.qr_redemptions(user_id, code);
+
+commit;

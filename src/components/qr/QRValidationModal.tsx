@@ -146,13 +146,13 @@ export const QRValidationModal: React.FC<QRValidationModalProps> = ({
     try {
       const { data, error } = await supabase.functions.invoke('redeem-qr', {
         body: {
-          code: qrData.code
+          code: qrData.code.toUpperCase()
         }
       });
 
       if (error) {
         // Extract detailed error from Supabase Functions context
-        const detail = (error as any)?.context ? JSON.stringify((error as any).context) : error.message;
+        const detail = (error as any)?.context?.error || error.message;
         throw new Error(detail);
       }
 
