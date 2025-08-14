@@ -155,8 +155,15 @@ useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    setShowLayer(z >= markerMinZoom);
-    if (import.meta.env.DEV) console.debug('[QR] layer toggle', { z, show: z >= markerMinZoom, minZoom: markerMinZoom });
+    const shouldShow = z >= markerMinZoom;
+    setShowLayer(shouldShow);
+    console.log('M1QR-TRACE:', { 
+      step: 'zoom_check', 
+      currentZoom: z, 
+      minZoom: markerMinZoom, 
+      showLayer: shouldShow,
+      markersVisible: shouldShow 
+    });
   };
   update();
   map.on('zoomend', update);
@@ -181,6 +188,12 @@ useEffect(() => {
 
 return (
   <>
+    {console.log('M1QR-TRACE:', { 
+      step: 'render_check', 
+      showLayer, 
+      markersCount: all.length,
+      markersWillRender: showLayer ? all.length : 0 
+    })}
     {showLayer && (
       <LayerGroup>
         {all.map((qr) => {
