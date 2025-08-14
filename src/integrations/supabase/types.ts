@@ -3308,13 +3308,13 @@ export type Database = {
           code?: string | null
           latitude?: never
           longitude?: never
-          title?: string | null
+          title?: never
         }
         Update: {
           code?: string | null
           latitude?: never
           longitude?: never
-          title?: string | null
+          title?: never
         }
         Relationships: []
       }
@@ -3329,13 +3329,13 @@ export type Database = {
           code?: string | null
           latitude?: never
           longitude?: never
-          title?: string | null
+          title?: never
         }
         Update: {
           code?: string | null
           latitude?: never
           longitude?: never
-          title?: string | null
+          title?: never
         }
         Relationships: []
       }
@@ -3713,10 +3713,6 @@ export type Database = {
       record_intelligence_tool_usage: {
         Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
-      }
-      redeem_qr: {
-        Args: { code_input: string }
-        Returns: Json
       }
       register_user_to_active_mission: {
         Args: { p_user_id: string }

@@ -39,18 +39,20 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        
-        const { data, error } = await supabase.functions.invoke('redeem-qr', {
-          body: { code }
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess?.session?.access_token || '';
+        const url = `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/redeem-qr`;
+
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          body: JSON.stringify({ code })
         });
 
-        if (error) {
-          console.error('Supabase function error:', error);
-          setError('Errore nella chiamata al server');
-          return;
-        }
-
-        const payload = data || {};
+        const payload = await res.json().catch(() => ({} as any));
 
         if (payload?.status === 'ok') {
           toast.success('🎁 Ricompensa sbloccata!');
@@ -66,13 +68,12 @@ export const QRQueryRedeemPage: React.FC = () => {
           setError('Codice QR non valido o disattivato');
           return;
         }
-        if (payload?.error === 'unauthorized') {
+        if (res.status === 401 || payload?.error === 'unauthorized') {
           setError('Devi effettuare l\'accesso per riscattare');
           return;
         }
         setError('Redeem fallito. Riprova tra poco.');
       } catch (e: any) {
-        console.error('Redeem error:', e);
         setError(e?.message || 'Errore sconosciuto');
       } finally {
         setLoading(false);
