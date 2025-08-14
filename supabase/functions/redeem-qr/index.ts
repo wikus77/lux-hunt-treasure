@@ -1,167 +1,118 @@
-// deno-lint-ignore-file no-explicit-any
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+// supabase/functions/redeem-qr/index.ts
+// Robust QR redeem – CORS safe + defaults + non-blocking logs
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-const ALLOWED_ORIGINS = new Set([
-  "https://m1ssion.eu",
-  "https://www.m1ssion.eu",
-  "https://lovable.dev",
-  "http://localhost:5173",
-  "http://localhost:5174",
-]);
-
-const baseCors = {
-  "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-  "Access-Control-Max-Age": "86400",
-};
-
-function withCors(origin: string | null, extra: Record<string, string> = {}) {
-  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : "*";
-  return {
-    ...baseCors,
-    "Access-Control-Allow-Origin": allowOrigin,
-    ...extra,
-  };
-}
+const cors = (origin: string) => ({
+  "Access-Control-Allow-Origin": origin || "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+  "Vary": "Origin",
+  "Content-Type": "application/json",
+});
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin");
-
+  const origin = req.headers.get("Origin") ?? "*";
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: withCors(origin) });
+    return new Response("ok", { headers: cors(origin) });
   }
 
+  // Auth-bound client (propaga Authorization)
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
+    { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
+  );
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: cors(origin) });
+
   try {
-    const { code } = await req.json().catch(() => ({}));
-    if (!code || typeof code !== "string") {
-      return Response.json(
-        { status: "error", error: "invalid_request", detail: "missing code" },
-        { headers: withCors(origin) },
-      );
-    }
+    const { data: auth } = await supabase.auth.getUser();
+    const user = auth?.user;
+    if (!user) return json({ status: "error", error: "unauthorized" }, 401);
 
-    const upper = code.trim().toUpperCase();
+    let payload: any = {};
+    try { payload = await req.json(); } catch { /* no body */ }
+    const code: string = String(payload?.code ?? "").trim().toUpperCase();
+    if (!code) return json({ status: "error", error: "missing_code" }, 400);
 
-    // Client con JWT utente per ottenere user_id
-    const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
-    });
-    const { data: auth } = await userClient.auth.getUser();
-    const user_id = auth?.user?.id;
-
-    if (!user_id) {
-      return Response.json(
-        { status: "error", error: "unauthorized" },
-        { headers: withCors(origin) },
-      );
-    }
-
-    // Service role per bypass RLS nelle operazioni atomiche
-    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // 1) Valida codice
-    const { data: qc, error: qcErr } = await admin
+    // Leggi QR dal backend unificato
+    const { data: qr, error: qrErr } = await supabase
       .from("qr_codes")
-      .select("code,reward_type,reward_value,is_active,expires_at")
-      .eq("code", upper)
+      .select("code, reward_type, reward_value, is_active, expires_at, title, lat, lng")
+      .eq("code", code)
       .maybeSingle();
 
-    if (qcErr) {
-      return Response.json(
-        { status: "error", error: "internal_error", detail: qcErr.message },
-        { headers: withCors(origin) },
-      );
+    if (qrErr) {
+      await safeLog(supabase, user.id, code, "error", { where: "select_qr", detail: qrErr.message });
+      return json({ status: "error", error: "db_error", detail: qrErr.message }, 500);
     }
 
     const nowIso = new Date().toISOString();
-    const active =
-      qc && qc.is_active === true &&
-      (!qc.expires_at || qc.expires_at > nowIso);
+    const expired = qr?.expires_at && qr.expires_at < nowIso;
 
-    if (!qc || !active) {
-      return Response.json(
-        { status: "error", error: "invalid_or_inactive_code" },
-        { headers: withCors(origin) },
-      );
+    if (!qr || qr.is_active === false || expired) {
+      await safeLog(supabase, user.id, code, "invalid_or_inactive_code", { found: !!qr, expired });
+      return json({ status: "invalid_or_inactive_code", error: "invalid_or_inactive_code" }, 200);
     }
 
-    // 2) doppioni utente
-    const { data: already } = await admin
+    // Normalizza reward_type + default sicuri
+    const reward_type = normalizeRewardType(qr.reward_type);
+    const reward_value = Number.isFinite(qr.reward_value) ? qr.reward_value : 1;
+
+    // Evita duplicati (1 redeem per utente per codice)
+    const { data: already } = await supabase
       .from("qr_redemptions")
-      .select("user_id,code")
-      .eq("user_id", user_id)
-      .eq("code", upper)
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("code", code)
       .maybeSingle();
 
     if (already) {
-      // Log non-bloccante
-      await admin.from("qr_redemption_logs").insert({
-        user_id,
-        qr_code_id: upper,
-        status: "already_redeemed",
-        details: { ua: req.headers.get("user-agent") },
-      }).catch(() => {});
-
-      return Response.json(
-        { status: "already_redeemed", reward_type: qc.reward_type, reward_value: qc.reward_value ?? 1 },
-        { headers: withCors(origin) },
-      );
+      await safeLog(supabase, user.id, code, "already_claimed", {});
+      return json({ status: "already_claimed" }, 200);
     }
 
-    // 3) Inserisci redeem + disattiva codice
-    const ins = await admin.from("qr_redemptions").insert({
-      user_id,
-      code: upper,
+    // Inserisci redemption con campi NON NULL
+    const { error: insErr } = await supabase.from("qr_redemptions").insert({
+      user_id: user.id,
+      code,
+      reward_type,
+      reward_value,
+      redeemed_at: nowIso,
     });
 
-    if (ins.error && !ins.error.message.includes("duplicate")) {
-      return Response.json(
-        { status: "error", error: "internal_error", detail: ins.error.message },
-        { headers: withCors(origin) },
-      );
+    if (insErr) {
+      await safeLog(supabase, user.id, code, "error", { where: "insert_redemption", detail: insErr.message });
+      return json({ status: "error", error: "internal_error", detail: insErr.message }, 500);
     }
 
-    // Disattiva il codice
-    const upd = await admin.from("qr_codes")
-      .update({ is_active: false })
-      .eq("code", upper);
+    // Log NON bloccante
+    await safeLog(supabase, user.id, code, "ok", { reward_type, reward_value });
 
-    if (upd.error) {
-      // Non bloccare il redeem, ma segnala nel detail
-      await admin.from("qr_redemption_logs").insert({
-        user_id,
-        qr_code_id: upper,
-        status: "ok_with_warning",
-        details: { warning: "failed_to_deactivate_code", err: upd.error.message },
-      }).catch(() => {});
-    } else {
-      // Log OK
-      await admin.from("qr_redemption_logs").insert({
-        user_id,
-        qr_code_id: upper,
-        status: "ok",
-        details: { ua: req.headers.get("user-agent") },
-      }).catch(() => {});
-    }
-
-    return Response.json(
-      {
-        status: "ok",
-        code: upper,
-        reward_type: qc.reward_type,
-        reward_value: qc.reward_value ?? 1,
-      },
-      { headers: withCors(origin) },
-    );
-  } catch (e: any) {
-    return Response.json(
-      { status: "error", error: "internal_error", detail: String(e?.message ?? e) },
-      { headers: withCors(req.headers.get("Origin")) },
-    );
+    return json({ status: "ok", reward_type, reward_value }, 200);
+  } catch (e) {
+    return new Response(JSON.stringify({ status: "error", error: "internal_error", detail: String(e?.message ?? e) }), {
+      status: 500,
+      headers: cors(origin),
+    });
   }
 });
+
+function normalizeRewardType(input?: string): string {
+  const t = (input || "").toLowerCase();
+  if (["buzz", "buzz_credit", "buzz_gratis", "buzz_map_credit"].includes(t)) return "buzz_credit";
+  if (["clue", "indizio_segreto"].includes(t)) return "clue";
+  if (["enigma", "enigma_misterioso"].includes(t)) return "enigma";
+  if (t === "fake") return "fake";
+  if (["sorpresa", "sorpresa_speciale", "custom"].includes(t)) return "sorpresa_speciale";
+  return "buzz_credit"; // default sicuro
+}
+
+async function safeLog(supabase: any, user_id: string, qr_code_id: string, status: string, details: Record<string, unknown>) {
+  try {
+    await supabase.from("qr_redemption_logs").insert({ user_id, qr_code_id, status, details });
+  } catch { /* non bloccare */ }
+}

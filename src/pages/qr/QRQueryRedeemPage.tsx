@@ -54,21 +54,19 @@ export const QRQueryRedeemPage: React.FC = () => {
           toast.success('🎁 Ricompensa sbloccata!');
           if (resp.reward_type === 'buzz_credit') {
             setLocation('/buzz?free=1&reward=1');
-          } else if (resp.reward_type === 'buzz_map_credit') {
-            setLocation('/map?free=1&reward=1');
           } else {
             setLocation('/home');
           }
           return;
         }
 
-        if (resp.status === 'already_redeemed' || resp.status === 'already_claimed') {
+        if (resp.status === 'already_claimed') {
           toast.info('Hai già riscattato questo QR');
           setLocation('/home');
           return;
         }
 
-        if (resp.error === 'invalid_or_inactive_code') {
+        if (resp.status === 'invalid_or_inactive_code') {
           setError('Codice QR non valido o disattivato');
           return;
         }
