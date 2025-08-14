@@ -192,8 +192,22 @@ return (
               icon={icon(qr.is_active)}
               eventHandlers={{
                 click: async () => {
-                  console.log('M1QR-TRACE:', { step: 'open_modal', markerId: qr.code, rewardsCount: 0 });
-                  setSelectedMarker(qr.code);
+                  const markerId = qr.code;
+                  console.log('M1QR-TRACE:', { step: 'click_marker_start', markerId });
+                  
+                  // Fetch rewards immediately
+                  const { data: rewards, error } = await supabase
+                    .from('marker_rewards')
+                    .select('*')
+                    .eq('marker_id', markerId);
+
+                  if (error) {
+                    console.error('M1QR-TRACE:', { step: 'rewards_fetch_error', markerId, error });
+                    return;
+                  }
+
+                  console.log('M1QR-TRACE:', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+                  setSelectedMarker(markerId);
                 }
               }}
             >
