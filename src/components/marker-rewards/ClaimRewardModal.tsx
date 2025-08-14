@@ -155,6 +155,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
               onClick={handleClaim}
               disabled={isClaiming}
               className="flex-1 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
+              data-testid="claim-reward-cta"
             >
               {isClaiming ? 'Riscattando...' : 'Riscatta'}
             </Button>

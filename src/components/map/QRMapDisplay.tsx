@@ -194,20 +194,20 @@ return (
               icon={icon(qr.is_active)}
               eventHandlers={{
                 click: () => {
-                  console.log('M1QR-TRACE: QR marker clicked - opening popup for code:', qr.code);
-                  // Popup opens on click - no navigation to QR pages
+                  console.log('M1QR-TRACE:', { step: 'open_modal', markerId: qr.code, title: qr.title });
+                  setSelectedMarker(qr.code);
                 }
               }}
             >
               <Popup>
-                <div className="text-center space-y-3 min-w-[200px]">
+                <div className="text-center space-y-2 min-w-[180px]">
                   <div className="flex items-center gap-2 justify-center">
-                    <QrCode className="w-5 h-5 text-primary" />
-                    <h3 className="font-bold text-lg">M1SSION™ QR</h3>
+                    <QrCode className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-sm">M1SSION™</h3>
                   </div>
                   <div>
-                    <p className="font-semibold text-base">{qr.title || 'QR'}</p>
-                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }}>
+                    <p className="font-medium text-sm">{qr.title || qr.code}</p>
+                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
                       {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
                     </Badge>
                   </div>
@@ -217,14 +217,9 @@ return (
                       <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
                     </div>
                   )}
-                  {(qr.is_active && userLocation) && (inRange ? (
-                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
-                      console.log('M1QR-TRACE: QR reward popup triggered for code:', qr.code);
-                      setSelectedMarker(qr.code);
-                    }}>🎯 Riscatta</Button>
-                  ) : (
-                    <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
-                  ))}
+                  <div className="text-xs text-muted-foreground">
+                    Click marker for rewards
+                  </div>
                 </div>
               </Popup>
             </Marker>
