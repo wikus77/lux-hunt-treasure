@@ -21,7 +21,6 @@ export const QRQueryRedeemPage: React.FC = () => {
   const code = (pathCode || queryCode || '').toUpperCase();
 
   useEffect(() => {
-
     if (!user) {
       // Save redirect and go to login
       if (code) {
@@ -47,15 +46,11 @@ export const QRQueryRedeemPage: React.FC = () => {
           return;
         }
 
-        const resp = (data || {}) as { status?: string; error?: string; detail?: string; reward_type?: string; reward_value?: number };
+        const resp = (data || {}) as { status?: string; error?: string; reward_type?: string; reward_value?: string };
 
         if (resp.status === 'ok') {
           toast.success('🎁 Ricompensa sbloccata!');
-          if (resp.reward_type === 'buzz_credit') {
-            setLocation('/buzz?free=1&reward=1');
-          } else {
-            setLocation('/home');
-          }
+          setLocation('/buzz?free=1&reward=1');
           return;
         }
 
@@ -70,7 +65,7 @@ export const QRQueryRedeemPage: React.FC = () => {
           return;
         }
 
-        setError(`Redeem fallito: ${resp.error ?? 'unknown'} ${resp.detail ?? ''}`.trim());
+        setError(`Redeem fallito: ${resp.error ?? 'unknown'}`);
       } catch (e: any) {
         setError(e?.message || 'Errore sconosciuto');
       } finally {

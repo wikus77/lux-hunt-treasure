@@ -230,7 +230,7 @@ const generateQRCode = async () => {
         code,
         title: formData.locationName || 'QR Manuale',
         reward_type: normalizedRewardType,
-        reward_value: 1, // default reward value
+        reward_value: "1", // default reward value as string
         lat: latNum,
         lng: lngNum,
         is_active: true,
