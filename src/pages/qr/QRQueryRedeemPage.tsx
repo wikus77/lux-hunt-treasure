@@ -15,7 +15,8 @@ export const QRQueryRedeemPage: React.FC = () => {
     const searchParams = new URLSearchParams(window.location.search);
     const [, routeParams] = useRoute('/qr/:code') || ([] as any);
     const pathCode = (routeParams && (routeParams as any).code ? String((routeParams as any).code) : undefined)?.toUpperCase();
-    const queryCode = searchParams.get('code')?.toUpperCase();
+    const raw = searchParams.get('c') ?? searchParams.get('code') ?? '';
+    const queryCode = raw.trim().toUpperCase();
     const code = pathCode || queryCode;
 
     if (!user) {

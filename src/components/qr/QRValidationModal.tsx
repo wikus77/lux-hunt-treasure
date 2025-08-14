@@ -105,6 +105,27 @@ export const QRValidationModal: React.FC<QRValidationModalProps> = ({
         return;
       }
 
+      // Final fallback to qr_codes table
+      const { data: qc } = await supabase
+        .from('qr_codes')
+        .select('code, title, reward_type, reward_value, lat, lng, is_active')
+        .eq('code', qrCode.toUpperCase())
+        .maybeSingle();
+
+      if (qc) {
+        setQrData({
+          id: qc.code,
+          code: qc.code,
+          lat: qc.lat || 0,
+          lng: qc.lng || 0,
+          location_name: qc.title || 'Posizione QR',
+          reward_type: qc.reward_type,
+          message: `Reward ${qc.reward_type}`,
+          is_used: false // Lasciamo a redeem il controllo dei doppioni
+        });
+        return;
+      }
+
       // QR code not found
       setError('QR code non trovato o non valido');
 
