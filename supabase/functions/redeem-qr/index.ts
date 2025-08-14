@@ -37,8 +37,8 @@ serve(async (req) => {
       return json({ status:"error", error:"invalid_or_inactive_code" }, 400);
     }
 
-    const reward_type  = qr.reward_type || "buzz_credit";
-    const reward_value = Number.isFinite(qr.reward_value) ? qr.reward_value : 1;
+    const reward_type = qr.reward_type || "buzz_credit";
+    const reward_value = qr.reward_value || "1";
 
     // 2) utente corrente
     const { data: auth } = await userClient.auth.getUser();
@@ -55,22 +55,17 @@ serve(async (req) => {
       return json({ status:"already_claimed", reward_type, reward_value }, 200);
     }
 
-    // 4) inserisci redemption (con valori NON null)
+    // 4) inserisci redemption
     const { error: insErr } = await userClient.from("qr_redemptions").insert([{
       user_id, code, reward_type, reward_value
     }]);
 
     if (insErr) {
-      // violazione unique -> already_claimed
-      if (String(insErr.message).includes("uq_qr_redemptions_user_code")) {
-        await safeLog(admin, req, { code, user_id, status: "already_claimed" });
-        return json({ status:"already_claimed", reward_type, reward_value }, 200);
-      }
       await safeLog(admin, req, { code, user_id, status: "error", details: { insErr } });
       return json({ status:"error", error:"internal_error", detail: insErr.message }, 500);
     }
 
-    // 5) log non bloccante (code/qr_code/qr_code_id riempiti tutti)
+    // 5) log non bloccante
     await safeLog(admin, req, { code, user_id, status: "ok", details: { reward_type, reward_value } });
 
     return json({ status:"ok", reward_type, reward_value }, 200);
@@ -92,11 +87,10 @@ function json(payload: Json, status=200) {
 }
 async function safeLog(admin: any, req: Request, row: Json) {
   try {
-    const base = { code: row.code, qr_code: row.code, qr_code_id: row.code, status: row.status, details: row.details ?? null };
     const { data: auth } = await createClient(url, anon, {
       global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
     }).auth.getUser();
     const user_id = auth?.user?.id ?? row.user_id ?? null;
-    await admin.from("qr_redemption_logs").insert([{ user_id, ...base }]);
+    await admin.from("qr_redemption_logs").insert([{ user_id, qr_code: row.code }]);
   } catch (_e) { /* non bloccante */ }
 }

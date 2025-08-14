@@ -1840,8 +1840,8 @@ export type Database = {
           max_uses_total: number | null
           message: string | null
           radius_m: number | null
-          reward_type: string
-          reward_value: number
+          reward_type: string | null
+          reward_value: string | null
           status: string
           title: string
           type: string | null
@@ -1862,8 +1862,8 @@ export type Database = {
           max_uses_total?: number | null
           message?: string | null
           radius_m?: number | null
-          reward_type: string
-          reward_value: number
+          reward_type?: string | null
+          reward_value?: string | null
           status?: string
           title: string
           type?: string | null
@@ -1884,8 +1884,8 @@ export type Database = {
           max_uses_total?: number | null
           message?: string | null
           radius_m?: number | null
-          reward_type?: string
-          reward_value?: number
+          reward_type?: string | null
+          reward_value?: string | null
           status?: string
           title?: string
           type?: string | null
@@ -1894,76 +1894,42 @@ export type Database = {
       }
       qr_redemption_logs: {
         Row: {
-          code: string | null
           created_at: string
-          details: Json | null
           distance_meters: number | null
           failure_reason: string | null
           id: string
           qr_code: string | null
-          qr_code_id: string
           reward_granted: Json | null
-          status: string | null
           success: boolean
           user_id: string
           user_lat: number | null
           user_lng: number | null
         }
         Insert: {
-          code?: string | null
-          created_at?: string
-          details?: Json | null
+          created_at: string
           distance_meters?: number | null
           failure_reason?: string | null
           id?: string
           qr_code?: string | null
-          qr_code_id: string
           reward_granted?: Json | null
-          status?: string | null
           success: boolean
           user_id: string
           user_lat?: number | null
           user_lng?: number | null
         }
         Update: {
-          code?: string | null
           created_at?: string
-          details?: Json | null
           distance_meters?: number | null
           failure_reason?: string | null
           id?: string
           qr_code?: string | null
-          qr_code_id?: string
           reward_granted?: Json | null
-          status?: string | null
           success?: boolean
           user_id?: string
           user_lat?: number | null
           user_lng?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "qr_redemption_logs_qr_code_fk"
-            columns: ["qr_code_id"]
-            isOneToOne: false
-            referencedRelation: "qr_codes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qr_redemption_logs_qr_code_id_fkey"
-            columns: ["qr_code_id"]
-            isOneToOne: false
-            referencedRelation: "qr_buzz_codes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "qr_redemption_logs_qr_fk"
-            columns: ["qr_code_id"]
-            isOneToOne: false
-            referencedRelation: "qr_codes"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       qr_redemptions: {
         Row: {
@@ -1972,8 +1938,8 @@ export type Database = {
           lat: number | null
           lon: number | null
           redeemed_at: string
-          reward_type: string
-          reward_value: number
+          reward_type: string | null
+          reward_value: string | null
           user_id: string
         }
         Insert: {
@@ -1982,8 +1948,8 @@ export type Database = {
           lat?: number | null
           lon?: number | null
           redeemed_at?: string
-          reward_type?: string
-          reward_value?: number
+          reward_type?: string | null
+          reward_value?: string | null
           user_id: string
         }
         Update: {
@@ -1992,8 +1958,8 @@ export type Database = {
           lat?: number | null
           lon?: number | null
           redeemed_at?: string
-          reward_type?: string
-          reward_value?: number
+          reward_type?: string | null
+          reward_value?: string | null
           user_id?: string
         }
         Relationships: [
@@ -2001,7 +1967,21 @@ export type Database = {
             foreignKeyName: "qr_redemptions_code_fk"
             columns: ["code"]
             isOneToOne: false
+            referencedRelation: "buzz_map_markers"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "qr_redemptions_code_fk"
+            columns: ["code"]
+            isOneToOne: false
             referencedRelation: "qr_codes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "qr_redemptions_code_fk"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "qr_codes_markers"
             referencedColumns: ["code"]
           },
         ]
@@ -3296,7 +3276,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      buzz_map_markers: {
+        Row: {
+          code: string | null
+          latitude: number | null
+          longitude: number | null
+          title: string | null
+        }
+        Insert: {
+          code?: string | null
+          latitude?: never
+          longitude?: never
+          title?: never
+        }
+        Update: {
+          code?: string | null
+          latitude?: never
+          longitude?: never
+          title?: never
+        }
+        Relationships: []
+      }
+      qr_codes_markers: {
+        Row: {
+          code: string | null
+          latitude: number | null
+          longitude: number | null
+          title: string | null
+        }
+        Insert: {
+          code?: string | null
+          latitude?: never
+          longitude?: never
+          title?: never
+        }
+        Update: {
+          code?: string | null
+          latitude?: never
+          longitude?: never
+          title?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_referral_credits: {
@@ -3605,8 +3626,8 @@ export type Database = {
           lat: number | null
           lon: number | null
           redeemed_at: string
-          reward_type: string
-          reward_value: number
+          reward_type: string | null
+          reward_value: string | null
           user_id: string
         }[]
       }
