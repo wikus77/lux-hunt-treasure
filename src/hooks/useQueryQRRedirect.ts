@@ -1,10 +1,11 @@
+// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
+
 import { useEffect } from 'react';
 import { useLocation } from 'wouter';
 
 /**
- * useQueryQRRedirect
- * - Legge ?qr= dalla URL e reindirizza a /qr/:code
- * - Pulisce il parametro per evitare loop al refresh
+ * useQueryQRRedirect - Legacy QR handling removed
+ * Now redirects directly to map without QR processing
  */
 export function useQueryQRRedirect() {
   const [, setLocation] = useLocation();
@@ -15,15 +16,15 @@ export function useQueryQRRedirect() {
       const raw = sp.get('qr')?.trim();
       if (!raw) return;
 
-      const code = encodeURIComponent(raw.toUpperCase());
+      // Direct redirect to map - QR processing handled by markers
       setLocation(`/map`);
 
-      // Rimuovi param per evitare ripetizioni
+      // Remove param to avoid loops
       const url = new URL(window.location.href);
       url.searchParams.delete('qr');
       window.history.replaceState({}, document.title, url.toString());
     } catch (e) {
-      console.warn('[useQueryQRRedirect] init error', e);
+      console.warn('[useQueryQRRedirect] redirect error', e);
     }
   }, [setLocation]);
 }
