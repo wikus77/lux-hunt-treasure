@@ -209,9 +209,23 @@ return (
                   const markerId = qr.code;
                   console.log('M1QR-TRACE:', { step: 'click_marker_start', markerId });
                   
-                  // Force immediate modal opening
-                  setSelectedMarker(markerId);
-                  console.log('M1QR-TRACE:', { step: 'modal_set', markerId });
+                  // Fetch rewards directly for immediate modal opening
+                  try {
+                    const { data: rewards, error } = await supabase
+                      .from('marker_rewards')
+                      .select('reward_type, payload, description')
+                      .eq('marker_id', markerId);
+
+                    if (error) {
+                      console.error('M1QR-TRACE:', { step: 'rewards_fetch_error', markerId, error });
+                      return;
+                    }
+
+                    console.log('M1QR-TRACE:', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+                    setSelectedMarker(markerId);
+                  } catch (err) {
+                    console.error('M1QR-TRACE:', { step: 'click_error', markerId, err });
+                  }
                 }
               }}
             >
