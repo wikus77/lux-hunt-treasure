@@ -37,7 +37,7 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.rpc('qr_redeem', { p_code: code });
+        const { data, error } = await supabase.functions.invoke('redeem-qr', { body: { code } });
         if (error) throw error;
 
         const resp = (data as unknown) as { status?: string; reward_type?: string; reward_value?: number };
@@ -54,15 +54,23 @@ export const QRQueryRedeemPage: React.FC = () => {
             toast.message('QR riscattato');
             setLocation('/home');
           }
-        } else if (resp?.status === 'already_claimed') {
+        } else if (resp?.status === 'already_redeemed' || resp?.status === 'already_claimed') {
           toast.info('Hai già riscattato questo QR');
           setLocation('/home');
         } else {
-          setError('Riscatto QR non riuscito');
+          if (error === 'invalid_or_inactive_code') {
+            setError('Codice QR non valido o disattivato');
+          } else {
+            setError('Riscatto QR non riuscito');
+          }
         }
       } catch (e: any) {
-        console.error('qr_redeem error', e);
-        setError(e?.message || 'Errore sconosciuto');
+        console.error('redeem-qr error', e);
+        if (e?.message === 'invalid_or_inactive_code') {
+          setError('Codice QR non valido o disattivato');
+        } else {
+          setError(e?.message || 'Errore sconosciuto');
+        }
       } finally {
         setLoading(false);
       }

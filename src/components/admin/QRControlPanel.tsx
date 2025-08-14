@@ -167,6 +167,22 @@ const loadStats = async () => {
   }
 };
 
+// Normalize reward_type to allowed values
+function mapRewardType(input: string): 'buzz_credit' | 'clue' | 'enigma' | 'fake' | 'sorpresa_speciale' {
+  const t = (input || '').toLowerCase();
+  if (t === 'buzz' || t === 'buzz_credit') return 'buzz_credit';
+  if (t === 'clue') return 'clue';
+  if (t === 'enigma') return 'enigma';
+  if (t === 'fake') return 'fake';
+  if (t === 'sorpresa_speciale' || t === 'sorpresa' || t === 'surprise') return 'sorpresa_speciale';
+  return 'buzz_credit';
+}
+
+// Generate unique QR code
+function generateQRCodeString(): string {
+  return Math.random().toString(36).substr(2, 8).toUpperCase();
+}
+
 const generateQRCode = async () => {
     // Validazioni base
     if (!formData.locationName.trim()) {
@@ -204,24 +220,39 @@ const generateQRCode = async () => {
     try {
       setIsCreating(true);
 
+      // Generate unique code
+      const code = generateQRCodeString();
+      
+      // Normalize reward type
+      const normalizedRewardType = mapRewardType(formData.rewardType);
+
       const payload = {
+        code,
         title: formData.locationName || 'QR Manuale',
-        reward_type: formData.rewardType,
+        reward_type: normalizedRewardType,
+        reward_value: 1, // default reward value
         lat: latNum,
         lng: lngNum,
-        message: formData.rewardContent || null,
+        is_active: true,
+        status: 'ACTIVE',
         expires_at: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null,
       };
 
-      const { data, error } = await supabase.functions.invoke('create_qr_code', { body: payload });
-      if (error) throw new Error(error.message || 'Errore funzione');
+      // Insert directly into public.qr_codes
+      const { data, error } = await supabase
+        .from('qr_codes')
+        .insert([payload])
+        .select()
+        .single();
+
+      if (error) throw error;
       const created = data as any;
 
       // Aggiorna lista locale (no refetch pesante) + cache
       const newItem: QRCode = {
         id: created.code, // usiamo il code come id visualizzato/di stampa
         reward_type: created.reward_type,
-        message: created.message || '',
+        message: formData.rewardContent || '',
         lat: created.lat,
         lon: created.lng,
         location_name: created.title || payload.title,
@@ -245,9 +276,11 @@ const generateQRCode = async () => {
 
       // Apri modale stampa esistente con il nuovo codice
       showQRForPrinting(created.code, { rewardType: created.reward_type, locationName: created.title });
+      
+      toast.success(`QR Code ${created.code} creato con successo!`);
     } catch (e: any) {
       console.error('Error creating QR code:', e);
-      toast.error('Errore nella creazione del QR code');
+      toast.error(`Errore creazione QR: ${e?.message || 'Errore sconosciuto'}`);
     } finally {
       setIsCreating(false);
     }

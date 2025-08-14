@@ -98,11 +98,11 @@ export const useQRMapIntegration = () => {
       setIsLoading(true);
       setError(null);
 
-      // Get all unused QR codes
+      // Get all active QR codes from qr_codes table
       const { data: qrCodes, error: qrError } = await supabase
-        .from('qr_buzz_codes')
-        .select('id, code, lat, lng, location_name, reward_type, expires_at')
-        .eq('is_used', false)
+        .from('qr_codes')
+        .select('code, title, reward_type, reward_value, lat, lng, is_active, expires_at')
+        .eq('is_active', true)
         .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
 
       if (qrError) throw qrError;
@@ -131,13 +131,13 @@ export const useQRMapIntegration = () => {
           // Only show QR codes within display radius
             if (distance <= QR_DISPLAY_RADIUS_KM * 1000) {
               isInRange = distance <= QR_DETECTION_RADIUS_METERS;
-              const isClaimed = claimedSet.has(qr.code) || claimedSet.has(qr.id);
+              const isClaimed = claimedSet.has(qr.code) || claimedSet.has(qr.code);
               markers.push({
-                id: qr.id,
+                id: qr.code,
                 code: qr.code,
                 lat: qr.lat,
                 lng: qr.lng,
-                location_name: qr.location_name,
+                location_name: qr.title ?? 'QR',
                 reward_type: qr.reward_type,
                 distance,
                 isInRange,
@@ -147,13 +147,13 @@ export const useQRMapIntegration = () => {
           }
         } else {
           // If no location, show all QR codes but mark as not in range
-          const isClaimed = claimedSet.has(qr.code) || claimedSet.has(qr.id);
+          const isClaimed = claimedSet.has(qr.code) || claimedSet.has(qr.code);
           markers.push({
-            id: qr.id,
+            id: qr.code,
             code: qr.code,
             lat: qr.lat,
             lng: qr.lng,
-            location_name: qr.location_name,
+            location_name: qr.title ?? 'QR',
             reward_type: qr.reward_type,
             distance: 0,
             isInRange: false,
