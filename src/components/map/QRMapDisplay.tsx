@@ -81,58 +81,38 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
         
-        // 3-step fallback: buzz_map_markers -> qr_codes_markers -> qr_codes
-        let data: any[] = [];
-        
-        try {
-          // Try buzz_map_markers view first
-          const { data: buzzData, error: buzzError } = await supabase
-            .from('buzz_map_markers')
-            .select('code,title,latitude,longitude');
-          
-          if (buzzData && buzzData.length > 0) {
-            data = buzzData.map(r => ({
-              ...r,
-              reward_type: 'buzz_credit',
-              is_active: true
+        // Try buzz_map_markers view first
+        let { data, error } = await supabase
+          .from('buzz_map_markers')
+          .select('code,title,latitude,longitude');
+
+        if (error) {
+          console.warn('buzz_map_markers error:', error?.message);
+        }
+
+        // Fallback to qr_codes if view is empty or fails
+        if (!data || data.length === 0) {
+          console.log('🔄 Fallback to qr_codes table...');
+          const fb = await supabase
+            .from('qr_codes')
+            .select('code,lat,lng,reward_type,is_active');
+          if (fb.data && fb.data.length > 0) {
+            data = fb.data.map(r => ({
+              code: r.code,
+              title: r.code,
+              latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+              longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+              reward_type: r.reward_type || 'buzz_credit',
+              is_active: r.is_active !== false
             }));
-          } else {
-            console.log('🔄 Fallback to qr_codes_markers...');
-            
-            // Try qr_codes_markers view
-            const { data: markersData, error: markersError } = await supabase
-              .from('qr_codes_markers')
-              .select('code,title,latitude,longitude');
-            
-            if (markersData && markersData.length > 0) {
-              data = markersData.map(r => ({
-                ...r,
-                reward_type: 'buzz_credit',
-                is_active: true
-              }));
-            } else {
-              console.log('🔄 Fallback to qr_codes table...');
-              
-              // Final fallback to qr_codes
-              const { data: qrData, error: qrError } = await supabase
-                .from('qr_codes')
-                .select('code,title,lat,lng,reward_type,is_active')
-                .eq('is_hidden', false);
-              
-              if (qrData && qrData.length > 0) {
-                data = qrData.map(r => ({
-                  code: r.code,
-                  title: r.title || r.code,
-                  latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
-                  longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
-                  reward_type: r.reward_type || 'buzz_credit',
-                  is_active: r.is_active !== false
-                }));
-              }
-            }
           }
-        } catch (error) {
-          console.warn('QR markers fetch error:', error);
+        } else {
+          // Add missing fields for buzz_map_markers
+          data = data.map(r => ({
+            ...r,
+            reward_type: 'buzz_credit',
+            is_active: true
+          }));
         }
 
         const processedItems = (data || [])
@@ -190,7 +170,7 @@ return (
               icon={icon(qr.is_active)}
               eventHandlers={{
                 click: () => {
-                  const url = `/qr/${encodeURIComponent(qr.code)}`;
+                  const url = `/qr?c=${encodeURIComponent(qr.code)}`;
                   if (import.meta.env.DEV) {
                     console.debug(TRACE_ID, { tag:'M1QR', step:'map:click', code: qr.code, url, ts: Date.now() });
                   }
@@ -217,11 +197,11 @@ return (
                     </div>
                   )}
                   {(qr.is_active && userLocation) && (inRange ? (
-                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
-                       const url = `/qr/${encodeURIComponent(qr.code)}`;
-                       if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
-                       setLocation(url);
-                     }}>🎯 Riscatta</Button>
+                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
+                      const url = `/qr?c=${encodeURIComponent(qr.code)}`;
+                      if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
+                      setLocation(url);
+                    }}>🎯 Riscatta</Button>
                   ) : (
                     <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
                   ))}
