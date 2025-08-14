@@ -1862,7 +1862,7 @@ export type Database = {
           max_uses_total?: number | null
           message?: string | null
           radius_m?: number | null
-          reward_type: string
+          reward_type?: string
           reward_value?: number
           status?: string
           title: string
@@ -1976,8 +1976,8 @@ export type Database = {
           lat?: number | null
           lon?: number | null
           redeemed_at?: string
-          reward_type: string
-          reward_value: number
+          reward_type?: string
+          reward_value?: number
           user_id: string
         }
         Update: {
