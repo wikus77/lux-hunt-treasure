@@ -55,8 +55,8 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
       if (error) {
         console.error('M1QR-TRACE:', { step: 'claim_error', error });
         
-        if (error.message?.includes('already_claimed')) {
-          toast.error('Premio già riscattato per questo marker');
+        if (error.message?.includes('already_claimed') || error.message?.includes('ALREADY_CLAIMED')) {
+          toast.info('Premio già riscattato per questo marker');
         } else {
           toast.error('Errore nel riscatto del premio');
         }
@@ -86,6 +86,14 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
         } else {
           onSuccess?.();
         }
+      } else if (data?.code === 'ALREADY_CLAIMED') {
+        toast.info('Premio già riscattato per questo marker');
+        onClose();
+        return;
+      } else if (data?.code === 'NO_REWARD') {
+        toast.error('Nessuna ricompensa configurata per questo marker');
+        onClose();
+        return;
       } else {
         throw new Error(data?.error || 'Unknown error');
       }

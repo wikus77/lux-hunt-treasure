@@ -186,7 +186,7 @@ const MarkerRewardsManager: React.FC<MarkerRewardsManagerProps> = ({ onRewardAdd
   return (
     <Card className="w-full max-w-2xl">
       <CardHeader>
-        <CardTitle>🎁 Configurazione Ricompense Marker</CardTitle>
+        <CardTitle>🎁 Salva Ricompense Marker</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -234,7 +234,7 @@ const MarkerRewardsManager: React.FC<MarkerRewardsManagerProps> = ({ onRewardAdd
             disabled={isLoading || !markerId || !rewardType}
             className="w-full"
           >
-            {isLoading ? 'Aggiungendo...' : 'Aggiungi Ricompensa'}
+            {isLoading ? 'Salvando...' : 'Salva Ricompense Marker'}
           </Button>
         </form>
       </CardContent>

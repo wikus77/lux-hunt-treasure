@@ -177,14 +177,11 @@ export const useQRMapIntegration = () => {
   };
 
   const redeemQRCode = async (code: string) => {
-    // Navigate to QR redeem page instead of inline redeem
-    if (typeof window !== 'undefined') {
-      window.location.href = `/qr/${code.toUpperCase()}`;
-    }
-    
+    // This is now handled by popup in QRMarkers component
+    console.log('M1QR-TRACE: QR redeem triggered via popup for code:', code);
     return {
       success: true,
-      message: 'Redirecting to QR redeem...'
+      message: 'QR redeem handled by popup'
     };
   };
 

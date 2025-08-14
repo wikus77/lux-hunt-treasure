@@ -38,7 +38,7 @@ import PanelAccessPage from "@/pages/PanelAccessPage";
 import QRValidatePage from "@/pages/qr/QRValidatePage";
 import QRRedeemPage from "@/pages/qr/QRRedeemPage";
 import { QRScannerPage } from "@/pages/qr/QRScannerPage";
-import { QRQueryRedeemPage } from "@/pages/qr/QRQueryRedeemPage"; // © 2025 NIYVORA KFT –Joseph MULÉ – M1SSION™
+// Removed QRQueryRedeemPage - rewards now handled by popup
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
 import Terms from "@/pages/Terms";
@@ -81,9 +81,7 @@ const WouterRoutes: React.FC = () => {
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
         <Switch>
-          {/* ✅ QR routes must come before landing */}
-          <Route path="/qr/:code"><QRQueryRedeemPage /></Route>
-          <Route path="/qr"><QRQueryRedeemPage /></Route>
+          {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
           {/* Landing page - CRITICAL FIX: Direct LandingPage render */}
           <Route path="/">
