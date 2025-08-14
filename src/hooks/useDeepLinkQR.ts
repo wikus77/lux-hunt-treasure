@@ -38,9 +38,9 @@ export function useDeepLinkQR() {
           code = data.code;
         }
 
-        // Normalize and navigate
+        // Normalize and navigate to map (rewards handled by map modal)
         code = code.toUpperCase();
-        setLocation(`/qr/${encodeURIComponent(code)}`);
+        setLocation(`/map`);
 
         // Remove param to avoid repeat on refresh
         const url = new URL(window.location.href);

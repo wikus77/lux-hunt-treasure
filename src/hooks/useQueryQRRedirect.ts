@@ -16,7 +16,7 @@ export function useQueryQRRedirect() {
       if (!raw) return;
 
       const code = encodeURIComponent(raw.toUpperCase());
-      setLocation(`/qr/${code}`);
+      setLocation(`/map`);
 
       // Rimuovi param per evitare ripetizioni
       const url = new URL(window.location.href);
