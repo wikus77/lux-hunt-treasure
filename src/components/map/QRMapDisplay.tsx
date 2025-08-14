@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import '@/styles/qr-markers.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
 type Item = {
   code: string;
@@ -20,11 +21,12 @@ type Item = {
 };
 
 export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } | null }> = ({ userLocation }) => {
+  const [, setLocation] = useLocation();
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
+  const [markerMinZoom, setMarkerMinZoom] = useState<number>(17); // Default from app_config
   const map = useMap();
-  const MIN_ZOOM = 14;  // Restored to working version
   const RADIUS_M = 500;
   const NEAR_M = 75;
   const watcher = useGeoWatcher();
@@ -35,6 +37,44 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
     className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
     iconSize: [16,16]
   });
+
+  // Load marker min zoom from app_config with cache and realtime updates
+  useEffect(() => {
+    (async () => {
+      try {
+        const cached = localStorage.getItem('cfg_marker_min_zoom');
+        if (cached) setMarkerMinZoom(Number(cached) || 17);
+      } catch {}
+
+      const { data } = await supabase
+        .from('app_config')
+        .select('value_int')
+        .eq('key', 'marker_min_zoom')
+        .maybeSingle();
+
+      if (data?.value_int) {
+        setMarkerMinZoom(Number(data.value_int));
+        try { localStorage.setItem('cfg_marker_min_zoom', String(data.value_int)); } catch {}
+      }
+    })();
+
+    const ch = supabase
+      .channel('cfg_marker_min_zoom')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_config', filter: 'key=eq.marker_min_zoom' },
+        (payload: any) => {
+          const v = payload?.new?.value_int ?? payload?.old?.value_int;
+          if (typeof v === 'number') {
+            setMarkerMinZoom(v);
+            try { localStorage.setItem('cfg_marker_min_zoom', String(v)); } catch {}
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { try { supabase.removeChannel(ch); } catch {} };
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -102,18 +142,18 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
 const all = useMemo(() => items, [items]);
 
-// Toggle layer visibility on zoom changes (must run regardless of loading to keep hooks order)
+// Toggle layer visibility on zoom changes using dynamic marker min zoom
 useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    setShowLayer(z >= MIN_ZOOM);
-    if (import.meta.env.DEV) console.debug('[QR] layer toggle', { z, show: z >= MIN_ZOOM });
+    setShowLayer(z >= markerMinZoom);
+    if (import.meta.env.DEV) console.debug('[QR] layer toggle', { z, show: z >= markerMinZoom, minZoom: markerMinZoom });
   };
   update();
   map.on('zoomend', update);
   return () => { map.off('zoomend', update); };
-}, [map]);
+}, [map, markerMinZoom]);
 
 if (isLoading) return null;
 
@@ -134,7 +174,7 @@ return (
                   if (import.meta.env.DEV) {
                     console.debug(TRACE_ID, { tag:'M1QR', step:'map:click', code: qr.code, url, ts: Date.now() });
                   }
-                  window.location.href = url;
+                  setLocation(url);
                 }
               }}
             >
@@ -160,7 +200,7 @@ return (
                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
                       const url = `/qr?c=${encodeURIComponent(qr.code)}`;
                       if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
-                      window.location.href = url;
+                      setLocation(url);
                     }}>🎯 Riscatta</Button>
                   ) : (
                     <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
