@@ -131,10 +131,10 @@ serve(async (req) => {
             
             if (!xpError) {
               // Increment XP
-              const { error: incrementError } = await admin.rpc('increment_xp', {
-                user_id,
-                xp_amount: xpPoints
-              });
+            const { error: incrementError } = await admin.rpc('increment_xp', {
+              p_user: user_id,
+              p_amount: xpPoints
+            });
               if (incrementError) {
                 // Fallback: direct update
                 await admin
