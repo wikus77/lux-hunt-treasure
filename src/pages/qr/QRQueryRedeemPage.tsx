@@ -18,7 +18,7 @@ export const QRQueryRedeemPage: React.FC = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const pathCode = match ? String((params as any).code || '').toUpperCase() : undefined;
   const queryCode = (searchParams.get('c') ?? searchParams.get('code') ?? '').trim().toUpperCase();
-  const code = pathCode || queryCode || '';
+  const code = (pathCode || queryCode || '').toUpperCase();
 
   useEffect(() => {
 
@@ -40,17 +40,18 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.functions.invoke('redeem-qr', { 
-          body: { code: code.toUpperCase() } 
+        const { data, error } = await supabase.functions.invoke('redeem-qr', {
+          body: { code },
+          headers: { 'x-client-info': 'm1-web' } // no-op, utile con alcuni edge/proxy
         });
         
         if (error) {
-          // Extract detailed error from Supabase Functions context
-          const detail = (error as any)?.context?.error || error.message;
-          console.error('redeem-qr error', error, detail);
-          if (detail === 'invalid_or_inactive_code') {
-            setError('Codice QR non valido o disattivato');
+          const msg = (error as any)?.message || String(error);
+          // Messaggio friendly per i casi CORS/preflight
+          if (msg.includes('Failed to send a request to the Edge Function')) {
+            setError('Redeem fallito: problema di connessione al server (CORS). Riprova o apri da m1ssion.eu');
           } else {
+            const detail = (error as any)?.context ? JSON.stringify((error as any).context) : msg;
             setError(`Redeem fallito: ${detail}`);
           }
           return;

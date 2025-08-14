@@ -1,26 +1,59 @@
-// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
-const OK=(o:string|null)=> allow(o)?o:'https://www.m1ssion.eu';
-function allow(o:string|null){ if(!o) return false; try{ const {hostname}=new URL(o); return [
-  'www.m1ssion.eu','m1ssion.eu','m1ssion.pages.dev','localhost','127.0.0.1'
-].includes(hostname) || hostname.endsWith('lovable.dev') || hostname.endsWith('lovableproject.com') || hostname.endsWith('lovable.app'); }catch{ return false; } }
-const C=(o:string|null)=>({'Access-Control-Allow-Origin':OK(o),'Vary':'Origin','Access-Control-Allow-Methods':'GET,POST,OPTIONS','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Max-Age':'86400'});
+// supabase/functions/validate-qr/index.ts
+// CORS-safe validation – GET/OPTIONS – returns {ok, valid, ...}
 
-Deno.serve(async(req)=>{
-  const origin=req.headers.get('origin'); console.log(JSON.stringify({tag:'M1QR',fn:'validate-qr',method:req.method,origin}));
-  if(req.method==='OPTIONS') return new Response(null,{status:204,headers:C(origin)});
-  try{
-    let up=''; if(req.method==='POST'){ const j=await req.json().catch(()=>({})); up=String(j?.code||'').toUpperCase().trim(); }
-    else { const u=new URL(req.url); up=String(u.searchParams.get('c')||'').toUpperCase().trim(); }
-    if(!up) return new Response(JSON.stringify({valid:false}),{status:404,headers:{...C(origin),'content-type':'application/json'}});
-    const url=Deno.env.get('SUPABASE_URL')!, key=Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const q=new URL(`${url}/rest/v1/qr_codes`); q.searchParams.set('select','code,title,lat,lng,is_active,expires_at,buzz'); q.searchParams.set('code',`eq.${up}`);
-    const r=await fetch(q.toString(),{headers:{apikey:key,authorization:`Bearer ${key}`}}); const arr=await r.json().catch(()=>[]) as any[];
-    const row=Array.isArray(arr)?arr[0]:null; const active=!!row?.is_active && (!row?.expires_at || new Date(row.expires_at)>new Date());
-    if(!row||!active) return new Response(JSON.stringify({valid:false}),{status:404,headers:{...C(origin),'content-type':'application/json'}});
-    return new Response(JSON.stringify({valid:true,code:row.code,title:row.title??null,lat:row.lat??null,lng:row.lng??null,reward:{type:'buzz_credit',buzz:row.buzz??null},one_time:true}),{status:200,headers:{...C(origin),'content-type':'application/json'}});
-  }catch(e){
-    console.log(JSON.stringify({tag:'M1QR',fn:'validate-qr',err:String(e)}));
-    return new Response(JSON.stringify({valid:false,error:'server_error'}),{status:500,headers:{...C(origin),'content-type':'application/json'}});
-  }
+import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const ORIGINS = new Set<string>([
+  "https://m1ssion.eu",
+  "https://www.m1ssion.eu",
+  "https://lovable.dev",
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "capacitor://localhost",
+  "ionic://localhost",
+]);
+
+function cors(req: Request) {
+  const origin = req.headers.get("Origin") ?? "*";
+  const allow = ORIGINS.has(origin) ? origin : "*";
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+    "Access-Control-Allow-Methods": "GET,OPTIONS",
+    "Access-Control-Max-Age": "86400",
+    "Content-Type": "application/json",
+  };
+}
+
+serve(async (req) => {
+  const headers = cors(req);
+  if (req.method === "OPTIONS") return new Response("ok", { headers });
+
+  const url = new URL(req.url);
+  const code = String(url.searchParams.get("code") ?? url.searchParams.get("c") ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (!code) return new Response(JSON.stringify({ ok: false, valid: false, error: "missing_code" }), { headers, status: 400 });
+
+  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+
+  const { data: qc, error } = await sb
+    .from("qr_codes")
+    .select("code, title, reward_type, reward_value, lat, lng, is_active, status, expires_at")
+    .eq("code", code)
+    .maybeSingle();
+
+  if (error) return new Response(JSON.stringify({ ok: false, valid: false, error: error.message }), { headers, status: 500 });
+
+  const nowIso = new Date().toISOString();
+  const expired = qc?.expires_at && qc.expires_at <= nowIso;
+
+  const valid = Boolean(qc && qc.is_active === true && !expired);
+  return new Response(
+    JSON.stringify({ ok: true, valid, code, ...(qc ?? {}), source: "qr_codes" }),
+    { headers, status: valid ? 200 : 404 },
+  );
 });
