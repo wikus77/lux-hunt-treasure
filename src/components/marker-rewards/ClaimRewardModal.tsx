@@ -52,54 +52,52 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
         body: { markerId }
       });
 
+      // Handle auth errors
+      if (error?.status === 401) {
+        console.log('M1QR-TRACE:', { step: 'claim_error', error: 'unauthorized' });
+        window.location.href = '/login';
+        return;
+      }
+
+      // Handle other errors
       if (error) {
-        console.error('M1QR-TRACE:', { step: 'claim_error', error });
-        
-        if (error.message?.includes('already_claimed') || error.message?.includes('ALREADY_CLAIMED')) {
-          toast.info('Premio già riscattato per questo marker');
-        } else {
-          toast.error('Errore nel riscatto del premio');
-        }
+        console.error('M1QR-TRACE:', { step: 'claim_error', markerId, error, data });
+        toast.error('Errore nel riscatto');
         return;
       }
 
-      if (data?.status === 'already_claimed') {
-        toast.info('Premio già riscattato per questo marker');
-        onClose();
-        return;
-      }
-
+      // Handle success responses
       if (data?.ok) {
-        console.log('M1QR-TRACE:', { step: 'claim_success', summary: data.summary });
-        
-        toast.success('Premio riscattato con successo!', {
-          description: `Ricevuti ${data.rewards} premi`
-        });
-        
+        console.log('M1QR-TRACE:', { step: 'claim_success', markerId, nextRoute: data.nextRoute });
+        toast.success('Premio riscattato');
         onClose();
-        
-        // Redirect based on priority
         if (data.nextRoute) {
-          setTimeout(() => {
-            onSuccess?.(data.nextRoute);
-          }, 1000);
-        } else {
-          onSuccess?.();
+          onSuccess?.(data.nextRoute);
         }
-      } else if (data?.code === 'ALREADY_CLAIMED') {
-        toast.info('Premio già riscattato per questo marker');
-        onClose();
         return;
-      } else if (data?.code === 'NO_REWARD') {
-        toast.error('Nessuna ricompensa configurata per questo marker');
-        onClose();
-        return;
-      } else {
-        throw new Error(data?.error || 'Unknown error');
       }
+
+      // Handle already claimed
+      if (data?.code === 'ALREADY_CLAIMED') {
+        console.log('M1QR-TRACE:', { step: 'claim_already', markerId });
+        toast.info('Premio già riscattato');
+        onClose();
+        return;
+      }
+
+      // Handle no reward configured
+      if (data?.code === 'NO_REWARD') {
+        console.log('M1QR-TRACE:', { step: 'claim_no_reward', markerId });
+        toast.error('Nessuna ricompensa configurata');
+        return;
+      }
+
+      // Unknown response
+      console.error('M1QR-TRACE:', { step: 'claim_error', markerId, error: 'unknown_response', data });
+      toast.error('Errore nel riscatto');
     } catch (error) {
-      console.error('M1QR-TRACE:', { step: 'claim_exception', error });
-      toast.error('Errore di rete nel riscatto del premio');
+      console.error('M1QR-TRACE:', { step: 'claim_error', markerId, error });
+      toast.error('Errore nel riscatto');
     } finally {
       setIsClaiming(false);
     }
@@ -107,7 +105,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto">
+      <DialogContent className="max-w-md mx-auto z-[9999] pointer-events-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-gradient">
             🎁 Premio Trovato!

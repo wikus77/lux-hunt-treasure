@@ -168,9 +168,7 @@ useEffect(() => {
     setSelectedMarker(null); // Close modal
     
     if (nextRoute) {
-      setTimeout(() => {
-        setLocation(nextRoute);
-      }, 1000);
+      setLocation(nextRoute);
     }
   };
 
@@ -193,8 +191,8 @@ return (
               position={[qr.lat, qr.lng]}
               icon={icon(qr.is_active)}
               eventHandlers={{
-                click: () => {
-                  console.log('M1QR-TRACE:', { step: 'open_modal', markerId: qr.code, title: qr.title });
+                click: async () => {
+                  console.log('M1QR-TRACE:', { step: 'open_modal', markerId: qr.code, rewardsCount: 0 });
                   setSelectedMarker(qr.code);
                 }
               }}
