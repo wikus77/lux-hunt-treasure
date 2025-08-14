@@ -126,7 +126,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         icon={<Mail className="h-4 w-4" />}
         required
         disabled={isLoading}
-        autoComplete="email"
+        autoComplete="username"
       />
 
       <div className="space-y-2">

@@ -1862,8 +1862,8 @@ export type Database = {
           max_uses_total?: number | null
           message?: string | null
           radius_m?: number | null
-          reward_type?: string
-          reward_value?: number
+          reward_type: string
+          reward_value: number
           status?: string
           title: string
           type?: string | null
@@ -1894,11 +1894,13 @@ export type Database = {
       }
       qr_redemption_logs: {
         Row: {
+          code: string | null
           created_at: string
           details: Json | null
           distance_meters: number | null
           failure_reason: string | null
           id: string
+          qr_code: string | null
           qr_code_id: string
           reward_granted: Json | null
           status: string | null
@@ -1908,11 +1910,13 @@ export type Database = {
           user_lng: number | null
         }
         Insert: {
+          code?: string | null
           created_at?: string
           details?: Json | null
           distance_meters?: number | null
           failure_reason?: string | null
           id?: string
+          qr_code?: string | null
           qr_code_id: string
           reward_granted?: Json | null
           status?: string | null
@@ -1922,11 +1926,13 @@ export type Database = {
           user_lng?: number | null
         }
         Update: {
+          code?: string | null
           created_at?: string
           details?: Json | null
           distance_meters?: number | null
           failure_reason?: string | null
           id?: string
+          qr_code?: string | null
           qr_code_id?: string
           reward_granted?: Json | null
           status?: string | null
@@ -1996,13 +2002,6 @@ export type Database = {
             columns: ["code"]
             isOneToOne: false
             referencedRelation: "qr_codes"
-            referencedColumns: ["code"]
-          },
-          {
-            foreignKeyName: "qr_redemptions_code_fk"
-            columns: ["code"]
-            isOneToOne: false
-            referencedRelation: "qr_codes_map"
             referencedColumns: ["code"]
           },
         ]
@@ -3297,42 +3296,7 @@ export type Database = {
       }
     }
     Views: {
-      qr_codes_map: {
-        Row: {
-          code: string | null
-          expires_at: string | null
-          is_active: boolean | null
-          is_redeemed: boolean | null
-          lat: number | null
-          lng: number | null
-          reward_type: string | null
-          reward_value: number | null
-          title: string | null
-        }
-        Insert: {
-          code?: string | null
-          expires_at?: string | null
-          is_active?: boolean | null
-          is_redeemed?: never
-          lat?: number | null
-          lng?: number | null
-          reward_type?: string | null
-          reward_value?: number | null
-          title?: string | null
-        }
-        Update: {
-          code?: string | null
-          expires_at?: string | null
-          is_active?: boolean | null
-          is_redeemed?: never
-          lat?: number | null
-          lng?: number | null
-          reward_type?: string | null
-          reward_value?: number | null
-          title?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_referral_credits: {

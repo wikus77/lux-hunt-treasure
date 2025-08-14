@@ -1,118 +1,102 @@
-// supabase/functions/redeem-qr/index.ts
-// Robust QR redeem – CORS safe + defaults + non-blocking logs
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+type Json = Record<string, any>;
 
-const cors = (origin: string) => ({
-  "Access-Control-Allow-Origin": origin || "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-  "Vary": "Origin",
-  "Content-Type": "application/json",
-});
+const url = Deno.env.get("SUPABASE_URL")!;
+const anon = Deno.env.get("SUPABASE_ANON_KEY")!;
+const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin") ?? "*";
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: cors(origin) });
-  }
-
-  // Auth-bound client (propaga Authorization)
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!,
-    { global: { headers: { Authorization: req.headers.get("Authorization")! } } }
-  );
-
-  const json = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), { status, headers: cors(origin) });
-
   try {
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth?.user;
-    if (!user) return json({ status: "error", error: "unauthorized" }, 401);
+    if (req.method === "OPTIONS") {
+      return new Response("ok", { headers: cors() });
+    }
 
-    let payload: any = {};
-    try { payload = await req.json(); } catch { /* no body */ }
-    const code: string = String(payload?.code ?? "").trim().toUpperCase();
+    const body = await req.json().catch(() => ({}));
+    const code = String((body?.code || "")).trim().toUpperCase();
     if (!code) return json({ status: "error", error: "missing_code" }, 400);
 
-    // Leggi QR dal backend unificato
-    const { data: qr, error: qrErr } = await supabase
+    // client con JWT utente per rispettare RLS
+    const userClient = createClient(url, anon, {
+      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+    });
+
+    // admin per log non bloccanti
+    const admin = createClient(url, service);
+
+    // 1) recupera QR
+    const { data: qr, error: qrErr } = await userClient
       .from("qr_codes")
-      .select("code, reward_type, reward_value, is_active, expires_at, title, lat, lng")
+      .select("code,reward_type,reward_value,is_active,expires_at")
       .eq("code", code)
       .maybeSingle();
 
-    if (qrErr) {
-      await safeLog(supabase, user.id, code, "error", { where: "select_qr", detail: qrErr.message });
-      return json({ status: "error", error: "db_error", detail: qrErr.message }, 500);
+    if (qrErr) return json({ status:"error", error:"db_error", detail: qrErr.message }, 500);
+    if (!qr || qr.is_active === false || (qr.expires_at && new Date(qr.expires_at) <= new Date())) {
+      await safeLog(admin, req, { code, status: "invalid_or_inactive_code" });
+      return json({ status:"error", error:"invalid_or_inactive_code" }, 400);
     }
 
-    const nowIso = new Date().toISOString();
-    const expired = qr?.expires_at && qr.expires_at < nowIso;
-
-    if (!qr || qr.is_active === false || expired) {
-      await safeLog(supabase, user.id, code, "invalid_or_inactive_code", { found: !!qr, expired });
-      return json({ status: "invalid_or_inactive_code", error: "invalid_or_inactive_code" }, 200);
-    }
-
-    // Normalizza reward_type + default sicuri
-    const reward_type = normalizeRewardType(qr.reward_type);
+    const reward_type  = qr.reward_type || "buzz_credit";
     const reward_value = Number.isFinite(qr.reward_value) ? qr.reward_value : 1;
 
-    // Evita duplicati (1 redeem per utente per codice)
-    const { data: already } = await supabase
+    // 2) utente corrente
+    const { data: auth } = await userClient.auth.getUser();
+    const user_id = auth?.user?.id;
+    if (!user_id) return json({ status:"error", error:"unauthorized" }, 401);
+
+    // 3) già riscattato?
+    const { data: already } = await userClient
       .from("qr_redemptions")
-      .select("id")
-      .eq("user_id", user.id)
-      .eq("code", code)
-      .maybeSingle();
+      .select("id").eq("user_id", user_id).eq("code", code).maybeSingle();
 
     if (already) {
-      await safeLog(supabase, user.id, code, "already_claimed", {});
-      return json({ status: "already_claimed" }, 200);
+      await safeLog(admin, req, { code, user_id, status: "already_claimed" });
+      return json({ status:"already_claimed", reward_type, reward_value }, 200);
     }
 
-    // Inserisci redemption con campi NON NULL
-    const { error: insErr } = await supabase.from("qr_redemptions").insert({
-      user_id: user.id,
-      code,
-      reward_type,
-      reward_value,
-      redeemed_at: nowIso,
-    });
+    // 4) inserisci redemption (con valori NON null)
+    const { error: insErr } = await userClient.from("qr_redemptions").insert([{
+      user_id, code, reward_type, reward_value
+    }]);
 
     if (insErr) {
-      await safeLog(supabase, user.id, code, "error", { where: "insert_redemption", detail: insErr.message });
-      return json({ status: "error", error: "internal_error", detail: insErr.message }, 500);
+      // violazione unique -> already_claimed
+      if (String(insErr.message).includes("uq_qr_redemptions_user_code")) {
+        await safeLog(admin, req, { code, user_id, status: "already_claimed" });
+        return json({ status:"already_claimed", reward_type, reward_value }, 200);
+      }
+      await safeLog(admin, req, { code, user_id, status: "error", details: { insErr } });
+      return json({ status:"error", error:"internal_error", detail: insErr.message }, 500);
     }
 
-    // Log NON bloccante
-    await safeLog(supabase, user.id, code, "ok", { reward_type, reward_value });
+    // 5) log non bloccante (code/qr_code/qr_code_id riempiti tutti)
+    await safeLog(admin, req, { code, user_id, status: "ok", details: { reward_type, reward_value } });
 
-    return json({ status: "ok", reward_type, reward_value }, 200);
+    return json({ status:"ok", reward_type, reward_value }, 200);
+
   } catch (e) {
-    return new Response(JSON.stringify({ status: "error", error: "internal_error", detail: String(e?.message ?? e) }), {
-      status: 500,
-      headers: cors(origin),
-    });
+    return json({ status:"error", error:"internal_error", detail: String(e?.message ?? e) }, 500);
   }
-});
+}, { onError: (e) => console.error(e) });
 
-function normalizeRewardType(input?: string): string {
-  const t = (input || "").toLowerCase();
-  if (["buzz", "buzz_credit", "buzz_gratis", "buzz_map_credit"].includes(t)) return "buzz_credit";
-  if (["clue", "indizio_segreto"].includes(t)) return "clue";
-  if (["enigma", "enigma_misterioso"].includes(t)) return "enigma";
-  if (t === "fake") return "fake";
-  if (["sorpresa", "sorpresa_speciale", "custom"].includes(t)) return "sorpresa_speciale";
-  return "buzz_credit"; // default sicuro
+function cors() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+  };
 }
-
-async function safeLog(supabase: any, user_id: string, qr_code_id: string, status: string, details: Record<string, unknown>) {
+function json(payload: Json, status=200) {
+  return new Response(JSON.stringify(payload), { status, headers: { "content-type": "application/json", ...cors() }});
+}
+async function safeLog(admin: any, req: Request, row: Json) {
   try {
-    await supabase.from("qr_redemption_logs").insert({ user_id, qr_code_id, status, details });
-  } catch { /* non bloccare */ }
+    const base = { code: row.code, qr_code: row.code, qr_code_id: row.code, status: row.status, details: row.details ?? null };
+    const { data: auth } = await createClient(url, anon, {
+      global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } },
+    }).auth.getUser();
+    const user_id = auth?.user?.id ?? row.user_id ?? null;
+    await admin.from("qr_redemption_logs").insert([{ user_id, ...base }]);
+  } catch (_e) { /* non bloccante */ }
 }

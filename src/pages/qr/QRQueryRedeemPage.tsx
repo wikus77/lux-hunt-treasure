@@ -43,8 +43,7 @@ export const QRQueryRedeemPage: React.FC = () => {
         const { data, error } = await supabase.functions.invoke('redeem-qr', { body: { code } });
 
         if (error) {
-          const detail = (error as any)?.context ? JSON.stringify((error as any).context) : (error.message || 'Edge error');
-          setError(`Redeem fallito: ${detail}`);
+          setError(`Redeem fallito: ${error.message || 'Edge error'}`);
           return;
         }
 
@@ -66,7 +65,7 @@ export const QRQueryRedeemPage: React.FC = () => {
           return;
         }
 
-        if (resp.status === 'invalid_or_inactive_code') {
+        if (resp.error === 'invalid_or_inactive_code') {
           setError('Codice QR non valido o disattivato');
           return;
         }
