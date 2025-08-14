@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -29,9 +29,9 @@ serve(async (req) => {
     // Get current user
     const { data: auth } = await userClient.auth.getUser();
     const user_id = auth?.user?.id;
-    if (!user_id) return json({ status: "error", error: "unauthorized" }, 401);
+    if (!user_id) return json({ ok: false, code: "UNAUTHORIZED" }, 401);
 
-    console.log(`M1QR-TRACE: claim-marker-reward - user:${user_id} marker:${markerId}`);
+    console.log(`M1QR-TRACE: claim-marker-reward start - user:${user_id} marker:${markerId}`);
 
     // Check if already claimed
     const { data: existingClaim } = await userClient
@@ -43,7 +43,7 @@ serve(async (req) => {
 
     if (existingClaim) {
       console.log(`M1QR-TRACE: already claimed - user:${user_id} marker:${markerId}`);
-      return json({ ok: false, status: "already_claimed", code: "ALREADY_CLAIMED" }, 200);
+      return json({ ok: false, code: "ALREADY_CLAIMED" }, 200);
     }
 
     // Get all rewards for this marker
@@ -59,7 +59,7 @@ serve(async (req) => {
 
     if (!rewards || rewards.length === 0) {
       console.log(`M1QR-TRACE: no rewards found - marker:${markerId}`);
-      return json({ ok: false, status: "error", code: "NO_REWARD", error: "no_rewards_found" }, 404);
+      return json({ ok: false, code: "NO_REWARD" }, 404);
     }
 
     // Start transaction - create claim first
@@ -196,9 +196,8 @@ serve(async (req) => {
 
     return json({
       ok: true,
-      summary,
       nextRoute,
-      rewards: rewards.length
+      summary
     }, 200);
 
   } catch (e) {
