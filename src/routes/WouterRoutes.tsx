@@ -35,10 +35,7 @@ import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
-import QRValidatePage from "@/pages/qr/QRValidatePage";
-import QRRedeemPage from "@/pages/qr/QRRedeemPage";
-import { QRScannerPage } from "@/pages/qr/QRScannerPage";
-// Removed QRQueryRedeemPage - rewards now handled by popup
+// QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
 import Terms from "@/pages/Terms";
@@ -242,40 +239,7 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* QR Code Routes - M1SSION™ QR System */}
-          {/* 🔥 CRITICAL: Safari iOS BLACK SCREEN FIX - Force immediate render */}
-          <Route path="/qr/test">
-            {React.createElement(React.lazy(() => import('@/pages/qr/QRTestPage').then(module => ({ default: module.QRTestPage })) ))}
-          </Route>
-          {/* New query-based QR redeem: /qr?code=... */}
-          
-          <Route path="/qr/validate">
-            <ErrorBoundary fallback={
-              <div style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: '#000',
-                color: '#fff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '18px'
-              }}>
-                🔍 QR Validation Error - Contact Support
-              </div>
-            }>
-              <QRValidatePage />
-            </ErrorBoundary>
-          </Route>
-          
-          <Route path="/qr/scanner">
-            <ProtectedRoute>
-              <GlobalLayout><QRScannerPage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
+          {/* QR Routes REMOVED - rewards now handled by popup in map */}
           
 
 
