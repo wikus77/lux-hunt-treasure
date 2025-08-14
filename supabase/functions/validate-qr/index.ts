@@ -1,59 +1,68 @@
-// supabase/functions/validate-qr/index.ts
-// CORS-safe validation – GET/OPTIONS – returns {ok, valid, ...}
-
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
+// deno-lint-ignore-file no-explicit-any
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ORIGINS = new Set<string>([
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+const ALLOWED_ORIGINS = new Set([
   "https://m1ssion.eu",
   "https://www.m1ssion.eu",
   "https://lovable.dev",
   "http://localhost:5173",
-  "http://127.0.0.1:5173",
-  "capacitor://localhost",
-  "ionic://localhost",
+  "http://localhost:5174",
 ]);
 
-function cors(req: Request) {
-  const origin = req.headers.get("Origin") ?? "*";
-  const allow = ORIGINS.has(origin) ? origin : "*";
-  return {
-    "Access-Control-Allow-Origin": allow,
-    "Vary": "Origin",
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-    "Access-Control-Allow-Methods": "GET,OPTIONS",
-    "Access-Control-Max-Age": "86400",
-    "Content-Type": "application/json",
-  };
+const baseCors = {
+  "Access-Control-Allow-Headers": "authorization,apikey,content-type,x-client-info",
+  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Max-Age": "86400",
+};
+
+function withCors(origin: string | null) {
+  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : "*";
+  return { ...baseCors, "Access-Control-Allow-Origin": allowOrigin };
 }
 
 serve(async (req) => {
-  const headers = cors(req);
-  if (req.method === "OPTIONS") return new Response("ok", { headers });
+  const origin = req.headers.get("Origin");
+  if (req.method === "OPTIONS") return new Response("ok", { headers: withCors(origin) });
 
-  const url = new URL(req.url);
-  const code = String(url.searchParams.get("code") ?? url.searchParams.get("c") ?? "")
-    .trim()
-    .toUpperCase();
+  try {
+    const url = new URL(req.url);
+    const raw = url.searchParams.get("c") ?? url.searchParams.get("code");
+    const code = (raw ?? "").trim().toUpperCase();
 
-  if (!code) return new Response(JSON.stringify({ ok: false, valid: false, error: "missing_code" }), { headers, status: 400 });
+    if (!code) {
+      return Response.json({ ok: false, valid: false, error: "missing_code" }, { headers: withCors(origin) });
+    }
 
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: qc, error } = await admin
+      .from("qr_codes")
+      .select("code,title,reward_type,reward_value,lat,lng,is_active")
+      .eq("code", code)
+      .maybeSingle();
 
-  const { data: qc, error } = await sb
-    .from("qr_codes")
-    .select("code, title, reward_type, reward_value, lat, lng, is_active, status, expires_at")
-    .eq("code", code)
-    .maybeSingle();
+    if (error || !qc) {
+      return Response.json({ ok: true, valid: false, source: "qr_codes" }, { headers: withCors(origin) });
+    }
 
-  if (error) return new Response(JSON.stringify({ ok: false, valid: false, error: error.message }), { headers, status: 500 });
+    return Response.json({
+      ok: true,
+      valid: qc.is_active === true,
+      code: qc.code,
+      title: qc.title,
+      reward_type: qc.reward_type,
+      reward_value: qc.reward_value ?? 1,
+      lat: qc.lat,
+      lng: qc.lng,
+      is_active: qc.is_active,
+      status: qc.is_active ? "ACTIVE" : "USED",
+      source: "qr_codes",
+    }, { headers: withCors(origin) });
 
-  const nowIso = new Date().toISOString();
-  const expired = qc?.expires_at && qc.expires_at <= nowIso;
-
-  const valid = Boolean(qc && qc.is_active === true && !expired);
-  return new Response(
-    JSON.stringify({ ok: true, valid, code, ...(qc ?? {}), source: "qr_codes" }),
-    { headers, status: valid ? 200 : 404 },
-  );
+  } catch (e: any) {
+    return Response.json({ ok: false, valid: false, error: "internal_error", detail: String(e?.message ?? e) }, { headers: withCors(origin) });
+  }
 });
