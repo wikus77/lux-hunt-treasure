@@ -1,5 +1,5 @@
-// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
-import React, { useEffect, useMemo, useState } from 'react';
+// © 2025 Joseph MULÉ – M1SSION™
+import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,6 +10,10 @@ import '@/styles/qr-markers.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
+import { useMarkerRewards } from '@/hooks/useMarkerRewards';
+
+// Lazy load the modal for better performance
+const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
 
 type Item = {
   code: string;
@@ -26,12 +30,16 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
   const [markerMinZoom, setMarkerMinZoom] = useState<number>(17); // Default from app_config
+  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
   const map = useMap();
   const RADIUS_M = 500;
   const NEAR_M = 75;
   const watcher = useGeoWatcher();
   const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
   const TRACE_ID = 'M1QR-TRACE';
+
+  // Hook to fetch rewards for selected marker
+  const { rewards } = useMarkerRewards(selectedMarker);
 
   const icon = (active:boolean) => L.divIcon({
     className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
@@ -155,7 +163,23 @@ useEffect(() => {
   return () => { map.off('zoomend', update); };
 }, [map, markerMinZoom]);
 
-if (isLoading) return null;
+  const handleClaimSuccess = (nextRoute?: string) => {
+    console.log('M1QR-TRACE:', { step: 'claim_success_redirect', nextRoute });
+    setSelectedMarker(null); // Close modal
+    
+    if (nextRoute) {
+      setTimeout(() => {
+        setLocation(nextRoute);
+      }, 1000);
+    }
+  };
+
+  const handleModalClose = () => {
+    console.log('M1QR-TRACE:', { step: 'modal_close' });
+    setSelectedMarker(null);
+  };
+
+  if (isLoading) return null;
 
 return (
   <>
@@ -196,7 +220,7 @@ return (
                   {(qr.is_active && userLocation) && (inRange ? (
                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
                       console.log('M1QR-TRACE: QR reward popup triggered for code:', qr.code);
-                      // TODO: Open ClaimRewardModal here
+                      setSelectedMarker(qr.code);
                     }}>🎯 Riscatta</Button>
                   ) : (
                     <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
@@ -207,6 +231,19 @@ return (
           );
         })}
       </LayerGroup>
+    )}
+    
+    {/* Lazy-loaded ClaimRewardModal */}
+    {selectedMarker && (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ClaimRewardModal
+          isOpen={!!selectedMarker}
+          onClose={handleModalClose}
+          markerId={selectedMarker}
+          rewards={rewards}
+          onSuccess={handleClaimSuccess}
+        />
+      </Suspense>
     )}
   </>
 );
