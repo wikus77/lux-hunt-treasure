@@ -13,12 +13,8 @@ export const QRMarkers = () => {
     }
 
     try {
-      const result = await redeemQRCode(code);
-      if (result.success) {
-        alert(`✅ ${result.message}`);
-      } else {
-        alert(`❌ ${result.error}`);
-      }
+      await redeemQRCode(code);
+      // Navigation is handled by redeemQRCode
     } catch (error) {
       alert('❌ Errore nel riscatto del QR code');
     }

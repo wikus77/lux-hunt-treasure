@@ -177,47 +177,15 @@ export const useQRMapIntegration = () => {
   };
 
   const redeemQRCode = async (code: string) => {
-    if (!user) {
-      throw new Error('Devi essere loggato per riscattare QR codes');
+    // Navigate to QR redeem page instead of inline redeem
+    if (typeof window !== 'undefined') {
+      window.location.href = `/qr/${code}`;
     }
-
-    try {
-      const { data, error } = await supabase.functions.invoke('redeem-qr', {
-        body: {
-          code: code.toUpperCase()
-        }
-      });
-
-      if (error) throw error;
-
-      // Normalize RPC payload into a predictable shape
-      const payload: any = (data && typeof data === 'object') ? data : {};
-      const status: string | undefined = payload?.status;
-      const success = status === 'ok';
-
-      // Reload QR codes after redemption attempt to refresh proximity/claimed
-      await loadNearbyQRCodes();
-
-      const message = payload?.message ||
-        (status === 'ok' ? 'QR riscattato con successo' :
-         status === 'already_claimed' ? 'Hai già riscattato questo QR' :
-         status === 'inactive' ? 'QR disattivato' :
-         status === 'not_found' ? 'QR non valido' :
-         status === 'out_of_range' ? 'Sei troppo lontano dal QR' :
-         'Errore nel riscatto del QR');
-
-      return {
-        success,
-        status,
-        ...(payload as Record<string, any>),
-        message,
-        error: success ? undefined : message
-      };
-
-    } catch (error) {
-      console.error('QR redemption error:', error);
-      throw error;
-    }
+    
+    return {
+      success: true,
+      message: 'Redirecting to QR redeem...'
+    };
   };
 
   const refreshLocation = () => {
