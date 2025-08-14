@@ -71,21 +71,36 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
         detail: { email, timestamp: Date.now() } 
       }));
       
-      // MISSION POST-LOGIN SEQUENCE: Clear intro flag and redirect to mission-intro
-      console.log('🚀 [StandardLoginForm] LOGIN SUCCESS - Clearing hasSeenPostLoginIntro flag');
-      sessionStorage.removeItem("hasSeenPostLoginIntro");
+      // POST-LOGIN REDIRECT: Handle redirect params and localStorage
+      const params = new URLSearchParams(window.location.search);
+      const qRedirect = params.get('redirect');
+      let target = qRedirect || '';
+      if (!target) {
+        try { 
+          target = localStorage.getItem('post_login_redirect') || ''; 
+          if (target) localStorage.removeItem('post_login_redirect'); 
+        } catch {}
+      }
       
-      console.log('🚀 [StandardLoginForm] ATTEMPTING REDIRECT TO /mission-intro for M1SSION animation');
-      navigate('/mission-intro');
+      // If no specific redirect, go to mission-intro, otherwise use the target
+      const finalTarget = target || '/mission-intro';
+      console.log('🚀 [StandardLoginForm] REDIRECTING TO:', finalTarget);
+      
+      // Clear intro flag only if going to mission-intro
+      if (!target) {
+        sessionStorage.removeItem("hasSeenPostLoginIntro");
+      }
+      
+      navigate(finalTarget);
       
       // PWA iOS Safari fallback
       if (window.matchMedia('(display-mode: standalone)').matches || 
           (window.navigator as any).standalone === true) {
-        console.log('📱 PWA DETECTED - Setting up fallback redirect to mission-intro');
+        console.log('📱 PWA DETECTED - Setting up fallback redirect to:', finalTarget);
         setTimeout(() => {
           if (window.location.pathname === '/login') {
-            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href to mission-intro');
-            window.location.href = '/mission-intro';
+            console.log('🔄 PRIMARY REDIRECT FAILED - Using window.location.href to:', finalTarget);
+            window.location.href = finalTarget;
           }
         }, 800);
       }
