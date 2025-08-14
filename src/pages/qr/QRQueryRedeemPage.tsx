@@ -38,15 +38,23 @@ export const QRQueryRedeemPage: React.FC = () => {
       try {
         setLoading(true);
         const { data, error } = await supabase.functions.invoke('redeem-qr', { body: { code } });
-        if (error) throw error;
+        
+        if (error) {
+          // Extract detailed error from Supabase Functions context
+          const detail = (error as any)?.context ? JSON.stringify((error as any).context) : error.message;
+          console.error('redeem-qr error', error, detail);
+          setError(`Redeem fallito: ${detail}`);
+          return;
+        }
 
-        const resp = (data as unknown) as { status?: string; reward_type?: string; reward_value?: number };
-        // resp: { status, reward_type, reward_value }
+        console.log('redeem-qr response:', data); // Development logging
+        
+        const resp = (data as unknown) as { status?: string; reward_type?: string; reward_value?: number; error?: string };
+        
         if (resp?.status === 'ok') {
           toast.success('🎁 Ricompensa sbloccata!');
           // Route based on reward
           if (resp.reward_type === 'buzz_credit') {
-            // navigate to buzz with free flag
             setLocation('/buzz?free=1&reward=1');
           } else if (resp.reward_type === 'buzz_map_credit') {
             setLocation('/map?free=1&reward=1');
@@ -57,12 +65,10 @@ export const QRQueryRedeemPage: React.FC = () => {
         } else if (resp?.status === 'already_redeemed' || resp?.status === 'already_claimed') {
           toast.info('Hai già riscattato questo QR');
           setLocation('/home');
+        } else if (resp?.error === 'invalid_or_inactive_code') {
+          setError('Codice QR non valido o disattivato');
         } else {
-          if (error === 'invalid_or_inactive_code') {
-            setError('Codice QR non valido o disattivato');
-          } else {
-            setError('Riscatto QR non riuscito');
-          }
+          setError('Riscatto QR non riuscito');
         }
       } catch (e: any) {
         console.error('redeem-qr error', e);

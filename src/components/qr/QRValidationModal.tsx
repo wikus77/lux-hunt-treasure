@@ -151,21 +151,44 @@ export const QRValidationModal: React.FC<QRValidationModalProps> = ({
       });
 
       if (error) {
-        throw error;
+        // Extract detailed error from Supabase Functions context
+        const detail = (error as any)?.context ? JSON.stringify((error as any).context) : error.message;
+        throw new Error(detail);
       }
 
-      setRedeemSuccess(true);
-      toast.success('QR code riscattato con successo!');
-
-      // Auto-close modal after success
-      setTimeout(() => {
-        onClose();
-      }, 3000);
+      const status = data?.status;
+      if (status === 'ok') {
+        setRedeemSuccess(true);
+        toast.success('🎁 Ricompensa sbloccata!');
+        
+        // Navigate based on reward type
+        setTimeout(() => {
+          onClose();
+          if (data?.reward_type === 'buzz_credit') {
+            window.location.href = '/buzz?free=1&reward=1';
+          } else if (data?.reward_type === 'buzz_map_credit') {
+            window.location.href = '/map?free=1&reward=1';
+          } else {
+            window.location.href = '/home';
+          }
+        }, 2000);
+        
+      } else if (status === 'already_redeemed' || status === 'already_claimed') {
+        toast.info('Hai già riscattato questo QR');
+        setTimeout(() => {
+          onClose();
+          window.location.href = '/home';
+        }, 2000);
+      } else if (data?.error === 'invalid_or_inactive_code') {
+        setError('Codice QR non valido o disattivato');
+      } else {
+        setError('Riscatto QR non riuscito');
+      }
 
     } catch (err: any) {
       console.error('QR redemption error:', err);
       setError(err.message || 'Errore nel riscatto del QR code');
-      toast.error('Errore nel riscatto');
+      toast.error(`Redeem fallito: ${err.message}`);
     } finally {
       setIsRedeeming(false);
     }
