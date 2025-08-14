@@ -48,7 +48,11 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     const { data, error } = await supabase.functions
       .invoke('claim-marker-reward', { body: { markerId } });
 
-    if (error?.status === 401) { window.location.href = '/login'; return; }
+    if (error?.status === 401) { 
+      console.log('M1QR-TRACE', { step: 'claim_unauthorized' });
+      window.location.href = '/login'; 
+      return; 
+    }
 
     if (data?.ok === true) {
       console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute });
@@ -58,8 +62,17 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
       return;
     }
 
-    if (data?.code === 'ALREADY_CLAIMED') { toast.info('Premio già riscattato'); onClose?.(); return; }
-    if (data?.code === 'NO_REWARD') { toast.error('Nessuna ricompensa configurata'); return; }
+    if (data?.code === 'ALREADY_CLAIMED') { 
+      console.log('M1QR-TRACE', { step: 'already_claimed' });
+      toast.info('Premio già riscattato'); 
+      onClose?.(); 
+      return; 
+    }
+    if (data?.code === 'NO_REWARD') { 
+      console.error('M1QR-TRACE', { step: 'no_reward' });
+      toast.error('Nessuna ricompensa configurata'); 
+      return; 
+    }
 
     console.error('M1QR-TRACE', { step: 'claim_error', markerId, error, data });
     toast.error('Errore nel riscatto');
