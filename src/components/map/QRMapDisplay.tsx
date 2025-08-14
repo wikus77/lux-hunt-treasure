@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
@@ -10,10 +10,21 @@ import '@/styles/qr-markers.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
-import { useMarkerRewards } from '@/hooks/useMarkerRewards';
 
 // Lazy load the modal for better performance
 const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
+
+interface MarkerReward {
+  reward_type: string;
+  payload: any;
+  description: string;
+}
+
+interface ClaimData {
+  isOpen: boolean;
+  markerId: string;
+  rewards: MarkerReward[];
+}
 
 type Item = {
   code: string;
@@ -30,16 +41,13 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
   const [markerMinZoom, setMarkerMinZoom] = useState<number>(17); // Default from app_config
-  const [selectedMarker, setSelectedMarker] = useState<string | null>(null);
+  const [claimData, setClaimData] = useState<ClaimData>({ isOpen: false, markerId: '', rewards: [] });
   const map = useMap();
   const RADIUS_M = 500;
   const NEAR_M = 75;
   const watcher = useGeoWatcher();
   const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
   const TRACE_ID = 'M1QR-TRACE';
-
-  // Hook to fetch rewards for selected marker
-  const { rewards } = useMarkerRewards(selectedMarker);
 
   const icon = (active:boolean) => L.divIcon({
     className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
@@ -171,8 +179,8 @@ useEffect(() => {
 }, [map, markerMinZoom]);
 
   const handleClaimSuccess = (nextRoute?: string) => {
-    console.log('M1QR-TRACE:', { step: 'claim_success_redirect', nextRoute });
-    setSelectedMarker(null); // Close modal
+    console.log('M1QR-TRACE', { step: 'claim_success_redirect', nextRoute });
+    setClaimData({ isOpen: false, markerId: '', rewards: [] }); // Close modal
     
     if (nextRoute) {
       setLocation(nextRoute);
@@ -180,8 +188,8 @@ useEffect(() => {
   };
 
   const handleModalClose = () => {
-    console.log('M1QR-TRACE:', { step: 'modal_close' });
-    setSelectedMarker(null);
+    console.log('M1QR-TRACE', { step: 'modal_close' });
+    setClaimData({ isOpen: false, markerId: '', rewards: [] });
   };
 
   if (isLoading) return null;
@@ -207,7 +215,7 @@ return (
                 click: async (e) => {
                   e.originalEvent?.stopPropagation();
                   const markerId = qr.code;
-                  console.log('M1QR-TRACE:', { step: 'click_marker_start', markerId });
+                  console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
                   
                   // Fetch rewards directly for immediate modal opening
                   try {
@@ -217,14 +225,14 @@ return (
                       .eq('marker_id', markerId);
 
                     if (error) {
-                      console.error('M1QR-TRACE:', { step: 'rewards_fetch_error', markerId, error });
+                      console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
                       return;
                     }
 
-                    console.log('M1QR-TRACE:', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
-                    setSelectedMarker(markerId);
+                    setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
+                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
                   } catch (err) {
-                    console.error('M1QR-TRACE:', { step: 'click_error', markerId, err });
+                    console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
                   }
                 }
               }}
@@ -259,13 +267,13 @@ return (
     )}
     
     {/* Lazy-loaded ClaimRewardModal */}
-    {selectedMarker && (
+    {claimData.isOpen && (
       <Suspense fallback={<div>Loading...</div>}>
         <ClaimRewardModal
-          isOpen={!!selectedMarker}
+          isOpen={claimData.isOpen}
           onClose={handleModalClose}
-          markerId={selectedMarker}
-          rewards={rewards}
+          markerId={claimData.markerId}
+          rewards={claimData.rewards}
           onSuccess={handleClaimSuccess}
         />
       </Suspense>
