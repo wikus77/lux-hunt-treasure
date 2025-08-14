@@ -39,33 +39,40 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.functions.invoke('redeem-qr', { body: { code } });
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess?.session?.access_token || '';
+        const url = `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/redeem-qr`;
 
-        if (error) {
-          setError(`Redeem fallito: ${error.message || 'Edge error'}`);
-          return;
-        }
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          body: JSON.stringify({ code })
+        });
 
-        const resp = (data || {}) as { status?: string; error?: string; reward_type?: string; reward_value?: string };
+        const payload = await res.json().catch(() => ({} as any));
 
-        if (resp.status === 'ok') {
+        if (payload?.status === 'ok') {
           toast.success('🎁 Ricompensa sbloccata!');
           setLocation('/buzz?free=1&reward=1');
           return;
         }
-
-        if (resp.status === 'already_claimed') {
+        if (payload?.status === 'already_claimed') {
           toast.info('Hai già riscattato questo QR');
           setLocation('/home');
           return;
         }
-
-        if (resp.error === 'invalid_or_inactive_code') {
+        if (payload?.error === 'invalid_or_inactive_code') {
           setError('Codice QR non valido o disattivato');
           return;
         }
-
-        setError(`Redeem fallito: ${resp.error ?? 'unknown'}`);
+        if (res.status === 401 || payload?.error === 'unauthorized') {
+          setError('Devi effettuare l\'accesso per riscattare');
+          return;
+        }
+        setError('Redeem fallito. Riprova tra poco.');
       } catch (e: any) {
         setError(e?.message || 'Errore sconosciuto');
       } finally {

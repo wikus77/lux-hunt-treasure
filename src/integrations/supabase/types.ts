@@ -239,6 +239,27 @@ export type Database = {
         }
         Relationships: []
       }
+      app_config: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value_int: number | null
+          value_text: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value_int?: number | null
+          value_text?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value_int?: number | null
+          value_text?: string | null
+        }
+        Relationships: []
+      }
       app_messages: {
         Row: {
           content: string

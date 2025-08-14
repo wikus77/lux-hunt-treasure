@@ -42,6 +42,57 @@ interface QRStats {
   failedAttempts: number;
 }
 
+function MapSettingsCard() {
+  const [minZoom, setMinZoom] = useState<number>(17);
+  const choices = [14, 15, 16, 17];
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('app_config')
+        .select('value_int')
+        .eq('key', 'marker_min_zoom')
+        .maybeSingle();
+      if (data?.value_int) setMinZoom(Number(data.value_int));
+    })();
+  }, []);
+
+  const save = async (v: number) => {
+    setMinZoom(v);
+    const { error } = await supabase
+      .from('app_config')
+      .upsert({ key: 'marker_min_zoom', value_int: v, value_text: null });
+    if (error) {
+      toast.error('Salvataggio soglia fallito (serve ruolo admin)');
+    } else {
+      toast.success(`Soglia marker aggiornata: zoom ≥ ${v}`);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Impostazioni Mappa — Visibilità Marker</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="text-sm text-muted-foreground">
+          Seleziona lo zoom minimo a cui mostrare i marker sulla mappa.
+        </div>
+        <Select value={String(minZoom)} onValueChange={(val) => save(Number(val))}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Seleziona zoom" />
+          </SelectTrigger>
+          <SelectContent>
+            {choices.map((z) => (
+              <SelectItem key={z} value={String(z)}>Zoom {z}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </CardContent>
+    </Card>
+  );
+}
+
 export const QRControlPanel = () => {
   const [qrCodes, setQrCodes] = useState<QRCode[]>([]);
   const [stats, setStats] = useState<QRStats>({
@@ -558,6 +609,9 @@ const getRewardColor = (type: string) => {
         <QrCode className="w-8 h-8 text-primary" />
         <h1 className="text-3xl font-bold">QR Control Panel</h1>
       </div>
+
+      {/* Map Settings */}
+      <MapSettingsCard />
 
       {/* Statistics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
