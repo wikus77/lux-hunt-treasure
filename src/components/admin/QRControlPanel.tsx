@@ -246,10 +246,38 @@ const saveMarkerRewards = async () => {
       return;
     }
 
+    if (!latFull || !lngFull) {
+      toast.error('⚠️ Coordinate marker obbligatorie');
+      return;
+    }
+
+    console.log('M1QR-TRACE:', { step: 'save_marker_start', markerId: formData.locationName, rewardType: formData.rewardType });
+
     try {
       setIsCreating(true);
 
-      // Generate payload based on reward type
+      // 1. WRITE TO qr_codes (for map display) - CRITICAL
+      const markerCode = formData.locationName.trim();
+      const { error: qrError } = await supabase
+        .from('qr_codes')
+        .upsert([{
+          code: markerCode,
+          title: `Marker ${markerCode}`,
+          lat: latFull,
+          lng: lngFull,
+          is_active: true,
+          reward_type: 'buzz_credit', // Default for compatibility
+          expires_at: formData.expiresAt || null
+        }]);
+
+      if (qrError) {
+        console.error('M1QR-TRACE:', { step: 'qr_codes_error', error: qrError });
+        throw new Error(`Errore creazione marker: ${qrError.message}`);
+      }
+
+      console.log('M1QR-TRACE:', { step: 'qr_codes_success', markerId: markerCode });
+
+      // 2. WRITE TO marker_rewards (for rewards)
       let payload: any = {};
       switch (formData.rewardType) {
         case 'buzz_free':
@@ -271,28 +299,35 @@ const saveMarkerRewards = async () => {
           payload = {};
       }
 
-      // Save to marker_rewards table
-      const { error } = await supabase
+      const { error: rewardError } = await supabase
         .from('marker_rewards')
         .insert([{
-          marker_id: formData.locationName, // Using locationName as marker_id
+          marker_id: markerCode,
           reward_type: formData.rewardType,
           payload,
           description: formData.rewardContent || `Premio ${formData.rewardType}`
         }]);
 
-      if (error) throw error;
+      if (rewardError) {
+        console.error('M1QR-TRACE:', { step: 'marker_rewards_error', error: rewardError });
+        throw new Error(`Errore salvataggio ricompense: ${rewardError.message}`);
+      }
 
-      toast.success('Ricompensa marker salvata con successo!');
+      console.log('M1QR-TRACE:', { step: 'save_marker_complete', markerId: markerCode });
+
+      toast.success('✅ Marker e ricompense salvati! Ora visibili in mappa.');
       
       // Reset form
       setFormData({ locationName: '', lat: '', lng: '', rewardType: '', rewardContent: '', expiresAt: '' });
       setLatFull(null);
       setLngFull(null);
+
+      // Reload markers to show the new one
+      loadQRCodes();
       
     } catch (e: any) {
-      console.error('Error saving marker reward:', e);
-      toast.error(`Errore salvataggio ricompensa: ${e?.message || 'Errore sconosciuto'}`);
+      console.error('M1QR-TRACE:', { step: 'save_marker_error', error: e });
+      toast.error(`❌ Errore: ${e?.message || 'Errore sconosciuto'}`);
     } finally {
       setIsCreating(false);
     }

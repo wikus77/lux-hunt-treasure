@@ -34,9 +34,9 @@ const QRValidatePage: React.FC = () => {
       return;
     }
 
-    console.log('QR_VALIDATE • auth → /qr/' + code);
+    console.log('QR_VALIDATE • auth → redirect to map');
     actedRef.current = true;
-    navigate(`/qr/${encodeURIComponent(code)}`);
+    navigate('/mappa'); // Redirect to map instead of broken QR pages
   }, [code, isAuthenticated, isLoading, navigate]);
 
   return (
