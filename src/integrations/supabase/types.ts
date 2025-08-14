@@ -3294,27 +3294,36 @@ export type Database = {
       qr_codes_map: {
         Row: {
           code: string | null
+          expires_at: string | null
           is_active: boolean | null
+          is_redeemed: boolean | null
           lat: number | null
           lng: number | null
           reward_type: string | null
+          reward_value: number | null
           title: string | null
         }
         Insert: {
           code?: string | null
+          expires_at?: string | null
           is_active?: boolean | null
+          is_redeemed?: never
           lat?: number | null
           lng?: number | null
           reward_type?: string | null
-          title?: never
+          reward_value?: number | null
+          title?: string | null
         }
         Update: {
           code?: string | null
+          expires_at?: string | null
           is_active?: boolean | null
+          is_redeemed?: never
           lat?: number | null
           lng?: number | null
           reward_type?: string | null
-          title?: never
+          reward_value?: number | null
+          title?: string | null
         }
         Relationships: []
       }
