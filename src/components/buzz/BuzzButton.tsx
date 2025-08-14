@@ -10,13 +10,17 @@ interface BuzzButtonProps {
   isBlocked: boolean;
   buzzing: boolean;
   onClick: () => void;
+  freeAvailable?: boolean;
+  freeCount?: number;
 }
 
 export const BuzzButton: React.FC<BuzzButtonProps> = ({
   currentPrice,
   isBlocked,
   buzzing,
-  onClick
+  onClick,
+  freeAvailable = false,
+  freeCount = 0
 }) => {
   const { xpStatus } = useXpSystem();
   return (
@@ -51,7 +55,7 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
             XP: {xpStatus.buzz_xp_progress}/100
           </div>
           <div className="text-sm font-medium bg-white/20 px-4 py-2 rounded-full backdrop-blur-sm text-white">
-            €{currentPrice.toFixed(2)}
+            {freeAvailable ? `GRATIS (${freeCount})` : `€${currentPrice.toFixed(2)}`}
           </div>
         </div>
       )}

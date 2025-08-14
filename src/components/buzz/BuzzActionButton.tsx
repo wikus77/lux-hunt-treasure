@@ -7,6 +7,7 @@ import { ShockwaveAnimation } from './ShockwaveAnimation';
 import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
+import { useBuzzGrants } from '@/hooks/useBuzzGrants';
 import { toast } from 'sonner';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
 import { validateBuzzPrice } from '@/lib/constants/buzzPricing';
@@ -23,6 +24,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   onSuccess
 }) => {
   const { user } = useUnifiedAuth();
+  const { hasFreeBuzz, consumeFreeBuzz, totalRemaining } = useBuzzGrants();
   
   // Enhanced BUZZ counter with progressive pricing
   const { 
@@ -32,10 +34,10 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     updateDailyBuzzCounter
   } = useBuzzCounter(user?.id);
   
-  // Progressive pricing calculation
-  const currentPriceCents = getCurrentBuzzPriceCents();
+  // Progressive pricing calculation (free if grants available)
+  const currentPriceCents = hasFreeBuzz ? 0 : getCurrentBuzzPriceCents();
   const currentPriceEur = currentPriceCents / 100;
-  const currentPriceDisplay = getCurrentBuzzDisplayPrice();
+  const currentPriceDisplay = hasFreeBuzz ? 'GRATIS' : getCurrentBuzzDisplayPrice();
   
   const { 
     processBuzzPayment, 
@@ -121,7 +123,31 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const handleStripePayment = async () => {
+  const handleAction = async () => {
+    if (!user) {
+      toast.error('Devi essere loggato per utilizzare BUZZ!');
+      return;
+    }
+
+    // Check if free buzz is available first
+    if (hasFreeBuzz) {
+      console.log('🎁 M1SSION™ FREE BUZZ: Using free grant', { remaining: totalRemaining });
+      const consumed = await consumeFreeBuzz();
+      if (consumed) {
+        // Execute buzz action directly without payment
+        await updateDailyBuzzCounter();
+        await handleBuzz();
+        onSuccess();
+        toast.success('BUZZ gratuito utilizzato!');
+        return;
+      } else {
+        console.error('🔴 M1SSION™ FREE BUZZ: Failed to consume grant');
+        toast.error('Errore nell\'uso del BUZZ gratuito');
+        return;
+      }
+    }
+
+    // Fallback to paid buzz with progressive pricing
     console.log('🔥 M1SSION™ PROGRESSIVE BUZZ: Initiating payment', { 
       dailyCount: dailyBuzzCounter,
       nextClick: dailyBuzzCounter + 1,
@@ -129,11 +155,6 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       priceEur: currentPriceEur,
       timestamp: new Date().toISOString()
     });
-    
-    if (!user) {
-      toast.error('Devi essere loggato per utilizzare BUZZ!');
-      return;
-    }
 
     // Validate pricing integrity
     if (!validateBuzzPrice(dailyBuzzCounter, currentPriceCents)) {
@@ -184,7 +205,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         currentPrice={currentPriceEur}
         isBlocked={isBlocked}
         buzzing={buzzing}
-        onClick={handleStripePayment}
+        onClick={handleAction}
+        freeAvailable={hasFreeBuzz}
+        freeCount={totalRemaining}
       />
       
       <ShockwaveAnimation show={showShockwave} />

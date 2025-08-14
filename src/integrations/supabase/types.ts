@@ -335,6 +335,30 @@ export type Database = {
         }
         Relationships: []
       }
+      badges: {
+        Row: {
+          badge_id: string
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          name: string
+        }
+        Insert: {
+          badge_id?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          name: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       blocked_ips: {
         Row: {
           attempts: number
@@ -428,6 +452,33 @@ export type Database = {
           user_id?: string
           week_number?: number
           year?: number
+        }
+        Relationships: []
+      }
+      buzz_grants: {
+        Row: {
+          created_at: string | null
+          id: string
+          remaining: number
+          source: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          remaining: number
+          source: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          remaining?: number
+          source?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -775,6 +826,60 @@ export type Database = {
         }
         Relationships: []
       }
+      event_tickets: {
+        Row: {
+          created_at: string | null
+          event_id: string
+          id: string
+          source: string
+          ticket_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_id: string
+          id?: string
+          source: string
+          ticket_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string
+          id?: string
+          source?: string
+          ticket_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          event_id: string
+          name: string
+          start_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_id?: string
+          name: string
+          start_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_id?: string
+          name?: string
+          start_date?: string | null
+        }
+        Relationships: []
+      }
       final_shot_rules: {
         Row: {
           cooldown_hours: number | null
@@ -1054,6 +1159,57 @@ export type Database = {
           note?: string | null
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      marker_claims: {
+        Row: {
+          claimed_at: string | null
+          id: string
+          marker_id: string
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          id?: string
+          marker_id: string
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          id?: string
+          marker_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marker_rewards: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          marker_id: string
+          payload: Json
+          reward_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          marker_id: string
+          payload: Json
+          reward_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          marker_id?: string
+          payload?: Json
+          reward_type?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -2291,6 +2447,30 @@ export type Database = {
           status?: string
           tier?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_badges: {
+        Row: {
+          badge_id: string
+          created_at: string | null
+          id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          created_at?: string | null
+          id?: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          created_at?: string | null
+          id?: string
+          source?: string
           user_id?: string
         }
         Relationships: []

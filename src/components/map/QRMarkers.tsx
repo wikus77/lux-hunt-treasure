@@ -1,23 +1,38 @@
 // © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 
-import React from 'react';
+import React, { useState, Suspense } from 'react';
 import { useQRMapIntegration } from '@/hooks/useQRMapIntegration';
+import { useMarkerRewards } from '@/hooks/useMarkerRewards';
+
+// Lazy load ClaimRewardModal for performance
+const ClaimRewardModal = React.lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
 
 export const QRMarkers = () => {
-  const { qrMarkers, getQRMarkerStyle, getQRMarkerIcon, redeemQRCode } = useQRMapIntegration();
+  const { qrMarkers, getQRMarkerStyle, getQRMarkerIcon } = useQRMapIntegration();
+  const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
+  const { rewards } = useMarkerRewards(selectedMarkerId);
 
-  const handleQRClick = async (code: string, isInRange: boolean) => {
+  const handleQRClick = (code: string, isInRange: boolean) => {
+    console.log('M1QR-TRACE:', { step: 'qr_click', code, isInRange });
+    
     if (!isInRange) {
       alert('🚫 Devi essere più vicino al QR code per riscattarlo!');
       return;
     }
 
-    try {
-      await redeemQRCode(code);
-      // Navigation is handled by redeemQRCode
-    } catch (error) {
-      alert('❌ Errore nel riscatto del QR code');
+    // Check if this marker has configured rewards
+    setSelectedMarkerId(code);
+  };
+
+  const handleClaimSuccess = (nextRoute?: string) => {
+    if (nextRoute) {
+      window.location.href = nextRoute;
     }
+    setSelectedMarkerId(null);
+  };
+
+  const handleModalClose = () => {
+    setSelectedMarkerId(null);
   };
 
   return (
@@ -52,6 +67,19 @@ export const QRMarkers = () => {
           </div>
         );
       })}
+      
+      {/* Claim Reward Modal */}
+      {selectedMarkerId && rewards.length > 0 && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <ClaimRewardModal
+            isOpen={true}
+            onClose={handleModalClose}
+            markerId={selectedMarkerId}
+            rewards={rewards}
+            onSuccess={handleClaimSuccess}
+          />
+        </Suspense>
+      )}
     </>
   );
 };
