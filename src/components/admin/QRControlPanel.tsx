@@ -115,7 +115,7 @@ export const QRControlPanel = () => {
     locationName: '',
     lat: '', // UI display (6 decimals)
     lng: '', // UI display (6 decimals)
-    rewardType: 'buzz_credit' as 'buzz_credit' | 'custom',
+    rewardType: '' as 'buzz_free' | 'message' | 'xp_points' | 'event_ticket' | 'badge' | '',
     rewardContent: '',
     expiresAt: ''
   });
@@ -234,104 +234,65 @@ function generateQRCodeString(): string {
   return Math.random().toString(36).substr(2, 8).toUpperCase();
 }
 
-const generateQRCode = async () => {
+const saveMarkerRewards = async () => {
     // Validazioni base
     if (!formData.locationName.trim()) {
-      toast.error('⚠️ Titolo/Nome posizione obbligatorio');
+      toast.error('⚠️ Marker ID obbligatorio');
       return;
     }
 
-    const latNum = (latFull ?? (formData.lat ? parseFloat(formData.lat.replace(',', '.')) : NaN));
-    const lngNum = (lngFull ?? (formData.lng ? parseFloat(formData.lng.replace(',', '.')) : NaN));
-
-    if (!isFinite(latNum)) {
-      toast.error('⚠️ Latitudine non valida (es: 45.464664)');
-      return;
-    }
-    if (!isFinite(lngNum)) {
-      toast.error('⚠️ Longitudine non valida (es: 9.188540)');
-      return;
-    }
-    if (latNum < -90 || latNum > 90) {
-      toast.error('⚠️ Latitudine deve essere tra -90 e 90');
-      return;
-    }
-    if (lngNum < -180 || lngNum > 180) {
-      toast.error('⚠️ Longitudine deve essere tra -180 e 180');
-      return;
-    }
     if (!formData.rewardType) {
-      toast.error('⚠️ Tipo reward obbligatorio');
+      toast.error('⚠️ Tipo ricompensa obbligatorio');
       return;
-    }
-    if (formData.rewardType === 'custom' && !formData.rewardContent.trim()) {
-      toast.warning('⚠️ Nessun messaggio personalizzato: proseguo comunque');
     }
 
     try {
       setIsCreating(true);
 
-      // Generate unique code
-      const code = generateQRCodeString();
-      
-      // Normalize reward type
-      const normalizedRewardType = mapRewardType(formData.rewardType);
+      // Generate payload based on reward type
+      let payload: any = {};
+      switch (formData.rewardType) {
+        case 'buzz_free':
+          payload = { buzzCount: 1 };
+          break;
+        case 'message':
+          payload = { text: formData.rewardContent || 'Congratulazioni agente!' };
+          break;
+        case 'xp_points':
+          payload = { xp: 50 };
+          break;
+        case 'event_ticket':
+          payload = { event_id: '', ticket_type: 'standard' };
+          break;
+        case 'badge':
+          payload = { badge_id: '' };
+          break;
+        default:
+          payload = {};
+      }
 
-      const payload = {
-        code,
-        title: formData.locationName || 'QR Manuale',
-        reward_type: normalizedRewardType,
-        reward_value: "1", // default reward value as string
-        lat: latNum,
-        lng: lngNum,
-        is_active: true,
-        status: 'ACTIVE',
-        expires_at: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : null,
-      };
-
-      // Insert directly into public.qr_codes
-      const { data, error } = await supabase
-        .from('qr_codes')
-        .insert([payload])
-        .select()
-        .single();
+      // Save to marker_rewards table
+      const { error } = await supabase
+        .from('marker_rewards')
+        .insert([{
+          marker_id: formData.locationName, // Using locationName as marker_id
+          reward_type: formData.rewardType,
+          payload,
+          description: formData.rewardContent || `Premio ${formData.rewardType}`
+        }]);
 
       if (error) throw error;
-      const created = data as any;
 
-      // Aggiorna lista locale (no refetch pesante) + cache
-      const newItem: QRCode = {
-        id: created.code, // usiamo il code come id visualizzato/di stampa
-        reward_type: created.reward_type,
-        message: formData.rewardContent || '',
-        lat: created.lat,
-        lon: created.lng,
-        location_name: created.title || payload.title,
-        max_distance_meters: 100,
-        attivo: created.is_active ?? true,
-        scansioni: 0,
-        redeemed_by: [],
-        expires_at: created.expires_at,
-        creato_da: 'me',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as QRCode;
-      const updatedList = [newItem, ...qrCodes];
-      setQrCodes(updatedList);
-      try { localStorage.setItem('qr_admin_list', JSON.stringify(updatedList)); } catch {}
-
-      // Reset form (mantieni mappa pulita)
-      setFormData({ locationName: '', lat: '', lng: '', rewardType: 'buzz_credit', rewardContent: '', expiresAt: '' });
+      toast.success('Ricompensa marker salvata con successo!');
+      
+      // Reset form
+      setFormData({ locationName: '', lat: '', lng: '', rewardType: '', rewardContent: '', expiresAt: '' });
       setLatFull(null);
       setLngFull(null);
-
-      // Apri modale stampa esistente con il nuovo codice
-      showQRForPrinting(created.code, { rewardType: created.reward_type, locationName: created.title });
       
-      toast.success(`QR Code ${created.code} creato con successo!`);
     } catch (e: any) {
-      console.error('Error creating QR code:', e);
-      toast.error(`Errore creazione QR: ${e?.message || 'Errore sconosciuto'}`);
+      console.error('Error saving marker reward:', e);
+      toast.error(`Errore salvataggio ricompensa: ${e?.message || 'Errore sconosciuto'}`);
     } finally {
       setIsCreating(false);
     }
@@ -646,37 +607,55 @@ const getRewardColor = (type: string) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Gift className="w-5 h-5" />
-            Crea Nuovo QR Code
+            🎁 Configurazione Ricompense Marker
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="locationName">Nome Posizione *</Label>
+              <Label htmlFor="locationName">Marker ID *</Label>
               <Input
                 id="locationName"
                 value={formData.locationName}
                 onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-                placeholder="es. Berlino - Alexanderplatz"
+                placeholder="UUID del marker (es. QR code ID)"
               />
             </div>
             <div>
-<Label htmlFor="rewardType">Tipo Reward *</Label>
+<Label htmlFor="rewardType">Tipo Ricompensa *</Label>
               <Select value={formData.rewardType} onValueChange={(value: any) => setFormData({ ...formData, rewardType: value })}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Seleziona tipo ricompensa" />
                 </SelectTrigger>
                 <SelectContent className="z-[100] max-h-[300px] overflow-y-auto bg-card border border-border shadow-xl backdrop-blur-md">
-                  <SelectItem value="buzz_credit" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                  <SelectItem value="buzz_free" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
                     <div className="flex items-center gap-2">
                       <span className="text-lg">⚡</span>
-                      <span>Buzz Credit</span>
+                      <span>BUZZ Gratuiti</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="custom" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                  <SelectItem value="message" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
                     <div className="flex items-center gap-2">
-                      <span className="text-lg">🎁</span>
-                      <span>Custom</span>
+                      <span className="text-lg">📩</span>
+                      <span>Messaggio</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="xp_points" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🏆</span>
+                      <span>Punti XP</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="event_ticket" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🎫</span>
+                      <span>Ticket Evento</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="badge" className="cursor-pointer py-3 px-4 text-base font-medium hover:bg-accent focus:bg-accent">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">🏅</span>
+                      <span>Badge</span>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -758,18 +737,16 @@ const getRewardColor = (type: string) => {
             }}
           />
 
-{(formData.rewardType === 'custom') && (
-            <div>
-              <Label htmlFor="rewardContent">Messaggio (opzionale)</Label>
-              <Textarea
-                id="rewardContent"
-                value={formData.rewardContent}
-                onChange={(e) => setFormData({ ...formData, rewardContent: e.target.value })}
-                placeholder={'Inserisci il messaggio personalizzato...'}
-                rows={3}
-              />
-            </div>
-          )}
+          <div>
+            <Label htmlFor="rewardContent">Descrizione (opzionale)</Label>
+            <Textarea
+              id="rewardContent"
+              value={formData.rewardContent}
+              onChange={(e) => setFormData({ ...formData, rewardContent: e.target.value })}
+              placeholder="Descrizione breve per il popup del marker..."
+              rows={3}
+            />
+          </div>
 
           <div>
             <Label htmlFor="expiresAt">Data Scadenza (opzionale)</Label>
@@ -781,11 +758,11 @@ const getRewardColor = (type: string) => {
             />
           </div>
 
-          <Button onClick={generateQRCode} disabled={isCreating} className="w-full">
-            {isCreating ? 'Creando...' : (
+          <Button onClick={saveMarkerRewards} disabled={isCreating} className="w-full">
+            {isCreating ? 'Salvando...' : (
               <>
-                <Printer className="w-4 h-4 mr-2" />
-                Genera QR Code + Stampa Adesivo
+                <Gift className="w-4 h-4 mr-2" />
+                Salva Ricompense Marker
               </>
             )}
           </Button>

@@ -170,11 +170,8 @@ return (
               icon={icon(qr.is_active)}
               eventHandlers={{
                 click: () => {
-                  const url = `/qr?c=${encodeURIComponent(qr.code)}`;
-                  if (import.meta.env.DEV) {
-                    console.debug(TRACE_ID, { tag:'M1QR', step:'map:click', code: qr.code, url, ts: Date.now() });
-                  }
-                  setLocation(url);
+                  console.log('M1QR-TRACE: QR marker clicked - opening popup for code:', qr.code);
+                  // Popup opens on click - no navigation to QR pages
                 }
               }}
             >
@@ -198,9 +195,8 @@ return (
                   )}
                   {(qr.is_active && userLocation) && (inRange ? (
                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
-                      const url = `/qr?c=${encodeURIComponent(qr.code)}`;
-                      if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
-                      setLocation(url);
+                      console.log('M1QR-TRACE: QR reward popup triggered for code:', qr.code);
+                      // TODO: Open ClaimRewardModal here
                     }}>🎯 Riscatta</Button>
                   ) : (
                     <Badge variant="outline" className="w-full">📍 Avvicinati (≤500m)</Badge>
