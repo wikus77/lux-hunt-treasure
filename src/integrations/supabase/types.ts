@@ -3759,6 +3759,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      grant_buzz: {
+        Args: { p_count: number; p_source: string; p_user: string }
+        Returns: undefined
+      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
@@ -3798,6 +3802,10 @@ export type Database = {
       increment_map_generation_counter: {
         Args: { p_user_id: string; p_week: number }
         Returns: number
+      }
+      increment_xp: {
+        Args: { p_amount: number; p_user: string }
+        Returns: undefined
       }
       is_admin: {
         Args: { user_id?: string }
