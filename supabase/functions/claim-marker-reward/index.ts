@@ -43,7 +43,7 @@ serve(async (req) => {
 
     if (existingClaim) {
       console.log(`M1QR-TRACE: already claimed - user:${user_id} marker:${markerId}`);
-      return json({ status: "already_claimed" }, 200);
+      return json({ ok: false, status: "already_claimed", code: "ALREADY_CLAIMED" }, 200);
     }
 
     // Get all rewards for this marker
@@ -59,7 +59,7 @@ serve(async (req) => {
 
     if (!rewards || rewards.length === 0) {
       console.log(`M1QR-TRACE: no rewards found - marker:${markerId}`);
-      return json({ status: "error", error: "no_rewards_found" }, 404);
+      return json({ ok: false, status: "error", code: "NO_REWARD", error: "no_rewards_found" }, 404);
     }
 
     // Start transaction - create claim first
