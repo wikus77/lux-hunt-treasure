@@ -24,7 +24,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
   const map = useMap();
-  const MIN_ZOOM = 17;
+  const MIN_ZOOM = 14;  // Restored to working version
   const RADIUS_M = 500;
   const NEAR_M = 75;
   const watcher = useGeoWatcher();
@@ -39,21 +39,55 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   useEffect(() => {
     (async () => {
       try {
-        const { data, error } = await (supabase as any)
-          .from('qr_codes_map')
-          .select('code,lat,lng,title,reward_type,is_active');
-        if (error) throw error;
-        const rows = (data||[])
-          .map((r:any)=>({
-            code:String(r.code),
-            lat:typeof r.lat==='number'?r.lat:Number(r.lat),
-            lng:typeof r.lng==='number'?r.lng:Number(r.lng),
-            title:r.title ?? '',
-            reward_type:r.reward_type ?? 'buzz_credit',
-            is_active: r.is_active === true
+        console.log('🎯 Fetching QR markers from buzz_map_markers...');
+        
+        // Try buzz_map_markers view first
+        let { data, error } = await supabase
+          .from('buzz_map_markers')
+          .select('code,title,latitude,longitude');
+
+        if (error) {
+          console.warn('buzz_map_markers error:', error?.message);
+        }
+
+        // Fallback to qr_codes if view is empty or fails
+        if (!data || data.length === 0) {
+          console.log('🔄 Fallback to qr_codes table...');
+          const fb = await supabase
+            .from('qr_codes')
+            .select('code,lat,lng,reward_type,is_active');
+          if (fb.data && fb.data.length > 0) {
+            data = fb.data.map(r => ({
+              code: r.code,
+              title: r.code,
+              latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+              longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+              reward_type: r.reward_type || 'buzz_credit',
+              is_active: r.is_active !== false
+            }));
+          }
+        } else {
+          // Add missing fields for buzz_map_markers
+          data = data.map(r => ({
+            ...r,
+            reward_type: 'buzz_credit',
+            is_active: true
+          }));
+        }
+
+        const processedItems = (data || [])
+          .map((r: any) => ({
+            code: String(r.code),
+            lat: typeof r.latitude === 'number' ? r.latitude : Number(r.latitude),
+            lng: typeof r.longitude === 'number' ? r.longitude : Number(r.longitude),
+            title: r.title ?? '',
+            reward_type: r.reward_type ?? 'buzz_credit',
+            is_active: r.is_active !== false
           }))
-          .filter((r:Item)=>Number.isFinite(r.lat)&&Number.isFinite(r.lng));
-        setItems(rows);
+          .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
+
+        console.log('📍 Markers loaded:', processedItems.length);
+        setItems(processedItems);
       } catch(e) {
         if (import.meta.env.DEV) console.debug('[qr map] load error', e);
       } finally { setIsLoading(false); }
@@ -94,9 +128,9 @@ return (
               key={qr.code}
               position={[qr.lat, qr.lng]}
               icon={icon(qr.is_active)}
-eventHandlers={{
+              eventHandlers={{
                 click: () => {
-                  const url = `/qr/${encodeURIComponent(qr.code)}`;
+                  const url = `/qr?c=${encodeURIComponent(qr.code)}`;
                   if (import.meta.env.DEV) {
                     console.debug(TRACE_ID, { tag:'M1QR', step:'map:click', code: qr.code, url, ts: Date.now() });
                   }
@@ -124,7 +158,7 @@ eventHandlers={{
                   )}
                   {(qr.is_active && userLocation) && (inRange ? (
                     <Button className="w-full bg-green-600 hover:bg-green-700" onClick={()=>{
-                      const url = `/qr/${encodeURIComponent(qr.code)}`;
+                      const url = `/qr?c=${encodeURIComponent(qr.code)}`;
                       if (import.meta.env.DEV) console.debug('[QR] navigate', qr.code, url);
                       window.location.href = url;
                     }}>🎯 Riscatta</Button>

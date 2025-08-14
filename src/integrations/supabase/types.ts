@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -3321,7 +3321,7 @@ export type Database = {
     }
     Functions: {
       add_referral_credits: {
-        Args: { user_email: string; credits_to_add: number }
+        Args: { credits_to_add: number; user_email: string }
         Returns: undefined
       }
       assign_area_radius: {
@@ -3336,9 +3336,9 @@ export type Database = {
       }
       block_ip: {
         Args: {
-          ip_addr: unknown
           block_duration_minutes?: number
           block_reason?: string
+          ip_addr: unknown
         }
         Returns: undefined
       }
@@ -3355,19 +3355,19 @@ export type Database = {
         Returns: number
       }
       calculate_direction: {
-        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: string
       }
       calculate_distance_meters: {
-        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
       calculate_qr_distance: {
-        Args: { lat1: number; lng1: number; lat2: number; lng2: number }
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: number
       }
       can_use_intelligence_tool: {
-        Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
+        Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
       }
       can_user_access_mission: {
@@ -3387,13 +3387,13 @@ export type Database = {
         Returns: boolean
       }
       check_daily_final_shot_limit: {
-        Args: { p_user_id: string; p_mission_id: string }
+        Args: { p_mission_id: string; p_user_id: string }
         Returns: boolean
       }
       check_rate_limit: {
         Args: {
-          ip_addr: unknown
           api_endpoint: string
+          ip_addr: unknown
           max_requests?: number
           window_minutes?: number
         }
@@ -3424,7 +3424,7 @@ export type Database = {
         Returns: boolean
       }
       consume_credit: {
-        Args: { p_user_id: string; p_credit_type: string }
+        Args: { p_credit_type: string; p_user_id: string }
         Returns: boolean
       }
       execute_sql: {
@@ -3458,9 +3458,9 @@ export type Database = {
       get_active_subscription: {
         Args: { p_user_id: string }
         Returns: {
-          tier: string
-          status: string
           expires_at: string
+          status: string
+          tier: string
         }[]
       }
       get_authenticated_user_id: {
@@ -3478,8 +3478,8 @@ export type Database = {
       get_current_user_profile_safe: {
         Args: Record<PropertyKey, never>
         Returns: {
-          role: string
           email: string
+          role: string
         }[]
       }
       get_current_user_role: {
@@ -3496,18 +3496,18 @@ export type Database = {
       get_legal_document: {
         Args: { document_type: string }
         Returns: {
-          id: string
-          type: string
-          title: string
-          version: string
           content_md: string
+          created_at: string
+          id: string
           is_active: boolean
           published_at: string
-          created_at: string
+          title: string
+          type: string
+          version: string
         }[]
       }
       get_map_radius_km: {
-        Args: { p_week: number; p_generation_count: number }
+        Args: { p_generation_count: number; p_week: number }
         Returns: number
       }
       get_max_buzz_for_week: {
@@ -3571,7 +3571,7 @@ export type Database = {
         Returns: boolean
       }
       has_role: {
-        Args: { user_id: string; role_name: string }
+        Args: { role_name: string; user_id: string }
         Returns: boolean
       }
       has_user_played_spin_today: {
@@ -3579,7 +3579,7 @@ export type Database = {
         Returns: boolean
       }
       haversine_m: {
-        Args: { lat1: number; lon1: number; lat2: number; lon2: number }
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
       increment_buzz_counter: {
@@ -3591,7 +3591,7 @@ export type Database = {
         Returns: number
       }
       increment_daily_final_shot_counter: {
-        Args: { p_user_id: string; p_mission_id: string }
+        Args: { p_mission_id: string; p_user_id: string }
         Returns: undefined
       }
       increment_map_generation_counter: {
@@ -3638,21 +3638,21 @@ export type Database = {
       log_security_event: {
         Args:
           | {
-              event_type_param: string
-              user_id_param?: string
               event_data_param?: Json
+              event_type_param: string
               severity_param?: string
+              user_id_param?: string
             }
-          | { p_event_type: string; p_event_data?: Json }
+          | { p_event_data?: Json; p_event_type: string }
         Returns: string
       }
       log_user_action: {
         Args: {
-          p_user_id: string
           p_action: string
           p_details?: Json
           p_ip_address?: unknown
           p_user_agent?: string
+          p_user_id: string
         }
         Returns: string
       }
@@ -3662,26 +3662,26 @@ export type Database = {
       }
       process_stripe_webhook_completed: {
         Args: {
+          p_amount_total: number
+          p_payment_status: string
           p_session_id: string
           p_stripe_customer_id: string
-          p_payment_status: string
-          p_amount_total: number
         }
         Returns: boolean
       }
       qr_admin_upsert: {
         Args: {
-          p_code: string
-          p_title: string
-          p_reward_type: string
-          p_reward_value: number
-          p_days_valid?: number
-          p_max_total?: number
-          p_max_per_user?: number
           p_center_lat?: number
           p_center_lon?: number
-          p_radius_m?: number
+          p_code: string
+          p_days_valid?: number
           p_is_active?: boolean
+          p_max_per_user?: number
+          p_max_total?: number
+          p_radius_m?: number
+          p_reward_type: string
+          p_reward_value: number
+          p_title: string
         }
         Returns: Json
       }
@@ -3690,7 +3690,7 @@ export type Database = {
         Returns: Json
       }
       record_intelligence_tool_usage: {
-        Args: { p_user_id: string; p_mission_id: string; p_tool_name: string }
+        Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
       }
       register_user_to_active_mission: {
@@ -3698,7 +3698,7 @@ export type Database = {
         Returns: boolean
       }
       release_clue_lines: {
-        Args: { p_user_id: string; p_plan_level: string; p_week_number: number }
+        Args: { p_plan_level: string; p_user_id: string; p_week_number: number }
         Returns: number
       }
       reset_user_mission: {
@@ -3711,11 +3711,11 @@ export type Database = {
       }
       send_user_notification: {
         Args: {
-          p_user_id: string
-          p_notification_type: string
-          p_title: string
           p_message: string
           p_metadata?: Json
+          p_notification_type: string
+          p_title: string
+          p_user_id: string
         }
         Returns: string
       }
@@ -3724,7 +3724,7 @@ export type Database = {
         Returns: undefined
       }
       submit_final_shot: {
-        Args: { p_mission_id: string; p_latitude: number; p_longitude: number }
+        Args: { p_latitude: number; p_longitude: number; p_mission_id: string }
         Returns: Json
       }
       sync_user_permissions: {
@@ -3733,26 +3733,26 @@ export type Database = {
       }
       update_personality_quiz_result: {
         Args: {
-          p_user_id: string
-          p_quiz_answers: Json
-          p_assigned_type: string
           p_assigned_description: string
+          p_assigned_type: string
+          p_quiz_answers: Json
+          p_user_id: string
         }
         Returns: Json
       }
       update_user_plan_complete: {
         Args: {
-          p_user_id: string
-          p_new_plan: string
-          p_event_type?: string
-          p_old_plan?: string
           p_amount?: number
+          p_event_type?: string
+          p_new_plan: string
+          p_old_plan?: string
           p_payment_intent_id?: string
+          p_user_id: string
         }
         Returns: Json
       }
       update_user_subscription_tier: {
-        Args: { target_user_id: string; new_tier: string }
+        Args: { new_tier: string; target_user_id: string }
         Returns: undefined
       }
       validate_buzz_user_id: {
@@ -3761,10 +3761,10 @@ export type Database = {
       }
       validate_progressive_pricing: {
         Args: {
-          p_user_id: string
+          p_generation: number
           p_price: number
           p_radius: number
-          p_generation: number
+          p_user_id: string
         }
         Returns: boolean
       }
