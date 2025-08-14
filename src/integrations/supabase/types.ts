@@ -1895,11 +1895,13 @@ export type Database = {
       qr_redemption_logs: {
         Row: {
           created_at: string
+          details: Json | null
           distance_meters: number | null
           failure_reason: string | null
           id: string
           qr_code_id: string
           reward_granted: Json | null
+          status: string | null
           success: boolean
           user_id: string
           user_lat: number | null
@@ -1907,11 +1909,13 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          details?: Json | null
           distance_meters?: number | null
           failure_reason?: string | null
           id?: string
           qr_code_id: string
           reward_granted?: Json | null
+          status?: string | null
           success: boolean
           user_id: string
           user_lat?: number | null
@@ -1919,11 +1923,13 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          details?: Json | null
           distance_meters?: number | null
           failure_reason?: string | null
           id?: string
           qr_code_id?: string
           reward_granted?: Json | null
+          status?: string | null
           success?: boolean
           user_id?: string
           user_lat?: number | null

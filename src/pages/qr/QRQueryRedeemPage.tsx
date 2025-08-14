@@ -40,53 +40,42 @@ export const QRQueryRedeemPage: React.FC = () => {
     const redeem = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase.functions.invoke('redeem-qr', {
-          body: { code },
-          headers: { 'x-client-info': 'm1-web' } // no-op, utile con alcuni edge/proxy
-        });
-        
+        const { data, error } = await supabase.functions.invoke('redeem-qr', { body: { code } });
+
         if (error) {
-          const msg = (error as any)?.message || String(error);
-          // Messaggio friendly per i casi CORS/preflight
-          if (msg.includes('Failed to send a request to the Edge Function')) {
-            setError('Redeem fallito: problema di connessione al server (CORS). Riprova o apri da m1ssion.eu');
-          } else {
-            const detail = (error as any)?.context ? JSON.stringify((error as any).context) : msg;
-            setError(`Redeem fallito: ${detail}`);
-          }
+          const detail = (error as any)?.context ? JSON.stringify((error as any).context) : (error.message || 'Edge error');
+          setError(`Redeem fallito: ${detail}`);
           return;
         }
 
-        console.log('redeem-qr response:', data); // Development logging
-        
-        const resp = (data as unknown) as { status?: string; reward_type?: string; reward_value?: number; error?: string };
-        
-        if (resp?.status === 'ok') {
+        const resp = (data || {}) as { status?: string; error?: string; detail?: string; reward_type?: string; reward_value?: number };
+
+        if (resp.status === 'ok') {
           toast.success('🎁 Ricompensa sbloccata!');
-          // Route based on reward
           if (resp.reward_type === 'buzz_credit') {
             setLocation('/buzz?free=1&reward=1');
           } else if (resp.reward_type === 'buzz_map_credit') {
             setLocation('/map?free=1&reward=1');
           } else {
-            toast.message('QR riscattato');
             setLocation('/home');
           }
-        } else if (resp?.status === 'already_redeemed' || resp?.status === 'already_claimed') {
+          return;
+        }
+
+        if (resp.status === 'already_redeemed' || resp.status === 'already_claimed') {
           toast.info('Hai già riscattato questo QR');
           setLocation('/home');
-        } else if (resp?.error === 'invalid_or_inactive_code') {
-          setError('Codice QR non valido o disattivato');
-        } else {
-          setError('Riscatto QR non riuscito');
+          return;
         }
+
+        if (resp.error === 'invalid_or_inactive_code') {
+          setError('Codice QR non valido o disattivato');
+          return;
+        }
+
+        setError(`Redeem fallito: ${resp.error ?? 'unknown'} ${resp.detail ?? ''}`.trim());
       } catch (e: any) {
-        console.error('redeem-qr error', e);
-        if (e?.message === 'invalid_or_inactive_code') {
-          setError('Codice QR non valido o disattivato');
-        } else {
-          setError(e?.message || 'Errore sconosciuto');
-        }
+        setError(e?.message || 'Errore sconosciuto');
       } finally {
         setLoading(false);
       }
