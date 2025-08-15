@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
-import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import React, { useEffect, useMemo, useState, lazy, Suspense, useCallback } from 'react';
 import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
@@ -156,7 +156,52 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
     return 2*R*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa));
   };
 
-const all = useMemo(() => items, [items]);
+// Performance optimizations - memoized values
+const visibleMarkers = useMemo(() => {
+  if (!showLayer) return [];
+  return items.filter(item => {
+    if (!userLocation) return true;
+    const dist = distance(userLocation, { lat: item.lat, lng: item.lng });
+    return dist <= RADIUS_M || !item.is_active; // Show all inactive markers regardless of distance
+  });
+}, [items, showLayer, userLocation]);
+
+// Memoized callbacks for performance
+const handleClaimSuccess = useCallback((nextRoute?: string) => {
+  console.log('M1QR-TRACE', { step: 'claim_success_redirect', nextRoute });
+  setClaimData({ isOpen: false, markerId: '', rewards: [] });
+  
+  if (nextRoute) {
+    setLocation(nextRoute);
+  }
+}, [setLocation]);
+
+const handleModalClose = useCallback(() => {
+  console.log('M1QR-TRACE', { step: 'modal_close' });
+  setClaimData({ isOpen: false, markerId: '', rewards: [] });
+}, []);
+
+const handleMarkerClick = useCallback(async (markerId: string, e?: any) => {
+  e?.originalEvent?.stopPropagation();
+  console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
+  
+  try {
+    const { data: rewards, error } = await supabase
+      .from('marker_rewards')
+      .select('reward_type, payload, description')
+      .eq('marker_id', markerId);
+
+    if (error) {
+      console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
+      return;
+    }
+
+    setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
+    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+  } catch (err) {
+    console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
+  }
+}, []);
 
 // Toggle layer visibility on zoom changes using dynamic marker min zoom
 useEffect(() => {
@@ -178,19 +223,6 @@ useEffect(() => {
   return () => { map.off('zoomend', update); };
 }, [map, markerMinZoom]);
 
-  const handleClaimSuccess = (nextRoute?: string) => {
-    console.log('M1QR-TRACE', { step: 'claim_success_redirect', nextRoute });
-    setClaimData({ isOpen: false, markerId: '', rewards: [] }); // Close modal
-    
-    if (nextRoute) {
-      setLocation(nextRoute);
-    }
-  };
-
-  const handleModalClose = () => {
-    console.log('M1QR-TRACE', { step: 'modal_close' });
-    setClaimData({ isOpen: false, markerId: '', rewards: [] });
-  };
 
   if (isLoading) return null;
 
@@ -199,68 +231,22 @@ return (
     {console.log('M1QR-TRACE:', { 
       step: 'render_check', 
       showLayer, 
-      markersCount: all.length,
-      markersWillRender: showLayer ? all.length : 0 
+      markersCount: items.length,
+      markersWillRender: showLayer ? visibleMarkers.length : 0 
     })}
     {showLayer && (
       <LayerGroup>
-        {all.map((qr) => {
+        {visibleMarkers.map((qr) => {
           const inRange = !!userLocation && distance(userLocation, {lat:qr.lat,lng:qr.lng}) <= RADIUS_M;
           return (
-            <Marker
+            <MarkerComponent
               key={qr.code}
-              position={[qr.lat, qr.lng]}
-              icon={icon(qr.is_active)}
-              eventHandlers={{
-                click: async (e) => {
-                  e.originalEvent?.stopPropagation();
-                  const markerId = qr.code;
-                  console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
-                  
-                  // Fetch rewards directly for immediate modal opening
-                  try {
-                    const { data: rewards, error } = await supabase
-                      .from('marker_rewards')
-                      .select('reward_type, payload, description')
-                      .eq('marker_id', markerId);
-
-                    if (error) {
-                      console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
-                      return;
-                    }
-
-                    setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
-                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
-                  } catch (err) {
-                    console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
-                  }
-                }
-              }}
-            >
-              <Popup>
-                <div className="text-center space-y-2 min-w-[180px]">
-                  <div className="flex items-center gap-2 justify-center">
-                    <QrCode className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-sm">M1SSION™</h3>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{qr.title || qr.code}</p>
-                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
-                      {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
-                    </Badge>
-                  </div>
-                  {userLocation && (
-                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    Click marker for rewards
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
+              qr={qr}
+              userLocation={userLocation}
+              onMarkerClick={handleMarkerClick}
+              distance={distance}
+              icon={icon}
+            />
           );
         })}
       </LayerGroup>
@@ -281,3 +267,56 @@ return (
   </>
 );
 };
+
+// Memoized marker component for performance
+const MarkerComponent = React.memo<{
+  qr: Item;
+  userLocation?: { lat: number; lng: number } | null;
+  onMarkerClick: (markerId: string, e?: any) => void;
+  distance: (a: {lat:number;lng:number}, b: {lat:number;lng:number}) => number;
+  icon: (active: boolean) => L.DivIcon;
+}>(({ qr, userLocation, onMarkerClick, distance, icon }) => {
+  return (
+    <Marker
+      position={[qr.lat, qr.lng]}
+      icon={icon(qr.is_active)}
+      eventHandlers={{
+        click: (e) => onMarkerClick(qr.code, e)
+      }}
+      aria-label={`Marker M1SSION ${qr.title || qr.code}, ${qr.is_active ? 'attivo' : 'già riscattato'}`}
+      // @ts-ignore - Adding accessibility attributes
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e: KeyboardEvent) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onMarkerClick(qr.code);
+        }
+      }}
+    >
+      <Popup>
+        <div className="text-center space-y-2 min-w-[180px]">
+          <div className="flex items-center gap-2 justify-center">
+            <QrCode className="w-4 h-4 text-primary" />
+            <h3 className="font-semibold text-sm">M1SSION™</h3>
+          </div>
+          <div>
+            <p className="font-medium text-sm">{qr.title || qr.code}</p>
+            <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
+              {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
+            </Badge>
+          </div>
+          {userLocation && (
+            <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+              <MapPin className="w-3 h-3" />
+              <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
+            </div>
+          )}
+          <div className="text-xs text-muted-foreground">
+            Click marker for rewards
+          </div>
+        </div>
+      </Popup>
+    </Marker>
+  );
+});

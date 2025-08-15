@@ -44,7 +44,8 @@ export default defineConfig(({ mode }) => ({
         globIgnores: [
           '**/lovable-uploads/**',
           '**/*.{png,jpg,jpeg}', // Exclude all images from precaching
-          '**/assets/index.*.js' // Exclude large main bundle from precaching
+          '**/assets/index.*.js', // Exclude large main bundle from precaching
+          '**/functions/v1/**' // Exclude edge function calls from caching
         ],
         globPatterns: [
           '**/*.{css,html,ico,svg}', // Cache essential files but not large JS bundles
@@ -52,12 +53,20 @@ export default defineConfig(({ mode }) => ({
         ],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co/,
+            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co\/rest\/v1\/.*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-api-cache',
               networkTimeoutSeconds: 10,
             },
+          },
+          {
+            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co\/auth\/v1\/.*/,
+            handler: 'NetworkOnly', // Never cache auth requests
+          },
+          {
+            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co\/functions\/v1\/.*/,
+            handler: 'NetworkOnly', // Never cache edge function calls
           },
           {
             urlPattern: /\/lovable-uploads\/.*\.(?:png|jpg|jpeg|gif|webp)$/,
@@ -72,7 +81,7 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'images-cache',
               expiration: {
