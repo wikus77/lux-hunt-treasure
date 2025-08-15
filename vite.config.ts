@@ -144,9 +144,9 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false,
     terserOptions: {
       compress: {
-        drop_console: false, // Keep console for error debugging
+        drop_console: mode === 'production', // Drop all console logs in production
         drop_debugger: true,
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn'] : [],
       },
       mangle: {
         safari10: true
