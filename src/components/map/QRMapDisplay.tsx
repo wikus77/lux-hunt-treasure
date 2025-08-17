@@ -95,43 +95,32 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   useEffect(() => {
     (async () => {
       try {
-        console.log('🎯 Fetching QR markers from buzz_map_markers...');
+        console.log('🎯 Fetching QR markers from qr_codes table...');
         
-        // Try buzz_map_markers view first
-        let { data, error } = await supabase
-          .from('buzz_map_markers')
-          .select('code,title,latitude,longitude');
+        // Query qr_codes table directly for better security (avoiding security definer views)
+        const { data, error } = await supabase
+          .from('qr_codes')
+          .select('code,title,lat,lng,reward_type,is_active')
+          .not('lat', 'is', null)
+          .not('lng', 'is', null)
+          .eq('is_hidden', false);
 
         if (error) {
-          console.warn('buzz_map_markers error:', error?.message);
+          console.warn('qr_codes query error:', error?.message);
+          return;
         }
 
-        // Fallback to qr_codes if view is empty or fails
-        if (!data || data.length === 0) {
-          console.log('🔄 Fallback to qr_codes table...');
-          const fb = await supabase
-            .from('qr_codes')
-            .select('code,lat,lng,reward_type,is_active');
-          if (fb.data && fb.data.length > 0) {
-            data = fb.data.map(r => ({
-              code: r.code,
-              title: r.code,
-              latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
-              longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
-              reward_type: r.reward_type || 'buzz_credit',
-              is_active: r.is_active !== false
-            }));
-          }
-        } else {
-          // Add missing fields for buzz_map_markers
-          data = data.map(r => ({
-            ...r,
-            reward_type: 'buzz_credit',
-            is_active: true
-          }));
-        }
+        // Transform data to expected format
+        const transformedData = (data || []).map(r => ({
+          code: r.code,
+          title: r.title || r.code,
+          latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+          longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+          reward_type: r.reward_type || 'buzz_credit',
+          is_active: r.is_active !== false
+        }));
 
-        const processedItems = (data || [])
+        const processedItems = transformedData
           .map((r: any) => ({
             code: String(r.code),
             lat: typeof r.latitude === 'number' ? r.latitude : Number(r.latitude),
