@@ -42,3 +42,6 @@ verify_jwt = false
 
 [functions.claim-marker-reward]
 verify_jwt = true
+
+[functions.store-contact-secure]
+verify_jwt = false
