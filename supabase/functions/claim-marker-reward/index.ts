@@ -213,6 +213,9 @@ function cors() {
     "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
   };
 }
 

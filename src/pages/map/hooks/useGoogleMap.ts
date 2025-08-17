@@ -1,8 +1,9 @@
 
 import { useState, useCallback } from 'react';
 import { useLoadScript } from '@react-google-maps/api';
-import { GOOGLE_MAPS_API_KEY } from '@/config/apiKeys';
 import { mapLibraries } from '../utils/mapStyles';
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
 export const useGoogleMap = (initialZoom: number = 15) => {
   const { isLoaded, loadError } = useLoadScript({
