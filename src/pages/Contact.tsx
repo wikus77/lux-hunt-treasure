@@ -42,9 +42,17 @@ const Contact: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
-        .from('contacts')
-        .insert([formData]);
+      // Use secure edge function instead of direct database access
+      const { data, error } = await supabase.functions.invoke('send-mailjet-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          subject: formData.subject,
+          message: formData.message,
+          type: 'contact'
+        }
+      });
 
       if (error) {
         throw error;
