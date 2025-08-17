@@ -13,7 +13,7 @@ test.describe('Marker Claim Flow', () => {
     await page.waitForURL('/home');
   });
 
-  test('should open modal when clicking marker', async ({ page }) => {
+  test('should open popup when clicking marker', async ({ page }) => {
     await page.goto('/map');
     
     // Wait for map to load
@@ -22,9 +22,10 @@ test.describe('Marker Claim Flow', () => {
     // Click on a marker (assuming test marker exists)
     await page.click('.qr-marker');
     
-    // Check modal opens
-    await expect(page.locator('[role="dialog"]')).toBeVisible();
-    await expect(page.locator('text=Premio Trovato!')).toBeVisible();
+    // Check popup opens
+    await expect(page.locator('.leaflet-popup')).toBeVisible();
+    await expect(page.locator('text=M1SSION™')).toBeVisible();
+    await expect(page.getByTestId('claim-reward-cta')).toBeVisible();
   });
 
   test('should claim reward successfully', async ({ page }) => {
