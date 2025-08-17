@@ -1165,18 +1165,21 @@ export type Database = {
       marker_claims: {
         Row: {
           claimed_at: string | null
+          created_at: string | null
           id: string
           marker_id: string
           user_id: string
         }
         Insert: {
           claimed_at?: string | null
+          created_at?: string | null
           id?: string
           marker_id: string
           user_id: string
         }
         Update: {
           claimed_at?: string | null
+          created_at?: string | null
           id?: string
           marker_id?: string
           user_id?: string
@@ -1999,6 +2002,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      qr_code_links: {
+        Row: {
+          code: string
+          created_at: string
+          marker_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          marker_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          marker_id?: string
+        }
+        Relationships: []
       }
       qr_codes: {
         Row: {
@@ -3495,6 +3516,21 @@ export type Database = {
           latitude?: never
           longitude?: never
           title?: string | null
+        }
+        Relationships: []
+      }
+      marker_by_code: {
+        Row: {
+          code: string | null
+          marker_id: string | null
+        }
+        Insert: {
+          code?: string | null
+          marker_id?: string | null
+        }
+        Update: {
+          code?: string | null
+          marker_id?: string | null
         }
         Relationships: []
       }
