@@ -1216,6 +1216,33 @@ export type Database = {
         }
         Relationships: []
       }
+      markers: {
+        Row: {
+          active: boolean
+          created_at: string | null
+          id: string
+          lat: number
+          lng: number
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          lat: number
+          lng: number
+          title: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          title?: string
+        }
+        Relationships: []
+      }
       mission_targets: {
         Row: {
           created_at: string

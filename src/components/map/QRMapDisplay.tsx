@@ -11,6 +11,7 @@ import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
 import { AuthPrompt } from './AuthPrompt';
+import ClaimRewardButton from './ClaimRewardButton';
 
 // Lazy load the modal for better performance
 const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
@@ -28,12 +29,11 @@ interface ClaimData {
 }
 
 type Item = {
-  code: string;
+  id: string;
   lat: number;
   lng: number;
   title: string | null;
-  reward_type: string;
-  is_active: boolean;
+  active: boolean;
 };
 
 export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } | null }> = ({ userLocation }) => {
@@ -97,13 +97,13 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   useEffect(() => {
     (async () => {
       try {
-        console.log('🎯 Fetching discovered QR markers...');
+        console.log('🎯 Fetching markers...');
         
         // Check if user is authenticated
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          console.log('⚠️ User not authenticated - no QR codes available');
+          console.log('⚠️ User not authenticated - no markers available');
           setIsAuthenticated(false);
           setItems([]);
           setIsLoading(false);
@@ -112,47 +112,34 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
         setIsAuthenticated(true);
 
-        // Query only QR codes that the authenticated user has legitimately discovered
+        // Query markers from the new markers table
         const { data, error } = await supabase
-          .from('qr_codes')
-          .select('code,title,lat,lng,reward_type,is_active')
-          .not('lat', 'is', null)
-          .not('lng', 'is', null)
-          .eq('is_hidden', false);
+          .from('markers')
+          .select('id,title,lat,lng,active')
+          .eq('active', true);
 
         if (error) {
-          console.warn('QR codes query error (this is expected for new users):', error?.message);
-          // Show empty state for users who haven't discovered any QR codes yet
+          console.warn('Markers query error:', error?.message);
           setItems([]);
           setIsLoading(false);
           return;
         }
 
         // Transform data to expected format
-        const transformedData = (data || []).map(r => ({
-          code: r.code,
-          title: r.title || r.code,
-          latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
-          longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
-          reward_type: r.reward_type || 'buzz_credit',
-          is_active: r.is_active !== false
-        }));
-
-        const processedItems = transformedData
+        const processedItems = (data || [])
           .map((r: any) => ({
-            code: String(r.code),
-            lat: typeof r.latitude === 'number' ? r.latitude : Number(r.latitude),
-            lng: typeof r.longitude === 'number' ? r.longitude : Number(r.longitude),
+            id: String(r.id),
+            lat: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+            lng: typeof r.lng === 'number' ? r.lng : Number(r.lng),
             title: r.title ?? '',
-            reward_type: r.reward_type ?? 'buzz_credit',
-            is_active: r.is_active !== false
+            active: r.active !== false
           }))
           .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 
         console.log('📍 Markers loaded:', processedItems.length);
         setItems(processedItems);
       } catch(e) {
-        if (import.meta.env.DEV) console.debug('[qr map] load error', e);
+        if (import.meta.env.DEV) console.debug('[marker map] load error', e);
       } finally { setIsLoading(false); }
     })();
   }, []);
@@ -169,7 +156,7 @@ const visibleMarkers = useMemo(() => {
   return items.filter(item => {
     if (!userLocation) return true;
     const dist = distance(userLocation, { lat: item.lat, lng: item.lng });
-    return dist <= RADIUS_M || !item.is_active; // Show all inactive markers regardless of distance
+    return dist <= RADIUS_M || !item.active; // Show all inactive markers regardless of distance
   });
 }, [items, showLayer, userLocation]);
 
@@ -255,12 +242,12 @@ return (
     })}
     {showLayer && (
       <LayerGroup>
-        {visibleMarkers.map((qr) => {
-          const inRange = !!userLocation && distance(userLocation, {lat:qr.lat,lng:qr.lng}) <= RADIUS_M;
+        {visibleMarkers.map((marker) => {
+          const inRange = !!userLocation && distance(userLocation, {lat:marker.lat,lng:marker.lng}) <= RADIUS_M;
           return (
             <MarkerComponent
-              key={qr.code}
-              qr={qr}
+              key={marker.id}
+              marker={marker}
               userLocation={userLocation}
               onMarkerClick={handleMarkerClick}
               distance={distance}
@@ -289,27 +276,27 @@ return (
 
 // Memoized marker component for performance
 const MarkerComponent = React.memo<{
-  qr: Item;
+  marker: Item;
   userLocation?: { lat: number; lng: number } | null;
   onMarkerClick: (markerId: string, e?: any) => void;
   distance: (a: {lat:number;lng:number}, b: {lat:number;lng:number}) => number;
   icon: (active: boolean) => L.DivIcon;
-}>(({ qr, userLocation, onMarkerClick, distance, icon }) => {
+}>(({ marker, userLocation, onMarkerClick, distance, icon }) => {
   return (
     <Marker
-      position={[qr.lat, qr.lng]}
-      icon={icon(qr.is_active)}
+      position={[marker.lat, marker.lng]}
+      icon={icon(marker.active)}
       eventHandlers={{
-        click: (e) => onMarkerClick(qr.code, e)
+        click: (e) => onMarkerClick(marker.id, e)
       }}
-      aria-label={`Marker M1SSION ${qr.title || qr.code}, ${qr.is_active ? 'attivo' : 'già riscattato'}`}
+      aria-label={`Marker M1SSION ${marker.title || marker.id}, ${marker.active ? 'attivo' : 'già riscattato'}`}
       // @ts-ignore - Adding accessibility attributes
       role="button"
       tabIndex={0}
       onKeyDown={(e: KeyboardEvent) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          onMarkerClick(qr.code);
+          onMarkerClick(marker.id);
         }
       }}
     >
@@ -320,20 +307,18 @@ const MarkerComponent = React.memo<{
             <h3 className="font-semibold text-sm">M1SSION™</h3>
           </div>
           <div>
-            <p className="font-medium text-sm">{qr.title || qr.code}</p>
-            <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
-              {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
+            <p className="font-medium text-sm">{marker.title || marker.id}</p>
+            <Badge style={{ background: marker.active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
+              {marker.active ? 'ATTIVO' : 'RISCATTATO'}
             </Badge>
           </div>
           {userLocation && (
             <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
               <MapPin className="w-3 h-3" />
-              <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
+              <span>{Math.round(distance(userLocation, {lat:marker.lat,lng:marker.lng}))}m</span>
             </div>
           )}
-          <div className="text-xs text-muted-foreground">
-            Click marker for rewards
-          </div>
+          <ClaimRewardButton markerId={marker.id} />
         </div>
       </Popup>
     </Marker>
