@@ -2165,21 +2165,7 @@ export type Database = {
             foreignKeyName: "qr_redemptions_code_fk"
             columns: ["code"]
             isOneToOne: false
-            referencedRelation: "buzz_map_markers"
-            referencedColumns: ["code"]
-          },
-          {
-            foreignKeyName: "qr_redemptions_code_fk"
-            columns: ["code"]
-            isOneToOne: false
             referencedRelation: "qr_codes"
-            referencedColumns: ["code"]
-          },
-          {
-            foreignKeyName: "qr_redemptions_code_fk"
-            columns: ["code"]
-            isOneToOne: false
-            referencedRelation: "qr_codes_markers"
             referencedColumns: ["code"]
           },
         ]
@@ -3498,63 +3484,7 @@ export type Database = {
       }
     }
     Views: {
-      buzz_map_markers: {
-        Row: {
-          code: string | null
-          latitude: number | null
-          longitude: number | null
-          title: string | null
-        }
-        Insert: {
-          code?: string | null
-          latitude?: never
-          longitude?: never
-          title?: string | null
-        }
-        Update: {
-          code?: string | null
-          latitude?: never
-          longitude?: never
-          title?: string | null
-        }
-        Relationships: []
-      }
-      marker_by_code: {
-        Row: {
-          code: string | null
-          marker_id: string | null
-        }
-        Insert: {
-          code?: string | null
-          marker_id?: string | null
-        }
-        Update: {
-          code?: string | null
-          marker_id?: string | null
-        }
-        Relationships: []
-      }
-      qr_codes_markers: {
-        Row: {
-          code: string | null
-          latitude: number | null
-          longitude: number | null
-          title: string | null
-        }
-        Insert: {
-          code?: string | null
-          latitude?: never
-          longitude?: never
-          title?: string | null
-        }
-        Update: {
-          code?: string | null
-          latitude?: never
-          longitude?: never
-          title?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       add_referral_credits: {
