@@ -61,7 +61,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
     (async () => {
       try {
         const cached = localStorage.getItem('cfg_marker_min_zoom');
-        if (cached) setMarkerMinZoom(Number(cached) || 17);
+        if (cached) setMarkerMinZoom(Number(cached) || 10); // Lowered default to 10
       } catch {}
 
       const { data } = await supabase
@@ -71,8 +71,9 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
         .maybeSingle();
 
       if (data?.value_int) {
-        setMarkerMinZoom(Number(data.value_int));
-        try { localStorage.setItem('cfg_marker_min_zoom', String(data.value_int)); } catch {}
+        const minZoom = Math.min(data.value_int, 12); // Cap at zoom 12 for better visibility
+        setMarkerMinZoom(minZoom);
+        try { localStorage.setItem('cfg_marker_min_zoom', String(minZoom)); } catch {}
       }
     })();
 
@@ -84,8 +85,9 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
         (payload: any) => {
           const v = payload?.new?.value_int ?? payload?.old?.value_int;
           if (typeof v === 'number') {
-            setMarkerMinZoom(v);
-            try { localStorage.setItem('cfg_marker_min_zoom', String(v)); } catch {}
+            const minZoom = Math.min(v, 12); // Cap at zoom 12 for better visibility
+            setMarkerMinZoom(minZoom);
+            try { localStorage.setItem('cfg_marker_min_zoom', String(minZoom)); } catch {}
           }
         }
       )
@@ -137,6 +139,10 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
           .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 
         console.log('📍 Markers loaded:', processedItems.length);
+        if (processedItems.length > 0) {
+          console.log('🎯 First marker:', processedItems[0]);
+          console.log('🗺️ Map bounds will include all markers');
+        }
         setItems(processedItems);
       } catch(e) {
         if (import.meta.env.DEV) console.debug('[marker map] load error', e);
@@ -209,13 +215,29 @@ useEffect(() => {
       currentZoom: z, 
       minZoom: markerMinZoom, 
       showLayer: shouldShow,
-      markersVisible: shouldShow 
+      markersVisible: shouldShow,
+      markersCount: items.length
     });
   };
   update();
   map.on('zoomend', update);
   return () => { map.off('zoomend', update); };
-}, [map, markerMinZoom]);
+}, [map, markerMinZoom, items.length]);
+
+// Fit map bounds to show all markers when they load
+useEffect(() => {
+  if (!map || items.length === 0) return;
+  
+  try {
+    const bounds = items.map(item => [item.lat, item.lng] as [number, number]);
+    if (bounds.length > 0) {
+      map.fitBounds(bounds, { padding: [20, 20] });
+      console.log('🗺️ Map fitted to', bounds.length, 'markers');
+    }
+  } catch (e) {
+    console.log('Could not fit bounds:', e);
+  }
+}, [map, items]);
 
 
   // Show authentication prompt if user is not authenticated
