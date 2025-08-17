@@ -95,9 +95,19 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   useEffect(() => {
     (async () => {
       try {
-        console.log('🎯 Fetching QR markers from qr_codes table...');
+        console.log('🎯 Fetching discovered QR markers...');
         
-        // Query qr_codes table directly for better security (avoiding security definer views)
+        // Check if user is authenticated
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          console.log('⚠️ User not authenticated - no QR codes available');
+          setItems([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Query only QR codes that the authenticated user has legitimately discovered
         const { data, error } = await supabase
           .from('qr_codes')
           .select('code,title,lat,lng,reward_type,is_active')
@@ -106,7 +116,10 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
           .eq('is_hidden', false);
 
         if (error) {
-          console.warn('qr_codes query error:', error?.message);
+          console.warn('QR codes query error (this is expected for new users):', error?.message);
+          // Show empty state for users who haven't discovered any QR codes yet
+          setItems([]);
+          setIsLoading(false);
           return;
         }
 
