@@ -10,6 +10,7 @@ import '@/styles/qr-markers.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
+import { AuthPrompt } from './AuthPrompt';
 
 // Lazy load the modal for better performance
 const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
@@ -38,6 +39,7 @@ type Item = {
 export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } | null }> = ({ userLocation }) => {
   const [, setLocation] = useLocation();
   const [items, setItems] = useState<Item[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
   const [markerMinZoom, setMarkerMinZoom] = useState<number>(17); // Default from app_config
@@ -102,10 +104,13 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
         
         if (!user) {
           console.log('⚠️ User not authenticated - no QR codes available');
+          setIsAuthenticated(false);
           setItems([]);
           setIsLoading(false);
           return;
         }
+
+        setIsAuthenticated(true);
 
         // Query only QR codes that the authenticated user has legitimately discovered
         const { data, error } = await supabase
@@ -225,6 +230,18 @@ useEffect(() => {
   return () => { map.off('zoomend', update); };
 }, [map, markerMinZoom]);
 
+
+  // Show authentication prompt if user is not authenticated
+  if (isAuthenticated === false) {
+    return (
+      <div className="p-4">
+        <AuthPrompt 
+          onLogin={() => setLocation('/auth')}
+          onSignup={() => setLocation('/auth')}
+        />
+      </div>
+    );
+  }
 
   if (isLoading) return null;
 
