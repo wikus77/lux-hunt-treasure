@@ -3526,7 +3526,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      buzz_map_markers: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          id: string | null
+          latitude: number | null
+          longitude: number | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_referral_credits: {
