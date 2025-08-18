@@ -1,4 +1,4 @@
-// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
+// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
 import React, { useEffect, useMemo, useState, lazy, Suspense, useCallback } from 'react';
 import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
@@ -12,6 +12,8 @@ import { toast } from 'sonner';
 import { useLocation } from 'wouter';
 import { AuthPrompt } from './AuthPrompt';
 import ClaimRewardButton from './ClaimRewardButton';
+import { GeoDebugBanner } from './GeoDebugBanner';
+import { invalidateMarkerCache, setupOnlineRefresh } from '@/utils/markerCacheUtils';
 
 // Lazy load the modal for better performance
 const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
@@ -96,59 +98,126 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
     return () => { try { supabase.removeChannel(ch); } catch {} };
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        console.log('🎯 Fetching markers...');
+  // Marker loading function
+  const loadMarkers = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // M1MARK-TRACE: Start marker loading with enhanced telemetry
+      const traceData = { step: 'markers_fetch_start', timestamp: new Date().toISOString() };
+      if (import.meta.env.DEV) console.info('M1MARK-TRACE:', traceData);
+      
+      // Clear cache to ensure fresh data
+      await invalidateMarkerCache();
+      
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        const authError = { step: 'auth_missing', reason: 'No authenticated user' };
+        if (import.meta.env.DEV) console.info('M1MARK-TRACE:', authError);
+        setIsAuthenticated(false);
+        setItems([]);
+        return;
+      }
+
+      setIsAuthenticated(true);
+
+      // Query markers with enhanced fields - use public access now available
+      const { data, error, count } = await supabase
+        .from('markers')
+        .select('id,title,lat,lng,active,visible_from,visible_to,zoom_min,zoom_max,created_at,updated_at', { count: 'exact' })
+        .eq('active', true);
+
+      if (error) {
+        const errorTrace = { step: 'query_error', error: error.message, code: error.code };
+        if (import.meta.env.DEV) console.error('M1MARK-TRACE:', errorTrace);
+        setItems([]);
+        return;
+      }
+
+      // M1MARK-TRACE: Raw data received
+      const rawDataTrace = { 
+        step: 'raw_data_received', 
+        total_count: count, 
+        payload_length: data?.length || 0,
+        first_record_sanitized: data?.[0] ? {
+          id: data[0].id,
+          active: data[0].active,
+          has_coords: !!(data[0].lat && data[0].lng),
+          visible_from: data[0].visible_from,
+          visible_to: data[0].visible_to,
+          zoom_constraints: { min: data[0].zoom_min, max: data[0].zoom_max }
+        } : null
+      };
+      if (import.meta.env.DEV) console.info('M1MARK-TRACE:', rawDataTrace);
+
+      // Apply temporal filtering
+      const now = new Date();
+      const temporalFiltered = (data || []).filter((r: any) => {
+        const visibleFrom = r.visible_from ? new Date(r.visible_from) : null;
+        const visibleTo = r.visible_to ? new Date(r.visible_to) : null;
         
-        // Check if user is authenticated
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          console.log('⚠️ User not authenticated - no markers available');
-          setIsAuthenticated(false);
-          setItems([]);
-          setIsLoading(false);
-          return;
-        }
+        const isTemporallyVisible = (!visibleFrom || visibleFrom <= now) && (!visibleTo || visibleTo >= now);
+        return isTemporallyVisible;
+      });
 
-        setIsAuthenticated(true);
+      // Transform data to expected format with coordinate validation
+      const processedItems = temporalFiltered
+        .map((r: any) => ({
+          id: String(r.id),
+          lat: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+          lng: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+          title: r.title ?? `Marker ${r.id.slice(-4)}`,
+          active: r.active !== false,
+          zoom_min: r.zoom_min,
+          zoom_max: r.zoom_max
+        }))
+        .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 
-        // Query markers from the new markers table
-        const { data, error } = await supabase
-          .from('markers')
-          .select('id,title,lat,lng,active')
-          .eq('active', true);
+      // M1MARK-TRACE: Final processed data
+      const processedTrace = {
+        step: 'processing_complete',
+        records_after_temporal_filter: temporalFiltered.length,
+        records_after_coordinate_filter: processedItems.length,
+        filtered_out: {
+          temporal: (data?.length || 0) - temporalFiltered.length,
+          coordinate: temporalFiltered.length - processedItems.length
+        },
+        current_time_utc: now.toISOString()
+      };
+      if (import.meta.env.DEV) console.info('M1MARK-TRACE:', processedTrace);
 
-        if (error) {
-          console.warn('Markers query error:', error?.message);
-          setItems([]);
-          setIsLoading(false);
-          return;
-        }
-
-        // Transform data to expected format
-        const processedItems = (data || [])
-          .map((r: any) => ({
-            id: String(r.id),
-            lat: typeof r.lat === 'number' ? r.lat : Number(r.lat),
-            lng: typeof r.lng === 'number' ? r.lng : Number(r.lng),
-            title: r.title ?? '',
-            active: r.active !== false
-          }))
-          .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
-
-        console.log('📍 Markers loaded:', processedItems.length);
-        if (processedItems.length > 0) {
-          console.log('🎯 First marker:', processedItems[0]);
-          console.log('🗺️ Map bounds will include all markers');
-        }
-        setItems(processedItems);
-      } catch(e) {
-        if (import.meta.env.DEV) console.debug('[marker map] load error', e);
-      } finally { setIsLoading(false); }
-    })();
+      setItems(processedItems);
+    } catch(e) {
+      const errorTrace = { step: 'fetch_exception', error: e instanceof Error ? e.message : String(e) };
+      if (import.meta.env.DEV) console.error('M1MARK-TRACE:', errorTrace);
+    } finally { 
+      setIsLoading(false); 
+    }
   }, []);
+
+  // Initial load and setup online refresh
+  useEffect(() => {
+    loadMarkers();
+    
+    // Setup online/visibility refresh
+    const cleanup = setupOnlineRefresh(loadMarkers);
+    
+    // Setup realtime subscription for marker changes
+    const channel = supabase
+      .channel('markers_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'markers' }, (payload) => {
+        if (import.meta.env.DEV) console.info('M1MARK-TRACE: Realtime marker update:', payload);
+        loadMarkers(); // Reload all markers on any change
+      })
+      .subscribe();
+    
+    return () => {
+      cleanup();
+      supabase.removeChannel(channel);
+    };
+  }, [loadMarkers]);
 
   const distance = (a:{lat:number;lng:number}, b:{lat:number;lng:number}) => {
     const R=6371000, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180;
@@ -254,46 +323,58 @@ useEffect(() => {
 
   if (isLoading) return null;
 
-return (
-  <>
-    {console.log('M1QR-TRACE:', { 
-      step: 'render_check', 
-      showLayer, 
-      markersCount: items.length,
-      markersWillRender: showLayer ? visibleMarkers.length : 0 
-    })}
-    {showLayer && (
-      <LayerGroup>
-        {visibleMarkers.map((marker) => {
-          const inRange = !!userLocation && distance(userLocation, {lat:marker.lat,lng:marker.lng}) <= RADIUS_M;
-          return (
-            <MarkerComponent
-              key={marker.id}
-              marker={marker}
-              userLocation={userLocation}
-              onMarkerClick={handleMarkerClick}
-              distance={distance}
-              icon={icon}
-            />
-          );
-        })}
-      </LayerGroup>
-    )}
-    
-    {/* Lazy-loaded ClaimRewardModal */}
-    {claimData.isOpen && (
-      <Suspense fallback={<div>Loading...</div>}>
-        <ClaimRewardModal
-          isOpen={claimData.isOpen}
-          onClose={handleModalClose}
-          markerId={claimData.markerId}
-          rewards={claimData.rewards}
-          onSuccess={handleClaimSuccess}
-        />
-      </Suspense>
-    )}
-  </>
-);
+  const currentZoom = map?.getZoom() ?? 0;
+  const debugReason = (() => {
+    if (items.length === 0 && !isLoading) return 'empty';
+    if (!showLayer && currentZoom < markerMinZoom) return 'zoom';
+    return undefined;
+  })();
+
+  return (
+    <>
+      {/* DEV-only GeoDebugBanner */}
+      <GeoDebugBanner
+        show={import.meta.env.DEV && (items.length === 0 || !showLayer || debugReason !== undefined)}
+        markersCount={items.length}
+        currentZoom={currentZoom}
+        minZoom={markerMinZoom}
+        isAuthenticated={isAuthenticated}
+        reason={debugReason}
+        additionalInfo={visibleMarkers.length !== items.length ? `Filtered: ${items.length - visibleMarkers.length}` : undefined}
+      />
+      
+      {showLayer && (
+        <LayerGroup>
+          {visibleMarkers.map((marker) => {
+            const inRange = !!userLocation && distance(userLocation, {lat:marker.lat,lng:marker.lng}) <= RADIUS_M;
+            return (
+              <MarkerComponent
+                key={marker.id}
+                marker={marker}
+                userLocation={userLocation}
+                onMarkerClick={handleMarkerClick}
+                distance={distance}
+                icon={icon}
+              />
+            );
+          })}
+        </LayerGroup>
+      )}
+      
+      {/* Lazy-loaded ClaimRewardModal */}
+      {claimData.isOpen && (
+        <Suspense fallback={<div>Loading...</div>}>
+          <ClaimRewardModal
+            isOpen={claimData.isOpen}
+            onClose={handleModalClose}
+            markerId={claimData.markerId}
+            rewards={claimData.rewards}
+            onSuccess={handleClaimSuccess}
+          />
+        </Suspense>
+      )}
+    </>
+  );
 };
 
 // Memoized marker component for performance
