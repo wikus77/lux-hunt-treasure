@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ - App Routes - Fixed Buzz route cache issue
 import React from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Router, Route } from "wouter";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
@@ -69,13 +69,13 @@ const AppRoutes: React.FC = () => {
   return (
     <ErrorBoundary>
       <IOSSafeAreaOverlay>
-        <Routes>
+        <Router>
             {/* Landing page routing - Xavier Cusso Style */}
             <Route 
-              path="/" 
-              element={
+              path="/"
+              component={() => 
                 isCapacitorApp && isAuthenticated && !isLoading ? (
-                  <Navigate to="/home" replace />
+                  <Index />
                 ) : (
                   <Index />
                 )
@@ -85,30 +85,30 @@ const AppRoutes: React.FC = () => {
             {/* Main App Routes - PROTECTED with GlobalLayout */}
             <Route
               path="/home"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <AppHome />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
             
             {/* MAP ROUTE - iOS Optimized */}
             <Route
               path="/map"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Map />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
             
             <Route
               path="/buzz"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     {(() => {
@@ -117,160 +117,160 @@ const AppRoutes: React.FC = () => {
                     })()}
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
             
             <Route
               path="/games"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Games />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
             
             <Route
               path="/leaderboard"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Leaderboard />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
             
             <Route 
               path="/notifications" 
-              element={
+              component={() => (
                 <GlobalLayout>
                   <Notifications />
                 </GlobalLayout>
-              } 
+              )}
             />
             
             <Route
               path="/profile"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Profile />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             {/* Profile subpages - BY JOSEPH MULE */}
             <Route
               path="/profile/personal-info"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <PersonalInfoPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             <Route
               path="/profile/security"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <SecurityPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             <Route
               path="/profile/payments"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <PaymentsHistoryPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
             
             <Route 
               path="/settings" 
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <SettingsPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              } 
+              )}
             />
 
             {/* Legal Routes - BY JOSEPH MULE */}
-            <Route path="/legal/terms" element={<LegalTerms />} />
-            <Route path="/legal/privacy" element={<Privacy />} />
-            <Route path="/legal/safecreative" element={<SafeCreative />} />
+            <Route path="/legal/terms" component={() => <LegalTerms />} />
+            <Route path="/legal/privacy" component={() => <Privacy />} />
+            <Route path="/legal/safecreative" component={() => <SafeCreative />} />
 
             <Route
               path="/subscriptions"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <Subscriptions />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             {/* Subscription plan pages - BY JOSEPH MULE */}
             <Route
               path="/subscriptions/silver"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <SilverPlanPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             <Route
               path="/subscriptions/gold"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <GoldPlanPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             <Route
               path="/subscriptions/black"
-              element={
+              component={() => (
                 <ProtectedRoute>
                   <GlobalLayout>
                     <BlackPlanPage />
                   </GlobalLayout>
                 </ProtectedRoute>
-              }
+              )}
             />
 
             {/* Auth routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/select-mission" element={<MissionSelection />} />
+            <Route path="/login" component={() => <Login />} />
+            <Route path="/register" component={() => <Register />} />
+            <Route path="/select-mission" component={() => <MissionSelection />} />
             
             {/* Other routes */}
-            <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<Terms />} />
+            <Route path="/how-it-works" component={() => <HowItWorks />} />
+            <Route path="/contacts" component={() => <Contacts />} />
+            <Route path="/privacy-policy" component={() => <PrivacyPolicy />} />
+            <Route path="/terms" component={() => <Terms />} />
             
             {/* 404 route */}
-            <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" component={() => <NotFound />} />
+        </Router>
       </IOSSafeAreaOverlay>
     </ErrorBoundary>
   );

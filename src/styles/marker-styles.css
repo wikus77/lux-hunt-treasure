@@ -88,5 +88,24 @@
 }
 
 .leaflet-popup-pane {
-  z-index: 700 !important;
+  z-index: 1100 !important;
+}
+
+/* POPUP VISIBILITY FIXES */
+.leaflet-popup {
+  z-index: 1100 !important;
+  position: relative !important;
+}
+
+.leaflet-popup-content-wrapper {
+  z-index: 1101 !important;
+  background: hsl(var(--background)) !important;
+  border: 1px solid hsl(var(--border)) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.leaflet-popup-tip {
+  z-index: 1102 !important;
+  background: hsl(var(--background)) !important;
+  border-color: hsl(var(--border)) !important;
 }

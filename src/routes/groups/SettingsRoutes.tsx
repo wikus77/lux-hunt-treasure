@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route } from 'wouter';
 import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
 
 // Pages
@@ -10,13 +9,11 @@ import PrivacySecurity from "../../pages/PrivacySecurity";
 import LanguageSettings from "../../pages/LanguageSettings";
 import Notifications from "../../pages/Notifications";
 import SettingsPage from "../../pages/settings/SettingsPage";
-import AgentProfileSettings from "../../pages/settings/AgentProfileSettings";
-import SecuritySettings from "../../pages/settings/SecuritySettings";
-import MissionSettings from "../../pages/settings/MissionSettings";
-import NotificationsSettings from "../../pages/settings/NotificationsSettings";
-import PrivacySettings from "../../pages/settings/PrivacySettings";
-import LegalSettings from "../../pages/settings/LegalSettings";
-import AppInfoSettings from "../../pages/settings/AppInfoSettings";
+import PersonalInfoPage from "../../pages/profile/PersonalInfoPage";
+import SecurityPage from "../../pages/profile/SecurityPage";
+import MissionSelection from "../../pages/MissionSelection";
+// import SettingsLegal from "../../pages/SettingsLegal";
+// import InfoPage from "../../pages/InfoPage";
 
 const SettingsRoutes = () => {
   const baseUserRoles = ['user', 'moderator', 'admin'];
@@ -25,100 +22,102 @@ const SettingsRoutes = () => {
     <>
       <Route
         path="/settings"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <SettingsPage />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/personal-info"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PersonalInfo />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/privacy-security"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PrivacySecurity />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/language-settings"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <LanguageSettings />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/notifications"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Notifications />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/settings/profile"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <AgentProfileSettings />
+            <PersonalInfoPage />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/settings/security"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <SecuritySettings />
+            <SecurityPage />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/settings/mission"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <MissionSettings />
+            <MissionSelection />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/settings/notifications"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <NotificationsSettings />
+            <Notifications />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/settings/privacy"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <PrivacySettings />
+            <PrivacySecurity />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
+      {/* Temporarily disabled until pages are created
       <Route
         path="/settings/legal"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <LegalSettings />
+            <SettingsLegal />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/settings/info"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
-            <AppInfoSettings />
+            <InfoPage />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
+      */}
     </>
   );
 };

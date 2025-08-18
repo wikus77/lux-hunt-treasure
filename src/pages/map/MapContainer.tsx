@@ -133,13 +133,12 @@ const MapContainer: React.FC<MapContainerProps> = ({
     console.log('🗺️ Leaflet map ready event fired');
   };
 
-  // FIXED: Container style for proper visibility
+  // PROFESSIONAL: Full container coverage with proper hierarchy
   const mapContainerStyle = {
     height: '100%', 
     width: '100%',
     position: 'relative' as const,
-    zIndex: 1,
-    minHeight: '400px'
+    zIndex: 1
   };
 
   console.log('🗺️ Rendering MapContainer with', currentWeekAreas.length, 'BUZZ areas');
@@ -160,17 +159,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
   }
 
   return (
-    <div 
-      className="map-container-wrapper w-full h-full"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 1
-      }}
-    >
+    <div className="map-container-wrapper w-full h-full relative">
       <LeafletMapContainer 
         center={mapCenter} 
         zoom={13}

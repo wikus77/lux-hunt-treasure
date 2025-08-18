@@ -69,17 +69,7 @@ const MapPage: React.FC = () => {
         <MapPageHeader />
         <MapErrorBoundary>
           <MapStateProvider>
-            <div 
-              className="flex-1 relative w-full h-full"
-              style={{
-                position: 'absolute',
-                top: '60px',
-                left: 0,
-                right: 0,
-                bottom: '80px',
-                zIndex: 1
-              }}
-            >
+            <div className="flex-1 relative w-full h-full overflow-hidden">
               <MapContainer
                 isAddingPoint={isAddingPoint}
                 setIsAddingPoint={setIsAddingPoint}

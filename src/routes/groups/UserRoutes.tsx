@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route } from 'wouter';
 import { ProtectedRoute } from "../../components/auth/ProtectedRoute";
 
 // Pages
@@ -10,8 +9,8 @@ import Events from "../../pages/Events";
 import { BuzzPage } from "../../pages/BuzzPage";
 import Map from "../../pages/Map";
 import Games from "../../pages/Games";
-import TestAgent from "../../pages/TestAgent";
-import AdminPrizeForm from "../../pages/AdminPrizeForm";
+import TestAdminUI from "../../pages/TestAdminUI";
+import AdminPrizes from "../../pages/AdminPrizes";
 
 const UserRoutes = () => {
   return (
@@ -19,67 +18,67 @@ const UserRoutes = () => {
       {/* User route definitions here */}
       <Route
         path="/home"
-        element={
+        component={() => (
           <ProtectedRoute>
             <Home />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/profile"
-        element={
+        component={() => (
           <ProtectedRoute>
             <Profile />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/events"
-        element={
+        component={() => (
           <ProtectedRoute>
             <Events />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/buzz"
-        element={
+        component={() => (
           <ProtectedRoute>
             <BuzzPage />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/map"
-        element={
+        component={() => (
           <ProtectedRoute>
             <Map />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/games"
-        element={
+        component={() => (
           <ProtectedRoute>
             <Games />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/test-agent"
-        element={
+        component={() => (
           <ProtectedRoute>
-            <TestAgent />
+            <TestAdminUI />
           </ProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/admin-prize-form"
-        element={
+        component={() => (
           <ProtectedRoute>
-            <AdminPrizeForm />
+            <AdminPrizes />
           </ProtectedRoute>
-        }
+        )}
       />
     </>
   );
