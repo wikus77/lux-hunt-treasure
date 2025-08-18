@@ -124,12 +124,17 @@ const MapContainer = ({
           if (map) handleMapReady(map);
         }}
       >
-        {/* SINGLE TILE LAYER */}
+        {/* PROFESSIONAL TILE LAYER - CartoDB Dark */}
         <TileLayer
-          attribution='&copy; CartoDB'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-          maxZoom={18}
-          minZoom={3}
+          maxZoom={19}
+          minZoom={2}
+          subdomains='abcd'
+          errorTileUrl='/placeholder.svg'
+          updateWhenIdle={false}
+          updateWhenZooming={false}
+          keepBuffer={2}
         />
         
         {/* User location marker */}
@@ -170,14 +175,84 @@ const MapContainer = ({
           onMapPointClick={addNewPoint}
         />
         
-        {/* Map Controls */}
-        <MapControls
-          requestLocationPermission={requestLocationPermission}
-          toggleAddingSearchArea={toggleAddingSearchArea}
-          isAddingSearchArea={isAddingSearchArea}
-          isAddingMapPoint={isAddingPoint}
-          setShowHelpDialog={setShowHelpDialog}
-        />
+        {/* M1SSION Style Map Controls - RESTORED */}
+        <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
+          {/* Add Point Button */}
+          <button
+            onClick={() => setIsAddingPoint(!isAddingPoint)}
+            className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
+              isAddingPoint
+                ? 'bg-[#00f0ff] border-[#00f0ff] text-black'
+                : 'bg-black/70 border-[#00f0ff]/30 text-[#00f0ff] hover:border-[#00f0ff]/60'
+            }`}
+            title="Aggiungi Punto"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {/* Add Area Button */}
+          <button
+            onClick={toggleAddingSearchArea}
+            className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
+              isAddingSearchArea
+                ? 'bg-[#7B2EFF] border-[#7B2EFF] text-white'
+                : 'bg-black/70 border-[#7B2EFF]/30 text-[#7B2EFF] hover:border-[#7B2EFF]/60'
+            }`}
+            title="Crea Area di Ricerca"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+          </button>
+        </div>
+
+        {/* Location Button */}
+        <div className="absolute top-4 right-4 z-50">
+          <button
+            onClick={requestLocationPermission}
+            className="w-12 h-12 rounded-full bg-black/70 border-2 border-[#00f0ff]/30 text-[#00f0ff] hover:border-[#00f0ff]/60 flex items-center justify-center transition-all"
+            title="Rileva Posizione"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <polygon points="3,11 22,2 13,21 11,13 3,11"></polygon>
+            </svg>
+          </button>
+        </div>
+
+        {/* Help Button */}
+        <div className="absolute bottom-4 left-4 z-50">
+          <button
+            onClick={() => setShowHelpDialog(true)}
+            className="w-12 h-12 rounded-full bg-black/70 border-2 border-[#00f0ff]/30 text-[#00f0ff] hover:border-[#00f0ff]/60 flex items-center justify-center transition-all"
+            title="Aiuto"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <circle cx="12" cy="17" r="0.5" fill="currentColor"></circle>
+            </svg>
+          </button>
+        </div>
+
+        {/* Instructions Overlay */}
+        {(isAddingPoint || isAddingSearchArea) && (
+          <div className="absolute top-20 left-0 right-0 z-50 flex justify-center pointer-events-none">
+            <div className="bg-black/90 text-white px-6 py-3 rounded-xl shadow-2xl border border-[#00f0ff]/20 backdrop-blur-md">
+              {isAddingPoint && (
+                <p className="text-sm font-medium">
+                  <span className="text-[#00f0ff]">Clicca sulla mappa</span> per aggiungere un punto
+                </p>
+              )}
+              {isAddingSearchArea && (
+                <p className="text-sm font-medium">
+                  <span className="text-[#7B2EFF]">Clicca sulla mappa</span> per creare un'area di ricerca
+                </p>
+              )}
+            </div>
+          </div>
+        )}
         
         {/* Zoom Controls */}
         <MapZoomControls />

@@ -118,14 +118,16 @@ body.m1ssion-modal-open .dynamic-island {
   z-index: 50000 !important;
 }
 
-/* Force M1SSION modal content above everything */
+/* CRITICAL: Force M1SSION modal content above everything - FIXED */
 .m1ssion-modal-content {
-  position: fixed;
-  inset: 0;
-  margin: auto;
-  z-index: 50000 !important;
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) translate3d(0, 0, 0) !important;
+  z-index: 99999 !important;
+  will-change: transform !important;
+  isolation: isolate !important;
+  pointer-events: auto !important;
 }
 
 /* Ensure marker circles are clickable */
