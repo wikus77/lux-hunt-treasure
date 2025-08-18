@@ -1,6 +1,6 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useRef, useEffect } from 'react';
-import { MapContainer as LeafletMapContainer, TileLayer, Marker, Circle, useMap } from 'react-leaflet';
+import UnifiedMapContainer from './UnifiedMapContainer';
 import { useLocation } from 'wouter';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -18,35 +18,7 @@ import { toast } from 'sonner';
 // Default location (Milan)
 const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
 
-// Centers map on user once and shows a user location marker + accuracy circle
-const CenterOnUserOnce: React.FC = () => {
-  const map = useMap();
-  const didCenter = useRef(false);
-  const didToast = useRef(false);
-  const { status, position } = useGeolocation();
-
-  useEffect(() => {
-    if (position && !didCenter.current) {
-      didCenter.current = true;
-      map.flyTo([position.lat, position.lng], Math.max(map.getZoom(), 13), { animate: true });
-    }
-  }, [position, map]);
-
-  useEffect(() => {
-    if ((status === 'denied' || status === 'error') && !didToast.current) {
-      didToast.current = true;
-      try { toast.error('Geolocalizzazione non disponibile'); } catch {}
-    }
-  }, [status]);
-
-  if (!position) return null;
-
-  return (
-    <>
-      <Marker icon={userDotIcon} position={[position.lat, position.lng]} />
-    </>
-  );
-};
+// REMOVED: CenterOnUserOnce moved to separate component file
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -159,77 +131,25 @@ const MapContainer: React.FC<MapContainerProps> = ({
   };
 
   return (
-    <div className="map-container-wrapper">
-      <LeafletMapContainer 
-        center={DEFAULT_LOCATION} 
-        zoom={13}
-        className="map-container"
-        zoomControl={false}
-        scrollWheelZoom={true}
-        doubleClickZoom={true}
-        dragging={true}
-        zoomAnimation={true}
-        fadeAnimation={true}
-        markerZoomAnimation={true}
-        inertia={true}
-        whenReady={handleWhenReady}
-      >
-        {/* Dark tiles */}
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        />
-        <CenterOnUserOnce />
-        
-        {/* Map Content */}
-        <MapContent
-          mapRef={mapRef}
-          handleMapLoad={handleMapReady}
-          searchAreas={searchAreas}
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-          mapPoints={mapPoints}
-          activeMapPoint={activeMapPoint}
-          setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={handleUpdatePoint}
-          deleteMapPoint={deleteMapPoint}
-          newPoint={newPoint}
-          handleSaveNewPoint={handleSaveNewPoint}
-          handleCancelNewPoint={handleCancelNewPoint}
-          isAddingSearchArea={isAddingSearchArea}
-          handleMapClickArea={handleMapClickArea}
-          setPendingRadius={setPendingRadius}
-          isAddingMapPoint={isAddingPoint}
-          hookHandleMapPointClick={addNewPoint}
-          currentWeekAreas={currentWeekAreas}
-        />
-        
-        {/* Map Controls */}
-        <MapControls
-          requestLocationPermission={requestLocationPermission}
-          toggleAddingSearchArea={toggleAddingSearchArea}
-          isAddingSearchArea={isAddingSearchArea}
-          isAddingMapPoint={isAddingPoint}
-          setShowHelpDialog={setShowHelpDialog}
-        />
-        
-        {/* Zoom Controls */}
-        <MapZoomControls />
-      </LeafletMapContainer>
-      
-      {/* BUZZ Button */}
-      <BuzzMapButton 
-        onBuzzPress={handleBuzz}
-        mapCenter={mapCenter}
-        onAreaGenerated={(lat, lng, radius) => {
-          console.log('🎯 Area generated:', { lat, lng, radius });
-          reloadAreas();
-        }}
-      />
-      
-      {/* Help Dialog */}
-      <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
-    </div>
+    <UnifiedMapContainer
+      isAddingPoint={isAddingPoint}
+      setIsAddingPoint={setIsAddingPoint}
+      addNewPoint={addNewPoint}
+      mapPoints={mapPoints}
+      activeMapPoint={activeMapPoint}
+      setActiveMapPoint={setActiveMapPoint}
+      handleUpdatePoint={handleUpdatePoint}
+      deleteMapPoint={deleteMapPoint}
+      newPoint={newPoint}
+      handleSaveNewPoint={handleSaveNewPoint}
+      handleCancelNewPoint={handleCancelNewPoint}
+      isAddingSearchArea={isAddingSearchArea}
+      handleMapClickArea={handleMapClickArea}
+      searchAreas={searchAreas}
+      setActiveSearchArea={setActiveSearchArea}
+      deleteSearchArea={deleteSearchArea}
+      setPendingRadius={setPendingRadius}
+    />
   );
 };
 

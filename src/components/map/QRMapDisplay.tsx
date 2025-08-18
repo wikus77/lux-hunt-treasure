@@ -89,6 +89,12 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   }, []);
 
   useEffect(() => {
+    // PREVENT DUPLICATE RENDERS: Only load if not already loaded
+    if (items.length > 0) {
+      console.log('🛑 QRMapDisplay: Already loaded', items.length, 'markers - skipping duplicate fetch');
+      return;
+    }
+    
     console.log('M1SSION_CANARY: QRMapDisplay component mounted - rendering QR markers');
     console.info('M1-ENV', { origin: window.location.origin, VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL });
     
