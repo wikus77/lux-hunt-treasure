@@ -69,3 +69,10 @@
 .leaflet-popup-pane {
   z-index: 300 !important;
 }
+
+/* Lower other elements when modal is open */
+body.m1ssion-modal-open .unified-header,
+body.m1ssion-modal-open .bottom-navigation,
+body.m1ssion-modal-open .floating-banner {
+  z-index: 8000 !important;
+}

@@ -93,6 +93,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   }, []);
 
   useEffect(() => {
+    console.log('M1SSION_CANARY: QRMapDisplay component mounted - rendering QR markers');
     (async () => {
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
