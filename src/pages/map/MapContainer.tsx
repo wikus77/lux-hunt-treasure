@@ -4,6 +4,7 @@ import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './components/leaflet-fixes.css';
+import '@/styles/marker-styles.css';
 import MapContent from './MapContent';
 import MapControls from './components/MapControls';
 import BuzzMapButton from '@/components/map/BuzzMapButton';
@@ -132,16 +133,13 @@ const MapContainer: React.FC<MapContainerProps> = ({
     console.log('🗺️ Leaflet map ready event fired');
   };
 
-  // iOS-specific map container style
+  // FIXED: Container style for proper visibility
   const mapContainerStyle = {
     height: '100%', 
     width: '100%',
-    position: 'absolute' as const,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1
+    position: 'relative' as const,
+    zIndex: 1,
+    minHeight: '400px'
   };
 
   console.log('🗺️ Rendering MapContainer with', currentWeekAreas.length, 'BUZZ areas');
@@ -163,12 +161,14 @@ const MapContainer: React.FC<MapContainerProps> = ({
 
   return (
     <div 
-      className="map-container-wrapper"
+      className="map-container-wrapper w-full h-full"
       style={{
-        height: '100%',
-        width: '100%',
-        position: 'relative',
-        minHeight: '400px' // Ensure minimum height for iOS
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1
       }}
     >
       <LeafletMapContainer 
