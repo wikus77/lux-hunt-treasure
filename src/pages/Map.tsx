@@ -1,9 +1,10 @@
 
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 import React from 'react';
-import NewMapPage from './NewMapPage';
+import MapPage from './MapPage';
 
 const Map = () => {
-  return <NewMapPage />;
+  return <MapPage />;
 };
 
 export default Map;

@@ -5,7 +5,7 @@ import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
-import MapContent from './components/MapContent';
+// REMOVED: Duplicate MapContent - unified in single container
 import MapControls from './components/MapControls';
 import TechnicalStatus from './components/TechnicalStatus';
 import { useMapStore } from '@/stores/mapStore';
@@ -245,27 +245,12 @@ const MapLogicProvider = () => {
           position: 'relative'
         }}
       >
-        {/* Map content */}
-        <MapContent 
-          mapRef={mapRef}
-          handleMapLoad={handleMapLoad}
-          searchAreas={searchAreas}
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-          mapPoints={mapPoints}
-          activeMapPoint={activeMapPoint}
-          setActiveMapPoint={setActiveMapPoint}
-          handleUpdatePoint={handleUpdatePoint}
-          deleteMapPoint={deleteMapPoint}
-          newPoint={newPoint}
-          handleSaveNewPoint={handleSaveNewPoint}
-          handleCancelNewPoint={handleCancelNewPoint}
-          isAddingSearchArea={isAddingSearchArea}
-          handleMapClickArea={handleMapClickArea}
-          setPendingRadius={setPendingRadius}
-          isAddingMapPoint={isAddingMapPoint || isAddingPoint}
-          hookHandleMapPointClick={hookHandleMapPointClick}
-        />
+        {/* UNIFIED MAP LOGIC - Single container replaces duplicate MapContent */}
+        <div className="w-full h-full">
+          <p className="text-center text-gray-500 mt-8">
+            Map unified in single container - see MapPage.tsx
+          </p>
+        </div>
 
         {/* Map controls */}
         <MapControls

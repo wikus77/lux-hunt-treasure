@@ -219,11 +219,7 @@ React.useEffect(() => {
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
         />
 
-        {/* Add labels layer separately for better visibility and control */}
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
-        />
+        {/* REMOVED: Duplicate TileLayer - dark_only_labels merged in single tile */}
         
         {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
         <BuzzMapAreas areas={currentWeekAreas} />

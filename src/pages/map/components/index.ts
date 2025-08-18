@@ -8,7 +8,7 @@ export { default as MapInstructionsOverlay } from './MapInstructionsOverlay';
 export { default as MapPopupManager } from './MapPopupManager';
 export { default as MapInitializer } from './MapInitializer';
 export { default as MapLayers } from './MapLayers';
-export { default as MapContent } from './MapContent';
+// REMOVED: Duplicate MapContent export
 export { default as MapControls } from './MapControls';
 export { default as TechnicalStatus } from './TechnicalStatus';
 export { default as MapPageHeader } from './MapPageHeader';
