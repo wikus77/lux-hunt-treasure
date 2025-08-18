@@ -16,7 +16,7 @@ import BuzzMapAreas from './BuzzMapAreas';
 import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
-import { QRMapDisplay } from '@/components/map/QRMapDisplay';
+import QRMapDisplay from '@/components/map/QRMapDisplay';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 import L from 'leaflet';
@@ -229,7 +229,7 @@ React.useEffect(() => {
         <BuzzMapAreas areas={currentWeekAreas} />
         
         {/* QR Map Display - Show QR codes on map */}
-        <QRMapDisplay userLocation={geoEnabled ? position : null} />
+        <QRMapDisplay />
         
         {/* Display search areas */}
         <SearchAreaMapLayer 

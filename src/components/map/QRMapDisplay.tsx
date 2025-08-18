@@ -8,7 +8,7 @@ const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRew
 
 type Item = { id: string; lat: number; lng: number; title?: string; active?: boolean; };
 
-export default function QRMapDisplay() {
+function QRMapDisplay() {
   const map = useMap();
   const [items, setItems] = useState<Item[]>([]);
   const [minZoom] = useState(13);
@@ -24,18 +24,14 @@ export default function QRMapDisplay() {
 
   useEffect(() => {
     (async () => {
-      // 1) prova dalla view compat
+      console.log('M1MARK-TRACE', { step: 'MARKER_FETCH_START' });
+      
+      // Try buzz_map_markers view first
       let { data, error } = await supabase
         .from('buzz_map_markers')
-        .select('id,title,latitude,longitude,active');
+        .select('*');
 
-      // 2) fallback tabella markers
-      if (error || !data || data.length === 0) {
-        const fb = await supabase.from('markers').select('id,title,lat,lng,active').eq('active', true);
-        data = (fb.data || []).map(r => ({
-          id: r.id, title: r.title, latitude: r.lat, longitude: r.lng, active: r.active,
-        }));
-      }
+      console.log('M1MARK-TRACE', { step: 'MARKER_FETCH_END', count: data?.length || 0, error });
 
       const list: Item[] = (data || [])
         .map((r: any) => ({
@@ -61,11 +57,14 @@ export default function QRMapDisplay() {
     const update = () => setShowLayer((map.getZoom?.() ?? 0) >= minZoom);
     update();
     map.on('zoomend', update);
-    return () => map.off('zoomend', update);
+    return () => {
+      map.off('zoomend', update);
+    };
   }, [map, minZoom]);
 
   // click marker → apri modale + fetch rewards
   const openModal = async (markerId: string) => {
+    console.log('M1MARK-TRACE', { step: 'POPUP_OPENED', markerId });
     setModalMarkerId(markerId);
     setModalOpen(true);
     try {
@@ -108,3 +107,5 @@ export default function QRMapDisplay() {
     </>
   );
 }
+
+export default QRMapDisplay;
