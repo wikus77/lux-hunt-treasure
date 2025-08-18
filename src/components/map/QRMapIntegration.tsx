@@ -184,7 +184,7 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
           
           <MapClickHandler />
 
-          {/* Existing QR locations */}
+          {/* Existing QR locations - NO POPUP, only marker */}
           {qrLocations.map((qr) => (
             <Marker
               key={qr.id}
