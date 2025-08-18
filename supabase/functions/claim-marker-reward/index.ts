@@ -1,4 +1,4 @@
-// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
+// © 2025 Joseph MULÉ – M1SSION™
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -29,9 +29,9 @@ serve(async (req) => {
     // Get current user
     const { data: auth } = await userClient.auth.getUser();
     const user_id = auth?.user?.id;
-    if (!user_id) return json({ ok: false, code: "UNAUTHORIZED" }, 401);
+    if (!user_id) return json({ status: "error", error: "unauthorized" }, 401);
 
-    console.log(`M1QR-TRACE: claim-marker-reward start - user:${user_id} marker:${markerId}`);
+    console.log(`M1QR-TRACE: claim-marker-reward - user:${user_id} marker:${markerId}`);
 
     // Check if already claimed
     const { data: existingClaim } = await userClient
@@ -43,7 +43,7 @@ serve(async (req) => {
 
     if (existingClaim) {
       console.log(`M1QR-TRACE: already claimed - user:${user_id} marker:${markerId}`);
-      return json({ ok: false, code: "ALREADY_CLAIMED" }, 200);
+      return json({ ok: false, status: "already_claimed", code: "ALREADY_CLAIMED" }, 200);
     }
 
     // Get all rewards for this marker
@@ -59,7 +59,7 @@ serve(async (req) => {
 
     if (!rewards || rewards.length === 0) {
       console.log(`M1QR-TRACE: no rewards found - marker:${markerId}`);
-      return json({ ok: false, code: "NO_REWARD" }, 404);
+      return json({ ok: false, status: "error", code: "NO_REWARD", error: "no_rewards_found" }, 404);
     }
 
     // Start transaction - create claim first
@@ -196,8 +196,9 @@ serve(async (req) => {
 
     return json({
       ok: true,
+      summary,
       nextRoute,
-      summary
+      rewards: rewards.length
     }, 200);
 
   } catch (e) {
@@ -209,13 +210,8 @@ serve(async (req) => {
 function cors() {
   return {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-requested-with",
-    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-    "X-XSS-Protection": "1; mode=block",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 }
 

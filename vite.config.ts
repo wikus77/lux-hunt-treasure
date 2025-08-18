@@ -44,8 +44,7 @@ export default defineConfig(({ mode }) => ({
         globIgnores: [
           '**/lovable-uploads/**',
           '**/*.{png,jpg,jpeg}', // Exclude all images from precaching
-          '**/assets/index.*.js', // Exclude large main bundle from precaching
-          '**/functions/v1/**' // Exclude edge function calls from caching
+          '**/assets/index.*.js' // Exclude large main bundle from precaching
         ],
         globPatterns: [
           '**/*.{css,html,ico,svg}', // Cache essential files but not large JS bundles
@@ -53,20 +52,12 @@ export default defineConfig(({ mode }) => ({
         ],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co\/rest\/v1\/.*/,
+            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'supabase-api-cache',
               networkTimeoutSeconds: 10,
             },
-          },
-          {
-            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co\/auth\/v1\/.*/,
-            handler: 'NetworkOnly', // Never cache auth requests
-          },
-          {
-            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co\/functions\/v1\/.*/,
-            handler: 'NetworkOnly', // Never cache edge function calls
           },
           {
             urlPattern: /\/lovable-uploads\/.*\.(?:png|jpg|jpeg|gif|webp)$/,
@@ -81,7 +72,7 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'StaleWhileRevalidate',
+            handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
               expiration: {
@@ -153,9 +144,9 @@ export default defineConfig(({ mode }) => ({
     reportCompressedSize: false,
     terserOptions: {
       compress: {
-        drop_console: mode === 'production', // Drop all console logs in production
+        drop_console: false, // Keep console for error debugging
         drop_debugger: true,
-        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.warn'] : [],
+        pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
       },
       mangle: {
         safari10: true
