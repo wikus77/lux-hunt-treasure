@@ -159,12 +159,12 @@ const MapContainer: React.FC<MapContainerProps> = ({
   }
 
   return (
-    <div className="map-container-wrapper w-full h-full relative">
+    <div className="map-container-wrapper w-full h-full relative bg-background">
       <LeafletMapContainer 
         center={mapCenter} 
         zoom={13}
         style={mapContainerStyle}
-        className="map-container z-10"
+        className="map-container"
         zoomControl={false}
         scrollWheelZoom={true}
         doubleClickZoom={true}
@@ -174,9 +174,9 @@ const MapContainer: React.FC<MapContainerProps> = ({
         markerZoomAnimation={true}
         inertia={true}
         whenReady={handleWhenReady}
-        // iOS-specific props
-        preferCanvas={true}
-        // Disable problematic animations on iOS
+        // iOS-specific optimizations
+        preferCanvas={false}
+        // Proper zoom animation
         zoomAnimationThreshold={4}
       >
         {/* Dark tiles optimized for iOS */}
