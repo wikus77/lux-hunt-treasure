@@ -1,24 +1,27 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useRef, useEffect } from 'react';
-import UnifiedMapContainer from './UnifiedMapContainer';
-import { useLocation } from 'wouter';
+import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './leaflet-fixes.css';
-import MapContent from './MapContent';
+import '@/styles/marker-styles.css';
+
+// Single source imports - no duplicates
+import { QRMapDisplay } from './QRMapDisplay';
+import BuzzMapAreas from '@/pages/map/components/BuzzMapAreas';
+import SearchAreaMapLayer from '@/pages/map/SearchAreaMapLayer';
+import MapPopupManager from './MapPopupManager';
+import MapEventHandler from './MapEventHandler';
+import { CenterOnUserOnce } from './CenterOnUserOnce';
+import BuzzMapButton from './BuzzMapButton';
 import MapControls from './MapControls';
-import BuzzMapButton from '@/components/map/BuzzMapButton';
 import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { userDotIcon } from '@/components/map/userDotIcon';
-import { toast } from 'sonner';
 
-// Default location (Milan)
-const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
-
-// REMOVED: CenterOnUserOnce moved to separate component file
+// Europe center location for initial map view
+const EUROPE_CENTER: [number, number] = [54.5260, 15.2551];
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -41,6 +44,8 @@ interface MapContainerProps {
   setPendingRadius?: (value: number) => void;
   requestLocationPermission?: () => void;
   toggleAddingSearchArea?: () => void;
+  showHelpDialog?: boolean;
+  setShowHelpDialog?: (show: boolean) => void;
 }
 
 const MapContainer: React.FC<MapContainerProps> = ({
@@ -63,96 +68,133 @@ const MapContainer: React.FC<MapContainerProps> = ({
   deleteSearchArea = async () => false,
   setPendingRadius = () => {},
   requestLocationPermission = () => {},
-  toggleAddingSearchArea = () => {}
+  toggleAddingSearchArea = () => {},
+  showHelpDialog = false,
+  setShowHelpDialog = () => {}
 }) => {
-  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-  const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const mapRef = useRef<L.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
-  const [location] = useLocation();
+  const [mapCenter, setMapCenter] = useState<[number, number]>(EUROPE_CENTER);
+  const mapRef = useRef<L.Map | null>(null);
   
-  // Get BUZZ areas
+  // Get user location and BUZZ areas
+  const { status, position, enabled } = useGeolocation();
+  const geoEnabled = enabled && status === 'granted';
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
 
-  // Handle map ready
+  // Handle map ready with proper iOS optimizations
   const handleMapReady = (map: L.Map) => {
     mapRef.current = map;
-    (window as any).leafletMap = map; // Store map reference globally for restoration
     setMapReady(true);
+    console.log('🗺️ Map ready with', currentWeekAreas.length, 'BUZZ areas');
     
-    // 🗺️ RESTORE MAP POSITION AFTER BUZZ PAYMENT
-    if ((location as any)?.state?.restorePreviousMapState) {
-      const saved = localStorage.getItem("map_state_before_buzz");
-      if (saved) {
-        const { center, zoom } = JSON.parse(saved);
-        console.log('🎯 Restoring map state after BUZZ payment:', { center, zoom });
-        map.setView([center?.lat || DEFAULT_LOCATION[0], center?.lng || DEFAULT_LOCATION[1]], zoom || 13);
-        localStorage.removeItem("map_state_before_buzz");
-      }
-    }
-    
-    // iOS Capacitor fixes
+    // iOS optimizations
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
         console.log('🗺️ Map invalidated for iOS');
       }
     }, 100);
-    
-    // Additional iOS fix
-    setTimeout(() => {
-      if (map) {
-        map.invalidateSize();
-        // Only center map if we're not restoring from BUZZ payment
-        if (!(location as any)?.state?.restorePreviousMapState) {
-          map.setView(mapCenter, map.getZoom());
-        }
-        console.log('🗺️ Map re-centered for iOS');
-      }
-    }, 500);
-  };
-
-  // Force map update on mount for iOS
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (mapRef.current && mapReady) {
-        mapRef.current.invalidateSize();
-        console.log('🗺️ Map force invalidated on mount');
-      }
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [mapReady]);
-
-  // Handle whenReady event - no parameters expected by React Leaflet
-  const handleWhenReady = () => {
-    // The map instance will be available through the MapContent component
-    console.log('🗺️ Map is ready');
   };
 
   return (
-    <UnifiedMapContainer
-      isAddingPoint={isAddingPoint}
-      setIsAddingPoint={setIsAddingPoint}
-      addNewPoint={addNewPoint}
-      mapPoints={mapPoints}
-      activeMapPoint={activeMapPoint}
-      setActiveMapPoint={setActiveMapPoint}
-      handleUpdatePoint={handleUpdatePoint}
-      deleteMapPoint={deleteMapPoint}
-      newPoint={newPoint}
-      handleSaveNewPoint={handleSaveNewPoint}
-      handleCancelNewPoint={handleCancelNewPoint}
-      isAddingSearchArea={isAddingSearchArea}
-      handleMapClickArea={handleMapClickArea}
-      searchAreas={searchAreas}
-      setActiveSearchArea={setActiveSearchArea}
-      deleteSearchArea={deleteSearchArea}
-      setPendingRadius={setPendingRadius}
-    />
+    <div 
+      className="flex-1 relative w-full border border-muted/20 rounded-lg overflow-hidden bg-muted/10"
+      style={{
+        height: 'calc(100dvh - 60px - 80px)', // Header + BottomNav
+        minHeight: '400px',
+        margin: '8px'
+      }}
+    >
+      <LeafletMapContainer 
+        center={EUROPE_CENTER} 
+        zoom={5} // Europe-wide view
+        className="map-container w-full h-full"
+        zoomControl={false}
+        scrollWheelZoom={true}
+        doubleClickZoom={true}
+        dragging={true}
+        zoomAnimation={true}
+        fadeAnimation={true}
+        markerZoomAnimation={true}
+        inertia={true}
+        whenReady={() => {
+          const map = mapRef.current;
+          if (map) handleMapReady(map);
+        }}
+      >
+        {/* SINGLE TILE LAYER */}
+        <TileLayer
+          attribution='&copy; CartoDB'
+          url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          maxZoom={18}
+          minZoom={3}
+        />
+        
+        {/* User location marker */}
+        <CenterOnUserOnce />
+        
+        {/* BUZZ Map Areas */}
+        <BuzzMapAreas areas={currentWeekAreas} />
+        
+        {/* QR Map Display */}
+        <QRMapDisplay userLocation={geoEnabled ? position : null} />
+        
+        {/* Search Areas */}
+        <SearchAreaMapLayer 
+          searchAreas={searchAreas} 
+          setActiveSearchArea={setActiveSearchArea}
+          deleteSearchArea={deleteSearchArea}
+        />
+        
+        {/* Map Popup Manager */}
+        <MapPopupManager 
+          mapPoints={mapPoints}
+          activeMapPoint={activeMapPoint}
+          setActiveMapPoint={setActiveMapPoint}
+          handleUpdatePoint={handleUpdatePoint}
+          deleteMapPoint={deleteMapPoint}
+          newPoint={newPoint}
+          handleSaveNewPoint={handleSaveNewPoint}
+          handleCancelNewPoint={handleCancelNewPoint}
+        />
+        
+        {/* Map Event Handler */}
+        <MapEventHandler 
+          isAddingSearchArea={isAddingSearchArea} 
+          handleMapClickArea={handleMapClickArea}
+          searchAreas={searchAreas}
+          setPendingRadius={setPendingRadius}
+          isAddingMapPoint={isAddingPoint} 
+          onMapPointClick={addNewPoint}
+        />
+        
+        {/* Map Controls */}
+        <MapControls
+          requestLocationPermission={requestLocationPermission}
+          toggleAddingSearchArea={toggleAddingSearchArea}
+          isAddingSearchArea={isAddingSearchArea}
+          isAddingMapPoint={isAddingPoint}
+          setShowHelpDialog={setShowHelpDialog}
+        />
+        
+        {/* Zoom Controls */}
+        <MapZoomControls />
+      </LeafletMapContainer>
+      
+      {/* BUZZ Button */}
+      <BuzzMapButton 
+        onBuzzPress={handleBuzz}
+        mapCenter={mapCenter}
+        onAreaGenerated={(lat, lng, radius) => {
+          console.log('🎯 Area generated:', { lat, lng, radius });
+          reloadAreas();
+        }}
+      />
+      
+      {/* Help Dialog */}
+      <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
+    </div>
   );
 };
 
 export default MapContainer;
-
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
