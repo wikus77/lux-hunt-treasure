@@ -142,7 +142,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
           }))
           .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 
-        console.log('📍 Markers loaded:', processedItems.length);
+        console.log('M1MARK-TRACE', { step: 'MARKER_FETCH_END', count: processedItems.length });
         setItems(processedItems);
       } catch(e) {
         if (import.meta.env.DEV) console.debug('[qr map] load error', e);
@@ -212,55 +212,31 @@ return (
               position={[qr.lat, qr.lng]}
               icon={icon(qr.is_active)}
               eventHandlers={{
-                click: async (e) => {
-                  e.originalEvent?.stopPropagation();
-                  const markerId = qr.code;
-                  console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
-                  
-                  // Fetch rewards directly for immediate modal opening
-                  try {
-                    const { data: rewards, error } = await supabase
-                      .from('marker_rewards')
-                      .select('reward_type, payload, description')
-                      .eq('marker_id', markerId);
+                 click: async (e) => {
+                   e.originalEvent?.stopPropagation();
+                   const markerId = qr.code;
+                   console.log('M1MARK-TRACE', { step: 'POPUP_OPENED', markerId });
+                   
+                   // Fetch rewards directly for immediate modal opening
+                   try {
+                     const { data: rewards, error } = await supabase
+                       .from('marker_rewards')
+                       .select('reward_type, payload, description')
+                       .eq('marker_id', markerId);
 
-                    if (error) {
-                      console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
-                      return;
-                    }
+                     if (error) {
+                       console.error('M1MARK-TRACE', { step: 'rewards_fetch_error', markerId, error });
+                       return;
+                     }
 
-                    setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
-                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
-                  } catch (err) {
-                    console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
-                  }
-                }
+                     setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
+                     console.log('M1MARK-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+                   } catch (err) {
+                     console.error('M1MARK-TRACE', { step: 'click_error', markerId, err });
+                   }
+                 }
               }}
-            >
-              <Popup>
-                <div className="text-center space-y-2 min-w-[180px]">
-                  <div className="flex items-center gap-2 justify-center">
-                    <QrCode className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-sm">M1SSION™</h3>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{qr.title || qr.code}</p>
-                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
-                      {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
-                    </Badge>
-                  </div>
-                  {userLocation && (
-                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    Click marker for rewards
-                  </div>
-                </div>
-              </Popup>
-            </Marker>
+            />
           );
         })}
       </LayerGroup>
