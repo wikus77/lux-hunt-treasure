@@ -1224,6 +1224,11 @@ export type Database = {
           lat: number
           lng: number
           title: string
+          updated_at: string | null
+          visible_from: string | null
+          visible_to: string | null
+          zoom_max: number | null
+          zoom_min: number | null
         }
         Insert: {
           active?: boolean
@@ -1232,6 +1237,11 @@ export type Database = {
           lat: number
           lng: number
           title: string
+          updated_at?: string | null
+          visible_from?: string | null
+          visible_to?: string | null
+          zoom_max?: number | null
+          zoom_min?: number | null
         }
         Update: {
           active?: boolean
@@ -1240,6 +1250,11 @@ export type Database = {
           lat?: number
           lng?: number
           title?: string
+          updated_at?: string | null
+          visible_from?: string | null
+          visible_to?: string | null
+          zoom_max?: number | null
+          zoom_min?: number | null
         }
         Relationships: []
       }
