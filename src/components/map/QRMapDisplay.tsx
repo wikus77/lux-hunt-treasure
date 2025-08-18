@@ -1,8 +1,9 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Marker, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
 import { redPulseIcon } from '@/components/map/redPulseIcon';
+import '@/components/map/forceMarkerIcon'; // Force global marker icon
 import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -91,12 +92,12 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   useEffect(() => {
     // PREVENT DUPLICATE RENDERS: Only load if not already loaded
     if (items.length > 0) {
-      console.log('🛑 QRMapDisplay: Already loaded', items.length, 'markers - skipping duplicate fetch');
+      console.log('M1QR-FETCH', 'Already loaded', items.length, 'markers - skipping duplicate fetch');
       return;
     }
     
-    console.log('M1SSION_CANARY: QRMapDisplay component mounted - rendering QR markers');
-    console.info('M1-ENV', { origin: window.location.origin, VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL });
+    console.log('M1QR-FETCH', 'QRMapDisplay component mounted - fetching QR markers');
+    console.log('M1QR-FETCH', { origin: window.location.origin });
     
     // Set body data-path for /map
     document.body.setAttribute('data-path', '/map');
@@ -179,7 +180,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
           }))
           .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 
-        console.log('M1MARK-TRACE', { step: 'MARKER_FETCH_END', count: processedItems.length });
+        console.log('M1QR-FETCH', { step: 'MARKER_FETCH_END', count: processedItems.length });
         setItems(processedItems);
       } catch(e) {
         if (import.meta.env.DEV) console.debug('[qr map] load error', e);
@@ -216,7 +217,7 @@ useEffect(() => {
 }, [map, markerMinZoom]);
 
   const handleModalClose = () => {
-    console.log('M1QR-TRACE', { step: 'modal_close' });
+    console.log('M1MODAL-CLOSE', { step: 'modal_close' });
     setClaimData({ isOpen: false, markerId: '' });
   };
 
@@ -224,7 +225,7 @@ useEffect(() => {
 
 return (
   <>
-    {console.log('M1QR-TRACE:', { 
+    {console.log('M1QR-RENDER:', { 
       step: 'render_check', 
       showLayer, 
       markersCount: all.length,
@@ -243,8 +244,8 @@ return (
                  click: (e) => {
                    e.originalEvent?.stopPropagation();
                    const markerId = qr.code;
-                   console.info('M1MARK-TRACE', { step: 'MARKER_FETCH_END', count: all.length });
-                   console.log('M1MARK-TRACE', { step: 'POPUP_OPENED', markerId });
+                   console.log('M1QR-CLICK', { markerId, count: all.length });
+                   console.log('M1MODAL-OPEN', { markerId });
                    setClaimData({ isOpen: true, markerId });
                  }
               }}
