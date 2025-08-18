@@ -50,8 +50,10 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const TRACE_ID = 'M1QR-TRACE';
 
   const icon = (active:boolean) => L.divIcon({
-    className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
-    iconSize: [16,16]
+    className: 'm1-red-pulse',
+    html: '<div class="dot"></div>',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
   });
 
   // Load marker min zoom from app_config with cache and realtime updates

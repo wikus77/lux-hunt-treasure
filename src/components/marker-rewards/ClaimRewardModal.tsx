@@ -94,7 +94,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto z-[15000] pointer-events-auto m1ssion-modal-content">
+      <DialogContent className="max-w-md mx-auto z-[15000] pointer-events-auto m1ssion-modal-content fixed inset-0 mx-auto my-auto w-[90vw] max-w-md h-fit">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-gradient">
             🎁 Premio Trovato!

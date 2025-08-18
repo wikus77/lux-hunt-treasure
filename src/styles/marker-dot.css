@@ -1,0 +1,83 @@
+/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ */
+
+.m1-red-pulse {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.m1-red-pulse .dot {
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, #00D1FF, #00f0ff);
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 
+    0 0 8px rgba(0, 240, 255, 0.8),
+    0 0 16px rgba(0, 240, 255, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  animation: marker-pulse 2s infinite ease-in-out;
+}
+
+.m1-red-pulse .dot::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: marker-glow 2s infinite ease-in-out;
+}
+
+@keyframes marker-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 
+      0 0 8px rgba(0, 240, 255, 0.8),
+      0 0 16px rgba(0, 240, 255, 0.4);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 
+      0 0 12px rgba(0, 240, 255, 1),
+      0 0 24px rgba(0, 240, 255, 0.6),
+      0 0 32px rgba(0, 240, 255, 0.3);
+  }
+}
+
+@keyframes marker-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Hover effects */
+.m1-red-pulse:hover .dot {
+  transform: scale(1.2);
+  box-shadow: 
+    0 0 16px rgba(0, 240, 255, 1),
+    0 0 32px rgba(0, 240, 255, 0.8);
+}
+
+/* Mobile touch optimization */
+@media (max-width: 768px) {
+  .m1-red-pulse {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .m1-red-pulse .dot {
+    width: 16px;
+    height: 16px;
+  }
+}
