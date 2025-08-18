@@ -259,6 +259,7 @@ const MapLogicProvider = () => {
           isAddingSearchArea={isAddingSearchArea}
           handleBuzz={handleBuzz}
           isAddingMapPoint={isAddingMapPoint || isAddingPoint}
+          setIsAddingMapPoint={setIsAddingMapPoint}
           showHelpDialog={showHelpDialog}
           setShowHelpDialog={setShowHelpDialog}
           mapCenter={mapCenter}

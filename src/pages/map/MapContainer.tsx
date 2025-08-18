@@ -159,7 +159,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
   }
 
   return (
-    <div className="map-container-wrapper w-full h-full relative bg-background">
+    <div className="map-container-wrapper relative border-2 border-primary/20 rounded-xl shadow-lg overflow-hidden bg-muted/5" style={{ height: '100%', width: '100%' }}>
       <LeafletMapContainer 
         center={mapCenter} 
         zoom={5} // Europe-wide view
@@ -220,6 +220,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
           toggleAddingSearchArea={toggleAddingSearchArea}
           isAddingSearchArea={isAddingSearchArea}
           isAddingMapPoint={isAddingPoint}
+          setIsAddingMapPoint={setIsAddingPoint}
           setShowHelpDialog={setShowHelpDialog}
           handleBuzz={handleBuzz}
           showHelpDialog={showHelpDialog}
