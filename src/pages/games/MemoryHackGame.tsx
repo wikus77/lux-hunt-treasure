@@ -290,7 +290,7 @@ const MemoryHackGame: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate("/")}
             className="glass-card"
           >
             <ArrowLeft className="h-5 w-5" />
