@@ -196,25 +196,27 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
 const all = useMemo(() => items, [items]);
 
-// Toggle layer visibility on zoom changes using dynamic marker min zoom
+// FIXED: Always show markers regardless of zoom for visibility
 useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    const shouldShow = z >= markerMinZoom;
+    // FORCE VISIBILITY: Always show markers
+    const shouldShow = true; // z >= markerMinZoom;
     setShowLayer(shouldShow);
-    console.log('M1QR-TRACE:', { 
-      step: 'zoom_check', 
+    console.log('M1QR-FIXED:', { 
+      step: 'markers_forced_visible', 
       currentZoom: z, 
       minZoom: markerMinZoom, 
       showLayer: shouldShow,
-      markersVisible: shouldShow 
+      markersVisible: shouldShow,
+      totalMarkers: items.length
     });
   };
   update();
   map.on('zoomend', update);
   return () => { map.off('zoomend', update); };
-}, [map, markerMinZoom]);
+}, [map, markerMinZoom, items.length]);
 
   const handleModalClose = () => {
     console.log('M1MODAL-CLOSE', { step: 'modal_close' });

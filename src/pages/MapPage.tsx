@@ -4,6 +4,7 @@ import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import MapContainer from './map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import MapDebugger from './map/components/MapDebugger';
+import MapDebugInfo from '@/components/debug/MapDebugInfo';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
 import { MapStateProvider } from './map/MapStateProvider';
 import MapErrorBoundary from './map/MapErrorBoundary';
@@ -64,20 +65,19 @@ const MapPage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-[100dvh] w/full overflow-hidden" style={{
-        paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
-        paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
-      }}>
+      <div className="flex flex-col h-[100dvh] w-full overflow-hidden">
         <MapPageHeader />
         <MapErrorBoundary>
           <MapStateProvider>
             <div 
-              className="flex-1 relative w-full"
+              className="flex-1 relative w-full h-full"
               style={{
-                minHeight: '400px',
-                height: 'calc(100dvh - 152px)',
-                maxWidth: '100vw',
-                overflow: 'hidden'
+                position: 'absolute',
+                top: '60px',
+                left: 0,
+                right: 0,
+                bottom: '80px',
+                zIndex: 1
               }}
             >
               <MapContainer
@@ -109,8 +109,9 @@ const MapPage: React.FC = () => {
         </MapErrorBoundary>
       </div>
 
-      {/* Debug component for development */}
+      {/* Debug components for development */}
       <MapDebugger />
+      <MapDebugInfo />
     </SafeAreaWrapper>
   );
 };
