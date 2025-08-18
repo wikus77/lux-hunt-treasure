@@ -122,7 +122,7 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name].[hash].[ext]',
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'router-vendor': ['react-router-dom'],
+          'router-vendor': ['wouter'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
           'supabase-vendor': ['@supabase/supabase-js'],
           'animation-vendor': ['framer-motion', 'lottie-react'],
@@ -161,7 +161,7 @@ export default defineConfig(({ mode }) => ({
     'process.env.NODE_ENV': '"production"',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'react-router-dom'],
+    include: ['react', 'react-dom', 'wouter'],
     exclude: ['@capacitor/core'],
   },
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']
