@@ -91,3 +91,19 @@ body.m1ssion-modal-open .dynamic-island {
 [data-radix-portal] {
   z-index: 15000 !important;
 }
+
+/* Remove ALL Leaflet popups on /map page */
+.page-map .leaflet-popup,
+.page-map .leaflet-popup-pane {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
+
+/* Ensure marker circles are clickable */
+.m1-red-pulse {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  z-index: 1000 !important;
+}
