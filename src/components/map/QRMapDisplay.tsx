@@ -70,15 +70,16 @@ const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocat
           invalidateMarkerCache();
         }
 
-        // Use qr_codes_markers as the main data source (available in types)
-        const { data: markersData, error: markersError } = await supabase
-          .from('qr_codes_markers')
-          .select('*');
-
-        // Fetch rewards separately to avoid infinite types
+        // Fetch rewards first for mapping
         const { data: rewardsData } = await supabase
           .from('marker_rewards')
           .select('marker_id, reward_type, description, payload');
+
+        // Direct fetch from buzz_map_markers (confirmed working source)
+        const { data: markersData, error: markersError } = await supabase
+          .from('buzz_map_markers')
+          .select('*')
+          .limit(100);
 
         if (markersError) {
           console.error('M1MARK-TRACE: MARKER_FETCH_ERROR', { error: markersError });
@@ -86,22 +87,22 @@ const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocat
           return;
         }
 
-        // Transform and filter markers using correct column names
+        // Transform and filter markers from buzz_map_markers (latitude -> lat, longitude -> lng)
         const validMarkers = (markersData || [])
-          .filter(marker => {
+          .filter((marker: any) => {
             return marker.latitude && 
                    marker.longitude &&
                    Math.abs(marker.latitude) <= 90 && 
                    Math.abs(marker.longitude) <= 180;
           })
-          .map(marker => {
-            const markerReward = (rewardsData || []).find(r => r.marker_id === marker.code);
+          .map((marker: any) => {
+            const markerReward = (rewardsData || []).find(r => r.marker_id === marker.id);
             return {
-              id: marker.code || crypto.randomUUID(),
-              title: marker.title || `Marker QR`,
+              id: marker.id,
+              title: marker.title || `Marker M1SSION™`,
               lat: marker.latitude,
               lng: marker.longitude,
-              active: true,
+              active: true, // buzz_map_markers are always active
               reward_type: markerReward?.reward_type || 'buzz_free',
               reward_description: markerReward?.description || 'BUZZ gratuiti',
               reward_payload: markerReward?.payload || {}
