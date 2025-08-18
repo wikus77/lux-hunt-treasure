@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
-import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
+import { Marker, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
@@ -94,6 +94,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
   useEffect(() => {
     console.log('M1SSION_CANARY: QRMapDisplay component mounted - rendering QR markers');
+    console.info('M1-ENV', { origin: window.location.origin, VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL });
     (async () => {
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
