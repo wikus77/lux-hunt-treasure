@@ -90,12 +90,16 @@ body.m1ssion-modal-open .dynamic-island {
   pointer-events: none !important;
 }
 
-/* Force modal above everything */
+/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ */
+/* CRITICAL: Modal z-index per iOS Safari compatibilità */
 [data-radix-portal], 
 .radix-dialog-content, 
 .m1ssion-modal-content {
-  z-index: 20000 !important; 
+  z-index: 25000 !important; 
   position: fixed !important;
+  isolation: isolate !important;
+  transform: translate3d(0, 0, 0) !important;
+  -webkit-transform: translate3d(0, 0, 0) !important;
 }
 
 /* Remove ALL Leaflet popups on /map page */
