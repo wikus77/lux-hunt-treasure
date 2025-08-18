@@ -1,7 +1,7 @@
 // © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 import React, { useEffect } from 'react';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
-import MapContainer from './map/MapContainer';
+import MapContainer from '@/components/map/MapContainer';
 import MapPageHeader from './map/components/MapPageHeader';
 import MapDebugger from './map/components/MapDebugger';
 import MapDebugInfo from '@/components/debug/MapDebugInfo';

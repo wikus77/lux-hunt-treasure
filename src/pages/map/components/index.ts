@@ -1,11 +1,11 @@
 
 export { default as BuzzButton } from './BuzzButton';
 export { default as LocationButton } from './LocationButton';
-export { default as MapContainer } from './MapContainer';
+// MapContainer moved to main components/map/
 export { default as MapController } from './MapController';
 export { default as MapEventHandler } from './MapEventHandler';
 export { default as MapInstructionsOverlay } from './MapInstructionsOverlay';
-export { default as MapPopupManager } from './MapPopupManager';
+// MapPopupManager moved to main components/map/
 export { default as MapInitializer } from './MapInitializer';
 export { default as MapLayers } from './MapLayers';
 // REMOVED: Duplicate MapContent export
