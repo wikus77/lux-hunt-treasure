@@ -116,8 +116,19 @@ const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocat
         console.info('M1MARK-TRACE: MARKER_FETCH_END', {
           count: validMarkers.length,
           duration_ms: fetchEndTime - fetchStartTime,
-          filters_applied: ['active', 'visible_window', 'coordinates_valid'],
-          has_rewards: validMarkers.filter(m => m.reward_type).length
+          filters_applied: ['active', 'coordinates_valid'],
+          has_rewards: validMarkers.filter(m => m.reward_type).length,
+          marker_coords: validMarkers.map(m => ({ id: m.id, lat: m.lat, lng: m.lng }))
+        });
+
+        // Log marker coordinates for debugging
+        console.info('M1MARK-TRACE: MARKER_COORDINATES', {
+          markers: validMarkers.map(m => ({ 
+            id: m.id.substring(0, 8), 
+            title: m.title,
+            lat: m.lat, 
+            lng: m.lng 
+          }))
         });
 
       } catch (error) {
