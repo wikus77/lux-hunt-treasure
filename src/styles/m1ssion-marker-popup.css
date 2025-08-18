@@ -91,8 +91,11 @@ body.m1ssion-modal-open .dynamic-island {
 }
 
 /* Force modal above everything */
-[data-radix-portal] {
-  z-index: 15000 !important;
+[data-radix-portal], 
+.radix-dialog-content, 
+.m1ssion-modal-content {
+  z-index: 20000 !important; 
+  position: fixed !important;
 }
 
 /* Remove ALL Leaflet popups on /map page */

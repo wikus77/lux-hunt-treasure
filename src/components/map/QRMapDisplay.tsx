@@ -1,7 +1,8 @@
-// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { Marker, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
+import { redPulseIcon } from '@/components/map/redPulseIcon';
 import { supabase } from '@/integrations/supabase/client';
 import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,6 @@ interface MarkerReward {
 interface ClaimData {
   isOpen: boolean;
   markerId: string;
-  rewards: MarkerReward[];
 }
 
 type Item = {
@@ -41,7 +41,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
   const [markerMinZoom, setMarkerMinZoom] = useState<number>(17); // Default from app_config
-  const [claimData, setClaimData] = useState<ClaimData>({ isOpen: false, markerId: '', rewards: [] });
+  const [claimData, setClaimData] = useState<ClaimData>({ isOpen: false, markerId: '' });
   const map = useMap();
   const RADIUS_M = 500;
   const NEAR_M = 75;
@@ -49,12 +49,6 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
   const TRACE_ID = 'M1QR-TRACE';
 
-  const icon = (active:boolean) => L.divIcon({
-    className: 'm1-red-pulse',
-    html: '<div class="dot"></div>',
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
-  });
 
   // Load marker min zoom from app_config with cache and realtime updates
   useEffect(() => {
@@ -97,6 +91,10 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   useEffect(() => {
     console.log('M1SSION_CANARY: QRMapDisplay component mounted - rendering QR markers');
     console.info('M1-ENV', { origin: window.location.origin, VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL });
+    
+    // Set body data-path for /map
+    document.body.setAttribute('data-path', '/map');
+    
     (async () => {
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
@@ -104,7 +102,8 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
         // Try buzz_map_markers view first
         let { data, error } = await supabase
           .from('buzz_map_markers')
-          .select('id,title,latitude,longitude,active');
+          .select('id,title,latitude,longitude,active')
+          .eq('active', true);
 
         if (error) {
           console.warn('buzz_map_markers error:', error?.message);
@@ -186,18 +185,9 @@ useEffect(() => {
   return () => { map.off('zoomend', update); };
 }, [map, markerMinZoom]);
 
-  const handleClaimSuccess = (nextRoute?: string) => {
-    console.log('M1QR-TRACE', { step: 'claim_success_redirect', nextRoute });
-    setClaimData({ isOpen: false, markerId: '', rewards: [] }); // Close modal
-    
-    if (nextRoute) {
-      setLocation(nextRoute);
-    }
-  };
-
   const handleModalClose = () => {
     console.log('M1QR-TRACE', { step: 'modal_close' });
-    setClaimData({ isOpen: false, markerId: '', rewards: [] });
+    setClaimData({ isOpen: false, markerId: '' });
   };
 
   if (isLoading) return null;
@@ -218,30 +208,14 @@ return (
             <Marker
               key={qr.code}
               position={[qr.lat, qr.lng]}
-              icon={icon(qr.is_active)}
+              icon={redPulseIcon}
               eventHandlers={{
-                 click: async (e) => {
+                 click: (e) => {
                    e.originalEvent?.stopPropagation();
                    const markerId = qr.code;
+                   console.info('M1MARK-TRACE', { step: 'MARKER_FETCH_END', count: all.length });
                    console.log('M1MARK-TRACE', { step: 'POPUP_OPENED', markerId });
-                   
-                   // Fetch rewards directly for immediate modal opening
-                   try {
-                     const { data: rewards, error } = await supabase
-                       .from('marker_rewards')
-                       .select('reward_type, payload, description')
-                       .eq('marker_id', markerId);
-
-                     if (error) {
-                       console.error('M1MARK-TRACE', { step: 'rewards_fetch_error', markerId, error });
-                       return;
-                     }
-
-                     setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
-                     console.log('M1MARK-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
-                   } catch (err) {
-                     console.error('M1MARK-TRACE', { step: 'click_error', markerId, err });
-                   }
+                   setClaimData({ isOpen: true, markerId });
                  }
               }}
             />
@@ -252,13 +226,11 @@ return (
     
     {/* Lazy-loaded ClaimRewardModal */}
     {claimData.isOpen && (
-      <Suspense fallback={<div>Loading...</div>}>
+      <Suspense fallback={null}>
         <ClaimRewardModal
           isOpen={claimData.isOpen}
           onClose={handleModalClose}
           markerId={claimData.markerId}
-          rewards={claimData.rewards}
-          onSuccess={handleClaimSuccess}
         />
       </Suspense>
     )}

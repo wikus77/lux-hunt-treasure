@@ -16,7 +16,6 @@ interface ClaimRewardModalProps {
   isOpen: boolean;
   onClose: () => void;
   markerId: string;
-  rewards: MarkerReward[];
   onSuccess?: (nextRoute?: string) => void;
 }
 
@@ -24,7 +23,6 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   isOpen,
   onClose,
   markerId,
-  rewards,
   onSuccess
 }) => {
   const [isClaiming, setIsClaiming] = useState(false);
@@ -94,7 +92,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto z-[15000] pointer-events-auto m1ssion-modal-content fixed inset-0 mx-auto my-auto w-[90vw] max-w-md h-fit">
+      <DialogContent className="max-w-md mx-auto z-[20000] pointer-events-auto m1ssion-modal-content fixed inset-0 mx-auto my-auto w-[90vw] max-w-md h-fit">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-gradient">
             🎁 Premio Trovato!
@@ -107,26 +105,17 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
           </div>
           
           <div className="space-y-3">
-            {rewards.map((reward, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
-                <span className="text-2xl">{getRewardIcon(reward.reward_type)}</span>
-                <div className="flex-1">
-                  <div className="text-sm font-medium">
-                    {reward.description || `Premio ${reward.reward_type}`}
-                  </div>
-                  {reward.reward_type === 'buzz_free' && (
-                    <div className="text-xs text-muted-foreground">
-                      {reward.payload.buzzCount || 1} BUZZ gratuiti
-                    </div>
-                  )}
-                  {reward.reward_type === 'xp_points' && (
-                    <div className="text-xs text-muted-foreground">
-                      +{reward.payload.xp || 10} XP
-                    </div>
-                  )}
+            <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
+              <span className="text-2xl">🎁</span>
+              <div className="flex-1">
+                <div className="text-sm font-medium">
+                  Premio speciale M1SSION™
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Clicca riscatta per scoprire cosa hai vinto!
                 </div>
               </div>
-            ))}
+            </div>
           </div>
           
           <div className="flex gap-3 pt-4">
