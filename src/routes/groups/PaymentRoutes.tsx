@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Route } from 'react-router-dom';
+import { Route } from 'wouter';
 import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
 
 // Pages
@@ -18,51 +17,51 @@ const PaymentRoutes = () => {
     <>
       <Route
         path="/subscriptions"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <Subscriptions />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/payment-methods"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentMethods />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/payment-silver"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentSilver />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/payment-gold"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentGold />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/payment-black"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentBlack />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
       <Route
         path="/payment-success"
-        element={
+        component={() => (
           <RoleBasedProtectedRoute allowedRoles={baseUserRoles}>
             <PaymentSuccess />
           </RoleBasedProtectedRoute>
-        }
+        )}
       />
     </>
   );

@@ -196,18 +196,18 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
 const all = useMemo(() => items, [items]);
 
-// FIXED: Always show markers regardless of zoom for visibility
+// ZOOM-BASED MARKER VISIBILITY: Only show markers at close zoom levels
 useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    // FORCE VISIBILITY: Always show markers
-    const shouldShow = true; // z >= markerMinZoom;
+    // Show markers only at zoom level 15 or higher (close zoom)
+    const shouldShow = z >= 15;
     setShowLayer(shouldShow);
-    console.log('M1QR-FIXED:', { 
-      step: 'markers_forced_visible', 
+    console.log('🎯 M1QR-ZOOM-CONTROL:', { 
+      step: 'markers_zoom_visibility', 
       currentZoom: z, 
-      minZoom: markerMinZoom, 
+      minZoom: 15, 
       showLayer: shouldShow,
       markersVisible: shouldShow,
       totalMarkers: items.length
@@ -216,7 +216,7 @@ useEffect(() => {
   update();
   map.on('zoomend', update);
   return () => { map.off('zoomend', update); };
-}, [map, markerMinZoom, items.length]);
+}, [map, items.length]);
 
   const handleModalClose = () => {
     console.log('M1MODAL-CLOSE', { step: 'modal_close' });

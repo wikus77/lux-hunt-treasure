@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - PWA Native Utility Functions
 
-import { NavigateFunction } from 'react-router-dom';
+type NavigateFunction = (path: string, options?: any) => void;
 
 // PWA Navigation handler
 export const pwaNavigationHandler = (
