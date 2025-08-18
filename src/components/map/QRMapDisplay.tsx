@@ -104,20 +104,31 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
         // Try buzz_map_markers view first
         let { data, error } = await supabase
           .from('buzz_map_markers')
-          .select('code,title,latitude,longitude');
+          .select('id,title,latitude,longitude,active');
 
         if (error) {
           console.warn('buzz_map_markers error:', error?.message);
         }
 
-        // Fallback to qr_codes if view is empty or fails
-        if (!data || data.length === 0) {
+        // Process buzz_map_markers data 
+        let processedData: any[] = [];
+        if (data && data.length > 0) {
+          // Add missing fields for buzz_map_markers
+          processedData = data.map((r: any) => ({
+            code: r.id || r.code,
+            title: r.title || 'Marker',
+            latitude: r.latitude,
+            longitude: r.longitude,
+            reward_type: 'buzz_credit',
+            is_active: r.active !== false
+          }));
+        } else {
           console.log('🔄 Fallback to qr_codes table...');
           const fb = await supabase
             .from('qr_codes')
             .select('code,lat,lng,reward_type,is_active');
           if (fb.data && fb.data.length > 0) {
-            data = fb.data.map(r => ({
+            processedData = fb.data.map((r: any) => ({
               code: r.code,
               title: r.code,
               latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
@@ -126,23 +137,16 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
               is_active: r.is_active !== false
             }));
           }
-        } else {
-          // Add missing fields for buzz_map_markers
-          data = data.map(r => ({
-            ...r,
-            reward_type: 'buzz_credit',
-            is_active: true
-          }));
         }
 
-        const processedItems = (data || [])
+        const processedItems = (processedData || [])
           .map((r: any) => ({
-            code: String(r.code),
+            code: String(r.code || r.id), // Use either code or id
             lat: typeof r.latitude === 'number' ? r.latitude : Number(r.latitude),
             lng: typeof r.longitude === 'number' ? r.longitude : Number(r.longitude),
             title: r.title ?? '',
             reward_type: r.reward_type ?? 'buzz_credit',
-            is_active: r.is_active !== false
+            is_active: r.is_active !== false || r.active !== false
           }))
           .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 

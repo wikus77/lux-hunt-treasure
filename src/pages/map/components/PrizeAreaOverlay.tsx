@@ -1,6 +1,6 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState, useEffect } from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Circle } from 'react-leaflet';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Prize {
@@ -88,17 +88,7 @@ const PrizeAreaOverlay: React.FC = () => {
               e.target.setStyle({ fillOpacity: 0.1, weight: 2 });
             }
           }}
-        >
-          <Popup>
-            <div className="p-3 text-center">
-              <div className="font-bold text-yellow-400 mb-2">🏆 {prize.title}</div>
-              <div className="text-sm text-gray-300 mb-2">{prize.description}</div>
-              <div className="text-xs text-yellow-300">
-                Area Premio - Raggio: {((prize.area_radius_m || 500) / 1000).toFixed(1)} km
-              </div>
-            </div>
-          </Popup>
-        </Circle>
+        />
       ))}
     </>
   );

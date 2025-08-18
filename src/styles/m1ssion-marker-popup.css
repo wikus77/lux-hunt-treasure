@@ -21,8 +21,11 @@
   width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 15000 !important;
-  position: relative;
+  z-index: 20000 !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 .m1ssion-modal-content::before {
