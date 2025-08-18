@@ -19,7 +19,7 @@ export const EnhancedToastProvider: React.FC<EnhancedToastProviderProps> = ({ ch
       <Toaster 
         position="top-right"
         richColors
-        closeButton
+        closeButton={false}
         duration={4000}
         expand={true}
         visibleToasts={5}

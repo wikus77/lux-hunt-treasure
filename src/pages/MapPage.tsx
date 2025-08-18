@@ -74,15 +74,18 @@ const MapPage: React.FC = () => {
       <div className="flex flex-col h-[100dvh] w-full overflow-hidden relative">
         <MapPageHeader />
         
-        {/* CRITICAL: Map container with proper boundaries and container structure */}
-        <div 
-          className="flex-1 relative w-full border border-muted/20 rounded-lg overflow-hidden bg-muted/10"
-          style={{
-            height: 'calc(100dvh - 60px - 80px)', // Header + BottomNav
-            minHeight: '400px',
-            margin: '8px'
-          }}
-        >
+        {/* M1SSION MAP CONTAINER - Professional Style */}
+        <div className="flex-1 relative w-full m1ssion-glass-card overflow-hidden" style={{
+          height: 'calc(100dvh - 60px - 80px)',
+          minHeight: '400px',
+          margin: '8px',
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 26, 26, 0.95))',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          boxShadow: `
+            0 25px 50px rgba(0, 0, 0, 0.5),
+            inset 0 1px 3px rgba(255, 255, 255, 0.1)
+          `
+        }}>
           <MapErrorBoundary>
             <MapStateProvider>
               <MapContainer
