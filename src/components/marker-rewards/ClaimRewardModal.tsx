@@ -43,7 +43,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   const handleClaim = async () => {
     if (!markerId) return;
     setIsClaiming(true);
-    console.log('M1QR-TRACE', { step: 'claim_start', markerId });
+    console.log('M1MARK-TRACE', { step: 'REDEEM_REQUESTED', markerId });
 
     const { data, error } = await supabase.functions
       .invoke('claim-marker-reward', { body: { markerId } });
@@ -55,7 +55,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     }
 
     if (data?.ok === true) {
-      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute });
+      console.log('M1MARK-TRACE', { step: 'REDEEM_SUCCESS', nextRoute: data?.nextRoute });
       toast.success('Premio riscattato');
       onClose?.();
       if (data?.nextRoute) window.location.href = data.nextRoute;
@@ -63,7 +63,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     }
 
     if (data?.code === 'ALREADY_CLAIMED') { 
-      console.log('M1QR-TRACE', { step: 'already_claimed' });
+      console.log('M1MARK-TRACE', { step: 'ALREADY_CLAIMED' });
       toast.info('Premio già riscattato'); 
       onClose?.(); 
       return; 
@@ -128,10 +128,10 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
             <Button 
               onClick={handleClaim}
               disabled={isClaiming}
-              className="flex-1 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
+              className="flex-1 m1ssion-claim-button"
               data-testid="claim-reward-cta"
             >
-              {isClaiming ? 'Riscattando...' : 'Riscatta'}
+              {isClaiming ? 'Riscattando...' : 'Riscatta ora'}
             </Button>
           </div>
         </div>
