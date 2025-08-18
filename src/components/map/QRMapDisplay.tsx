@@ -196,18 +196,18 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
 const all = useMemo(() => items, [items]);
 
-// ZOOM-BASED MARKER VISIBILITY: Only show markers at close zoom levels
+// PROFESSIONAL ZOOM-BASED MARKER VISIBILITY: Only show markers at close zoom levels
 useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    // Show markers only at zoom level 15 or higher (close zoom)
-    const shouldShow = z >= 15;
+    // Show markers only at zoom level 16 or higher (very close zoom as requested)
+    const shouldShow = z >= 16;
     setShowLayer(shouldShow);
-    console.log('🎯 M1QR-ZOOM-CONTROL:', { 
-      step: 'markers_zoom_visibility', 
+    console.log('🎯 M1QR-PROFESSIONAL-ZOOM:', { 
+      step: 'markers_professional_visibility', 
       currentZoom: z, 
-      minZoom: 15, 
+      minZoom: 16, 
       showLayer: shouldShow,
       markersVisible: shouldShow,
       totalMarkers: items.length

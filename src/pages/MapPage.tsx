@@ -35,6 +35,11 @@ const MapPage: React.FC = () => {
     requestLocationPermission
   } = useNewMapPage();
 
+  // Clear any previous mount state
+  useEffect(() => {
+    try { delete (window as any).__M1_MAP_MOUNTED__; } catch {}
+  }, []);
+
   // Log mount for debugging
   useEffect(() => {
     console.log('🗺️ MapPage mounted successfully');
@@ -65,11 +70,20 @@ const MapPage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
-      <div className="flex flex-col h-[100dvh] w-full overflow-hidden">
+      {/* PROFESSIONAL: Full screen layout with proper container hierarchy */}
+      <div className="flex flex-col h-[100dvh] w-full overflow-hidden relative">
         <MapPageHeader />
-        <MapErrorBoundary>
-          <MapStateProvider>
-            <div className="flex-1 relative w-full h-full overflow-hidden">
+        
+        {/* CRITICAL: Map container with proper boundaries */}
+        <div 
+          className="flex-1 relative w-full"
+          style={{
+            height: 'calc(100dvh - 60px - 80px)', // Header + BottomNav
+            minHeight: '400px'
+          }}
+        >
+          <MapErrorBoundary>
+            <MapStateProvider>
               <MapContainer
                 isAddingPoint={isAddingPoint}
                 setIsAddingPoint={setIsAddingPoint}
@@ -94,9 +108,9 @@ const MapPage: React.FC = () => {
                 requestLocationPermission={requestLocationPermission}
                 toggleAddingSearchArea={toggleAddingSearchArea}
               />
-            </div>
-          </MapStateProvider>
-        </MapErrorBoundary>
+            </MapStateProvider>
+          </MapErrorBoundary>
+        </div>
       </div>
 
       {/* Debug components for development */}
