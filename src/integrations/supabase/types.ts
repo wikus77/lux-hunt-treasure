@@ -3404,13 +3404,6 @@ export type Database = {
             foreignKeyName: "user_rewards_marker_id_fkey"
             columns: ["marker_id"]
             isOneToOne: false
-            referencedRelation: "buzz_map_markers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_rewards_marker_id_fkey"
-            columns: ["marker_id"]
-            isOneToOne: false
             referencedRelation: "markers"
             referencedColumns: ["id"]
           },
@@ -3574,30 +3567,10 @@ export type Database = {
       buzz_map_markers: {
         Row: {
           active: boolean | null
-          created_at: string | null
           id: string | null
           latitude: number | null
           longitude: number | null
           title: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          title?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          active?: boolean | null
-          created_at?: string | null
-          id?: string | null
-          latitude?: number | null
-          longitude?: number | null
-          title?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
