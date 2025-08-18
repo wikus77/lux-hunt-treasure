@@ -1,10 +1,9 @@
 
-// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import React from 'react';
-import LazyMap from './LazyMap';
+import NewMapPage from './NewMapPage';
 
 const Map = () => {
-  return <LazyMap />;
+  return <NewMapPage />;
 };
 
 export default Map;

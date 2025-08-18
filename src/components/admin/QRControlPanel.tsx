@@ -335,8 +335,8 @@ const saveMarkerRewards = async () => {
 
   // 🔥 FIXED: Advanced QR Generation with M1 Logo and Reward Message
   const generatePrintableQR = async (code: string, rewardMessage: string) => {
-    // 🎯 QR URL for markers - opens map and triggers marker modal
-    const qrUrl = `https://m1ssion.eu/map?marker=${code}`;
+    // 🎯 CRITICAL FIX: Use UUID for both validate and direct routes - iOS Safari compatibility
+    const qrUrl = `https://m1ssion.eu/qr/${code}`;
     
     console.log('🔥 GENERATING QR FOR URL:', qrUrl);
     

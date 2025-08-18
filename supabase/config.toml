@@ -29,19 +29,3 @@ verify_jwt = true
 [functions.nearby_qr_notify]
 # Publicly callable, function uses service role internally
 verify_jwt = false
-
-[functions.discover-qr-code]
-# Requires user authentication for security
-verify_jwt = true
-
-[functions.send-contact-email]
-verify_jwt = false
-
-[functions.send-mailjet-email]
-verify_jwt = false
-
-[functions.claim-marker-reward]
-verify_jwt = true
-
-[functions.store-contact-secure]
-verify_jwt = false
