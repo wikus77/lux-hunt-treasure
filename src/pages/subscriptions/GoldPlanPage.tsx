@@ -6,12 +6,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Crown, Star } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateWouter } from '@/utils/routerUtils';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
 import { getDisplayPrice } from '@/lib/constants/pricingConfig';
 
 const GoldPlanPage: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
 
   const planFeatures = [
     "Tutti i vantaggi Silver",

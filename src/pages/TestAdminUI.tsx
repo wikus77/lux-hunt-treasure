@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateWouter } from '@/utils/routerUtils';
 import AdminPrizeManager from '@/components/admin/prizeManager/AdminPrizeManager';
 import { useAuthContext } from '@/contexts/auth';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function TestAdminUI() {
   const { isAuthenticated, isLoading, userRole, hasRole, isRoleLoading, logout, getCurrentUser } = useAuthContext();
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const [verifying, setVerifying] = useState(false);
   const [profileInfo, setProfileInfo] = useState<any>(null);
 

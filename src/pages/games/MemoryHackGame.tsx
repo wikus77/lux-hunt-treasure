@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Play, RotateCcw, Star, Clock, Target } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateWouter } from '@/utils/routerUtils';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ interface GameStats {
 }
 
 const MemoryHackGame: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const { vibrate, playSound } = usePWAHardwareStub();
   const { toast } = useToast();
   
