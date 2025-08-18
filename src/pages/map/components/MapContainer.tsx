@@ -16,7 +16,7 @@ import BuzzMapAreas from './BuzzMapAreas';
 import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
-import { QRMapDisplay } from '@/components/map/QRMapDisplay';
+import QRMapDisplay from '@/components/map/QRMapDisplay';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
 import L from 'leaflet';

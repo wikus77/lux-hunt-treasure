@@ -41,8 +41,8 @@ const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocat
   const [selectedMarker, setSelectedMarker] = useState<MarkerItem | null>(null);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
 
-  // Determine user location priority: prop > detected > geo watcher
-  const userLocation = propUserLocation || detectedLocation || geoPosition;
+  // Determine user location priority: prop > detected > geo watcher  
+  const userLocation = propUserLocation || detectedLocation || (geoPosition?.coords ? { lat: geoPosition.coords.lat, lng: geoPosition.coords.lng } : null);
 
   // M1MARK-TRACE: Fetch markers from proper source with telemetry
   useEffect(() => {
@@ -70,28 +70,15 @@ const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocat
           invalidateMarkerCache();
         }
 
-        // Fetch from public.markers with rewards JOIN
+        // Use qr_codes_markers as the main data source (available in types)
         const { data: markersData, error: markersError } = await supabase
-          .from('markers')
-          .select(`
-            id,
-            title,
-            lat,
-            lng,
-            active,
-            visible_from,
-            visible_to,
-            zoom_min,
-            zoom_max,
-            marker_rewards (
-              reward_type,
-              description,
-              payload
-            )
-          `)
-          .eq('active', true)
-          .gte('visible_to', new Date().toISOString())
-          .lte('visible_from', new Date().toISOString());
+          .from('qr_codes_markers')
+          .select('*');
+
+        // Fetch rewards separately to avoid infinite types
+        const { data: rewardsData } = await supabase
+          .from('marker_rewards')
+          .select('marker_id, reward_type, description, payload');
 
         if (markersError) {
           console.error('M1MARK-TRACE: MARKER_FETCH_ERROR', { error: markersError });
@@ -99,31 +86,27 @@ const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocat
           return;
         }
 
-        // Transform and filter markers
-        const now = new Date();
+        // Transform and filter markers using correct column names
         const validMarkers = (markersData || [])
           .filter(marker => {
-            const visibleFrom = marker.visible_from ? new Date(marker.visible_from) : new Date(0);
-            const visibleTo = marker.visible_to ? new Date(marker.visible_to) : new Date('2099-12-31');
-            const isVisible = now >= visibleFrom && now <= visibleTo;
-            
-            return marker.active && 
-                   isVisible && 
-                   marker.lat && 
-                   marker.lng &&
-                   Math.abs(marker.lat) <= 90 && 
-                   Math.abs(marker.lng) <= 180;
+            return marker.latitude && 
+                   marker.longitude &&
+                   Math.abs(marker.latitude) <= 90 && 
+                   Math.abs(marker.longitude) <= 180;
           })
-          .map(marker => ({
-            id: marker.id,
-            title: marker.title || `Marker ${marker.id}`,
-            lat: marker.lat,
-            lng: marker.lng,
-            active: marker.active,
-            reward_type: marker.marker_rewards?.[0]?.reward_type,
-            reward_description: marker.marker_rewards?.[0]?.description,
-            reward_payload: marker.marker_rewards?.[0]?.payload
-          }));
+          .map(marker => {
+            const markerReward = (rewardsData || []).find(r => r.marker_id === marker.code);
+            return {
+              id: marker.code || crypto.randomUUID(),
+              title: marker.title || `Marker QR`,
+              lat: marker.latitude,
+              lng: marker.longitude,
+              active: true,
+              reward_type: markerReward?.reward_type || 'buzz_free',
+              reward_description: markerReward?.description || 'BUZZ gratuiti',
+              reward_payload: markerReward?.payload || {}
+            };
+          });
 
         setItems(validMarkers);
         setLastFetchTime(Date.now());
