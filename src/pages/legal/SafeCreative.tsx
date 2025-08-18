@@ -4,10 +4,10 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Copyright, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateWouter } from '@/utils/routerUtils';
 
 const SafeCreative: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#131524] via-[#0F1419] to-black text-white">

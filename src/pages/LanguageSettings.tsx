@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, Check } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateWouter } from "@/utils/routerUtils";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ const languages = [
 ];
 
 const LanguageSettings = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const { toast } = useToast();
   const [selectedLanguage, setSelectedLanguage] = useState("it");
 
@@ -43,7 +43,7 @@ const LanguageSettings = () => {
           variant="ghost" 
           size="icon" 
           className="mr-2"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/settings')}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

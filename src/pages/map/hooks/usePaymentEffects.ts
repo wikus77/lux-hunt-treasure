@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocationWouter } from "@/utils/routerUtils";
 import { toast } from "sonner";
 import { useBuzzClues } from "@/hooks/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -11,7 +11,7 @@ export const usePaymentEffects = (generateSearchArea: (radius: number) => string
   const [processedSessionIds, setProcessedSessionIds] = useState<Set<string>>(new Set());
   const [isMapBuzzActive, setIsMapBuzzActive] = useState(false);
   
-  const location = useLocation();
+  const location = useLocationWouter();
   const { incrementUnlockedCluesAndAddClue } = useBuzzClues();
   const { addNotification } = useNotifications();
 

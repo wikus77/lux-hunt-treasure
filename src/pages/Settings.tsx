@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from "react-router-dom";
+import { LinkWouter, useNavigateWouter } from "@/utils/routerUtils";
 import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
@@ -25,7 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const { logout } = useAuthContext();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   
@@ -67,7 +67,7 @@ const Settings = () => {
             variant="ghost" 
             size="icon" 
             className="h-8 w-8 rounded-full" 
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/home')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>

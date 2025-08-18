@@ -47,8 +47,8 @@ export default defineConfig(({ mode }) => ({
           '**/assets/index.*.js' // Exclude large main bundle from precaching
         ],
         globPatterns: [
-          '**/*.{css,html,ico,svg}', // Cache essential files but not large JS bundles
-          '**/assets/!(index).*.js' // Cache vendor chunks but not main bundle
+          '**/*.{css,html,ico,svg}',
+          '**/assets/*.js'
         ],
         runtimeCaching: [
           {

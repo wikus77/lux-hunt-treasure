@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ArrowLeft, Upload, User, Mail, Phone, MapPin, Save } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigateWouter } from '@/utils/routerUtils';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useProfileData } from '@/hooks/useProfileData';
 
 const PersonalInfoPage: React.FC = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const { toast } = useToast();
   const { profileData, actions } = useProfileData();
   const fileInputRef = useRef<HTMLInputElement>(null);

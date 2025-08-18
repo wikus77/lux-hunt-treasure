@@ -1,10 +1,10 @@
 
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateWouter } from "@/utils/routerUtils";
 import ContactLayout from "@/components/contacts/ContactLayout";
 
 const Contacts = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const isBeforeLaunch = new Date() < new Date("2025-07-19T00:00:00");
 
   // Log component mounting to help debug routing issues

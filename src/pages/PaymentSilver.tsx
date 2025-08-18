@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateWouter } from "@/utils/routerUtils";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
@@ -11,7 +11,7 @@ import ClueUnlockedExplosion from "@/components/clues/ClueUnlockedExplosion";
 import { useStripePayment } from "@/hooks/useStripePayment";
 
 const PaymentSilver = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
   const [showExplosion, setShowExplosion] = useState(false);
   const [fadeOutExplosion, setFadeOutExplosion] = useState(false);
@@ -141,7 +141,7 @@ const PaymentSilver = () => {
           variant="ghost" 
           size="icon" 
           className="mr-2"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/subscriptions')}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

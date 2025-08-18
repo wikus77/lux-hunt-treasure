@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigateWouter } from "@/utils/routerUtils";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -14,7 +14,7 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Profile = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigateWouter();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
