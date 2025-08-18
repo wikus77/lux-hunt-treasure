@@ -3572,6 +3572,20 @@ export type Database = {
           longitude: number | null
           title: string | null
         }
+        Insert: {
+          active?: never
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          title?: string | null
+        }
+        Update: {
+          active?: never
+          id?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          title?: string | null
+        }
         Relationships: []
       }
     }
