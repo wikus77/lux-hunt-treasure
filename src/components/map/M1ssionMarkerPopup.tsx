@@ -184,6 +184,7 @@ const M1ssionMarkerPopup: React.FC<M1ssionMarkerPopupProps> = ({
             <Button 
               onClick={handleRedeem}
               disabled={isLoading || error?.code === 'ALREADY_CLAIMED'}
+              data-testid="claim-reward-cta"
               className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-medium transition-all duration-300 shadow-[0_0_20px_rgba(0,255,255,0.4)]"
             >
               {isLoading ? (
