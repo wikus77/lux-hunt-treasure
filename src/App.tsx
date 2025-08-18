@@ -42,8 +42,8 @@ function App() {
         <Router>
           <SoundProvider>
             <AuthProvider>
-            <SystemInitializer />
-            <AuthenticationManager 
+              <SystemInitializer />
+              <AuthenticationManager
               onAuthenticated={handleAuthenticated}
               onNotAuthenticated={handleNotAuthenticated}
               onEmailNotVerified={handleEmailNotVerified}
@@ -59,7 +59,7 @@ function App() {
             
           </SoundProvider>
         </Router>
-        <Toaster closeButton={false} position="top-center" />
+        <Toaster closeButton={true} position="top-center" />
       </HelmetProvider>
     </GlobalErrorBoundary>
   );
