@@ -1,5 +1,5 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 

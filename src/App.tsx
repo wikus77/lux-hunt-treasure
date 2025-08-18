@@ -18,21 +18,10 @@ import OneSignalSetup from "./components/push/OneSignalSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
-import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
-import { useGlobalProfileSync } from "./hooks/useGlobalProfileSync";
-import { useState, useEffect } from "react";
-
+import { SystemInitializer } from './components/system/SystemInitializer';
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
-  // Production-ready logging removed
-  
-  // Initialize push notification processor
-  usePushNotificationProcessor();
-  
-  // Initialize global profile sync for real-time updates across all components
-  useGlobalProfileSync();
-
   const handleAuthenticated = (userId: string) => {
     // User authenticated successfully
   };
@@ -53,6 +42,7 @@ function App() {
         <Router>
           <SoundProvider>
             <AuthProvider>
+            <SystemInitializer />
             <AuthenticationManager 
               onAuthenticated={handleAuthenticated}
               onNotAuthenticated={handleNotAuthenticated}

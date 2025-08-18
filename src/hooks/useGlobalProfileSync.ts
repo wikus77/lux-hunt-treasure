@@ -1,5 +1,5 @@
 // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useProfileRealtime } from '@/hooks/useProfileRealtime';
 
 /**
