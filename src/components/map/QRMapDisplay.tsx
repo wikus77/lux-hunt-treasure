@@ -99,11 +99,21 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
         
-        // Try buzz_map_markers view first
-        let { data, error } = await supabase
-          .from('buzz_map_markers')
-          .select('id,title,latitude,longitude,active')
-          .eq('active', true);
+        // Direct query to avoid TypeScript type recursion issues
+        let data: any = null;
+        let error: any = null;
+        
+        try {
+          const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/buzz_map_markers?active=eq.true&select=id,title,latitude,longitude,active`, {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+            }
+          });
+          data = await response.json();
+        } catch (fetchError) {
+          error = fetchError;
+        }
 
         if (error) {
           console.warn('buzz_map_markers error:', error?.message);
