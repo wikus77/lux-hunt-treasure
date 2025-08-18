@@ -43,38 +43,37 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   const handleClaim = async () => {
     if (!markerId) return;
     setIsClaiming(true);
-    console.log('M1QR-TRACE', { step: 'claim_start', markerId });
+    console.log('M1MARK-TRACE', { step: 'REDEEM_REQUESTED', markerId });
 
     const { data, error } = await supabase.functions
       .invoke('claim-marker-reward', { body: { markerId } });
 
     if (error?.status === 401) { 
-      console.log('M1QR-TRACE', { step: 'claim_unauthorized' });
+      console.log('M1MARK-TRACE', { step: 'claim_unauthorized' });
       window.location.href = '/login'; 
       return; 
     }
 
     if (data?.ok === true) {
-      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute });
-      toast.success('Premio riscattato');
-      onClose?.();
-      if (data?.nextRoute) window.location.href = data.nextRoute;
+      console.log('M1MARK-TRACE', { step: 'REDEEM_SUCCESS', nextRoute: data?.nextRoute });
+      toast.success('Ricompensa riscattata 🎉');
+      onSuccess?.(data?.nextRoute);
       return;
     }
 
     if (data?.code === 'ALREADY_CLAIMED') { 
-      console.log('M1QR-TRACE', { step: 'already_claimed' });
+      console.log('M1MARK-TRACE', { step: 'ALREADY_CLAIMED' });
       toast.info('Premio già riscattato'); 
       onClose?.(); 
       return; 
     }
     if (data?.code === 'NO_REWARD') { 
-      console.error('M1QR-TRACE', { step: 'no_reward' });
+      console.error('M1MARK-TRACE', { step: 'REDEEM_ERROR', reason: 'no_reward' });
       toast.error('Nessuna ricompensa configurata'); 
       return; 
     }
 
-    console.error('M1QR-TRACE', { step: 'claim_error', markerId, error, data });
+    console.error('M1MARK-TRACE', { step: 'REDEEM_ERROR', markerId, error, data });
     toast.error('Errore nel riscatto');
     setIsClaiming(false);
   };
@@ -131,7 +130,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
               className="flex-1 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
               data-testid="claim-reward-cta"
             >
-              {isClaiming ? 'Riscattando...' : 'Riscatta'}
+              {isClaiming ? 'Riscattando...' : 'Riscatta ora'}
             </Button>
           </div>
         </div>
