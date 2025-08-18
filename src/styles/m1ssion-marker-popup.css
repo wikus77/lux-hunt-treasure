@@ -1,0 +1,115 @@
+/* © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ */
+
+.m1ssion-marker-popup {
+  position: relative;
+  min-width: 280px;
+  max-width: 350px;
+}
+
+.glass-container {
+  position: relative;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(0, 255, 255, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.glass-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(0, 255, 255, 0.8) 50%, 
+    transparent
+  );
+}
+
+.glass-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, 
+    rgba(0, 255, 255, 0.1) 0%, 
+    transparent 25%, 
+    transparent 75%, 
+    rgba(0, 255, 255, 0.05) 100%
+  );
+  pointer-events: none;
+}
+
+/* Leaflet popup customization */
+.leaflet-popup-content-wrapper {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: normal !important;
+}
+
+.leaflet-popup-tip {
+  display: none !important;
+}
+
+/* Neon glow animations */
+@keyframes neonPulse {
+  0%, 100% { 
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 30px rgba(0, 255, 255, 0.3);
+  }
+  50% { 
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      0 0 40px rgba(0, 255, 255, 0.5);
+  }
+}
+
+.glass-container:hover {
+  animation: neonPulse 2s ease-in-out infinite;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Success pulse animation */
+@keyframes successPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-pulse {
+  animation: successPulse 1.5s ease-in-out infinite;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  .m1ssion-marker-popup {
+    min-width: 260px;
+    max-width: 300px;
+  }
+  
+  .glass-container {
+    border-radius: 12px;
+  }
+}
