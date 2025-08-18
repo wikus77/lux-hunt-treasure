@@ -74,12 +74,13 @@ const MapPage: React.FC = () => {
       <div className="flex flex-col h-[100dvh] w-full overflow-hidden relative">
         <MapPageHeader />
         
-        {/* CRITICAL: Map container with proper boundaries */}
+        {/* CRITICAL: Map container with proper boundaries and container structure */}
         <div 
-          className="flex-1 relative w-full"
+          className="flex-1 relative w-full border border-muted/20 rounded-lg overflow-hidden bg-muted/10"
           style={{
             height: 'calc(100dvh - 60px - 80px)', // Header + BottomNav
-            minHeight: '400px'
+            minHeight: '400px',
+            margin: '8px'
           }}
         >
           <MapErrorBoundary>

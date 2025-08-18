@@ -14,8 +14,8 @@ import FinalShotButton from '@/components/map/FinalShotButton';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapState } from './MapStateProvider';
 
-// Default location (Rome)
-const DEFAULT_LOCATION: [number, number] = [41.9028, 12.4964];
+// Default location (Europe view)
+const DEFAULT_LOCATION: [number, number] = [54.5260, 15.2551]; // Center of Europe
 
 interface MapContainerProps {
   isAddingPoint: boolean;
@@ -162,7 +162,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
     <div className="map-container-wrapper w-full h-full relative bg-background">
       <LeafletMapContainer 
         center={mapCenter} 
-        zoom={13}
+        zoom={5} // Europe-wide view
         style={mapContainerStyle}
         className="map-container"
         zoomControl={false}

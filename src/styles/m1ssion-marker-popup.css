@@ -95,7 +95,7 @@ body.m1ssion-modal-open .dynamic-island {
 [data-radix-portal], 
 .radix-dialog-content, 
 .m1ssion-modal-content {
-  z-index: 25000 !important; 
+  z-index: 30000 !important; 
   position: fixed !important;
   isolation: isolate !important;
   transform: translate3d(0, 0, 0) !important;
@@ -114,7 +114,7 @@ body.m1ssion-modal-open .dynamic-island {
 
 /* Force modal portal above everything */
 [data-radix-portal] {
-  z-index: 25000 !important;
+  z-index: 30000 !important;
 }
 
 /* Force M1SSION modal content above everything */
@@ -122,7 +122,7 @@ body.m1ssion-modal-open .dynamic-island {
   position: fixed;
   inset: 0;
   margin: auto;
-  z-index: 25000 !important;
+  z-index: 30000 !important;
 }
 
 /* Ensure marker circles are clickable */
