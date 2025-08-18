@@ -1,10 +1,10 @@
 
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 const MapDebugger: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const [mounted, setMounted] = useState(false);
   const [renderCount, setRenderCount] = useState(0);
 
@@ -12,9 +12,9 @@ const MapDebugger: React.FC = () => {
     setMounted(true);
     setRenderCount(prev => prev + 1);
     console.log('🔍 MapDebugger - Component mounted');
-    console.log('🔍 Current location:', location.pathname);
+    console.log('🔍 Current location:', location);
     console.log('🔍 Render count:', renderCount + 1);
-  }, [location.pathname]);
+  }, [location]);
 
   // Log navigation attempts
   useEffect(() => {
@@ -47,11 +47,11 @@ const MapDebugger: React.FC = () => {
     >
       <div>🔍 MAP DEBUG</div>
       <div>Mounted: {mounted ? '✅' : '❌'}</div>
-      <div>Pathname: {location.pathname}</div>
+      <div>Pathname: {location}</div>
       <div>Renders: {renderCount}</div>
       <div>Capacitor: {!!(window as any).Capacitor ? '✅' : '❌'}</div>
       <button 
-        onClick={() => navigate('/home')}
+        onClick={() => setLocation('/home')}
         style={{ marginTop: '5px', padding: '2px 5px', fontSize: '10px' }}
       >
         Go Home
