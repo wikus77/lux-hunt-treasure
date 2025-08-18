@@ -29,6 +29,19 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
 }) => {
   const [isClaiming, setIsClaiming] = useState(false);
 
+  // Add body class management for z-index control
+  React.useEffect(() => {
+    console.log('M1SSION_CANARY: ClaimRewardModal mounted');
+    if (isOpen) {
+      document.body.classList.add('m1ssion-modal-open');
+    } else {
+      document.body.classList.remove('m1ssion-modal-open');
+    }
+    return () => {
+      document.body.classList.remove('m1ssion-modal-open');
+    };
+  }, [isOpen]);
+
   const getRewardIcon = (rewardType: string) => {
     switch (rewardType) {
       case 'buzz_free': return '⚡';
