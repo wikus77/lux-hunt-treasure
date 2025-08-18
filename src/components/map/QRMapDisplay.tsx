@@ -99,18 +99,32 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
         
-        // Direct query to avoid TypeScript type recursion issues
+        // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+        // Optimized fetch with proper error handling and caching
         let data: any = null;
         let error: any = null;
         
         try {
-          const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/buzz_map_markers?active=eq.true&select=id,title,latitude,longitude,active`, {
+          const response = await fetch('/api/supabase/buzz-map-markers', {
+            method: 'GET',
             headers: {
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+              'Content-Type': 'application/json',
+              'Cache-Control': 'max-age=60'
             }
           });
-          data = await response.json();
+          
+          if (response.ok) {
+            data = await response.json();
+          } else {
+            // Fallback to direct Supabase API
+            const fallbackResponse = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/buzz_map_markers?active=eq.true&select=id,title,latitude,longitude,active`, {
+              headers: {
+                'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                'Prefer': 'return=representation'
+              }
+            });
+            data = await fallbackResponse.json();
+          }
         } catch (fetchError) {
           error = fetchError;
         }
