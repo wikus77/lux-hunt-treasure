@@ -97,52 +97,52 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
         
+        console.log('M1MARK-TRACE', { step: 'MARKER_FETCH_START' });
+        
         // Try buzz_map_markers view first
         let { data, error } = await supabase
           .from('buzz_map_markers')
-          .select('code,title,latitude,longitude');
+          .select('id,title,latitude,longitude,active');
 
         if (error) {
-          console.warn('buzz_map_markers error:', error?.message);
+          console.warn('M1MARK-TRACE', { step: 'buzz_map_markers_error', error: error?.message });
         }
 
-        // Fallback to qr_codes if view is empty or fails
+        // Fallback to markers table if view is empty or fails  
         if (!data || data.length === 0) {
-          console.log('🔄 Fallback to qr_codes table...');
-          const fb = await supabase
-            .from('qr_codes')
-            .select('code,lat,lng,reward_type,is_active');
-          if (fb.data && fb.data.length > 0) {
-            data = fb.data.map(r => ({
-              code: r.code,
-              title: r.code,
-              latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
-              longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
-              reward_type: r.reward_type || 'buzz_credit',
-              is_active: r.is_active !== false
-            }));
+          console.log('M1MARK-TRACE', { step: 'fallback_to_markers_table' });
+          try {
+            // Use any type to bypass TypeScript limitations
+            const fb = await (supabase as any)
+              .from('markers')
+              .select('id,title,lat,lng,active')
+              .eq('active', true);
+            if (fb.data && fb.data.length > 0) {
+              data = fb.data.map((r: any) => ({
+                id: r.id,
+                title: r.title,
+                latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+                longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+                active: r.active !== false
+              }));
+            }
+          } catch (markerError) {
+            console.warn('M1MARK-TRACE', { step: 'markers_table_error', error: markerError });
           }
-        } else {
-          // Add missing fields for buzz_map_markers
-          data = data.map(r => ({
-            ...r,
-            reward_type: 'buzz_credit',
-            is_active: true
-          }));
         }
 
         const processedItems = (data || [])
           .map((r: any) => ({
-            code: String(r.code),
+            code: String(r.id || r.code),
             lat: typeof r.latitude === 'number' ? r.latitude : Number(r.latitude),
             lng: typeof r.longitude === 'number' ? r.longitude : Number(r.longitude),
             title: r.title ?? '',
-            reward_type: r.reward_type ?? 'buzz_credit',
-            is_active: r.is_active !== false
+            reward_type: 'marker_reward',
+            is_active: r.active !== false
           }))
           .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
 
-        console.log('📍 Markers loaded:', processedItems.length);
+        console.log('M1MARK-TRACE', { step: 'MARKER_FETCH_END', count: processedItems.length });
         setItems(processedItems);
       } catch(e) {
         if (import.meta.env.DEV) console.debug('[qr map] load error', e);
@@ -215,7 +215,7 @@ return (
                 click: async (e) => {
                   e.originalEvent?.stopPropagation();
                   const markerId = qr.code;
-                  console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
+                  console.log('M1MARK-TRACE', { step: 'POPUP_OPENED', markerId });
                   
                   // Fetch rewards directly for immediate modal opening
                   try {
@@ -225,41 +225,18 @@ return (
                       .eq('marker_id', markerId);
 
                     if (error) {
-                      console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
+                      console.error('M1MARK-TRACE', { step: 'rewards_fetch_error', markerId, error });
                       return;
                     }
 
                     setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
-                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+                    console.log('M1MARK-TRACE', { step: 'modal_opened', markerId, rewardsCount: (rewards || []).length });
                   } catch (err) {
-                    console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
+                    console.error('M1MARK-TRACE', { step: 'click_error', markerId, err });
                   }
                 }
               }}
             >
-              <Popup>
-                <div className="text-center space-y-2 min-w-[180px]">
-                  <div className="flex items-center gap-2 justify-center">
-                    <QrCode className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-sm">M1SSION™</h3>
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{qr.title || qr.code}</p>
-                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
-                      {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
-                    </Badge>
-                  </div>
-                  {userLocation && (
-                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
-                      <MapPin className="w-3 h-3" />
-                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
-                    </div>
-                  )}
-                  <div className="text-xs text-muted-foreground">
-                    Click marker for rewards
-                  </div>
-                </div>
-              </Popup>
             </Marker>
           );
         })}
