@@ -1,16 +1,8 @@
-/* M1SSION™ - Kill Legacy Leaflet Popups */
-.leaflet-popup {
+/* disattiva popups Leaflet in /map */
+body[data-path="/map"] .leaflet-popup,
+body[data-path="/map"] .leaflet-popup-pane {
   display: none !important;
-  opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
-}
-
-.leaflet-popup-pane {
-  z-index: 300 !important;
-}
-
-.leaflet-pane,
-.leaflet-control-container {
-  z-index: 400 !important;
+  z-index: -1 !important;
 }

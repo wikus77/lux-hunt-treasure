@@ -1,83 +1,15 @@
 /* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ */
 
-.m1-red-pulse {
+.m1-cyan-dot {
+  background: transparent; 
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
 }
 
-.m1-red-pulse .dot {
-  width: 16px;
-  height: 16px;
-  background: radial-gradient(circle, #22d3ee 0%, #0891b2 100%);
+.m1-cyan-dot .dot {
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  position: relative;
-  box-shadow: 
-    0 0 10px 3px rgba(34, 211, 238, 0.9),
-    0 0 20px rgba(34, 211, 238, 0.6),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
-  animation: marker-pulse 2s infinite ease-in-out;
-}
-
-.m1-red-pulse .dot::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: -6px;
-  right: -6px;
-  bottom: -6px;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.4) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: marker-glow 2s infinite ease-in-out;
-}
-
-@keyframes marker-pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 
-      0 0 10px 3px rgba(34, 211, 238, 0.9),
-      0 0 20px rgba(34, 211, 238, 0.6);
-  }
-  50% {
-    transform: scale(1.1);
-    box-shadow: 
-      0 0 15px 5px rgba(34, 211, 238, 1),
-      0 0 30px rgba(34, 211, 238, 0.8),
-      0 0 40px rgba(34, 211, 238, 0.4);
-  }
-}
-
-@keyframes marker-glow {
-  0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-/* Hover effects */
-.m1-red-pulse:hover .dot {
-  transform: scale(1.2);
-  box-shadow: 
-    0 0 20px 6px rgba(34, 211, 238, 1),
-    0 0 40px rgba(34, 211, 238, 0.9);
-}
-
-/* Mobile touch optimization */
-@media (max-width: 768px) {
-  .m1-red-pulse {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .m1-red-pulse .dot {
-    width: 18px;
-    height: 18px;
-  }
+  background: #22d3ee;
+  box-shadow: 0 0 10px 3px rgba(34, 211, 238, .9);
+  transform: translate(3px, 3px);
 }
