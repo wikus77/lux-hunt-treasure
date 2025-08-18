@@ -21,6 +21,8 @@
   width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
+  z-index: 15000 !important;
+  position: relative;
 }
 
 .m1ssion-modal-content::before {
@@ -73,6 +75,19 @@
 /* Lower other elements when modal is open */
 body.m1ssion-modal-open .unified-header,
 body.m1ssion-modal-open .bottom-navigation,
-body.m1ssion-modal-open .floating-banner {
+body.m1ssion-modal-open .floating-banner,
+body.m1ssion-modal-open .dynamic-island {
   z-index: 8000 !important;
+}
+
+/* Strengthen popup disabling on /map */
+.page-map .leaflet-popup {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Force modal above everything */
+[data-radix-portal] {
+  z-index: 15000 !important;
 }

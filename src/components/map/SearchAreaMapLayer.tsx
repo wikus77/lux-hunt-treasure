@@ -1,7 +1,8 @@
 // © 2025 All Rights Reserved  – M1SSION™  – NIYVORA KFT Joseph MULÉ
 import React, { useState } from 'react';
-import { Circle, Popup } from 'react-leaflet';
+import { Circle } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
+import { useLocation } from 'wouter';
 import { Trash2 } from 'lucide-react';
 
 interface SearchAreaMapLayerProps {
@@ -16,6 +17,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
   deleteSearchArea
 }) => {
   const [hoveredArea, setHoveredArea] = useState<string | null>(null);
+  const [location] = useLocation();
 
   const validAreas = (searchAreas || []).filter((a) =>
     Number.isFinite(a?.lat) && Number.isFinite(a?.lng) && Number.isFinite(a?.radius)
@@ -70,25 +72,7 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               }
             }}
           >
-            <Popup>
-              <div className="p-1">
-                <div className="font-medium mb-2">{area.label || "Area di ricerca"}</div>
-                <div className="text-sm mb-3">Raggio: {((area.radius as number)/1000).toFixed(1)} km</div>
-                <div className="flex gap-2">
-                  <Button 
-                    size="sm" 
-                    variant="destructive"
-                    className="text-xs flex items-center gap-1 flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(area.id, area.label || "Area di ricerca");
-                    }}
-                  >
-                    <Trash2 className="w-3 h-3" /> Elimina
-                  </Button>
-                </div>
-              </div>
-            </Popup>
+            {/* Popup removed on /map to avoid interference with M1SSION modal */}
           </Circle>
         );
       })}

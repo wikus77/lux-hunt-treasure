@@ -1,6 +1,6 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { useState } from 'react';
-import { Marker, Popup } from 'react-leaflet';
+import { Marker } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -63,47 +63,10 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
                   setEditTitle(point.title || '');
                   setEditNote(point.note || '');
                 }
-              }}
-            >
-              {activeMapPoint === point.id && (
-                <Popup 
-                  eventHandlers={{
-                    popupclose: () => setActiveMapPoint(null)
-                  }}
-                >
-                  <div className="p-2 space-y-2">
-                    <Input 
-                      value={editTitle} 
-                      onChange={e => setEditTitle(e.target.value)} 
-                      placeholder="Titolo punto" 
-                      className="mb-2"
-                    />
-                    <Textarea 
-                      value={editNote} 
-                      onChange={e => setEditNote(e.target.value)}
-                      placeholder="Note aggiuntive"
-                      className="mb-2"
-                      rows={3}
-                    />
-                    <div className="flex space-x-2">
-                      <Button 
-                        size="sm" 
-                        onClick={() => handleUpdatePoint(point.id, editTitle, editNote)}
-                      >
-                        Salva
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="destructive"
-                        onClick={() => deleteMapPoint(point.id)}
-                      >
-                        Elimina
-                      </Button>
-                    </div>
-                  </div>
-                </Popup>
-              )}
-            </Marker>
+          }}
+        >
+          {/* Popup removed on /map to avoid interference with M1SSION modal */}
+        </Marker>
           );
         })}
 
@@ -113,44 +76,7 @@ const MapPopupManager: React.FC<MapPopupManagerProps> = ({
           position={[newPoint.lat, newPoint.lng]}
           icon={createMarkerIcon()}
         >
-          <Popup 
-            eventHandlers={{
-              popupclose: handleCancelNewPoint
-            }}
-            autoPan
-          >
-            <div className="p-2 space-y-2">
-              <Input 
-                value={title} 
-                onChange={e => setTitle(e.target.value)} 
-                placeholder="Titolo punto" 
-                className="mb-2"
-                autoFocus
-              />
-              <Textarea 
-                value={note} 
-                onChange={e => setNote(e.target.value)}
-                placeholder="Note aggiuntive"
-                className="mb-2"
-                rows={3}
-              />
-              <div className="flex space-x-2">
-                <Button 
-                  size="sm" 
-                  onClick={() => handleSaveNewPoint(title, note)}
-                >
-                  Salva
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={handleCancelNewPoint}
-                >
-                  Annulla
-                </Button>
-              </div>
-            </div>
-          </Popup>
+          {/* Popup removed on /map to avoid interference with M1SSION modal */}
         </Marker>
       )}
     </>
