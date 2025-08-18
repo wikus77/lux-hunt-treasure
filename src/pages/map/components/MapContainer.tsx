@@ -1,4 +1,5 @@
 
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -18,6 +19,7 @@ import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import MapErrorBoundary from '@/components/map/MapErrorBoundary';
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -78,6 +80,17 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   showHelpDialog = false,
   setShowHelpDialog = () => {}
 }) => {
+  console.log('M1MAP-STRUCT', 'MapContainerComponent mounting');
+  
+  // Count active TileLayers and LayerGroups for debugging
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const tileLayers = document.querySelectorAll('.leaflet-tile-pane .leaflet-layer').length;
+      const layerGroups = document.querySelectorAll('.leaflet-overlay-pane').length;
+      console.log('M1MAP-TILECOUNT', { tileLayers, layerGroups });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
 const { status, position, enable, disable, enabled } = useGeolocation();
 const geoEnabled = enabled && status === 'granted';
@@ -171,17 +184,33 @@ React.useEffect(() => {
     }, 1000);
   };
 
+  // Final render summary
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      const summary = {
+        mapInstances: document.querySelectorAll('.leaflet-container').length,
+        tileLayers: document.querySelectorAll('.leaflet-tile-pane .leaflet-layer').length,
+        buzzAreas: currentWeekAreas.length,
+        qrMarkers: document.querySelectorAll('.m1-red-pulse').length,
+        searchAreas: searchAreas.length
+      };
+      console.log('M1MAP-SUMMARY', summary);
+    }, 2000);
+    return () => clearTimeout(timer);
+  }, [currentWeekAreas, searchAreas]);
+
   return (
-    <div 
-      className="rounded-[24px] overflow-hidden relative w-full" 
-      style={{ 
-        height: '70vh', 
-        minHeight: '500px',
-        width: '100%',
-        display: 'block',
-        position: 'relative'
-      }}
-    >
+    <MapErrorBoundary>
+      <div 
+        className="rounded-[24px] overflow-hidden relative w-full" 
+        style={{ 
+          height: '70vh', 
+          minHeight: '500px',
+          width: '100%',
+          display: 'block',
+          position: 'relative'
+        }}
+      >
       <MapContainer 
         center={[54.5260, 15.2551]} 
         zoom={4}
@@ -287,7 +316,8 @@ React.useEffect(() => {
       {setShowHelpDialog && 
         <HelpDialog open={showHelpDialog || false} setOpen={setShowHelpDialog} />
       }
-    </div>
+      </div>
+    </MapErrorBoundary>
   );
 };
 

@@ -102,13 +102,27 @@ body.m1ssion-modal-open .dynamic-island {
   -webkit-transform: translate3d(0, 0, 0) !important;
 }
 
-/* Remove ALL Leaflet popups on /map page */
+/* © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ */
+/* Disable ALL Leaflet popups on /map page */
 .page-map .leaflet-popup,
 .page-map .leaflet-popup-pane {
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
   z-index: -1 !important;
+}
+
+/* Force modal portal above everything */
+[data-radix-portal] {
+  z-index: 25000 !important;
+}
+
+/* Force M1SSION modal content above everything */
+.m1ssion-modal-content {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  z-index: 25000 !important;
 }
 
 /* Ensure marker circles are clickable */

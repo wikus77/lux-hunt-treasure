@@ -1,15 +1,17 @@
-/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ */
+/* © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ */
 
-.m1-cyan-dot {
+.m1-red-pulse {
   background: transparent; 
   position: relative;
+  z-index: 1000;
 }
 
-.m1-cyan-dot .dot {
+.m1-red-pulse .dot {
   width: 14px;
   height: 14px;
   border-radius: 50%;
   background: #22d3ee;
-  box-shadow: 0 0 10px 3px rgba(34, 211, 238, .9);
+  box-shadow: 0 0 8px 2px rgba(34, 211, 238, .9);
   transform: translate(3px, 3px);
+  pointer-events: auto;
 }
