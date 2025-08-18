@@ -1,257 +1,283 @@
-// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { LayerGroup, Marker, Popup } from 'react-leaflet';
+// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
+import React, { useEffect, useMemo, useState, lazy, Suspense } from 'react';
+import { Marker, Popup, useMap, LayerGroup } from 'react-leaflet';
 import L from 'leaflet';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuthContext } from '@/contexts/auth';
-import { useLocation } from '@/hooks/useLocation';
+import { QrCode, MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import '@/styles/qr-markers.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
-import { useMarkerRewards } from '@/hooks/useMarkerRewards';
-import { GeoDebugBanner } from './GeoDebugBanner';
-import { invalidateMarkerCache } from '@/utils/markerCacheUtils';
+import { toast } from 'sonner';
+import { useLocation } from 'wouter';
 
-// Lazy load M1ssion components
-const M1ssionMarkerPopup = lazy(() => import('./M1ssionMarkerPopup'));
+// Lazy load the modal for better performance
+const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
 
-interface MarkerItem {
-  id: string;
-  title: string;
+interface MarkerReward {
+  reward_type: string;
+  payload: any;
+  description: string;
+}
+
+interface ClaimData {
+  isOpen: boolean;
+  markerId: string;
+  rewards: MarkerReward[];
+}
+
+type Item = {
+  code: string;
   lat: number;
   lng: number;
-  active: boolean;
-  reward_type?: string;
-  reward_description?: string;
-  reward_payload?: any;
-}
+  title: string | null;
+  reward_type: string;
+  is_active: boolean;
+};
 
-interface QRMapDisplayProps {
-  userLocation?: { lat: number; lng: number } | null;
-}
-
-const QRMapDisplay: React.FC<QRMapDisplayProps> = ({ userLocation: propUserLocation }) => {
-  const { user } = useAuthContext();
-  const detectedLocation = useLocation();
-  const geoPosition = useGeoWatcher();
-  const { claims, refreshClaims } = useMarkerRewards();
-
-  const [items, setItems] = useState<MarkerItem[]>([]);
+export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } | null }> = ({ userLocation }) => {
+  const [, setLocation] = useLocation();
+  const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showLayer, setShowLayer] = useState(false);
-  const [markerMinZoom, setMarkerMinZoom] = useState<number>(14);
-  const [selectedMarker, setSelectedMarker] = useState<MarkerItem | null>(null);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+  const [markerMinZoom, setMarkerMinZoom] = useState<number>(17); // Default from app_config
+  const [claimData, setClaimData] = useState<ClaimData>({ isOpen: false, markerId: '', rewards: [] });
+  const map = useMap();
+  const RADIUS_M = 500;
+  const NEAR_M = 75;
+  const watcher = useGeoWatcher();
+  const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
+  const TRACE_ID = 'M1QR-TRACE';
 
-  // Determine user location priority: prop > detected > geo watcher  
-  const userLocation = propUserLocation || detectedLocation || (geoPosition?.coords ? { lat: geoPosition.coords.lat, lng: geoPosition.coords.lng } : null);
+  const icon = (active:boolean) => L.divIcon({
+    className: `qr-marker ${active ? 'qr--active' : 'qr--redeemed'}`,
+    iconSize: [16,16]
+  });
 
-  // M1MARK-TRACE: Fetch markers from proper source with telemetry
+  // Load marker min zoom from app_config with cache and realtime updates
   useEffect(() => {
-    const fetchMarkers = async () => {
-      const fetchStartTime = Date.now();
-      
+    (async () => {
       try {
-        setIsLoading(true);
-        
-        console.info('M1MARK-TRACE: MARKER_FETCH_START', {
-          user_authenticated: !!user,
-          last_fetch: lastFetchTime,
-          cache_invalidated: Date.now() - lastFetchTime > 30000
-        });
+        const cached = localStorage.getItem('cfg_marker_min_zoom');
+        if (cached) setMarkerMinZoom(Number(cached) || 17);
+      } catch {}
 
-        if (!user) {
-          console.warn('M1MARK-TRACE: No authenticated user, skipping marker fetch');
-          setItems([]);
-          setIsLoading(false);
-          return;
-        }
+      const { data } = await supabase
+        .from('app_config')
+        .select('value_int')
+        .eq('key', 'marker_min_zoom')
+        .maybeSingle();
 
-        // Invalidate cache if online and refresh needed
-        if (navigator.onLine && Date.now() - lastFetchTime > 30000) {
-          invalidateMarkerCache();
-        }
-
-        // Fetch rewards first for mapping
-        const { data: rewardsData } = await supabase
-          .from('marker_rewards')
-          .select('marker_id, reward_type, description, payload');
-
-        // Direct fetch from buzz_map_markers (confirmed working source)
-        const { data: markersData, error: markersError } = await supabase
-          .from('buzz_map_markers')
-          .select('*')
-          .limit(100);
-
-        if (markersError) {
-          console.error('M1MARK-TRACE: MARKER_FETCH_ERROR', { error: markersError });
-          setItems([]);
-          return;
-        }
-
-        // Transform and filter markers from buzz_map_markers (latitude -> lat, longitude -> lng)
-        const validMarkers = (markersData || [])
-          .filter((marker: any) => {
-            return marker.latitude && 
-                   marker.longitude &&
-                   Math.abs(marker.latitude) <= 90 && 
-                   Math.abs(marker.longitude) <= 180;
-          })
-          .map((marker: any) => {
-            const markerReward = (rewardsData || []).find(r => r.marker_id === marker.id);
-            return {
-              id: marker.id,
-              title: marker.title || `Marker M1SSION™`,
-              lat: marker.latitude,
-              lng: marker.longitude,
-              active: true, // buzz_map_markers are always active
-              reward_type: markerReward?.reward_type || 'buzz_free',
-              reward_description: markerReward?.description || 'BUZZ gratuiti',
-              reward_payload: markerReward?.payload || {}
-            };
-          });
-
-        setItems(validMarkers);
-        setLastFetchTime(Date.now());
-
-        const fetchEndTime = Date.now();
-        console.info('M1MARK-TRACE: MARKER_FETCH_END', {
-          count: validMarkers.length,
-          duration_ms: fetchEndTime - fetchStartTime,
-          filters_applied: ['active', 'coordinates_valid'],
-          has_rewards: validMarkers.filter(m => m.reward_type).length,
-          marker_coords: validMarkers.map(m => ({ id: m.id, lat: m.lat, lng: m.lng }))
-        });
-
-        // Log marker coordinates for debugging
-        console.info('M1MARK-TRACE: MARKER_COORDINATES', {
-          markers: validMarkers.map(m => ({ 
-            id: m.id.substring(0, 8), 
-            title: m.title,
-            lat: m.lat, 
-            lng: m.lng 
-          }))
-        });
-
-      } catch (error) {
-        console.error('M1MARK-TRACE: MARKER_FETCH_EXCEPTION', { error });
-        setItems([]);
-      } finally {
-        setIsLoading(false);
+      if (data?.value_int) {
+        setMarkerMinZoom(Number(data.value_int));
+        try { localStorage.setItem('cfg_marker_min_zoom', String(data.value_int)); } catch {}
       }
-    };
+    })();
 
-    fetchMarkers();
-  }, [user, lastFetchTime]);
+    const ch = supabase
+      .channel('cfg_marker_min_zoom')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'app_config', filter: 'key=eq.marker_min_zoom' },
+        (payload: any) => {
+          const v = payload?.new?.value_int ?? payload?.old?.value_int;
+          if (typeof v === 'number') {
+            setMarkerMinZoom(v);
+            try { localStorage.setItem('cfg_marker_min_zoom', String(v)); } catch {}
+          }
+        }
+      )
+      .subscribe();
 
-  // Create custom M1SSION™ marker icon
-  const icon = (item: MarkerItem) => {
-    const isClaimed = claims.some(claim => claim.marker_id === item.id);
-    const color = isClaimed ? '#666666' : '#00f0ff';
-    
-    return L.divIcon({
-      className: 'm1ssion-map-marker',
-      html: `<div style="width: 24px; height: 24px; background: linear-gradient(135deg, ${color}, #0066cc); border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(0,255,255,0.6); display: flex; align-items: center; justify-content: center; position: relative;">
-               <div style="color: white; font-size: 12px; font-weight: bold;">⚡</div>
-               <div style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #00ff00; border-radius: 50%; border: 1px solid white; ${isClaimed ? 'display: none;' : ''}"></div>
-             </div>`,
-      iconSize: [30, 30],
-      iconAnchor: [15, 15]
+    return () => { try { supabase.removeChannel(ch); } catch {} };
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        console.log('🎯 Fetching QR markers from buzz_map_markers...');
+        
+        // Try buzz_map_markers view first
+        let { data, error } = await supabase
+          .from('buzz_map_markers')
+          .select('code,title,latitude,longitude');
+
+        if (error) {
+          console.warn('buzz_map_markers error:', error?.message);
+        }
+
+        // Fallback to qr_codes if view is empty or fails
+        if (!data || data.length === 0) {
+          console.log('🔄 Fallback to qr_codes table...');
+          const fb = await supabase
+            .from('qr_codes')
+            .select('code,lat,lng,reward_type,is_active');
+          if (fb.data && fb.data.length > 0) {
+            data = fb.data.map(r => ({
+              code: r.code,
+              title: r.code,
+              latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+              longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+              reward_type: r.reward_type || 'buzz_credit',
+              is_active: r.is_active !== false
+            }));
+          }
+        } else {
+          // Add missing fields for buzz_map_markers
+          data = data.map(r => ({
+            ...r,
+            reward_type: 'buzz_credit',
+            is_active: true
+          }));
+        }
+
+        const processedItems = (data || [])
+          .map((r: any) => ({
+            code: String(r.code),
+            lat: typeof r.latitude === 'number' ? r.latitude : Number(r.latitude),
+            lng: typeof r.longitude === 'number' ? r.longitude : Number(r.longitude),
+            title: r.title ?? '',
+            reward_type: r.reward_type ?? 'buzz_credit',
+            is_active: r.is_active !== false
+          }))
+          .filter((r: Item) => Number.isFinite(r.lat) && Number.isFinite(r.lng));
+
+        console.log('📍 Markers loaded:', processedItems.length);
+        setItems(processedItems);
+      } catch(e) {
+        if (import.meta.env.DEV) console.debug('[qr map] load error', e);
+      } finally { setIsLoading(false); }
+    })();
+  }, []);
+
+  const distance = (a:{lat:number;lng:number}, b:{lat:number;lng:number}) => {
+    const R=6371000, dLat=(b.lat-a.lat)*Math.PI/180, dLng=(b.lng-a.lng)*Math.PI/180;
+    const aa = Math.sin(dLat/2)**2 + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2;
+    return 2*R*Math.atan2(Math.sqrt(aa),Math.sqrt(1-aa));
+  };
+
+const all = useMemo(() => items, [items]);
+
+// Toggle layer visibility on zoom changes using dynamic marker min zoom
+useEffect(() => {
+  if (!map) return;
+  const update = () => {
+    const z = map.getZoom?.() ?? 0;
+    const shouldShow = z >= markerMinZoom;
+    setShowLayer(shouldShow);
+    console.log('M1QR-TRACE:', { 
+      step: 'zoom_check', 
+      currentZoom: z, 
+      minZoom: markerMinZoom, 
+      showLayer: shouldShow,
+      markersVisible: shouldShow 
     });
   };
+  update();
+  map.on('zoomend', update);
+  return () => { map.off('zoomend', update); };
+}, [map, markerMinZoom]);
 
-  // Calculate distance to marker for debugging
-  const calculateDistance = (marker: MarkerItem): number | undefined => {
-    if (!userLocation) return undefined;
+  const handleClaimSuccess = (nextRoute?: string) => {
+    console.log('M1QR-TRACE', { step: 'claim_success_redirect', nextRoute });
+    setClaimData({ isOpen: false, markerId: '', rewards: [] }); // Close modal
     
-    const R = 6371000; // Earth's radius in meters
-    const dLat = (marker.lat - userLocation.lat) * Math.PI / 180;
-    const dLng = (marker.lng - userLocation.lng) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(userLocation.lat * Math.PI / 180) * Math.cos(marker.lat * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
+    if (nextRoute) {
+      setLocation(nextRoute);
+    }
   };
 
-  const all = useMemo(() => items, [items]);
-
-  // Toggle layer visibility on zoom changes
-  useEffect(() => {
-    const handleZoomChange = () => {
-      const z = 13; // Default zoom for now
-      const shouldShow = z >= markerMinZoom - 3; // More permissive for testing
-      setShowLayer(shouldShow);
-    };
-    
-    handleZoomChange();
-  }, [markerMinZoom]);
-
-  // Handle popup close
-  const handlePopupClose = () => {
-    setSelectedMarker(null);
+  const handleModalClose = () => {
+    console.log('M1QR-TRACE', { step: 'modal_close' });
+    setClaimData({ isOpen: false, markerId: '', rewards: [] });
   };
 
-  if (isLoading) {
-    return (
-      <GeoDebugBanner 
-        markersCount={0}
-        isLoading={true}
-        userLocation={userLocation}
-        showMarkersLayer={showLayer}
-        markerMinZoom={markerMinZoom}
-        debugMessage="Caricamento markers M1SSION™..."
-      />
-    );
-  }
+  if (isLoading) return null;
 
-  return (
-    <>
-      <GeoDebugBanner 
-        markersCount={all.length}
-        isLoading={isLoading}
-        userLocation={userLocation}
-        showMarkersLayer={showLayer}
-        markerMinZoom={markerMinZoom}
-      />
-      
+return (
+  <>
+    {console.log('M1QR-TRACE:', { 
+      step: 'render_check', 
+      showLayer, 
+      markersCount: all.length,
+      markersWillRender: showLayer ? all.length : 0 
+    })}
+    {showLayer && (
       <LayerGroup>
-        {all.map((item) => (
-          <Marker
-            key={item.id}
-            position={[item.lat, item.lng]}
-            icon={icon(item)}
-          >
-            <Popup
+        {all.map((qr) => {
+          const inRange = !!userLocation && distance(userLocation, {lat:qr.lat,lng:qr.lng}) <= RADIUS_M;
+          return (
+            <Marker
+              key={qr.code}
+              position={[qr.lat, qr.lng]}
+              icon={icon(qr.is_active)}
               eventHandlers={{
-                popupopen: () => {
-                  console.info('M1MARK-TRACE: POPUP_OPENED', { 
-                    marker_id: item.id,
-                    reward_type: item.reward_type,
-                    user_distance: calculateDistance(item)
-                  });
+                click: async (e) => {
+                  e.originalEvent?.stopPropagation();
+                  const markerId = qr.code;
+                  console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
+                  
+                  // Fetch rewards directly for immediate modal opening
+                  try {
+                    const { data: rewards, error } = await supabase
+                      .from('marker_rewards')
+                      .select('reward_type, payload, description')
+                      .eq('marker_id', markerId);
+
+                    if (error) {
+                      console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
+                      return;
+                    }
+
+                    setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
+                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+                  } catch (err) {
+                    console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
+                  }
                 }
               }}
             >
-              <div className="p-2 min-w-[200px]">
-                <Suspense fallback={<div>Caricamento...</div>}>
-                  <M1ssionMarkerPopup
-                    markerId={item.id}
-                    markerTitle={item.title}
-                    rewards={item.reward_type ? [{
-                      reward_type: item.reward_type,
-                      payload: item.reward_payload || {},
-                      description: item.reward_description || `Premio ${item.reward_type}`
-                    }] : []}
-                    userDistance={calculateDistance(item)}
-                    onClose={handlePopupClose}
-                  />
-                </Suspense>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              <Popup>
+                <div className="text-center space-y-2 min-w-[180px]">
+                  <div className="flex items-center gap-2 justify-center">
+                    <QrCode className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-sm">M1SSION™</h3>
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{qr.title || qr.code}</p>
+                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
+                      {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
+                    </Badge>
+                  </div>
+                  {userLocation && (
+                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground">
+                    Click marker for rewards
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </LayerGroup>
-    </>
-  );
+    )}
+    
+    {/* Lazy-loaded ClaimRewardModal */}
+    {claimData.isOpen && (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ClaimRewardModal
+          isOpen={claimData.isOpen}
+          onClose={handleModalClose}
+          markerId={claimData.markerId}
+          rewards={claimData.rewards}
+          onSuccess={handleClaimSuccess}
+        />
+      </Suspense>
+    )}
+  </>
+);
 };
-
-export default QRMapDisplay;

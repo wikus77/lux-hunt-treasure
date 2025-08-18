@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -41,66 +41,42 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   };
 
   const handleClaim = async () => {
-    if (isClaiming) return;
-    
+    if (!markerId) return;
     setIsClaiming(true);
-    
-    console.log('M1QR-TRACE:', { step: 'claim_start', markerId, rewards: rewards.length });
+    console.log('M1QR-TRACE', { step: 'claim_start', markerId });
 
-    try {
-      const { data, error } = await supabase.functions.invoke('claim-marker-reward', {
-        body: { markerId }
-      });
+    const { data, error } = await supabase.functions
+      .invoke('claim-marker-reward', { body: { markerId } });
 
-      // Handle auth errors
-      if (error?.status === 401) {
-        console.log('M1QR-TRACE:', { step: 'claim_error', error: 'unauthorized' });
-        window.location.href = '/login';
-        return;
-      }
-
-      // Handle other errors
-      if (error) {
-        console.error('M1QR-TRACE:', { step: 'claim_error', markerId, error, data });
-        toast.error('Errore nel riscatto');
-        return;
-      }
-
-      // Handle success responses
-      if (data?.ok) {
-        console.log('M1QR-TRACE:', { step: 'claim_success', markerId, nextRoute: data.nextRoute });
-        toast.success('Premio riscattato');
-        onClose();
-        if (data.nextRoute) {
-          onSuccess?.(data.nextRoute);
-        }
-        return;
-      }
-
-      // Handle already claimed
-      if (data?.code === 'ALREADY_CLAIMED') {
-        console.log('M1QR-TRACE:', { step: 'claim_already', markerId });
-        toast.info('Premio già riscattato');
-        onClose();
-        return;
-      }
-
-      // Handle no reward configured
-      if (data?.code === 'NO_REWARD') {
-        console.log('M1QR-TRACE:', { step: 'claim_no_reward', markerId });
-        toast.error('Nessuna ricompensa configurata');
-        return;
-      }
-
-      // Unknown response
-      console.error('M1QR-TRACE:', { step: 'claim_error', markerId, error: 'unknown_response', data });
-      toast.error('Errore nel riscatto');
-    } catch (error) {
-      console.error('M1QR-TRACE:', { step: 'claim_error', markerId, error });
-      toast.error('Errore nel riscatto');
-    } finally {
-      setIsClaiming(false);
+    if (error?.status === 401) { 
+      console.log('M1QR-TRACE', { step: 'claim_unauthorized' });
+      window.location.href = '/login'; 
+      return; 
     }
+
+    if (data?.ok === true) {
+      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute });
+      toast.success('Premio riscattato');
+      onClose?.();
+      if (data?.nextRoute) window.location.href = data.nextRoute;
+      return;
+    }
+
+    if (data?.code === 'ALREADY_CLAIMED') { 
+      console.log('M1QR-TRACE', { step: 'already_claimed' });
+      toast.info('Premio già riscattato'); 
+      onClose?.(); 
+      return; 
+    }
+    if (data?.code === 'NO_REWARD') { 
+      console.error('M1QR-TRACE', { step: 'no_reward' });
+      toast.error('Nessuna ricompensa configurata'); 
+      return; 
+    }
+
+    console.error('M1QR-TRACE', { step: 'claim_error', markerId, error, data });
+    toast.error('Errore nel riscatto');
+    setIsClaiming(false);
   };
 
   return (
