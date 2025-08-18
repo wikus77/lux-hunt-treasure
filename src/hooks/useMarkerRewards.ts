@@ -9,63 +9,41 @@ interface MarkerReward {
   description: string;
 }
 
-export const useMarkerRewards = () => {
+export const useMarkerRewards = (markerId: string | null) => {
   const [rewards, setRewards] = useState<MarkerReward[]>([]);
-  const [claims, setClaims] = useState<{ marker_id: string; claimed_at: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchRewards = async (markerId: string | null) => {
+  useEffect(() => {
     if (!markerId) {
       setRewards([]);
       return;
     }
 
-    setIsLoading(true);
-    setError('');
+    const fetchRewards = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      const { data, error } = await supabase
-        .from('marker_rewards')
-        .select('reward_type, payload, description')
-        .eq('marker_id', markerId);
+      try {
+        const { data, error } = await supabase
+          .from('marker_rewards')
+          .select('reward_type, payload, description')
+          .eq('marker_id', markerId);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      setRewards(data || []);
-    } catch (err) {
-      console.error('Error fetching marker rewards:', err);
-      setError(err instanceof Error ? err.message : 'Unknown error');
-      setRewards([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setRewards(data || []);
+      } catch (err) {
+        console.error('Error fetching marker rewards:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setRewards([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const refreshClaims = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('marker_claims')
-        .select('marker_id, claimed_at')
-        .order('claimed_at', { ascending: false });
+    fetchRewards();
+  }, [markerId]);
 
-      if (error) throw error;
-      setClaims(data || []);
-    } catch (err) {
-      console.error('Error fetching claims:', err);
-    }
-  };
-
-  useEffect(() => {
-    refreshClaims();
-  }, []);
-
-  return { 
-    rewards, 
-    claims, 
-    isLoading, 
-    error, 
-    fetchRewards,
-    refreshClaims 
-  };
+  return { rewards, isLoading, error };
 };
