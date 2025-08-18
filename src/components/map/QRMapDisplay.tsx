@@ -201,13 +201,13 @@ useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    // Show markers starting from zoom level 12 (as per user request from Photo 2)
-    const shouldShow = z >= 12;
+    // Show markers only at zoom level 17 or higher (very close zoom as user requested)
+    const shouldShow = z >= 17;
     setShowLayer(shouldShow);
     console.log('🎯 M1QR-PROFESSIONAL-ZOOM:', { 
       step: 'markers_professional_visibility', 
       currentZoom: z, 
-      minZoom: 12, 
+      minZoom: 17, 
       showLayer: shouldShow,
       markersVisible: shouldShow,
       totalMarkers: items.length
