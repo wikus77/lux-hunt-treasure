@@ -10,7 +10,14 @@ const ClaimRewardModal = React.lazy(() => import('@/components/marker-rewards/Cl
 export const QRMarkers = () => {
   const { qrMarkers, getQRMarkerStyle, getQRMarkerIcon } = useQRMapIntegration();
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
-  const { rewards } = useMarkerRewards(selectedMarkerId);
+  const { rewards, fetchRewards } = useMarkerRewards();
+  
+  // Fetch rewards when marker is selected
+  React.useEffect(() => {
+    if (selectedMarkerId) {
+      fetchRewards(selectedMarkerId);
+    }
+  }, [selectedMarkerId, fetchRewards]);
 
   const handleQRClick = (code: string, isInRange: boolean) => {
     console.log('M1QR-TRACE:', { step: 'qr_click', code, isInRange });
