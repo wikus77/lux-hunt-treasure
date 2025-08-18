@@ -1,12 +1,12 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { MapContainer as LeafletMapContainer, TileLayer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import './leaflet-fixes.css';
 import '@/styles/marker-styles.css';
 
-// Single source imports - no duplicates
+// Component imports
 import { QRMapDisplay } from './QRMapDisplay';
 import BuzzMapAreas from '@/pages/map/components/BuzzMapAreas';
 import SearchAreaMapLayer from '@/pages/map/SearchAreaMapLayer';
@@ -17,6 +17,8 @@ import BuzzMapButton from './BuzzMapButton';
 import MapControls from './MapControls';
 import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
+
+// Hooks
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
 
@@ -48,7 +50,7 @@ interface MapContainerProps {
   setShowHelpDialog?: (show: boolean) => void;
 }
 
-const MapContainer: React.FC<MapContainerProps> = ({
+const MapContainer = ({
   isAddingPoint,
   setIsAddingPoint,
   addNewPoint,
@@ -71,7 +73,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
   toggleAddingSearchArea = () => {},
   showHelpDialog = false,
   setShowHelpDialog = () => {}
-}) => {
+}: MapContainerProps) => {
   const [mapReady, setMapReady] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>(EUROPE_CENTER);
   const mapRef = useRef<L.Map | null>(null);
