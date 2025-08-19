@@ -1,0 +1,55 @@
+/* © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ */
+
+/* UNIFIED MARKER STYLING FOR M1SSION™ */
+/* Standardizes all marker colors and animations */
+
+/* Standard marker color - cyan/aqua theme */
+.map-point-marker,
+.leaflet-marker-icon,
+.custom-marker {
+  color: #00f0ff !important;
+  border-color: #00f0ff !important;
+}
+
+/* QR and reward markers - golden theme */
+.qr-marker,
+.reward-marker,
+.m1-red-pulse {
+  color: #FFD700 !important;
+  border-color: #FFD700 !important;
+  background-color: rgba(255, 215, 0, 0.2) !important;
+}
+
+/* Unified pulse animation for all clickable markers */
+.marker-pulse {
+  animation: markerPulse 2s infinite ease-in-out;
+}
+
+@keyframes markerPulse {
+  0% { 
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% { 
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+  100% { 
+    transform: scale(1);
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+}
+
+/* Remove inconsistent marker styles */
+.leaflet-marker-icon:not(.custom-marker) {
+  filter: hue-rotate(180deg) brightness(1.2) !important;
+}
+
+/* Ensure all markers are clickable */
+.leaflet-marker-icon,
+.map-point-marker,
+.qr-marker,
+.reward-marker {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+}
