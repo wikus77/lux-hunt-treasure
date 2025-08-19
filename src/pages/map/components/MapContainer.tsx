@@ -263,8 +263,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         />
       </MapContainer>
 
-      {/* Dev-only geo debug */}
-      {import.meta.env.DEV && <GeoDebugOverlay />}
+      {/* DISABILITO GeoDebugOverlay per evitare conflitti */}
+      {/* {import.meta.env.DEV && <GeoDebugOverlay />} */}
 
 
       {/* Use the LocationButton component */}
