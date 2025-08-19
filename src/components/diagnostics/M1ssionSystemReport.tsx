@@ -1,217 +1,260 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle, XCircle, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { 
+  Shield, 
+  MapPin, 
+  Bell, 
+  Wifi, 
+  Smartphone, 
+  Database, 
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Loader2,
+  RefreshCw
+} from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useGeoWatcher } from '@/hooks/useGeoWatcher';
+import { toast } from 'sonner';
 
-interface SystemCheck {
-  name: string;
-  status: 'checking' | 'ok' | 'warning' | 'error';
+interface SystemStatus {
+  category: string;
+  status: 'ok' | 'warning' | 'error' | 'loading';
   message: string;
-  details?: string;
+  details?: string[];
 }
 
 export const M1ssionSystemReport: React.FC = () => {
-  const [checks, setChecks] = useState<SystemCheck[]>([
-    { name: 'Geolocation API', status: 'checking', message: 'Verificando...' },
-    { name: 'OneSignal Push', status: 'checking', message: 'Verificando...' },
-    { name: 'Supabase Connection', status: 'checking', message: 'Verificando...' },
-    { name: 'Marker Database', status: 'checking', message: 'Verificando...' },
-    { name: 'iOS PWA Mode', status: 'checking', message: 'Verificando...' }
-  ]);
+  const [systemStatus, setSystemStatus] = useState<SystemStatus[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const geoWatcher = useGeoWatcher();
+
+  const runDiagnostics = async () => {
+    setIsLoading(true);
+    const diagnostics: SystemStatus[] = [];
+
+    // 🔐 Security Check
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      diagnostics.push({
+        category: '🔐 Sicurezza',
+        status: user ? 'ok' : 'error',
+        message: user ? 'Autenticazione attiva' : 'Utente non autenticato',
+        details: user ? [`User ID: ${user.user.id}`, `Email: ${user.user.email}`] : []
+      });
+    } catch (error) {
+      diagnostics.push({
+        category: '🔐 Sicurezza',
+        status: 'error',
+        message: 'Errore autenticazione',
+        details: [error instanceof Error ? error.message : 'Errore sconosciuto']
+      });
+    }
+
+    // 🌍 Geolocalizzazione
+    const geoStatus = geoWatcher.granted ? 'ok' : geoWatcher.error ? 'error' : 'warning';
+    diagnostics.push({
+      category: '🌍 Geolocalizzazione',
+      status: geoStatus,
+      message: geoWatcher.granted ? 'Posizione attiva' : geoWatcher.error || 'In attesa permessi',
+      details: geoWatcher.coords ? [
+        `Lat: ${geoWatcher.coords.lat.toFixed(6)}`,
+        `Lng: ${geoWatcher.coords.lng.toFixed(6)}`,
+        `Precisione: ${geoWatcher.coords.acc}m`,
+        `iOS: ${geoWatcher.isIOS ? 'Sì' : 'No'}`,
+        `PWA: ${geoWatcher.isPWA ? 'Sì' : 'No'}`
+      ] : []
+    });
+
+    // 📡 Database Connectivity
+    try {
+      const { data: configData, error: configError } = await supabase
+        .from('app_config')
+        .select('key, value_text')
+        .eq('key', 'app_version')
+        .maybeSingle();
+
+      diagnostics.push({
+        category: '📡 Database',
+        status: configError ? 'error' : 'ok',
+        message: configError ? 'Errore connessione database' : 'Database connesso',
+        details: configData ? [`App Version: ${configData.value_text}`] : []
+      });
+    } catch (error) {
+      diagnostics.push({
+        category: '📡 Database',
+        status: 'error',
+        message: 'Database non raggiungibile',
+        details: [error instanceof Error ? error.message : 'Errore sconosciuto']
+      });
+    }
+
+    // 🔔 Push Notifications
+    const pushStatus = 'Notification' in window ? 'ok' : 'error';
+    const permission = 'Notification' in window ? Notification.permission : 'denied';
+    diagnostics.push({
+      category: '🔔 Push Notifications',
+      status: permission === 'granted' ? 'ok' : permission === 'denied' ? 'error' : 'warning',
+      message: `Supporto: ${pushStatus === 'ok' ? 'Sì' : 'No'}, Permesso: ${permission}`,
+      details: [
+        `Service Worker: ${navigator.serviceWorker ? 'Supportato' : 'Non supportato'}`,
+        `OneSignal Ready: ${(window as any).OneSignal ? 'Sì' : 'No'}`
+      ]
+    });
+
+    // 📱 PWA Status
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    const isInstallable = 'serviceWorker' in navigator;
+    diagnostics.push({
+      category: '📱 PWA Status',
+      status: isPWA ? 'ok' : isInstallable ? 'warning' : 'error',
+      message: isPWA ? 'Installata come PWA' : isInstallable ? 'Installabile' : 'Non supportata',
+      details: [
+        `Standalone: ${isPWA ? 'Sì' : 'No'}`,
+        `Service Worker: ${isInstallable ? 'Supportato' : 'Non supportato'}`,
+        `Manifest: ${document.querySelector('link[rel="manifest"]') ? 'Presente' : 'Mancante'}`
+      ]
+    });
+
+    // 🎯 QR Markers
+    try {
+      const { data: markers, error: markersError } = await supabase
+        .from('qr_codes')
+        .select('code, is_active')
+        .limit(5);
+
+      const activeMarkers = markers?.filter(m => m.is_active)?.length || 0;
+      const totalMarkers = markers?.length || 0;
+
+      diagnostics.push({
+        category: '🎯 QR Markers',
+        status: markersError ? 'error' : totalMarkers > 0 ? 'ok' : 'warning',
+        message: markersError ? 'Errore caricamento marker' : `${activeMarkers}/${totalMarkers} marker attivi`,
+        details: markersError ? [markersError.message] : markers?.slice(0, 3).map(m => `${m.code}: ${m.is_active ? 'Attivo' : 'Inattivo'}`) || []
+      });
+    } catch (error) {
+      diagnostics.push({
+        category: '🎯 QR Markers',
+        status: 'error',
+        message: 'Errore accesso marker',
+        details: [error instanceof Error ? error.message : 'Errore sconosciuto']
+      });
+    }
+
+    setSystemStatus(diagnostics);
+    setIsLoading(false);
+  };
 
   useEffect(() => {
-    runSystemChecks();
+    runDiagnostics();
   }, []);
 
-  const runSystemChecks = async () => {
-    const newChecks: SystemCheck[] = [];
-
-    // 1. Geolocation Check
-    if ('geolocation' in navigator) {
-      try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-        });
-        newChecks.push({
-          name: 'Geolocation API',
-          status: 'ok',
-          message: `✅ Attiva (${position.coords.latitude.toFixed(4)}, ${position.coords.longitude.toFixed(4)})`,
-          details: `Accuracy: ${position.coords.accuracy}m`
-        });
-      } catch (err: any) {
-        newChecks.push({
-          name: 'Geolocation API',
-          status: 'error',
-          message: '❌ Negata o non disponibile',
-          details: err.message
-        });
-      }
-    } else {
-      newChecks.push({
-        name: 'Geolocation API',
-        status: 'error',
-        message: '❌ Non supportata su questo browser'
-      });
-    }
-
-    // 2. OneSignal Check
-    if ('OneSignal' in window) {
-      try {
-        newChecks.push({
-          name: 'OneSignal Push',
-          status: 'ok',
-          message: '✅ SDK caricato e pronto'
-        });
-      } catch (err) {
-        newChecks.push({
-          name: 'OneSignal Push',
-          status: 'warning',
-          message: '⚠️ SDK presente ma con errori'
-        });
-      }
-    } else {
-      newChecks.push({
-        name: 'OneSignal Push',
-        status: 'error',
-        message: '❌ SDK non caricato'
-      });
-    }
-
-    // 3. Supabase Connection Check
-    try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.from('profiles').select('id').limit(1);
-      if (error) throw error;
-      
-      newChecks.push({
-        name: 'Supabase Connection',
-        status: 'ok',
-        message: '✅ Connesso e funzionante'
-      });
-    } catch (err: any) {
-      newChecks.push({
-        name: 'Supabase Connection',
-        status: 'error',
-        message: '❌ Connessione fallita',
-        details: err.message
-      });
-    }
-
-    // 4. Marker Database Check
-    try {
-      const { supabase } = await import('@/integrations/supabase/client');
-      const { data, error } = await supabase.from('qr_codes').select('code').limit(1);
-      if (error) throw error;
-      
-      newChecks.push({
-        name: 'Marker Database',
-        status: 'ok',
-        message: `✅ ${data?.length || 0} markers disponibili`
-      });
-    } catch (err: any) {
-      newChecks.push({
-        name: 'Marker Database',
-        status: 'warning',
-        message: '⚠️ Problemi di accesso ai marker',
-        details: err.message
-      });
-    }
-
-    // 5. iOS PWA Check
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-    
-    if (isIOS && isPWA) {
-      newChecks.push({
-        name: 'iOS PWA Mode',
-        status: 'ok',
-        message: '✅ iOS PWA modalità standalone'
-      });
-    } else if (isIOS) {
-      newChecks.push({
-        name: 'iOS PWA Mode',
-        status: 'warning',
-        message: '⚠️ iOS ma non in modalità PWA',
-        details: 'Aggiungi a Home Screen per funzionalità complete'
-      });
-    } else {
-      newChecks.push({
-        name: 'iOS PWA Mode',
-        status: 'ok',
-        message: '✅ Desktop/Android browser'
-      });
-    }
-
-    setChecks(newChecks);
-  };
-
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: SystemStatus['status']) => {
     switch (status) {
-      case 'ok': return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'warning': return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      case 'error': return <XCircle className="w-5 h-5 text-red-500" />;
-      default: return <Clock className="w-5 h-5 text-gray-500 animate-spin" />;
+      case 'ok': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
+      case 'error': return <XCircle className="w-4 h-4 text-red-500" />;
+      case 'loading': return <Loader2 className="w-4 h-4 animate-spin text-blue-500" />;
     }
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: SystemStatus['status']) => {
     const variants = {
-      ok: 'bg-green-100 text-green-800',
-      warning: 'bg-yellow-100 text-yellow-800', 
-      error: 'bg-red-100 text-red-800',
-      checking: 'bg-gray-100 text-gray-800'
+      ok: 'bg-green-100 text-green-800 border-green-200',
+      warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      error: 'bg-red-100 text-red-800 border-red-200',
+      loading: 'bg-blue-100 text-blue-800 border-blue-200'
     };
-    return variants[status as keyof typeof variants] || variants.checking;
+    
+    return (
+      <Badge className={`${variants[status]} border`}>
+        {status.toUpperCase()}
+      </Badge>
+    );
   };
 
-  const overallStatus = checks.every(c => c.status === 'ok') ? 'perfect' :
-                       checks.some(c => c.status === 'error') ? 'critical' : 'warning';
+  const testPushNotification = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+        body: {
+          title: '🔬 Test Diagnostico',
+          body: 'Sistema M1SSION™ funzionante',
+          timestamp: new Date().toISOString()
+        }
+      });
+
+      if (error) throw error;
+      
+      toast.success('Test push notification inviato', {
+        description: `Risultato: ${data?.success ? 'Successo' : 'Fallito'}`
+      });
+    } catch (error) {
+      toast.error('Errore test push notification', {
+        description: error instanceof Error ? error.message : 'Errore sconosciuto'
+      });
+    }
+  };
+
+  const testGeolocation = () => {
+    if (geoWatcher.requestPermissions) {
+      geoWatcher.requestPermissions();
+      toast.info('Richiesta permessi geolocalizzazione...');
+    }
+  };
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg shadow">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900">🧠 M1SSION™ System Report</h2>
-        <Button onClick={runSystemChecks} variant="outline" size="sm">
-          Ricarica Test
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Sistema M1SSION™</h2>
+          <p className="text-muted-foreground">Diagnostica completa dell'applicazione</p>
+        </div>
+        <Button onClick={runDiagnostics} disabled={isLoading} variant="outline">
+          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          Aggiorna
         </Button>
       </div>
 
       <div className="grid gap-4">
-        {checks.map((check, index) => (
-          <div key={index} className="flex items-center gap-4 p-4 border rounded-lg">
-            {getStatusIcon(check.status)}
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">{check.name}</h3>
-                <Badge className={getStatusBadge(check.status)}>
-                  {check.status.toUpperCase()}
-                </Badge>
-              </div>
-              <p className="text-sm text-gray-600">{check.message}</p>
-              {check.details && (
-                <p className="text-xs text-gray-500 mt-1">{check.details}</p>
+        {systemStatus.map((item, index) => (
+          <Card key={index}>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center justify-between text-lg">
+                <div className="flex items-center gap-2">
+                  {getStatusIcon(item.status)}
+                  <span>{item.category}</span>
+                </div>
+                {getStatusBadge(item.status)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <p className="text-foreground mb-2">{item.message}</p>
+              {item.details && item.details.length > 0 && (
+                <div className="space-y-1">
+                  {item.details.map((detail, i) => (
+                    <p key={i} className="text-sm text-muted-foreground font-mono">
+                      • {detail}
+                    </p>
+                  ))}
+                </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      <div className={`p-4 rounded-lg ${
-        overallStatus === 'perfect' ? 'bg-green-50 border-green-200' :
-        overallStatus === 'critical' ? 'bg-red-50 border-red-200' : 
-        'bg-yellow-50 border-yellow-200'
-      }`}>
-        <h3 className="font-bold mb-2">
-          {overallStatus === 'perfect' && '🎯 Sistema M1SSION™ Perfetto'}
-          {overallStatus === 'critical' && '🚨 Problemi Critici Rilevati'}
-          {overallStatus === 'warning' && '⚠️ Attenzione: Problemi Minori'}
-        </h3>
-        <p className="text-sm">
-          {overallStatus === 'perfect' && 'Tutti i sistemi funzionano correttamente. L\'app è pronta per il lancio iOS.'}
-          {overallStatus === 'critical' && 'Alcuni sistemi critici non funzionano. Correggere prima del lancio.'}
-          {overallStatus === 'warning' && 'Sistema generale stabile ma con avvisi da monitorare.'}
-        </p>
+      <div className="flex gap-3">
+        <Button onClick={testPushNotification} variant="outline" size="sm">
+          <Bell className="w-4 h-4 mr-2" />
+          Test Push
+        </Button>
+        <Button onClick={testGeolocation} variant="outline" size="sm">
+          <MapPin className="w-4 h-4 mr-2" />
+          Test Geo
+        </Button>
       </div>
     </div>
   );
