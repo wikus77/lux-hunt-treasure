@@ -19,9 +19,17 @@ export const useIPGeolocation = () => {
     console.log('🌍 IP GEOLOCATION: Starting IP-based location...');
     
     try {
-      // Uso servizio IP gratuito
-      const response = await fetch('http://ip-api.com/json/?fields=status,lat,lon,city,country');
-      const data: IPLocationResponse = await response.json();
+      // Uso servizio IP HTTPS sicuro
+      const response = await fetch('https://ipapi.co/json/');
+      const rawData = await response.json();
+      
+      // Adatta formato risposta
+      const data: IPLocationResponse = {
+        lat: rawData.latitude,
+        lon: rawData.longitude,
+        city: rawData.city,
+        country: rawData.country_name
+      };
       
       console.log('🌍 IP GEOLOCATION: Response:', data);
       
