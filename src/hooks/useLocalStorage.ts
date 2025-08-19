@@ -44,7 +44,19 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   useEffect(() => {
     function handleStorageChange(event) {
       if (event.key === key && event.newValue) {
-        setStoredValue(JSON.parse(event.newValue));
+        try {
+          // CRITICAL FIX: Add validation before JSON.parse
+          const newValue = event.newValue.trim();
+          if (newValue.startsWith('{') || newValue.startsWith('[') || newValue.startsWith('"') || newValue === 'true' || newValue === 'false' || !isNaN(Number(newValue))) {
+            setStoredValue(JSON.parse(newValue));
+          } else {
+            console.warn(`Invalid JSON data for key "${key}":`, newValue);
+            // Don't update state with corrupted data
+          }
+        } catch (parseError) {
+          console.error(`JSON parse error for localStorage key "${key}":`, parseError, 'Raw value:', event.newValue);
+          // Don't crash the app, just ignore corrupted data
+        }
       }
     }
 
