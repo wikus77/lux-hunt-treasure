@@ -50,7 +50,14 @@ export function useGeolocation() {
         setPosition({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy });
       },
       (e) => {
-        setStatus(e.code === e.PERMISSION_DENIED ? 'denied' : 'error');
+        console.warn('🗺️ Geolocation error:', e.message, e.code);
+        const newStatus = e.code === e.PERMISSION_DENIED ? 'denied' : 'error';
+        setStatus(newStatus);
+        
+        // Set fallback position to Rome if available
+        if (newStatus === 'error' && !position) {
+          setPosition({ lat: 41.9028, lng: 12.4964, acc: null });
+        }
       },
       { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
