@@ -4,12 +4,15 @@
 /* Critical fix for all overlay conflicts */
 
 :root {
-  /* Z-index values organized by layer purpose */
+  /* Z-index values organized by layer purpose - Updated for 100% reliability */
   --z-map-base: 1;
   --z-map-controls: 10;
+  --z-map-markers: 15;
   --z-navigation: 100;
+  --z-notifications: 500;
   --z-modals: 9999;
-  --z-critical-modal: 10000;
+  --z-critical-modal: 99999;
+  --z-system-modal: 999999;
 }
 
 /* Base layers */
@@ -41,8 +44,25 @@
 /* Critical modals that must be on top */
 .claim-reward-modal,
 .m1ssion-modal,
-[data-radix-portal] {
+.m1ssion-modal-content,
+[data-radix-portal],
+[data-radix-overlay] {
   z-index: var(--z-critical-modal) !important;
+}
+
+/* System level modals - above everything */
+.m1ssion-system-modal,
+body.m1ssion-modal-open .m1ssion-modal-content {
+  z-index: var(--z-system-modal) !important;
+}
+
+/* Prevent map interaction when modal is open */
+body.m1ssion-modal-open .leaflet-container {
+  pointer-events: none !important;
+}
+
+body.m1ssion-modal-open .m1ssion-modal-content {
+  pointer-events: auto !important;
 }
 
 /* Leaflet specific fixes */
@@ -61,7 +81,31 @@ body[data-route="/map"] .leaflet-popup {
 
 /* Ensure markers are always clickable */
 .m1-red-pulse,
-.map-point-marker {
+.map-point-marker,
+.qr-marker-icon,
+.m1ssion-qr-marker {
   pointer-events: auto !important;
-  z-index: calc(var(--z-map-controls) + 3) !important;
+  z-index: var(--z-map-markers) !important;
+}
+
+/* QR Marker specific styles for guaranteed visibility */
+.qr-marker-container {
+  position: relative;
+  z-index: var(--z-map-markers) !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure modal overlays work correctly */
+.modal-overlay,
+.dialog-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: var(--z-modals) !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Notifications */
+.toast,
+.sonner-toast {
+  z-index: var(--z-notifications) !important;
 }

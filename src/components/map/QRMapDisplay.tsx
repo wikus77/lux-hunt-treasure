@@ -197,27 +197,36 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
 
 const all = useMemo(() => items, [items]);
 
-// PROFESSIONAL ZOOM-BASED MARKER VISIBILITY: Only show markers at close zoom levels
+// PROFESSIONAL ZOOM-BASED MARKER VISIBILITY: Always visible at zoom ≥17
 useEffect(() => {
   if (!map) return;
   const update = () => {
     const z = map.getZoom?.() ?? 0;
-    // Show markers only at zoom level 17 or higher (very close zoom as user requested)
-    const shouldShow = z >= 17;
+    // Show markers at zoom level >= markerMinZoom (configurable, default 17)
+    const shouldShow = z >= markerMinZoom;
     setShowLayer(shouldShow);
-    console.log('🎯 M1QR-PROFESSIONAL-ZOOM:', { 
-      step: 'markers_professional_visibility', 
+    console.log('🎯 M1QR-VISIBILITY:', { 
+      step: 'marker_visibility_check', 
       currentZoom: z, 
-      minZoom: 17, 
-      showLayer: shouldShow,
-      markersVisible: shouldShow,
-      totalMarkers: items.length
+      minZoom: markerMinZoom, 
+      shouldShow: shouldShow,
+      markersCount: items.length,
+      markersVisible: shouldShow ? items.length : 0
     });
   };
+  
+  // Initial check
   update();
+  
+  // Listen for zoom changes
   map.on('zoomend', update);
-  return () => { map.off('zoomend', update); };
-}, [map, items.length]);
+  map.on('zoom', update); // Also listen to zoom events for smoother UX
+  
+  return () => { 
+    map.off('zoomend', update); 
+    map.off('zoom', update);
+  };
+}, [map, markerMinZoom, items.length]);
 
   const handleModalClose = () => {
     console.log('M1MODAL-CLOSE', { step: 'modal_close' });

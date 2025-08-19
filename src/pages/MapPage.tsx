@@ -8,6 +8,8 @@ import MapDebugInfo from '@/components/debug/MapDebugInfo';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
 import { MapStateProvider } from './map/MapStateProvider';
 import MapErrorBoundary from './map/MapErrorBoundary';
+import { GeolocationDebugOverlay } from '@/components/diagnostics/GeolocationDebugOverlay';
+import { M1ssionSystemTest } from '@/components/testing/M1ssionSystemTest';
 
 const MapPage: React.FC = () => {
   
@@ -127,6 +129,8 @@ const MapPage: React.FC = () => {
       {/* Debug components for development */}
       <MapDebugger />
       <MapDebugInfo />
+      <GeolocationDebugOverlay />
+      <M1ssionSystemTest />
     </SafeAreaWrapper>
   );
 };
