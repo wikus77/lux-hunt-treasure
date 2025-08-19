@@ -1,0 +1,67 @@
+/* © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ */
+
+/* CENTRALIZED Z-INDEX HIERARCHY FOR M1SSION™ APP */
+/* Critical fix for all overlay conflicts */
+
+:root {
+  /* Z-index values organized by layer purpose */
+  --z-map-base: 1;
+  --z-map-controls: 10;
+  --z-navigation: 100;
+  --z-modals: 9999;
+  --z-critical-modal: 10000;
+}
+
+/* Base layers */
+.map-container,
+.leaflet-container {
+  z-index: var(--z-map-base) !important;
+}
+
+/* Map controls and buttons */
+.map-controls,
+.map-zoom-controls,
+.leaflet-control-container {
+  z-index: var(--z-map-controls) !important;
+}
+
+/* Navigation elements */
+.bottom-navigation,
+.header-navigation {
+  z-index: var(--z-navigation) !important;
+}
+
+/* Standard modals */
+.modals,
+.dialog-overlay,
+[data-radix-overlay] {
+  z-index: var(--z-modals) !important;
+}
+
+/* Critical modals that must be on top */
+.claim-reward-modal,
+.m1ssion-modal,
+[data-radix-portal] {
+  z-index: var(--z-critical-modal) !important;
+}
+
+/* Leaflet specific fixes */
+.leaflet-popup-pane {
+  z-index: calc(var(--z-map-controls) + 1) !important;
+}
+
+.leaflet-marker-pane {
+  z-index: calc(var(--z-map-controls) + 2) !important;
+}
+
+/* Hide problematic elements on map page */
+body[data-route="/map"] .leaflet-popup {
+  display: none !important;
+}
+
+/* Ensure markers are always clickable */
+.m1-red-pulse,
+.map-point-marker {
+  pointer-events: auto !important;
+  z-index: calc(var(--z-map-controls) + 3) !important;
+}

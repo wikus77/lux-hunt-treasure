@@ -3,7 +3,7 @@
 .m1ssion-modal {
   position: fixed;
   inset: 0;
-  z-index: 12000;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,7 +22,7 @@
   width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 99999 !important;
+  z-index: 10000 !important;
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
@@ -98,7 +98,7 @@ body.m1ssion-modal-open .dynamic-island {
 
 /* Force modal portal above everything */
 [data-radix-portal] {
-  z-index: 99999 !important;
+  z-index: 10000 !important;
 }
 
 /* Ensure marker circles are clickable */

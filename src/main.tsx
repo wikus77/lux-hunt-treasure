@@ -9,7 +9,7 @@ import App from './App';
 import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
-import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
+
 
 // Initialize production optimizations
 setupProductionConsole();
@@ -88,9 +88,7 @@ const renderApp = () => {
     root.render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-          <EnhancedToastProvider>
-            <App />
-          </EnhancedToastProvider>
+          <App />
         </QueryClientProvider>
       </React.StrictMode>
     );
