@@ -113,6 +113,7 @@ export default defineConfig(({ mode }) => ({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
+    copyPublicDir: true,
     target: 'es2020',
     minify: mode === 'production' ? 'terser' : false,
     sourcemap: mode === 'development',
