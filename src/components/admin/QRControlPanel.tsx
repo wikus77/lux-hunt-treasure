@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import QRCodeLib from 'qrcode';
 import jsPDF from 'jspdf';
 import { QRInlineMap } from './QRInlineMap';
+import { AdminPanelMapView } from './AdminPanelMapView';
 
 interface QRCode {
   id: string;

@@ -25,24 +25,42 @@ export const AdminPushNotifications = () => {
     setIsSending(true);
     
     try {
+      console.log('🔔 Sending push notification:', { title, message });
+      
       // Call the Edge Function to send push notification
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
-        body: { title, message }
+        body: { 
+          title, 
+          body: message,
+          message  // Backward compatibility
+        }
       });
       
+      console.log('🔔 Edge function response:', { data, error });
+      
       if (error) {
+        console.error('❌ Edge function error:', error);
         throw new Error(error.message);
       }
       
-      toast.success("Notifica inviata con successo");
+      if (data?.success) {
+        toast.success("Notifica inviata con successo", {
+          description: `Inviata a ${data.sent || 0} dispositivi`
+        });
+      } else {
+        toast.warning("Notifica processata ma possibili problemi", {
+          description: data?.message || "Controlla i log per dettagli"
+        });
+      }
+      
       // Reset form
       setTitle("");
       setMessage("");
     } catch (error: any) {
+      console.error("❌ Error sending push notification:", error);
       toast.error("Errore nell'invio della notifica", {
-        description: error.message
+        description: error.message || "Errore sconosciuto"
       });
-      console.error("Error sending push notification:", error);
     } finally {
       setIsSending(false);
     }
