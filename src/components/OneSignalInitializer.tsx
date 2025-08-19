@@ -15,7 +15,12 @@ export const OneSignalInitializer = () => {
   useEffect(() => {
     const initializeOneSignal = async () => {
       try {
-        console.log('🔔 CRITICAL: Initializing OneSignal for M1SSION™...');
+        console.log('🔔 CRITICAL: Initializing OneSignal for M1SSION™...', {
+          url: window.location.href,
+          hostname: window.location.hostname,
+          protocol: window.location.protocol,
+          userAgent: navigator.userAgent
+        });
         
         // Check if already initialized
         if ((window as any).OneSignalInitialized) {
@@ -38,16 +43,17 @@ export const OneSignalInitializer = () => {
         
         console.log('🔔 FORCING OneSignal initialization in ALL environments...');
 
+        console.log('🔔 BEFORE OneSignal.init() call...');
+        
         await OneSignal.init({
           appId: ONESIGNAL_APP_ID,
           allowLocalhostAsSecureOrigin: true,
           serviceWorkerPath: '/OneSignalSDKWorker.js',
           serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
-          // CRITICAL: Fix SSL issues
           safari_web_id: "web.onesignal.auto.50cb75f7-f065-4626-9a63-ce5692fa7e70",
-          // CRITICAL: Disable default notify button
-          // notifyButton: { enable: false }
         });
+
+        console.log('🔔 AFTER OneSignal.init() call - SUCCESS!');
 
         (window as any).OneSignalInitialized = true;
         console.log('✅ OneSignal initialized successfully');
