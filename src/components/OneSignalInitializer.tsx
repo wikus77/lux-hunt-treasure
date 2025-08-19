@@ -113,6 +113,14 @@ const registerUserForPushNotifications = async (userId: string) => {
       return;
     }
 
+    // Set external user ID for better targeting
+    try {
+      await OneSignal.User.addAlias('external_id', userId);
+      console.log('🔔 CRITICAL: External ID set for user:', userId);
+    } catch (aliasError) {
+      console.warn('🔔 WARNING: Failed to set external ID:', aliasError);
+    }
+
     // Save to Supabase device_tokens table
     console.log('🔐 CRITICAL: Saving OneSignal Player ID to database...');
     const { error } = await supabase
