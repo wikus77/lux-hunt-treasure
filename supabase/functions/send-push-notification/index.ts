@@ -168,8 +168,9 @@ serve(async (req: Request) => {
       });
     }
 
-    // Save notification to database for sync with notifications page
+    // Enhanced database save: save to BOTH app_messages and user_notifications for better sync
     try {
+      // 1. Save to app_messages (for global notifications view)
       const notificationData = {
         title: title || "M1SSION™",
         content: body || "Nuova notifica",
@@ -179,15 +180,41 @@ serve(async (req: Request) => {
         created_at: new Date().toISOString()
       };
 
+      console.log('💾 Saving notification to app_messages:', notificationData);
       const { error: dbError } = await supabase
         .from('app_messages')
         .insert([notificationData]);
 
       if (dbError) {
-        console.error('⚠️ Failed to save notification to DB:', dbError);
+        console.error('⚠️ Failed to save notification to app_messages:', dbError);
       } else {
-        console.log('💾 Notification saved to database for sync');
+        console.log('✅ Notification saved to app_messages successfully');
       }
+      
+      // 2. ALSO save to user_notifications for targeted users (if specific user)
+      if (target_user_id) {
+        console.log('💾 Saving targeted notification to user_notifications for user:', target_user_id);
+        const { error: userNotifError } = await supabase
+          .from('user_notifications')
+          .insert([{
+            user_id: target_user_id,
+            notification_type: 'push',
+            title: title || "M1SSION™",
+            message: body || "Nuova notifica",
+            metadata: { 
+              source: 'push_notification', 
+              oneSignalId: oneSignalResult.id,
+              sent_at: new Date().toISOString()
+            }
+          }]);
+        
+        if (userNotifError) {
+          console.error('⚠️ Failed to save user notification:', userNotifError);
+        } else {
+          console.log('✅ User notification saved successfully');
+        }
+      }
+      
     } catch (saveError) {
       console.error('⚠️ Database save error:', saveError);
     }
