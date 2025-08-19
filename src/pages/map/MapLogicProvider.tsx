@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { DEFAULT_LOCATION, useMapLogic } from './useMapLogic';
+import { useMapLogic } from './useMapLogic';
 import { useMapPoints } from './hooks/useMapPoints';
 import { useMapInitialization } from './hooks/useMapInitialization';
 import LoadingScreen from './LoadingScreen';
@@ -66,7 +66,7 @@ const MapContext = React.createContext<MapContextType | undefined>(undefined);
 
 const MapLogicProvider = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
-  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([46.0, 8.0]); // European view
   
   // Use Zustand store for centralized state management
   const { 

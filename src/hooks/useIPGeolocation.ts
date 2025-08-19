@@ -90,11 +90,9 @@ export const useIPGeolocation = () => {
         console.error('🌍 IP GEOLOCATION: Final attempt failed!', finalError);
       }
       
-      // Solo se tutti i servizi falliscono, usa Milano
-      const fallbackCoords = { lat: 45.4642, lng: 9.19 };
-      setCoords(fallbackCoords);
-      toast.error('❌ Tutti i servizi di geolocalizzazione IP falliti - Fallback: Milano');
-      return fallbackCoords;
+      // Nessun fallback - lascia coords null se tutti i servizi falliscono
+      toast.error('❌ Geolocalizzazione IP non disponibile');
+      return null;
     } finally {
       setIsLoading(false);
     }

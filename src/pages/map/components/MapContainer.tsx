@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { DEFAULT_LOCATION } from '../useMapLogic';
+// No default location fallback - GPS only
 import MapController from './MapController';
 import MapPopupManager from './MapPopupManager';
 import SearchAreaMapLayer from '../SearchAreaMapLayer';
@@ -79,7 +79,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   showHelpDialog = false,
   setShowHelpDialog = () => {}
 }) => {
-  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([46.0, 8.0]); // European view
   const geo = useSimpleGeolocation();
   const ipGeo = useIPGeolocation();
   const mapRef = useRef<L.Map | null>(null);

@@ -3,9 +3,7 @@ import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { useBuzzMapPricing } from '@/hooks/map/useBuzzMapPricing';
 import { safeLatLng } from '@/pages/map/utils/safeLatLng';
-export const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
-const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
-let __geolocWarned = false;
+// GPS-only geolocation - no fallbacks
 
 export const useMapLogic = () => {
   const [isAddingPoint, setIsAddingPoint] = useState(false);
@@ -48,9 +46,8 @@ export const useMapLogic = () => {
           toast.success("Posizione rilevata");
         },
         (error) => {
-          if (!__geolocWarned) { console.warn('geoloc unavailable – fallback Milano'); __geolocWarned = true; }
           console.error("Error getting location:", error);
-          toast.error("Errore nel rilevare la posizione");
+          toast.error("❌ Errore GPS - Posizione non disponibile");
         }
       );
     } else {
@@ -67,7 +64,7 @@ export const useMapLogic = () => {
 
     const ll = safeLatLng(e);
     if (!ll) {
-      if (!__geolocWarned) { console.warn('Layer skipped: missing lat/lng', { comp: 'useMapLogic.handleMapClickArea' }); __geolocWarned = true; }
+      console.warn('Layer skipped: missing lat/lng', { comp: 'useMapLogic.handleMapClickArea' });
       return;
     }
 
