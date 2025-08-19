@@ -2,8 +2,7 @@
 import { useState, useCallback, useRef } from 'react';
 import L from 'leaflet';
 import { toast } from 'sonner';
-const FALLBACK_MILAN = { lat: 45.4642, lng: 9.19 } as const;
-let __mapFallbackWarned = false;
+// GPS-only geolocation - no fallbacks
 
 export const useMapInitialization = (
   isAddingMapPoint: boolean,
@@ -26,12 +25,17 @@ export const useMapInitialization = (
     
     setMapLoaded(true);
     
-    // Add direct click handler to the map as a fallback mechanism
+    // Add direct click handler to the map
     map.on('click', (e: L.LeafletMouseEvent) => {
       const hasLatLng = e && (e as any).latlng && typeof (e as any).latlng.lat === 'number' && typeof (e as any).latlng.lng === 'number';
-      const lat = hasLatLng ? (e as any).latlng.lat : FALLBACK_MILAN.lat;
-      const lng = hasLatLng ? (e as any).latlng.lng : FALLBACK_MILAN.lng;
-      if (!hasLatLng && !__mapFallbackWarned) { console.warn('geoloc unavailable – fallback Milano'); __mapFallbackWarned = true; }
+      
+      if (!hasLatLng) {
+        console.warn('Invalid click coordinates - ignoring click');
+        return;
+      }
+      
+      const lat = (e as any).latlng.lat;
+      const lng = (e as any).latlng.lng;
 
       if (isAddingMapPoint || isAddingPoint) {
         hookHandleMapPointClick(lat, lng);

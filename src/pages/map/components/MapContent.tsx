@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { MapContainer } from 'react-leaflet';
-import { DEFAULT_LOCATION } from '../useMapLogic';
+// No default location fallback - GPS only
 import MapInitializer from './MapInitializer';
 import MapLayers from './MapLayers';
 import MapPopupManager from './MapPopupManager';
@@ -109,7 +109,7 @@ const MapContent: React.FC<MapContentProps> = ({
 
   return (
     <MapContainer 
-      center={DEFAULT_LOCATION} 
+      center={[46.0, 8.0]} // European view 
       zoom={15}
       style={{ 
         height: '100%', 

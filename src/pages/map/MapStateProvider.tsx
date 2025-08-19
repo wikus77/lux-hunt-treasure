@@ -16,11 +16,8 @@ interface MapStateContextType {
   actions: {
     setCenter: (ll: LatLng | null) => void;
     setLastClick: (ll: LatLng | null) => void;
-    fallbackToMilano: () => void;
   };
 }
-
-const DEFAULT_MILANO: LatLng = { lat: 45.4642, lng: 9.19 } as const;
 
 const MapStateContext = createContext<MapStateContextType | undefined>(undefined);
 
@@ -30,10 +27,6 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [lastClick, setLastClick] = useState<LatLng | null>(null);
   const warnedToast = useRef(false);
 
-  const fallbackToMilano = () => {
-    setCenter(DEFAULT_MILANO);
-  };
-
   useEffect(() => {
     let cancelled = false;
     setStatus('locating');
@@ -41,10 +34,9 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (!('geolocation' in navigator)) {
       setStatus('error');
       if (!warnedToast.current) {
-        toast('Geolocalizzazione non disponibile — fallback: Milano');
+        toast.error('❌ Geolocalizzazione non supportata dal browser');
         warnedToast.current = true;
       }
-      fallbackToMilano();
       return;
     }
 
@@ -55,25 +47,24 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
           setCenter({ lat: latitude, lng: longitude });
           setStatus('ready');
+          toast.success('📍 Posizione GPS rilevata!');
         } else {
           setStatus('error');
           if (!warnedToast.current) {
-            toast('Geolocalizzazione non valida — fallback: Milano');
+            toast.error('❌ Coordinate GPS non valide');
             warnedToast.current = true;
           }
-          fallbackToMilano();
         }
       },
       () => {
         if (cancelled) return;
         setStatus('denied');
         if (!warnedToast.current) {
-          toast('Geolocalizzazione non disponibile — fallback: Milano');
+          toast.error('❌ Geolocalizzazione GPS negata');
           warnedToast.current = true;
         }
-        fallbackToMilano();
       },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 2000 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 }
     );
 
     return () => {
@@ -86,7 +77,7 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       status,
       center,
       lastClick,
-      actions: { setCenter, setLastClick, fallbackToMilano },
+      actions: { setCenter, setLastClick },
     }),
     [status, center, lastClick]
   );
@@ -100,4 +91,4 @@ export function useMapState() {
   return ctx;
 }
 
-export const DEFAULT_CENTER_MILANO = DEFAULT_MILANO;
+// GPS-only geolocation - no fallbacks to specific cities
