@@ -1,4 +1,5 @@
-import { Route } from 'wouter';
+
+import { Route } from 'react-router-dom';
 import Admin from '@/pages/Admin'; // Ensure correct import path
 import RoleBasedProtectedRoute from '@/components/auth/RoleBasedProtectedRoute';
 import { useState, useEffect } from 'react';
@@ -8,16 +9,14 @@ import AbuseLogsPage from '@/pages/AbuseLogsPage';
 
 export default function AdminRoutes() {
   const [bypassProtection, setBypassProtection] = useState(false);
-
+  
   useEffect(() => {
-    // Temporary bypass for admin protection until May 21, 2025
+    // Check if current date is before May 21, 2025
+    const expirationDate = new Date('2025-05-21T00:00:00');
     const currentDate = new Date();
-    const expirationDate = new Date('2025-05-21');
     
-    if (currentDate < expirationDate) {
-      setBypassProtection(true);
-    }
-
+    setBypassProtection(currentDate < expirationDate);
+    
     // Debug log for routes
     console.log("🟢 AdminRoutes rendering, bypassProtection:", currentDate < expirationDate);
     console.log("🟢 Current routes being configured in AdminRoutes");
@@ -27,7 +26,7 @@ export default function AdminRoutes() {
     <>
       <Route 
         path="/admin" 
-        component={() =>
+        element={
           bypassProtection ? (
             // Temporary direct access until May 21, 2025
             <Admin />
@@ -37,38 +36,25 @@ export default function AdminRoutes() {
               <Admin />
             </RoleBasedProtectedRoute>
           )
-        }
+        } 
       />
-
+      
+      {/* Direct access to Prize Clues Manager without protection */}
       <Route 
         path="/admin/prizes" 
-        component={() =>
-          bypassProtection ? (
-            <AdminPrizes />
-          ) : (
-            <RoleBasedProtectedRoute allowedRoles={['admin']}>
-              <AdminPrizes />
-            </RoleBasedProtectedRoute>
-          )
-        }
+        element={<AdminPrizes />} 
       />
-
+      
+      {/* Keep the original AdminPrizeClues route for now */}
       <Route 
         path="/admin/prize-clues" 
-        component={() =>
-          bypassProtection ? (
-            <AdminPrizeClues />
-          ) : (
-            <RoleBasedProtectedRoute allowedRoles={['admin']}>
-              <AdminPrizeClues />
-            </RoleBasedProtectedRoute>
-          )
-        }
+        element={<AdminPrizeClues />} 
       />
 
+      {/* Abuse Logs Registry - Admin only */}
       <Route 
         path="/admin/abuse-logs" 
-        component={() =>
+        element={
           bypassProtection ? (
             <AbuseLogsPage />
           ) : (
@@ -76,7 +62,7 @@ export default function AdminRoutes() {
               <AbuseLogsPage />
             </RoleBasedProtectedRoute>
           )
-        }
+        } 
       />
     </>
   );

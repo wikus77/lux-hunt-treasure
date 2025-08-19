@@ -75,7 +75,14 @@ const { isConnected } = useRealTimeNotifications();
     // Real-time notification connection status updated
   }, [isConnected]);
 
-  // REMOVED: Duplicate toast on error - notifications handled by global notification system
+  useEffect(() => {
+    if (error) {
+      toast.error("Si è verificato un errore", {
+        description: error,
+        position: "bottom-center"
+      });
+    }
+  }, [error]);
   
   // User state validated
   

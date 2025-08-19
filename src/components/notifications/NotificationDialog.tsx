@@ -1,4 +1,3 @@
-// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 
 import {
   Dialog,

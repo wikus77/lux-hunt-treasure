@@ -244,7 +244,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         isEliteMaxPrice={isEliteMaxPrice()}
       />
       
-      <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50">
+      <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
         <Button
           onClick={handleBuzzMapPress}
           disabled={!isAuthenticated || isProcessing || loading || !isEligibleForBuzz || dailyBuzzMapCounter >= 3}

@@ -47,8 +47,8 @@ export default defineConfig(({ mode }) => ({
           '**/assets/index.*.js' // Exclude large main bundle from precaching
         ],
         globPatterns: [
-          '**/*.{css,html,ico,svg}',
-          '**/assets/*.js'
+          '**/*.{css,html,ico,svg}', // Cache essential files but not large JS bundles
+          '**/assets/!(index).*.js' // Cache vendor chunks but not main bundle
         ],
         runtimeCaching: [
           {
@@ -122,7 +122,7 @@ export default defineConfig(({ mode }) => ({
         assetFileNames: 'assets/[name].[hash].[ext]',
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
-          'router-vendor': ['wouter'],
+          'router-vendor': ['react-router-dom'],
           'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-toast'],
           'supabase-vendor': ['@supabase/supabase-js'],
           'animation-vendor': ['framer-motion', 'lottie-react'],
@@ -161,7 +161,7 @@ export default defineConfig(({ mode }) => ({
     'process.env.NODE_ENV': '"production"',
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', 'wouter'],
+    include: ['react', 'react-dom', 'react-router-dom'],
     exclude: ['@capacitor/core'],
   },
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.mp3', '**/*.wav']

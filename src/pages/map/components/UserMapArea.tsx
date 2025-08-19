@@ -1,6 +1,6 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
-import { Circle } from 'react-leaflet';
+import { Circle, Popup } from 'react-leaflet';
 
 interface BuzzMapArea {
   id: string;
@@ -54,7 +54,18 @@ const UserMapAreas: React.FC<UserMapAreasProps> = ({ areas }) => {
         }
       }}
     >
-      {/* Popup removed on /map to avoid interference with M1SSION modal */}
+      <Popup>
+        <div className="p-3 text-center">
+          <div className="font-bold text-cyan-400 mb-2">🎯 AREA BUZZ MAPPA</div>
+          <div className="text-sm mb-1">Raggio: {latestArea.radius_km.toFixed(1)} km</div>
+          <div className="text-xs text-gray-400 mb-2">
+            Generata: {new Date(latestArea.created_at).toLocaleDateString()}
+          </div>
+          <div className="text-xs text-cyan-300">
+            Settimana: {latestArea.week}
+          </div>
+        </div>
+      </Popup>
     </Circle>
   );
 };

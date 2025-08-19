@@ -1,5 +1,5 @@
 // M1SSION™ - Post Login Redirect Logic for iOS Capacitor
-type NavigateFunction = (path: string, options?: any) => void;
+import { NavigateFunction } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { detectPWAEnvironment, preserveFunctionName } from '@/utils/pwaStubs';
 

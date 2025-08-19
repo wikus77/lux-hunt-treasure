@@ -1,14 +1,14 @@
 
 import { useState } from "react";
 import { ArrowLeft, LockIcon, EyeIcon, EyeOffIcon, ShieldIcon } from "lucide-react";
-import { useNavigateWouter } from "@/utils/routerUtils";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 
 const PrivacySecurity = () => {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [securitySettings, setSecuritySettings] = useState({
@@ -74,7 +74,7 @@ const PrivacySecurity = () => {
           variant="ghost" 
           size="icon" 
           className="mr-2"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

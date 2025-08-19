@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigateWouter } from "@/utils/routerUtils";
+import { useNavigate } from "react-router-dom";
 import { ArrowDown, Check } from "lucide-react";
 import CountdownTimer from "@/components/ui/countdown-timer";
 import { getMissionDeadline } from "@/utils/countdownDate";
 
 export default function MissionSelection() {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
   const [selectedMission, setSelectedMission] = useState<"uomo" | "donna" | null>(null);
 
   const handleSelectMission = (gender: "uomo" | "donna") => {

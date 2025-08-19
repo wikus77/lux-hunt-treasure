@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route } from 'wouter';
+import { Route } from 'react-router-dom';
 import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
 
 // Pages
@@ -9,21 +9,22 @@ import Leaderboard from "../../pages/Leaderboard";
 const PremiumRoutes = () => {
   return (
     <>
+      {/* Premium route definitions here */}
       <Route
         path="/stats"
-        component={() => (
+        element={
           <RoleBasedProtectedRoute allowedRoles={['premium_user', 'admin']}>
             <Stats />
           </RoleBasedProtectedRoute>
-        )}
+        }
       />
       <Route
         path="/leaderboard"
-        component={() => (
+        element={
           <RoleBasedProtectedRoute allowedRoles={['premium_user', 'admin']}>
             <Leaderboard />
           </RoleBasedProtectedRoute>
-        )}
+        }
       />
     </>
   );

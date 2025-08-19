@@ -13,23 +13,16 @@ serve(async (req: Request) => {
   }
 
   try {
-    // 🔑 Enhanced authorization check - support both service role and authenticated users
+    // 🔑 Controllo autorizzazione con Service Role Key
     const authHeader = req.headers.get("authorization") || "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    // Allow both service role and authenticated users
-    const isServiceRole = authHeader.includes(serviceKey || "");
-    const isAuthenticated = authHeader.includes("Bearer ey"); // JWT token pattern
-    
-    if (!isServiceRole && !isAuthenticated) {
-      console.error('❌ Authorization failed - missing valid auth header');
+
+    if (!authHeader.includes(serviceKey)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: corsHeaders
       });
     }
-    
-    console.log('✅ Authorization OK', { isServiceRole, isAuthenticated });
 
     // 📩 Lettura payload JSON
     const { user_id, title, body, target_user_id } = await req.json();
@@ -52,19 +45,12 @@ serve(async (req: Request) => {
     });
 
     if (!oneSignalRestApiKey) {
-      console.error('❌ OneSignal REST API Key not configured in environment');
-      console.error('⚠️ Push payload for debugging:', { title, body, target_user_id });
-      return new Response(JSON.stringify({ 
-        error: "OneSignal REST API Key not configured",
-        details: "Please configure ONESIGNAL_REST_API_KEY in edge function secrets",
-        debug: { appId: oneSignalAppId, hasTitle: !!title, hasBody: !!body }
-      }), {
+      console.error('❌ OneSignal REST API Key not configured');
+      return new Response(JSON.stringify({ error: "OneSignal not configured" }), {
         status: 500,
         headers: corsHeaders
       });
     }
-
-    console.log('⚠️ Push payload:', { title, body, target_user_id, oneSignalAppId });
 
     // Get device tokens for OneSignal
     let deviceQuery = supabase
@@ -104,7 +90,7 @@ serve(async (req: Request) => {
     const playerIds = devices.map(device => device.token);
     console.log(`📱 Found ${playerIds.length} OneSignal player IDs`);
 
-    // Send OneSignal notification with retry logic
+    // Send OneSignal notification
     const oneSignalPayload = {
       app_id: oneSignalAppId,
       include_player_ids: playerIds,
@@ -117,49 +103,17 @@ serve(async (req: Request) => {
     };
 
     console.log('🔔 Sending to OneSignal API...');
-    console.log('📱 OneSignal payload:', JSON.stringify(oneSignalPayload, null, 2));
-    
-    let oneSignalResponse;
-    let oneSignalResult;
-    let retryCount = 0;
-    const maxRetries = 3;
-    
-    while (retryCount < maxRetries) {
-      try {
-        oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Basic ${oneSignalRestApiKey}`,
-            'User-Agent': 'M1SSION-EdgeFunction/1.0'
-          },
-          body: JSON.stringify(oneSignalPayload)
-        });
+    const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${oneSignalRestApiKey}`
+      },
+      body: JSON.stringify(oneSignalPayload)
+    });
 
-        oneSignalResult = await oneSignalResponse.json();
-        console.log(`🔔 OneSignal response (attempt ${retryCount + 1}):`, {
-          status: oneSignalResponse.status,
-          statusText: oneSignalResponse.statusText,
-          result: oneSignalResult
-        });
-
-        if (oneSignalResponse.ok) {
-          break; // Success, exit retry loop
-        } else {
-          throw new Error(`OneSignal API error: ${oneSignalResponse.status} - ${JSON.stringify(oneSignalResult)}`);
-        }
-      } catch (error) {
-        console.error(`❌ OneSignal attempt ${retryCount + 1} failed:`, error);
-        retryCount++;
-        
-        if (retryCount >= maxRetries) {
-          throw error; // Re-throw after max retries
-        }
-        
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
-      }
-    }
+    const oneSignalResult = await oneSignalResponse.json();
+    console.log('🔔 OneSignal response:', oneSignalResult);
 
     // Save notification to database
     if (target_user_id) {

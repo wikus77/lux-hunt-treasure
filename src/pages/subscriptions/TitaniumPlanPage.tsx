@@ -7,12 +7,12 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Infinity, Crown } from 'lucide-react';
-import { useNavigateWouter } from '@/utils/routerUtils';
+import { useNavigate } from 'react-router-dom';
 import FakeStripeCheckout from '@/components/payment/FakeStripeCheckout';
 import { getDisplayPrice } from '@/lib/constants/pricingConfig';
 
 const TitaniumPlanPage: React.FC = () => {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
 
   const planFeatures = [
     "Tutti i vantaggi Black",

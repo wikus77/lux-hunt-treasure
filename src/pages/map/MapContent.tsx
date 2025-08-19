@@ -6,8 +6,6 @@ import SearchAreaMapLayer from './SearchAreaMapLayer';
 import MapPopupManager from '../../components/map/MapPopupManager';
 import MapEventHandler from '../../components/map/MapEventHandler';
 import PrizeAreaOverlay from './components/PrizeAreaOverlay';
-import { QRMapDisplay } from '../../components/map/QRMapDisplay';
-import BuzzMapAreas from '../../components/map/BuzzMapAreas';
 
 interface MapContentProps {
   mapRef: React.MutableRefObject<L.Map | null>;
@@ -63,26 +61,16 @@ const MapContent: React.FC<MapContentProps> = ({
 
   return (
     <>
-      {/* QR Code Markers - SEMPRE VISIBILI */}
-      <QRMapDisplay />
-      
-      {/* BUZZ Map Areas - User Generated */}
       <UserMapAreas areas={currentWeekAreas} />
       
-      {/* Alternative BUZZ Areas Component */}
-      <BuzzMapAreas areas={currentWeekAreas} />
-      
-      {/* Prize Areas */}
       <PrizeAreaOverlay />
       
-      {/* Search Areas */}
       <SearchAreaMapLayer 
         searchAreas={searchAreas}
         setActiveSearchArea={setActiveSearchArea}
         deleteSearchArea={deleteSearchArea}
       />
       
-      {/* Map Points and Popups */}
       <MapPopupManager 
         mapPoints={mapPoints}
         activeMapPoint={activeMapPoint}
@@ -94,7 +82,6 @@ const MapContent: React.FC<MapContentProps> = ({
         handleCancelNewPoint={handleCancelNewPoint}
       />
       
-      {/* Event Handlers */}
       <MapEventHandler 
         isAddingSearchArea={isAddingSearchArea} 
         handleMapClickArea={handleMapClickArea}

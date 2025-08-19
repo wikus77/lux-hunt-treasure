@@ -31,7 +31,7 @@ serve(async (req) => {
     const user_id = auth?.user?.id;
     if (!user_id) return json({ ok: false, code: "UNAUTHORIZED" }, 401);
 
-    console.log(`TRACE_CLAIM_START: claim-marker-reward start - user:${user_id} marker:${markerId}`);
+    console.log(`M1QR-TRACE: claim-marker-reward start - user:${user_id} marker:${markerId}`);
 
     // Check if already claimed
     const { data: existingClaim } = await userClient
@@ -42,7 +42,7 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existingClaim) {
-      console.log(`TRACE_USER: already claimed - user:${user_id} marker:${markerId}`);
+      console.log(`M1QR-TRACE: already claimed - user:${user_id} marker:${markerId}`);
       return json({ ok: false, code: "ALREADY_CLAIMED" }, 200);
     }
 
@@ -53,12 +53,12 @@ serve(async (req) => {
       .eq("marker_id", markerId);
 
     if (rewardsError) {
-      console.error(`TRACE_DB_WRITE: rewards fetch error:`, rewardsError);
+      console.error(`M1QR-TRACE: rewards fetch error:`, rewardsError);
       return json({ status: "error", error: "db_error", detail: rewardsError.message }, 500);
     }
 
     if (!rewards || rewards.length === 0) {
-      console.log(`TRACE_DB_WRITE: no rewards found - marker:${markerId}`);
+      console.log(`M1QR-TRACE: no rewards found - marker:${markerId}`);
       return json({ ok: false, code: "NO_REWARD" }, 404);
     }
 
@@ -68,7 +68,7 @@ serve(async (req) => {
       .insert([{ user_id, marker_id: markerId }]);
 
     if (claimError) {
-      console.error(`TRACE_DB_WRITE: claim creation error:`, claimError);
+      console.error(`M1QR-TRACE: claim creation error:`, claimError);
       return json({ status: "error", error: "claim_failed", detail: claimError.message }, 500);
     }
 
@@ -183,54 +183,25 @@ serve(async (req) => {
           }
 
           default:
-            console.warn(`TRACE_DB_WRITE: unknown reward type: ${reward_type}`);
+            console.warn(`M1QR-TRACE: unknown reward type: ${reward_type}`);
         }
       } catch (rewardError) {
-        console.error(`TRACE_DB_WRITE: reward processing error (${reward_type}):`, rewardError);
+        console.error(`M1QR-TRACE: reward processing error (${reward_type}):`, rewardError);
         // Continue with other rewards, don't fail completely
         summary.push({ type: reward_type, info: { error: String(rewardError) } });
       }
     }
 
-    // Send push notification for successful claim
-    try {
-      const notificationTitle = "🎁 Premio Riscattato!";
-      const notificationMessage = rewards[0]?.description || "Hai ottenuto una ricompensa speciale!";
-      
-      const { error: notifError } = await admin.functions.invoke('send-push-notification', {
-        body: {
-          userId: user_id,
-          title: notificationTitle,
-          message: notificationMessage,
-          data: {
-            type: 'reward_claimed',
-            markerId,
-            rewardType: rewards[0]?.reward_type,
-            timestamp: new Date().toISOString()
-          }
-        }
-      });
-      
-      if (notifError) {
-        console.error(`TRACE_PUSH: notification error:`, notifError);
-      } else {
-        console.log(`TRACE_PUSH: notification sent successfully - user:${user_id}`);
-      }
-    } catch (pushError) {
-      console.error(`TRACE_PUSH: push notification failed:`, pushError);
-    }
-
-    console.log(`TRACE_RESPONSE: claim success - user:${user_id} marker:${markerId} rewards:${rewards.map(r => r.reward_type).join(',')}`);
+    console.log(`M1QR-TRACE: claim success - user:${user_id} marker:${markerId} rewards:${rewards.map(r => r.reward_type).join(',')}`);
 
     return json({
       ok: true,
-      reward: { type: rewards[0]?.reward_type || "unknown", label: rewards[0]?.description || "Ricompensa" },
       nextRoute,
       summary
     }, 200);
 
   } catch (e) {
-    console.error(`TRACE_RESPONSE: claim-marker-reward error:`, e);
+    console.error(`M1QR-TRACE: claim-marker-reward error:`, e);
     return json({ status: "error", error: "internal_error", detail: String(e?.message ?? e) }, 500);
   }
 }, { onError: (e) => console.error(e) });

@@ -62,12 +62,18 @@ const MapContent: React.FC<MapContentProps> = ({
 
   return (
     <>
-      {/* REMOVED: Duplicate UserMapAreas - handled in main MapContainer as BuzzMapAreas */}
+      {/* BUZZ Map Areas */}
+      <UserMapAreas areas={currentWeekAreas} />
       
       {/* Prize Area Overlay */}
       <PrizeAreaOverlay />
       
-      {/* REMOVED: Duplicate SearchAreaMapLayer - handled in main MapContainer */}
+      {/* Search Areas Layer */}
+      <SearchAreaMapLayer 
+        searchAreas={searchAreas}
+        setActiveSearchArea={setActiveSearchArea}
+        deleteSearchArea={deleteSearchArea}
+      />
       
       {/* Map Popup Manager */}
       <MapPopupManager 
