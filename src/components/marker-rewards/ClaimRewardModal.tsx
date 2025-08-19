@@ -41,9 +41,13 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   };
 
   const handleClaim = async () => {
-    if (!markerId) return;
+    if (!markerId) {
+      console.error('M1QR-TRACE', { step: 'claim_error', error: 'No markerId provided' });
+      toast.error('Errore: marker non identificato');
+      return;
+    }
     setIsClaiming(true);
-    console.log('M1QR-TRACE', { step: 'claim_start', markerId });
+    console.log('M1QR-TRACE', { step: 'claim_start', markerId, rewardsCount: rewards.length });
 
     const { data, error } = await supabase.functions
       .invoke('claim-marker-reward', { body: { markerId } });

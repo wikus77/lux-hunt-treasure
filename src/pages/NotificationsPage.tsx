@@ -54,24 +54,42 @@ export const NotificationsPage: React.FC = () => {
         .eq('is_active', true)
         .or(`target_users.cs.{all},target_users.cs.{${user.id}}`)
         .order('created_at', { ascending: false });
+      
+      // Also check for any messages with empty or null target_users that should be global
+      const { data: globalData, error: globalError } = await supabase
+        .from('app_messages')
+        .select('*')
+        .eq('is_active', true)
+        .is('target_users', null)
+        .order('created_at', { ascending: false });
+
+      // Combine results from both queries
+      const allNotifications = [
+        ...(data || []),
+        ...(globalData || [])
+      ].filter((notification, index, self) => 
+        // Remove duplicates by id
+        index === self.findIndex(n => n.id === notification.id)
+      );
 
       console.log('[NOTIF DEBUG] Raw query result:', { 
-        data, 
-        error, 
+        data: allNotifications, 
+        error: error || globalError, 
         userTargets: [`all`, user.id],
-        totalMessages: data?.length,
-        pushMessages: data?.filter(msg => msg.message_type === 'push')?.length,
-        messageTypes: data?.map(msg => msg.message_type)
+        totalMessages: allNotifications.length,
+        pushMessages: allNotifications.filter(msg => msg.message_type === 'push').length,
+        messageTypes: allNotifications.map(msg => msg.message_type),
+        globalMessages: globalData?.length || 0
       });
 
-      if (error) {
-        console.error('[NOTIF DEBUG] Error loading notifications:', error);
+      if (error || globalError) {
+        console.error('[NOTIF DEBUG] Error loading notifications:', error || globalError);
         toast.error('Errore nel caricamento delle notifiche');
         return;
       }
 
-      // Process and filter notifications
-      const processedNotifications = (data || []).map(notification => ({
+      // Process and filter notifications - include ALL message types
+      const processedNotifications = allNotifications.map(notification => ({
         id: notification.id,
         title: notification.title || 'Notifica',
         content: notification.content || 'Contenuto non disponibile',
