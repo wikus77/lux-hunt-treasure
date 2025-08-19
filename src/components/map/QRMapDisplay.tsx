@@ -97,37 +97,23 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
       try {
         console.log('🎯 Fetching QR markers from buzz_map_markers...');
         
-        // Try buzz_map_markers view first
-        let { data, error } = await supabase
-          .from('buzz_map_markers')
-          .select('code,title,latitude,longitude');
-
+        // Use qr_codes table directly to avoid database issues
+        let data: any[] = [];
+        console.log('🔄 Loading from qr_codes table...');
+        const { data: qrData, error } = await supabase
+          .from('qr_codes')
+          .select('code,lat,lng,reward_type,is_active');
+          
         if (error) {
-          console.warn('buzz_map_markers error:', error?.message);
-        }
-
-        // Fallback to qr_codes if view is empty or fails
-        if (!data || data.length === 0) {
-          console.log('🔄 Fallback to qr_codes table...');
-          const fb = await supabase
-            .from('qr_codes')
-            .select('code,lat,lng,reward_type,is_active');
-          if (fb.data && fb.data.length > 0) {
-            data = fb.data.map(r => ({
-              code: r.code,
-              title: r.code,
-              latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
-              longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
-              reward_type: r.reward_type || 'buzz_credit',
-              is_active: r.is_active !== false
-            }));
-          }
-        } else {
-          // Add missing fields for buzz_map_markers
-          data = data.map(r => ({
-            ...r,
-            reward_type: 'buzz_credit',
-            is_active: true
+          console.warn('qr_codes error:', error?.message);
+        } else if (qrData && qrData.length > 0) {
+          data = qrData.map(r => ({
+            code: r.code,
+            title: r.code,
+            latitude: typeof r.lat === 'number' ? r.lat : Number(r.lat),
+            longitude: typeof r.lng === 'number' ? r.lng : Number(r.lng),
+            reward_type: r.reward_type || 'buzz_credit',
+            is_active: r.is_active !== false
           }));
         }
 

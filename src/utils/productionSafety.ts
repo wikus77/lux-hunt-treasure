@@ -13,7 +13,8 @@ export const setupProductionConsole = () => {
     
     console.log = (...args: any[]) => {
       // Only show critical logs in production
-      if (args[0]?.includes('CRITICAL') || args[0]?.includes('ERROR')) {
+      if (args.length > 0 && typeof args[0] === 'string' && 
+          (args[0].includes('CRITICAL') || args[0].includes('ERROR'))) {
         originalLog.apply(console, args);
       }
     };
