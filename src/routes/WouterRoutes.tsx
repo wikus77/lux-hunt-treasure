@@ -35,6 +35,7 @@ import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import PushTest from "@/pages/debug/PushTest";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
@@ -230,6 +231,11 @@ const WouterRoutes: React.FC = () => {
           {/* 🔍 NOTIFICATION DEBUG ROUTE */}
           <Route path="/notifications-debug">
             <NotificationDebug />
+          </Route>
+
+          {/* 🔧 DEBUG PUSH TEST ROUTE */}
+          <Route path="/debug/pushtest">
+            <PushTest />
           </Route>
 
           {/* Panel Access route */}
