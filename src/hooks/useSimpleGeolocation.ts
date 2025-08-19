@@ -21,7 +21,7 @@ export const useSimpleGeolocation = () => {
   const timeoutRef = useRef<NodeJS.Timeout>();
 
   const requestLocation = useCallback(async () => {
-    console.log('🎯 SIMPLE GEO: Starting location request...');
+    console.log('🎯 SIMPLE GEO: Starting location request... Browser:', navigator.userAgent);
     
     if (!navigator.geolocation) {
       const error = 'Geolocalizzazione non supportata dal browser';
@@ -41,7 +41,12 @@ export const useSimpleGeolocation = () => {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log('🎯 SIMPLE GEO: Success!', position.coords);
+        console.log('🎯 SIMPLE GEO: SUCCESS!!! Position received:', {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: position.timestamp
+        });
         
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);
@@ -59,10 +64,17 @@ export const useSimpleGeolocation = () => {
           hasPermission: true
         });
         
+        console.log('🎯 SIMPLE GEO: State updated, triggering toast...');
         toast.success('🎯 Posizione rilevata con successo!');
       },
       (error) => {
-        console.error('🎯 SIMPLE GEO: Error!', error);
+        console.error('🎯 SIMPLE GEO: ERROR!!!', {
+          code: error.code,
+          message: error.message,
+          PERMISSION_DENIED: error.PERMISSION_DENIED,
+          POSITION_UNAVAILABLE: error.POSITION_UNAVAILABLE,
+          TIMEOUT: error.TIMEOUT
+        });
         
         if (timeoutRef.current) {
           clearTimeout(timeoutRef.current);

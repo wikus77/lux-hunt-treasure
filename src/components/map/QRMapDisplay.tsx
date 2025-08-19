@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import '@/styles/qr-markers.css';
 import '@/styles/qr-markers-popup.css';
-import { useGeoWatcher } from '@/hooks/useGeoWatcher';
+// DISABLED: import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
 import GeoStatusBanner from '@/components/map/GeoStatusBanner';
@@ -47,7 +47,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const map = useMap();
   const RADIUS_M = 500;
   const NEAR_M = 75;
-  const watcher = useGeoWatcher();
+  // DISABLED: const watcher = useGeoWatcher();
   const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
   const TRACE_ID = 'M1QR-TRACE';
 
@@ -184,11 +184,12 @@ useEffect(() => {
 
 return (
   <>
-    {/* Geolocation Debug Banner (Dev Only) */}
+    {/* DISABLED: Geolocation Debug Banner temporaneo
     <GeoStatusBanner 
       geoState={watcher} 
       onRetryPermission={watcher.requestPermissions} 
     />
+    */}
     
     {console.log('M1QR-TRACE:', { 
       step: 'render_check', 
