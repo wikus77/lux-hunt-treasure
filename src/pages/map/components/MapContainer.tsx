@@ -18,6 +18,7 @@ import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
+import { useIPGeolocation } from '@/hooks/useIPGeolocation';
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -80,6 +81,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
   const geo = useSimpleGeolocation();
+  const ipGeo = useIPGeolocation();
   const mapRef = useRef<L.Map | null>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -111,17 +113,18 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     });
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
-  // ZOOM AUTOMATICO SULLA POSIZIONE
+  // ZOOM AUTOMATICO SULLA POSIZIONE (GPS o IP)
   React.useEffect(() => {
-    if (geo.coords && mapRef.current) {
-      console.log('🎯 AUTO-ZOOM: Centrando mappa su:', geo.coords);
+    const coords = geo.coords || ipGeo.coords;
+    if (coords && mapRef.current) {
+      console.log('🎯 AUTO-ZOOM: Centrando mappa su:', coords);
       
-      mapRef.current.setView([geo.coords.lat, geo.coords.lng], 15, {
+      mapRef.current.setView([coords.lat, coords.lng], 15, {
         animate: true,
         duration: 1.5
       });
     }
-  }, [geo.coords]);
+  }, [geo.coords, ipGeo.coords]);
 
   // Listen for BUZZ area creation events and auto-center map
   React.useEffect(() => {
@@ -231,7 +234,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         <BuzzMapAreas areas={currentWeekAreas} />
         
         {/* QR Map Display - Show QR codes on map */}
-        <QRMapDisplay userLocation={geo.coords} />
+        <QRMapDisplay userLocation={geo.coords || ipGeo.coords} />
         
         {/* Display search areas */}
         <SearchAreaMapLayer 
@@ -268,7 +271,19 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
 
       {/* Use the LocationButton component */}
-      <LocationButton requestLocationPermission={geo.requestLocation} />
+      <LocationButton requestLocationPermission={async () => {
+        // Prima prova GPS
+        await geo.requestLocation();
+        
+        // Se GPS fallisce (iframe), usa IP
+        setTimeout(async () => {
+          if (!geo.coords && !geo.isLoading) {
+            console.log('🌍 GPS failed, trying IP geolocation...');
+            toast.info('📍 GPS bloccato - Provo geolocalizzazione IP...');
+            await ipGeo.getLocationByIP();
+          }
+        }, 3000);
+      }} />
 
       {/* Add SearchAreaButton component */}
       <SearchAreaButton 
