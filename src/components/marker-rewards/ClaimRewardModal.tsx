@@ -92,7 +92,26 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto z-[50000] pointer-events-auto m1ssion-modal-content fixed inset-0 mx-auto my-auto w-[90vw] max-w-md h-fit transform-gpu">
+      <DialogContent 
+        className="m1ssion-modal-content fixed"
+        style={{
+          position: 'fixed' as const,
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          zIndex: 99999,
+          isolation: 'isolate',
+          willChange: 'transform',
+          pointerEvents: 'auto' as const,
+          maxWidth: '420px',
+          width: '90vw',
+          maxHeight: '80vh',
+          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 26, 26, 0.95))',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '24px',
+          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.1)'
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-gradient">
             🎁 Premio Trovato!
