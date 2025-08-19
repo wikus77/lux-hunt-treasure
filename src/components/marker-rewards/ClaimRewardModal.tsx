@@ -100,12 +100,17 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
             onClick={onClose}
           />
           
-          {/* Modal Content - M1SSION™ Style */}
+          {/* Modal Content - M1SSION™ Style - Mobile Optimized */}
           <div 
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90vw] max-w-md mx-auto"
-            style={{ pointerEvents: 'auto' }}
+            className="fixed inset-4 z-[9999] flex items-center justify-center"
+            style={{ 
+              pointerEvents: 'auto',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: 'env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px)'
+            }}
           >
-            <div className="bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#0a0a0a] border border-[#00D1FF]/30 rounded-2xl shadow-[0_0_50px_rgba(0,209,255,0.4)] backdrop-blur-xl relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#0a0a0a] via-[#1a1a2e] to-[#0a0a0a] border border-[#00D1FF]/30 rounded-2xl shadow-[0_0_50px_rgba(0,209,255,0.4)] backdrop-blur-xl relative overflow-hidden w-full max-w-md max-h-full overflow-y-auto">
               {/* Neon glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#00D1FF]/5 via-transparent to-[#FF1493]/5 rounded-2xl"></div>
               {/* Header */}
@@ -117,8 +122,8 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
                 </div>
               </div>
               
-              {/* Content */}
-              <div className="relative z-10 space-y-6 p-6">
+              {/* Content - Scrollable */}
+              <div className="relative z-10 space-y-6 p-6 max-h-[60vh] overflow-y-auto">
                 {/* Rewards List */}
                 <div className="space-y-4">
                   {rewards.map((reward, index) => (

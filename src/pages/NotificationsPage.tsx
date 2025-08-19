@@ -55,15 +55,39 @@ export const NotificationsPage: React.FC = () => {
         .or(`target_users.cs.{all},target_users.cs.{${user.id}}`)
         .order('created_at', { ascending: false });
 
-      console.log('📨 NOTIFICATIONS: Raw query result:', { data, error, userTargets: [`all`, user.id] });
+      console.log('[NOTIF DEBUG] Raw query result:', { 
+        data, 
+        error, 
+        userTargets: [`all`, user.id],
+        totalMessages: data?.length,
+        pushMessages: data?.filter(msg => msg.message_type === 'push')?.length,
+        messageTypes: data?.map(msg => msg.message_type)
+      });
 
       if (error) {
-        console.error('Error loading notifications:', error);
+        console.error('[NOTIF DEBUG] Error loading notifications:', error);
         toast.error('Errore nel caricamento delle notifiche');
         return;
       }
 
-      setNotifications(data || []);
+      // Process and filter notifications
+      const processedNotifications = (data || []).map(notification => ({
+        id: notification.id,
+        title: notification.title || 'Notifica',
+        content: notification.content || 'Contenuto non disponibile',
+        message_type: notification.message_type || 'info',
+        is_read: notification.is_read || false,
+        created_at: notification.created_at,
+        expiry_date: notification.expiry_date
+      }));
+
+      console.log('[NOTIF DEBUG] Processed notifications:', {
+        total: processedNotifications.length,
+        pushNotifications: processedNotifications.filter(n => n.message_type === 'push').length,
+        unread: processedNotifications.filter(n => !n.is_read).length
+      });
+
+      setNotifications(processedNotifications);
     } catch (err) {
       console.error('Error in loadNotifications:', err);
       toast.error('Errore di connessione');
