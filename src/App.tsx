@@ -15,9 +15,7 @@ import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
 import OneSignalSetup from "./components/push/OneSignalSetup";
-import { OneSignalInitializer } from "./components/OneSignalInitializer";
-import { IOSPushDiagnosticsPanel } from "./components/IOSPushDiagnosticsPanel";
-import { IOSOneSignalAutoManager } from "./components/IOSOneSignalAutoManager";
+import { OneSignalSingletonManager } from "./components/OneSignalSingletonManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
@@ -63,15 +61,7 @@ function App() {
         <Router>
           <SoundProvider>
             <AuthProvider>
-            <IOSOneSignalAutoManager />
-            <BuzzPaymentMonitor />
-            <LegalOnboarding />
-            <WouterRoutes />
-            <InstallPrompt />
-            <PushSetup />
-            <OneSignalSetup />
-            <OneSignalInitializer />
-            <IOSPushDiagnosticsPanel />
+            <OneSignalSingletonManager />
             <XpSystemManager />
             </AuthProvider>
             
