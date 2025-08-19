@@ -211,8 +211,10 @@ return (
                   const markerId = qr.code;
                   console.log('M1QR-TRACE', { step: 'click_marker_start', markerId });
                   
-                  // Fetch rewards directly for immediate modal opening
+                   // Fetch rewards for this specific marker only
                   try {
+                    console.log('M1QR-TRACE', { step: 'fetching_rewards_for_marker', markerId });
+                    
                     const { data: rewards, error } = await supabase
                       .from('marker_rewards')
                       .select('reward_type, payload, description')
@@ -220,11 +222,21 @@ return (
 
                     if (error) {
                       console.error('M1QR-TRACE', { step: 'rewards_fetch_error', markerId, error });
+                      toast.error('Errore nel caricamento premi');
                       return;
                     }
 
-                    setClaimData({ isOpen: true, markerId, rewards: rewards || [] });
-                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: (rewards || []).length });
+                    // Filter rewards to only show those specific to this marker
+                    const markerSpecificRewards = rewards || [];
+                    console.log('M1QR-TRACE', { 
+                      step: 'filtered_rewards', 
+                      markerId, 
+                      totalRewards: rewards?.length,
+                      filteredRewards: markerSpecificRewards.length 
+                    });
+
+                    setClaimData({ isOpen: true, markerId, rewards: markerSpecificRewards });
+                    console.log('M1QR-TRACE', { step: 'open_modal', markerId, rewardsCount: markerSpecificRewards.length });
                   } catch (err) {
                     console.error('M1QR-TRACE', { step: 'click_error', markerId, err });
                   }

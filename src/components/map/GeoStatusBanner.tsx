@@ -16,8 +16,9 @@ export const GeoStatusBanner: React.FC<GeoStatusBannerProps> = ({
   isDevMode = import.meta.env.DEV,
   onRetryPermission
 }) => {
-  // Show permission guide if explicitly denied, otherwise show debug banner in dev mode
-  if (geoState.debugInfo?.permission === 'denied' && !geoState.granted) {
+  // Always show permission guide for iOS PWA when permission is denied or has error
+  if ((geoState.debugInfo?.permission === 'denied' && !geoState.granted) || 
+      (geoState.isIOS && geoState.isPWA && geoState.error)) {
     return (
       <GeolocationPermissionGuide 
         isIOS={geoState.isIOS}

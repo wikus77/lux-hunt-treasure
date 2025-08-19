@@ -58,6 +58,14 @@ export function useGeoWatcher() {
 
   const onError = (err: GeolocationPositionError) => {
     console.error('❌ Geolocation error:', err.code, err.message);
+    console.log('🔍 GEO DEBUG INFO:', {
+      errorCode: err.code,
+      errorMessage: err.message,
+      isIOS,
+      isPWA,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent
+    });
     
     const errorMessages = {
       1: 'Accesso alla posizione negato. Abilita la geolocalizzazione nelle impostazioni del browser.',
@@ -150,6 +158,13 @@ export function useGeoWatcher() {
         try {
           const permission = await navigator.permissions.query({ name: 'geolocation' });
           console.log('🔐 Initial permission state:', permission.state);
+          console.log('🔍 PERMISSION DEBUG:', {
+            permissionState: permission.state,
+            permissionObject: permission,
+            isIOS,
+            isPWA,
+            navigatorGeolocation: !!navigator.geolocation
+          });
           
           if (permission.state === 'denied') {
             setState(s => ({ 
