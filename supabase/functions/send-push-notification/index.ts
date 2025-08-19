@@ -104,23 +104,25 @@ serve(async (req: Request) => {
     }
 
     if (!devices || devices.length === 0) {
-      console.log('⚠️ CRITICAL: No OneSignal device tokens found in database');
+      console.log('🚨 CRITICAL ISSUE: No OneSignal device tokens found in database');
       console.log('🔍 Device token debug:', {
         queryUsed: `device_type = 'onesignal'`,
         targetUserId: target_user_id,
-        deviceCount: devices?.length || 0
+        deviceCount: devices?.length || 0,
+        criticalIssue: 'NO_ONESIGNAL_TOKENS_REGISTERED'
       });
       
-      // Still save the notification to database even if no devices
+      // ALWAYS save notification to database, even with no devices
       const notificationData = {
         title: title || "M1SSION™",
-        content: body || "Nuova notifica",
+        content: body || "Notifica push non consegnata",
         message_type: 'push',
         is_active: true,
         target_users: target_user_id ? [target_user_id] : ['all'],
         created_at: new Date().toISOString()
       };
 
+      console.log('💾 Saving notification despite no devices:', notificationData);
       const { error: dbSaveError } = await supabase
         .from('app_messages')
         .insert([notificationData]);
@@ -130,13 +132,38 @@ serve(async (req: Request) => {
       } else {
         console.log('✅ Notification saved to database despite no devices');
       }
+
+      // ALSO try to save to user_notifications if target_user_id is provided
+      if (target_user_id) {
+        console.log('💾 Also saving to user_notifications for user:', target_user_id);
+        const { error: userNotifError } = await supabase
+          .from('user_notifications')
+          .insert([{
+            user_id: target_user_id,
+            notification_type: 'push',
+            title: title || "M1SSION™",
+            message: `${body || "Notifica push"} (Push non consegnato: nessun dispositivo registrato)`,
+            metadata: { 
+              source: 'failed_push_notification', 
+              reason: 'no_devices_registered',
+              sent_at: new Date().toISOString()
+            }
+          }]);
+        
+        if (userNotifError) {
+          console.error('⚠️ Failed to save user notification:', userNotifError);
+        } else {
+          console.log('✅ User notification saved for failed push');
+        }
+      }
       
       return new Response(JSON.stringify({ 
         success: false, 
-        message: "CRITICAL: No devices registered for push notifications",
+        message: "❌ CRITICAL: Nessun dispositivo registrato per le notifiche push",
         sent: 0,
         total: 0,
-        critical_issue: "No OneSignal tokens in device_tokens table"
+        critical_issue: "NO_ONESIGNAL_TOKENS_IN_DEVICE_TOKENS_TABLE",
+        instruction: "L'utente deve prima attivare le notifiche push nell'app per registrare il token OneSignal"
       }), {
         status: 200,
         headers: corsHeaders

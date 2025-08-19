@@ -10,6 +10,7 @@ import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
+import { OneSignalInitializer } from '@/components/OneSignalInitializer';
 
 // Initialize production optimizations
 setupProductionConsole();
@@ -89,6 +90,7 @@ const renderApp = () => {
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
           <EnhancedToastProvider>
+            <OneSignalInitializer />
             <App />
           </EnhancedToastProvider>
         </QueryClientProvider>

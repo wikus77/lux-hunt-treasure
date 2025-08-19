@@ -90,16 +90,26 @@ export const NotificationsPage: React.FC = () => {
       // Add app messages (global notifications)
       if (appMessages) {
         appMessages.forEach(msg => {
-          // Skip corrupted messages
-          if (msg.title === 'M1' && !msg.content) {
-            console.warn('[NOTIF DEBUG] Skipping corrupted app message:', msg.id);
+          // Enhanced corruption detection for app messages
+          const title = msg.title?.trim() || '';
+          const content = msg.content?.trim() || '';
+          
+          // Skip severely corrupted messages
+          const isCorrupted = 
+            (title === 'M1' || title === 'm1') && (!content || content === 'M1' || content === 'm1') ||
+            (!title && !content) ||
+            (title.length === 1 && !content) ||
+            (title === content && title.length < 3);
+          
+          if (isCorrupted) {
+            console.warn('[NOTIF DEBUG] Skipping corrupted app message:', { id: msg.id, title, content });
             return;
           }
           
           allNotifications.push({
             id: msg.id,
-            title: msg.title || 'Notifica',
-            content: msg.content || '',
+            title: title || 'Notifica di Sistema',
+            content: content || 'Contenuto non disponibile',
             message_type: msg.message_type || 'info',
             is_read: msg.is_read || false,
             created_at: msg.created_at,
@@ -111,16 +121,26 @@ export const NotificationsPage: React.FC = () => {
       // Add user notifications (personal from markers, etc.)
       if (userNotifications) {
         userNotifications.forEach(notif => {
-          // Skip corrupted notifications
-          if (notif.title === 'M1' && !notif.message) {
-            console.warn('[NOTIF DEBUG] Skipping corrupted user notification:', notif.id);
+          // Enhanced corruption detection for user notifications
+          const title = notif.title?.trim() || '';
+          const message = notif.message?.trim() || '';
+          
+          // Skip severely corrupted notifications
+          const isCorrupted = 
+            (title === 'M1' || title === 'm1') && (!message || message === 'M1' || message === 'm1') ||
+            (!title && !message) ||
+            (title.length === 1 && !message) ||
+            (title === message && title.length < 3);
+          
+          if (isCorrupted) {
+            console.warn('[NOTIF DEBUG] Skipping corrupted user notification:', { id: notif.id, title, message });
             return;
           }
           
           allNotifications.push({
             id: notif.id,
-            title: notif.title || 'Notifica Personale',
-            content: notif.message || '',
+            title: title || 'Premio Ricevuto',
+            content: message || 'Dettagli non disponibili',
             message_type: notif.type || 'reward',
             is_read: notif.is_read || false,
             created_at: notif.created_at,
