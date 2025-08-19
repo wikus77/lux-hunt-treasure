@@ -1,3 +1,4 @@
+/* © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT */
 /* M1SSION™ Marker Popup Styles */
 .m1ssion-modal {
   position: fixed;
@@ -21,11 +22,14 @@
   width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 20000 !important;
+  z-index: 99999 !important;
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
+  isolation: isolate !important;
+  will-change: transform !important;
+  pointer-events: auto !important;
 }
 
 .m1ssion-modal-content::before {
@@ -65,7 +69,7 @@
   transform: none;
 }
 
-/* Ensure modal is above Leaflet controls */
+/* CRITICAL: Ensure modal is above ALL Leaflet elements */
 .leaflet-pane,
 .leaflet-control-container {
   z-index: 400 !important;
@@ -83,28 +87,7 @@ body.m1ssion-modal-open .dynamic-island {
   z-index: 8000 !important;
 }
 
-/* Strengthen popup disabling on /map */
-.page-map .leaflet-popup {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-}
-
-/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ */
-/* CRITICAL: Modal z-index per iOS Safari compatibilità */
-[data-radix-portal], 
-.radix-dialog-content, 
-.m1ssion-modal-content {
-  z-index: 50000 !important; 
-  position: fixed !important;
-  isolation: isolate !important;
-  transform: translate3d(0, 0, 0) !important;
-  -webkit-transform: translate3d(0, 0, 0) !important;
-  will-change: transform !important;
-}
-
-/* © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ */
-/* Disable ALL Leaflet popups on /map page */
+/* CRITICAL: Disable ALL Leaflet popups on /map page */
 .page-map .leaflet-popup,
 .page-map .leaflet-popup-pane {
   display: none !important;
@@ -115,19 +98,7 @@ body.m1ssion-modal-open .dynamic-island {
 
 /* Force modal portal above everything */
 [data-radix-portal] {
-  z-index: 50000 !important;
-}
-
-/* CRITICAL: Force M1SSION modal content above everything - FIXED */
-.m1ssion-modal-content {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) translate3d(0, 0, 0) !important;
   z-index: 99999 !important;
-  will-change: transform !important;
-  isolation: isolate !important;
-  pointer-events: auto !important;
 }
 
 /* Ensure marker circles are clickable */

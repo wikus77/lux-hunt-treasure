@@ -1,4 +1,4 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
 import React, { useEffect } from 'react';
 import { useProfileRealtime } from '@/hooks/useProfileRealtime';
 
