@@ -100,12 +100,14 @@ const MapContainer = ({
 
   return (
     <div 
-      className="w-full h-full relative overflow-hidden"
+      className="map-container-wrapper w-full h-full relative overflow-hidden"
       style={{
         width: '100%',
         height: '100%',
         borderRadius: '24px',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        zIndex: 1,
+        isolation: 'isolate'
       }}
     >
       <LeafletMapContainer 

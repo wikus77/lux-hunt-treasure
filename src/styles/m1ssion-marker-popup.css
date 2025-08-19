@@ -22,7 +22,7 @@
   width: 90vw;
   max-height: 80vh;
   overflow-y: auto;
-  z-index: 10000 !important;
+  z-index: 100000 !important;
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
@@ -30,6 +30,12 @@
   isolation: isolate !important;
   will-change: transform !important;
   pointer-events: auto !important;
+}
+
+/* Modal backdrop blur effect when modal is open */
+.m1ssion-modal-open .map-container-wrapper {
+  filter: blur(2px);
+  transition: filter 0.2s ease;
 }
 
 .m1ssion-modal-content::before {
