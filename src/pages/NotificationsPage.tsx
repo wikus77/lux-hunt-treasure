@@ -47,12 +47,15 @@ export const NotificationsPage: React.FC = () => {
     try {
       setLoading(true);
 
+      // Enhanced query to properly fetch all notifications including push notifications
       const { data, error } = await supabase
         .from('app_messages')
         .select('*')
         .eq('is_active', true)
         .or(`target_users.cs.{all},target_users.cs.{${user.id}}`)
         .order('created_at', { ascending: false });
+
+      console.log('📨 NOTIFICATIONS: Raw query result:', { data, error, userTargets: [`all`, user.id] });
 
       if (error) {
         console.error('Error loading notifications:', error);
@@ -180,6 +183,12 @@ export const NotificationsPage: React.FC = () => {
           icon: <Trophy className={`${baseClass} text-yellow-400`} />,
           bgColor: 'bg-yellow-500/10 border-yellow-500/30',
           glowClass: ''
+        };
+      case 'push':
+        return {
+          icon: <Bell className={`${baseClass} text-[#00D1FF]`} />,
+          bgColor: 'bg-[#00D1FF]/10 border-[#00D1FF]/30',
+          glowClass: 'shadow-[0_0_15px_rgba(0,209,255,0.3)]'
         };
       default:
         return {

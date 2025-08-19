@@ -25,25 +25,31 @@ export const EnhancedToastProvider: React.FC<EnhancedToastProviderProps> = ({ ch
         visibleToasts={3}
         toastOptions={{
           style: {
-            background: 'rgba(0, 0, 0, 0.92)',
+            background: 'rgba(0, 0, 0, 0.95)',
             color: 'white',
-            border: '1px solid rgba(0, 209, 255, 0.4)',
-            borderRadius: '16px',
-            backdropFilter: 'blur(20px)',
-            boxShadow: '0 8px 32px rgba(0, 209, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-            fontFamily: 'Inter, sans-serif',
+            border: '1px solid rgba(0, 209, 255, 0.5)',
+            borderRadius: '20px',
+            backdropFilter: 'blur(24px)',
+            boxShadow: '0 12px 40px rgba(0, 209, 255, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.2)',
+            fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
             fontSize: '15px',
-            padding: '12px 20px',
-            minHeight: '48px',
+            padding: '16px 24px',
+            minHeight: '56px',
             width: 'auto',
-            maxWidth: '340px',
+            maxWidth: '380px',
             margin: '0 auto',
-            marginTop: '60px',
+            marginTop: '80px', // Moved further down to avoid UI overlap
             textAlign: 'center',
             fontWeight: '500',
-            letterSpacing: '0.025em'
+            letterSpacing: '0.025em',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            WebkitUserSelect: 'none',
+            userSelect: 'none'
           },
-          className: 'enhanced-toast-apple',
+          className: 'enhanced-toast-apple-ios',
+          unstyled: false
         }}
       />
     </EnhancedToastContext.Provider>
