@@ -113,6 +113,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     });
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
+  // AUTO-START IP GEOLOCATION immediatamente
+  React.useEffect(() => {
+    console.log('🌍 AUTO-START: Avviando geolocalizzazione IP automaticamente...');
+    ipGeo.getLocationByIP();
+  }, []);
+
   // ZOOM AUTOMATICO SULLA POSIZIONE (GPS o IP)
   React.useEffect(() => {
     const coords = geo.coords || ipGeo.coords;
@@ -272,17 +278,23 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
       {/* Use the LocationButton component */}
       <LocationButton requestLocationPermission={async () => {
-        // Prima prova GPS
-        await geo.requestLocation();
+        console.log('🎯 LOCATION BUTTON: Pressed!');
         
-        // Se GPS fallisce (iframe), usa IP
-        setTimeout(async () => {
-          if (!geo.coords && !geo.isLoading) {
-            console.log('🌍 GPS failed, trying IP geolocation...');
-            toast.info('📍 GPS bloccato - Provo geolocalizzazione IP...');
-            await ipGeo.getLocationByIP();
-          }
-        }, 3000);
+        // Attiva immediatamente IP geolocation
+        const ipLocationPromise = ipGeo.getLocationByIP();
+        
+        // Prova GPS in parallelo con timeout molto breve
+        const gpsPromise = new Promise((resolve) => {
+          setTimeout(() => {
+            console.log('🎯 GPS timeout reached, IP geolocation should be active');
+            resolve(null);
+          }, 1000); // 1 secondo timeout per GPS
+          
+          geo.requestLocation().then(resolve).catch(() => resolve(null));
+        });
+        
+        // Usa la prima che risponde
+        await Promise.race([ipLocationPromise, gpsPromise]);
       }} />
 
       {/* Add SearchAreaButton component */}
