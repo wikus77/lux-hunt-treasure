@@ -126,6 +126,9 @@
   "web_app_capability": "standalone",
   "mobile_web_app_capable": "yes",
   "mobile_web_app_status_bar_style": "black",
+  "apple-mobile-web-app-capable": "yes",
+  "apple-mobile-web-app-status-bar-style": "black",
+  "apple-mobile-web-app-title": "M1SSION",
   "notification_permission": {
     "allowed": true
   }
