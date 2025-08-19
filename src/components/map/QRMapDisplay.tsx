@@ -9,6 +9,7 @@ import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import '@/styles/qr-markers.css';
+import '@/styles/qr-marker-m1ssion.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';

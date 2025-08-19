@@ -192,12 +192,41 @@ serve(async (req) => {
       }
     }
 
+    // Send push notification for successful claim
+    try {
+      const notificationTitle = "🎁 Premio Riscattato!";
+      const notificationMessage = rewards[0]?.description || "Hai ottenuto una ricompensa speciale!";
+      
+      const { error: notifError } = await admin.functions.invoke('send-push-notification', {
+        body: {
+          userId: user_id,
+          title: notificationTitle,
+          message: notificationMessage,
+          data: {
+            type: 'reward_claimed',
+            markerId,
+            rewardType: rewards[0]?.reward_type,
+            timestamp: new Date().toISOString()
+          }
+        }
+      });
+      
+      if (notifError) {
+        console.error(`TRACE_PUSH: notification error:`, notifError);
+      } else {
+        console.log(`TRACE_PUSH: notification sent successfully - user:${user_id}`);
+      }
+    } catch (pushError) {
+      console.error(`TRACE_PUSH: push notification failed:`, pushError);
+    }
+
     console.log(`TRACE_RESPONSE: claim success - user:${user_id} marker:${markerId} rewards:${rewards.map(r => r.reward_type).join(',')}`);
 
     return json({
       ok: true,
       reward: { type: rewards[0]?.reward_type || "unknown", label: rewards[0]?.description || "Ricompensa" },
-      nextRoute
+      nextRoute,
+      summary
     }, 200);
 
   } catch (e) {
