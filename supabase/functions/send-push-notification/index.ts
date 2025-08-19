@@ -168,21 +168,28 @@ serve(async (req: Request) => {
       });
     }
 
-    // Save notification to database
-    if (target_user_id) {
-      const { error: notifError } = await supabase
-        .from('user_notifications')
-        .insert({
-          user_id: target_user_id,
-          title: title || "M1SSION™",
-          message: body || "Nuova notifica",
-          notification_type: "push",
-          metadata: { oneSignalId: oneSignalResult.id }
-        });
+    // Save notification to database for sync with notifications page
+    try {
+      const notificationData = {
+        title: title || "M1SSION™",
+        content: body || "Nuova notifica",
+        message_type: 'push',
+        is_active: true,
+        target_users: target_user_id ? [target_user_id] : ['all'],
+        created_at: new Date().toISOString()
+      };
 
-      if (notifError) {
-        console.error('❌ Error saving notification:', notifError);
+      const { error: dbError } = await supabase
+        .from('app_messages')
+        .insert([notificationData]);
+
+      if (dbError) {
+        console.error('⚠️ Failed to save notification to DB:', dbError);
+      } else {
+        console.log('💾 Notification saved to database for sync');
       }
+    } catch (saveError) {
+      console.error('⚠️ Database save error:', saveError);
     }
 
     // 🟢 Risposta OK
