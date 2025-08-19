@@ -9,6 +9,7 @@ export type GeoState = {
   error?: string;
   isIOS?: boolean;
   isPWA?: boolean;
+  permissionState?: PermissionState;
 };
 
 // iOS PWA-friendly geolocation with proper error handling and fallbacks
@@ -34,7 +35,8 @@ export function useGeoWatcher() {
       coords: { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy },
       ts: Date.now(),
       isIOS,
-      isPWA
+      isPWA,
+      error: undefined
     });
   };
 
@@ -121,15 +123,37 @@ export function useGeoWatcher() {
     try {
       console.log('🔐 Requesting geolocation permission...');
       
+      // iOS PWA specific check
+      if (isIOS && isPWA) {
+        console.log('🍎 iOS PWA detected, using optimized approach');
+        
+        // Direct getCurrentPosition for iOS PWA
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            onSuccess,
+            onError,
+            { 
+              enableHighAccuracy: false, 
+              timeout: 15000, 
+              maximumAge: 30000 
+            }
+          );
+        }
+        return;
+      }
+      
       // Check permission API if available
       if ('permissions' in navigator) {
         try {
           const result = await navigator.permissions.query({ name: 'geolocation' });
           console.log('🔐 Permission state:', result.state);
           
+          setState(s => ({ ...s, permissionState: result.state }));
+          
           if (result.state === 'denied') {
             setState(s => ({ 
               ...s, 
+              granted: false,
               error: 'Geolocalizzazione bloccata. Sblocca nelle impostazioni del browser.',
               isIOS,
               isPWA
@@ -153,12 +177,22 @@ export function useGeoWatcher() {
               onError(err);
               resolve();
             },
-            { enableHighAccuracy: false, timeout: 10000 }
+            { 
+              enableHighAccuracy: !isIOS, 
+              timeout: isIOS ? 15000 : 10000,
+              maximumAge: isIOS ? 30000 : 10000
+            }
           );
         });
       }
     } catch (e) {
       console.error('Permission request failed:', e);
+      setState(s => ({ 
+        ...s, 
+        error: 'Errore durante la richiesta di geolocalizzazione',
+        isIOS,
+        isPWA
+      }));
     }
   };
 

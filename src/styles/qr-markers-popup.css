@@ -1,0 +1,58 @@
+/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ */
+
+/* M1SSION™ Custom Popup Styles */
+.leaflet-popup.m1ssion-popup .leaflet-popup-content-wrapper {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.leaflet-popup.m1ssion-popup .leaflet-popup-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.leaflet-popup.m1ssion-popup .leaflet-popup-tip {
+  background: rgba(0, 0, 0, 0.9) !important;
+  border: 1px solid rgba(34, 197, 94, 0.3) !important;
+}
+
+.leaflet-popup.m1ssion-popup .leaflet-popup-close-button {
+  color: #ffffff !important;
+  font-size: 18px !important;
+  padding: 4px 8px !important;
+  background: rgba(0, 0, 0, 0.8) !important;
+  border-radius: 0 8px 0 0 !important;
+}
+
+/* Animation for popup appearance */
+.leaflet-popup.m1ssion-popup {
+  animation: m1ssionPopupFadeIn 0.3s ease-out;
+}
+
+@keyframes m1ssionPopupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Enhanced marker glow effect */
+.qr-marker.qr--active {
+  animation: markerPulse 2s ease-in-out infinite;
+}
+
+@keyframes markerPulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px #00f0ff);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px #00f0ff) drop-shadow(0 0 20px #00f0ff80);
+  }
+}

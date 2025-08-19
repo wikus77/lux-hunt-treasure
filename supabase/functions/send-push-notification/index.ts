@@ -14,19 +14,39 @@ serve(async (req: Request) => {
   }
 
   try {
-    // 🔑 Controllo autorizzazione con Service Role Key
+    console.log('🚀 Push notification request started');
+    
+    // 🔑 Controllo autorizzazione con Service Role Key  
     const authHeader = req.headers.get("authorization") || "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    console.log('🔐 Auth check:', {
+      hasAuthHeader: !!authHeader,
+      hasServiceKey: !!serviceKey,
+      authHeaderLength: authHeader.length
+    });
 
     if (!authHeader.includes(serviceKey)) {
+      console.error('❌ Authorization failed');
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: corsHeaders
       });
     }
+    
+    console.log('✅ Authorization successful');
 
     // 📩 Lettura payload JSON
-    const { user_id, title, body, target_user_id } = await req.json();
+    const requestBody = await req.json();
+    const { user_id, title, body, target_user_id } = requestBody;
+    
+    console.log('📩 Request payload:', {
+      user_id,
+      title,
+      body,
+      target_user_id,
+      fullPayload: requestBody
+    });
     
     console.log(`📲 Sending OneSignal push notification: ${title} - ${body}`);
 
@@ -91,7 +111,7 @@ serve(async (req: Request) => {
     const playerIds = devices.map(device => device.token);
     console.log(`📱 Found ${playerIds.length} OneSignal player IDs`);
 
-    // Send OneSignal notification
+    // Send OneSignal notification with enhanced logging
     const oneSignalPayload = {
       app_id: oneSignalAppId,
       include_player_ids: playerIds,
@@ -106,18 +126,26 @@ serve(async (req: Request) => {
     console.log('🔔 Sending to OneSignal API...');
     console.log('📤 OneSignal payload:', JSON.stringify(oneSignalPayload, null, 2));
     
-    const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Basic ${oneSignalRestApiKey}`
-      },
-      body: JSON.stringify(oneSignalPayload)
-    });
+    let oneSignalResponse;
+    let oneSignalResult;
+    
+    try {
+      oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${oneSignalRestApiKey}`
+        },
+        body: JSON.stringify(oneSignalPayload)
+      });
 
-    console.log('📡 OneSignal HTTP status:', oneSignalResponse.status);
-    const oneSignalResult = await oneSignalResponse.json();
-    console.log('🔔 OneSignal response:', oneSignalResult);
+      console.log('📡 OneSignal HTTP status:', oneSignalResponse.status);
+      oneSignalResult = await oneSignalResponse.json();
+      console.log('🔔 OneSignal response:', oneSignalResult);
+    } catch (fetchError) {
+      console.error('❌ OneSignal fetch error:', fetchError);
+      throw new Error(`OneSignal request failed: ${fetchError.message}`);
+    }
     
     // Check for OneSignal errors
     if (!oneSignalResponse.ok) {

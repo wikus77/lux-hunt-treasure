@@ -7,6 +7,7 @@ import { QrCode, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import '@/styles/qr-markers.css';
+import '@/styles/qr-markers-popup.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
@@ -223,26 +224,32 @@ return (
                 }
               }}
             >
-              <Popup>
-                <div className="text-center space-y-2 min-w-[180px]">
-                  <div className="flex items-center gap-2 justify-center">
-                    <QrCode className="w-4 h-4 text-primary" />
-                    <h3 className="font-semibold text-sm">M1SSION™</h3>
+              <Popup
+                className="m1ssion-popup"
+                closeButton={false}
+                autoClose={false}
+              >
+                <div className="bg-black/90 text-white p-4 rounded-lg border border-cyan-400/20 backdrop-blur-sm min-w-[200px]">
+                  <div className="flex items-center gap-2 justify-center mb-3">
+                    <QrCode className="w-5 h-5 text-cyan-400" />
+                    <h3 className="font-bold text-white text-lg">M1SSION™</h3>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">{qr.title || qr.code}</p>
-                    <Badge style={{ background: qr.is_active ? '#22c55e' : '#ef4444', color: 'white' }} className="text-xs">
+                  <div className="text-center mb-3">
+                    <p className="font-medium text-white mb-2">{qr.title || qr.code}</p>
+                    <Badge 
+                      className={`${qr.is_active ? 'bg-green-500' : 'bg-red-500'} text-white text-xs border-0`}
+                    >
                       {qr.is_active ? 'ATTIVO' : 'RISCATTATO'}
                     </Badge>
                   </div>
                   {userLocation && (
-                    <div className="text-xs text-gray-600 flex items-center justify-center gap-1">
+                    <div className="text-xs text-cyan-300 flex items-center justify-center gap-1 mb-3">
                       <MapPin className="w-3 h-3" />
-                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m</span>
+                      <span>{Math.round(distance(userLocation, {lat:qr.lat,lng:qr.lng}))}m di distanza</span>
                     </div>
                   )}
-                  <div className="text-xs text-muted-foreground">
-                    Click marker for rewards
+                  <div className="text-xs text-cyan-200 text-center">
+                    🎯 Clicca il marker per i premi
                   </div>
                 </div>
               </Popup>
