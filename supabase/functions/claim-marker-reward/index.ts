@@ -291,6 +291,40 @@ serve(async (req) => {
       }
     }
 
+    // 🔔 CRITICAL: Send OneSignal push notification for marker discovery
+    try {
+      console.log(`M1QR-TRACE: Sending OneSignal push notification...`);
+      
+      const pushResponse = await fetch(`${url}/functions/v1/send-push-notification-onesignal`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${service}`,
+        },
+        body: JSON.stringify({
+          user_id,
+          title: '🛡️ Premio Trovato!',
+          message: 'Hai scoperto un marker con premio speciale.',
+          data: {
+            marker_id: markerId,
+            reward_types: rewards.map(r => r.reward_type).join(','),
+            source: 'marker_discovery'
+          }
+        }),
+      });
+
+      const pushResult = await pushResponse.json();
+      
+      if (pushResponse.ok) {
+        console.log(`M1QR-TRACE: ✅ OneSignal push sent successfully:`, pushResult);
+      } else {
+        console.error(`M1QR-TRACE: ❌ OneSignal push failed:`, pushResult);
+      }
+    } catch (pushError) {
+      console.error(`M1QR-TRACE: ❌ OneSignal push error:`, pushError);
+      // Non blocchiamo il flusso principale se il push fallisce
+    }
+
     console.log(`M1QR-TRACE: claim success - user:${user_id} marker:${markerId} rewards:${rewards.map(r => r.reward_type).join(',')}`);
 
     return json({
