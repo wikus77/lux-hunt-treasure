@@ -100,11 +100,12 @@ const MapContainer = ({
 
   return (
     <div 
-      className="flex-1 relative w-full border border-muted/20 rounded-lg overflow-hidden bg-muted/10"
+      className="w-full h-full relative overflow-hidden"
       style={{
-        height: 'calc(100dvh - 60px - 80px)', // Header + BottomNav
-        minHeight: '400px',
-        margin: '8px'
+        width: '100%',
+        height: '100%',
+        borderRadius: '24px',
+        overflow: 'hidden'
       }}
     >
       <LeafletMapContainer 

@@ -59,7 +59,7 @@ function App() {
             
           </SoundProvider>
         </Router>
-        <Toaster closeButton={true} position="top-center" />
+        <Toaster closeButton={false} position="top-right" />
       </HelmetProvider>
     </GlobalErrorBoundary>
   );
