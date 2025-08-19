@@ -9,10 +9,15 @@ import { Bell, CheckCircle, XCircle } from 'lucide-react';
 export const OneSignalTestButton = () => {
   const testOneSignal = async () => {
     try {
-      console.log('🔔 TESTING OneSignal...');
+      console.log('🔔 TESTING OneSignal...', {
+        OneSignalInitialized: (window as any).OneSignalInitialized,
+        OneSignalExists: !!(window as any).OneSignal,
+        url: window.location.href
+      });
       
       // Check if OneSignal is initialized
       if (!(window as any).OneSignalInitialized) {
+        console.error('❌ OneSignal non inizializzato');
         toast.error('❌ OneSignal non inizializzato');
         return;
       }

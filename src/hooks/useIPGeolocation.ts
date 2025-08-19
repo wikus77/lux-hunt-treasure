@@ -15,6 +15,7 @@ export const useIPGeolocation = () => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const getLocationByIP = useCallback(async () => {
+    console.log('🌍 IP GEOLOCATION: Starting IP-based location...', { coords, isLoading });
     setIsLoading(true);
     console.log('🌍 IP GEOLOCATION: Starting IP-based location...');
     
@@ -59,15 +60,20 @@ export const useIPGeolocation = () => {
       
       if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
         const newCoords = { lat: parseFloat(lat), lng: parseFloat(lng) };
+        
+        console.log('🌍 IP GEOLOCATION: Checking city for Milano override:', { city, country, coords: newCoords });
+        
         // CRITICAL: Override Milano se viene rilevata automaticamente
-        if (city.toLowerCase().includes('milan') || city.toLowerCase().includes('milano')) {
+        if (city && (city.toLowerCase().includes('milan') || city.toLowerCase().includes('milano'))) {
+          console.log('🌍 IP GEOLOCATION: MILANO DETECTED! Applying override...');
           toast.success(`🌍 Override IP (${city} -> Europa Centrale)`);
-          console.log('🌍 IP GEOLOCATION: Milano detected, using Europe fallback');
           const europeanCoords = { lat: 46.0, lng: 8.0 };
           setCoords(europeanCoords);
+          console.log('🌍 IP GEOLOCATION: Override applied, coords set to:', europeanCoords);
           return europeanCoords;
         }
         
+        console.log('🌍 IP GEOLOCATION: No override needed, using original coords:', newCoords);
         setCoords(newCoords);
         toast.success(`🌍 Posizione rilevata via IP: ${city}, ${country}`);
         console.log('🌍 IP GEOLOCATION: SUCCESS!', newCoords);
@@ -88,15 +94,23 @@ export const useIPGeolocation = () => {
         if (data.loc) {
           const [lat, lng] = data.loc.split(',').map(parseFloat);
           if (!isNaN(lat) && !isNaN(lng)) {
+            console.log('🌍 IP GEOLOCATION: ipinfo.io success, checking city for Milano override:', { 
+              city: data.city, 
+              country: data.country, 
+              coords: { lat, lng } 
+            });
+            
             // CRITICAL: Override Milano se viene rilevata automaticamente
-            if (data.city?.toLowerCase().includes('milan') || data.city?.toLowerCase().includes('milano')) {
+            if (data.city && (data.city.toLowerCase().includes('milan') || data.city.toLowerCase().includes('milano'))) {
+              console.log('🌍 IP GEOLOCATION: MILANO DETECTED in ipinfo.io! Applying override...');
               toast.success(`🌍 Override IP (${data.city} -> Europa Centrale)`);
-              console.log('🌍 IP GEOLOCATION: Milano detected in ipinfo.io, using Europe fallback');
               const europeanCoords = { lat: 46.0, lng: 8.0 };
               setCoords(europeanCoords);
+              console.log('🌍 IP GEOLOCATION: Override applied, coords set to:', europeanCoords);
               return europeanCoords;
             }
             
+            console.log('🌍 IP GEOLOCATION: No override needed for ipinfo.io, using original coords');
             const newCoords = { lat, lng };
             setCoords(newCoords);
             toast.success(`🌍 Posizione rilevata via IP: ${data.city || 'Unknown'}, ${data.country || 'Unknown'}`);
