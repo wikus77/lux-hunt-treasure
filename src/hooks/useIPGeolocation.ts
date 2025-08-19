@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Geolocalizzazione IP come fallback per iframe Lovable
+// Geolocalizzazione IP robusta con fallback multipli per M1SSION™ PWA
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 
@@ -10,110 +10,153 @@ interface IPLocationResponse {
   country: string;
 }
 
+// Servizi di geolocalizzazione IP in ordine di priorità
+const GEO_SERVICES = [
+  {
+    name: 'ipinfo.io',
+    url: 'https://ipinfo.io/json',
+    parser: (data: any) => {
+      if (data.loc) {
+        const [lat, lng] = data.loc.split(',').map(parseFloat);
+        return {
+          lat, lng,
+          city: data.city || 'Unknown',
+          country: data.country || 'Unknown'
+        };
+      }
+      return null;
+    }
+  },
+  {
+    name: 'geojs.io',
+    url: 'https://get.geojs.io/v1/ip/geo.json',
+    parser: (data: any) => ({
+      lat: parseFloat(data.latitude),
+      lng: parseFloat(data.longitude),
+      city: data.city || 'Unknown',
+      country: data.country || 'Unknown'
+    })
+  },
+  {
+    name: 'ip-api.com',
+    url: 'http://ip-api.com/json/',
+    parser: (data: any) => ({
+      lat: data.lat,
+      lng: data.lon,
+      city: data.city || 'Unknown',
+      country: data.country || 'Unknown'
+    })
+  }
+];
+
 export const useIPGeolocation = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const getLocationByIP = useCallback(async () => {
-    console.log('🌍 IP GEOLOCATION: Starting IP-based location...', { coords, isLoading });
+    console.log('🌍 M1SSION™ GEOLOCATION: Starting enhanced IP-based location...');
     setIsLoading(true);
-    console.log('🌍 IP GEOLOCATION: Starting IP-based location...');
     
+    // Prima, prova GPS se disponibile e autorizzato
     try {
-      // Provo prima ipapi.co
-      console.log('🌍 IP GEOLOCATION: Trying ipapi.co...');
-      let response = await fetch('https://ipapi.co/json/');
-      let data = await response.json();
-      
-      console.log('🌍 IP GEOLOCATION: ipapi.co response:', data);
-      
-      // Se ipapi.co fallisce, provo ip-api.com
-      if (!data.latitude || !data.longitude) {
-        console.log('🌍 IP GEOLOCATION: ipapi.co failed, trying ip-api.com...');
-        response = await fetch('https://ipapi.com/ip_api.php?ip=check');
-        data = await response.json();
-        console.log('🌍 IP GEOLOCATION: ip-api.com response:', data);
-      }
-      
-      // Se anche quello fallisce, provo geoplugin
-      if (!data.latitude && !data.longitude && !data.lat && !data.lon) {
-        console.log('🌍 IP GEOLOCATION: Previous services failed, trying geoplugin...');
-        response = await fetch('http://www.geoplugin.net/json.gp');
-        data = await response.json();
-        console.log('🌍 IP GEOLOCATION: geoplugin response:', data);
+      if ('geolocation' in navigator) {
+        console.log('🌍 M1SSION™ GEOLOCATION: Trying GPS first...');
         
-        if (data.geoplugin_latitude && data.geoplugin_longitude) {
-          data.latitude = parseFloat(data.geoplugin_latitude);
-          data.longitude = parseFloat(data.geoplugin_longitude);
-          data.city = data.geoplugin_city;
-          data.country_name = data.geoplugin_countryName;
+        const gpsPromise = new Promise<{lat: number, lng: number}>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const coords = {
+                lat: position.coords.latitude,
+                lng: position.coords.longitude
+              };
+              console.log('🌍 M1SSION™ GEOLOCATION: GPS success:', coords);
+              resolve(coords);
+            },
+            (error) => {
+              console.log('🌍 M1SSION™ GEOLOCATION: GPS failed:', error.message);
+              reject(error);
+            },
+            { 
+              timeout: 5000, 
+              enableHighAccuracy: true,
+              maximumAge: 30000 
+            }
+          );
+        });
+
+        // Aspetta GPS per max 5 secondi
+        const gpsCoords = await Promise.race([
+          gpsPromise,
+          new Promise<null>((_, reject) => 
+            setTimeout(() => reject(new Error('GPS timeout')), 5000)
+          )
+        ]);
+
+        if (gpsCoords) {
+          setCoords(gpsCoords);
+          toast.success('🎯 Posizione GPS rilevata con precisione');
+          return gpsCoords;
         }
       }
-      
-      // Estrai coordinate in modo flessibile
-      const lat = data.latitude || data.lat;
-      const lng = data.longitude || data.lon;
-      const city = data.city || data.geoplugin_city || 'Unknown';
-      const country = data.country_name || data.country || data.geoplugin_countryName || 'Unknown';
-      
-      console.log('🌍 IP GEOLOCATION: Final coordinates extracted:', { lat, lng, city, country });
-      
-      if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-        const newCoords = { lat: parseFloat(lat), lng: parseFloat(lng) };
-        
-        console.log('🌍 IP GEOLOCATION: Checking city for Milano override:', { city, country, coords: newCoords });
-        
-        // Use actual IP location without any overrides
-        console.log('🌍 IP GEOLOCATION: Using actual IP location:', newCoords);
-        
-        console.log('🌍 IP GEOLOCATION: No override needed, using original coords:', newCoords);
-        setCoords(newCoords);
-        toast.success(`🌍 Posizione rilevata via IP: ${city}, ${country}`);
-        console.log('🌍 IP GEOLOCATION: SUCCESS!', newCoords);
-        return newCoords;
-      } else {
-        throw new Error('Coordinate non valide dai servizi IP');
-      }
-    } catch (error) {
-      console.error('🌍 IP GEOLOCATION: ERROR!', error);
-      
-      // ULTIMO TENTATIVO: Provo ipinfo.io
-      try {
-        console.log('🌍 IP GEOLOCATION: Final attempt with ipinfo.io...');
-        const response = await fetch('https://ipinfo.io/json');
-        const data = await response.json();
-        console.log('🌍 IP GEOLOCATION: ipinfo.io response:', data);
-        
-        if (data.loc) {
-          const [lat, lng] = data.loc.split(',').map(parseFloat);
-          if (!isNaN(lat) && !isNaN(lng)) {
-            console.log('🌍 IP GEOLOCATION: ipinfo.io success, checking city for Milano override:', { 
-              city: data.city, 
-              country: data.country, 
-              coords: { lat, lng } 
-            });
-            
-            // Use actual IP location from ipinfo.io
-            console.log('🌍 IP GEOLOCATION: Using actual IP location from ipinfo.io');
-            
-            console.log('🌍 IP GEOLOCATION: No override needed for ipinfo.io, using original coords');
-            const newCoords = { lat, lng };
-            setCoords(newCoords);
-            toast.success(`🌍 Posizione rilevata via IP: ${data.city || 'Unknown'}, ${data.country || 'Unknown'}`);
-            console.log('🌍 IP GEOLOCATION: SUCCESS with ipinfo.io!', newCoords);
-            return newCoords;
-          }
-        }
-      } catch (finalError) {
-        console.error('🌍 IP GEOLOCATION: Final attempt failed!', finalError);
-      }
-      
-      // Nessun fallback - lascia coords null se tutti i servizi falliscono
-      toast.error('❌ Geolocalizzazione IP non disponibile');
-      return null;
-    } finally {
-      setIsLoading(false);
+    } catch (gpsError) {
+      console.log('🌍 M1SSION™ GEOLOCATION: GPS not available, fallback to IP:', gpsError);
     }
+
+    // Se GPS fallisce, prova i servizi IP in sequenza
+    for (const service of GEO_SERVICES) {
+      try {
+        console.log(`🌍 M1SSION™ GEOLOCATION: Trying ${service.name}...`);
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        
+        const response = await fetch(service.url, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log(`🌍 M1SSION™ GEOLOCATION: ${service.name} response:`, data);
+        
+        const parsed = service.parser(data);
+        
+        if (parsed && !isNaN(parsed.lat) && !isNaN(parsed.lng)) {
+          const newCoords = { lat: parsed.lat, lng: parsed.lng };
+          
+          // Verifica che le coordinate siano ragionevoli (Europa)
+          if (parsed.lat >= 36 && parsed.lat <= 71 && parsed.lng >= -11 && parsed.lng <= 40) {
+            setCoords(newCoords);
+            toast.success(`🌍 Posizione rilevata: ${parsed.city}, ${parsed.country}`);
+            console.log(`🌍 M1SSION™ GEOLOCATION: SUCCESS with ${service.name}!`, newCoords);
+            return newCoords;
+          } else {
+            console.warn(`🌍 M1SSION™ GEOLOCATION: ${service.name} returned coordinates outside Europe:`, parsed);
+          }
+        } else {
+          console.warn(`🌍 M1SSION™ GEOLOCATION: ${service.name} returned invalid coordinates:`, parsed);
+        }
+        
+      } catch (error) {
+        console.error(`🌍 M1SSION™ GEOLOCATION: ${service.name} failed:`, error);
+        continue; // Prova il prossimo servizio
+      }
+    }
+    
+    // Se tutti i servizi falliscono, fallback geografico per l'Europa
+    console.log('🌍 M1SSION™ GEOLOCATION: All services failed, using European fallback');
+    const europeFallback = { lat: 50.1109, lng: 8.6821 }; // Francoforte, centro Europa
+    setCoords(europeFallback);
+    toast.info('🗺️ Posizione geografica non disponibile, usando vista Europa');
+    return europeFallback;
+    
   }, []);
 
   return {

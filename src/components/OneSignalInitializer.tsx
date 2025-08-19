@@ -113,12 +113,17 @@ const registerUserForPushNotifications = async (userId: string) => {
       return;
     }
 
-    // Set external user ID for better targeting
+    // Set external user ID for better targeting - CRITICAL for M1SSION™ notifications
     try {
       await OneSignal.User.addAlias('external_id', userId);
       console.log('🔔 CRITICAL: External ID set for user:', userId);
+      
+      // Add tag for marker reward notifications
+      await OneSignal.User.addTag('marker_discovery_enabled', 'true');
+      await OneSignal.User.addTag('user_type', 'm1ssion_player');
+      console.log('🔔 CRITICAL: OneSignal tags set successfully');
     } catch (aliasError) {
-      console.warn('🔔 WARNING: Failed to set external ID:', aliasError);
+      console.warn('🔔 WARNING: Failed to set external ID or tags:', aliasError);
     }
 
     // Save to Supabase device_tokens table
@@ -138,11 +143,31 @@ const registerUserForPushNotifications = async (userId: string) => {
     if (error) {
       console.error('❌ CRITICAL: Error saving OneSignal Player ID:', error);
       toast.error('Errore nel salvataggio token notifiche');
+      
+      // Log error to admin_logs for debugging
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'onesignal_token_save_error',
+          user_id: userId,
+          note: `Failed to save OneSignal token: ${error.message}`,
+          context: 'push_notifications'
+        });
     } else {
       console.log('✅ CRITICAL: OneSignal Player ID saved successfully:', playerId);
       toast.success('✅ Notifiche push attivate!', {
         description: 'Riceverai aggiornamenti su missioni e premi'
       });
+      
+      // Log successful registration
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'onesignal_token_registered',
+          user_id: userId,
+          note: `OneSignal token registered successfully: ${playerId}`,
+          context: 'push_notifications'
+        });
     }
 
   } catch (error) {

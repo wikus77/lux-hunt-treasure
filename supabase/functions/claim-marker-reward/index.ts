@@ -293,7 +293,19 @@ serve(async (req) => {
 
     // 🔔 CRITICAL: Send OneSignal push notification for marker discovery
     try {
-      console.log(`M1QR-TRACE: Sending OneSignal push notification...`);
+      console.log(`M1QR-TRACE: rewardClaimStarted - user:${user_id} marker:${markerId}`);
+      
+      // Log the reward process start
+      await admin
+        .from('admin_logs')
+        .insert({
+          event_type: 'marker_reward_claim_started',
+          user_id,
+          note: `Marker ${markerId} reward claim started`,
+          context: `rewards:${rewards.map(r => r.reward_type).join(',')}`
+        });
+
+      console.log(`M1QR-TRACE: rewardInsertOK - sending push notification...`);
       
       const pushResponse = await fetch(`${url}/functions/v1/send-push-notification-onesignal`, {
         method: 'POST',
@@ -304,11 +316,12 @@ serve(async (req) => {
         body: JSON.stringify({
           user_id,
           title: '🛡️ Premio Trovato!',
-          message: 'Hai scoperto un marker con premio speciale.',
+          message: 'Hai conquistato un premio segreto su M1SSION™',
           data: {
             marker_id: markerId,
             reward_types: rewards.map(r => r.reward_type).join(','),
-            source: 'marker_discovery'
+            source: 'marker_discovery',
+            redirect_url: '/profile'
           }
         }),
       });
@@ -316,20 +329,63 @@ serve(async (req) => {
       const pushResult = await pushResponse.json();
       
       if (pushResponse.ok) {
-        console.log(`M1QR-TRACE: ✅ OneSignal push sent successfully:`, pushResult);
+        console.log(`M1QR-TRACE: ✅ pushSent - OneSignal success:`, pushResult);
+        
+        // Log successful push
+        await admin
+          .from('admin_logs')
+          .insert({
+            event_type: 'marker_reward_push_sent',
+            user_id,
+            note: `OneSignal push sent successfully for marker ${markerId}`,
+            context: `onesignal_id:${pushResult.onesignal_id || 'unknown'}`
+          });
       } else {
         console.error(`M1QR-TRACE: ❌ OneSignal push failed:`, pushResult);
+        
+        // Log push failure
+        await admin
+          .from('admin_logs')
+          .insert({
+            event_type: 'marker_reward_push_failed',
+            user_id,
+            note: `OneSignal push failed for marker ${markerId}: ${JSON.stringify(pushResult)}`,
+            context: 'push_notification_error'
+          });
       }
     } catch (pushError) {
       console.error(`M1QR-TRACE: ❌ OneSignal push error:`, pushError);
+      
+      // Log push error
+      await admin
+        .from('admin_logs')
+        .insert({
+          event_type: 'marker_reward_push_error',
+          user_id,
+          note: `OneSignal push error for marker ${markerId}: ${String(pushError)}`,
+          context: 'push_notification_exception'
+        });
+      
       // Non blocchiamo il flusso principale se il push fallisce
     }
 
     console.log(`M1QR-TRACE: claim success - user:${user_id} marker:${markerId} rewards:${rewards.map(r => r.reward_type).join(',')}`);
 
+    // Log successful completion with redirect
+    await admin
+      .from('admin_logs')
+      .insert({
+        event_type: 'marker_reward_redirectOK',
+        user_id,
+        note: `Marker ${markerId} reward chain completed successfully - redirecting to ${nextRoute || '/profile'}`,
+        context: `summary:${JSON.stringify(summary)}`
+      });
+
+    console.log(`M1QR-TRACE: ✅ redirectOK - reward chain completed for marker ${markerId}`);
+
     return json({
       ok: true,
-      nextRoute,
+      nextRoute: nextRoute || '/profile',
       summary
     }, 200);
 
