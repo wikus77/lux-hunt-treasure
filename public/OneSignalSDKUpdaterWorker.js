@@ -1,7 +1,7 @@
 // OneSignal SDK Updater Worker - Required for OneSignal Updates
 // © 2025 Joseph MULÉ – M1SSION™ – PWA Push Integration
 
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js');
 
 // Enhanced logging for debugging
 console.log('🔄 OneSignal SDK Updater Worker initialized for M1SSION™ PWA');
