@@ -13,9 +13,8 @@ import OfflineIndicator from "./components/offline/OfflineIndicator";
 import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
-import PushSetup from "./components/pwa/PushSetup";
-import OneSignalSetup from "./components/push/OneSignalSetup";
 import { OneSignalSingletonManager } from "./components/OneSignalSingletonManager";
+import { IOSPermissionManager } from "./components/IOSPermissionManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
@@ -62,6 +61,11 @@ function App() {
           <SoundProvider>
             <AuthProvider>
             <OneSignalSingletonManager />
+            <BuzzPaymentMonitor />
+            <LegalOnboarding />
+            <WouterRoutes />
+            <InstallPrompt />
+            <IOSPermissionManager />
             <XpSystemManager />
             </AuthProvider>
             
