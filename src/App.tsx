@@ -15,6 +15,8 @@ import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
 import OneSignalSetup from "./components/push/OneSignalSetup";
+import { OneSignalInitializer } from "./components/OneSignalInitializer";
+import { IOSPushDebugPanel } from "./components/IOSPushDebugPanel";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
@@ -83,6 +85,8 @@ function App() {
             <InstallPrompt />
             <PushSetup />
             <OneSignalSetup />
+            <OneSignalInitializer />
+            <IOSPushDebugPanel />
             <XpSystemManager />
             </AuthProvider>
             
