@@ -125,8 +125,8 @@ const GeoRadarTool: React.FC = () => {
 
   const checkTargetProximity = (lat: number, lng: number) => {
     // Simulated target coordinates - in real app would come from mission data
-    const targetLat = 45.4642; // Example: Milan
-    const targetLng = 9.1900;
+    const targetLat = 46.0; // Vista europea generica
+    const targetLng = 8.0;
     
     // Calculate distance in meters
     const R = 6371000; // Earth radius in meters
@@ -232,7 +232,7 @@ const GeoRadarTool: React.FC = () => {
                 id="centerLat"
                 type="number"
                 step="any"
-                placeholder="45.4642 [COORD-LAT]"
+                placeholder="46.0 [COORD-LAT]"
                 value={scanParams.centerLat}
                 onChange={(e) => setScanParams({...scanParams, centerLat: e.target.value})}
                 className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
@@ -245,7 +245,7 @@ const GeoRadarTool: React.FC = () => {
                 id="centerLng"
                 type="number"
                 step="any"
-                placeholder="9.1900 [COORD-LNG]"
+                placeholder="8.0 [COORD-LNG]"
                 value={scanParams.centerLng}
                 onChange={(e) => setScanParams({...scanParams, centerLng: e.target.value})}
                 className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"

@@ -262,7 +262,7 @@ const FinalShotManager: React.FC = () => {
                 <Input
                   type="number"
                   step="any"
-                  placeholder="45.4642 [FINAL-LAT]"
+                  placeholder="46.0 [FINAL-LAT]"
                   value={coordinates.lat}
                   onChange={(e) => setCoordinates({...coordinates, lat: e.target.value})}
                   className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"
@@ -276,7 +276,7 @@ const FinalShotManager: React.FC = () => {
                 <Input
                   type="number"
                   step="any"
-                  placeholder="9.1900 [FINAL-LNG]"
+                  placeholder="8.0 [FINAL-LNG]"
                   value={coordinates.lng}
                   onChange={(e) => setCoordinates({...coordinates, lng: e.target.value})}
                   className="bg-muted/60 border-2 border-border/50 rounded-xl px-4 py-4 backdrop-blur-md focus:ring-2 focus:ring-cyan-400/40 focus:border-cyan-400 transition-all duration-300 text-lg"

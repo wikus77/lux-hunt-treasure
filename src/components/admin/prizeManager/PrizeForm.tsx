@@ -202,7 +202,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
               <Input 
                 type="text" 
                 id="manual_lat" 
-                placeholder="Es: 45.4642"
+                placeholder="Es: 46.0"
                 {...form.register("manual_lat")} 
               />
               {form.formState.errors.manual_lat && (
@@ -214,7 +214,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
               <Input 
                 type="text" 
                 id="manual_lng" 
-                placeholder="Es: 9.1900"
+                placeholder="Es: 8.0"
                 {...form.register("manual_lng")} 
               />
               {form.formState.errors.manual_lng && (

@@ -56,8 +56,8 @@ const BuzzInterceptor: React.FC = () => {
       frequency: Math.random() * (frequencyRange.max - frequencyRange.min) + frequencyRange.min,
       strength: Math.random() * 100,
       location: {
-        lat: 45.4642 + (Math.random() - 0.5) * 0.1,
-        lng: 9.1900 + (Math.random() - 0.5) * 0.1
+        lat: 46.0 + (Math.random() - 0.5) * 0.1,
+        lng: 8.0 + (Math.random() - 0.5) * 0.1
       },
       timestamp: new Date(),
       decoded: Math.random() < 0.4, // 40% chance di decodifica
@@ -73,7 +73,7 @@ const BuzzInterceptor: React.FC = () => {
 
   const getRandomMessage = () => {
     const messages = [
-      "COORDINATE: 45.4642, 9.1900",
+      "COORDINATE: 46.0000, 8.0000",
       "SETTORE ALPHA: ANOMALIA RILEVATA",
       "PROTOCOLLO M1SSION: FASE 3 ATTIVA",
       "SEGNALE DEBOLE - RIPETERE SCANSIONE",
