@@ -35,17 +35,6 @@ function App() {
   // Initialize global profile sync for real-time updates across all components
   useGlobalProfileSync();
 
-  const handleAuthenticated = (userId: string) => {
-    // User authenticated successfully
-  };
-  
-  const handleNotAuthenticated = () => {
-    // User not authenticated
-  };
-  
-  const handleEmailNotVerified = () => {
-    // Email verification required
-  };
   
   return (
     <ErrorBoundary fallback={
