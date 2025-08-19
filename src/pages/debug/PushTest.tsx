@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
