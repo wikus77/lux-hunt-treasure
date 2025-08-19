@@ -27,12 +27,16 @@ export const AdminPushNotifications = () => {
     try {
       console.log('🚀 Sending push notification:', { title, message });
       
-      // Call the Edge Function to send push notification  
+      // Enhanced Edge Function call with proper headers
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: { 
           title: title.trim(), 
           body: message.trim(),
+          user_id: 'broadcast', // Broadcast to all
           timestamp: new Date().toISOString()
+        },
+        headers: {
+          'Content-Type': 'application/json'
         }
       });
       

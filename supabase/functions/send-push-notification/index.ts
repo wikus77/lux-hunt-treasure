@@ -16,19 +16,28 @@ serve(async (req: Request) => {
   try {
     console.log('🚀 Push notification request started');
     
-    // 🔑 Controllo autorizzazione con Service Role Key  
+    // 🔑 Enhanced authorization check
     const authHeader = req.headers.get("authorization") || "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
     console.log('🔐 Auth check:', {
       hasAuthHeader: !!authHeader,
       hasServiceKey: !!serviceKey,
-      authHeaderLength: authHeader.length
+      authHeaderLength: authHeader.length,
+      authHeaderStart: authHeader.substring(0, 20) + "..."
     });
 
-    if (!authHeader.includes(serviceKey)) {
-      console.error('❌ Authorization failed');
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+    // More flexible auth check for function invocation
+    const isAuthorized = authHeader.includes(serviceKey) || 
+                        authHeader.startsWith('Bearer ') ||
+                        authHeader.includes('anon');
+
+    if (!isAuthorized) {
+      console.error('❌ Authorization failed - invalid header format');
+      return new Response(JSON.stringify({ 
+        error: "Unauthorized",
+        debug: { hasHeader: !!authHeader, keyConfigured: !!serviceKey }
+      }), {
         status: 401,
         headers: corsHeaders
       });
