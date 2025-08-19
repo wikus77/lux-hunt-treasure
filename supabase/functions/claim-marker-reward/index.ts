@@ -77,7 +77,7 @@ serve(async (req) => {
     let nextRoute: string | null = null;
 
     for (const reward of rewards) {
-      const { reward_type, payload } = reward;
+      const { reward_type, payload, description } = reward;
       
       try {
         switch (reward_type) {
@@ -95,25 +95,75 @@ serve(async (req) => {
               });
             
             if (buzzError) throw buzzError;
+            
+            // ALWAYS create notification for buzz rewards
+            const { error: buzzNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'reward',
+                title: 'BUZZ Gratuito Ricevuto!',
+                message: `Hai ricevuto ${buzzCount} BUZZ gratuiti dal marker ${markerId}`,
+                metadata: { source: `marker:${markerId}`, reward_type: 'buzz_free', count: buzzCount }
+              }]);
+            
+            if (buzzNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for buzz:`, buzzNotificationError);
+            } else {
+              console.log(`M1QR-TRACE: buzz notification created successfully`);
+            }
+            
             summary.push({ type: 'buzz_free', info: { count: buzzCount } });
             if (!nextRoute) nextRoute = '/buzz';
             break;
           }
 
           case 'message': {
-            const message = payload.text || "Ricompensa ottenuta!";
-            const { error: notificationError } = await admin
-              .from("user_notifications")
-              .insert([{
-                user_id,
-                notification_type: 'reward',
-                title: 'Ricompensa Marker',
-                message,
-                metadata: { source: `marker:${markerId}` }
-              }]);
+            const message = payload.text || description || "Ricompensa ottenuta!";
             
-            if (notificationError) throw notificationError;
-            summary.push({ type: 'message', info: { text: message } });
+            // Validate message content - filter out corrupted text
+            const cleanMessage = message.trim();
+            if (!cleanMessage || cleanMessage.length < 2 || /^[^\w\s]*$/.test(cleanMessage)) {
+              console.warn(`M1QR-TRACE: corrupted message detected: "${message}", using fallback`);
+              const fallbackMessage = "Hai ottenuto un premio speciale dal marker!";
+              
+              // Still create notification with fallback message
+              const { error: messageNotificationError } = await admin
+                .from("user_notifications")
+                .insert([{
+                  user_id,
+                  notification_type: 'reward',
+                  title: 'Premio Messaggio',
+                  message: fallbackMessage,
+                  metadata: { source: `marker:${markerId}`, reward_type: 'message', original_message: message }
+                }]);
+              
+              if (messageNotificationError) {
+                console.error(`M1QR-TRACE: notification creation error for message:`, messageNotificationError);
+              }
+              
+              summary.push({ type: 'message', info: { text: fallbackMessage } });
+            } else {
+              // Create notification with clean message
+              const { error: notificationError } = await admin
+                .from("user_notifications")
+                .insert([{
+                  user_id,
+                  notification_type: 'reward',
+                  title: 'Premio Messaggio',
+                  message: cleanMessage,
+                  metadata: { source: `marker:${markerId}`, reward_type: 'message' }
+                }]);
+              
+              if (notificationError) {
+                console.error(`M1QR-TRACE: notification creation error for message:`, notificationError);
+              } else {
+                console.log(`M1QR-TRACE: message notification created successfully`);
+              }
+              
+              summary.push({ type: 'message', info: { text: cleanMessage } });
+            }
+            
             if (!nextRoute) nextRoute = '/notifications';
             break;
           }
@@ -144,6 +194,23 @@ serve(async (req) => {
               }
             }
             
+            // Create notification for XP rewards
+            const { error: xpNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'reward',
+                title: 'Punti Esperienza Ricevuti!',
+                message: `Hai guadagnato ${xpPoints} punti esperienza dal marker ${markerId}`,
+                metadata: { source: `marker:${markerId}`, reward_type: 'xp_points', xp: xpPoints }
+              }]);
+            
+            if (xpNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for XP:`, xpNotificationError);
+            } else {
+              console.log(`M1QR-TRACE: XP notification created successfully`);
+            }
+            
             summary.push({ type: 'xp_points', info: { xp: xpPoints } });
             break;
           }
@@ -161,6 +228,22 @@ serve(async (req) => {
               }]);
             
             if (ticketError) throw ticketError;
+            
+            // Create notification for event ticket
+            const { error: ticketNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'reward',
+                title: 'Biglietto Evento Ricevuto!',
+                message: `Hai ricevuto un biglietto ${ticketType} per l'evento ${eventId}`,
+                metadata: { source: `marker:${markerId}`, reward_type: 'event_ticket', event_id: eventId, ticket_type: ticketType }
+              }]);
+            
+            if (ticketNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for ticket:`, ticketNotificationError);
+            }
+            
             summary.push({ type: 'event_ticket', info: { event_id: eventId, ticket_type: ticketType } });
             if (!nextRoute) nextRoute = '/profile';
             break;
@@ -177,6 +260,22 @@ serve(async (req) => {
               }]);
             
             if (badgeError) throw badgeError;
+            
+            // Create notification for badge
+            const { error: badgeNotificationError } = await admin
+              .from("user_notifications")
+              .insert([{
+                user_id,
+                notification_type: 'reward',
+                title: 'Distintivo Sbloccato!',
+                message: `Hai sbloccato un nuovo distintivo dal marker ${markerId}`,
+                metadata: { source: `marker:${markerId}`, reward_type: 'badge', badge_id: badgeId }
+              }]);
+            
+            if (badgeNotificationError) {
+              console.error(`M1QR-TRACE: notification creation error for badge:`, badgeNotificationError);
+            }
+            
             summary.push({ type: 'badge', info: { badge_id: badgeId } });
             if (!nextRoute) nextRoute = '/profile';
             break;

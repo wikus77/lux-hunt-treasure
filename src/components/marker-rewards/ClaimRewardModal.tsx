@@ -59,10 +59,21 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     }
 
     if (data?.ok === true) {
-      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute });
-      toast.success('Premio riscattato');
+      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute, summary: data?.summary });
+      toast.success('🎁 Premio riscattato con successo!', {
+        description: 'Controlla le tue notifiche per i dettagli'
+      });
       onClose?.();
-      if (data?.nextRoute) window.location.href = data.nextRoute;
+      
+      // Force notifications refresh after successful claim
+      setTimeout(() => {
+        if (data?.nextRoute) {
+          window.location.href = data.nextRoute;
+        } else {
+          // Default to notifications page to show the new notification
+          window.location.href = '/notifications';
+        }
+      }, 1000);
       return;
     }
 
@@ -128,41 +139,83 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
               
               {/* Content - Scrollable */}
               <div className="relative z-10 space-y-6 p-6 max-h-[60vh] overflow-y-auto">
-                {/* Rewards List */}
+                 {/* Rewards List */}
                 <div className="space-y-4">
-                  {rewards.map((reward, index) => (
-                    <div key={index} className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#00D1FF]/10 via-[#FF1493]/10 to-[#00D1FF]/10 border border-[#00D1FF]/30 p-4 backdrop-blur-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#00D1FF]/30 to-[#FF1493]/30 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)]">
-                          <span className="text-2xl filter drop-shadow-[0_0_8px_rgba(0,209,255,0.8)]">
-                            {getRewardIcon(reward.reward_type)}
-                          </span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-white font-bold text-lg">
-                            {reward.reward_type === 'buzz_free' ? 'BUZZ GRATUITO' : 
-                             reward.reward_type === 'xp_points' ? 'PUNTI ESPERIENZA' :
-                             reward.description || `Premio ${reward.reward_type}`}
+                  {rewards
+                    .filter(reward => {
+                      // Filter out corrupted or invalid rewards
+                      if (!reward.reward_type) return false;
+                      
+                      // If message type, check if description is valid
+                      if (reward.reward_type === 'message') {
+                        const message = reward.payload?.text || reward.description || '';
+                        const cleanMessage = message.trim();
+                        // Show even if corrupted, but we'll display a fallback
+                        return true;
+                      }
+                      
+                      return true;
+                    })
+                    .map((reward, index) => {
+                      // Clean up message content for display
+                      let displayDescription = reward.description;
+                      if (reward.reward_type === 'message') {
+                        const message = reward.payload?.text || reward.description || '';
+                        const cleanMessage = message.trim();
+                        if (!cleanMessage || cleanMessage.length < 2 || /^[^\w\s]*$/.test(cleanMessage)) {
+                          displayDescription = "Premio messaggio speciale!";
+                        } else {
+                          displayDescription = cleanMessage;
+                        }
+                      }
+
+                      return (
+                        <div key={index} className="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#00D1FF]/10 via-[#FF1493]/10 to-[#00D1FF]/10 border border-[#00D1FF]/30 p-4 backdrop-blur-sm">
+                          <div className="flex items-center gap-4">
+                            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#00D1FF]/30 to-[#FF1493]/30 flex items-center justify-center shadow-[0_0_20px_rgba(0,209,255,0.3)]">
+                              <span className="text-2xl filter drop-shadow-[0_0_8px_rgba(0,209,255,0.8)]">
+                                {getRewardIcon(reward.reward_type)}
+                              </span>
+                            </div>
+                            <div className="flex-1">
+                              <div className="text-white font-bold text-lg">
+                                {reward.reward_type === 'buzz_free' ? 'BUZZ GRATUITO' : 
+                                 reward.reward_type === 'xp_points' ? 'PUNTI ESPERIENZA' :
+                                 reward.reward_type === 'message' ? 'PREMIO MESSAGGIO' :
+                                 reward.reward_type === 'event_ticket' ? 'BIGLIETTO EVENTO' :
+                                 reward.reward_type === 'badge' ? 'DISTINTIVO' :
+                                 displayDescription || `Premio ${reward.reward_type}`}
+                              </div>
+                              {reward.reward_type === 'buzz_free' && (
+                                <div className="text-[#00D1FF] text-sm font-semibold">
+                                  +{reward.payload?.buzzCount || 1} BUZZ gratuiti
+                                </div>
+                              )}
+                              {reward.reward_type === 'xp_points' && (
+                                <div className="text-[#00D1FF] text-sm font-semibold">
+                                  +{reward.payload?.xp || 10} XP
+                                </div>
+                              )}
+                              {reward.reward_type === 'message' && displayDescription && (
+                                <div className="text-gray-300 text-sm">
+                                  {displayDescription}
+                                </div>
+                              )}
+                              {reward.reward_type === 'event_ticket' && (
+                                <div className="text-[#00D1FF] text-sm font-semibold">
+                                  Tipo: {reward.payload?.ticket_type || 'Standard'}
+                                </div>
+                              )}
+                              {reward.reward_type === 'badge' && displayDescription && (
+                                <div className="text-gray-300 text-sm">
+                                  {displayDescription}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          {reward.reward_type === 'buzz_free' && (
-                            <div className="text-[#00D1FF] text-sm font-semibold">
-                              +{reward.payload?.buzzCount || 1} BUZZ gratuiti
-                            </div>
-                          )}
-                          {reward.reward_type === 'xp_points' && (
-                            <div className="text-[#00D1FF] text-sm font-semibold">
-                              +{reward.payload?.xp || 10} XP
-                            </div>
-                          )}
-                          {reward.description && reward.reward_type !== 'buzz_free' && reward.reward_type !== 'xp_points' && (
-                            <div className="text-gray-300 text-sm">
-                              {reward.description}
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
                 </div>
                 
                 {/* Action Buttons */}
