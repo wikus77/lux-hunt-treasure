@@ -122,5 +122,11 @@
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
-  "gcm_sender_id": "307707487376"
+  "gcm_sender_id": "307707487376",
+  "web_app_capability": "standalone",
+  "mobile_web_app_capable": "yes",
+  "mobile_web_app_status_bar_style": "black",
+  "notification_permission": {
+    "allowed": true
+  }
 }

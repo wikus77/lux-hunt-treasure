@@ -75,20 +75,22 @@ export const OneSignalInitializer = () => {
           throw new Error('Notifications not supported in this browser');
         }
 
-        // Initialize OneSignal with iOS PWA optimized config
+        // CRITICAL iOS PWA: Initialize OneSignal with Cloudflare optimized config
         await OneSignal.init({
           appId: ONESIGNAL_APP_ID,
           allowLocalhostAsSecureOrigin: true,
           serviceWorkerPath: '/OneSignalSDKWorker.js',
           serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
           safari_web_id: "web.onesignal.auto.50cb75f7-f065-4626-9a63-ce5692fa7e70",
-          // iOS PWA specific settings
+          // iOS PWA specific settings for Cloudflare deployment
           autoResubscribe: true,
-          persistNotification: false, // Important for iOS
+          persistNotification: true, // CRITICAL: Set to true for iOS PWA
           showCredit: false,
-          // Notification settings optimized for iOS PWA
+          // Enhanced notification settings for iOS Safari PWA
           notificationClickHandlerMatch: 'origin',
-          notificationClickHandlerAction: 'focus'
+          notificationClickHandlerAction: 'focus',
+          // CRITICAL: Cloudflare Pages specific settings  
+          path: "/"
         });
 
         // Mark as successfully initialized
