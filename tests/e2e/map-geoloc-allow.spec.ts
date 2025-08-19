@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('map - geolocation allowed -> center valid, map visible', async ({ browser }) => {
   const context = await browser.newContext({
     permissions: ['geolocation'],
-    geolocation: { latitude: 45.4642, longitude: 9.19 },
+    geolocation: { latitude: 43.7874, longitude: 7.6326 }, // Ventimiglia
   });
   const page = await context.newPage();
 

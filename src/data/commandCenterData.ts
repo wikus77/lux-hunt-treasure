@@ -43,9 +43,9 @@ export const activeMission: Mission = {
   id: "mission-001",
   name: "Operazione Fantasma",
   status: 'active',
-  description: "Identificare e neutralizzare la minaccia emergente nella zona urbana di Milano.",
-  location: "Milano, Italia",
-  coordinates: [45.4642, 9.1900],
+  description: "Identificare e neutralizzare la minaccia emergente nella zona urbana europea.",
+  location: "Europa Centrale",
+  coordinates: [46.0, 8.0],
   threatLevel: 2,
   activeArea: "Centro Città",
   objectives: [

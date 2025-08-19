@@ -33,7 +33,7 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
     if (typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng)) {
       return [lat, lng];
     }
-    return [45.4642, 9.19]; // Milano
+    return [46.0, 8.0]; // Vista europea generica
   }, [lat, lng]);
 
   const { tileUrl, attribution } = getDefaultMapSettings();

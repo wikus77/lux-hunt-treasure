@@ -19,7 +19,7 @@ const locationDatabase = {
   toscana: { lat: 43.7711, lng: 11.2486, radius: 150000 },
   
   // Città italiane principali
-  milano: { lat: 45.4642, lng: 9.1900, radius: 50000 },
+  europa: { lat: 46.0, lng: 8.0, radius: 50000 },
   roma: { lat: 41.9028, lng: 12.4964, radius: 50000 },
   napoli: { lat: 40.8518, lng: 14.2681, radius: 50000 },
   firenze: { lat: 43.7696, lng: 11.2558, radius: 50000 },

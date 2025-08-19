@@ -68,7 +68,7 @@ const InteractiveGlobe = () => {
         { lat: 55.7558, lng: 37.6173, name: 'Moscow' },
         { lat: -33.8688, lng: 151.2093, name: 'Sydney' },
         { lat: -22.9068, lng: -43.1729, name: 'Rio de Janeiro' },
-        { lat: 45.4642, lng: 9.1900, name: 'Milan' },
+        { lat: 46.0, lng: 8.0, name: 'Europe' },
       ];
       
       globe.pointsData(cities)

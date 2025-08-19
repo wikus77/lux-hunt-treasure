@@ -88,7 +88,7 @@ const useGlobeEffect = (iframeId: string, visible: boolean) => {
                   { lat: 42.6977, lng: 23.3219, name: 'Sofia' },
                   { lat: 42.5063, lng: 1.5218, name: 'Andorra' },
                   { lat: 39.9042, lng: 116.4074, name: 'Beijing' },
-                  { lat: 45.4642, lng: 9.1900, name: 'Milan' },
+                  { lat: 46.0, lng: 8.0, name: 'Europe' },
                   { lat: 43.7696, lng: 11.2558, name: 'Florence' },
                   { lat: 40.8518, lng: 14.2681, name: 'Naples' },
                   { lat: 45.0703, lng: 7.6869, name: 'Turin' },
