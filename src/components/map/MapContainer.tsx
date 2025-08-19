@@ -12,6 +12,7 @@ import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { useIPGeolocation } from '@/hooks/useIPGeolocation';
 import { userDotIcon } from '@/components/map/userDotIcon';
 import { toast } from 'sonner';
 
@@ -101,6 +102,50 @@ const MapContainer: React.FC<MapContainerProps> = ({
   
   // Get BUZZ areas
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
+  
+  // Enhanced geolocation with IP fallback
+  const { getLocationByIP } = useIPGeolocation();
+
+  // Priority geolocation: GPS first, then IP fallback
+  useEffect(() => {
+    const initLocation = async () => {
+      console.log('🗺️ MAP: Tentativo GPS con priorità...');
+      
+      // Try browser GPS first with extended timeout
+      if ('geolocation' in navigator) {
+        try {
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true,
+              timeout: 20000, // Extended timeout for GPS
+              maximumAge: 30000
+            });
+          });
+          
+          const { latitude, longitude } = position.coords;
+          if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+            console.log('🎯 GPS SUCCESS! Posizione:', { latitude, longitude });
+            setMapCenter([latitude, longitude]);
+            toast.success('🎯 Posizione GPS rilevata correttamente!');
+            return; // Exit early if GPS works
+          }
+        } catch (error) {
+          console.log('🚫 GPS FAILED, fallback IP:', error);
+          toast.warning('GPS non disponibile, uso IP geolocation...');
+        }
+      }
+      
+      // Fallback to IP geolocation only if GPS fails
+      console.log('🌐 Tentativo geolocalizzazione IP...');
+      const ipCoords = await getLocationByIP();
+      if (ipCoords) {
+        setMapCenter([ipCoords.lat, ipCoords.lng]);
+        toast.info('⚠️ Posizione IP imprecisa - Attiva GPS per precisione');
+      }
+    };
+    
+    initLocation();
+  }, [getLocationByIP]);
 
   // Handle map ready
   const handleMapReady = (map: L.Map) => {
