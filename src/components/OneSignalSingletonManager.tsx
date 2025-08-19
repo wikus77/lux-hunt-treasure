@@ -6,6 +6,7 @@ import OneSignal from 'react-onesignal';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/use-auth';
+import { usePushNotificationLogger } from '@/hooks/usePushNotificationLogger';
 
 const ONESIGNAL_APP_ID = "50cb75f7-f065-4626-9a63-ce5692fa7e70";
 
@@ -38,6 +39,7 @@ const iOSUtils = {
 
 export const OneSignalSingletonManager = () => {
   const { user } = useAuth();
+  const { logInitializationSuccess, logInitializationFailed, logTokenRegistered, logTokenRegistrationFailed } = usePushNotificationLogger();
   const componentInitialized = useRef(false);
   const permissionRequested = useRef(false);
 
@@ -151,17 +153,11 @@ export const OneSignalSingletonManager = () => {
       };
 
       // Log successful initialization
-      await logToSupabase('onesignal_singleton_initialized', null, {
-        environment: env,
-        timestamp: new Date().toISOString()
-      });
+      await logInitializationSuccess(env.isIOS ? 'ios_pwa' : 'web_pwa');
 
     } catch (error) {
       console.error('❌ M1SSION™: OneSignal initialization error:', error);
-      await logToSupabase('onesignal_singleton_init_failed', null, {
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      await logInitializationFailed(error.message, 'unknown');
       throw error;
     }
   };
@@ -312,18 +308,11 @@ export const OneSignalSingletonManager = () => {
       toast.success('✅ Token push registrato!');
 
       // Log success
-      await logToSupabase('push_token_registered_singleton', userId, {
-        playerId: playerId.substring(0, 20) + '...',
-        platform: iOSUtils.isIOS() ? 'ios_pwa' : 'web_pwa',
-        timestamp: new Date().toISOString()
-      });
+      await logTokenRegistered(playerId, iOSUtils.isIOS() ? 'ios_pwa' : 'web_pwa');
 
     } catch (error) {
       console.error('❌ M1SSION™: Token registration error:', error);
-      await logToSupabase('push_token_registration_error', userId, {
-        error: error.message,
-        timestamp: new Date().toISOString()
-      });
+      await logTokenRegistrationFailed(error.message, iOSUtils.isIOS() ? 'ios_pwa' : 'web_pwa');
     }
   };
 
