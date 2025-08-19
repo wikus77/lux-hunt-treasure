@@ -59,6 +59,15 @@ export const useIPGeolocation = () => {
       
       if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
         const newCoords = { lat: parseFloat(lat), lng: parseFloat(lng) };
+        // CRITICAL: Override Milano se viene rilevata automaticamente
+        if (city.toLowerCase().includes('milan') || city.toLowerCase().includes('milano')) {
+          toast.success(`🌍 Override IP (${city} -> Europa Centrale)`);
+          console.log('🌍 IP GEOLOCATION: Milano detected, using Europe fallback');
+          const europeanCoords = { lat: 46.0, lng: 8.0 };
+          setCoords(europeanCoords);
+          return europeanCoords;
+        }
+        
         setCoords(newCoords);
         toast.success(`🌍 Posizione rilevata via IP: ${city}, ${country}`);
         console.log('🌍 IP GEOLOCATION: SUCCESS!', newCoords);
@@ -79,6 +88,15 @@ export const useIPGeolocation = () => {
         if (data.loc) {
           const [lat, lng] = data.loc.split(',').map(parseFloat);
           if (!isNaN(lat) && !isNaN(lng)) {
+            // CRITICAL: Override Milano se viene rilevata automaticamente
+            if (data.city?.toLowerCase().includes('milan') || data.city?.toLowerCase().includes('milano')) {
+              toast.success(`🌍 Override IP (${data.city} -> Europa Centrale)`);
+              console.log('🌍 IP GEOLOCATION: Milano detected in ipinfo.io, using Europe fallback');
+              const europeanCoords = { lat: 46.0, lng: 8.0 };
+              setCoords(europeanCoords);
+              return europeanCoords;
+            }
+            
             const newCoords = { lat, lng };
             setCoords(newCoords);
             toast.success(`🌍 Posizione rilevata via IP: ${data.city || 'Unknown'}, ${data.country || 'Unknown'}`);

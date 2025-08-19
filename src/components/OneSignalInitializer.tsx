@@ -23,15 +23,20 @@ export const OneSignalInitializer = () => {
           return;
         }
 
-        // CRITICAL: Allow both dev and production for debugging
+        // CRITICAL: Enable OneSignal in ALL environments for testing
         const isDev = import.meta.env.DEV;
         const isLovablePreview = window.location.hostname.includes('lovable');
         const isLocalhost = window.location.hostname === 'localhost';
         
-        console.log('🔔 Environment check:', { isDev, isLovablePreview, isLocalhost, hostname: window.location.hostname });
+        console.log('🔔 Environment check:', { 
+          isDev, 
+          isLovablePreview, 
+          isLocalhost, 
+          hostname: window.location.hostname,
+          protocol: window.location.protocol
+        });
         
-        // SEMPRE INIZIALIZZA per debug OneSignal
-        console.log('🔔 FORCING OneSignal initialization for debugging...');
+        console.log('🔔 FORCING OneSignal initialization in ALL environments...');
 
         await OneSignal.init({
           appId: ONESIGNAL_APP_ID,

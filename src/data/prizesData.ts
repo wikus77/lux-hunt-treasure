@@ -12,7 +12,7 @@ export const prizesData = [
     id: 'rolex-watch',
     title: 'Rolex Submariner',
     description: 'Orologio Rolex Submariner Date con cinturino in acciaio inossidabile',
-    location: 'Milano, IT',
+    location: 'Europa, CH',
     deadline: '20 Gen',
     type: 'physical' as const,
     status: 'active' as const

@@ -110,10 +110,10 @@ const SecurityPage: React.FC = () => {
 
   // Mock data per log accessi - BY JOSEPH MULE
   const loginHistory = [
-    { date: '12/07/2025 14:30', device: 'iPhone 15 Pro', ip: '192.168.1.1', location: 'Milano, IT' },
-    { date: '11/07/2025 09:15', device: 'MacBook Pro', ip: '192.168.1.2', location: 'Milano, IT' },
+    { date: '12/07/2025 14:30', device: 'iPhone 15 Pro', ip: '192.168.1.1', location: 'Europa, CH' },
+    { date: '11/07/2025 09:15', device: 'MacBook Pro', ip: '192.168.1.2', location: 'Europa, CH' },
     { date: '10/07/2025 16:45', device: 'iPad Air', ip: '10.0.0.1', location: 'Roma, IT' },
-    { date: '09/07/2025 11:20', device: 'iPhone 15 Pro', ip: '192.168.1.1', location: 'Milano, IT' },
+    { date: '09/07/2025 11:20', device: 'iPhone 15 Pro', ip: '192.168.1.1', location: 'Europa, CH' },
     { date: '08/07/2025 13:10', device: 'Chrome Browser', ip: '203.0.113.1', location: 'Napoli, IT' }
   ];
 
