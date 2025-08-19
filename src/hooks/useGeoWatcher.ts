@@ -98,10 +98,44 @@ export function useGeoWatcher() {
 
     console.log('🌍 Starting geolocation watch...', { isIOS, isPWA });
     
+    // iOS PWA requires immediate permission request
+    if (isIOS && isPWA) {
+      console.log('🍎 iOS PWA: Direct permission request');
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          console.log('✅ iOS PWA geolocation success');
+          onSuccess(pos);
+          
+          // Start watching after initial success
+          try {
+            const options = {
+              enableHighAccuracy: false,
+              maximumAge: 30000,
+              timeout: 15000,
+            };
+            watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, options);
+          } catch (e) {
+            console.warn('iOS PWA watch failed, using polling', e);
+          }
+        },
+        (err) => {
+          console.error('❌ iOS PWA geolocation failed:', err);
+          onError(err);
+        },
+        { 
+          enableHighAccuracy: false, 
+          timeout: 20000, 
+          maximumAge: 60000 
+        }
+      );
+      return () => clear();
+    }
+    
     try {
-      // More relaxed settings for iOS PWA
+      // Standard approach for non-iOS or non-PWA
       const options = {
-        enableHighAccuracy: !isIOS, // Less demanding for iOS
+        enableHighAccuracy: !isIOS,
         maximumAge: isIOS ? 30000 : 10000,
         timeout: isIOS ? 15000 : 10000,
       };
@@ -117,7 +151,7 @@ export function useGeoWatcher() {
     }
     
     return () => clear();
-  }, []);
+  }, [isIOS, isPWA]);
 
   const requestPermissions = async () => {
     try {
