@@ -104,12 +104,39 @@ serve(async (req: Request) => {
     }
 
     if (!devices || devices.length === 0) {
-      console.log('⚠️ No OneSignal device tokens found');
+      console.log('⚠️ CRITICAL: No OneSignal device tokens found in database');
+      console.log('🔍 Device token debug:', {
+        queryUsed: `device_type = 'onesignal'`,
+        targetUserId: target_user_id,
+        deviceCount: devices?.length || 0
+      });
+      
+      // Still save the notification to database even if no devices
+      const notificationData = {
+        title: title || "M1SSION™",
+        content: body || "Nuova notifica",
+        message_type: 'push',
+        is_active: true,
+        target_users: target_user_id ? [target_user_id] : ['all'],
+        created_at: new Date().toISOString()
+      };
+
+      const { error: dbSaveError } = await supabase
+        .from('app_messages')
+        .insert([notificationData]);
+        
+      if (dbSaveError) {
+        console.error('❌ Failed to save notification to database:', dbSaveError);
+      } else {
+        console.log('✅ Notification saved to database despite no devices');
+      }
+      
       return new Response(JSON.stringify({ 
-        success: true, 
-        message: "No devices to send to",
+        success: false, 
+        message: "CRITICAL: No devices registered for push notifications",
         sent: 0,
-        total: 0 
+        total: 0,
+        critical_issue: "No OneSignal tokens in device_tokens table"
       }), {
         status: 200,
         headers: corsHeaders

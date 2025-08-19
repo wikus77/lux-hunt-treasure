@@ -144,14 +144,27 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
                   {rewards
                     .filter(reward => {
                       // Filter out corrupted or invalid rewards
-                      if (!reward.reward_type) return false;
+                      if (!reward.reward_type) {
+                        console.warn('M1QR-DEBUG: Filtering out reward with no type:', reward);
+                        return false;
+                      }
                       
-                      // If message type, check if description is valid
+                      // If message type, validate content
                       if (reward.reward_type === 'message') {
                         const message = reward.payload?.text || reward.description || '';
                         const cleanMessage = message.trim();
-                        // Show even if corrupted, but we'll display a fallback
-                        return true;
+                        
+                        // Filter out severely corrupted messages (single chars, symbols only)
+                        if (cleanMessage.length === 0 || 
+                            cleanMessage.length === 1 ||
+                            /^[^\w\s]*$/.test(cleanMessage) ||
+                            cleanMessage === ',' ||
+                            cleanMessage === 'è' ||
+                            cleanMessage === 'Pè' ||
+                            cleanMessage === 'dsdf') {
+                          console.warn('M1QR-DEBUG: Filtering out corrupted message:', cleanMessage);
+                          return false;
+                        }
                       }
                       
                       return true;
