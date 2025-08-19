@@ -61,51 +61,25 @@ export const useGeoMarkerAlert = () => {
 
       const { latitude: userLat, longitude: userLng } = position.coords;
       
-      // Get all active markers
-      const { data: markers, error } = await supabase
-        .from('markers')
-        .select('id, title, lat, lng')
-        .eq('active', true);
+      // Use the get-nearby-markers edge function
+      const { data: response, error } = await supabase.functions.invoke('get-nearby-markers', {
+        body: {
+          lat: userLat,
+          lng: userLng,
+          radius_meters: 500
+        }
+      });
 
       if (error) throw error;
+      if (!response?.success) throw new Error('Failed to get nearby markers');
 
-      // Also get QR codes as markers
-      const { data: qrCodes, error: qrError } = await supabase
-        .from('qr_codes')
-        .select('id, title, lat, lng, code')
-        .eq('is_active', true);
-
-      if (qrError) throw qrError;
-
-      // Combine all markers
-      const allMarkers = [
-        ...(markers || []),
-        ...(qrCodes || []).map(qr => ({
-          id: qr.id,
-          title: qr.title || `QR ${qr.code}`,
-          lat: qr.lat,
-          lng: qr.lng
-        }))
-      ];
-
-      // Calculate distances and find nearby markers
-      const nearby: NearbyMarker[] = [];
-      
-      for (const marker of allMarkers) {
-        if (!marker.lat || !marker.lng) continue;
-        
-        const distance = calculateDistance(userLat, userLng, marker.lat, marker.lng);
-        
-        if (distance <= 500) { // Within 500 meters
-          nearby.push({
-            id: marker.id,
-            title: marker.title,
-            lat: marker.lat,
-            lng: marker.lng,
-            distance: Math.round(distance)
-          });
-        }
-      }
+      const nearby: NearbyMarker[] = (response.markers || []).map((marker: any) => ({
+        id: marker.id,
+        title: marker.title,
+        lat: marker.lat,
+        lng: marker.lng,
+        distance: marker.distance
+      }));
 
       // Send notifications for new nearby markers
       for (const marker of nearby) {
