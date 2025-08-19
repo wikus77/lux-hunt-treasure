@@ -234,9 +234,7 @@ const WouterRoutes: React.FC = () => {
           </Route>
 
           {/* 🔧 DEBUG PUSH TEST ROUTE */}
-          <Route path="/debug/pushtest">
-            <PushTest />
-          </Route>
+          <Route path="/debug/pushtest" component={PushTest} />
 
           {/* Panel Access route */}
           <Route path="/panel-access">
