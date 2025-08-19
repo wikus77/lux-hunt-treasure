@@ -33,11 +33,11 @@ export const useSimpleGeolocation = () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     toast.info('📍 Rilevamento posizione in corso...');
 
-    // Timeout di sicurezza per iOS PWA
+    // Timeout di sicurezza per iOS PWA - MOLTO PIÙ LUNGO
     timeoutRef.current = setTimeout(() => {
-      setState(prev => ({ ...prev, isLoading: false, error: 'Timeout rilevamento posizione' }));
-      toast.error('⏱️ Timeout rilevamento posizione');
-    }, 15000);
+      setState(prev => ({ ...prev, isLoading: false, error: 'Timeout rilevamento posizione dopo 45 secondi' }));
+      toast.error('⏱️ Timeout rilevamento posizione - Prova a ricaricare la pagina');
+    }, 45000);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -105,8 +105,8 @@ export const useSimpleGeolocation = () => {
       },
       {
         enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 30000
+        timeout: 45000,  // 45 secondi per iOS PWA
+        maximumAge: 60000  // Cache di 1 minuto
       }
     );
   }, []);
