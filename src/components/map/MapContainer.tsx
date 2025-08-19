@@ -12,6 +12,7 @@ import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import OneSignalTestButton from '@/components/OneSignalTestButton';
 
 import { userDotIcon } from '@/components/map/userDotIcon';
 import { toast } from 'sonner';
@@ -290,6 +291,9 @@ const MapContainer: React.FC<MapContainerProps> = ({
       
       {/* Help Dialog */}
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
+      
+      {/* OneSignal Test Button */}
+      <OneSignalTestButton />
     </div>
   );
 };

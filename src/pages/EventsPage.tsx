@@ -11,10 +11,10 @@ const EventsPage = () => {
   const [events, setEvents] = useState([
     {
       id: 1,
-      title: "Caccia al tesoro a Milano",
+      title: "Caccia al tesoro in Europa",
       date: "15 Luglio 2024",
-      location: "Milano, Italia",
-      description: "Un'avventura emozionante nel cuore di Milano, alla ricerca di indizi nascosti e tesori inestimabili.",
+      location: "Europa Centrale",
+      description: "Un'avventura emozionante nel cuore dell'Europa, alla ricerca di indizi nascosti e tesori inestimabili.",
       imageUrl: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
       carModel: "",
       carBrand: "",
@@ -22,7 +22,7 @@ const EventsPage = () => {
       images: [
         {
           url: "/public/lovable-uploads/a253aeab-083c-4416-b20f-da7a0433ea3b.png",
-          description: "Caccia al tesoro a Milano"
+          description: "Caccia al tesoro in Europa"
         }
       ],
       detailedDescription: "Un'avventura emozionante nel cuore di Milano, alla ricerca di indizi nascosti e tesori inestimabili."

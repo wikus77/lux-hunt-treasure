@@ -712,7 +712,7 @@ const getRewardColor = (type: string) => {
                   const num = parseFloat(v);
                   if (isFinite(num)) setLatFull(num);
                 }}
-                placeholder="45.464664 (Milano)"
+                placeholder="46.0 (Europa)"
                 className={!formData.lat || isNaN(parseFloat(formData.lat)) ? 'border-red-300' : 'border-green-300'}
               />
               {formData.lat && isNaN(parseFloat(formData.lat)) && (
@@ -732,7 +732,7 @@ const getRewardColor = (type: string) => {
                   const num = parseFloat(v);
                   if (isFinite(num)) setLngFull(num);
                 }}
-                placeholder="9.188540 (Milano)"
+                placeholder="8.0 (Europa)"
                 className={!formData.lng || isNaN(parseFloat(formData.lng)) ? 'border-red-300' : 'border-green-300'}
               />
               {formData.lng && isNaN(parseFloat(formData.lng)) && (
@@ -747,7 +747,7 @@ const getRewardColor = (type: string) => {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <strong>Berlin:</strong> 52.520008, 13.404954<br/>
-                <strong>Milano:</strong> 45.464664, 9.188540<br/>
+                <strong>Europa:</strong> 46.0, 8.0<br/>
                 <strong>Roma:</strong> 41.902782, 12.496365
               </div>
               <div>
