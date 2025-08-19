@@ -16,9 +16,27 @@ export const GeoStatusBanner: React.FC<GeoStatusBannerProps> = ({
   isDevMode = import.meta.env.DEV,
   onRetryPermission
 }) => {
-  // Always show permission guide for iOS PWA when permission is denied or has error
-  if ((geoState.debugInfo?.permission === 'denied' && !geoState.granted) || 
-      (geoState.isIOS && geoState.isPWA && geoState.error)) {
+  console.log('🔍 GeoStatusBanner render:', {
+    permission: geoState.debugInfo?.permission,
+    granted: geoState.granted,
+    isIOS: geoState.isIOS,
+    isPWA: geoState.isPWA,
+    error: geoState.error,
+    hasDebugInfo: !!geoState.debugInfo
+  });
+
+  // CRITICAL: Show guide for iOS PWA geolocation issues
+  const shouldShowPermissionGuide = 
+    // Permission explicitly denied
+    (geoState.debugInfo?.permission === 'denied' && !geoState.granted) ||
+    // iOS PWA with geolocation error
+    (geoState.isIOS && geoState.isPWA && geoState.error) ||
+    // iOS PWA and no coordinates after attempts
+    (geoState.isIOS && geoState.isPWA && !geoState.coords && geoState.debugInfo?.attempts > 0);
+
+  console.log('🔍 shouldShowPermissionGuide:', shouldShowPermissionGuide);
+
+  if (shouldShowPermissionGuide) {
     return (
       <GeolocationPermissionGuide 
         isIOS={geoState.isIOS}
@@ -28,8 +46,13 @@ export const GeoStatusBanner: React.FC<GeoStatusBannerProps> = ({
     );
   }
 
-  // Only show debug banner in dev mode and when there's debug info
-  if (!isDevMode || !geoState.debugInfo) return null;
+  // Enhanced debug banner - show in dev OR when there are issues
+  const shouldShowDebugBanner = 
+    isDevMode || 
+    geoState.error || 
+    (geoState.debugInfo && !geoState.granted);
+
+  if (!shouldShowDebugBanner || !geoState.debugInfo) return null;
 
   const { debugInfo } = geoState;
   

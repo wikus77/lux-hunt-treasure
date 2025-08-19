@@ -141,34 +141,40 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
               <div className="relative z-10 space-y-6 p-6 max-h-[60vh] overflow-y-auto">
                  {/* Rewards List */}
                 <div className="space-y-4">
-                  {rewards
-                    .filter(reward => {
-                      // Filter out corrupted or invalid rewards
-                      if (!reward.reward_type) {
-                        console.warn('M1QR-DEBUG: Filtering out reward with no type:', reward);
-                        return false;
-                      }
-                      
-                      // If message type, validate content
-                      if (reward.reward_type === 'message') {
-                        const message = reward.payload?.text || reward.description || '';
-                        const cleanMessage = message.trim();
-                        
-                        // Filter out severely corrupted messages (single chars, symbols only)
-                        if (cleanMessage.length === 0 || 
-                            cleanMessage.length === 1 ||
-                            /^[^\w\s]*$/.test(cleanMessage) ||
-                            cleanMessage === ',' ||
-                            cleanMessage === 'è' ||
-                            cleanMessage === 'Pè' ||
-                            cleanMessage === 'dsdf') {
-                          console.warn('M1QR-DEBUG: Filtering out corrupted message:', cleanMessage);
+                  {(() => {
+                    console.log('M1QR-DEBUG: Rendering rewards for marker:', markerId, 'Total rewards:', rewards.length);
+                    
+                    return rewards
+                      .filter(reward => {
+                        // Filter out corrupted or invalid rewards
+                        if (!reward.reward_type) {
+                          console.warn('M1QR-DEBUG: Filtering out reward with no type:', reward);
                           return false;
                         }
-                      }
-                      
-                      return true;
-                    })
+                        
+                        // Enhanced message validation
+                        if (reward.reward_type === 'message') {
+                          const message = reward.payload?.text || reward.description || '';
+                          const cleanMessage = message.trim();
+                          
+                          // Filter out severely corrupted messages
+                          const isCorrupted = 
+                            cleanMessage.length === 0 || 
+                            cleanMessage.length === 1 ||
+                            /^[^\w\s]*$/.test(cleanMessage) ||
+                            ['', ',', 'è', 'Pè', 'dsdf', 'ciao', 'M1', 'm1'].includes(cleanMessage.toLowerCase());
+                          
+                          if (isCorrupted) {
+                            console.warn('M1QR-DEBUG: Filtering out corrupted message:', cleanMessage);
+                            return false;
+                          }
+                        }
+                        
+                        console.log('M1QR-DEBUG: Valid reward:', reward.reward_type, reward.description?.substring(0, 50));
+                        return true;
+                      })
+                      .slice(0, 3); // Limit to max 3 rewards per modal
+                  })()
                     .map((reward, index) => {
                       // Clean up message content for display
                       let displayDescription = reward.description;
