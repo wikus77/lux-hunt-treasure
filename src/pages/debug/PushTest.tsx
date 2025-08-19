@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import DeviceTokenDebug from '@/components/DeviceTokenDebug';
 
+console.log('🚀 DEBUG: PushTest component loaded!');
+
 export default function PushTest() {
   const [title, setTitle] = useState('M1SSION™ Test');
   const [body, setBody] = useState('Test push notification per iOS e Android');

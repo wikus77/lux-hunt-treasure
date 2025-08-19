@@ -233,8 +233,21 @@ const WouterRoutes: React.FC = () => {
             <NotificationDebug />
           </Route>
 
+          {/* 🧪 SIMPLE DEBUG TEST ROUTE */}
+          <Route path="/debug/test">
+            <div className="min-h-screen bg-black text-white p-4">
+              <h1 className="text-2xl text-center">🧪 Debug Route Works!</h1>
+              <p className="text-center mt-4">Path: {window.location.pathname}</p>
+            </div>
+          </Route>
+
           {/* 🔧 DEBUG PUSH TEST ROUTE */}
-          <Route path="/debug/pushtest" component={PushTest} />
+          <Route path="/debug/pushtest">
+            {(() => {
+              console.log('🚀 DEBUG: /debug/pushtest route matched!');
+              return <PushTest />;
+            })()}
+          </Route>
 
           {/* Panel Access route */}
           <Route path="/panel-access">
