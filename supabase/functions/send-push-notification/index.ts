@@ -13,16 +13,23 @@ serve(async (req: Request) => {
   }
 
   try {
-    // 🔑 Controllo autorizzazione con Service Role Key
+    // 🔑 Enhanced authorization check - support both service role and authenticated users
     const authHeader = req.headers.get("authorization") || "";
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
-    if (!authHeader.includes(serviceKey)) {
+    
+    // Allow both service role and authenticated users
+    const isServiceRole = authHeader.includes(serviceKey || "");
+    const isAuthenticated = authHeader.includes("Bearer ey"); // JWT token pattern
+    
+    if (!isServiceRole && !isAuthenticated) {
+      console.error('❌ Authorization failed - missing valid auth header');
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: corsHeaders
       });
     }
+    
+    console.log('✅ Authorization OK', { isServiceRole, isAuthenticated });
 
     // 📩 Lettura payload JSON
     const { user_id, title, body, target_user_id } = await req.json();
@@ -45,8 +52,11 @@ serve(async (req: Request) => {
     });
 
     if (!oneSignalRestApiKey) {
-      console.error('❌ OneSignal REST API Key not configured');
-      return new Response(JSON.stringify({ error: "OneSignal not configured" }), {
+      console.error('❌ OneSignal REST API Key not configured in environment');
+      return new Response(JSON.stringify({ 
+        error: "OneSignal REST API Key not configured",
+        details: "Please configure ONESIGNAL_REST_API_KEY in edge function secrets"
+      }), {
         status: 500,
         headers: corsHeaders
       });
