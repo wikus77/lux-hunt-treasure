@@ -45,7 +45,7 @@ export function useGeoWatcher() {
     console.log('🗺️ GeoWatcher: Setting fallback location (Rome)');
     setState({
       granted: false,
-      coords: { lat: 41.9028, lng: 12.4964, acc: null },
+      coords: { lat: 41.9028, lng: 12.4964, acc: 1000 },
       ts: Date.now(),
       error: 'Usando posizione di fallback'
     });
@@ -110,43 +110,77 @@ export function useGeoWatcher() {
 
     console.log('🗺️ GeoWatcher: Starting geolocation watch');
     
-    // iOS Safari: Start with getCurrentPosition for immediate permission prompt
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        onSuccess(position);
-        // Start watching for continuous updates
-        try {
-          watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-            enableHighAccuracy: true,
-            maximumAge: 10000,
-            timeout: 15000,
-          });
-        } catch (e: any) {
-          console.warn('🗺️ GeoWatcher: Watch setup failed', e);
-          setState(s => ({ ...s, error: e?.message || 'Errore configurazione geolocalizzazione' }));
+    // iOS Safari PWA fix: Check permissions first, then request
+    const initializeGeoLocation = async () => {
+      try {
+        // Check if we're in a PWA (standalone mode)
+        const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        console.log('🗺️ GeoWatcher: PWA Mode:', isPWA);
+        
+        // For iOS Safari PWA, use specific settings
+        const options = {
+          enableHighAccuracy: true,
+          maximumAge: isPWA ? 30000 : 5000, // Allow cached location in PWA
+          timeout: isPWA ? 20000 : 10000, // Longer timeout for PWA
+        };
+        
+        // Try permissions API if available (not in Safari)
+        if ('permissions' in navigator) {
+          try {
+            const permission = await navigator.permissions.query({ name: 'geolocation' as PermissionName });
+            console.log('🗺️ GeoWatcher: Permission state:', permission.state);
+            
+            if (permission.state === 'denied') {
+              console.log('🗺️ GeoWatcher: Permission previously denied, using fallback');
+              setFallbackLocation();
+              return;
+            }
+          } catch (e) {
+            console.log('🗺️ GeoWatcher: Permissions API not available (Safari)');
+          }
         }
-      },
-      (err) => {
-        console.log('🗺️ GeoWatcher: Initial position failed, setting up watch anyway');
-        onError(err);
-        // Still try to set up watch in case permissions change
-        try {
-          watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, {
-            enableHighAccuracy: true,
-            maximumAge: 10000,
-            timeout: 15000,
-          });
-        } catch (e: any) {
-          console.warn('🗺️ GeoWatcher: Watch setup failed after initial error', e);
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 5000,
-        timeout: 10000,
+        
+        // Primary position request
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            onSuccess(position);
+            // Start watching for continuous updates
+            try {
+              watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+                enableHighAccuracy: true,
+                maximumAge: 10000,
+                timeout: 15000,
+              });
+              console.log('🗺️ GeoWatcher: Watch position started successfully');
+            } catch (e: any) {
+              console.warn('🗺️ GeoWatcher: Watch setup failed', e);
+              setState(s => ({ ...s, error: e?.message || 'Errore configurazione geolocalizzazione' }));
+            }
+          },
+          (err) => {
+            console.log('🗺️ GeoWatcher: Initial position failed, trying watch anyway');
+            onError(err);
+            // Still try to set up watch in case permissions change later
+            try {
+              watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, {
+                enableHighAccuracy: true,
+                maximumAge: 15000,
+                timeout: 20000,
+              });
+            } catch (e: any) {
+              console.warn('🗺️ GeoWatcher: Watch setup failed after initial error', e);
+            }
+          },
+          options
+        );
+        
+      } catch (error) {
+        console.error('🗺️ GeoWatcher: Initialization error:', error);
+        setFallbackLocation();
       }
-    );
-
+    };
+    
+    initializeGeoLocation();
     return () => clear();
   }, []);
 
