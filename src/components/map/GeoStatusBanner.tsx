@@ -1,18 +1,33 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { GeoState } from '@/hooks/useGeoWatcher';
+import { GeolocationPermissionGuide } from './GeolocationPermissionGuide';
 
 interface GeoStatusBannerProps {
   geoState: GeoState;
   isDevMode?: boolean;
+  onRetryPermission?: () => void;
 }
 
 export const GeoStatusBanner: React.FC<GeoStatusBannerProps> = ({ 
   geoState, 
-  isDevMode = import.meta.env.DEV 
+  isDevMode = import.meta.env.DEV,
+  onRetryPermission
 }) => {
+  // Show permission guide if explicitly denied, otherwise show debug banner in dev mode
+  if (geoState.debugInfo?.permission === 'denied' && !geoState.granted) {
+    return (
+      <GeolocationPermissionGuide 
+        isIOS={geoState.isIOS}
+        isPWA={geoState.isPWA}
+        onRetry={onRetryPermission}
+      />
+    );
+  }
+
+  // Only show debug banner in dev mode and when there's debug info
   if (!isDevMode || !geoState.debugInfo) return null;
 
   const { debugInfo } = geoState;

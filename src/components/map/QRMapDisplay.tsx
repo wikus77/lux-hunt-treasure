@@ -185,7 +185,10 @@ useEffect(() => {
 return (
   <>
     {/* Geolocation Debug Banner (Dev Only) */}
-    <GeoStatusBanner geoState={watcher} />
+    <GeoStatusBanner 
+      geoState={watcher} 
+      onRetryPermission={watcher.requestPermissions} 
+    />
     
     {console.log('M1QR-TRACE:', { 
       step: 'render_check', 
