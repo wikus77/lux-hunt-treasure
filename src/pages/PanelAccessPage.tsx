@@ -151,8 +151,8 @@ const PanelAccessPage = () => {
               >
                 ← Torna al Panel
               </button>
-              <h1 className="text-2xl font-bold text-white">🧿 QR Buzz Control</h1>
-              <p className="text-gray-400">Gestione, generazione e statistiche QR Code Buzz™</p>
+              <h1 className="text-2xl font-bold text-white">🧿 Marker Buzz Control</h1>
+              <p className="text-gray-400">Gestione, generazione e statistiche Marker Buzz™</p>
             </div>
             <QRControlPanel />
           </div>
@@ -318,8 +318,8 @@ const PanelAccessPage = () => {
                       <QrCode className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">🧿 QR Buzz Control</h3>
-                      <p className="text-gray-400 text-sm">Gestione, generazione e statistiche QR Code Buzz™</p>
+                      <h3 className="font-semibold text-white">🧿 Marker Buzz Control</h3>
+                      <p className="text-gray-400 text-sm">Gestione, generazione e statistiche Marker Buzz™</p>
                     </div>
                   </div>
                 </motion.div>

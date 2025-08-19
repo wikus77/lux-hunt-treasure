@@ -1,3 +1,4 @@
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
@@ -103,6 +104,8 @@ serve(async (req: Request) => {
     };
 
     console.log('🔔 Sending to OneSignal API...');
+    console.log('📤 OneSignal payload:', JSON.stringify(oneSignalPayload, null, 2));
+    
     const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
@@ -112,8 +115,21 @@ serve(async (req: Request) => {
       body: JSON.stringify(oneSignalPayload)
     });
 
+    console.log('📡 OneSignal HTTP status:', oneSignalResponse.status);
     const oneSignalResult = await oneSignalResponse.json();
     console.log('🔔 OneSignal response:', oneSignalResult);
+    
+    // Check for OneSignal errors
+    if (!oneSignalResponse.ok) {
+      console.error('❌ OneSignal API error:', oneSignalResponse.status, oneSignalResult);
+      return new Response(JSON.stringify({ 
+        error: `OneSignal API error: ${oneSignalResponse.status}`,
+        details: oneSignalResult 
+      }), {
+        status: 500,
+        headers: corsHeaders
+      });
+    }
 
     // Save notification to database
     if (target_user_id) {
