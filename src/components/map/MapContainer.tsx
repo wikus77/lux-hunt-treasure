@@ -12,12 +12,12 @@ import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { useIPGeolocation } from '@/hooks/useIPGeolocation';
+
 import { userDotIcon } from '@/components/map/userDotIcon';
 import { toast } from 'sonner';
 
-// Default location (Milan)
-const DEFAULT_LOCATION: [number, number] = [45.4642, 9.19];
+// Default view (centered on Europe)
+const DEFAULT_VIEW: [number, number] = [46.0, 8.0];
 
 // Centers map on user once and shows a user location marker + accuracy circle
 const CenterOnUserOnce: React.FC = () => {
@@ -94,7 +94,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
   requestLocationPermission = () => {},
   toggleAddingSearchArea = () => {}
 }) => {
-  const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const mapRef = useRef<L.Map | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -103,49 +103,63 @@ const MapContainer: React.FC<MapContainerProps> = ({
   // Get BUZZ areas
   const { currentWeekAreas, reloadAreas } = useBuzzMapLogic();
   
-  // Enhanced geolocation with IP fallback
-  const { getLocationByIP } = useIPGeolocation();
-
-  // Priority geolocation: GPS first, then IP fallback
+  // GPS-only geolocation - no fallbacks
   useEffect(() => {
-    const initLocation = async () => {
-      console.log('🗺️ MAP: Tentativo GPS con priorità...');
+    let timeoutId: NodeJS.Timeout;
+    
+    const initGPSLocation = () => {
+      console.log('🗺️ MAP: Tentativo geolocalizzazione GPS...');
       
-      // Try browser GPS first with extended timeout
-      if ('geolocation' in navigator) {
-        try {
-          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject, {
-              enableHighAccuracy: true,
-              timeout: 20000, // Extended timeout for GPS
-              maximumAge: 30000
-            });
-          });
-          
+      if (!('geolocation' in navigator)) {
+        console.log('🚫 Geolocation non supportata dal browser');
+        toast.error('Geolocalizzazione non supportata dal browser');
+        return;
+      }
+
+      const options: PositionOptions = {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000 // Cache for 1 minute
+      };
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
           const { latitude, longitude } = position.coords;
           if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-            console.log('🎯 GPS SUCCESS! Posizione:', { latitude, longitude });
+            console.log('🎯 GPS SUCCESS! Posizione rilevata:', { latitude, longitude });
             setMapCenter([latitude, longitude]);
-            toast.success('🎯 Posizione GPS rilevata correttamente!');
-            return; // Exit early if GPS works
+            toast.success('📍 Posizione rilevata correttamente!');
           }
-        } catch (error) {
-          console.log('🚫 GPS FAILED, fallback IP:', error);
-          toast.warning('GPS non disponibile, uso IP geolocation...');
-        }
-      }
-      
-      // Fallback to IP geolocation only if GPS fails
-      console.log('🌐 Tentativo geolocalizzazione IP...');
-      const ipCoords = await getLocationByIP();
-      if (ipCoords) {
-        setMapCenter([ipCoords.lat, ipCoords.lng]);
-        toast.info('⚠️ Posizione IP imprecisa - Attiva GPS per precisione');
-      }
+        },
+        (error) => {
+          console.log('🚫 GPS Error:', error);
+          let message = 'Impossibile rilevare la posizione';
+          
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              message = 'Permessi di geolocalizzazione negati';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              message = 'Posizione non disponibile';
+              break;
+            case error.TIMEOUT:
+              message = 'Timeout geolocalizzazione';
+              break;
+          }
+          
+          toast.error(message);
+        },
+        options
+      );
     };
+
+    // Start geolocation immediately
+    initGPSLocation();
     
-    initLocation();
-  }, [getLocationByIP]);
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, []);
 
   // Handle map ready
   const handleMapReady = (map: L.Map) => {
@@ -159,7 +173,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
       if (saved) {
         const { center, zoom } = JSON.parse(saved);
         console.log('🎯 Restoring map state after BUZZ payment:', { center, zoom });
-        map.setView([center?.lat || DEFAULT_LOCATION[0], center?.lng || DEFAULT_LOCATION[1]], zoom || 13);
+        map.setView([center?.lat || DEFAULT_VIEW[0], center?.lng || DEFAULT_VIEW[1]], zoom || 13);
         localStorage.removeItem("map_state_before_buzz");
       }
     }
@@ -176,8 +190,8 @@ const MapContainer: React.FC<MapContainerProps> = ({
     setTimeout(() => {
       if (map) {
         map.invalidateSize();
-        // Only center map if we're not restoring from BUZZ payment
-        if (!(location as any)?.state?.restorePreviousMapState) {
+        // Only center map if we're not restoring from BUZZ payment and have a valid center
+        if (!(location as any)?.state?.restorePreviousMapState && mapCenter) {
           map.setView(mapCenter, map.getZoom());
         }
         console.log('🗺️ Map re-centered for iOS');
@@ -206,8 +220,8 @@ const MapContainer: React.FC<MapContainerProps> = ({
   return (
     <div className="map-container-wrapper">
       <LeafletMapContainer 
-        center={DEFAULT_LOCATION} 
-        zoom={13}
+        center={mapCenter || DEFAULT_VIEW}
+        zoom={mapCenter ? 13 : 6}
         className="map-container"
         zoomControl={false}
         scrollWheelZoom={true}
@@ -262,15 +276,17 @@ const MapContainer: React.FC<MapContainerProps> = ({
         <MapZoomControls />
       </LeafletMapContainer>
       
-      {/* BUZZ Button */}
-      <BuzzMapButton 
-        onBuzzPress={handleBuzz}
-        mapCenter={mapCenter}
-        onAreaGenerated={(lat, lng, radius) => {
-          console.log('🎯 Area generated:', { lat, lng, radius });
-          reloadAreas();
-        }}
-      />
+      {/* BUZZ Button - only show if we have a valid location */}
+      {mapCenter && (
+        <BuzzMapButton 
+          onBuzzPress={handleBuzz}
+          mapCenter={mapCenter}
+          onAreaGenerated={(lat, lng, radius) => {
+            console.log('🎯 Area generated:', { lat, lng, radius });
+            reloadAreas();
+          }}
+        />
+      )}
       
       {/* Help Dialog */}
       <HelpDialog open={showHelpDialog} setOpen={setShowHelpDialog} />
