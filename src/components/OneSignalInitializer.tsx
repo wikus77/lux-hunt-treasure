@@ -23,21 +23,25 @@ export const OneSignalInitializer = () => {
           return;
         }
 
-        // Check if running in production environment
-        const isProduction = !import.meta.env.DEV && window.location.hostname !== 'localhost';
+        // CRITICAL: Allow both dev and production for debugging
+        const isDev = import.meta.env.DEV;
+        const isLovablePreview = window.location.hostname.includes('lovable');
+        const isLocalhost = window.location.hostname === 'localhost';
         
-        if (!isProduction) {
-          console.log('🔔 OneSignal skipped in development mode');
-          return;
-        }
-
-        console.log('🔔 OneSignal production initialization starting...');
+        console.log('🔔 Environment check:', { isDev, isLovablePreview, isLocalhost, hostname: window.location.hostname });
+        
+        // SEMPRE INIZIALIZZA per debug OneSignal
+        console.log('🔔 FORCING OneSignal initialization for debugging...');
 
         await OneSignal.init({
           appId: ONESIGNAL_APP_ID,
           allowLocalhostAsSecureOrigin: true,
           serviceWorkerPath: '/OneSignalSDKWorker.js',
-          serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js'
+          serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
+          // CRITICAL: Fix SSL issues
+          safari_web_id: "web.onesignal.auto.50cb75f7-f065-4626-9a63-ce5692fa7e70",
+          // CRITICAL: Disable default notify button
+          // notifyButton: { enable: false }
         });
 
         (window as any).OneSignalInitialized = true;
@@ -83,9 +87,22 @@ const registerUserForPushNotifications = async (userId: string) => {
     if (permission !== true) {
       console.log('🔔 Requesting notification permission...');
       
-      const isSubscribed = await OneSignal.User.PushSubscription.optedIn;
-      if (!isSubscribed) {
+      try {
+        // CRITICAL: Try modern approach first
         await OneSignal.Notifications.requestPermission();
+        console.log('🔔 Permission request completed');
+        
+        // Check permission again
+        const newPermission = await OneSignal.Notifications.permission;
+        if (newPermission !== true) {
+          console.log('🔔 Permission denied by user');
+          toast.error('Notifiche rifiutate dall\'utente');
+          return;
+        }
+      } catch (permError) {
+        console.error('🔔 Permission request failed:', permError);
+        toast.error('Errore nella richiesta permessi notifiche');
+        return;
       }
     }
 
