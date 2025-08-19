@@ -1,6 +1,6 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
-import { Circle } from 'react-leaflet';
+import { Circle, Popup } from 'react-leaflet';
 import { BuzzMapArea } from '@/hooks/useBuzzMapLogic';
 import { getCurrentColor } from './BuzzColorManager';
 
@@ -62,7 +62,18 @@ const BuzzCircleRenderer: React.FC<BuzzCircleRendererProps> = ({ areas }) => {
                   }
                 }}
               >
-                {/* Popup removed on /map to avoid interference with M1SSION modal */}
+                <Popup>
+                  <div className="p-2">
+                    <div className="font-bold text-sm mb-1">Area BUZZ MAPPA</div>
+                    <div className="text-xs mb-1">Raggio: {area.radius_km.toFixed(1)} km</div>
+                    <div className="text-xs text-gray-600">
+                      Generata: {new Date(area.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-gray-600">
+                      Settimana: {area.week}
+                    </div>
+                  </div>
+                </Popup>
               </Circle>
             </React.Fragment>
           );

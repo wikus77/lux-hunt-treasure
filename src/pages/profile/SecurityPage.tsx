@@ -9,12 +9,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft, Lock, Shield, Smartphone, Eye, EyeOff, History } from 'lucide-react';
-import { useNavigateWouter } from '@/utils/routerUtils';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const SecurityPage: React.FC = () => {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [passwordData, setPasswordData] = useState({

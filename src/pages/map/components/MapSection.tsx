@@ -3,7 +3,7 @@ import React, { lazy, Suspense } from 'react';
 import MapLoadingFallback from './MapLoadingFallback';
 
 // Lazy load heavy map components
-const MapContainer = lazy(() => import('@/components/map/MapContainer'));
+const MapContainer = lazy(() => import('./MapContainer'));
 
 interface MapSectionProps {
   isAddingPoint: boolean;

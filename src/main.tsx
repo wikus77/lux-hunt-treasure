@@ -9,7 +9,7 @@ import App from './App';
 import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
-
+import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
 
 // Initialize production optimizations
 setupProductionConsole();
@@ -17,7 +17,7 @@ setupProductionLogging();
 enableProductionOptimizations();
 
 // Performance monitoring in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+if (typeof window !== 'undefined' && import.meta.env?.DEV) {
   setTimeout(() => monitorPerformance(), 2000);
 }
 
@@ -88,7 +88,9 @@ const renderApp = () => {
     root.render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-          <App />
+          <EnhancedToastProvider>
+            <App />
+          </EnhancedToastProvider>
         </QueryClientProvider>
       </React.StrictMode>
     );

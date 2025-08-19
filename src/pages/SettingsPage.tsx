@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, User, Bell, Shield, Globe, Smartphone, Volume2 } from 'lucide-react';
-import { useNavigateWouter } from '@/utils/routerUtils';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -44,7 +44,7 @@ interface UserSettings {
 }
 
 const SettingsPage: React.FC = () => {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
   const { user, updateProfile, logout } = useAuth();
   const { vibrate, playSound } = usePWAHardwareStub();
   const { toast } = useToast();
@@ -195,7 +195,7 @@ const SettingsPage: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate('/home')}
+            onClick={() => navigate(-1)}
             className="glass-card"
           >
             <ArrowLeft className="h-5 w-5" />

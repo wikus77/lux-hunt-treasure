@@ -1,10 +1,10 @@
 
-import { useLocationWouter, LinkWouter } from "@/utils/routerUtils";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 const NotFound = () => {
-  const location = useLocationWouter();
+  const location = useLocation();
 
   useEffect(() => {
     // Production-safe logging - BY JOSEPH MULE / NIYVORA KFT™
@@ -19,7 +19,7 @@ const NotFound = () => {
         <h1 className="text-4xl font-bold mb-4 gradient-text-cyan">404</h1>
         <p className="text-xl text-white/80 mb-6">Oops! Pagina non trovata</p>
         <Button asChild>
-          <LinkWouter to="/">Torna alla Home</LinkWouter>
+          <Link to="/">Torna alla Home</Link>
         </Button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React from 'react';
-import { Circle } from 'react-leaflet';
+import { Circle, Popup } from 'react-leaflet';
 import { Button } from '@/components/ui/button';
 import { Trash2 } from 'lucide-react';
 
@@ -57,7 +57,25 @@ const SearchAreaMapLayer: React.FC<SearchAreaMapLayerProps> = ({
               e.target.setStyle({ fillOpacity: 0.1, weight: 2 });
             }
           }}
-        />
+        >
+          <Popup>
+            <div className="p-3 text-center">
+              <div className="font-bold text-cyan-400 mb-2">🔍 {area.label}</div>
+              <div className="text-sm mb-2">Raggio: {(area.radius / 1000).toFixed(1)} km</div>
+              <div className="flex justify-center">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => deleteSearchArea(area.id)}
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Elimina
+                </Button>
+              </div>
+            </div>
+          </Popup>
+        </Circle>
       ))}
     </>
   );

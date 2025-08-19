@@ -1,4 +1,8 @@
-// © 2025 M1SSION™ – Joseph MULÉ – NIYVORA KFT
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Push Notifications Processor Worker
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
 
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -45,3 +49,8 @@ export const usePushNotificationProcessor = () => {
     };
   }, []);
 };
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */

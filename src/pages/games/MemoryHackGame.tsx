@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Play, RotateCcw, Star, Clock, Target } from 'lucide-react';
-import { useNavigateWouter } from '@/utils/routerUtils';
+import { useNavigate } from 'react-router-dom';
 import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,7 +29,7 @@ interface GameStats {
 }
 
 const MemoryHackGame: React.FC = () => {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
   const { vibrate, playSound } = usePWAHardwareStub();
   const { toast } = useToast();
   
@@ -290,7 +290,7 @@ const MemoryHackGame: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => navigate("/")}
+            onClick={() => navigate(-1)}
             className="glass-card"
           >
             <ArrowLeft className="h-5 w-5" />

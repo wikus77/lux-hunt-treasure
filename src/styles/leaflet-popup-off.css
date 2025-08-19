@@ -1,8 +1,0 @@
-/* disattiva popups Leaflet in /map */
-body[data-path="/map"] .leaflet-popup,
-body[data-path="/map"] .leaflet-popup-pane {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
-  z-index: -1 !important;
-}

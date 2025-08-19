@@ -1165,21 +1165,18 @@ export type Database = {
       marker_claims: {
         Row: {
           claimed_at: string | null
-          created_at: string | null
           id: string
           marker_id: string
           user_id: string
         }
         Insert: {
           claimed_at?: string | null
-          created_at?: string | null
           id?: string
           marker_id: string
           user_id: string
         }
         Update: {
           claimed_at?: string | null
-          created_at?: string | null
           id?: string
           marker_id?: string
           user_id?: string
@@ -1213,48 +1210,6 @@ export type Database = {
           payload?: Json
           reward_type?: string
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      markers: {
-        Row: {
-          active: boolean
-          created_at: string | null
-          id: string
-          lat: number
-          lng: number
-          title: string
-          updated_at: string | null
-          visible_from: string | null
-          visible_to: string | null
-          zoom_max: number | null
-          zoom_min: number | null
-        }
-        Insert: {
-          active?: boolean
-          created_at?: string | null
-          id?: string
-          lat: number
-          lng: number
-          title: string
-          updated_at?: string | null
-          visible_from?: string | null
-          visible_to?: string | null
-          zoom_max?: number | null
-          zoom_min?: number | null
-        }
-        Update: {
-          active?: boolean
-          created_at?: string | null
-          id?: string
-          lat?: number
-          lng?: number
-          title?: string
-          updated_at?: string | null
-          visible_from?: string | null
-          visible_to?: string | null
-          zoom_max?: number | null
-          zoom_min?: number | null
         }
         Relationships: []
       }
@@ -2045,24 +2000,6 @@ export type Database = {
           },
         ]
       }
-      qr_code_links: {
-        Row: {
-          code: string
-          created_at: string
-          marker_id: string
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          marker_id: string
-        }
-        Update: {
-          code?: string
-          created_at?: string
-          marker_id?: string
-        }
-        Relationships: []
-      }
       qr_codes: {
         Row: {
           center_lat: number | null
@@ -2207,7 +2144,21 @@ export type Database = {
             foreignKeyName: "qr_redemptions_code_fk"
             columns: ["code"]
             isOneToOne: false
+            referencedRelation: "buzz_map_markers"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "qr_redemptions_code_fk"
+            columns: ["code"]
+            isOneToOne: false
             referencedRelation: "qr_codes"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "qr_redemptions_code_fk"
+            columns: ["code"]
+            isOneToOne: false
+            referencedRelation: "qr_codes_markers"
             referencedColumns: ["code"]
           },
         ]
@@ -3371,44 +3322,6 @@ export type Database = {
         }
         Relationships: []
       }
-      user_rewards: {
-        Row: {
-          claimed_at: string | null
-          created_at: string | null
-          id: string
-          marker_id: string
-          payload: Json | null
-          reward_type: string
-          user_id: string
-        }
-        Insert: {
-          claimed_at?: string | null
-          created_at?: string | null
-          id?: string
-          marker_id: string
-          payload?: Json | null
-          reward_type: string
-          user_id: string
-        }
-        Update: {
-          claimed_at?: string | null
-          created_at?: string | null
-          id?: string
-          marker_id?: string
-          payload?: Json | null
-          reward_type?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_rewards_marker_id_fkey"
-            columns: ["marker_id"]
-            isOneToOne: false
-            referencedRelation: "markers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -3566,24 +3479,42 @@ export type Database = {
     Views: {
       buzz_map_markers: {
         Row: {
-          active: boolean | null
-          id: string | null
+          code: string | null
           latitude: number | null
           longitude: number | null
           title: string | null
         }
         Insert: {
-          active?: never
-          id?: string | null
-          latitude?: number | null
-          longitude?: number | null
+          code?: string | null
+          latitude?: never
+          longitude?: never
           title?: string | null
         }
         Update: {
-          active?: never
-          id?: string | null
-          latitude?: number | null
-          longitude?: number | null
+          code?: string | null
+          latitude?: never
+          longitude?: never
+          title?: string | null
+        }
+        Relationships: []
+      }
+      qr_codes_markers: {
+        Row: {
+          code: string | null
+          latitude: number | null
+          longitude: number | null
+          title: string | null
+        }
+        Insert: {
+          code?: string | null
+          latitude?: never
+          longitude?: never
+          title?: string | null
+        }
+        Update: {
+          code?: string | null
+          latitude?: never
+          longitude?: never
           title?: string | null
         }
         Relationships: []
@@ -3696,6 +3627,10 @@ export type Database = {
       consume_credit: {
         Args: { p_credit_type: string; p_user_id: string }
         Returns: boolean
+      }
+      execute_sql: {
+        Args: { sql: string }
+        Returns: undefined
       }
       force_subscription_sync: {
         Args: { p_user_id: string }

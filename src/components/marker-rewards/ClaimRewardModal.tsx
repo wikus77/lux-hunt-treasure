@@ -16,6 +16,7 @@ interface ClaimRewardModalProps {
   isOpen: boolean;
   onClose: () => void;
   markerId: string;
+  rewards: MarkerReward[];
   onSuccess?: (nextRoute?: string) => void;
 }
 
@@ -23,22 +24,10 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   isOpen,
   onClose,
   markerId,
+  rewards,
   onSuccess
 }) => {
   const [isClaiming, setIsClaiming] = useState(false);
-
-  // Add body class management for z-index control
-  React.useEffect(() => {
-    console.log('M1SSION_CANARY: ClaimRewardModal mounted');
-    if (isOpen) {
-      document.body.classList.add('m1ssion-modal-open');
-    } else {
-      document.body.classList.remove('m1ssion-modal-open');
-    }
-    return () => {
-      document.body.classList.remove('m1ssion-modal-open');
-    };
-  }, [isOpen]);
 
   const getRewardIcon = (rewardType: string) => {
     switch (rewardType) {
@@ -54,7 +43,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   const handleClaim = async () => {
     if (!markerId) return;
     setIsClaiming(true);
-    console.log('M1MARK-TRACE', { step: 'REDEEM_REQUESTED', markerId });
+    console.log('M1QR-TRACE', { step: 'claim_start', markerId });
 
     const { data, error } = await supabase.functions
       .invoke('claim-marker-reward', { body: { markerId } });
@@ -66,7 +55,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     }
 
     if (data?.ok === true) {
-      console.log('M1MARK-TRACE', { step: 'REDEEM_SUCCESS', nextRoute: data?.nextRoute });
+      console.log('M1QR-TRACE', { step: 'claim_success', nextRoute: data?.nextRoute });
       toast.success('Premio riscattato');
       onClose?.();
       if (data?.nextRoute) window.location.href = data.nextRoute;
@@ -74,7 +63,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
     }
 
     if (data?.code === 'ALREADY_CLAIMED') { 
-      console.log('M1MARK-TRACE', { step: 'ALREADY_CLAIMED' });
+      console.log('M1QR-TRACE', { step: 'already_claimed' });
       toast.info('Premio già riscattato'); 
       onClose?.(); 
       return; 
@@ -92,26 +81,7 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent 
-        className="m1ssion-modal-content fixed"
-        style={{
-          position: 'fixed' as const,
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          zIndex: 99999,
-          isolation: 'isolate',
-          willChange: 'transform',
-          pointerEvents: 'auto' as const,
-          maxWidth: '420px',
-          width: '90vw',
-          maxHeight: '80vh',
-          background: 'linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(26, 26, 26, 0.95))',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '24px',
-          boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), inset 0 1px 3px rgba(255, 255, 255, 0.1)'
-        }}
-      >
+      <DialogContent className="max-w-md mx-auto z-[9999] pointer-events-auto">
         <DialogHeader>
           <DialogTitle className="text-center text-xl font-bold text-gradient">
             🎁 Premio Trovato!
@@ -124,17 +94,26 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
           </div>
           
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
-              <span className="text-2xl">🎁</span>
-              <div className="flex-1">
-                <div className="text-sm font-medium">
-                  Premio speciale M1SSION™
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Clicca riscatta per scoprire cosa hai vinto!
+            {rewards.map((reward, index) => (
+              <div key={index} className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
+                <span className="text-2xl">{getRewardIcon(reward.reward_type)}</span>
+                <div className="flex-1">
+                  <div className="text-sm font-medium">
+                    {reward.description || `Premio ${reward.reward_type}`}
+                  </div>
+                  {reward.reward_type === 'buzz_free' && (
+                    <div className="text-xs text-muted-foreground">
+                      {reward.payload.buzzCount || 1} BUZZ gratuiti
+                    </div>
+                  )}
+                  {reward.reward_type === 'xp_points' && (
+                    <div className="text-xs text-muted-foreground">
+                      +{reward.payload.xp || 10} XP
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            ))}
           </div>
           
           <div className="flex gap-3 pt-4">
@@ -149,10 +128,10 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
             <Button 
               onClick={handleClaim}
               disabled={isClaiming}
-              className="flex-1 m1ssion-claim-button"
+              className="flex-1 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
               data-testid="claim-reward-cta"
             >
-              {isClaiming ? 'Riscattando...' : 'Riscatta ora'}
+              {isClaiming ? 'Riscattando...' : 'Riscatta'}
             </Button>
           </div>
         </div>

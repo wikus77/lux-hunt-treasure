@@ -25,96 +25,39 @@ export function useGeolocation() {
   const [enabled, setEnabled] = useState<boolean>(() => readEnabled());
   const [position, setPosition] = useState<Pos | undefined>(undefined);
   const watchId = useRef<number | undefined>();
-  const toastShownRef = useRef<boolean>(false);
 
   const enable = useCallback(() => {
     writeEnabled(true);
     setEnabled(true);
-    toastShownRef.current = false; // Reset toast flag when enabling
   }, []);
-  
   const disable = useCallback(() => {
     writeEnabled(false);
     setEnabled(false);
     setStatus('idle');
     if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
-    toastShownRef.current = false; // Reset toast flag
   }, []);
 
   useEffect(() => {
     if (!enabled) return;
     if (!('geolocation' in navigator)) {
-      console.warn('🗺️ Geolocation not supported by browser');
       setStatus('error');
-      if (!position) {
-        setPosition({ lat: 41.9028, lng: 12.4964, acc: null }); // Rome fallback
-      }
       return;
     }
-    
     setStatus('prompt');
-    
-    // iOS Safari requires user interaction before getCurrentPosition
-    // Try getCurrentPosition first for immediate result
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        console.log('🗺️ Initial position obtained:', { lat: p.coords.latitude, lng: p.coords.longitude });
-        setStatus('granted');
-        setPosition({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy });
-      },
-      (initialError) => {
-        console.log('🗺️ Initial position failed, setting up watch...', initialError.message);
-        // Fallback to watch position for continuous tracking
-      },
-      { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 }
-    );
-
     watchId.current = navigator.geolocation.watchPosition(
       (p) => {
-        console.log('🗺️ Watch position update:', { lat: p.coords.latitude, lng: p.coords.longitude });
         setStatus('granted');
         setPosition({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy });
-        toastShownRef.current = false; // Reset error toast flag on success
       },
       (e) => {
-        console.warn('🗺️ Geolocation watch error:', e.message, e.code, 'Error name:', e.PERMISSION_DENIED === e.code ? 'PERMISSION_DENIED' : e.POSITION_UNAVAILABLE === e.code ? 'POSITION_UNAVAILABLE' : 'TIMEOUT');
-        
-        const newStatus = e.code === e.PERMISSION_DENIED ? 'denied' : 'error';
-        setStatus(newStatus);
-        
-        // Only show toast once per session to avoid spam
-        if (!toastShownRef.current) {
-          toastShownRef.current = true;
-          
-          if (e.code === e.PERMISSION_DENIED) {
-            console.log('🗺️ Permission denied - using fallback location');
-          } else if (e.code === e.POSITION_UNAVAILABLE) {
-            console.log('🗺️ Position unavailable - using fallback location');
-          } else {
-            console.log('🗺️ Timeout error - using fallback location');
-          }
-        }
-        
-        // Always set fallback position if we don't have one
-        if (!position) {
-          console.log('🗺️ Setting fallback position to Rome');
-          setPosition({ lat: 41.9028, lng: 12.4964, acc: null });
-        }
+        setStatus(e.code === e.PERMISSION_DENIED ? 'denied' : 'error');
       },
-      { 
-        enableHighAccuracy: true, 
-        maximumAge: 60000, // Cache for 1 minute on iOS
-        timeout: 15000 // Longer timeout for iOS
-      }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
     );
-    
     return () => {
-      if (watchId.current != null) {
-        navigator.geolocation.clearWatch(watchId.current);
-        watchId.current = undefined;
-      }
+      if (watchId.current != null) navigator.geolocation.clearWatch(watchId.current);
     };
-  }, [enabled, position]); // Added position dependency for fallback logic
+  }, [enabled]);
 
   return { status, enabled, position, enable, disable };
 }

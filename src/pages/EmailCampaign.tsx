@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { useNavigateWouter } from "@/utils/routerUtils";
+import { useNavigate } from "react-router-dom";
 import { useAuthContext } from "@/contexts/auth";
 import CampaignSender from "@/components/email/CampaignSender";
 import { Spinner } from "@/components/ui/spinner";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 const EmailCampaign = () => {
   const { hasRole, isAuthenticated, isRoleLoading } = useAuthContext();
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // If user is authenticated and roles are loaded, check if they have admin or developer role

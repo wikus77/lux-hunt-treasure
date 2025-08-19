@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
-import { useNavigateWouter, useLocationWouter } from "@/utils/routerUtils";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import CardPaymentForm from "@/components/payments/CardPaymentForm";
@@ -13,8 +13,8 @@ import { useStripePayment } from "@/hooks/useStripePayment";
 import { v4 as uuidv4 } from "uuid";
 
 const PaymentMethods = () => {
-  const navigate = useNavigateWouter();
-  const location = useLocationWouter();
+  const navigate = useNavigate();
+  const location = useLocation();
   const queryParams = useQueryParams<{ from?: string; price?: string; session?: string }>();
   const { toast: toastHandler } = useToast();
   const [paymentMethod, setPaymentMethod] = useState<string>("card");
@@ -65,10 +65,28 @@ const PaymentMethods = () => {
     // Set appropriate state based on payment type
     if (isMapBuzz) {
       // Redirect to map with state
-      navigate("/map");
+      navigate("/map", {
+        state: {
+          paymentCompleted: true, 
+          mapBuzz: true,
+          sessionId: sessionId, // Include session ID to prevent duplicates
+          clue: { description: clueMessage },
+          createdAt: new Date().toISOString()
+        },
+        replace: true
+      });
     } else {
       // Regular buzz, redirect to buzz page
-      navigate("/buzz");
+      navigate("/buzz", {
+        state: {
+          paymentCompleted: true, 
+          fromRegularBuzz: true,
+          sessionId: sessionId, // Include session ID to prevent duplicates
+          clue: { description: clueMessage },
+          createdAt: new Date().toISOString()
+        },
+        replace: true
+      });
     }
   };
 
@@ -164,7 +182,7 @@ const PaymentMethods = () => {
           variant="ghost" 
           size="icon" 
           className="mr-2"
-          onClick={() => navigate('/map')}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

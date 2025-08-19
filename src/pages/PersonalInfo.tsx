@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { ArrowLeft, Save } from "lucide-react";
-import { useNavigateWouter } from "@/utils/routerUtils";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const PersonalInfo = () => {
-  const navigate = useNavigateWouter();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [originalInfo, setOriginalInfo] = useState({
@@ -162,7 +162,7 @@ const PersonalInfo = () => {
           variant="ghost" 
           size="icon" 
           className="mr-2"
-          onClick={() => navigate('/settings')}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>

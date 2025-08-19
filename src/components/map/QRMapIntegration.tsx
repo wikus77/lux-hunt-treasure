@@ -184,7 +184,7 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
           
           <MapClickHandler />
 
-          {/* Existing QR locations - NO POPUP, only marker */}
+          {/* Existing QR locations */}
           {qrLocations.map((qr) => (
             <Marker
               key={qr.id}
@@ -193,7 +193,31 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
               eventHandlers={{
                 click: () => handleQRClick(qr)
               }}
-            />
+            >
+              <Popup>
+                <div className="p-2 min-w-[200px]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg">{getRewardIcon(qr.reward_type)}</span>
+                    <strong className="text-sm">{qr.location_name}</strong>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {qr.message}
+                  </p>
+                  <div className="flex justify-between text-xs">
+                    <span>Scansioni: {qr.scansioni}</span>
+                    <span>{qr.max_distance_meters}m</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    className="w-full mt-2" 
+                    onClick={() => handleQRClick(qr)}
+                  >
+                    <QrCode className="w-3 h-3 mr-1" />
+                    Condividi QR
+                  </Button>
+                </div>
+              </Popup>
+            </Marker>
           ))}
 
           {/* New position marker */}
@@ -201,7 +225,16 @@ export const QRMapIntegration: React.FC<QRMapIntegrationProps> = ({ isAdminMode 
             <Marker
               position={[selectedPosition.lat, selectedPosition.lng]}
               icon={redPulseIcon}
-            />
+            >
+              <Popup>
+                <div className="p-2">
+                  <strong>Nuova posizione QR</strong>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedPosition.lat.toFixed(6)}, {selectedPosition.lng.toFixed(6)}
+                  </p>
+                </div>
+              </Popup>
+            </Marker>
           )}
         </MapContainer>
       </div>
