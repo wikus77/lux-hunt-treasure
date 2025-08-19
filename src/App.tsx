@@ -2,7 +2,6 @@
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ – M1SSION™
 import React from 'react';
 import { Router } from 'wouter';
-import { Toaster } from "./components/ui/sonner";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
@@ -16,10 +15,10 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import PushSetup from "./components/pwa/PushSetup";
 import OneSignalSetup from "./components/push/OneSignalSetup";
 import { AuthenticationManager } from "./components/auth/AuthenticationManager";
-import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { SystemInitializer } from './components/system/SystemInitializer';
 import LegalOnboarding from "./components/legal/LegalOnboarding";
+import EnhancedToastProvider from "./components/ui/enhanced-toast-provider";
 
 function App() {
   const handleAuthenticated = (userId: string) => {
@@ -37,29 +36,29 @@ function App() {
   return (
     <GlobalErrorBoundary>
       <HelmetProvider>
-        <SkipToContent />
-        <OfflineIndicator />
-        <Router>
-          <SoundProvider>
-            <AuthProvider>
-              <SystemInitializer />
-              <AuthenticationManager
-              onAuthenticated={handleAuthenticated}
-              onNotAuthenticated={handleNotAuthenticated}
-              onEmailNotVerified={handleEmailNotVerified}
-            />
-            <BuzzPaymentMonitor />
-            <LegalOnboarding />
-            <WouterRoutes />
-            <InstallPrompt />
-            <PushSetup />
-            <OneSignalSetup />
-            <XpSystemManager />
-            </AuthProvider>
-            
-          </SoundProvider>
-        </Router>
-        <Toaster closeButton={false} position="top-right" />
+        <EnhancedToastProvider>
+          <SkipToContent />
+          <OfflineIndicator />
+          <Router>
+            <SoundProvider>
+              <AuthProvider>
+                <SystemInitializer />
+                <AuthenticationManager
+                onAuthenticated={handleAuthenticated}
+                onNotAuthenticated={handleNotAuthenticated}
+                onEmailNotVerified={handleEmailNotVerified}
+              />
+              <BuzzPaymentMonitor />
+              <LegalOnboarding />
+              <WouterRoutes />
+              <InstallPrompt />
+              <PushSetup />
+              <OneSignalSetup />
+              <XpSystemManager />
+              </AuthProvider>
+            </SoundProvider>
+          </Router>
+        </EnhancedToastProvider>
       </HelmetProvider>
     </GlobalErrorBoundary>
   );

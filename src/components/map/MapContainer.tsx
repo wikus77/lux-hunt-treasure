@@ -112,6 +112,7 @@ const MapContainer = ({
         center={EUROPE_CENTER} 
         zoom={5} // Europe-wide view
         className="map-container w-full h-full"
+        style={{ zIndex: 1 }}
         zoomControl={false}
         scrollWheelZoom={true}
         doubleClickZoom={true}
