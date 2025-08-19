@@ -24,10 +24,15 @@ export type GeoState = {
 export function useGeoWatcher() {
   const [state, setState] = useState<GeoState>({ granted: false });
   const watchId = useRef<number | null>(null);
+  const attemptsRef = useRef(0);
   
-  // Detect iOS and PWA mode
+  // Enhanced iOS and PWA detection
   const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isPWA = typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches;
+  const isPWA = typeof window !== 'undefined' && (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true ||
+    document.referrer.includes('android-app://')
+  );
 
   const clear = () => {
     if (watchId.current !== null && navigator.geolocation) {
@@ -152,25 +157,30 @@ export function useGeoWatcher() {
 
     console.log('🌍 Starting geolocation watch...', { isIOS, isPWA });
     
-    const initGeoLocation = async () => {
-      // Check permission API first if available
+  const initGeoLocation = async () => {
+      console.log('🌍 INIT GEO - Starting geolocation for:', { isIOS, isPWA });
+      attemptsRef.current = 0;
+      
+      // iOS PWA FIRST - Skip permission API that causes issues
+      if (isIOS && isPWA) {
+        console.log('🍎 iOS PWA: Direct approach without permission API');
+        tryIOSPWAGeolocation();
+        return;
+      }
+      
+      // Standard browser - try permission API
       if ('permissions' in navigator) {
         try {
           const permission = await navigator.permissions.query({ name: 'geolocation' });
-          console.log('🔐 Initial permission state:', permission.state);
-          console.log('🔍 PERMISSION DEBUG:', {
-            permissionState: permission.state,
-            permissionObject: permission,
-            isIOS,
-            isPWA,
-            navigatorGeolocation: !!navigator.geolocation
-          });
+          console.log('🔐 Permission state:', permission.state);
           
           if (permission.state === 'denied') {
             setState(s => ({ 
               ...s, 
               granted: false,
-              error: 'Geolocalizzazione bloccata nelle impostazioni del browser',
+              error: 'Geolocalizzazione bloccata. Abilita nelle impostazioni del browser.',
+              isIOS,
+              isPWA,
               debugInfo: {
                 locationEnabled: false,
                 permission: 'denied',
@@ -183,103 +193,97 @@ export function useGeoWatcher() {
             return;
           }
         } catch (permErr) {
-          console.warn('Permission API not available:', permErr);
+          console.warn('🚫 Permission API error:', permErr);
+          // Continue with direct approach
         }
       }
 
-      // iOS PWA enhanced approach with multiple fallbacks
-      if (isIOS && isPWA) {
-        console.log('🍎 iOS PWA: Enhanced geolocation approach');
-        
-        // First attempt: Direct getCurrentPosition with optimized settings
-        const tryGeoLocation = (attempt: number = 1) => {
-          console.log(`🍎 iOS PWA attempt ${attempt}`);
-          
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
-              console.log('✅ iOS PWA geolocation success on attempt', attempt);
-              onSuccess(pos);
-              
-              // Start watching after initial success only if first attempt worked
-              if (attempt === 1) {
-                try {
-                  const watchOptions = {
-                    enableHighAccuracy: false,
-                    maximumAge: 45000, // Longer cache for iOS
-                    timeout: 20000,
-                  };
-                  watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, watchOptions);
-                  console.log('🍎 iOS PWA: Watch position started');
-                } catch (e) {
-                  console.warn('iOS PWA watch failed, position acquired but no continuous tracking', e);
-                }
-              }
-            },
-            (err) => {
-              console.error(`❌ iOS PWA geolocation failed on attempt ${attempt}:`, err);
-              
-              // Enhanced error handling with retries
-              if (attempt < 3 && err.code !== 1) { // Don't retry if permission denied
-                console.log(`🔄 iOS PWA: Retrying in ${attempt * 1000}ms...`);
-                setTimeout(() => tryGeoLocation(attempt + 1), attempt * 1000);
-              } else {
-                // Final failure - enhanced error message for iOS PWA
-                const finalError = err.code === 1 
-                  ? 'iOS PWA: Apri Safari > Impostazioni > Privacy e Sicurezza > Posizione. Assicurati che "Servizi di localizzazione" sia attivo e che questo sito abbia accesso alla posizione.'
-                  : err.code === 2
-                  ? 'Posizione non disponibile. Verifica di essere connesso a internet e che i servizi di localizzazione siano attivi.'
-                  : 'Timeout nella richiesta di posizione. Riprova.';
-                
-                setState(s => ({ 
-                  ...s, 
-                  granted: false, 
-                  error: finalError,
-                  isIOS,
-                  isPWA,
-                  debugInfo: {
-                    locationEnabled: false,
-                    permission: err.code === 1 ? 'denied' : 'prompt',
-                    lastError: `Final attempt failed: ${err.message}`,
-                    coords: null,
-                    attempts: attempt,
-                    lastAttemptTime: Date.now()
-                  }
-                }));
-              }
-            },
-            { 
-              enableHighAccuracy: false, 
-              timeout: 25000, // Longer timeout for iOS
-              maximumAge: attempt > 1 ? 0 : 60000 // Fresh location on retries
-            }
-          );
-        };
-        
-        tryGeoLocation(1);
-        return () => clear();
-      }
+      // Start standard geolocation
+      startStandardGeolocation();
+    };
+    
+    const tryIOSPWAGeolocation = () => {
+      console.log('🍎 iOS PWA: Starting optimized geolocation');
+      attemptsRef.current++;
       
-      // Standard approach for non-iOS or non-PWA with enhanced options
+      const options = {
+        enableHighAccuracy: false,
+        timeout: 20000,
+        maximumAge: 60000
+      };
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          console.log('✅ iOS PWA: Geolocation success');
+          onSuccess(pos);
+          
+          // Start watching for continuous updates
+          try {
+            watchId.current = navigator.geolocation.watchPosition(
+              onSuccess, 
+              onError, 
+              { ...options, maximumAge: 30000 }
+            );
+          } catch (e) {
+            console.warn('🍎 iOS PWA: Watch failed, but position acquired', e);
+          }
+        },
+        (err) => {
+          console.error('❌ iOS PWA geolocation failed:', err.code, err.message);
+          
+          // Show appropriate error message
+          let errorMsg = 'Geolocalizzazione non disponibile.';
+          if (err.code === 1) {
+            errorMsg = 'iOS PWA: Abilita la geolocalizzazione in Safari > Impostazioni > Privacy e Sicurezza > Posizione';
+          } else if (err.code === 2) {
+            errorMsg = 'Posizione non disponibile. Verifica connessione e servizi di localizzazione.';
+          } else if (err.code === 3) {
+            errorMsg = 'Timeout geolocalizzazione. Riprova.';
+          }
+          
+          setState(s => ({ 
+            ...s, 
+            granted: false, 
+            error: errorMsg,
+            isIOS,
+            isPWA,
+            debugInfo: {
+              locationEnabled: false,
+              permission: err.code === 1 ? 'denied' : 'prompt',
+              lastError: err.message,
+              coords: null,
+              attempts: attemptsRef.current,
+              lastAttemptTime: Date.now()
+            }
+          }));
+        },
+        options
+      );
+    };
+    
+    const startStandardGeolocation = () => {
+      
+      console.log('🌍 Starting standard geolocation watch');
+      
+      const options = {
+        enableHighAccuracy: true,
+        maximumAge: 10000,
+        timeout: 15000
+      };
+      
       try {
-        const options = {
-          enableHighAccuracy: !isIOS,
-          maximumAge: isIOS ? 30000 : 10000,
-          timeout: isIOS ? 20000 : 15000, // Longer timeout for better reliability
-        };
-        
-        console.log('🌍 Starting standard watchPosition with options:', options);
         watchId.current = navigator.geolocation.watchPosition(onSuccess, onError, options);
       } catch (e: any) {
-        console.error('Failed to initialize geolocation:', e);
+        console.error('❌ Standard geolocation failed:', e);
         setState({ 
           granted: false, 
-          error: e?.message || 'Errore di inizializzazione geolocalizzazione',
+          error: 'Errore di inizializzazione geolocalizzazione',
           isIOS,
           isPWA,
           debugInfo: {
             locationEnabled: false,
             permission: 'prompt',
-            lastError: `Initialization error: ${e?.message}`,
+            lastError: e?.message || 'Unknown error',
             coords: null,
             attempts: 1,
             lastAttemptTime: Date.now()

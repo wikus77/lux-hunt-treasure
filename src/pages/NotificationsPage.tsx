@@ -47,57 +47,92 @@ export const NotificationsPage: React.FC = () => {
     try {
       setLoading(true);
 
-      // Enhanced query to properly fetch all notifications including push notifications
-      const { data, error } = await supabase
-        .from('app_messages')
-        .select('*')
-        .eq('is_active', true)
-        .or(`target_users.cs.{all},target_users.cs.{${user.id}}`)
-        .order('created_at', { ascending: false });
+      console.log('[NOTIF DEBUG] Loading notifications for user:', user.id);
       
-      // Also check for any messages with empty or null target_users that should be global
-      const { data: globalData, error: globalError } = await supabase
-        .from('app_messages')
-        .select('*')
-        .eq('is_active', true)
-        .is('target_users', null)
-        .order('created_at', { ascending: false });
+      // Enhanced query strategy - get ALL app_messages and user_notifications
+      const [appMessagesResponse, userNotificationsResponse] = await Promise.all([
+        // App messages (global notifications)
+        supabase
+          .from('app_messages')
+          .select('*')
+          .eq('is_active', true)
+          .or(`target_users.cs.{all},target_users.cs.{${user.id}},target_users.is.null`)
+          .order('created_at', { ascending: false }),
+        
+        // User notifications (personal notifications from markers, etc.)
+        supabase
+          .from('user_notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('is_deleted', false)
+          .order('created_at', { ascending: false })
+      ]);
 
-      // Combine results from both queries
-      const allNotifications = [
-        ...(data || []),
-        ...(globalData || [])
-      ].filter((notification, index, self) => 
-        // Remove duplicates by id
-        index === self.findIndex(n => n.id === notification.id)
-      );
+      const { data: appMessages, error: appError } = appMessagesResponse;
+      const { data: userNotifications, error: userError } = userNotificationsResponse;
 
-      console.log('[NOTIF DEBUG] Raw query result:', { 
-        data: allNotifications, 
-        error: error || globalError, 
-        userTargets: [`all`, user.id],
-        totalMessages: allNotifications.length,
-        pushMessages: allNotifications.filter(msg => msg.message_type === 'push').length,
-        messageTypes: allNotifications.map(msg => msg.message_type),
-        globalMessages: globalData?.length || 0
+      console.log('[NOTIF DEBUG] Raw data:', { 
+        appMessages: appMessages?.length || 0,
+        userNotifications: userNotifications?.length || 0,
+        appError,
+        userError
       });
 
-      if (error || globalError) {
-        console.error('[NOTIF DEBUG] Error loading notifications:', error || globalError);
+      if (appError && userError) {
+        console.error('[NOTIF DEBUG] Both queries failed:', { appError, userError });
         toast.error('Errore nel caricamento delle notifiche');
         return;
       }
 
-      // Process and filter notifications - include ALL message types
-      const processedNotifications = allNotifications.map(notification => ({
-        id: notification.id,
-        title: notification.title || 'Notifica',
-        content: notification.content || 'Contenuto non disponibile',
-        message_type: notification.message_type || 'info',
-        is_read: notification.is_read || false,
-        created_at: notification.created_at,
-        expiry_date: notification.expiry_date
-      }));
+      // Combine and normalize both sources
+      const allNotifications: Notification[] = [];
+      
+      // Add app messages (global notifications)
+      if (appMessages) {
+        appMessages.forEach(msg => {
+          // Skip corrupted messages
+          if (msg.title === 'M1' && !msg.content) {
+            console.warn('[NOTIF DEBUG] Skipping corrupted app message:', msg.id);
+            return;
+          }
+          
+          allNotifications.push({
+            id: msg.id,
+            title: msg.title || 'Notifica',
+            content: msg.content || '',
+            message_type: msg.message_type || 'info',
+            is_read: msg.is_read || false,
+            created_at: msg.created_at,
+            expiry_date: msg.expiry_date
+          });
+        });
+      }
+      
+      // Add user notifications (personal from markers, etc.)
+      if (userNotifications) {
+        userNotifications.forEach(notif => {
+          // Skip corrupted notifications
+          if (notif.title === 'M1' && !notif.message) {
+            console.warn('[NOTIF DEBUG] Skipping corrupted user notification:', notif.id);
+            return;
+          }
+          
+          allNotifications.push({
+            id: notif.id,
+            title: notif.title || 'Notifica Personale',
+            content: notif.message || '',
+            message_type: notif.type || 'reward',
+            is_read: notif.is_read || false,
+            created_at: notif.created_at,
+            expiry_date: undefined
+          });
+        });
+      }
+      
+      // Sort by creation date
+      const processedNotifications = allNotifications.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
       console.log('[NOTIF DEBUG] Processed notifications:', {
         total: processedNotifications.length,
