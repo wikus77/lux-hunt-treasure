@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    historyApiFallback: true,
     proxy: {
       '/functions/v1': 'http://localhost:54321'
     },

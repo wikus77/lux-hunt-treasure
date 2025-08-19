@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/_worker.js",
+    "/assets/*",
+    "/favicon.ico",
+    "/manifest.json",
+    "/sw.js",
+    "/service-worker.js",
+    "/_next/*",
+    "/api/*"
+  ]
+}
