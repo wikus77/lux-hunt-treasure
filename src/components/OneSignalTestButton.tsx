@@ -75,14 +75,15 @@ export const OneSignalTestButton = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+    <div className="fixed top-20 right-4 z-50 flex flex-col gap-2 p-3 bg-black/80 rounded-lg border border-cyan-500/30">
+      <div className="text-cyan-400 text-xs font-semibold mb-2">OneSignal Debug</div>
       <Button
         onClick={testOneSignal}
         variant="outline"
         size="sm"
-        className="bg-black/70 border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60"
+        className="bg-black/70 border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 text-xs"
       >
-        <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
+        <CheckCircle className="h-3 w-3 text-green-400 mr-1" />
         Test OneSignal
       </Button>
       
@@ -90,9 +91,9 @@ export const OneSignalTestButton = () => {
         onClick={requestPermission}
         variant="outline"
         size="sm"
-        className="bg-black/70 border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60"
+        className="bg-black/70 border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60 text-xs"
       >
-        <Bell className="h-4 w-4 text-cyan-400 mr-2" />
+        <Bell className="h-3 w-3 text-cyan-400 mr-1" />
         Richiedi Permessi
       </Button>
     </div>

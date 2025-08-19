@@ -28,22 +28,8 @@ export const OneSignalInitializer = () => {
           return;
         }
 
-        // CRITICAL: Enable OneSignal in ALL environments for testing
-        const isDev = import.meta.env.DEV;
-        const isLovablePreview = window.location.hostname.includes('lovable');
-        const isLocalhost = window.location.hostname === 'localhost';
-        
-        console.log('🔔 Environment check:', { 
-          isDev, 
-          isLovablePreview, 
-          isLocalhost, 
-          hostname: window.location.hostname,
-          protocol: window.location.protocol
-        });
-        
-        console.log('🔔 FORCING OneSignal initialization in ALL environments...');
-
-        console.log('🔔 BEFORE OneSignal.init() call...');
+        // Initialize OneSignal with proper configuration
+        console.log('🔔 Initializing OneSignal...');
         
         await OneSignal.init({
           appId: ONESIGNAL_APP_ID,
@@ -53,7 +39,7 @@ export const OneSignalInitializer = () => {
           safari_web_id: "web.onesignal.auto.50cb75f7-f065-4626-9a63-ce5692fa7e70",
         });
 
-        console.log('🔔 AFTER OneSignal.init() call - SUCCESS!');
+        console.log('🔔 OneSignal initialized successfully!');
 
         (window as any).OneSignalInitialized = true;
         console.log('✅ OneSignal initialized successfully');

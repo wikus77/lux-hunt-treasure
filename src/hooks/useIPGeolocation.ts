@@ -63,15 +63,8 @@ export const useIPGeolocation = () => {
         
         console.log('🌍 IP GEOLOCATION: Checking city for Milano override:', { city, country, coords: newCoords });
         
-        // CRITICAL: Override Milano se viene rilevata automaticamente
-        if (city && (city.toLowerCase().includes('milan') || city.toLowerCase().includes('milano'))) {
-          console.log('🌍 IP GEOLOCATION: MILANO DETECTED! Applying override...');
-          toast.success(`🌍 Override IP (${city} -> Europa Centrale)`);
-          const europeanCoords = { lat: 46.0, lng: 8.0 };
-          setCoords(europeanCoords);
-          console.log('🌍 IP GEOLOCATION: Override applied, coords set to:', europeanCoords);
-          return europeanCoords;
-        }
+        // Use actual IP location without any overrides
+        console.log('🌍 IP GEOLOCATION: Using actual IP location:', newCoords);
         
         console.log('🌍 IP GEOLOCATION: No override needed, using original coords:', newCoords);
         setCoords(newCoords);
@@ -100,15 +93,8 @@ export const useIPGeolocation = () => {
               coords: { lat, lng } 
             });
             
-            // CRITICAL: Override Milano se viene rilevata automaticamente
-            if (data.city && (data.city.toLowerCase().includes('milan') || data.city.toLowerCase().includes('milano'))) {
-              console.log('🌍 IP GEOLOCATION: MILANO DETECTED in ipinfo.io! Applying override...');
-              toast.success(`🌍 Override IP (${data.city} -> Europa Centrale)`);
-              const europeanCoords = { lat: 46.0, lng: 8.0 };
-              setCoords(europeanCoords);
-              console.log('🌍 IP GEOLOCATION: Override applied, coords set to:', europeanCoords);
-              return europeanCoords;
-            }
+            // Use actual IP location from ipinfo.io
+            console.log('🌍 IP GEOLOCATION: Using actual IP location from ipinfo.io');
             
             console.log('🌍 IP GEOLOCATION: No override needed for ipinfo.io, using original coords');
             const newCoords = { lat, lng };
