@@ -17,7 +17,7 @@ import MapInitializer from './MapInitializer';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
 import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
-import { useGeolocation } from '@/hooks/useGeolocation';
+import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -79,8 +79,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   setShowHelpDialog = () => {}
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>(DEFAULT_LOCATION);
-const { status, position, enable, disable, enabled } = useGeolocation();
-const geoEnabled = enabled && status === 'granted';
+  const [hasAutoZoomed, setHasAutoZoomed] = useState(false);
+  const geoState = useGeoWatcher();
+  const geoEnabled = geoState.granted && geoState.coords;
   const mapRef = useRef<L.Map | null>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -112,14 +113,30 @@ const geoEnabled = enabled && status === 'granted';
     });
   }, [isAddingPoint, isAddingMapPoint, mapStatus]);
 
-// Toast su denied/error solo una volta
-const didToast = React.useRef(false);
-React.useEffect(() => {
-  if ((status === 'denied' || status === 'error') && !didToast.current) {
-    didToast.current = true;
-    try { toast.error('Geolocalizzazione non disponibile. Abilitala nelle impostazioni del browser.'); } catch {}
-  }
-}, [status]);
+  // CRITICAL: Auto-zoom sulla posizione utente quando disponibile
+  React.useEffect(() => {
+    if (!hasAutoZoomed && geoState.coords && mapRef.current) {
+      console.log('🎯 AUTO-ZOOM: Centrando mappa sulla posizione utente:', geoState.coords);
+      
+      const { lat, lng } = geoState.coords;
+      mapRef.current.setView([lat, lng], 15, {
+        animate: true,
+        duration: 1.5
+      });
+      
+      setHasAutoZoomed(true);
+      toast.success(`🎯 Posizione rilevata con successo!`);
+    }
+  }, [geoState.coords, hasAutoZoomed]);
+
+  // Toast su denied/error solo una volta
+  const didToast = React.useRef(false);
+  React.useEffect(() => {
+    if (!geoState.granted && geoState.error && !didToast.current) {
+      didToast.current = true;
+      toast.error('Errore geolocalizzazione: ' + geoState.error);
+    }
+  }, [geoState.granted, geoState.error]);
 
   // Listen for BUZZ area creation events and auto-center map
   React.useEffect(() => {
@@ -229,7 +246,7 @@ React.useEffect(() => {
         <BuzzMapAreas areas={currentWeekAreas} />
         
         {/* QR Map Display - Show QR codes on map */}
-        <QRMapDisplay userLocation={geoEnabled ? position : null} />
+        <QRMapDisplay userLocation={geoEnabled ? geoState.coords : null} />
         
         {/* Display search areas */}
         <SearchAreaMapLayer 
@@ -266,7 +283,12 @@ React.useEffect(() => {
 
 
       {/* Use the LocationButton component */}
-      <LocationButton requestLocationPermission={requestLocationPermission} />
+      <LocationButton requestLocationPermission={() => {
+        // Reset auto-zoom flag to allow re-centering
+        setHasAutoZoomed(false);
+        // Request permission to trigger geolocation
+        geoState.requestPermissions();
+      }} />
 
       {/* Add SearchAreaButton component */}
       <SearchAreaButton 
