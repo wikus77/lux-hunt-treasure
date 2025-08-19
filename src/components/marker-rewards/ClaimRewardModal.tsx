@@ -80,63 +80,84 @@ const ClaimRewardModal: React.FC<ClaimRewardModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto z-[9999] pointer-events-auto">
-        <DialogHeader>
-          <DialogTitle className="text-center text-xl font-bold text-gradient">
-            🎁 Premio Trovato!
-          </DialogTitle>
-        </DialogHeader>
-        
-        <div className="space-y-4 py-4">
-          <div className="text-center text-sm text-muted-foreground">
-            Hai trovato un marker con premi speciali
-          </div>
+    <>
+      {/* Modal Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
+          style={{ pointerEvents: 'auto' }}
+          onClick={onClose}
+        />
+      )}
+      
+      {/* Modal Content */}
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] w-[90vw] max-w-md mx-auto bg-[#0a0a0a] border border-[#00D1FF]/30 rounded-2xl shadow-[0_0_50px_rgba(0,209,255,0.3)] pointer-events-auto">
+          <DialogHeader className="text-center pb-2">
+            <DialogTitle className="text-2xl font-bold text-white flex items-center justify-center gap-2">
+              🛡️ Premio Trovato!
+            </DialogTitle>
+          </DialogHeader>
           
-          <div className="space-y-3">
-            {rewards.map((reward, index) => (
-              <div key={index} className="flex items-center gap-3 p-3 bg-background/50 rounded-lg border">
-                <span className="text-2xl">{getRewardIcon(reward.reward_type)}</span>
-                <div className="flex-1">
-                  <div className="text-sm font-medium">
-                    {reward.description || `Premio ${reward.reward_type}`}
+          <div className="space-y-6 p-6 pt-2">
+            <div className="text-center text-[#00D1FF] font-medium">
+              Hai trovato un marker con premi speciali
+            </div>
+            
+            <div className="space-y-4">
+              {rewards.map((reward, index) => (
+                <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-[#00D1FF]/10 to-[#FF1493]/10 rounded-xl border border-[#00D1FF]/20">
+                  <div className="w-12 h-12 rounded-full bg-[#00D1FF]/20 flex items-center justify-center">
+                    <span className="text-2xl">{getRewardIcon(reward.reward_type)}</span>
                   </div>
-                  {reward.reward_type === 'buzz_free' && (
-                    <div className="text-xs text-muted-foreground">
-                      {reward.payload.buzzCount || 1} BUZZ gratuiti
+                  <div className="flex-1">
+                    <div className="text-white font-semibold">
+                      {reward.reward_type === 'buzz_free' ? 'BUZZ GRATUITO' : 
+                       reward.reward_type === 'xp_points' ? 'PUNTI ESPERIENZA' :
+                       reward.description || `Premio ${reward.reward_type}`}
                     </div>
-                  )}
-                  {reward.reward_type === 'xp_points' && (
-                    <div className="text-xs text-muted-foreground">
-                      +{reward.payload.xp || 10} XP
-                    </div>
-                  )}
+                    {reward.reward_type === 'buzz_free' && (
+                      <div className="text-[#00D1FF] text-sm">
+                        {reward.payload.buzzCount || 1} BUZZ gratuiti
+                      </div>
+                    )}
+                    {reward.reward_type === 'xp_points' && (
+                      <div className="text-[#00D1FF] text-sm">
+                        +{reward.payload.xp || 10} XP
+                      </div>
+                    )}
+                    {reward.description && reward.reward_type !== 'buzz_free' && reward.reward_type !== 'xp_points' && (
+                      <div className="text-gray-300 text-sm">
+                        {reward.description}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            
+            <div className="flex gap-4 pt-4">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                disabled={isClaiming}
+                className="flex-1 border-gray-600 text-gray-300 hover:bg-gray-800"
+              >
+                Annulla
+              </Button>
+              <Button 
+                onClick={handleClaim}
+                disabled={isClaiming}
+                className="flex-1 bg-gradient-to-r from-[#00D1FF] to-[#FF1493] text-white font-semibold hover:shadow-[0_0_20px_rgba(0,209,255,0.5)] transition-all duration-300"
+                data-testid="claim-reward-cta"
+              >
+                {isClaiming ? 'Riscattando...' : 'Riscatta subito'}
+              </Button>
+            </div>
           </div>
-          
-          <div className="flex gap-3 pt-4">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              disabled={isClaiming}
-              className="flex-1"
-            >
-              Annulla
-            </Button>
-            <Button 
-              onClick={handleClaim}
-              disabled={isClaiming}
-              className="flex-1 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink"
-              data-testid="claim-reward-cta"
-            >
-              {isClaiming ? 'Riscattando...' : 'Riscatta'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 

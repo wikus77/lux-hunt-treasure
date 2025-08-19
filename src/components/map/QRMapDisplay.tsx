@@ -11,6 +11,7 @@ import '@/styles/qr-markers-popup.css';
 import { useGeoWatcher } from '@/hooks/useGeoWatcher';
 import { toast } from 'sonner';
 import { useLocation } from 'wouter';
+import GeoStatusBanner from '@/components/map/GeoStatusBanner';
 
 // Lazy load the modal for better performance
 const ClaimRewardModal = lazy(() => import('@/components/marker-rewards/ClaimRewardModal'));
@@ -183,6 +184,9 @@ useEffect(() => {
 
 return (
   <>
+    {/* Geolocation Debug Banner (Dev Only) */}
+    <GeoStatusBanner geoState={watcher} />
+    
     {console.log('M1QR-TRACE:', { 
       step: 'render_check', 
       showLayer, 
@@ -229,7 +233,7 @@ return (
       </LayerGroup>
     )}
     
-    {/* Lazy-loaded ClaimRewardModal */}
+    {/* Modal-style ClaimRewardModal */}
     {claimData.isOpen && (
       <Suspense fallback={<div>Loading...</div>}>
         <ClaimRewardModal

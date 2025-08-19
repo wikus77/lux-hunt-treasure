@@ -10,6 +10,14 @@ export type GeoState = {
   isIOS?: boolean;
   isPWA?: boolean;
   permissionState?: PermissionState;
+  debugInfo?: {
+    locationEnabled: boolean;
+    permission: 'granted' | 'denied' | 'prompt';
+    lastError: string;
+    coords: { lat: number; lng: number } | null;
+    attempts: number;
+    lastAttemptTime: number;
+  };
 };
 
 // iOS PWA-friendly geolocation with proper error handling and fallbacks
@@ -30,14 +38,22 @@ export function useGeoWatcher() {
 
   const onSuccess = (pos: GeolocationPosition) => {
     console.log('✅ Geolocation success:', pos.coords);
-    setState({
+    setState(prevState => ({
       granted: true,
       coords: { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy },
       ts: Date.now(),
       isIOS,
       isPWA,
-      error: undefined
-    });
+      error: undefined,
+      debugInfo: {
+        locationEnabled: true,
+        permission: 'granted',
+        lastError: '',
+        coords: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+        attempts: (prevState?.debugInfo?.attempts || 0) + 1,
+        lastAttemptTime: Date.now()
+      }
+    }));
   };
 
   const onError = (err: GeolocationPositionError) => {
@@ -49,20 +65,32 @@ export function useGeoWatcher() {
       3: 'Timeout nella richiesta di posizione. Riprova.'
     };
     
-    // iOS PWA specific handling
-    if (isIOS && err.code === 1) {
+    // Enhanced debugging for iOS PWA
+    const debugState = {
+      locationEnabled: false,
+      permission: err.code === 1 ? 'denied' : 'prompt',
+      lastError: errorMessages[err.code as keyof typeof errorMessages] || err.message,
+      coords: null,
+      attempts: 0,
+      lastAttemptTime: Date.now()
+    } as const;
+    
+    // iOS PWA specific handling with enhanced diagnostics
+    if (isIOS && isPWA && err.code === 1) {
       setState(s => ({ 
         ...s, 
         granted: false, 
-        error: 'Su iOS, apri Impostazioni > Privacy > Servizi di localizzazione e abilita Safari.',
+        error: 'iOS PWA: Apri Safari > Impostazioni > Privacy e Sicurezza > Localizzazione. Abilita per tutti i siti web.',
         isIOS,
-        isPWA
+        isPWA,
+        debugInfo: debugState
       }));
       return;
     }
 
-    // Single getCurrentPosition attempt for some iOS issues
+    // Enhanced retry mechanism for iOS
     if (err.code === 1 && navigator.geolocation) {
+      // Try with different options for iOS compatibility
       navigator.geolocation.getCurrentPosition(
         onSuccess, 
         (e) => setState(s => ({ 
@@ -70,9 +98,18 @@ export function useGeoWatcher() {
           granted: false, 
           error: errorMessages[e.code as keyof typeof errorMessages] || e.message,
           isIOS,
-          isPWA
+          isPWA,
+          debugInfo: {
+            ...debugState,
+            attempts: 2,
+            lastError: `Retry failed: ${e.message}`
+          }
         })),
-        { enableHighAccuracy: false, maximumAge: 30000, timeout: 15000 }
+        { 
+          enableHighAccuracy: false, 
+          maximumAge: 60000, 
+          timeout: 20000 
+        }
       );
     } else {
       setState(s => ({ 
@@ -80,7 +117,8 @@ export function useGeoWatcher() {
         granted: false, 
         error: errorMessages[err.code as keyof typeof errorMessages] || err.message,
         isIOS,
-        isPWA
+        isPWA,
+        debugInfo: debugState
       }));
     }
   };
