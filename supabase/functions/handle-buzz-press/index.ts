@@ -289,19 +289,23 @@ serve(async (req) => {
       response.generation_number = 1; // Will be calculated correctly after payment
     }
 
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - INSERIRE NOTIFICA CON CONTROLLO DUPLICATI
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - INSERIRE NOTIFICA CON CONTROLLO DUPLICATI ROBUSTO
     if (clueEngineResult.clue_text && clueEngineResult.clue_text.trim() !== '') {
-      // Check for duplicate notifications in last 24h
-      const { data: existingNotif, error: checkError } = await supabase
+      // Check for duplicate notifications in last 24h with similarity check
+      const { data: existingNotifs, error: checkError } = await supabase
         .from('user_notifications')
-        .select('id')
+        .select('id, message')
         .eq('user_id', userId)
-        .eq('message', clueEngineResult.clue_text)
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
-        .single();
+        .eq('type', 'clue')
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
 
-      if (existingNotif) {
-        console.log('🚫 Duplicate notification prevented');
+      const isDuplicate = existingNotifs?.some(notif => 
+        notif.message === clueEngineResult.clue_text || 
+        Math.abs(notif.message.length - clueEngineResult.clue_text.length) < 10
+      );
+
+      if (isDuplicate) {
+        console.log('🚫 Duplicate notification prevented - similar content found');
       } else {
         const { error: notificationError } = await supabase
           .from('user_notifications')
@@ -369,52 +373,32 @@ serve(async (req) => {
   }
 });
 
-// Helper function to generate appropriate clue based on week number
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Helper function to generate appropriate clue based on week number
 function generateClueBasedOnWeek(weekNumber: number): string {
-  const vagueClues = [
-    "Cerca dove splende il sole sul metallo lucente",
-    "L'essenza del premio si nasconde tra storia e modernità",
-    "Il tuo obiettivo si muove in spazi aperti e veloci",
-    "Una creazione nata dalla passione e dall'innovazione",
-    "Dove il design incontra la potenza troverai ciò che cerchi"
+  const narrativeClues = [
+    "Un'ombra di magnificenza danza tra le strade antiche",
+    "L'eco della perfezione risuona dove arte e passione si fondono",
+    "Un sogno di metallo attende nel cuore della bellezza",
+    "La leggenda sussurra segreti di potenza e grazia",
+    "Dove i maestri dell'ingegneria hanno lasciato la loro firma",
+    "Un gioiello nascosto brilla sotto il cielo del sud",
+    "Il destino chiama chi sa interpretare i segni della maestria",
+    "Un simbolo di eccellenza dimora dove la storia incontra il futuro"
   ];
   
-  const mediumClues = [
-    "La velocità incontra l'eleganza in questo gioiello di ingegneria",
-    "Prestigio e prestazioni si fondono in un'opera d'arte meccanica",
-    "Un simbolo di status che attende di essere scoperto",
-    "La perfezione tecnica nascosta alla vista ma non lontana",
-    "Un capolavoro di ingegneria con il cuore pulsante di potenza"
+  const metaphoricalClues = [
+    "Il cavallo d'acciaio riposa nell'ombra degli dei antichi",
+    "Una stella cadente si è fermata sulla terra degli antenati",
+    "Il tuono silenzioso attende dove le colonne guardano il mare",
+    "Un lampo di genio cristallizzato nel tempo aspetta la sua ora",
+    "L'anima della velocità sussurra tra le pietre millenarie",
+    "Un fulmine dorato dorme nella valle dei sogni perduti",
+    "Il soffio del vento eterno custodisce un segreto di ferro e fuoco"
   ];
   
-  const geographicClues = [
-    "Nella terra della moda e del design, vicino alle Alpi",
-    "Cerca nella regione conosciuta per la sua tradizione motoristica",
-    "Lungo la costa mediterranea, dove il sole bacia le montagne",
-    "Nella pianura fertile, tra fiumi antichi e città moderne",
-    "Nella regione che ha dato i natali ai grandi innovatori"
-  ];
-  
-  const preciseClues = [
-    "Nella città della moda, dove creatività e industria si incontrano",
-    "Cerca nel capoluogo circondato dalle colline, famoso per la sua storia industriale",
-    "Nel cuore della città dalle torri medievali, dove tradizione e innovazione convivono",
-    "Nella zona industriale della città che ha fatto la storia dell'automobile italiana",
-    "Vicino al fiume che attraversa la città, in un'area di sviluppo tecnologico"
-  ];
-  
-  if (weekNumber <= 2) {
-    return vagueClues[Math.floor(Math.random() * vagueClues.length)];
-  } else if (weekNumber == 3) {
-    return mediumClues[Math.floor(Math.random() * mediumClues.length)];
-  } else {
-    const useMorePrecise = Math.random() > 0.5;
-    if (useMorePrecise) {
-      return preciseClues[Math.floor(Math.random() * preciseClues.length)];
-    } else {
-      return geographicClues[Math.floor(Math.random() * geographicClues.length)];
-    }
-  }
+  // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - SEMPRE indizi narrativi, mai espliciti
+  const selectedClues = Math.random() > 0.5 ? narrativeClues : metaphoricalClues;
+  return selectedClues[Math.floor(Math.random() * selectedClues.length)];
 }
 
 // 🧬 BUZZ_CLUE_ENGINE - Intelligent clue generation system
@@ -462,8 +446,8 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
       return { success: false, clue_text: '', clue_category, is_misleading: false, error: 'Errore controllo indizi utilizzati' };
     }
     
-    // STEP 5: Generate appropriate clue based on week and category using activeTarget
-    const clueData = await generateTargetClue(currentWeek, clueCategory, activeTarget, usedClues || []);
+    // STEP 5: Generate appropriate clue based on week and category using activeTarget  
+    const clueData = await generateNarrativeClue(currentWeek, clueCategory);
     
     // STEP 6: Mark clue as used
     const { error: markUsedError } = await supabase
@@ -499,103 +483,31 @@ async function generateSmartClue(supabase: any, userId: string, currentWeek: num
   }
 }
 
-// by Joseph Mulé – M1SSION™
-// ✅ CORRETTA GENERAZIONE INDIZI - MAI RIVELARE MARCA/MODELLO
-async function generateTargetClue(week: number, category: 'location' | 'prize', target: any, usedClues: any[]): Promise<{clue_text: string, is_misleading: boolean}> {
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// ✅ GENERAZIONE INDIZI NARRATIVI - MAI INDIRIZZI O COORDINATE ESATTE
+async function generateNarrativeClue(week: number, category: 'location' | 'prize'): Promise<{clue_text: string, is_misleading: boolean}> {
   const is_misleading = Math.random() < 0.25; // 25% chance M1SSION™ logic
   
-  if (category === 'prize') {
-    // ✅ WEEK 1-2: INDIZI PRIZE VAGHI (MAI MARCA)
-    if (week <= 2) {
-      const prizeClues = [
-        `Un tesoro su quattro ruote ti aspetta nel sud.`,
-        `La velocità incontra l'eleganza in un luogo ricco di storia.`,
-        `Potenza e prestigio nascosti dove il sole scalda la terra.`,
-        `Un premio che farà battere il cuore, celato tra antiche pietre.`,
-        `Quattro ruote di lusso dormono sotto il cielo siciliano.`
-      ];
-      return { 
-        clue_text: prizeClues[Math.floor(Math.random() * prizeClues.length)], 
-        is_misleading 
-      };
-    }
-    
-    // ✅ WEEK 3: INDIZI PRIZE MEDI (MAI MARCA)
-    if (week === 3) {
-      const prizeClues = [
-        `Quattro ruote di lusso attendono nella terra dei templi.`,
-        `Un coupé esclusivo riposa dove la Magna Grecia fiorì.`,
-        `Potenza alemanna nascosta nel cuore della Sicilia storica.`,
-        `Un gigante dell'automotive si cela tra rovine millenarie.`,
-        `450 cavalli che non fanno rumore, in attesa del proprietario.`
-      ];
-      return { 
-        clue_text: prizeClues[Math.floor(Math.random() * prizeClues.length)], 
-        is_misleading 
-      };
-    }
-    
-    // ✅ WEEK 4+: INDIZI PRIZE PRECISI (MA MAI MARCA ESPLICITA)
-    const prizeClues = [
-      `450 cavalli di pura potenza aspettano nella valle dei templi.`,
-      `Un coupé che sfida le leggi della fisica, nascosto ad Agrigento.`,
-      `Lusso tedesco che incontra la bellezza siciliana, tra strade antiche.`,
-      `Una macchina dei sogni riposa dove Akragas dominava il Mediterraneo.`,
-      `Ingegneria di precisione che attende su quattro ruote dorate.`
-    ];
-    return { 
-      clue_text: prizeClues[Math.floor(Math.random() * prizeClues.length)], 
-      is_misleading 
-    };
-  }
+  // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - SOLO INDIZI NARRATIVI/METAFORICI
+  const narrativeClues = [
+    `Un'ombra di magnificenza danza tra le strade antiche`,
+    `L'eco della perfezione risuona dove arte e passione si fondono`,
+    `Un sogno di metallo attende nel cuore della bellezza`,
+    `La leggenda sussurra segreti di potenza e grazia`,
+    `Dove i maestri dell'ingegneria hanno lasciato la loro firma`,
+    `Un gioiello nascosto brilla sotto il cielo del sud`,
+    `Il destino chiama chi sa interpretare i segni della maestria`,
+    `Un simbolo di eccellenza dimora dove la storia incontra il futuro`,
+    `Il cavallo d'acciaio riposa nell'ombra degli dei antichi`,
+    `Una stella cadente si è fermata sulla terra degli antenati`
+  ];
   
-  // ✅ CATEGORY LOCATION - CORRETTI E PROGRESSIVI
-  if (category === 'location') {
-    // WEEK 1-2: LOCATION VAGHI
-    if (week <= 2) {
-      const locationClues = [
-        `Dove i templi greci guardano il mare, la risposta ti attende.`,
-        `Nella terra della Magna Grecia, tra colline e antiche pietre.`,
-        `Un luogo dove storia millenaria incontra la modernità siciliana.`,
-        `Tra le rovine di Akragas, qualcosa di prezioso si nasconde.`,
-        `Nel sud dell'isola, dove il passato sussurra ai visitatori.`
-      ];
-      return { 
-        clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
-        is_misleading 
-      };
-    }
-    
-    // WEEK 3: LOCATION MEDI  
-    if (week === 3) {
-      const locationClues = [
-        `Nella città dei templi, lungo una strada che porta il nome di un fiore.`,
-        `Ad Agrigento, dove le strade moderne incontrano la storia antica.`,
-        `Nel cuore della Valle dei Templi, su una via che profuma di rose.`,
-        `Dove Luigi Pirandello nacque, in una strada dal nome botanico.`,
-        `Tra coordinate siciliane, vicino a monumenti UNESCO.`
-      ];
-      return { 
-        clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
-        is_misleading 
-      };
-    }
-    
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - WEEK 4+: LOCATION PRECISI (MAI INDIRIZZI ESATTI)
-    const locationClues = [
-      `Nella città dei templi, cerca vicino al quartiere delle rose.`,
-      `Ad Agrigento, dove antiche strade incontrano nuovi sogni.`,
-      `Nel cuore pulsante della Valle dei Templi, tra storia e modernità.`,
-      `Dove la Magna Grecia sussurra ancora, in una zona di prestigio.`,
-      `Nella perla siciliana, là dove il passato illumina il futuro.`
-    ];
-    return { 
-      clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
-      is_misleading 
-    };
-  }
+  const selectedClue = narrativeClues[Math.floor(Math.random() * narrativeClues.length)];
   
-  return { clue_text: "Indizio M1SSION™ in elaborazione", is_misleading: false };
+  return { 
+    clue_text: selectedClue, 
+    is_misleading 
+  };
 }
 
 // Helper functions
