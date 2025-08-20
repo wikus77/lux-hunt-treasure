@@ -889,7 +889,7 @@ const LandingPage = () => {
 
       {/* Age Verification Modal */}
       {showAgeVerification && (
-        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-[9999] p-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
           <motion.div
             className="bg-black/90 border border-purple-500/30 rounded-xl p-6 max-w-md w-full relative"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -906,7 +906,7 @@ const LandingPage = () => {
             <div className="text-center">
               <h3 className="text-xl font-bold text-white mb-4">Verifica dell'età</h3>
               <p className="text-white/70 mb-6">
-                Confermi di avere almeno 18 anni? Questo gioco è riservato solo ai maggiorenni.
+                Confermi di avere almeno 18 anni? Questo gioco è riservato ai maggiorenni.
               </p>
               
               <div className="flex gap-4">

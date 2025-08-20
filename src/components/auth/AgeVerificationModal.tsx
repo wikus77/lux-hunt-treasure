@@ -1,5 +1,5 @@
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -70,7 +70,16 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md glass-card fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-md p-6">
+      <DialogContent className="fixed inset-0 flex items-center justify-center z-[9999] p-4" style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
+        <div className="max-w-md w-full glass-card p-6"
+             style={{ 
+               transform: 'none',
+               position: 'static',
+               background: 'rgba(0, 12, 24, 0.95)',
+               border: '1px solid rgba(0, 209, 255, 0.3)',
+               borderRadius: '16px',
+               backdropFilter: 'blur(20px)'
+             }}>
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-center neon-text">
             Verifica la tua età
@@ -130,9 +139,10 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
             </Button>
           </form>
           
-          <p className="text-xs text-center text-muted-foreground">
-            Inserendo la tua data di nascita, confermi di avere almeno 18 anni e accetti i nostri Termini e Condizioni e la nostra Privacy Policy.
-          </p>
+           <p className="text-xs text-center text-muted-foreground">
+             Inserendo la tua data di nascita, confermi di avere almeno 18 anni e accetti i nostri Termini e Condizioni.
+           </p>
+         </div>
         </div>
       </DialogContent>
     </Dialog>
