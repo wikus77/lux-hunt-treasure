@@ -25,9 +25,13 @@ const CookieBanner = () => {
   });
 
   useEffect(() => {
-    // Check if user has already made a choice
-    const cookieConsent = localStorage.getItem('m1ssion-cookie-consent');
-    if (!cookieConsent) {
+    // Check if user has already made a choice - unified storage key
+    const cookieConsent = localStorage.getItem('cookie_consent') || localStorage.getItem('m1ssion-cookie-consent');
+    const today = new Date().toISOString().split('T')[0];
+    const lastShown = localStorage.getItem('cookie_banner_last_shown');
+    
+    // Only show if no consent exists AND not shown today
+    if (!cookieConsent || lastShown !== today) {
       // Show banner after a short delay for better UX
       const timer = setTimeout(() => setIsVisible(true), 1000);
       return () => clearTimeout(timer);
@@ -42,12 +46,16 @@ const CookieBanner = () => {
       functional: true
     };
     
-    localStorage.setItem('m1ssion-cookie-consent', JSON.stringify(allAccepted));
-    localStorage.setItem('m1ssion-cookie-timestamp', new Date().toISOString());
-    setIsVisible(false);
+    const today = new Date().toISOString().split('T')[0];
     
-    // Initialize analytics and other services here
-    console.log('🍪 All cookies accepted');
+    // Use unified storage keys
+    localStorage.setItem('cookie_consent', JSON.stringify(allAccepted));
+    localStorage.setItem('cookie_banner_last_shown', today);
+    localStorage.setItem('m1ssion-cookie-consent', JSON.stringify(allAccepted)); // Backward compatibility
+    localStorage.setItem('m1ssion-cookie-timestamp', new Date().toISOString());
+    
+    setIsVisible(false);
+    console.log('🍪 All cookies accepted - GDPR component');
   };
 
   const handleRejectAll = () => {
@@ -58,20 +66,30 @@ const CookieBanner = () => {
       functional: false
     };
     
-    localStorage.setItem('m1ssion-cookie-consent', JSON.stringify(onlyNecessary));
-    localStorage.setItem('m1ssion-cookie-timestamp', new Date().toISOString());
-    setIsVisible(false);
+    const today = new Date().toISOString().split('T')[0];
     
-    console.log('🍪 Only necessary cookies accepted');
+    // Use unified storage keys
+    localStorage.setItem('cookie_consent', JSON.stringify(onlyNecessary));
+    localStorage.setItem('cookie_banner_last_shown', today);
+    localStorage.setItem('m1ssion-cookie-consent', JSON.stringify(onlyNecessary)); // Backward compatibility
+    localStorage.setItem('m1ssion-cookie-timestamp', new Date().toISOString());
+    
+    setIsVisible(false);
+    console.log('🍪 Only necessary cookies accepted - GDPR component');
   };
 
   const handleSaveSettings = () => {
-    localStorage.setItem('m1ssion-cookie-consent', JSON.stringify(preferences));
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Use unified storage keys
+    localStorage.setItem('cookie_consent', JSON.stringify(preferences));
+    localStorage.setItem('cookie_banner_last_shown', today);
+    localStorage.setItem('m1ssion-cookie-consent', JSON.stringify(preferences)); // Backward compatibility
     localStorage.setItem('m1ssion-cookie-timestamp', new Date().toISOString());
+    
     setIsVisible(false);
     setShowSettings(false);
-    
-    console.log('🍪 Custom cookie preferences saved:', preferences);
+    console.log('🍪 Custom cookie preferences saved - GDPR component:', preferences);
   };
 
   const togglePreference = (key: keyof CookiePreferences) => {
@@ -91,8 +109,13 @@ const CookieBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="fixed inset-0 flex items-center justify-center z-50 p-4"
-          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}
+          className="fixed inset-0 flex items-center justify-center z-[9999] p-4"
+          style={{ 
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', 
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(8px)'
+          }}
         >
           <div className="max-w-6xl mx-auto">
             <div className="bg-black/95 backdrop-blur-xl border border-cyan-400/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,229,255,0.3)]">
