@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -91,8 +91,8 @@ const CookieBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-4"
-          style={{ marginTop: 'calc(env(safe-area-inset-top, 0px) * 0.5)' }}
+          className="fixed inset-0 flex items-center justify-center z-50 p-4"
+          style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}
         >
           <div className="max-w-6xl mx-auto">
             <div className="bg-black/95 backdrop-blur-xl border border-cyan-400/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,229,255,0.3)]">
