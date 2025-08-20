@@ -130,9 +130,25 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       return;
     }
 
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage first with STRICT enforcement
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage and trigger Stripe if needed
     if (dailyUsed || !hasFreeBuzz) {
+      console.log('🔥 M1SSION™ PAID BUZZ REQUIRED: Free BUZZ exhausted for today');
       toast.error('Hai già utilizzato il BUZZ gratuito oggi.');
+      
+      // Calculate current paid BUZZ price
+      const paidBuzzPriceCents = getCurrentBuzzPriceCents();
+      const paidBuzzPriceEur = paidBuzzPriceCents / 100;
+      
+      console.log('💳 M1SSION™ TRIGGERING STRIPE: Paid BUZZ required', {
+        priceCents: paidBuzzPriceCents,
+        priceEur: paidBuzzPriceEur,
+        dailyCount: dailyBuzzCounter,
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Trigger Stripe payment flow
+      await processBuzzPayment(paidBuzzPriceCents, false);
       return;
     }
 
@@ -195,11 +211,14 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // Update BUZZ counter after successful payment
       await updateDailyBuzzCounter();
       
-      // Then execute the BUZZ logic
+      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Execute BUZZ logic after successful payment
+      console.log('🧬 M1SSION™ POST-PAYMENT BUZZ: Executing BUZZ action after payment');
       await handleBuzz();
       
       // Finally call parent success callback
       onSuccess();
+      
+      toast.success('🎉 BUZZ acquistato ed eseguito con successo!');
     } catch (error) {
       console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
       toast.error('Errore nella finalizzazione BUZZ');
@@ -209,11 +228,11 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   return (
     <div className="relative flex flex-col items-center space-y-6">
       <BuzzButton
-        currentPrice={currentPriceEur}
+        currentPrice={dailyUsed || !hasFreeBuzz ? currentPriceEur : 0}
         isBlocked={isBlocked}
         buzzing={buzzing}
         onClick={handleAction}
-        freeAvailable={hasFreeBuzz}
+        freeAvailable={hasFreeBuzz && !dailyUsed}
         freeCount={totalRemaining}
       />
       
