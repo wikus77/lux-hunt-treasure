@@ -17,7 +17,7 @@ export default function PushTest() {
 
     setLoading(true);
     try {
-      console.log('🚀 Sending push notification:', { title, body });
+      console.log('🚀 M1SSION™ PUSH TEST: Sending notification', { title, body });
       
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
@@ -27,15 +27,19 @@ export default function PushTest() {
       });
 
       if (error) {
-        console.error('❌ Push notification error:', error);
-        toast.error(`Errore: ${error.message}`);
+        console.error('❌ M1SSION™ PUSH ERROR:', error);
+        toast.error(`❌ ERRORE: ${error.message}`);
       } else {
-        console.log('✅ Push notification sent:', data);
-        toast.success(`Notifica inviata a ${data.sent}/${data.total} dispositivi`);
+        console.log('✅ M1SSION™ PUSH SUCCESSO:', data);
+        if (data.success) {
+          toast.success(`✅ SUCCESSO: Notifica inviata a ${data.sent}/${data.total} dispositivi`);
+        } else {
+          toast.error(`❌ ERRORE: ${data.message || 'Invio fallito'}`);
+        }
       }
     } catch (err) {
-      console.error('❌ Push notification exception:', err);
-      toast.error('Errore durante l\'invio della notifica');
+      console.error('❌ M1SSION™ PUSH EXCEPTION:', err);
+      toast.error('❌ ERRORE: Eccezione durante invio notifica');
     } finally {
       setLoading(false);
     }

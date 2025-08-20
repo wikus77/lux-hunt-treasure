@@ -26,10 +26,15 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     });
 
-    // Verify environment variables
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Verify environment variables
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeKey) {
       throw new Error('STRIPE_SECRET_KEY not found');
+    }
+    
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Validate Stripe secret key format
+    if (!stripeKey.startsWith('sk_')) {
+      throw new Error('Invalid Stripe secret key format - must start with sk_');
     }
     logStep('✅ Stripe key verified');
 
