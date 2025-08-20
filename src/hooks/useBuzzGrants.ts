@@ -22,17 +22,20 @@ export const useBuzzGrants = () => {
     setError(null);
 
     try {
-      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage first
-      const { data: dailyCheck, error: dailyError } = await supabase
+      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check if user has already consumed daily free BUZZ
+      const today = new Date().toISOString().split('T')[0];
+      const { data: todayUsage, error: usageError } = await supabase
         .from('buzz_grants')
         .select('*')
-        .gt('remaining', 0)
         .eq('source', 'daily_free')
-        .gte('created_at', new Date().toISOString().split('T')[0])
-        .single();
+        .gte('created_at', today)
+        .gte('updated_at', today)
+        .eq('remaining', 0);
 
-      if (dailyCheck && dailyCheck.remaining === 0) {
+      if (todayUsage && todayUsage.length > 0) {
         setDailyUsed(true);
+      } else {
+        setDailyUsed(false);
       }
 
       const { data, error } = await supabase
