@@ -91,7 +91,7 @@ const CookieBanner = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="fixed bottom-0 left-0 right-0 z-50 p-4"
+          className="fixed bottom-0 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-4"
         >
           <div className="max-w-6xl mx-auto">
             <div className="bg-black/95 backdrop-blur-xl border border-cyan-400/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,229,255,0.3)]">
