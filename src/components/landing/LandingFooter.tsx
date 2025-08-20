@@ -27,14 +27,6 @@ const LandingFooter = () => {
             © 2025 <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span> – ALL RIGHTS RESERVED – NIYVORA KFT™
           </p>
         </div>
-        
-        {/* SafeCreative Registration Block */}
-        <div className="mt-8 pt-8 border-t border-white/20">
-          <p className="text-base text-white/70 text-center font-medium leading-relaxed">
-            © 2024 – <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span> is a protected work registered on SafeCreative.<br />
-            <span className="text-cyan-400">Registration Code: 2505261861325</span>
-          </p>
-        </div>
       </div>
     </footer>
   );
