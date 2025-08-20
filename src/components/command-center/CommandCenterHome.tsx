@@ -1,4 +1,3 @@
-
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Command Center Home Component - RESET COMPLETO 17/07/2025
 
@@ -16,7 +15,6 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 import { InviteFriendButton } from "@/components/xp/InviteFriendButton";
-import { CluesList } from "@/components/clues/CluesList"; // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -211,14 +209,80 @@ export default function CommandCenterHome() {
         <InviteFriendButton />
       </motion.div>
 
-      {/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Clues List */}
+      {/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Consolidated Dynamic Clues Container */}
       <motion.div 
         className="mb-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.18 }}
       >
-        <CluesList />
+        <div className="glass-card p-6 rounded-xl">
+          {/* Dynamic Progress Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">🧩 Indizi trovati: {userClues?.length || 0}/200</h3>
+            <span className="text-sm text-white/60">
+              {Math.round(((userClues?.length || 0) / 200) * 100)}% completato
+            </span>
+          </div>
+          
+          {/* Dynamic Progress Bar */}
+          <div className="mb-6">
+            <div className="w-full bg-white/10 rounded-full h-2">
+              <motion.div 
+                className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(100, ((userClues?.length || 0) / 200) * 100)}%` }}
+                transition={{ duration: 1, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+
+          {/* Clues Display */}
+          {!userClues || userClues.length === 0 ? (
+            <div className="text-center text-white/60 py-8">
+              <p>Nessun indizio trovato oggi.</p>
+              <p className="text-sm mt-2">Premi BUZZ per scoprire nuovi indizi!</p>
+              <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
+                <p className="text-xs text-blue-300">💡 Gli indizi BUZZ verranno visualizzati qui dopo ogni utilizzo</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {userClues.map((clue, index) => (
+                <motion.div
+                  key={clue.clue_id}
+                  className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-white/20 transition-colors"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className="text-sm font-medium text-white">{clue.title_it}</h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-white/50">
+                        {new Date(clue.created_at).toLocaleDateString('it-IT')}
+                      </span>
+                      <span className="inline-block px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">
+                        {clue.clue_type}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-white/80 leading-relaxed mb-3">
+                    {clue.description_it}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-green-400">
+                      ✅ Costo: €{(clue.buzz_cost / 100).toFixed(2)}
+                    </span>
+                    <button className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs rounded-lg border border-blue-500/30 transition-colors">
+                      📍 Visualizza
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
       </motion.div>
 
       {/* Two column layout for Console and Agent */}

@@ -120,7 +120,7 @@ serve(async (req) => {
       status: paymentIntent.status
     });
 
-    // Store payment intent in database for tracking
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Store payment intent + admin logging
     const { error: dbError } = await supabaseClient
       .from('payment_intents')
       .insert({
@@ -131,6 +131,24 @@ serve(async (req) => {
         plan: plan || payment_type,
         status: paymentIntent.status,
         created_at: new Date().toISOString()
+      });
+
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Log payment creation for admin tracking
+    await supabaseClient
+      .from('admin_logs')
+      .insert({
+        event_type: 'payment_intent_created',
+        user_id: user.id,
+        note: `Payment intent ${paymentIntent.id} created for ${amount/100}€`,
+        context: JSON.stringify({
+          payment_intent_id: paymentIntent.id,
+          amount_eur: amount/100,
+          payment_type: payment_type,
+          plan: plan
+        })
+      })
+      .then(({ error: logError }) => {
+        if (logError) console.warn('Admin log failed:', logError);
       });
 
     if (dbError) {
