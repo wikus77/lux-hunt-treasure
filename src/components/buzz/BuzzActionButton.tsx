@@ -156,8 +156,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       timestamp: new Date().toISOString()
     });
 
-    // Validate pricing integrity
-    if (!validateBuzzPrice(dailyBuzzCounter, currentPriceCents)) {
+    // 🔥 FIXED: Only validate pricing for PAID buzz, skip validation for FREE buzz
+    if (!hasFreeBuzz && !validateBuzzPrice(dailyBuzzCounter, currentPriceCents)) {
       console.error('❌ BUZZ PRICING VALIDATION FAILED');
       toast.error('Errore nel calcolo del prezzo. Riprova.');
       return;
