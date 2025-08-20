@@ -130,9 +130,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       return;
     }
 
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage first
-    if (dailyUsed) {
-      toast.error('Hai già usato il tuo BUZZ gratuito oggi.');
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage first with STRICT enforcement
+    if (dailyUsed || !hasFreeBuzz) {
+      toast.error('Hai già utilizzato il BUZZ gratuito oggi.');
       return;
     }
 

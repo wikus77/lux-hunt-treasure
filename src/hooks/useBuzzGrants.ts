@@ -22,17 +22,19 @@ export const useBuzzGrants = () => {
     setError(null);
 
     try {
-      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check if user has already consumed daily free BUZZ
+      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check if user has already consumed daily free BUZZ today
       const today = new Date().toISOString().split('T')[0];
-      const { data: todayUsage, error: usageError } = await supabase
-        .from('buzz_grants')
+      
+      // Check user_buzz_counter for today's free BUZZ usage
+      const { data: todayBuzzUsage, error: buzzError } = await supabase
+        .from('user_buzz_counter')
         .select('*')
-        .eq('source', 'daily_free')
-        .gte('created_at', today)
-        .gte('updated_at', today)
-        .eq('remaining', 0);
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        .eq('date', today)
+        .single();
 
-      if (todayUsage && todayUsage.length > 0) {
+      // If any BUZZ was used today, mark daily as used
+      if (todayBuzzUsage && todayBuzzUsage.buzz_count > 0) {
         setDailyUsed(true);
       } else {
         setDailyUsed(false);
@@ -69,6 +71,23 @@ export const useBuzzGrants = () => {
     if (totalRemaining <= 0) return false;
 
     try {
+      // Check one more time if already used today via database
+      const today = new Date().toISOString().split('T')[0];
+      const userId = (await supabase.auth.getUser()).data.user?.id;
+      
+      const { data: todayCheck } = await supabase
+        .from('user_buzz_counter')
+        .select('buzz_count')
+        .eq('user_id', userId)
+        .eq('date', today)
+        .single();
+
+      if (todayCheck && todayCheck.buzz_count > 0) {
+        console.log('❌ Daily BUZZ already used - database check');
+        setDailyUsed(true);
+        return false;
+      }
+
       // Find the first grant with remaining buzz
       const grantToUse = grants.find(g => g.remaining > 0);
       if (!grantToUse) return false;
@@ -83,7 +102,7 @@ export const useBuzzGrants = () => {
 
       if (error) throw error;
 
-      // Mark daily usage
+      // Mark daily usage immediately
       setDailyUsed(true);
       
       // Refresh grants after consumption

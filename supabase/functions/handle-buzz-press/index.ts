@@ -376,27 +376,27 @@ serve(async (req) => {
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Helper function to generate appropriate clue based on week number
 function generateClueBasedOnWeek(weekNumber: number): string {
   const narrativeClues = [
-    "Un'ombra di magnificenza danza tra le strade antiche",
-    "L'eco della perfezione risuona dove arte e passione si fondono",
-    "Un sogno di metallo attende nel cuore della bellezza",
-    "La leggenda sussurra segreti di potenza e grazia",
-    "Dove i maestri dell'ingegneria hanno lasciato la loro firma",
-    "Un gioiello nascosto brilla sotto il cielo del sud",
-    "Il destino chiama chi sa interpretare i segni della maestria",
-    "Un simbolo di eccellenza dimora dove la storia incontra il futuro"
+    "Un sussurro di eleganza riecheggia nell'aria del mattino",
+    "L'essenza della perfezione si nasconde tra le ombre dorate",
+    "Un sogno di metallo attende dove l'arte incontra l'anima",
+    "La melodia del vento racconta storie di antica saggezza",
+    "Dove i maestri hanno intessuto bellezza e potenza",
+    "Un respiro di eccellenza si libra sopra le nuvole",
+    "Il destino sussurra a chi sa ascoltare il linguaggio del tempo",
+    "Una carezza di magnificenza danza nella luce dell'alba"
   ];
   
   const metaphoricalClues = [
-    "Il cavallo d'acciaio riposa nell'ombra degli dei antichi",
-    "Una stella cadente si è fermata sulla terra degli antenati",
-    "Il tuono silenzioso attende dove le colonne guardano il mare",
-    "Un lampo di genio cristallizzato nel tempo aspetta la sua ora",
-    "L'anima della velocità sussurra tra le pietre millenarie",
-    "Un fulmine dorato dorme nella valle dei sogni perduti",
-    "Il soffio del vento eterno custodisce un segreto di ferro e fuoco"
+    "Il guardiano silenzioso riposa dove i sogni prendono forma",
+    "Una lacrima di stelle cristallizzata attende il momento perfetto",
+    "Il battito del cuore della velocità echeggia tra le colline",
+    "Un raggio di genialità si riflette nello specchio dell'eternità",
+    "L'anima della grazia sussurra segreti al vento della sera",
+    "Un frammento di paradiso dimora nella valle dei desideri",
+    "Il respiro della leggenda accarezza chi sa sognare oltre l'orizzonte"
   ];
   
-  // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - SEMPRE indizi narrativi, mai espliciti
+  // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - SEMPRE indizi narrativi e poetici, mai espliciti
   const selectedClues = Math.random() > 0.5 ? narrativeClues : metaphoricalClues;
   return selectedClues[Math.floor(Math.random() * selectedClues.length)];
 }
