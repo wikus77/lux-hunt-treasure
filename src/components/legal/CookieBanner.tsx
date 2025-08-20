@@ -208,12 +208,13 @@ const CookieBanner: React.FC = () => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+           style={{ paddingTop: 'calc(env(safe-area-inset-top, 0px) + 20px)', paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 20px)' }}>
         <motion.div
           initial={{ opacity: 0, y: 100 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 100 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
         >
           {!showSettings ? (
             // Main Cookie Banner

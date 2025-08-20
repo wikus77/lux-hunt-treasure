@@ -5,6 +5,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
 @import './styles/mobile-optimizations.css';
+@import './styles/ios-safe-area-fixes.css';
 
 @tailwind base;
 @tailwind components;
@@ -167,6 +168,25 @@
   @supports (height: 100dvh) {
     .full-height-container {
       height: 100dvh;
+    }
+    
+    .min-h-screen-dvh {
+      min-height: 100dvh;
+    }
+    
+    .h-screen-dvh {
+      height: 100dvh;
+    }
+  }
+  
+  /* Fallback for browsers without dvh support */
+  @supports not (height: 100dvh) {
+    .min-h-screen-dvh {
+      min-height: 100vh;
+    }
+    
+    .h-screen-dvh {
+      height: 100vh;
     }
   }
 

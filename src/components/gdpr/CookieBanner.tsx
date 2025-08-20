@@ -92,6 +92,7 @@ const CookieBanner = () => {
           exit={{ y: 100, opacity: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 p-4"
+          style={{ marginTop: 'calc(env(safe-area-inset-top, 0px) * 0.5)' }}
         >
           <div className="max-w-6xl mx-auto">
             <div className="bg-black/95 backdrop-blur-xl border border-cyan-400/30 rounded-2xl p-6 shadow-[0_0_30px_rgba(0,229,255,0.3)]">
