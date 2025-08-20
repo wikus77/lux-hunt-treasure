@@ -63,18 +63,7 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
-      {/* © 2025 Joseph MULÉ – M1SSION™ - HEADER UNIFICATA */}
-      <div 
-        className="fixed left-0 right-0 z-50 backdrop-blur-xl"
-        style={{
-          height: '72px',
-          paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: 'rgba(19, 21, 33, 0.55)',
-          backdropFilter: 'blur(12px)'
-        }}
-      >
-        <UnifiedHeader />
-      </div>
+      <UnifiedHeader />
       
       {/* Main scrollable content */}
       <main
