@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -206,7 +206,7 @@ const LegalOnboarding: React.FC = () => {
               {/* Footer */}
               <div className="text-center pt-4 border-t border-white/10">
                 <p className="text-xs text-white/50">
-                  © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+                  © 2025 M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
                 </p>
               </div>
             </CardContent>
