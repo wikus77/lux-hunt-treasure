@@ -66,10 +66,16 @@ export const CluesList = () => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <h3 className="text-lg font-semibold text-white mb-3">🧩 Indizi Trovati</h3>
+      <h3 className="text-lg font-semibold text-white mb-3">🧩 Indizi Trovati {clues.length > 0 && `(${clues.length})`}</h3>
       
       {clues.length === 0 ? (
-        <p className="text-white/70 text-sm">Nessun indizio ancora trovato</p>
+        <div className="text-center text-white/60 py-8">
+          <p>Nessun indizio trovato oggi.</p>
+          <p className="text-sm mt-2">Premi BUZZ per scoprire nuovi indizi!</p>
+          <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
+            <p className="text-xs text-blue-300">💡 Gli indizi BUZZ verranno visualizzati qui dopo ogni utilizzo</p>
+          </div>
+        </div>
       ) : (
         <div className="space-y-3">
           {clues.map((clue, index) => (

@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Enhanced Toast with Debouncing
+import { useState, useCallback, useRef } from 'react';
 import { toast as sonnerToast } from 'sonner';
 
 export interface Toast {
@@ -12,6 +13,8 @@ export interface Toast {
 
 export function useToast() {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Debounce duplicate toasts
+  const recentToasts = useRef<Set<string>>(new Set());
 
   const toast = useCallback(({
     title,
@@ -20,6 +23,19 @@ export function useToast() {
     duration = 4000,
     action
   }: Toast) => {
+    const content = title || description || '';
+    const toastKey = `${variant}-${content}`;
+    
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Prevent duplicate toasts
+    if (recentToasts.current.has(toastKey)) {
+      return { id: '', dismiss: () => {}, update: () => {} };
+    }
+    
+    recentToasts.current.add(toastKey);
+    setTimeout(() => {
+      recentToasts.current.delete(toastKey);
+    }, 2000); // Prevent duplicates for 2 seconds
+
     const id = Math.random().toString(36).substr(2, 9);
 
     switch (variant) {
