@@ -73,7 +73,7 @@ export const Footer = () => {
         
         <div className="border-t mt-6 pt-6 text-center border-gray-800">
           <p className="text-sm text-gray-400">
-            © {new Date().getFullYear()} <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. Tutti i diritti riservati.
+            © {new Date().getFullYear()} <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span> – ALL RIGHTS RESERVED – NIYVORA KFT™
           </p>
         </div>
       </div>

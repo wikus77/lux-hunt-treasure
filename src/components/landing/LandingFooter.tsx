@@ -24,7 +24,7 @@ const LandingFooter = () => {
         </div>
         <div className="border-t border-white/20 pt-8 text-center md:text-left">
           <p className="text-base text-white/80 font-medium">
-            © 2025 <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span>. Tutti i diritti riservati.
+            © 2025 <span className="text-[#00E5FF]">M1</span><span className="text-white">SSION<span className="text-xs align-top">™</span></span> – ALL RIGHTS RESERVED – NIYVORA KFT™
           </p>
         </div>
         
