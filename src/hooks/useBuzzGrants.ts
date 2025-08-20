@@ -15,12 +15,26 @@ export const useBuzzGrants = () => {
   const [totalRemaining, setTotalRemaining] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dailyUsed, setDailyUsed] = useState(false); // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 
   const fetchGrants = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage first
+      const { data: dailyCheck, error: dailyError } = await supabase
+        .from('buzz_grants')
+        .select('*')
+        .gt('remaining', 0)
+        .eq('source', 'daily_free')
+        .gte('created_at', new Date().toISOString().split('T')[0])
+        .single();
+
+      if (dailyCheck && dailyCheck.remaining === 0) {
+        setDailyUsed(true);
+      }
+
       const { data, error } = await supabase
         .from('buzz_grants')
         .select('*')
@@ -43,6 +57,12 @@ export const useBuzzGrants = () => {
   };
 
   const consumeFreeBuzz = async (): Promise<boolean> => {
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily limit first
+    if (dailyUsed) {
+      console.log('Daily free BUZZ already used');
+      return false;
+    }
+    
     if (totalRemaining <= 0) return false;
 
     try {
@@ -60,6 +80,9 @@ export const useBuzzGrants = () => {
 
       if (error) throw error;
 
+      // Mark daily usage
+      setDailyUsed(true);
+      
       // Refresh grants after consumption
       await fetchGrants();
       return true;
@@ -80,6 +103,7 @@ export const useBuzzGrants = () => {
     error,
     fetchGrants,
     consumeFreeBuzz,
-    hasFreeBuzz: totalRemaining > 0
+    hasFreeBuzz: totalRemaining > 0 && !dailyUsed, // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+    dailyUsed
   };
 };

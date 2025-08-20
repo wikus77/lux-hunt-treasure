@@ -24,7 +24,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   onSuccess
 }) => {
   const { user } = useUnifiedAuth();
-  const { hasFreeBuzz, consumeFreeBuzz, totalRemaining } = useBuzzGrants();
+  const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants(); // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
   
   // Enhanced BUZZ counter with progressive pricing
   const { 
@@ -127,6 +127,12 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   const handleAction = async () => {
     if (!user) {
       toast.error('Devi essere loggato per utilizzare BUZZ!');
+      return;
+    }
+
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Check daily usage first
+    if (dailyUsed) {
+      toast.error('Hai già usato il tuo BUZZ di oggi.');
       return;
     }
 

@@ -16,6 +16,7 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 import { InviteFriendButton } from "@/components/xp/InviteFriendButton";
+import { CluesList } from "@/components/clues/CluesList"; // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -208,6 +209,16 @@ export default function CommandCenterHome() {
         transition={{ duration: 0.5, delay: 0.15 }}
       >
         <InviteFriendButton />
+      </motion.div>
+
+      {/* © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Clues List */}
+      <motion.div 
+        className="mb-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.18 }}
+      >
+        <CluesList />
       </motion.div>
 
       {/* Two column layout for Console and Agent */}

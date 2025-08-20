@@ -289,36 +289,49 @@ serve(async (req) => {
       response.generation_number = 1; // Will be calculated correctly after payment
     }
 
-    // ✅ INSERIRE NOTIFICA PER L'UTENTE CON CLUE_TEXT VALIDO
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - INSERIRE NOTIFICA CON CONTROLLO DUPLICATI
     if (clueEngineResult.clue_text && clueEngineResult.clue_text.trim() !== '') {
-      const { error: notificationError } = await supabase
+      // Check for duplicate notifications in last 24h
+      const { data: existingNotif, error: checkError } = await supabase
         .from('user_notifications')
-        .insert({
-          user_id: userId,
-          title: '🧩 Nuovo indizio M1SSION™',
-          message: clueEngineResult.clue_text,
-          type: 'clue',
-          is_read: false
-        });
-        
-      if (notificationError) {
-        console.error("❌ Error saving notification:", notificationError);
-        await supabase.from('admin_logs').insert({
-          user_id: userId,
-          event_type: 'notification_error',
-          context: `Failed to save notification: ${notificationError.message}`,
-          note: `Clue text: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
-          device: 'web_app'
-        });
+        .select('id')
+        .eq('user_id', userId)
+        .eq('message', clueEngineResult.clue_text)
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .single();
+
+      if (existingNotif) {
+        console.log('🚫 Duplicate notification prevented');
       } else {
-        console.log("✅ Notification saved successfully with clue_text");
-        await supabase.from('admin_logs').insert({
-          user_id: userId,
-          event_type: 'notification_success',
-          context: `Notification saved successfully`,
-          note: `Clue text: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
-          device: 'web_app'
-        });
+        const { error: notificationError } = await supabase
+          .from('user_notifications')
+          .insert({
+            user_id: userId,
+            title: '🧩 Nuovo indizio M1SSION™',
+            message: clueEngineResult.clue_text,
+            type: 'clue',
+            is_read: false
+          });
+        
+        if (notificationError) {
+          console.error("❌ Error saving notification:", notificationError);
+          await supabase.from('admin_logs').insert({
+            user_id: userId,
+            event_type: 'notification_error',
+            context: `Failed to save notification: ${notificationError.message}`,
+            note: `Clue text: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
+            device: 'web_app'
+          });
+        } else {
+          console.log("✅ Notification saved successfully with clue_text");
+          await supabase.from('admin_logs').insert({
+            user_id: userId,
+            event_type: 'notification_success',
+            context: `Notification saved successfully`,
+            note: `Clue text: "${clueEngineResult.clue_text.substring(0, 50)}..."`,
+            device: 'web_app'
+          });
+        }
       }
     } else {
       console.error("❌ Cannot save notification: clue_text is empty or null");
@@ -568,13 +581,13 @@ async function generateTargetClue(week: number, category: 'location' | 'prize', 
       };
     }
     
-    // WEEK 4+: LOCATION PRECISI
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - WEEK 4+: LOCATION PRECISI (MAI INDIRIZZI ESATTI)
     const locationClues = [
-      `Via Rossi 13, dove Agrigento custodisce i suoi segreti moderni.`,
-      `Nel numero 13 di via Rossi, la città dei templi rivela sorprese.`,
-      `Agrigento, via Rossi al civico 13: coordinate 37.3156, 13.5858.`,
-      `Tra le coordinate 37°18'56" N, 13°35'09" E troverai ciò che cerchi.`,
-      `${target.address} - l'indirizzo del destino ti attende.`
+      `Nella città dei templi, cerca vicino al quartiere delle rose.`,
+      `Ad Agrigento, dove antiche strade incontrano nuovi sogni.`,
+      `Nel cuore pulsante della Valle dei Templi, tra storia e modernità.`,
+      `Dove la Magna Grecia sussurra ancora, in una zona di prestigio.`,
+      `Nella perla siciliana, là dove il passato illumina il futuro.`
     ];
     return { 
       clue_text: locationClues[Math.floor(Math.random() * locationClues.length)], 
