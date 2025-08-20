@@ -1,4 +1,4 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// © 2025 M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { createContext, useContext, ReactNode } from 'react';
 import { Toaster } from 'sonner';
 
@@ -39,6 +39,11 @@ export const EnhancedToastProvider: React.FC<EnhancedToastProviderProps> = ({ ch
             maxWidth: '380px',
             margin: '0 auto',
             marginTop: 'calc(env(safe-area-inset-top, 47px) + 40px)',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            position: 'fixed',
             textAlign: 'center',
             fontWeight: '500',
             letterSpacing: '0.025em',

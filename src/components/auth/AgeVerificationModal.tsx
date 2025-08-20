@@ -1,5 +1,5 @@
 
-// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
+// © 2025 M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
