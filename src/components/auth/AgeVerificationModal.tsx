@@ -70,7 +70,7 @@ const AgeVerificationModal: React.FC<AgeVerificationModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md glass-card">
+      <DialogContent className="max-w-md glass-card fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-md p-6">
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-center neon-text">
             Verifica la tua età
