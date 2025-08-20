@@ -49,7 +49,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   
   const { buzzing, showShockwave, handleBuzz } = useBuzzHandler({
     currentPrice: currentPriceEur,
-    onSuccess
+    onSuccess,
+    hasFreeBuzz // 🔥 FIXED: Pass hasFreeBuzz flag to prevent price validation error
   });
 
   // © 2025 Joseph MULÉ – M1SSION™ – Progressive BUZZ Pricing Handler

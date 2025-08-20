@@ -14,9 +14,10 @@ import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationSchedul
 interface UseBuzzHandlerProps {
   currentPrice: number;
   onSuccess: () => void;
+  hasFreeBuzz?: boolean; // 🔥 ADDED: Flag to indicate if user has free buzz
 }
 
-export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps) {
+export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false }: UseBuzzHandlerProps) {
   const [buzzing, setBuzzing] = useState(false);
   const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
@@ -43,12 +44,13 @@ export function useBuzzHandler({ currentPrice, onSuccess }: UseBuzzHandlerProps)
       setShowShockwave(true);
       await vibrate(100);
       
-      console.log('💰 BUZZ PRICE CHECK - RESET COMPLETO 17/07/2025', { currentPrice });
+      console.log('💰 BUZZ PRICE CHECK - FIXED', { currentPrice, hasFreeBuzz });
       
       // Progressive pricing - no blocking, price increases with usage
       console.log('💰 PROGRESSIVE PRICING: Current price €' + currentPrice + ' for usage level');
       
-      if (currentPrice <= 0) {
+      // 🔥 FIXED: Allow zero price for FREE buzz, only check for paid buzz
+      if (!hasFreeBuzz && currentPrice <= 0) {
         toast.error('Errore nel calcolo del prezzo BUZZ');
         return;
       }
