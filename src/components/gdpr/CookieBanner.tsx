@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { X, Settings, Cookie } from 'lucide-react';
-import { useI18n } from '@/intl/useI18n';
+import { useLandingTranslations } from '@/hooks/useLandingTranslations';
 
 interface CookiePreferences {
   necessary: boolean;
@@ -14,7 +14,7 @@ interface CookiePreferences {
 }
 
 const CookieBanner = () => {
-  const { t } = useI18n();
+  const { t } = useLandingTranslations();
   const [isVisible, setIsVisible] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
