@@ -15,6 +15,8 @@ import { MissionConfigSection } from '@/components/panel/MissionConfigSection';
 import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -329,7 +331,42 @@ const PanelAccessPage = () => {
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => window.open('/push-test', '_blank')}
+                    onClick={async () => {
+                      console.log('[PUSH-TEST] Inizio test → utente:', user?.id);
+                      
+                      if (!user?.id) {
+                        toast.error('❌ PUSH-TEST: Utente non autenticato');
+                        return;
+                      }
+                      
+                      if (user?.email !== 'wikus77@hotmail.it') {
+                        toast.error('❌ PUSH-TEST: Accesso negato - non admin');
+                        return;
+                      }
+                      
+                      try {
+                        const { data, error } = await supabase.functions.invoke('send-push-notification', {
+                          body: {
+                            title: "🔔 PUSH Test M1SSION™",
+                            body: "Questa è una notifica test ricevuta dal M1SSION Panel",
+                            target_user_id: user.id
+                          }
+                        });
+                        
+                        console.log('[PUSH-TEST] Risposta funzione:', data);
+                        
+                        if (error) {
+                          console.error('[PUSH-TEST] Errore:', error);
+                          toast.error(`❌ PUSH Test fallito: ${error.message}`);
+                        } else {
+                          console.log('[PUSH-TEST] Successo:', data);
+                          toast.success(`✅ PUSH Test inviato! Dispositivi: ${data?.total || 0}, Inviati: ${data?.sent || 0}`);
+                        }
+                      } catch (err) {
+                        console.error('[PUSH-TEST] Eccezione:', err);
+                        toast.error('❌ PUSH Test: Errore di connessione');
+                      }
+                    }}
                     className="glass-card p-4 border border-orange-500/30 cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
