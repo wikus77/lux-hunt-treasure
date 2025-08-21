@@ -82,16 +82,18 @@ serve(async (req: Request) => {
       });
     }
 
-    // Get device tokens for OneSignal
+    // Get device tokens for OneSignal - with enhanced error handling
+    console.log('🔍 Querying device tokens for:', target_user_id || 'all users');
+    
     let deviceQuery = supabase
       .from('device_tokens')
-      .select('token, is_active, device_info')
-      .eq('device_type', 'onesignal')
-      .eq('is_active', true);
+      .select('token, is_active, device_info, user_id')
+      .eq('device_type', 'onesignal');
 
     // Filter by specific user if provided
     if (target_user_id) {
       deviceQuery = deviceQuery.eq('user_id', target_user_id);
+      console.log('🎯 Filtering for specific user:', target_user_id);
     }
 
     const { data: devices, error: deviceError } = await deviceQuery;
