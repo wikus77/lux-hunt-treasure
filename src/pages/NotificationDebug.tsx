@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { OneSignalRegistrationFixed } from "@/components/debug/OneSignalRegistrationFixed";
+import { PushPermissionChecker } from "@/components/debug/PushPermissionChecker";
 
 const NotificationDebug = () => {
   const [deviceTokens, setDeviceTokens] = useState<any[]>([]);
@@ -99,6 +100,9 @@ const NotificationDebug = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
+        
+        {/* DIAGNOSTICA PERMESSI PUSH */}
+        <PushPermissionChecker />
         
         {/* NUOVO COMPONENTE FISSO */}
         <OneSignalRegistrationFixed />
