@@ -14,20 +14,29 @@ export const OneSignalRegistration = () => {
   const { user } = useUnifiedAuth();
 
   useEffect(() => {
-    // Check if OneSignal is available and user is subscribed  
-    if ((window as any).OneSignal) {
-      // Wait for OneSignal to be ready
-      (window as any).OneSignal.push(() => {
-        (window as any).OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
-          setIsRegistered(isEnabled);
-          if (isEnabled) {
-            (window as any).OneSignal.getUserId((userId: string) => {
-              setPlayerId(userId);
-            });
-          }
-        });
-      });
-    }
+    // Check if OneSignal is available and user is subscribed
+    const checkOneSignal = async () => {
+      if (typeof window !== 'undefined' && (window as any).OneSignal) {
+        try {
+          // Wait for OneSignal to be ready
+          await (window as any).OneSignal.push(async () => {
+            const isEnabled = await (window as any).OneSignal.Notifications.permission;
+            setIsRegistered(isEnabled === 'granted');
+            
+            if (isEnabled === 'granted') {
+              const userId = (window as any).OneSignal.User.PushSubscription.id;
+              if (userId) {
+                setPlayerId(userId);
+              }
+            }
+          });
+        } catch (error) {
+          console.error('Error checking OneSignal status:', error);
+        }
+      }
+    };
+
+    checkOneSignal();
   }, []);
 
   const registerForNotifications = async () => {
@@ -38,31 +47,40 @@ export const OneSignalRegistration = () => {
         throw new Error('OneSignal not loaded');
       }
 
-      // Request permission using OneSignal API
-      (window as any).OneSignal.push(() => {
-        (window as any).OneSignal.showSlidedownPrompt();
-      });
-      
-      // Wait for subscription
-      setTimeout(() => {
-        (window as any).OneSignal.push(() => {
-          (window as any).OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
-            if (isEnabled) {
-              (window as any).OneSignal.getUserId((userId: string) => {
+      // Request permission using the new OneSignal API
+      await (window as any).OneSignal.push(async () => {
+        try {
+          // Request notification permission
+          const permission = await (window as any).OneSignal.Notifications.requestPermission();
+          
+          if (permission) {
+            // Wait a moment for the subscription to be created
+            setTimeout(async () => {
+              const userId = (window as any).OneSignal.User.PushSubscription.id;
+              if (userId) {
                 setPlayerId(userId);
                 setIsRegistered(true);
                 toast.success('✅ Registrato per le notifiche!', {
                   description: `Player ID: ${userId.substring(0, 8)}...`
                 });
-              });
-            } else {
-              toast.error('❌ Registrazione fallita', {
-                description: 'Permesso negato o OneSignal non configurato'
-              });
-            }
+              } else {
+                toast.error('❌ Player ID non trovato', {
+                  description: 'Riprova tra qualche secondo'
+                });
+              }
+            }, 2000);
+          } else {
+            toast.error('❌ Registrazione fallita', {
+              description: 'Permesso negato dall\'utente'
+            });
+          }
+        } catch (innerError) {
+          console.error('Inner OneSignal error:', innerError);
+          toast.error('❌ Errore durante registrazione', {
+            description: 'OneSignal non disponibile'
           });
-        });
-      }, 3000);
+        }
+      });
 
     } catch (error: any) {
       console.error('Registration error:', error);
