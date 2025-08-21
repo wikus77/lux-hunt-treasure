@@ -16,9 +16,9 @@ const ONE_SIGNAL_CONFIGS: Record<string, OneSignalConfig> = {
     allowedOrigins: ['https://m1ssion.eu', 'https://www.m1ssion.eu']
   },
   
-  // Development/Preview (per testing su Lovable)
+  // Development/Preview (BYPASS MODE per testing)
   development: {
-    appId: "50cb75f7-f065-4626-9a63-ce5692fa7e70", // Stesso ID per ora
+    appId: "50cb75f7-f065-4626-9a63-ce5692fa7e70", 
     environment: 'development',
     allowedOrigins: ['https://*.lovable.app', 'http://localhost:3000', 'http://localhost:5173']
   }
@@ -47,6 +47,9 @@ export const getOneSignalInitConfig = () => {
   return {
     appId: config.appId,
     allowLocalhostAsSecureOrigin: true,
+    // BYPASS MODE: Forza l'inizializzazione anche su domini non autorizzati
+    requiresUserPrivacyConsent: false,
+    autoRegister: false, // Disabilita auto-registrazione per evitare errori
     serviceWorkerPath: '/OneSignalSDKWorker.js',
     serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
     safari_web_id: `web.onesignal.auto.${config.appId}`,
