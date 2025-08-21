@@ -187,6 +187,7 @@ const NotificationDebug = () => {
   };
 
   useEffect(() => {
+    console.log('🚀 ULTIMATE: NOTIFICATION DEBUG MOUNTED - Component rendering successfully!');
     initializeOneSignal();
     loadDeviceTokens();
     updatePermissionStatus();
