@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { getOneSignalConfig, getOneSignalInitConfig } from '@/config/oneSignalConfig';
 
 // Global state to prevent multiple initializations
 declare global {
@@ -25,6 +26,7 @@ export const OneSignalRegistrationUltimate = () => {
   const [isRegistered, setIsRegistered] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<string>('Starting ultimate registration...');
+  const [currentConfig, setCurrentConfig] = useState<any>(null);
   const { user } = useUnifiedAuth();
 
   useEffect(() => {
@@ -33,8 +35,16 @@ export const OneSignalRegistrationUltimate = () => {
 
   const initializeUltimate = async () => {
     try {
-      console.log('🚀 ULTIMATE: Starting OneSignal ultimate initialization...');
-      setDebugInfo('🚀 Initializing ultimate OneSignal...');
+      const config = getOneSignalConfig();
+      const initConfig = getOneSignalInitConfig();
+      setCurrentConfig(config);
+      
+      console.log('🚀 ULTIMATE: Starting OneSignal ultimate initialization...', { 
+        environment: config.environment,
+        appId: config.appId,
+        hostname: window.location.hostname 
+      });
+      setDebugInfo(`🚀 Initializing for ${config.environment} environment...`);
 
       // Check if already initialized globally
       if (window.OneSignalUltimateState?.isInitialized) {
@@ -77,11 +87,8 @@ export const OneSignalRegistrationUltimate = () => {
       }
 
       // Initialize OneSignal ONLY if not already done
-      console.log('🔄 ULTIMATE: Initializing OneSignal...');
-      await (window as any).OneSignal.init({
-        appId: "50cb75f7-f065-4626-9a63-ce5692fa7e70",
-        allowLocalhostAsSecureOrigin: true
-      });
+      console.log('🔄 ULTIMATE: Initializing OneSignal with config...', initConfig);
+      await (window as any).OneSignal.init(initConfig);
 
       console.log('✅ ULTIMATE: OneSignal initialized successfully');
       window.OneSignalUltimateState.isInitialized = true;
@@ -283,6 +290,9 @@ export const OneSignalRegistrationUltimate = () => {
 
         <div className="text-xs text-muted-foreground space-y-1 bg-gray-800 p-3 rounded">
           <p><strong>Status:</strong> {isRegistered ? '✅ ATTIVO' : '❌ NON ATTIVO'}</p>
+          <p><strong>Environment:</strong> {currentConfig?.environment || 'Unknown'}</p>
+          <p><strong>App ID:</strong> {currentConfig?.appId?.substring(0, 12)}...</p>
+          <p><strong>Hostname:</strong> {window.location.hostname}</p>
           <p><strong>Debug:</strong> {debugInfo}</p>
           <p><strong>OneSignal SDK:</strong> {typeof (window as any).OneSignal !== 'undefined' ? '✅ Loaded' : '❌ Not Loaded'}</p>
           <p><strong>Global State:</strong> {window.OneSignalUltimateState?.isInitialized ? '✅ Initialized' : '❌ Not Initialized'}</p>
