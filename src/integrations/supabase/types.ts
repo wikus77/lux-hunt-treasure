@@ -802,6 +802,7 @@ export type Database = {
       device_tokens: {
         Row: {
           created_at: string
+          device_info: Json | null
           device_type: string
           id: string
           is_active: boolean | null
@@ -811,6 +812,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          device_info?: Json | null
           device_type: string
           id?: string
           is_active?: boolean | null
@@ -820,6 +822,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          device_info?: Json | null
           device_type?: string
           id?: string
           is_active?: boolean | null

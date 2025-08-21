@@ -19,10 +19,17 @@ export default function PushTest() {
     try {
       console.log('🚀 M1SSION™ PUSH TEST: Sending notification', { title, body });
       
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('❌ Devi essere loggato per testare le push');
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
           title: title.trim(),
-          body: body.trim()
+          body: body.trim(),
+          target_user_id: user.id
         }
       });
 
