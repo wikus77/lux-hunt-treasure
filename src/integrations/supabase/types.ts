@@ -804,6 +804,7 @@ export type Database = {
           created_at: string
           device_type: string
           id: string
+          is_active: boolean | null
           last_used: string
           token: string
           user_id: string
@@ -812,6 +813,7 @@ export type Database = {
           created_at?: string
           device_type: string
           id?: string
+          is_active?: boolean | null
           last_used?: string
           token: string
           user_id: string
@@ -820,6 +822,7 @@ export type Database = {
           created_at?: string
           device_type?: string
           id?: string
+          is_active?: boolean | null
           last_used?: string
           token?: string
           user_id?: string

@@ -150,6 +150,22 @@ export const useBuzzGrants = () => {
         console.log('✅ FREE BUZZ NOTIFICATION SAVED');
       }
 
+      // 🔥 TRIGGER REALTIME UPDATE by also updating user_mission_status
+      const { error: statusUpdateError } = await supabase
+        .from('user_mission_status')
+        .upsert({
+          user_id: userId,
+          clues_found: 1,
+          mission_progress_percent: Math.round((1 / 200) * 100),
+          updated_at: new Date().toISOString()
+        });
+
+      if (statusUpdateError) {
+        console.error('❌ Error triggering mission status update:', statusUpdateError);
+      } else {
+        console.log('✅ MISSION STATUS UPDATE TRIGGERED');
+      }
+
       // Mark daily usage immediately
       setDailyUsed(true);
       
