@@ -18,7 +18,7 @@ import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
 
 // Initialize Stripe - M1SSION™ Project Key LIVE
-const stripePromise = loadStripe("pk_test_51QJWtNRp5StPxareRp0GNVD9BT0auKQ8LEeezlPROQcwiDQ6nGOd0UihU5Y9fjJFD3naTwx3YsHoPPzlJ5Alk4pD00FhZM6lyZ");
+const stripePromise = loadStripe("pk_live_51QWy1JJ6V46p1E83lB4LKnZAH5oLGBgM9IwK6Jj9iMIgKiojGRAqv3bUhc7Jxuu9Xjux2tYyg4kbnW2LGMfDODJW00SH0X7LvW");
 
 interface StripeInAppCheckoutProps {
   config: PaymentConfig;
