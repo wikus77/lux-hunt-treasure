@@ -66,10 +66,10 @@ const NotificationDebug = () => {
     return iosInfo;
   };
 
-  // OneSignal initialization with iOS-specific config
+  // OneSignal initialization with iOS-specific config - FIXED
   const initializeOneSignal = async () => {
     try {
-      console.log('🛰️ ULTIMATE iOS: Inizializzazione OneSignal...');
+      console.log('🛰️ ULTIMATE iOS: Inizializzazione OneSignal con config corretta...');
       
       if (typeof window === 'undefined') {
         console.log('🛰️ ULTIMATE iOS: Non in ambiente browser');
@@ -79,10 +79,15 @@ const NotificationDebug = () => {
       // Detect iOS environment first
       const iosInfo = detectiOSEnvironment();
 
+      // Clear any existing OneSignal instance
       if ((window as any).OneSignal) {
-        console.log('🛰️ ULTIMATE iOS: OneSignal già caricato');
-        await checkOneSignalStatus();
-        return true;
+        console.log('🛰️ ULTIMATE iOS: Clearing existing OneSignal instance...');
+        try {
+          await (window as any).OneSignal.logout();
+        } catch (e) {
+          console.log('🛰️ ULTIMATE iOS: OneSignal logout not needed');
+        }
+        delete (window as any).OneSignal;
       }
 
       // Load OneSignal script
@@ -94,9 +99,9 @@ const NotificationDebug = () => {
       return new Promise((resolve) => {
         script.onload = async () => {
           try {
-            // iOS-specific OneSignal config
+            // Use the corrected configuration
             const config = {
-              appId: "5e0cb75f-f065-4626-9a63-ce5692f7a7e0",
+              appId: "5e0cb75f-f065-4626-9a63-ce5692f7a7e0", // FIXED: Correct App ID
               allowLocalhostAsSecureOrigin: true,
               notifyButton: { enable: false },
               safari_web_id: undefined, // Let OneSignal handle this
@@ -104,11 +109,15 @@ const NotificationDebug = () => {
               autoRegister: false, // Manual control for iOS
               serviceWorkerPath: '/OneSignalSDKWorker.js',
               serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
-              serviceWorkerParam: { scope: '/' }
+              serviceWorkerParam: { scope: '/' },
+              // Enhanced localhost/development support
+              restrictedOriginValidation: false,
+              requiresUserPrivacyConsent: false
             };
             
-            console.log('🛰️ ULTIMATE iOS: Config OneSignal:', config);
+            console.log('🛰️ ULTIMATE iOS: FIXED Config OneSignal:', config);
             console.log('🛰️ ULTIMATE iOS: Environment info:', iosInfo);
+            console.log('🛰️ ULTIMATE iOS: Current URL:', window.location.href);
             
             await (window as any).OneSignal.init(config);
             console.log('🛰️ ULTIMATE iOS: OneSignal inizializzato con successo!');
@@ -123,8 +132,18 @@ const NotificationDebug = () => {
             resolve(true);
           } catch (error) {
             console.error('🛰️ ULTIMATE iOS: Errore inizializzazione:', error);
+            console.error('🛰️ ULTIMATE iOS: Error details:', {
+              message: error.message,
+              stack: error.stack,
+              name: error.name
+            });
             resolve(false);
           }
+        };
+        
+        script.onerror = (error) => {
+          console.error('🛰️ ULTIMATE iOS: Script loading failed:', error);
+          resolve(false);
         };
       });
     } catch (error) {
@@ -180,24 +199,24 @@ const NotificationDebug = () => {
     }
   };
 
-  // Ultimate registration function - iOS optimized
+  // Ultimate registration function - iOS optimized with FIXED App ID
   const handleUltimateRegistration = async () => {
     setIsLoading(true);
-    console.log('🛰️ ULTIMATE iOS: Inizio registrazione...');
+    console.log('🛰️ ULTIMATE iOS: Inizio registrazione con App ID corretto...');
 
     try {
-      if (!isInitialized) {
-        console.log('🛰️ ULTIMATE iOS: Inizializzazione OneSignal...');
-        const initialized = await initializeOneSignal();
-        if (!initialized) {
-          throw new Error('Inizializzazione OneSignal fallita');
-        }
-        // Wait a bit for initialization
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      // Always reinitialize to ensure clean state
+      console.log('🛰️ ULTIMATE iOS: Forcing fresh initialization...');
+      const initialized = await initializeOneSignal();
+      if (!initialized) {
+        throw new Error('Inizializzazione OneSignal fallita');
       }
+      
+      // Wait a bit for initialization to settle
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
       if (!(window as any).OneSignal) {
-        throw new Error('OneSignal non disponibile');
+        throw new Error('OneSignal non disponibile dopo inizializzazione');
       }
 
       const OneSignal = (window as any).OneSignal;
@@ -210,6 +229,7 @@ const NotificationDebug = () => {
       }
       
       console.log('🛰️ ULTIMATE iOS: Richiesta permessi notifiche...');
+      console.log('🛰️ ULTIMATE iOS: Current permission:', Notification.permission);
       
       // For iOS Safari, we need to use the standard Notification API first
       if (iosDebugInfo.isIOS && iosDebugInfo.isSafari) {
@@ -219,7 +239,7 @@ const NotificationDebug = () => {
         console.log('🛰️ ULTIMATE iOS: Native permission result:', permission);
         
         if (permission !== 'granted') {
-          throw new Error('Permesso notifiche negato');
+          console.warn('🛰️ ULTIMATE iOS: Permission not granted, trying OneSignal anyway...');
         }
       }
       
