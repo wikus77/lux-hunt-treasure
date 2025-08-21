@@ -21,11 +21,15 @@ serve(async (req) => {
   }
 
   try {
+    console.log("🟡 Stripe saved card payment handler avviato");
     logStep("Processing saved card payment");
 
     // Initialize Stripe
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    console.log('🧾 Stripe Key Check:', { keyPresent: !!stripeKey, keyLength: stripeKey?.length });
+    
     if (!stripeKey) {
+      console.error("❌ STRIPE_SECRET_KEY not configured");
       throw new Error("STRIPE_SECRET_KEY not configured");
     }
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
@@ -54,6 +58,8 @@ serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
+    console.log('🧾 Payload ricevuto:', body);
+    
     const { 
       payment_method_id, 
       amount, 
@@ -90,27 +96,35 @@ serve(async (req) => {
     });
 
     // Create payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount,
-      currency: currency,
-      payment_method: payment_method_id,
-      customer: paymentMethod.stripe_customer_id,
-      confirmation_method: 'manual',
-      confirm: true,
-      return_url: `${req.headers.get("origin")}/payment-success`,
-      description: description,
-      metadata: {
-        user_id: user.id,
-        payment_type: payment_type,
-        plan: plan || '',
-        ...metadata
-      }
-    });
+    console.log('💳 Creating Stripe Payment Intent with saved card...');
+    let paymentIntent;
+    try {
+      paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: currency,
+        payment_method: payment_method_id,
+        customer: paymentMethod.stripe_customer_id,
+        confirmation_method: 'manual',
+        confirm: true,
+        return_url: `${req.headers.get("origin")}/payment-success`,
+        description: description,
+        metadata: {
+          user_id: user.id,
+          payment_type: payment_type,
+          plan: plan || '',
+          ...metadata
+        }
+      });
 
-    logStep("Payment intent created", { 
-      id: paymentIntent.id, 
-      status: paymentIntent.status 
-    });
+      console.log('💳 Intent Stripe:', paymentIntent?.id);
+      logStep("Payment intent created", { 
+        id: paymentIntent.id, 
+        status: paymentIntent.status 
+      });
+    } catch (stripeError) {
+      console.error('❌ Errore Stripe:', stripeError?.message);
+      throw stripeError;
+    }
 
     // Record payment in database
     await supabaseClient.from('payment_intents').insert({
@@ -137,11 +151,14 @@ serve(async (req) => {
         stripe_payment_intent_id: paymentIntent.id
       });
 
-      return new Response(JSON.stringify({
+      const successResponse = {
         success: true,
         payment_intent_id: paymentIntent.id,
         status: 'succeeded'
-      }), {
+      };
+      
+      console.log('📋 Risposta restituita (SUCCESS):', successResponse);
+      return new Response(JSON.stringify(successResponse), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
