@@ -26,20 +26,20 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const oneSignalApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY')!;
-    const oneSignalAppId = "50cb75f7-f065-4626-9a63-ce5692fa7e70";
+    const oneSignalAppId = "5e0cb75f-f065-4626-9a63-ce5692f7a7e0"; // FIXED: Correct App ID
 
     console.log(`🔔 M1QR-PUSH: Starting push for user ${user_id}`);
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get OneSignal token for this user
+    // Get OneSignal token for this user - Support all device types
     const { data: deviceTokens, error: tokenError } = await supabase
       .from('device_tokens')
-      .select('token')
+      .select('token, device_type, platform')
       .eq('user_id', user_id)
-      .eq('device_type', 'onesignal')
-      .order('last_used', { ascending: false })
-      .limit(1);
+      .in('device_type', ['onesignal', 'onesignal_web', 'onesignal_ios_web'])
+      .order('created_at', { ascending: false })
+      .limit(5); // Get multiple tokens for better iOS compatibility
 
     if (tokenError || !deviceTokens || deviceTokens.length === 0) {
       console.error(`🔔 M1QR-PUSH: No OneSignal token found for user ${user_id}:`, tokenError);
@@ -49,22 +49,34 @@ serve(async (req) => {
       );
     }
 
-    const playerId = deviceTokens[0].token;
-    console.log(`🔔 M1QR-PUSH: Found OneSignal token: ${playerId}`);
+    // Use all available player IDs for better iOS compatibility
+    const playerIds = deviceTokens.map(dt => dt.token);
+    console.log(`🔔 M1QR-PUSH: Found ${playerIds.length} OneSignal tokens:`, deviceTokens);
 
-    // Send OneSignal notification
+    // Enhanced OneSignal payload with iOS Safari support
     const oneSignalPayload = {
       app_id: oneSignalAppId,
-      include_external_user_ids: [user_id],
+      include_player_ids: playerIds, // Use player IDs instead of external user IDs for iOS
+      include_external_user_ids: [user_id], // Keep as fallback
       headings: { en: title, it: title },
       contents: { en: message, it: message },
       data: data || {},
+      // iOS Safari specific settings
+      web_push_topic: "M1SSION", // iOS Safari requirement
+      // Platform specific settings
       android_channel_id: "d9ad4ee7-1db8-459b-8db2-02cc0f5f2b83",
       ios_sound: "notification.wav",
       android_sound: "notification",
       web_icon: "/icon-192x192.png",
       chrome_web_icon: "/icon-192x192.png",
-      firefox_icon: "/icon-192x192.png"
+      firefox_icon: "/icon-192x192.png",
+      safari_icon: "/icon-192x192.png", // iOS Safari specific
+      // Enhanced targeting for iOS Safari
+      web_url: "https://m1ssion.eu",
+      url: "https://m1ssion.eu",
+      // iOS Safari PWA specific
+      ios_badgeType: "Increase",
+      ios_badgeCount: 1
     };
 
     console.log(`🔔 M1QR-PUSH: Sending to OneSignal:`, oneSignalPayload);
