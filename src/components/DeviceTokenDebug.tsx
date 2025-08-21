@@ -57,6 +57,8 @@ export default function DeviceTokenDebug() {
           user_id: user.id,
           token: testPlayerId,
           device_type: 'onesignal',
+          device_info: { platform: 'web', source: 'debug_test', created: new Date().toISOString() },
+          is_active: true,
           last_used: new Date().toISOString(),
           created_at: new Date().toISOString()
         }, {
