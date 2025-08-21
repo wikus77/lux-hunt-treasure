@@ -1,13 +1,13 @@
-// 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
-// M1SSION™ Create Payment Intent - RESET COMPLETO 22/07/2025
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ Create Payment Intent Edge Function
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const logStep = (step: string, details?: any) => {
@@ -16,194 +16,147 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    logStep('🚀 M1SSION™ Payment Intent Creation Started', {
-      method: req.method,
-      timestamp: new Date().toISOString()
-    });
-
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Verify environment variables
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-    console.log('🧾 Stripe Key Check:', { keyPresent: !!stripeKey, keyLength: stripeKey?.length });
+    logStep("Creating payment intent");
     
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      console.error('❌ STRIPE_SECRET_KEY not found in environment');
-      throw new Error('STRIPE_SECRET_KEY not found');
+      throw new Error("STRIPE_SECRET_KEY non configurata");
     }
     
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Validate Stripe secret key format
-    if (!stripeKey.startsWith('sk_')) {
-      console.error('❌ Invalid Stripe secret key format:', stripeKey.substring(0, 10) + '...');
-      throw new Error('Invalid Stripe secret key format - must start with sk_');
-    }
-    logStep('✅ Stripe key verified');
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
-    // Initialize Supabase client
+    // Initialize Supabase
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    // Get user from auth header
-    const authHeader = req.headers.get('Authorization');
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      console.error('❌ No authorization header provided');
-      throw new Error('No authorization header provided');
+      throw new Error("No authorization header");
     }
 
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) {
-      console.error('❌ Authentication error:', userError);
-      throw new Error(`Authentication error: ${userError.message}`);
+    if (userError || !userData.user) {
+      throw new Error("Authentication failed");
     }
-    
+
     const user = userData.user;
-    if (!user?.email) {
-      console.error('❌ User not authenticated or email not available');
-      throw new Error('User not authenticated or email not available');
-    }
-    logStep('✅ User authenticated', { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Parse request body
     const body = await req.json();
-    console.log('🧾 Payload ricevuto:', body);
-    const { user_id, plan, amount, currency = 'eur', payment_type, description, metadata } = body;
+    logStep("Request body", body);
     
-    logStep('📋 Payment intent request', { user_id, plan, amount, currency, payment_type, description });
+    const { 
+      amount, 
+      currency = 'eur', 
+      payment_type,
+      plan,
+      description,
+      metadata = {}
+    } = body;
 
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Validate amount
-    if (!amount || amount < 50) { // Minimum 0.50 EUR
-      throw new Error('Invalid amount - minimum 0.50 EUR required');
-    }
-    
-    logStep('✅ Amount validation passed', { amount, currency });
-
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Initialize Stripe with enhanced logging
-    logStep('🔗 Initializing Stripe client', { keyPresent: !!stripeKey, keyLength: stripeKey.length });
-    const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
-    logStep('✅ Stripe client initialized successfully');
-
-    // Find or create customer
-    let customerId: string;
+    // Check if customer exists
+    let customerId;
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep('🔍 Existing customer found', { customerId });
+      logStep("Existing customer found", { customerId });
     } else {
-      const newCustomer = await stripe.customers.create({
+      // Create new customer
+      const customer = await stripe.customers.create({
         email: user.email,
-        metadata: {
-          user_id: user.id,
-          plan: plan || payment_type,
-          payment_type: payment_type,
-          mission: 'M1SSION'
-        }
+        metadata: { user_id: user.id }
       });
-      customerId = newCustomer.id;
-      logStep('👤 New customer created', { customerId });
+      customerId = customer.id;
+      logStep("New customer created", { customerId });
     }
 
-    // Create payment intent
-    console.log('💳 Creating Stripe Payment Intent...');
-    let paymentIntent;
-    try {
-      paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: currency,
-        customer: customerId,
-        setup_future_usage: 'off_session', // For future payments
-        metadata: {
-          user_id: user.id,
-          plan: plan || payment_type,
-          payment_type: payment_type,
-          source: 'in_app_checkout',
-          mission: 'M1SSION',
-          ...metadata
-        },
-        description: description || `M1SSION™ ${payment_type || plan} payment`
-      });
-
-      console.log('💳 Intent Stripe:', paymentIntent?.id);
-      logStep('✅ Payment intent created', {
-        paymentIntentId: paymentIntent.id,
-        clientSecret: paymentIntent.client_secret?.slice(0, 20) + '...',
-        amount: paymentIntent.amount,
-        status: paymentIntent.status
-      });
-    } catch (stripeError) {
-      console.error('❌ Errore Stripe:', stripeError?.message);
-      throw stripeError;
-    }
-
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Store payment intent + admin logging
-    const { error: dbError } = await supabaseClient
-      .from('payment_intents')
-      .insert({
-        payment_intent_id: paymentIntent.id,
+    // Create payment intent with automatic payment methods
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount,
+      currency: currency,
+      customer: customerId,
+      automatic_payment_methods: {
+        enabled: true,
+        allow_redirects: 'never'
+      },
+      description: description,
+      metadata: {
         user_id: user.id,
-        amount: amount,
-        currency: currency,
-        plan: plan || payment_type,
-        status: paymentIntent.status,
-        created_at: new Date().toISOString()
-      });
+        payment_type: payment_type,
+        plan: plan || '',
+        function: 'create-payment-intent',
+        timestamp: new Date().toISOString(),
+        ...metadata
+      }
+    });
 
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Log payment creation for admin tracking
-    await supabaseClient
-      .from('admin_logs')
-      .insert({
-        event_type: 'payment_intent_created',
-        user_id: user.id,
-        note: `Payment intent ${paymentIntent.id} created for ${amount/100}€`,
-        context: JSON.stringify({
-          payment_intent_id: paymentIntent.id,
-          amount_eur: amount/100,
-          payment_type: payment_type,
-          plan: plan
-        })
-      })
-      .then(({ error: logError }) => {
-        if (logError) console.warn('Admin log failed:', logError);
-      });
+    logStep("Payment intent created", { 
+      id: paymentIntent.id, 
+      status: paymentIntent.status,
+      amount: paymentIntent.amount,
+      currency: paymentIntent.currency
+    });
 
-    if (dbError) {
-      logStep('⚠️ Database insert warning', dbError);
-      // Don't fail the request for database issues
-    } else {
-      logStep('✅ Payment intent stored in database');
-    }
+    // Record payment in database
+    await supabaseClient.from('payment_intents').insert({
+      user_id: user.id,
+      payment_intent_id: paymentIntent.id,
+      plan: plan || payment_type,
+      amount: amount,
+      currency: currency,
+      status: paymentIntent.status
+    });
 
-    console.log('📋 Risposta restituita:', { client_secret: paymentIntent.client_secret, payment_intent_id: paymentIntent.id });
-    return new Response(JSON.stringify({
+    const response = {
+      success: true,
+      payment_intent_id: paymentIntent.id,
       client_secret: paymentIntent.client_secret,
-      payment_intent_id: paymentIntent.id
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: paymentIntent.status,
+      amount: amount / 100,
+      currency: currency,
+      timestamp: new Date().toISOString()
+    };
+
+    logStep("Response", response);
+    
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep('❌ ERROR in create-payment-intent', { message: errorMessage });
+    logStep("ERROR", { message: errorMessage });
     
-    return new Response(JSON.stringify({ 
+    const errorResponse = { 
       error: errorMessage,
-      details: 'Payment intent creation failed'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      success: false,
+      debug: {
+        timestamp: new Date().toISOString(),
+        function: 'create-payment-intent'
+      }
+    };
+    
+    return new Response(JSON.stringify(errorResponse), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
   }
 });
 
 /*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ - RESET COMPLETO 22/07/2025
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ * M1SSION™ - Payment Intent Creation
  */

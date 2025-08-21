@@ -129,25 +129,28 @@ serve(async (req: Request) => {
           finalSentCount = 1;
         }
         
-        // Salva sempre user_notifications
+        // 🔥 CRITICAL FIX: ALWAYS save user_notifications
+        console.log('💾 Saving notification to user_notifications...');
         const { error: notifError } = await supabase
           .from('user_notifications')
           .insert({
             user_id: target_user_id,
             type: 'push',
-            title: title || "🔔 PUSH M1SSION™",
-            message: body || "Notifica push inviata con successo",
+            title: title || "🔔 PUSH Test M1SSION™",
+            message: body || "Questa è una notifica test ricevuta dal M1SSION Panel",
             is_read: false,
             is_deleted: false,
             metadata: { 
-              source: 'push_notification', 
+              source: 'test_push_notification', 
               sent_at: new Date().toISOString(),
-              auto_generated: true
+              device_count: finalDeviceCount
             }
           });
         
-        if (!notifError) {
-          console.log('✅ User notification saved successfully');
+        if (notifError) {
+          console.error('❌ Failed to save user notification:', notifError);
+        } else {
+          console.log('✅ User notification saved successfully to database');
         }
       }
       
