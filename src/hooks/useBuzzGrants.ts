@@ -75,6 +75,11 @@ export const useBuzzGrants = () => {
       const today = new Date().toISOString().split('T')[0];
       const userId = (await supabase.auth.getUser()).data.user?.id;
       
+      if (!userId) {
+        console.error('❌ No user ID found');
+        return false;
+      }
+      
       const { data: todayCheck } = await supabase
         .from('user_buzz_counter')
         .select('buzz_count')
@@ -92,6 +97,8 @@ export const useBuzzGrants = () => {
       const grantToUse = grants.find(g => g.remaining > 0);
       if (!grantToUse) return false;
 
+      console.log('🎁 CONSUMING FREE BUZZ GRANT:', grantToUse.id);
+
       const { error } = await supabase
         .from('buzz_grants')
         .update({ 
@@ -101,6 +108,47 @@ export const useBuzzGrants = () => {
         .eq('id', grantToUse.id);
 
       if (error) throw error;
+
+      // 🔥 CRITICAL FIX: SAVE CLUE TO DATABASE IMMEDIATELY
+      const uniqueClue = `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString()}) - FREE BUZZ ${Date.now()}`;
+      
+      console.log('💾 SAVING FREE BUZZ CLUE TO DATABASE:', uniqueClue);
+      
+      const { error: clueError } = await supabase
+        .from('user_clues')
+        .insert({
+          user_id: userId,
+          clue_id: `free_buzz_${Date.now()}`,
+          title_it: "🎁 Indizio BUZZ Gratuito",
+          description_it: uniqueClue,
+          clue_type: "buzz",
+          buzz_cost: 0,
+          week_number: Math.ceil(Date.now() / (1000 * 60 * 60 * 24 * 7))
+        });
+
+      if (clueError) {
+        console.error('❌ Error saving free buzz clue:', clueError);
+      } else {
+        console.log('✅ FREE BUZZ CLUE SAVED TO DATABASE');
+      }
+
+      // SAVE NOTIFICATION TOO
+      const { error: notifError } = await supabase
+        .from('user_notifications')
+        .insert({
+          user_id: userId,
+          type: 'buzz',
+          title: '🎁 Nuovo Indizio BUZZ Gratuito!',
+          message: uniqueClue,
+          is_read: false,
+          metadata: { free: true, source: 'buzz_grant' }
+        });
+
+      if (notifError) {
+        console.error('❌ Error saving free buzz notification:', notifError);
+      } else {
+        console.log('✅ FREE BUZZ NOTIFICATION SAVED');
+      }
 
       // Mark daily usage immediately
       setDailyUsed(true);
