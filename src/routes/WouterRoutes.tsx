@@ -37,6 +37,7 @@ import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 import PushTest from "@/pages/debug/PushTest";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
+import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
@@ -243,6 +244,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/debug/m1ssion-push-test">
             <ProtectedRoute>
               <GlobalLayout><M1ssionPushTest /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* 🔧 M1SSION™ EMERGENCY DEBUG */}
+          <Route path="/debug/raw-test">
+            <ProtectedRoute>
+              <GlobalLayout><M1ssionDebugTest /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
