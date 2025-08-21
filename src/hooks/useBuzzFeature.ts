@@ -130,23 +130,14 @@ export const useBuzzFeature = () => {
       setLastDynamicClue(uniqueClueContent);
       setLastVagueClue(uniqueClueContent);
       
-      setTimeout(async () => {
-        setShowDialog(false);
-        
+      // 🔥 CRITICAL FIX: SALVATAGGIO IMMEDIATO SENZA setTimeout
+      try {
         // Track clue unlocked event
         if (typeof window !== 'undefined' && window.plausible) {
           window.plausible('clue_unlocked');
         }
         
-        // 🔥 CRITICAL FIX: SALVA L'INDIZIO SIA NELLE NOTIFICHE CHE IN user_clues
-        console.log("💾 Salvando indizio nelle notifiche...");
-        await addNotification({
-          title: "Nuovo Indizio BUZZ!",
-          description: uniqueClueContent,
-          type: "buzz"
-        });
-        
-        // 🔥 NUOVO: SALVA DIRETTAMENTE IN user_clues DATABASE
+        // SALVA IMMEDIATAMENTE IN user_clues DATABASE
         console.log("💾 Salvando indizio in user_clues database...");
         const { error: clueError } = await supabase
           .from('user_clues')
@@ -156,7 +147,7 @@ export const useBuzzFeature = () => {
             title_it: "Nuovo Indizio BUZZ",
             description_it: uniqueClueContent,
             clue_type: "buzz",
-            buzz_cost: 199, // €1.99 in cents
+            buzz_cost: 199,
             week_number: Math.ceil(Date.now() / (1000 * 60 * 60 * 24 * 7))
           });
         
@@ -166,7 +157,15 @@ export const useBuzzFeature = () => {
           console.log("✅ Clue saved to user_clues database successfully");
         }
         
-        // 🔥 INCREMENTA CONTATORE INDIZI TROVATI
+        // SALVA ANCHE NELLE NOTIFICHE
+        console.log("💾 Salvando indizio nelle notifiche...");
+        await addNotification({
+          title: "Nuovo Indizio BUZZ!",
+          description: uniqueClueContent,
+          type: "buzz"
+        });
+        
+        // INCREMENTA CONTATORE
         console.log("📊 Incrementando contatore indizi trovati...");
         incrementUnlockedCluesAndAddClue();
         
@@ -179,7 +178,10 @@ export const useBuzzFeature = () => {
         });
         
         setShowExplosion(true);
-      }, 1500);
+        setShowDialog(false);
+      } catch (saveError) {
+        console.error("❌ Error saving clue:", saveError);
+      }
     } catch (error) {
       console.error("❌ Error in buzz process:", error);
       toast.error("Si è verificato un errore");
