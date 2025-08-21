@@ -35,7 +35,7 @@ export const FoundCluesDisplay: React.FC = () => {
         // 🔄 QUERY FINALE GLOBAL SYNC - Tutti gli indizi trovati dall'utente
         const { data: clues, error } = await supabase
           .from("user_clues")
-          .select("clue_id, title_it, description_it, clue_type, created_at, week_number, buzz_cost")
+          .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 

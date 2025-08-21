@@ -24,14 +24,20 @@ serve(async (req) => {
     console.log("🟡 Stripe saved card payment handler avviato");
     logStep("Processing saved card payment");
 
-    // Initialize Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    console.log('🧾 Stripe Key Check:', { keyPresent: !!stripeKey, keyLength: stripeKey?.length });
+    // Enhanced logging for payment debugging
+    console.log(`🧾 Stripe Key Check: { keyPresent: ${!!Deno.env.get("STRIPE_SECRET_KEY")}, keyLength: ${Deno.env.get("STRIPE_SECRET_KEY")?.length || 0} }`);
     
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      console.error("❌ STRIPE_SECRET_KEY not configured");
-      throw new Error("STRIPE_SECRET_KEY not configured");
+      console.error("❌ STRIPE_SECRET_KEY is missing from environment");
+      throw new Error("STRIPE_SECRET_KEY non configurata");
     }
+    
+    if (!stripeKey.startsWith("sk_live_") && !stripeKey.startsWith("sk_test_")) {
+      console.error("❌ STRIPE_SECRET_KEY invalid format:", stripeKey.substring(0, 8));
+      throw new Error("STRIPE_SECRET_KEY deve iniziare con sk_live_ o sk_test_");
+    }
+    
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Initialize Supabase
@@ -58,7 +64,18 @@ serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    console.log('🧾 Payload ricevuto:', body);
+    
+    // Enhanced payload logging
+    console.log(`🧾 Payload ricevuto: {
+  user_id: "${body.user_id}",
+  payment_method_id: "${body.payment_method_id}",
+  plan: "${body.plan}",
+  amount: ${body.amount},
+  currency: "${body.currency}",
+  payment_type: "${body.payment_type}",
+  description: "${body.description}",
+  metadata: ${JSON.stringify(body.metadata, null, 2)}
+}`);
     
     const { 
       payment_method_id, 
@@ -183,10 +200,19 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     
-    return new Response(JSON.stringify({ 
+    // Enhanced error response with detailed debugging
+    const errorResponse = { 
       error: errorMessage,
-      success: false 
-    }), {
+      success: false,
+      debug: {
+        timestamp: new Date().toISOString(),
+        function: 'process-saved-card-payment'
+      }
+    };
+    
+    console.log(`📤 Error Response: ${JSON.stringify(errorResponse, null, 2)}`);
+    
+    return new Response(JSON.stringify(errorResponse), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
     });
