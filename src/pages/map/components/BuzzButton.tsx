@@ -132,12 +132,30 @@ const BuzzButton: React.FC<BuzzButtonProps> = ({
 
       // Verify map center coordinates
       if (!mapCenter || !Array.isArray(mapCenter) || mapCenter.length !== 2) {
-        toast.error("Errore posizione", {
-          description: "Impossibile determinare la posizione sulla mappa."
+        console.error('❌ BUZZ MAPPA: Invalid coordinates', { 
+          mapCenter, 
+          isArray: Array.isArray(mapCenter), 
+          length: mapCenter?.length 
+        });
+        toast.error("Errore validazione BUZZ", {
+          description: "Impossibile procedere con il BUZZ - Coordinate non valide."
         });
         setIsGenerating(false);
         return;
       }
+
+      // Additional validation for coordinates
+      const [lat, lng] = mapCenter;
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        console.error('❌ BUZZ MAPPA: Coordinate fuori range', { lat, lng });
+        toast.error("Errore validazione BUZZ", {
+          description: "Impossibile procedere con il BUZZ - Coordinate fuori range."
+        });
+        setIsGenerating(false);
+        return;
+      }
+
+      console.log('✅ BUZZ MAPPA: Coordinates validated', { lat, lng });
 
       console.log('🗺️ BUZZ MAPPA: Calling unified API for map generation');
 
