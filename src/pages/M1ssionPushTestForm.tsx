@@ -77,7 +77,7 @@ export const M1ssionPushTestForm = () => {
       setLastResult({
         success: false,
         timestamp: new Date().toISOString(),
-        error: err.message || 'Errore di connessione',
+        error: err?.message || String(err) || 'Errore di connessione',
         title: title.trim(),
         body: body.trim()
       });
@@ -288,14 +288,20 @@ export const M1ssionPushTestForm = () => {
                 <div className="bg-red-50 dark:bg-red-950 p-3 rounded-lg">
                   <h4 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Errore:</h4>
                   <p className="text-sm text-red-700 dark:text-red-300">
-                    {lastResult.error}
+                    {typeof lastResult.error === 'string' ? lastResult.error : String(lastResult.error || 'Errore sconosciuto')}
                   </p>
                 </div>
               )}
 
               <div className="text-xs bg-muted p-3 rounded overflow-auto">
                 <strong>🔍 Debug Raw:</strong>
-                <pre className="mt-1">{JSON.stringify(lastResult, null, 2)}</pre>
+                <pre className="mt-1">{(() => {
+                  try {
+                    return JSON.stringify(lastResult, null, 2);
+                  } catch (e) {
+                    return 'Errore nel debug display: ' + String(e);
+                  }
+                })()}</pre>
               </div>
             </div>
           </CardContent>
