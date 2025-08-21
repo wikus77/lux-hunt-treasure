@@ -28,6 +28,12 @@ serve(async (req: Request) => {
     const { user_id, title, body, data = {}, broadcast = false } = requestBody;
 
     console.log('🔥 FCM Push notification request:', { user_id, title, body, broadcast });
+    console.log('🔥 FCM VERBOSE DEBUG - Request details:', {
+      method: req.method,
+      headers: Object.fromEntries(req.headers.entries()),
+      timestamp: new Date().toISOString(),
+      userAgent: req.headers.get('user-agent')
+    });
 
     // Validate required fields
     if (!title || !body) {
@@ -94,6 +100,13 @@ serve(async (req: Request) => {
     }
 
     console.log(`🔥 Found ${tokens.length} FCM tokens to send to`);
+    console.log('🔥 FCM VERBOSE DEBUG - Tokens details:', {
+      tokens: tokens.map(t => ({
+        user_id: t.user_id,
+        token_preview: t.fcm_token?.substring(0, 20) + '...',
+        token_length: t.fcm_token?.length
+      }))
+    });
 
     // Prepare FCM message payload
     const fcmPayload = {
@@ -122,6 +135,13 @@ serve(async (req: Request) => {
 
     const fcmResult = await fcmResponse.json();
     console.log('🔥 FCM API Response:', fcmResult);
+    console.log('🔥 FCM VERBOSE DEBUG - Full response details:', {
+      status: fcmResponse.status,
+      statusText: fcmResponse.statusText,
+      headers: Object.fromEntries(fcmResponse.headers.entries()),
+      payload_sent: fcmPayload,
+      fcm_result: fcmResult
+    });
 
     // Save notification to database for each user
     const notifications = tokens.map(token => ({
