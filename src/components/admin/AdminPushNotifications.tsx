@@ -1,3 +1,4 @@
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell } from "lucide-react";
-import { M1ssionPushTestPanel } from "./M1ssionPushTestPanel";
+import { M1ssionFirebasePushTestPanel } from "./M1ssionFirebasePushTestPanel";
 
 export const AdminPushNotifications = () => {
   const [title, setTitle] = useState("");
@@ -26,30 +27,42 @@ export const AdminPushNotifications = () => {
     setIsSending(true);
     
     try {
-      console.log('🚀 Sending push notification:', { title, message });
+      console.log('🔥 Sending Firebase push notification:', { title, message });
       
-      // Enhanced Edge Function call with proper headers
-      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+      // Log test in admin_logs
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'firebase_push_test',
+          note: `Push Test Custom - Title: ${title}, Body: ${message}`,
+          context: 'admin_panel_push_test'
+        });
+      
+      // Call Firebase Edge Function
+      const { data, error } = await supabase.functions.invoke('send-firebase-push', {
         body: { 
           title: title.trim(), 
           body: message.trim(),
-          user_id: 'broadcast', // Broadcast to all
-          timestamp: new Date().toISOString()
+          broadcast: true, // Broadcast to all users
+          additionalData: {
+            source: 'admin_panel',
+            timestamp: new Date().toISOString()
+          }
         },
         headers: {
           'Content-Type': 'application/json'
         }
       });
       
-      console.log('📡 Edge function response:', { data, error });
+      console.log('🔥 Firebase Edge function response:', { data, error });
       
       if (error) {
         throw new Error(error.message);
       }
       
       if (data?.success) {
-        toast.success(`Notifica inviata con successo a ${data.sent}/${data.total} dispositivi`, {
-          description: `OneSignal ID: ${data.oneSignalId || 'N/A'}`
+        toast.success(`🔥 Notifica Firebase inviata con successo!`, {
+          description: `Inviata a ${data.sent_count || 0} dispositivi FCM`
         });
       } else {
         toast.warning("Notifica elaborata ma con possibili problemi", {
@@ -61,8 +74,8 @@ export const AdminPushNotifications = () => {
       setTitle("");
       setMessage("");
     } catch (error: any) {
-      console.error("❌ Error sending push notification:", error);
-      toast.error("Errore nell'invio della notifica", {
+      console.error("❌ Error sending Firebase push notification:", error);
+      toast.error("Errore nell'invio della notifica Firebase", {
         description: error.message || "Errore sconosciuto"
       });
     } finally {
@@ -72,15 +85,15 @@ export const AdminPushNotifications = () => {
   
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4">Invio Notifiche Push</h2>
+      <h2 className="text-2xl font-semibold mb-4">🔥 Firebase Push Notifications</h2>
       
-      <M1ssionPushTestPanel />
+      <M1ssionFirebasePushTestPanel />
       
       <Card>
         <CardHeader>
-          <CardTitle>Invia notifica push a tutti gli utenti</CardTitle>
+          <CardTitle>🔥 Invia notifica Firebase FCM a tutti gli utenti</CardTitle>
           <CardDescription>
-            Le notifiche verranno inviate agli utenti che hanno accettato di ricevere notifiche push.
+            Le notifiche verranno inviate tramite Firebase Cloud Messaging agli utenti che hanno token FCM attivi.
           </CardDescription>
         </CardHeader>
         
@@ -92,7 +105,7 @@ export const AdminPushNotifications = () => {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Titolo della notifica"
+                placeholder="Titolo della notifica Firebase"
                 required
               />
             </div>
@@ -103,7 +116,7 @@ export const AdminPushNotifications = () => {
                 id="message"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Contenuto della notifica"
+                placeholder="Contenuto della notifica Firebase"
                 required
                 rows={4}
               />
@@ -118,11 +131,11 @@ export const AdminPushNotifications = () => {
             className="w-full"
           >
             {isSending ? (
-              <>Invio in corso...</>
+              <>🔥 Invio Firebase in corso...</>
             ) : (
               <>
                 <Bell size={16} className="mr-2" />
-                Invia notifica
+                🔥 Invia notifica Firebase
               </>
             )}
           </Button>
