@@ -17,6 +17,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { M1ssionDebugTest } from './M1ssionDebugTest';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -24,7 +25,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -157,6 +158,35 @@ const PanelAccessPage = () => {
               <p className="text-gray-400">Gestione, generazione e statistiche Marker Buzz™</p>
             </div>
             <QRControlPanel />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'debug-test' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">🧪 OneSignal Debug Test</h1>
+              <p className="text-gray-400">Test diretto API OneSignal - Emergenza</p>
+            </div>
+            <M1ssionDebugTest />
           </div>
         </div>
       </div>
@@ -376,6 +406,26 @@ const PanelAccessPage = () => {
                       <div>
                         <h3 className="font-semibold text-white">Push Test</h3>
                         <p className="text-gray-400 text-sm">Test sistema notifiche push (Admin Only)</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 🧪 ONESIGNAL DEBUG TEST - Admin Only per Emergenza */}
+                {user?.email === 'wikus77@hotmail.it' && (
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentView('debug-test')}
+                    className="glass-card p-4 border border-yellow-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-yellow-600 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        🧪
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">OneSignal Debug Test</h3>
+                        <p className="text-gray-400 text-sm">Test diretto API OneSignal (EMERGENZA)</p>
                       </div>
                     </div>
                   </motion.div>
