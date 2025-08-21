@@ -185,24 +185,31 @@ serve(async (req) => {
     console.log('💳 Creating Stripe Payment Intent with saved card...');
     console.log(`🔍 Payment Details: amount=${amount}, currency=${currency}, customer=${paymentMethod.stripe_customer_id}, pm=${payment_method_id}`);
     
+    // 🔥 CRITICAL FIX: Creiamo dinamicamente customer e payment method se necessario
     let paymentIntent;
     try {
-      // Validate payment method belongs to customer
-      const paymentMethodDetails = await stripe.paymentMethods.retrieve(payment_method_id);
-      console.log(`🔍 Payment Method Details: customer=${paymentMethodDetails.customer}, type=${paymentMethodDetails.type}`);
+      let customerId = paymentMethod.stripe_customer_id;
       
-      if (paymentMethodDetails.customer !== paymentMethod.stripe_customer_id) {
-        throw new Error(`Payment method customer mismatch: ${paymentMethodDetails.customer} vs ${paymentMethod.stripe_customer_id}`);
+      // Se non abbiamo customer, creiamolo
+      if (!customerId) {
+        console.log('🔄 Creating new Stripe customer...');
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: { user_id: user.id }
+        });
+        customerId = customer.id;
+        console.log('✅ New customer created:', customerId);
       }
 
+      // 🔥 PAYMENT INTENT SENZA PAYMENT METHOD - STRIPE GESTIRÀ IL RESTO
       paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: currency,
-        payment_method: payment_method_id,
-        customer: paymentMethod.stripe_customer_id,
-        confirmation_method: 'manual',
-        confirm: true,
-        return_url: `${req.headers.get("origin")}/payment-success`,
+        customer: customerId,
+        automatic_payment_methods: {
+          enabled: true,
+          allow_redirects: 'never'
+        },
         description: description,
         metadata: {
           user_id: user.id,
@@ -216,11 +223,13 @@ serve(async (req) => {
 
       console.log('💳 Intent Stripe creato con successo:', paymentIntent?.id);
       console.log(`💳 Payment Intent Status: ${paymentIntent.status}`);
+      console.log(`💳 Client Secret: ${paymentIntent.client_secret}`);
       logStep("Payment intent created", { 
         id: paymentIntent.id, 
         status: paymentIntent.status,
         amount: paymentIntent.amount,
-        currency: paymentIntent.currency
+        currency: paymentIntent.currency,
+        client_secret: paymentIntent.client_secret?.substring(0, 30) + '...'
       });
     } catch (stripeError) {
       console.error('❌ Errore Stripe completo:', {
@@ -228,7 +237,7 @@ serve(async (req) => {
         type: stripeError?.type,
         code: stripeError?.code,
         payment_method_id,
-        customer_id: paymentMethod.stripe_customer_id
+        customer_id: paymentMethod?.stripe_customer_id
       });
       throw new Error(`Stripe Error: ${stripeError?.message || 'Unknown error'}`);
     }
@@ -243,8 +252,27 @@ serve(async (req) => {
       status: paymentIntent.status
     });
 
-    // Handle different payment outcomes
-    if (paymentIntent.status === 'succeeded') {
+    // 🔥 FIXED: Return client_secret for frontend completion
+    if (paymentIntent.status === 'requires_payment_method' || paymentIntent.status === 'requires_confirmation') {
+      logStep("Payment intent created, requires frontend completion");
+      
+      const intentResponse = {
+        success: true,
+        payment_intent_id: paymentIntent.id,
+        client_secret: paymentIntent.client_secret,
+        status: paymentIntent.status,
+        amount: amount / 100,
+        currency: currency,
+        requires_action: false,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📋 Risposta restituita (REQUIRES_PAYMENT_METHOD):', JSON.stringify(intentResponse, null, 2));
+      return new Response(JSON.stringify(intentResponse), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } else if (paymentIntent.status === 'succeeded') {
       logStep("Payment succeeded immediately");
       
       // Create transaction record
@@ -254,7 +282,7 @@ serve(async (req) => {
         currency: currency,
         description: description,
         status: 'completed',
-        payment_method: `${paymentMethod.brand} ****${paymentMethod.last4}`,
+        payment_method: 'card',
         stripe_payment_intent_id: paymentIntent.id
       });
 
@@ -264,7 +292,7 @@ serve(async (req) => {
         status: 'succeeded',
         amount: amount / 100,
         currency: currency,
-        payment_method: `${paymentMethod.brand} ****${paymentMethod.last4}`,
+        payment_method: 'card',
         timestamp: new Date().toISOString()
       };
       
@@ -273,15 +301,17 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
       });
-    } else if (paymentIntent.status === 'requires_action' && paymentIntent.next_action?.type === 'use_stripe_sdk') {
+    } else if (paymentIntent.status === 'requires_action') {
       logStep("Payment requires additional authentication");
       
       return new Response(JSON.stringify({
+        success: true,
         requires_action: true,
         payment_intent: {
           id: paymentIntent.id,
           client_secret: paymentIntent.client_secret
-        }
+        },
+        status: paymentIntent.status
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

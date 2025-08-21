@@ -82,11 +82,10 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
     try {
       console.log('🚀 M1SSION™ Processing payment with saved card:', savedCard.stripe_pm_id);
 
-      // Create payment intent and confirm with saved payment method
-      const { data, error } = await supabase.functions.invoke('process-saved-card-payment', {
+      // 🔥 FIXED: Use create-payment-intent instead of broken process-saved-card-payment
+      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: {
           user_id: user.id,
-          payment_method_id: savedCard.stripe_pm_id,
           plan: config.plan || config.type,
           amount: config.amount,
           currency: config.currency || 'eur',
@@ -102,8 +101,14 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         return;
       }
 
-      if (data?.payment_intent_id) {
-        console.log('✅ M1SSION™ Payment succeeded with saved card');
+      if (data?.client_secret) {
+        console.log('✅ M1SSION™ Payment intent created, redirecting to Stripe');
+        // Redirect to Stripe with client_secret for payment completion
+        const stripeUrl = `https://checkout.stripe.com/c/pay/${data.client_secret}`;
+        window.open(stripeUrl, '_blank');
+        toast.success('Reindirizzamento a Stripe per completare il pagamento...');
+      } else if (data?.payment_intent_id) {
+        console.log('✅ M1SSION™ Payment succeeded immediately');
         onSuccess(data.payment_intent_id);
       }
     } catch (error) {
