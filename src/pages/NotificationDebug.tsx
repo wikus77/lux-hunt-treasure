@@ -202,6 +202,9 @@ const NotificationDebug = () => {
             <CardTitle className="text-cyan-400 text-center">
               🚀 NOTIFICATION DEBUG ULTIMATE - M1SSION™
             </CardTitle>
+            <div className="text-center text-sm text-green-400 mt-2">
+              ✅ PAGINA FUNZIONANTE - URL CORRETTA: {window.location.href}
+            </div>
           </CardHeader>
         </Card>
 
