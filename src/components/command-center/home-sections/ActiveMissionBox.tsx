@@ -210,17 +210,24 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <span className="text-white/80 text-sm">Stato missione</span>
           </div>
           <div className="text-xl font-bold text-[#00D1FF] mb-1">
-             {mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA'}
-           </div>
-           <div className="text-xs text-white/60 mb-2">
-             Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
-           </div>
-          <div className="w-full bg-gray-700 rounded-full h-2">
+              {mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA'}
+            </div>
+            <div className="text-xs text-white/60 mb-2">
+              Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
+            </div>
+          <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
-              className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] h-2 rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              className={`h-2 rounded-full transition-all duration-500 ${
+                unlockedClues === 0 ? 'bg-gray-500' :
+                unlockedClues < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
+                unlockedClues < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
+              }`}
+              style={{ width: `${(unlockedClues / 200) * 100}%` }}
             />
           </div>
+          <span className="text-xs text-white/60">
+            {Math.round((unlockedClues / 200) * 100)}% completato ({unlockedClues}/200 indizi)
+          </span>
 
           <AnimatePresence>
             {expandedBox === "status" && (
@@ -237,13 +244,17 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 <div className="mb-4">
                   <div className="flex justify-between mb-2">
                     <span className="text-white text-sm">Progresso Generale</span>
-                    <span className="text-[#00D1FF] text-sm font-bold">{progress}%</span>
+                    <span className="text-[#00D1FF] text-sm font-bold">{Math.round((unlockedClues / 200) * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-3">
                     <motion.div
-                      className="bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] h-3 rounded-full"
+                      className={`h-3 rounded-full transition-all duration-500 ${
+                        unlockedClues === 0 ? 'bg-gray-500' :
+                        unlockedClues < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
+                        unlockedClues < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
+                      }`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
+                      animate={{ width: `${(unlockedClues / 200) * 100}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
                   </div>
@@ -252,11 +263,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 {/* Mission Stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
-                    <p className="text-lg font-bold text-green-400">{mission.foundClues}</p>
+                    <p className="text-lg font-bold text-green-400">{unlockedClues}</p>
                     <p className="text-xs text-white/60">Obiettivi Raggiunti</p>
                   </div>
                   <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
-                    <p className="text-lg font-bold text-red-400">{mission.totalClues - mission.foundClues}</p>
+                    <p className="text-lg font-bold text-red-400">{200 - unlockedClues}</p>
                     <p className="text-xs text-white/60">Obiettivi Rimanenti</p>
                   </div>
                 </div>
