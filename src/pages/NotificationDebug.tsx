@@ -2,12 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const NotificationDebug = () => {
   const [deviceTokens, setDeviceTokens] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
   const { isSupported, permission, token, requestPermission } = usePushNotifications();
 
   // Load device tokens
@@ -63,21 +65,32 @@ const NotificationDebug = () => {
       
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
-          title: 'Test Debug',
-          body: 'Notifica di debug dal sistema',
-          data: { source: 'notification_debug' }
+          title: '🔔 PUSH Test M1SSION™',
+          body: 'Questa è una notifica test ricevuta dal M1SSION Panel',
+          target_user_id: user?.id || null
         }
       });
       
       if (error) {
-        console.error('Push test error:', error);
-        toast.error('❌ Errore invio push');
+        console.error('❌ Push test error:', error);
+        toast.error(`❌ Errore push: ${error.message}`);
       } else {
-        console.log('Push test result:', data);
-        toast.success('✅ Push inviato!');
+        console.log('✅ Push test result:', data);
+        
+        // Show detailed results
+        const deviceCount = data?.devices_found || 0;
+        const sentCount = data?.notifications_sent || 0;
+        
+        if (deviceCount === 0) {
+          toast.warning(`⚠️ Nessun dispositivo OneSignal registrato. Registra prima il dispositivo!`);
+        } else if (sentCount > 0) {
+          toast.success(`✅ Push inviato a ${sentCount}/${deviceCount} dispositivi!`);
+        } else {
+          toast.error(`❌ Push non inviato (${deviceCount} dispositivi trovati)`);
+        }
       }
     } catch (error) {
-      console.error('Exception in push test:', error);
+      console.error('❌ Exception in push test:', error);
       toast.error('❌ Errore durante test push');
     }
   };
