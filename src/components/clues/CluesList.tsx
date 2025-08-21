@@ -1,7 +1,8 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Deprecated: CluesList now consolidated into CommandCenterHome
-// This component is kept for backward compatibility but should not be used directly
+// REMOVED: CluesList functionality completely moved to CommandCenterHome
+// This component is deprecated and should not be used
 
 export const CluesList = () => {
-  return null; // Component logic moved to CommandCenterHome
+  console.warn("⚠️ CluesList is deprecated - UI merged into CommandCenterHome");
+  return null;
 };
