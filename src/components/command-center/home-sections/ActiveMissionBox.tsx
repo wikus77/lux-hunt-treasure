@@ -82,21 +82,48 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="overflow-hidden mt-4 pt-4 border-t border-white/10"
               >
-                <h4 className="text-white font-medium mb-3">Indizi Scoperti</h4>
+                <h4 className="text-white font-medium mb-3">Indizi BUZZ Scoperti</h4>
                 <div className="space-y-2">
                   {purchasedClues.length > 0 ? (
                     purchasedClues.map((clue, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-[#0a0a0a] rounded-lg">
-                        <div>
-                          <p className="text-white font-medium text-sm">{clue.title}</p>
-                          <p className="text-xs text-white/60">{clue.code}</p>
+                      <motion.div
+                        key={clue.clue_id || index}
+                        className="bg-white/5 rounded-lg p-3 border border-white/10 hover:border-white/20 transition-colors"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h5 className="text-sm font-medium text-white">{clue.title_it || clue.title}</h5>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-white/50">
+                              {new Date(clue.created_at || Date.now()).toLocaleDateString('it-IT')}
+                            </span>
+                            <span className="inline-block px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">
+                              {clue.clue_type || 'BUZZ'}
+                            </span>
+                          </div>
                         </div>
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                      </div>
+                        <p className="text-sm text-white/80 leading-relaxed mb-3">
+                          {clue.description_it || clue.content || 'Indizio scoperto tramite BUZZ'}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-green-400">
+                            ✅ Costo: €{clue.buzz_cost ? (clue.buzz_cost / 100).toFixed(2) : (clue.cost || 0)}
+                          </span>
+                          <button className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs rounded-lg border border-blue-500/30 transition-colors">
+                            📍 Visualizza
+                          </button>
+                        </div>
+                      </motion.div>
                     ))
                   ) : (
-                    <div className="text-center py-4 text-white/50 text-sm">
-                      Nessun indizio acquistato ancora
+                    <div className="text-center py-4 text-white/60">
+                      <p>Nessun indizio trovato oggi.</p>
+                      <p className="text-sm mt-2">Premi BUZZ per scoprire nuovi indizi!</p>
+                      <div className="mt-4 p-3 bg-blue-900/20 rounded-lg border border-blue-500/30">
+                        <p className="text-xs text-blue-300">💡 Gli indizi BUZZ verranno visualizzati qui dopo ogni utilizzo</p>
+                      </div>
                     </div>
                   )}
                 </div>
