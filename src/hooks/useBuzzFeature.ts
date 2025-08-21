@@ -138,13 +138,33 @@ export const useBuzzFeature = () => {
           window.plausible('clue_unlocked');
         }
         
-        // 🔥 SALVA L'INDIZIO NELLE NOTIFICHE
+        // 🔥 CRITICAL FIX: SALVA L'INDIZIO SIA NELLE NOTIFICHE CHE IN user_clues
         console.log("💾 Salvando indizio nelle notifiche...");
         await addNotification({
           title: "Nuovo Indizio BUZZ!",
           description: uniqueClueContent,
           type: "buzz"
         });
+        
+        // 🔥 NUOVO: SALVA DIRETTAMENTE IN user_clues DATABASE
+        console.log("💾 Salvando indizio in user_clues database...");
+        const { error: clueError } = await supabase
+          .from('user_clues')
+          .insert({
+            user_id: userId,
+            clue_id: `buzz_${newBuzzCount}_${Date.now()}`,
+            title_it: "Nuovo Indizio BUZZ",
+            description_it: uniqueClueContent,
+            clue_type: "buzz",
+            buzz_cost: 199, // €1.99 in cents
+            week_number: Math.ceil(Date.now() / (1000 * 60 * 60 * 24 * 7))
+          });
+        
+        if (clueError) {
+          console.error("❌ Error saving clue to database:", clueError);
+        } else {
+          console.log("✅ Clue saved to user_clues database successfully");
+        }
         
         // 🔥 INCREMENTA CONTATORE INDIZI TROVATI
         console.log("📊 Incrementando contatore indizi trovati...");
