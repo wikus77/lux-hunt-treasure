@@ -18,6 +18,7 @@ import { QRControlPanel } from '@/components/admin/QRControlPanel';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { M1ssionDebugTest } from './M1ssionDebugTest';
+import { EdgeFunctionTester } from '@/components/debug/EdgeFunctionTester';
 import { M1ssionPushTestForm } from './M1ssionPushTestForm';
 
 const PanelAccessPage = () => {
@@ -187,6 +188,7 @@ const PanelAccessPage = () => {
               <h1 className="text-2xl font-bold text-white">🧪 OneSignal Debug Test</h1>
               <p className="text-gray-400">Test diretto API OneSignal - Emergenza</p>
             </div>
+            <EdgeFunctionTester />
             <M1ssionDebugTest />
           </div>
         </div>
