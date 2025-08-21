@@ -16,13 +16,16 @@ export const OneSignalRegistration = () => {
   useEffect(() => {
     // Check if OneSignal is available and user is subscribed  
     if ((window as any).OneSignal) {
-      (window as any).OneSignal.getSubscription((isSubscribed: boolean) => {
-        setIsRegistered(isSubscribed);
-        if (isSubscribed) {
-          (window as any).OneSignal.getUserId((userId: string) => {
-            setPlayerId(userId);
-          });
-        }
+      // Wait for OneSignal to be ready
+      (window as any).OneSignal.push(() => {
+        (window as any).OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
+          setIsRegistered(isEnabled);
+          if (isEnabled) {
+            (window as any).OneSignal.getUserId((userId: string) => {
+              setPlayerId(userId);
+            });
+          }
+        });
       });
     }
   }, []);
@@ -35,27 +38,31 @@ export const OneSignalRegistration = () => {
         throw new Error('OneSignal not loaded');
       }
 
-      // Request permission and subscribe
-      (window as any).OneSignal.registerForPushNotifications();
+      // Request permission using OneSignal API
+      (window as any).OneSignal.push(() => {
+        (window as any).OneSignal.showSlidedownPrompt();
+      });
       
       // Wait for subscription
       setTimeout(() => {
-        (window as any).OneSignal.getSubscription((isSubscribed: boolean) => {
-          if (isSubscribed) {
-            (window as any).OneSignal.getUserId((userId: string) => {
-              setPlayerId(userId);
-              setIsRegistered(true);
-              toast.success('✅ Registrato per le notifiche!', {
-                description: `Player ID: ${userId.substring(0, 8)}...`
+        (window as any).OneSignal.push(() => {
+          (window as any).OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
+            if (isEnabled) {
+              (window as any).OneSignal.getUserId((userId: string) => {
+                setPlayerId(userId);
+                setIsRegistered(true);
+                toast.success('✅ Registrato per le notifiche!', {
+                  description: `Player ID: ${userId.substring(0, 8)}...`
+                });
               });
-            });
-          } else {
-            toast.error('❌ Registrazione fallita', {
-              description: 'Permesso negato o OneSignal non configurato'
-            });
-          }
+            } else {
+              toast.error('❌ Registrazione fallita', {
+                description: 'Permesso negato o OneSignal non configurato'
+              });
+            }
+          });
         });
-      }, 2000);
+      }, 3000);
 
     } catch (error: any) {
       console.error('Registration error:', error);
