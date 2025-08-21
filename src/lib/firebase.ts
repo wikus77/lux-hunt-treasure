@@ -40,16 +40,28 @@ export const getFCMToken = async (): Promise<string | null> => {
   }
 
   try {
+    console.log('🔥 FCM-TRACE: Requesting token with VAPID key...');
     const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
     if (currentToken) {
       console.log('✅ FCM Token retrieved:', currentToken.substring(0, 20) + '...');
+      console.log('🔥 FCM-TRACE: Token details:', {
+        length: currentToken.length,
+        prefix: currentToken.substring(0, 10),
+        generatedAt: new Date().toISOString()
+      });
       return currentToken;
     } else {
       console.warn('⚠️ No FCM registration token available');
+      console.log('🔥 FCM-TRACE: Token generation failed - check VAPID key and browser support');
       return null;
     }
   } catch (error) {
     console.error('❌ Error retrieving FCM token:', error);
+    console.log('🔥 FCM-TRACE: Token error details:', {
+      error: error,
+      vapidKey: VAPID_KEY.substring(0, 10) + '...',
+      messaging: !!messaging
+    });
     return null;
   }
 };
