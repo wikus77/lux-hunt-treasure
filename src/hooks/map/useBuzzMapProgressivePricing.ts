@@ -314,17 +314,38 @@ export const useBuzzMapProgressivePricing = () => {
       }
 
       // Increment daily counter
+      // Fix duplicate key constraint by using INSERT ON CONFLICT approach
+      const todayDate = new Date().toISOString().split('T')[0];
+      
+      // First try to insert, if conflict then update
       const { error: counterError } = await supabase
         .from('user_buzz_map_counter')
-        .upsert({
+        .insert({
           user_id: user.id,
-          date: new Date().toISOString().split('T')[0],
-          buzz_map_count: dailyBuzzMapCounter + 1
+          date: todayDate,
+          buzz_map_count: 1
         });
 
-      if (counterError) {
-        console.error('❌ Error updating daily counter:', counterError);
+      if (counterError && counterError.code === '23505') {
+        // Record exists, update it
+        const { error: updateError } = await supabase
+          .from('user_buzz_map_counter')
+          .update({
+            buzz_map_count: dailyBuzzMapCounter + 1
+          })
+          .eq('user_id', user.id)
+          .eq('date', todayDate);
+          
+        if (updateError) {
+          console.error('❌ Error updating existing daily counter:', updateError);
+          return false;
+        }
+        console.log('✅ Successfully updated existing daily counter');
+      } else if (counterError) {
+        console.error('❌ Error creating daily counter:', counterError);
         return false;
+      } else {
+        console.log('✅ Successfully created new daily counter');
       }
 
       // Log the action in buzz_map_actions

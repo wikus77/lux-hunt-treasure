@@ -112,10 +112,20 @@ serve(async (req) => {
       last4: paymentMethod.last4 
     });
 
-    // Create payment intent
+    // Create payment intent with enhanced error handling
     console.log('💳 Creating Stripe Payment Intent with saved card...');
+    console.log(`🔍 Payment Details: amount=${amount}, currency=${currency}, customer=${paymentMethod.stripe_customer_id}, pm=${payment_method_id}`);
+    
     let paymentIntent;
     try {
+      // Validate payment method belongs to customer
+      const paymentMethodDetails = await stripe.paymentMethods.retrieve(payment_method_id);
+      console.log(`🔍 Payment Method Details: customer=${paymentMethodDetails.customer}, type=${paymentMethodDetails.type}`);
+      
+      if (paymentMethodDetails.customer !== paymentMethod.stripe_customer_id) {
+        throw new Error(`Payment method customer mismatch: ${paymentMethodDetails.customer} vs ${paymentMethod.stripe_customer_id}`);
+      }
+
       paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
         currency: currency,
@@ -129,18 +139,29 @@ serve(async (req) => {
           user_id: user.id,
           payment_type: payment_type,
           plan: plan || '',
+          function: 'process-saved-card-payment',
+          timestamp: new Date().toISOString(),
           ...metadata
         }
       });
 
-      console.log('💳 Intent Stripe:', paymentIntent?.id);
+      console.log('💳 Intent Stripe creato con successo:', paymentIntent?.id);
+      console.log(`💳 Payment Intent Status: ${paymentIntent.status}`);
       logStep("Payment intent created", { 
         id: paymentIntent.id, 
-        status: paymentIntent.status 
+        status: paymentIntent.status,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency
       });
     } catch (stripeError) {
-      console.error('❌ Errore Stripe:', stripeError?.message);
-      throw stripeError;
+      console.error('❌ Errore Stripe completo:', {
+        message: stripeError?.message,
+        type: stripeError?.type,
+        code: stripeError?.code,
+        payment_method_id,
+        customer_id: paymentMethod.stripe_customer_id
+      });
+      throw new Error(`Stripe Error: ${stripeError?.message || 'Unknown error'}`);
     }
 
     // Record payment in database
@@ -171,10 +192,14 @@ serve(async (req) => {
       const successResponse = {
         success: true,
         payment_intent_id: paymentIntent.id,
-        status: 'succeeded'
+        status: 'succeeded',
+        amount: amount / 100,
+        currency: currency,
+        payment_method: `${paymentMethod.brand} ****${paymentMethod.last4}`,
+        timestamp: new Date().toISOString()
       };
       
-      console.log('📋 Risposta restituita (SUCCESS):', successResponse);
+      console.log('📋 Risposta restituita (SUCCESS):', JSON.stringify(successResponse, null, 2));
       return new Response(JSON.stringify(successResponse), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
