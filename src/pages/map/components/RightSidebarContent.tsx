@@ -3,10 +3,9 @@ import React from 'react';
 import MapPointsSection from '../MapPointsSection';
 import SearchAreasSection from '../SearchAreasSection';
 import { MapMarker } from '@/components/maps/types';
-import { QRMapIntegration } from '@/components/map/QRMapIntegration';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { MapPin, Target, QrCode } from 'lucide-react';
+import { MapPin, Target } from 'lucide-react';
 
 interface RightSidebarContentProps {
   mapPoints: MapMarker[];
@@ -40,7 +39,7 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
     <div className="space-y-4">
       <div className="m1ssion-glass-card p-4 sm:p-6 rounded-[24px]">
         <Tabs defaultValue="points" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="points" className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               Punti
@@ -48,10 +47,6 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
             <TabsTrigger value="areas" className="flex items-center gap-2">
               <Target className="w-4 h-4" />
               Aree
-            </TabsTrigger>
-            <TabsTrigger value="qr" className="flex items-center gap-2">
-              <QrCode className="w-4 h-4" />
-              QR
             </TabsTrigger>
           </TabsList>
           
@@ -73,10 +68,6 @@ const RightSidebarContent: React.FC<RightSidebarContentProps> = ({
               isAddingSearchArea={isAddingSearchArea}
               deleteSearchArea={deleteSearchArea}
             />
-          </TabsContent>
-          
-          <TabsContent value="qr" className="mt-4">
-            <QRMapIntegration isAdminMode={isAdmin} />
           </TabsContent>
         </Tabs>
       </div>
