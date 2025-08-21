@@ -29,3 +29,7 @@ verify_jwt = true
 [functions.nearby_qr_notify]
 # Publicly callable, function uses service role internally
 verify_jwt = false
+
+[functions.send-push-notification]
+# Public function for push notifications
+verify_jwt = false
