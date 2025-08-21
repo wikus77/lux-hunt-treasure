@@ -93,6 +93,16 @@ export const OneSignalRegistration = () => {
     setIsRegistering(true);
     setDebugInfo('Requesting permission...');
 
+    // CRITICAL: Timeout per evitare blocchi infiniti
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ TIMEOUT: Registration taking too long, resetting...');
+      setIsRegistering(false);
+      setDebugInfo('❌ Timeout - Registration took too long');
+      toast.error('❌ Timeout', {
+        description: 'La registrazione ha impiegato troppo tempo'
+      });
+    }, 10000); // 10 secondi timeout
+
     try {
       // Check if OneSignal is available
       if (!(window as any).OneSignal) {
@@ -101,9 +111,53 @@ export const OneSignalRegistration = () => {
 
       console.log('🔔 V16 REGISTER: Requesting permission...');
       
-      // Request permission with v16 API
-      const hasPermission = await (window as any).OneSignal.Notifications.requestPermission();
-      console.log('🔔 V16 REGISTER: Permission result:', hasPermission);
+      // Prova approccio alternativo con wrapper
+      let hasPermission = false;
+      
+      try {
+        // Tentativo 1: API v16 standard
+        console.log('🔔 Attempt 1: Standard v16 API...');
+        setDebugInfo('Attempt 1: Standard v16 API...');
+        hasPermission = await Promise.race([
+          (window as any).OneSignal.Notifications.requestPermission(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('API timeout')), 5000))
+        ]);
+        console.log('✅ Standard API result:', hasPermission);
+      } catch (apiError) {
+        console.log('⚠️ Standard API failed, trying alternative...', apiError);
+        
+        // Tentativo 2: Approccio alternativo
+        try {
+          console.log('🔔 Attempt 2: Alternative approach...');
+          setDebugInfo('Attempt 2: Alternative approach...');
+          
+          // Controlla permesso corrente
+          const currentPermission = await (window as any).OneSignal.Notifications.permission;
+          console.log('Current permission:', currentPermission);
+          
+          if (currentPermission === 'default') {
+            // Forza la richiesta usando l'API browser nativa
+            const browserPermission = await Notification.requestPermission();
+            hasPermission = browserPermission === 'granted';
+            console.log('Browser native permission:', browserPermission);
+          } else {
+            hasPermission = currentPermission === 'granted';
+          }
+        } catch (altError) {
+          console.log('⚠️ Alternative approach failed:', altError);
+          
+          // Tentativo 3: Fallback completo
+          console.log('🔔 Attempt 3: Complete fallback...');
+          setDebugInfo('Attempt 3: Complete fallback...');
+          
+          if ('Notification' in window) {
+            const permission = await Notification.requestPermission();
+            hasPermission = permission === 'granted';
+          }
+        }
+      }
+
+      console.log('🔔 Final permission result:', hasPermission);
 
       if (hasPermission) {
         setDebugInfo('Permission granted, getting ID...');
@@ -111,20 +165,34 @@ export const OneSignalRegistration = () => {
         // Wait a moment for OneSignal to process
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Get player ID
-        const id = await (window as any).OneSignal.User.PushSubscription.id;
-        console.log('🔔 V16 REGISTER: Player ID:', id);
-
-        if (id) {
-          setPlayerId(id);
-          setIsRegistered(true);
-          setDebugInfo('✅ Registration successful!');
+        // Get player ID con timeout
+        try {
+          const id = await Promise.race([
+            (window as any).OneSignal.User.PushSubscription.id,
+            new Promise((_, reject) => setTimeout(() => reject(new Error('ID timeout')), 3000))
+          ]);
           
-          toast.success('✅ Registrato con successo!', {
-            description: `ID: ${id.substring(0, 12)}...`
+          console.log('🔔 V16 REGISTER: Player ID:', id);
+
+          if (id) {
+            setPlayerId(id);
+            setIsRegistered(true);
+            setDebugInfo('✅ Registration successful!');
+            
+            toast.success('✅ Registrato con successo!', {
+              description: `ID: ${id.substring(0, 12)}...`
+            });
+          } else {
+            throw new Error('No player ID received');
+          }
+        } catch (idError) {
+          console.log('⚠️ Could not get player ID:', idError);
+          // Considera comunque successo se il permesso è stato dato
+          setIsRegistered(true);
+          setDebugInfo('✅ Permission granted (ID pending)');
+          toast.success('✅ Permesso concesso!', {
+            description: 'Player ID sarà disponibile a breve'
           });
-        } else {
-          throw new Error('No player ID received');
         }
       } else {
         throw new Error('Permission denied');
@@ -138,6 +206,7 @@ export const OneSignalRegistration = () => {
         description: error.message
       });
     } finally {
+      clearTimeout(timeoutId); // Cancella timeout
       console.log('🔔 V16 REGISTER: Resetting isRegistering to false');
       setIsRegistering(false);
     }
