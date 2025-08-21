@@ -218,15 +218,15 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
-                unlockedClues === 0 ? 'bg-gray-500' :
-                unlockedClues < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
-                unlockedClues < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
+                mission.remainingDays <= 0 ? 'bg-red-500' :
+                mission.remainingDays <= 5 ? 'bg-gradient-to-r from-yellow-400 to-red-500' :
+                mission.remainingDays <= 15 ? 'bg-gradient-to-r from-green-400 to-yellow-400' : 'bg-gradient-to-r from-[#00D1FF] to-green-400'
               }`}
-              style={{ width: `${(unlockedClues / 200) * 100}%` }}
+              style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }}
             />
           </div>
           <span className="text-xs text-white/60">
-            {Math.round((unlockedClues / 200) * 100)}% completato ({unlockedClues}/200 indizi)
+            {Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}% tempo trascorso ({mission.totalDays - mission.remainingDays}/{mission.totalDays} giorni)
           </span>
 
           <AnimatePresence>
