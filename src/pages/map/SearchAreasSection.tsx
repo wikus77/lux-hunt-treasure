@@ -99,94 +99,126 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
   };
 
   return (
-    <>
-      <div className="flex justify-between mt-6 mb-2">
-        <h2 className="text-lg font-medium text-white flex items-center gap-2">
-          <Circle className="h-4 w-4 text-cyan-400" />
-          Aree di interesse ({searchAreas.length})
-        </h2>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+    <div 
+      className="rounded-[20px] bg-[#1C1C1F] backdrop-blur-md transition-all duration-300 hover:shadow-lg mb-4 relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #1C1C1F 0%, rgba(28, 28, 31, 0.95) 50%, rgba(54, 94, 255, 0.1) 100%)',
+        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)"
+      }}
+    >
+      {/* Top gradient border */}
+      <div 
+        className="absolute top-0 left-0 w-full h-[1px]"
+        style={{
+          background: 'linear-gradient(90deg, #FC1EFF 0%, #365EFF 50%, #FACC15 100%)'
+        }}
+      />
+      
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-medium text-white font-orbitron">
+            Aree di interesse
+          </h2>
+          <Button 
+            variant="outline" 
+            size="sm" 
             onClick={handleAddClick}
             disabled={isAddingSearchArea}
-            className="text-xs flex items-center gap-1 bg-black/40 hover:bg-black/60 text-[#00D1FF] hover:text-[#33D9FF]"
+            className="group bg-gradient-to-r from-[#365EFF] to-[#FC1EFF] text-white rounded-full border-none hover:shadow-lg transition-all"
           >
-            <Plus className="h-3.5 w-3.5" />
-            Aggiungi area
+            <Plus className="mr-1 h-4 w-4" />
+            Aggiungi Area
           </Button>
         </div>
-      </div>
-      <div className="space-y-3 mt-2">
+
         {searchAreas.length === 0 ? (
-          <div className="text-center py-4 text-gray-400">
-            Nessuna area di interesse. Aggiungi un'area sulla mappa per iniziare.
+          <div className="p-4 border border-dashed border-gray-600 rounded-[16px] text-center text-gray-400">
+            <p className="text-white/70">Nessuna area di interesse salvata</p>
+            <p className="text-sm mt-1 text-white/50">Clicca su "Aggiungi Area" per iniziare</p>
           </div>
         ) : (
-          searchAreas.map((area) => (
-            <div
-              key={`area-list-${area.id}`}
-              className="p-3 rounded-[16px] backdrop-blur-sm cursor-pointer transition-colors bg-black/40 hover:bg-black/50"
-              onClick={() => {
-                console.log("🎯 SECTION CLICK: Area clicked in section:", area.id);
-                setActiveSearchArea(area.id);
-              }}
-            >
-              <div className="flex items-start gap-2">
-                <Circle className="w-5 h-5 flex-shrink-0 text-cyan-400" />
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{area.label}</div>
-                  <div className="text-xs text-gray-400">Raggio: {(area.radius/1000).toFixed(1)}km</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {showConfirmDelete === area.id ? (
-                    <>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmDelete(area.id, area.label || "Area di ricerca");
-                        }}
-                        className="h-8 rounded-full text-xs"
-                        disabled={isDeleting === area.id}
-                      >
-                        {isDeleting === area.id ? 'Eliminando...' : 'Conferma'}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowConfirmDelete(null);
-                        }}
-                        className="h-8 rounded-full text-xs"
-                        disabled={isDeleting === area.id}
-                      >
-                        Annulla
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("🗑️ SECTION BUTTON: Delete button clicked in section for area:", area.id);
-                        handleDeleteClick(area.id);
-                      }}
-                      className="h-8 w-8 p-0 rounded-full text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                      disabled={isDeleting !== null}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Elimina area</span>
-                    </Button>
-                  )}
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2">
+            {searchAreas.map((area) => (
+              <div 
+                key={area.id} 
+                className="p-4 bg-[#0a0a0a]/50 rounded-[16px] transition-all hover:bg-[#0a0a0a]/70 cursor-pointer"
+                onClick={() => {
+                  console.log("🎯 SECTION CLICK: Area clicked in section:", area.id);
+                  setActiveSearchArea(area.id);
+                }}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full bg-green-500"/>
+                      <h3 className="font-medium text-white text-lg font-orbitron">{area.label || 'Area di ricerca'}</h3>
+                    </div>
+                    <div className="text-xs text-white/50 mt-2 flex items-center">
+                      <Circle className="h-3 w-3 mr-1 text-green-400" />
+                      <span>Raggio: {(area.radius / 1000).toFixed(1)} km</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 ml-2">
+                    {showConfirmDelete === area.id ? (
+                      <>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmDelete(area.id, area.label || "Area di ricerca");
+                          }}
+                          className="rounded-full text-xs"
+                          disabled={isDeleting === area.id}
+                        >
+                          {isDeleting === area.id ? 'Eliminando...' : 'Conferma'}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowConfirmDelete(null);
+                          }}
+                          className="rounded-full text-xs"
+                          disabled={isDeleting === area.id}
+                        >
+                          Annulla
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveSearchArea(area.id);
+                          }}
+                          className="rounded-full text-green-400 border-green-500/50 hover:bg-green-950/30 text-xs"
+                        >
+                          Visualizza
+                        </Button>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log("🗑️ SECTION BUTTON: Delete button clicked in section for area:", area.id);
+                            handleDeleteClick(area.id);
+                          }}
+                          className="rounded-full text-xs"
+                          disabled={isDeleting !== null}
+                        >
+                          Elimina
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
 
@@ -235,7 +267,7 @@ const SearchAreasSection: React.FC<SearchAreasSectionProps> = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 };
 

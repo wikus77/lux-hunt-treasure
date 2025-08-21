@@ -308,9 +308,8 @@ export const useBuzzMapProgressivePricing = () => {
     try {
       // Validate the request
       const isValid = await validateBuzzRequest(buzzMapPrice, radiusKm);
-      if (!isValid) {
-        console.warn('🚫 BUZZ MAP: Validation failed, blocking button');
-        // NON incrementare counter né bloccare se validazione fallisce
+        if (!isValid) {
+        console.warn('🚫 BUZZ MAP: Validation failed, not blocking button');
         return false;
       }
 
