@@ -232,7 +232,7 @@ const WouterRoutes: React.FC = () => {
 
           {/* 🔍 NOTIFICATION DEBUG ROUTE - M1SSION™ ULTIMATE */}
           <Route path="/notification-debug">
-            <NotificationDebug />
+            <GlobalLayout><NotificationDebug /></GlobalLayout>
           </Route>
 
           {/* 🔧 DEBUG PUSH TEST ROUTE */}
