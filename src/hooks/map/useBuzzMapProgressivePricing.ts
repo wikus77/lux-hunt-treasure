@@ -109,7 +109,7 @@ export const useBuzzMapProgressivePricing = () => {
         setDailyBuzzMapCounter(0);
       }
 
-      // Get last buzz time for anti-spam protection
+      // Get last buzz time for anti-spam protection - DEBUG MODE
       const { data: lastAction, error: actionError } = await supabase
         .from('buzz_map_actions')
         .select('created_at')
@@ -122,11 +122,21 @@ export const useBuzzMapProgressivePricing = () => {
         const lastTime = new Date(lastAction.created_at);
         setLastBuzzTime(lastTime);
         
-        // Check if 3 hours have passed since last buzz
-        const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
-        setIsEligibleForBuzz(lastTime < threeHoursAgo);
+        // 🚨 DEBUG MODE: Ridotto a 10 secondi per test
+        const cooldownTime = new Date(Date.now() - 10 * 1000); // 10 secondi invece di 3 ore
+        const isEligible = lastTime < cooldownTime;
+        setIsEligibleForBuzz(isEligible);
+        
+        console.log('🕒 BUZZ MAPPA COOLDOWN CHECK:', {
+          lastBuzzTime: lastTime.toISOString(),
+          cooldownTime: cooldownTime.toISOString(),
+          secondsSinceLastBuzz: (Date.now() - lastTime.getTime()) / 1000,
+          isEligible,
+          debugMode: true
+        });
       } else {
         setIsEligibleForBuzz(true);
+        console.log('✅ BUZZ MAPPA: No previous BUZZ found, eligible immediately');
       }
 
       // Calculate pricing based on generation count
@@ -191,11 +201,13 @@ export const useBuzzMapProgressivePricing = () => {
       return false;
     }
 
-    // Check time-based anti-spam (3 hours minimum)
+    // Check time-based anti-spam (DEBUG: 10 seconds)
     if (!isEligibleForBuzz) {
-      console.warn('🚫 ANTI-FRAUD: Time-based anti-spam triggered', {
+      console.warn('🚫 ANTI-FRAUD: Time-based anti-spam triggered (DEBUG MODE)', {
         isEligibleForBuzz,
-        lastBuzzTime
+        lastBuzzTime,
+        cooldownSeconds: 10,
+        debugMode: true
       });
       return false;
     }
