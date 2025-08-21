@@ -86,19 +86,25 @@ export const OneSignalRegistration = () => {
   }, []);
 
   const registerForNotifications = async () => {
+    console.log('🔔 REGISTRATION START: Setting isRegistering to true');
     setIsRegistering(true);
     
     try {
       console.log('🔔 FORCE REGISTRATION: Starting...');
 
+      // Critical check with proper cleanup
       if (!(window as any).OneSignal || !(window as any).OneSignalInitialized) {
+        console.log('❌ OneSignal not ready, stopping registration');
+        setIsRegistering(false); // CRITICAL: Reset state
         toast.error('❌ OneSignal non inizializzato', {
           description: 'Ricarica la pagina e riprova'
         });
-        return;
+        return; // CRITICAL: Exit early
       }
 
-      // Use correct OneSignal v16 API
+      console.log('✅ OneSignal ready, proceeding with permission request...');
+
+      // Use correct OneSignal v16 API with better error handling
       try {
         console.log('🔔 Requesting permission via OneSignal v16...');
         
@@ -107,17 +113,24 @@ export const OneSignalRegistration = () => {
         console.log('✅ Permission result:', permission);
         
         if (permission) {
+          console.log('✅ Permission granted, waiting for Player ID...');
+          
           // Wait a bit for initialization then check subscription
           setTimeout(async () => {
             try {
+              console.log('🔔 Trying to get Player ID...');
               const playerId = await (window as any).OneSignal.User.PushSubscription.id;
+              console.log('🔔 Player ID result:', playerId);
+              
               if (playerId) {
+                console.log('✅ SUCCESS: Got Player ID:', playerId);
                 setPlayerId(playerId);
                 setIsRegistered(true);
                 toast.success('✅ Registrato per le notifiche!', {
                   description: `Player ID: ${playerId.substring(0, 8)}...`
                 });
               } else {
+                console.log('❌ FAIL: No Player ID received');
                 toast.error('❌ Registrazione fallita', {
                   description: 'Player ID non ottenuto'
                 });
@@ -127,29 +140,35 @@ export const OneSignalRegistration = () => {
               toast.error('❌ Errore Player ID', {
                 description: 'Non riesco a ottenere il Player ID'
               });
+            } finally {
+              console.log('🔔 REGISTRATION END: Setting isRegistering to false (timeout)');
+              setIsRegistering(false); // CRITICAL: Always reset state
             }
-            setIsRegistering(false);
           }, 2000);
         } else {
+          console.log('❌ Permission denied by user');
           toast.error('❌ Registrazione fallita', {
             description: 'Permesso negato dall\'utente'
           });
-          setIsRegistering(false);
+          console.log('🔔 REGISTRATION END: Setting isRegistering to false (permission denied)');
+          setIsRegistering(false); // CRITICAL: Reset state
         }
       } catch (error: any) {
         console.error('❌ Registration error:', error);
         toast.error('❌ Errore registrazione', {
           description: error.message
         });
-        setIsRegistering(false);
+        console.log('🔔 REGISTRATION END: Setting isRegistering to false (error)');
+        setIsRegistering(false); // CRITICAL: Reset state
       }
 
     } catch (error: any) {
-      console.error('Registration error:', error);
-      toast.error('Errore registrazione', {
+      console.error('❌ Outer registration error:', error);
+      toast.error('❌ Errore registrazione generale', {
         description: error.message
       });
-      setIsRegistering(false);
+      console.log('🔔 REGISTRATION END: Setting isRegistering to false (outer error)');
+      setIsRegistering(false); // CRITICAL: Reset state
     }
   };
 
