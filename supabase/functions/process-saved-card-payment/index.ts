@@ -104,7 +104,52 @@ serve(async (req) => {
       .maybeSingle();
 
     if (pmError || !paymentMethod) {
-      throw new Error("Payment method not found or unauthorized");
+      console.error('❌ PAYMENT METHOD ERROR:', { pmError, payment_method_id, user_id: user.id });
+      
+      // CHECK IF PAYMENT METHOD EXISTS IN STRIPE
+      try {
+        const pmDetails = await stripe.paymentMethods.retrieve(payment_method_id);
+        console.log('💳 Payment method exists in Stripe:', pmDetails.id, pmDetails.type);
+        
+        // If PM exists in Stripe but not in our DB, create it
+        const { error: insertError } = await supabaseClient
+          .from('user_payment_methods')
+          .insert({
+            user_id: user.id,
+            stripe_pm_id: payment_method_id,
+            stripe_customer_id: pmDetails.customer,
+            brand: pmDetails.card?.brand || 'unknown',
+            last4: pmDetails.card?.last4 || '0000',
+            exp_month: pmDetails.card?.exp_month || 12,
+            exp_year: pmDetails.card?.exp_year || 2030,
+            is_default: true
+          });
+          
+        if (insertError) {
+          console.error('❌ Failed to create payment method record:', insertError);
+          throw new Error("Payment method not found and could not be created");
+        }
+        
+        console.log('✅ Payment method record created in database');
+        
+        // Reload the payment method
+        const { data: newPaymentMethod } = await supabaseClient
+          .from('user_payment_methods')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('stripe_pm_id', payment_method_id)
+          .single();
+          
+        if (!newPaymentMethod) {
+          throw new Error("Payment method creation failed");
+        }
+        
+        // Continue with the newly created payment method
+        paymentMethod = newPaymentMethod;
+      } catch (stripeError) {
+        console.error('❌ Payment method does not exist in Stripe:', stripeError);
+        throw new Error(`Payment method not found: ${payment_method_id}`);
+      }
     }
 
     logStep("Payment method verified", { 

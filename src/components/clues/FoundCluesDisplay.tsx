@@ -30,7 +30,7 @@ export const FoundCluesDisplay: React.FC = () => {
       }
 
       try {
-        console.log('🔍 Loading found clues for user:', user.id);
+        console.log('🔍 [FOUND CLUES] Loading found clues for user:', user.id);
         
         // 🔄 QUERY FINALE GLOBAL SYNC - Tutti gli indizi trovati dall'utente
         const { data: clues, error } = await supabase
@@ -40,20 +40,32 @@ export const FoundCluesDisplay: React.FC = () => {
           .order("created_at", { ascending: false });
 
         if (error) {
-          console.error('❌ Error loading found clues:', error);
+          console.error('❌ [FOUND CLUES] Error loading found clues:', error);
           return;
         }
 
-        console.log('✅ Found clues loaded:', clues?.length || 0, clues);
+        console.log('✅ [FOUND CLUES] Found clues loaded:', clues?.length || 0, clues);
+        
+        // FORCE UPDATE UI - Ensure clues are displayed
+        if (clues && clues.length > 0) {
+          console.log('🎯 [FOUND CLUES] DISPLAYING CLUES:', clues.map(c => ({ id: c.clue_id, title: c.title_it, type: c.clue_type })));
+        } else {
+          console.log('⚠️ [FOUND CLUES] NO CLUES FOUND IN DATABASE');
+        }
+        
         setFoundClues(clues || []);
       } catch (error) {
-        console.error('❌ Exception loading found clues:', error);
+        console.error('❌ [FOUND CLUES] Exception loading found clues:', error);
       } finally {
         setLoading(false);
       }
     };
 
     loadFoundClues();
+    
+    // AUTO-REFRESH ogni 5 secondi per sincronizzazione real-time
+    const interval = setInterval(loadFoundClues, 5000);
+    return () => clearInterval(interval);
   }, [user]);
 
   const getClueIcon = (type: string) => {
