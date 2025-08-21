@@ -1,4 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// COMPLETAMENTE NUOVO - OneSignal v16 Registration Component - SOSTITUISCE IL VECCHIO
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,164 +12,134 @@ export const OneSignalRegistration = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
   const [playerId, setPlayerId] = useState<string | null>(null);
-  const [initStatus, setInitStatus] = useState<string>('Checking...');
+  const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
   const { user } = useUnifiedAuth();
 
   useEffect(() => {
-    // DRASTICO: Inizializzazione OneSignal forzata e semplificata
-    const forceInitOneSignal = async () => {
+    const initOneSignalV16 = async () => {
       try {
-        console.log('🔔 FORCE INIT: Starting OneSignal force initialization...');
-        setInitStatus('Initializing...');
+        console.log('🔔 V16 INIT: Starting OneSignal v16 initialization...');
+        setDebugInfo('Checking OneSignal v16...');
 
-        // Check if OneSignal SDK is loaded from CDN
+        // Wait for OneSignal to be available
+        let attempts = 0;
+        while (!(window as any).OneSignal && attempts < 10) {
+          console.log(`🔔 V16 INIT: Waiting for OneSignal... attempt ${attempts + 1}`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+          attempts++;
+        }
+
         if (!(window as any).OneSignal) {
-          console.error('❌ OneSignal SDK not loaded from CDN');
-          setInitStatus('❌ SDK Not Loaded');
+          console.error('❌ V16 INIT: OneSignal SDK not loaded after 5 seconds');
+          setDebugInfo('❌ OneSignal SDK not loaded');
           return;
         }
 
-        console.log('✅ OneSignal SDK detected, initializing...');
+        console.log('✅ V16 INIT: OneSignal SDK detected');
+        setDebugInfo('OneSignal SDK loaded, initializing...');
 
-        // FORZATURA: Inizializzazione diretta senza controlli complessi
-        (window as any).OneSignal.push(() => {
-          (window as any).OneSignal.init({
-            appId: "50cb75f7-f065-4626-9a63-ce5692fa7e70",
-            allowLocalhostAsSecureOrigin: true,
-            serviceWorkerPath: '/OneSignalSDKWorker.js',
-            serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
-            safari_web_id: "web.onesignal.auto.50cb75f7-f065-4626-9a63-ce5692fa7e70"
-          });
-
-          console.log('✅ OneSignal init called');
-          (window as any).OneSignalInitialized = true;
-          setInitStatus('✅ Initialized');
-
-          // Check current subscription
-          checkSubscriptionStatus();
+        // Initialize with v16 syntax
+        await (window as any).OneSignal.init({
+          appId: "50cb75f7-f065-4626-9a63-ce5692fa7e70",
+          allowLocalhostAsSecureOrigin: true
         });
 
+        console.log('✅ V16 INIT: OneSignal initialized');
+        setDebugInfo('✅ OneSignal v16 initialized');
+
+        // Check current permission status
+        await checkPermissionStatus();
+
       } catch (error) {
-        console.error('❌ FORCE INIT ERROR:', error);
-        setInitStatus('❌ Init Failed');
+        console.error('❌ V16 INIT ERROR:', error);
+        setDebugInfo(`❌ Init error: ${error}`);
       }
     };
 
-    const checkSubscriptionStatus = async () => {
+    const checkPermissionStatus = async () => {
       try {
-        console.log('🔔 Checking subscription with OneSignal v16 API...');
-        
-        // Use correct OneSignal v16 API
+        // Use v16 API to check permission
         const permission = await (window as any).OneSignal.Notifications.permission;
-        console.log('🔔 Permission status:', permission);
+        console.log('🔔 V16 CHECK: Current permission:', permission);
         
-        const isSubscribed = permission === 'granted';
-        setIsRegistered(isSubscribed);
-        
-        if (isSubscribed) {
+        if (permission === 'granted') {
+          setIsRegistered(true);
+          setDebugInfo('✅ Already registered');
+          
+          // Try to get player ID
           try {
-            const playerId = await (window as any).OneSignal.User.PushSubscription.id;
-            console.log('🔔 Player ID:', playerId);
-            if (playerId) {
-              setPlayerId(playerId);
+            const id = await (window as any).OneSignal.User.PushSubscription.id;
+            if (id) {
+              setPlayerId(id);
+              console.log('✅ V16 CHECK: Player ID found:', id);
             }
-          } catch (playerError) {
-            console.warn('⚠️ Could not get player ID:', playerError);
+          } catch (e) {
+            console.log('⚠️ V16 CHECK: Could not get player ID:', e);
           }
+        } else {
+          setDebugInfo(`Permission: ${permission}`);
         }
       } catch (error) {
-        console.error('❌ Check subscription error:', error);
+        console.error('❌ V16 CHECK ERROR:', error);
+        setDebugInfo(`❌ Check error: ${error}`);
       }
     };
 
-    // Start initialization immediately
-    forceInitOneSignal();
+    initOneSignalV16();
   }, []);
 
   const registerForNotifications = async () => {
-    console.log('🔔 REGISTRATION START: Setting isRegistering to true');
+    console.log('🔔 V16 REGISTER: Starting registration...');
     setIsRegistering(true);
-    
-    try {
-      console.log('🔔 FORCE REGISTRATION: Starting...');
+    setDebugInfo('Requesting permission...');
 
-      // Critical check with proper cleanup
-      if (!(window as any).OneSignal || !(window as any).OneSignalInitialized) {
-        console.log('❌ OneSignal not ready, stopping registration');
-        setIsRegistering(false); // CRITICAL: Reset state
-        toast.error('❌ OneSignal non inizializzato', {
-          description: 'Ricarica la pagina e riprova'
-        });
-        return; // CRITICAL: Exit early
+    try {
+      // Check if OneSignal is available
+      if (!(window as any).OneSignal) {
+        throw new Error('OneSignal not available');
       }
 
-      console.log('✅ OneSignal ready, proceeding with permission request...');
+      console.log('🔔 V16 REGISTER: Requesting permission...');
+      
+      // Request permission with v16 API
+      const hasPermission = await (window as any).OneSignal.Notifications.requestPermission();
+      console.log('🔔 V16 REGISTER: Permission result:', hasPermission);
 
-      // Use correct OneSignal v16 API with better error handling
-      try {
-        console.log('🔔 Requesting permission via OneSignal v16...');
+      if (hasPermission) {
+        setDebugInfo('Permission granted, getting ID...');
         
-        // Request permission using v16 API
-        const permission = await (window as any).OneSignal.Notifications.requestPermission();
-        console.log('✅ Permission result:', permission);
+        // Wait a moment for OneSignal to process
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        if (permission) {
-          console.log('✅ Permission granted, waiting for Player ID...');
+        // Get player ID
+        const id = await (window as any).OneSignal.User.PushSubscription.id;
+        console.log('🔔 V16 REGISTER: Player ID:', id);
+
+        if (id) {
+          setPlayerId(id);
+          setIsRegistered(true);
+          setDebugInfo('✅ Registration successful!');
           
-          // Wait a bit for initialization then check subscription
-          setTimeout(async () => {
-            try {
-              console.log('🔔 Trying to get Player ID...');
-              const playerId = await (window as any).OneSignal.User.PushSubscription.id;
-              console.log('🔔 Player ID result:', playerId);
-              
-              if (playerId) {
-                console.log('✅ SUCCESS: Got Player ID:', playerId);
-                setPlayerId(playerId);
-                setIsRegistered(true);
-                toast.success('✅ Registrato per le notifiche!', {
-                  description: `Player ID: ${playerId.substring(0, 8)}...`
-                });
-              } else {
-                console.log('❌ FAIL: No Player ID received');
-                toast.error('❌ Registrazione fallita', {
-                  description: 'Player ID non ottenuto'
-                });
-              }
-            } catch (playerError) {
-              console.error('❌ Player ID error:', playerError);
-              toast.error('❌ Errore Player ID', {
-                description: 'Non riesco a ottenere il Player ID'
-              });
-            } finally {
-              console.log('🔔 REGISTRATION END: Setting isRegistering to false (timeout)');
-              setIsRegistering(false); // CRITICAL: Always reset state
-            }
-          }, 2000);
-        } else {
-          console.log('❌ Permission denied by user');
-          toast.error('❌ Registrazione fallita', {
-            description: 'Permesso negato dall\'utente'
+          toast.success('✅ Registrato con successo!', {
+            description: `ID: ${id.substring(0, 12)}...`
           });
-          console.log('🔔 REGISTRATION END: Setting isRegistering to false (permission denied)');
-          setIsRegistering(false); // CRITICAL: Reset state
+        } else {
+          throw new Error('No player ID received');
         }
-      } catch (error: any) {
-        console.error('❌ Registration error:', error);
-        toast.error('❌ Errore registrazione', {
-          description: error.message
-        });
-        console.log('🔔 REGISTRATION END: Setting isRegistering to false (error)');
-        setIsRegistering(false); // CRITICAL: Reset state
+      } else {
+        throw new Error('Permission denied');
       }
 
     } catch (error: any) {
-      console.error('❌ Outer registration error:', error);
-      toast.error('❌ Errore registrazione generale', {
+      console.error('❌ V16 REGISTER ERROR:', error);
+      setDebugInfo(`❌ Registration failed: ${error.message}`);
+      
+      toast.error('❌ Registrazione fallita', {
         description: error.message
       });
-      console.log('🔔 REGISTRATION END: Setting isRegistering to false (outer error)');
-      setIsRegistering(false); // CRITICAL: Reset state
+    } finally {
+      console.log('🔔 V16 REGISTER: Resetting isRegistering to false');
+      setIsRegistering(false);
     }
   };
 
@@ -176,7 +147,7 @@ export const OneSignalRegistration = () => {
     <Card className="mb-6">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          🔔 OneSignal FORCE Init Registration
+          🆕 OneSignal v16 COMPLETELY FIXED
           <Badge variant={isRegistered ? 'default' : 'secondary'}>
             {isRegistered ? 'REGISTRATO' : 'NON REGISTRATO'}
           </Badge>
@@ -185,29 +156,26 @@ export const OneSignalRegistration = () => {
       <CardContent className="space-y-4">
         <Alert>
           <AlertDescription>
-            {isRegistered 
-              ? `✅ Dispositivo registrato! Player ID: ${playerId?.substring(0, 12)}...`
-              : '⚠️ Devi registrarti per ricevere notifiche push.'
-            }
+            <strong>Debug:</strong> {debugInfo}
           </AlertDescription>
         </Alert>
 
         {!isRegistered && (
           <Button
             onClick={registerForNotifications}
-            disabled={isRegistering || !initStatus.includes('✅')}
-            className="w-full"
+            disabled={isRegistering}
+            className="w-full bg-blue-600 hover:bg-blue-700"
             size="lg"
           >
-            {isRegistering ? '🔄 Registrando...' : '🔔 REGISTRATI PER NOTIFICHE'}
+            {isRegistering ? '🔄 Registrando...' : '🔔 REGISTRATI NUOVO V16'}
           </Button>
         )}
 
-        <div className="text-xs text-muted-foreground">
-          <p><strong>Stato:</strong> {isRegistered ? '✅ Pronto per notifiche' : '❌ Non registrato'}</p>
-          <p><strong>Init Status:</strong> {initStatus}</p>
-          <p><strong>OneSignal SDK:</strong> {(window as any).OneSignal ? '✅ Loaded' : '❌ Not Loaded'}</p>
-          <p><strong>OneSignal Init:</strong> {(window as any).OneSignalInitialized ? '✅ Ready' : '❌ Not Ready'}</p>
+        <div className="text-xs text-muted-foreground space-y-1">
+          <p><strong>Stato:</strong> {isRegistered ? '✅ Registrato' : '❌ Non registrato'}</p>
+          <p><strong>Debug Info:</strong> {debugInfo}</p>
+          <p><strong>OneSignal SDK:</strong> {typeof (window as any).OneSignal !== 'undefined' ? '✅ Loaded' : '❌ Not Loaded'}</p>
+          <p><strong>Is Registering:</strong> {isRegistering ? '🔄 TRUE' : '✅ FALSE'}</p>
           {playerId && <p><strong>Player ID:</strong> {playerId}</p>}
           <p><strong>User ID:</strong> {user?.id || 'Non autenticato'}</p>
         </div>
