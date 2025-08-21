@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell } from "lucide-react";
+import { M1ssionPushTestPanel } from "./M1ssionPushTestPanel";
 
 export const AdminPushNotifications = () => {
   const [title, setTitle] = useState("");
@@ -72,6 +73,8 @@ export const AdminPushNotifications = () => {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-4">Invio Notifiche Push</h2>
+      
+      <M1ssionPushTestPanel />
       
       <Card>
         <CardHeader>
