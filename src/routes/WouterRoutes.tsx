@@ -249,9 +249,7 @@ const WouterRoutes: React.FC = () => {
 
           {/* 🔧 M1SSION™ EMERGENCY DEBUG */}
           <Route path="/debug/raw-test">
-            <ProtectedRoute>
-              <GlobalLayout><M1ssionDebugTest /></GlobalLayout>
-            </ProtectedRoute>
+            <GlobalLayout><M1ssionDebugTest /></GlobalLayout>
           </Route>
 
           {/* Panel Access route */}
