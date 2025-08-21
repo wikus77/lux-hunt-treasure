@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -18,6 +18,7 @@ import { QRControlPanel } from '@/components/admin/QRControlPanel';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { M1ssionDebugTest } from './M1ssionDebugTest';
+import { M1ssionPushTestForm } from './M1ssionPushTestForm';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -25,7 +26,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'push-test-form'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -187,6 +188,35 @@ const PanelAccessPage = () => {
               <p className="text-gray-400">Test diretto API OneSignal - Emergenza</p>
             </div>
             <M1ssionDebugTest />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'push-test-form' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">🚀 Push Test Custom</h1>
+              <p className="text-gray-400">Test personalizzato notifiche push</p>
+            </div>
+            <M1ssionPushTestForm />
           </div>
         </div>
       </div>
@@ -356,6 +386,26 @@ const PanelAccessPage = () => {
                   </div>
                 </motion.div>
 
+                {/* 🚀 PUSH TEST FORM - Push Test Personalizzato */}
+                {user?.email === 'wikus77@hotmail.it' && (
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentView('push-test-form')}
+                    className="glass-card p-4 border border-blue-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Send className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">🚀 Push Test Custom</h3>
+                        <p className="text-gray-400 text-sm">Test personalizzato con messaggio custom</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
                 {/* 🔥 PUSH TEST BUTTON - Solo per Admin AG-X0197 */}
                 {user?.email === 'wikus77@hotmail.it' && (
                   <motion.div 
@@ -404,8 +454,8 @@ const PanelAccessPage = () => {
                         <AlertTriangle className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">Push Test</h3>
-                        <p className="text-gray-400 text-sm">Test sistema notifiche push (Admin Only)</p>
+                        <h3 className="font-semibold text-white">Push Test Quick</h3>
+                        <p className="text-gray-400 text-sm">Test veloce con messaggio predefinito</p>
                       </div>
                     </div>
                   </motion.div>
