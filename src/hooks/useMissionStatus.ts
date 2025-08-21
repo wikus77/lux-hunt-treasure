@@ -33,24 +33,38 @@ export const useMissionStatus = () => {
       setLoading(true);
       setError(null);
 
-      // 🔥 FIRST: Get REAL clues count from user_clues table
-      const { count: realCluesCount, error: cluesError } = await supabase
-        .from('user_clues')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+      // 🔥 CRITICAL FIX: Get REAL clues count from user_clues table WITH RETRY
+      let realCluesCount = 0;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        const { count, error: cluesError } = await supabase
+          .from('user_clues')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
 
-      if (cluesError) {
-        console.error('❌ Error loading user clues count:', cluesError);
-        setError('Errore nel caricamento indizi');
-        return;
+        if (cluesError) {
+          console.error(`❌ Error loading user clues count (attempt ${retryCount + 1}):`, cluesError);
+          retryCount++;
+          if (retryCount >= maxRetries) {
+            setError('Errore nel caricamento indizi');
+            return;
+          }
+          await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+          continue;
+        }
+
+        realCluesCount = count || 0;
+        break;
       }
 
-      const actualCluesFound = realCluesCount || 0;
-      const actualProgress = Math.round((actualCluesFound / 200) * 100);
+      const actualProgress = Math.round((realCluesCount / 200) * 100);
 
       console.log('🔥 REAL CLUES COUNT FROM DATABASE:', {
-        realCluesCount: actualCluesFound,
-        actualProgress: actualProgress
+        realCluesCount: realCluesCount,
+        actualProgress: actualProgress,
+        timestamp: new Date().toISOString()
       });
 
       // Fetch user mission status from database
@@ -99,7 +113,7 @@ export const useMissionStatus = () => {
         const { error: updateError } = await supabase
           .from('user_mission_status')
           .update({
-            clues_found: actualCluesFound,
+            clues_found: realCluesCount,
             mission_progress_percent: actualProgress
           })
           .eq('user_id', user.id);
@@ -115,7 +129,7 @@ export const useMissionStatus = () => {
           startDate: missionStart,
           daysRemaining: daysRemaining,
           totalDays: 30,
-          cluesFound: actualCluesFound,
+          cluesFound: realCluesCount,
           totalClues: 200,
           progressPercent: actualProgress
         });
@@ -127,11 +141,11 @@ export const useMissionStatus = () => {
         const daysRemaining = Math.max(0, 30 - daysPassed);
 
         // 🔥 AUTO-UPDATE mission status with real clues count
-        if ((userMissionData.clues_found || 0) !== actualCluesFound) {
+        if ((userMissionData.clues_found || 0) !== realCluesCount) {
           const { error: updateError } = await supabase
             .from('user_mission_status')
             .update({
-              clues_found: actualCluesFound,
+              clues_found: realCluesCount,
               mission_progress_percent: actualProgress
             })
             .eq('user_id', user.id);
@@ -148,7 +162,7 @@ export const useMissionStatus = () => {
           startDate: missionStart,
           daysRemaining: daysRemaining,
           totalDays: 30,
-          cluesFound: actualCluesFound,
+          cluesFound: realCluesCount,
           totalClues: 200,
           progressPercent: actualProgress
         });
