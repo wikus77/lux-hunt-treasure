@@ -14,13 +14,19 @@ serve(async (req: Request) => {
   }
 
   try {
-    console.log('🚀 PUSH START: OneSignal notification request');
+    console.log('🚀 M1SSION™ PUSH NOTIFICATION PIPELINE START');
     
     // Read request payload
     const requestBody = await req.json();
-    const { title, body, target_user_id } = requestBody;
+    const { title, body, user_id, target_user_id } = requestBody;
     
-    console.log('📩 PAYLOAD:', { title, body, target_user_id });
+    console.log('📩 PAYLOAD RECEIVED:', { 
+      title, 
+      body, 
+      user_id, 
+      target_user_id,
+      timestamp: new Date().toISOString()
+    });
 
     // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -31,11 +37,12 @@ serve(async (req: Request) => {
     const oneSignalAppId = "50cb75f7-f065-4626-9a63-ce5692fa7e70";
     const oneSignalRestApiKey = Deno.env.get('ONESIGNAL_REST_API_KEY');
 
-    console.log('🔑 OneSignal config loaded:', {
+    console.log('🔑 M1SSION™ OneSignal Configuration:', {
       appId: oneSignalAppId,
-      hasApiKey: !!oneSignalRestApiKey,
-      apiKeyLength: oneSignalRestApiKey?.length,
-      apiKeyPreview: oneSignalRestApiKey?.substring(0, 8) + '...'
+      hasRestApiKey: !!oneSignalRestApiKey,
+      keyFormat: oneSignalRestApiKey?.startsWith('os_v2_app_') ? 'VALID v2 FORMAT ✅' : 'INVALID FORMAT ❌',
+      keyLength: oneSignalRestApiKey?.length || 0,
+      keyPreview: oneSignalRestApiKey?.substring(0, 15) + '...'
     });
 
     if (!oneSignalRestApiKey) {
@@ -49,15 +56,21 @@ serve(async (req: Request) => {
       });
     }
 
-    // 🔥 SIMPLIFIED: Try to get device tokens using service role
-    console.log('🔍 Fetching device tokens...');
+    // 🔍 DEVICE TOKEN LOOKUP
+    const targetUserId = user_id || target_user_id || '495246c1-9154-4f01-a428-7f37fe230180';
+    console.log(`🔍 M1SSION™ Device Token Query for User: ${targetUserId}`);
+    
     const { data: devices, error: deviceError } = await supabase
       .from('device_tokens')
       .select('*')
       .eq('device_type', 'onesignal')
-      .eq('user_id', target_user_id || '495246c1-9154-4f01-a428-7f37fe230180'); // fallback to test user
+      .eq('user_id', targetUserId);
 
-    console.log('📱 Query result:', { devices, deviceError });
+    console.log('📱 M1SSION™ Device Query Result:', { 
+      devicesFound: devices?.length || 0, 
+      devices: devices?.map(d => ({ id: d.id, token: d.token.substring(0, 10) + '...', created: d.created_at })),
+      error: deviceError 
+    });
 
     if (deviceError) {
       console.error('❌ Device query error:', deviceError);
@@ -70,68 +83,101 @@ serve(async (req: Request) => {
       });
     }
 
-    // 🚀 If no devices, create a test one and proceed
+    // 🚀 M1SSION™ DEVICE TOKEN VALIDATION
     if (!devices || devices.length === 0) {
-      console.log('🔧 NO DEVICES: Creating test device token...');
+      console.log('🔧 M1SSION™ NO DEVICES FOUND - Testing OneSignal API with broadcast');
       
-      const testUserId = target_user_id || '495246c1-9154-4f01-a428-7f37fe230180';
-      const testToken = `test_${testUserId}_${Date.now()}`;
-      
-      const { error: insertError } = await supabase
-        .from('device_tokens')
-        .upsert({
-          user_id: testUserId,
-          token: testToken,
-          device_type: 'onesignal',
-          device_info: { platform: 'web', source: 'auto_created' },
-          is_active: true
-        });
+      // Test OneSignal API directly with broadcast to all subscribed users
+      const broadcastPayload = {
+        app_id: oneSignalAppId,
+        included_segments: ["Subscribed Users"], // Broadcast to all
+        contents: { "en": body || "🔔 M1SSION™ Test Notification" },
+        headings: { "en": title || "M1SSION™ System Test" },
+        data: { 
+          url: "/notifications",
+          source: "system_test",
+          timestamp: new Date().toISOString()
+        }
+      };
 
-      if (insertError) {
-        console.error('❌ Failed to create test token:', insertError);
-      } else {
-        console.log('✅ Test token created successfully');
-      }
+      console.log('📡 M1SSION™ Broadcasting to all subscribed users:', broadcastPayload);
+
+      const broadcastResponse = await fetch('https://onesignal.com/api/v1/notifications', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Basic ${oneSignalRestApiKey}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(broadcastPayload)
+      });
+
+      const broadcastResult = await broadcastResponse.json();
+      console.log('📡 M1SSION™ Broadcast Result:', {
+        status: broadcastResponse.status,
+        result: broadcastResult,
+        success: broadcastResponse.ok
+      });
 
       // Save notification to database
       await supabase
         .from('user_notifications')
         .insert({
-          user_id: testUserId,
+          user_id: targetUserId,
           type: 'push',
-          title: title || "🔔 Test M1SSION™",
-          message: body || "Test notification",
+          title: title || "🔔 M1SSION™ System Test",
+          message: body || "Test notification broadcast",
           is_read: false,
           metadata: { 
-            source: 'test_push', 
-            auto_token: true,
+            source: 'broadcast_test', 
+            oneSignalId: broadcastResult.id,
+            recipients: broadcastResult.recipients || 0,
             timestamp: new Date().toISOString()
           }
         });
 
       return new Response(JSON.stringify({ 
-        success: true, 
-        message: "✅ Test notification sent successfully",
-        sent: 1,
-        total: 1,
-        debug: "Auto-created test token"
+        success: broadcastResponse.ok, 
+        message: broadcastResponse.ok ? "✅ M1SSION™ Broadcast sent successfully" : "❌ OneSignal API Error",
+        sent: broadcastResult.recipients || 0,
+        total: broadcastResult.recipients || 0,
+        oneSignalId: broadcastResult.id,
+        debug: "Broadcast to all subscribed users",
+        error: !broadcastResponse.ok ? broadcastResult : null
       }), {
-        status: 200,
+        status: broadcastResponse.ok ? 200 : 500,
         headers: corsHeaders
       });
     }
 
-    // 📡 Send real OneSignal notification
+    // 📡 M1SSION™ TARGETED NOTIFICATION
     const playerIds = devices.map(d => d.token);
-    console.log(`📲 Sending to ${playerIds.length} OneSignal devices`);
+    console.log(`📲 M1SSION™ Sending to ${playerIds.length} specific devices:`, {
+      deviceTokens: playerIds.map(token => token.substring(0, 10) + '...')
+    });
 
     const oneSignalPayload = {
       app_id: oneSignalAppId,
       include_player_ids: playerIds,
-      contents: { "en": body || "New M1SSION™ notification" },
+      contents: { "en": body || "🔔 New M1SSION™ notification" },
       headings: { "en": title || "M1SSION™" },
-      data: { url: "/notifications" }
+      data: { 
+        url: "/notifications",
+        source: "targeted_push",
+        timestamp: new Date().toISOString()
+      }
     };
+
+    console.log('📡 M1SSION™ OneSignal API Request:', {
+      url: 'https://onesignal.com/api/v1/notifications',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${oneSignalRestApiKey?.substring(0, 15)}...`,
+        'Accept': 'application/json'
+      },
+      payload: oneSignalPayload
+    });
 
     const oneSignalResponse = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
@@ -144,7 +190,12 @@ serve(async (req: Request) => {
     });
 
     const oneSignalResult = await oneSignalResponse.json();
-    console.log('🔔 OneSignal response:', oneSignalResult);
+    console.log('🔔 M1SSION™ OneSignal API Response:', {
+      status: oneSignalResponse.status,
+      statusText: oneSignalResponse.statusText,
+      result: oneSignalResult,
+      success: oneSignalResponse.ok
+    });
 
     if (!oneSignalResponse.ok) {
       console.error('❌ OneSignal API error:', oneSignalResult);
@@ -157,39 +208,54 @@ serve(async (req: Request) => {
       });
     }
 
-    // Save notification to database
-    if (target_user_id) {
-      await supabase
-        .from('user_notifications')
-        .insert({
-          user_id: target_user_id,
-          type: 'push',
-          title: title || "M1SSION™",
-          message: body || "New notification",
-          is_read: false,
-          metadata: { 
-            source: 'push_notification', 
-            oneSignalId: oneSignalResult.id 
-          }
-        });
-    }
+    // 💾 M1SSION™ DATABASE LOGGING
+    await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: targetUserId,
+        type: 'push',
+        title: title || "M1SSION™",
+        message: body || "New notification",
+        is_read: false,
+        metadata: { 
+          source: 'targeted_push_notification', 
+          oneSignalId: oneSignalResult.id,
+          recipients: oneSignalResult.recipients || 0,
+          playerIds: playerIds.length,
+          timestamp: new Date().toISOString()
+        }
+      });
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      message: "✅ OneSignal notification sent successfully",
+    // 📊 M1SSION™ FINAL RESULT
+    const finalResult = {
+      success: oneSignalResponse.ok, 
+      message: oneSignalResponse.ok ? "✅ M1SSION™ Targeted notification sent successfully" : "❌ OneSignal API Error",
       sent: oneSignalResult.recipients || 0,
       total: playerIds.length,
-      oneSignalId: oneSignalResult.id
-    }), {
-      status: 200,
+      oneSignalId: oneSignalResult.id,
+      status: oneSignalResponse.status,
+      timestamp: new Date().toISOString(),
+      error: !oneSignalResponse.ok ? oneSignalResult : null
+    };
+
+    console.log('📋 M1SSION™ FINAL CHECKPOINT RESULT:', finalResult);
+
+    return new Response(JSON.stringify(finalResult), {
+      status: oneSignalResponse.ok ? 200 : 500,
       headers: corsHeaders
     });
 
   } catch (error) {
-    console.error('❌ CRITICAL ERROR:', error);
+    console.error('❌ M1SSION™ CRITICAL PIPELINE ERROR:', {
+      error: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
     return new Response(JSON.stringify({ 
       success: false,
-      error: `Server error: ${error.message}` 
+      error: `M1SSION™ Pipeline Error: ${error.message}`,
+      timestamp: new Date().toISOString()
     }), {
       status: 500,
       headers: corsHeaders
