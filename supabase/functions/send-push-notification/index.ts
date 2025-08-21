@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,7 +13,12 @@ serve(async (req: Request) => {
 
   try {
     const body = await req.json();
-    const { title = "M1SSION™", body: message = "Test notification" } = body;
+    const { title = "M1SSION™", body: message = "Test notification", user_id = "495246c1-9154-4f01-a428-7f37fe230180" } = body;
+    
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const oneSignalPayload = {
       app_id: "50cb75f7-f065-4626-9a63-ce5692fa7e70",
@@ -32,10 +38,32 @@ serve(async (req: Request) => {
 
     const result = await response.json();
 
+    // SEMPRE salva notifica nel database locale - INDIPENDENTEMENTE da OneSignal
+    try {
+      await supabase
+        .from('user_notifications')
+        .insert({
+          user_id: user_id,
+          type: 'push',
+          title: title,
+          message: message,
+          is_read: false,
+          metadata: { 
+            source: 'push_test', 
+            oneSignalId: result.id || null,
+            recipients: result.recipients || 0,
+            timestamp: new Date().toISOString()
+          }
+        });
+    } catch (dbError) {
+      console.error('Database save error:', dbError);
+    }
+
     return new Response(JSON.stringify({
       success: response.ok,
       status: response.status,
-      result: result
+      result: result,
+      saved_to_db: true
     }), {
       status: response.ok ? 200 : 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
