@@ -225,11 +225,17 @@ export default function CommandCenterHome() {
             </span>
           </div>
           
-          {/* Dynamic Progress Bar */}
+          {/* Dynamic Progress Bar with Color Progression */}
           <div className="mb-6">
-            <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="w-full bg-white/10 rounded-full h-3">
               <motion.div 
-                className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full"
+                className={`h-3 rounded-full transition-all duration-1000 ${
+                  ((userClues?.length || 0) / 200) * 100 < 30 
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-400'
+                    : ((userClues?.length || 0) / 200) * 100 < 70
+                    ? 'bg-gradient-to-r from-blue-400 to-green-400'
+                    : 'bg-gradient-to-r from-green-400 to-green-500'
+                }`}
                 initial={{ width: 0 }}
                 animate={{ width: `${Math.min(100, ((userClues?.length || 0) / 200) * 100)}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
