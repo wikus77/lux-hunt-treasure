@@ -230,8 +230,8 @@ const WouterRoutes: React.FC = () => {
             <PushTestPage />
           </Route>
 
-          {/* 🔍 NOTIFICATION DEBUG ROUTE */}
-          <Route path="/notifications-debug">
+          {/* 🔍 NOTIFICATION DEBUG ROUTE - M1SSION™ ULTIMATE */}
+          <Route path="/notification-debug">
             <NotificationDebug />
           </Route>
 
