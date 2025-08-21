@@ -33,7 +33,9 @@ serve(async (req: Request) => {
 
     console.log('🔑 OneSignal config loaded:', {
       appId: oneSignalAppId,
-      hasApiKey: !!oneSignalRestApiKey
+      hasApiKey: !!oneSignalRestApiKey,
+      apiKeyLength: oneSignalRestApiKey?.length,
+      apiKeyPreview: oneSignalRestApiKey?.substring(0, 8) + '...'
     });
 
     if (!oneSignalRestApiKey) {
@@ -135,7 +137,8 @@ serve(async (req: Request) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${oneSignalRestApiKey}`
+        'Authorization': `Basic ${oneSignalRestApiKey}`,
+        'Accept': 'application/json'
       },
       body: JSON.stringify(oneSignalPayload)
     });
