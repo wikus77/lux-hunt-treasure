@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { OneSignalRegistrationFixed } from "@/components/debug/OneSignalRegistrationFixed";
+import { OneSignalRegistrationUltimate } from "@/components/debug/OneSignalRegistrationUltimate";
 import { PushPermissionChecker } from "@/components/debug/PushPermissionChecker";
 import { EmergencyPushResolver } from "@/components/debug/EmergencyPushResolver";
 import { DetailedPermissionChecker } from "@/components/debug/DetailedPermissionChecker";
@@ -103,6 +104,9 @@ const NotificationDebug = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
         
+        {/* ULTIMATE REGISTRATION - SINGLE POINT OF TRUTH */}
+        <OneSignalRegistrationUltimate />
+        
         {/* DIAGNOSI COMPLETA DETTAGLIATA */}
         <DetailedPermissionChecker />
         
@@ -112,7 +116,7 @@ const NotificationDebug = () => {
         {/* DIAGNOSTICA PERMESSI PUSH */}
         <PushPermissionChecker />
         
-        {/* NUOVO COMPONENTE FISSO */}
+        {/* COMPONENTE PRECEDENTE PER CONFRONTO */}
         <OneSignalRegistrationFixed />
         
         <Card className="bg-black/50 border-cyan-400/30">
