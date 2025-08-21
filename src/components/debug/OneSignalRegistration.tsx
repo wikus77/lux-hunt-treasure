@@ -54,24 +54,28 @@ export const OneSignalRegistration = () => {
       }
     };
 
-    const checkSubscriptionStatus = () => {
+    const checkSubscriptionStatus = async () => {
       try {
-        (window as any).OneSignal.push(() => {
-          // Check if user is subscribed
-          (window as any).OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
-            console.log('🔔 Push notifications enabled:', isEnabled);
-            setIsRegistered(isEnabled);
-            
-            if (isEnabled) {
-              (window as any).OneSignal.getUserId((userId: string) => {
-                console.log('🔔 User ID:', userId);
-                if (userId) {
-                  setPlayerId(userId);
-                }
-              });
+        console.log('🔔 Checking subscription with OneSignal v16 API...');
+        
+        // Use correct OneSignal v16 API
+        const permission = await (window as any).OneSignal.Notifications.permission;
+        console.log('🔔 Permission status:', permission);
+        
+        const isSubscribed = permission === 'granted';
+        setIsRegistered(isSubscribed);
+        
+        if (isSubscribed) {
+          try {
+            const playerId = await (window as any).OneSignal.User.PushSubscription.id;
+            console.log('🔔 Player ID:', playerId);
+            if (playerId) {
+              setPlayerId(playerId);
             }
-          });
-        });
+          } catch (playerError) {
+            console.warn('⚠️ Could not get player ID:', playerError);
+          }
+        }
       } catch (error) {
         console.error('❌ Check subscription error:', error);
       }
@@ -94,42 +98,51 @@ export const OneSignalRegistration = () => {
         return;
       }
 
-      // Use the old OneSignal API that works
-      (window as any).OneSignal.push(() => {
-        console.log('🔔 Requesting permission via OneSignal...');
+      // Use correct OneSignal v16 API
+      try {
+        console.log('🔔 Requesting permission via OneSignal v16...');
         
-        (window as any).OneSignal.registerForPushNotifications().then(() => {
-          console.log('✅ Registration completed');
-          
-          // Check subscription after registration
-          setTimeout(() => {
-            (window as any).OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
-              if (isEnabled) {
-                (window as any).OneSignal.getUserId((userId: string) => {
-                  if (userId) {
-                    setPlayerId(userId);
-                    setIsRegistered(true);
-                    toast.success('✅ Registrato per le notifiche!', {
-                      description: `Player ID: ${userId.substring(0, 8)}...`
-                    });
-                  }
+        // Request permission using v16 API
+        const permission = await (window as any).OneSignal.Notifications.requestPermission();
+        console.log('✅ Permission result:', permission);
+        
+        if (permission) {
+          // Wait a bit for initialization then check subscription
+          setTimeout(async () => {
+            try {
+              const playerId = await (window as any).OneSignal.User.PushSubscription.id;
+              if (playerId) {
+                setPlayerId(playerId);
+                setIsRegistered(true);
+                toast.success('✅ Registrato per le notifiche!', {
+                  description: `Player ID: ${playerId.substring(0, 8)}...`
                 });
               } else {
                 toast.error('❌ Registrazione fallita', {
-                  description: 'Permesso negato dall\'utente'
+                  description: 'Player ID non ottenuto'
                 });
               }
-              setIsRegistering(false);
-            });
+            } catch (playerError) {
+              console.error('❌ Player ID error:', playerError);
+              toast.error('❌ Errore Player ID', {
+                description: 'Non riesco a ottenere il Player ID'
+              });
+            }
+            setIsRegistering(false);
           }, 2000);
-        }).catch((error: any) => {
-          console.error('❌ Registration error:', error);
-          toast.error('❌ Errore registrazione', {
-            description: error.message
+        } else {
+          toast.error('❌ Registrazione fallita', {
+            description: 'Permesso negato dall\'utente'
           });
           setIsRegistering(false);
+        }
+      } catch (error: any) {
+        console.error('❌ Registration error:', error);
+        toast.error('❌ Errore registrazione', {
+          description: error.message
         });
-      });
+        setIsRegistering(false);
+      }
 
     } catch (error: any) {
       console.error('Registration error:', error);
