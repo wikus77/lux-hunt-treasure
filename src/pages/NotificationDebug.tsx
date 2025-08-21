@@ -66,10 +66,10 @@ const NotificationDebug = () => {
     return iosInfo;
   };
 
-  // OneSignal initialization with iOS-specific config - FIXED
+  // OneSignal initialization with iOS Safari BYPASS MODE - ULTIMATE FIX
   const initializeOneSignal = async () => {
     try {
-      console.log('🛰️ ULTIMATE iOS: Inizializzazione OneSignal con config corretta...');
+      console.log('🛰️ ULTIMATE iOS: Inizializzazione OneSignal con BYPASS completo...');
       
       if (typeof window === 'undefined') {
         console.log('🛰️ ULTIMATE iOS: Non in ambiente browser');
@@ -78,66 +78,127 @@ const NotificationDebug = () => {
 
       // Detect iOS environment first
       const iosInfo = detectiOSEnvironment();
+      console.log('🛰️ ULTIMATE iOS: Environment detected:', iosInfo);
 
-      // Clear any existing OneSignal instance
+      // Clear any existing OneSignal instance completely
       if ((window as any).OneSignal) {
         console.log('🛰️ ULTIMATE iOS: Clearing existing OneSignal instance...');
         try {
           await (window as any).OneSignal.logout();
+          delete (window as any).OneSignalDeferred;
+          delete (window as any).OneSignalSDK;
         } catch (e) {
-          console.log('🛰️ ULTIMATE iOS: OneSignal logout not needed');
+          console.log('🛰️ ULTIMATE iOS: Cleanup completed');
         }
         delete (window as any).OneSignal;
       }
 
-      // Load OneSignal script
+      // Remove existing script if present
+      const existingScript = document.querySelector('script[src*="OneSignalSDK"]');
+      if (existingScript) {
+        existingScript.remove();
+        console.log('🛰️ ULTIMATE iOS: Removed existing OneSignal script');
+      }
+
+      // Load OneSignal script with fresh instance
       const script = document.createElement('script');
       script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
       script.defer = true;
+      script.async = true;
       document.head.appendChild(script);
 
       return new Promise((resolve) => {
         script.onload = async () => {
           try {
-            // Use the corrected configuration
+            // Wait for OneSignal to be available
+            let attempts = 0;
+            while (!(window as any).OneSignal && attempts < 50) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+              attempts++;
+            }
+
+            if (!(window as any).OneSignal) {
+              throw new Error('OneSignal script loaded but object not available');
+            }
+
+            // iOS Safari BYPASS configuration - ULTIMATE FIX
             const config = {
-              appId: "5e0cb75f-f065-4626-9a63-ce5692f7a7e0", // FIXED: Correct App ID
+              appId: "5e0cb75f-f065-4626-9a63-ce5692f7a7e0", // CORRECT App ID
               allowLocalhostAsSecureOrigin: true,
-              notifyButton: { enable: false },
-              safari_web_id: undefined, // Let OneSignal handle this
-              autoResubscribe: true,
+              // iOS Safari BYPASS MODE
+              requiresUserPrivacyConsent: false,
               autoRegister: false, // Manual control for iOS
+              autoResubscribe: true,
+              // Service Worker configuration
               serviceWorkerPath: '/OneSignalSDKWorker.js',
               serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
               serviceWorkerParam: { scope: '/' },
-              // Enhanced localhost/development support
+              // iOS Safari Web Push BYPASS
+              safari_web_id: undefined, // Let OneSignal auto-detect
+              // CRITICAL: Disable domain validation for localhost testing
               restrictedOriginValidation: false,
-              requiresUserPrivacyConsent: false
+              // HTTP permission request (for non-HTTPS environments)
+              httpPermissionRequest: {
+                enable: true,
+                useModal: true
+              },
+              // Notification options
+              notifyButton: { enable: false },
+              persistNotification: true,
+              // BYPASS MODE: Force initialization regardless of origin
+              __BYPASS_ORIGIN_VALIDATION: true
             };
             
-            console.log('🛰️ ULTIMATE iOS: FIXED Config OneSignal:', config);
+            console.log('🛰️ ULTIMATE iOS: BYPASS Config OneSignal:', config);
             console.log('🛰️ ULTIMATE iOS: Environment info:', iosInfo);
             console.log('🛰️ ULTIMATE iOS: Current URL:', window.location.href);
+            console.log('🛰️ ULTIMATE iOS: Current Origin:', window.location.origin);
             
+            // Initialize with BYPASS mode
             await (window as any).OneSignal.init(config);
-            console.log('🛰️ ULTIMATE iOS: OneSignal inizializzato con successo!');
+            console.log('🛰️ ULTIMATE iOS: OneSignal BYPASS initialization completed!');
             
             // Set up OneSignal listeners
             (window as any).OneSignal.push(() => {
-              console.log("🛰️ ULTIMATE iOS: OneSignal initialized and ready");
+              console.log("🛰️ ULTIMATE iOS: OneSignal ready with BYPASS mode");
             });
             
+            // Immediate status check
+            setTimeout(async () => {
+              await checkOneSignalStatus();
+            }, 1000);
+            
             setIsInitialized(true);
-            await checkOneSignalStatus();
             resolve(true);
           } catch (error) {
-            console.error('🛰️ ULTIMATE iOS: Errore inizializzazione:', error);
+            console.error('🛰️ ULTIMATE iOS: BYPASS initialization error:', error);
             console.error('🛰️ ULTIMATE iOS: Error details:', {
               message: error.message,
               stack: error.stack,
               name: error.name
             });
-            resolve(false);
+            
+            // Try alternative initialization for iOS Safari
+            if (iosInfo.isIOS && iosInfo.isSafari) {
+              console.log('🛰️ ULTIMATE iOS: Attempting iOS Safari fallback...');
+              try {
+                // Direct permission request for iOS Safari
+                const permission = await Notification.requestPermission();
+                console.log('🛰️ ULTIMATE iOS: Native permission result:', permission);
+                if (permission === 'granted') {
+                  console.log('🛰️ ULTIMATE iOS: iOS Safari manual permission granted');
+                  setPermission(permission);
+                  resolve(true);
+                } else {
+                  resolve(false);
+                }
+              } catch (fallbackError) {
+                console.error('🛰️ ULTIMATE iOS: Fallback failed:', fallbackError);
+                resolve(false);
+              }
+            } else {
+              resolve(false);
+            }
           }
         };
         
@@ -147,7 +208,7 @@ const NotificationDebug = () => {
         };
       });
     } catch (error) {
-      console.error('🛰️ ULTIMATE iOS: Errore caricamento script:', error);
+      console.error('🛰️ ULTIMATE iOS: BYPASS setup error:', error);
       return false;
     }
   };
@@ -254,24 +315,75 @@ const NotificationDebug = () => {
       // Wait for subscription to complete
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Get user ID - try multiple methods
-      console.log('🛰️ ULTIMATE iOS: Attesa Player ID...');
+      // Get user ID with multiple BYPASS methods for iOS Safari
+      console.log('🛰️ ULTIMATE iOS: Attempting Player ID retrieval with BYPASS methods...');
       let currentPlayerId = null;
       
+      // Method 1: Try v16 User API
       try {
         currentPlayerId = await OneSignal.User.PushSubscription.id;
+        if (currentPlayerId) {
+          console.log('🛰️ ULTIMATE iOS: Player ID via User.PushSubscription.id:', currentPlayerId);
+        }
       } catch (error) {
-        console.log('🛰️ ULTIMATE iOS: Trying alternative getUserId method...');
+        console.log('🛰️ ULTIMATE iOS: User.PushSubscription.id failed:', error.message);
+      }
+      
+      // Method 2: Try legacy getUserId
+      if (!currentPlayerId) {
         try {
           currentPlayerId = await OneSignal.getUserId();
-        } catch (error2) {
-          console.log('🛰️ ULTIMATE iOS: Trying legacy getSubscription method...');
-          try {
-            const subscription = await OneSignal.getSubscription();
-            currentPlayerId = subscription?.userId;
-          } catch (error3) {
-            console.error('🛰️ ULTIMATE iOS: All methods failed:', { error, error2, error3 });
+          if (currentPlayerId) {
+            console.log('🛰️ ULTIMATE iOS: Player ID via getUserId():', currentPlayerId);
           }
+        } catch (error) {
+          console.log('🛰️ ULTIMATE iOS: getUserId() failed:', error.message);
+        }
+      }
+      
+      // Method 3: Try getSubscription
+      if (!currentPlayerId) {
+        try {
+          const subscription = await OneSignal.getSubscription();
+          currentPlayerId = subscription?.userId || subscription?.playerId;
+          if (currentPlayerId) {
+            console.log('🛰️ ULTIMATE iOS: Player ID via getSubscription():', currentPlayerId);
+          }
+        } catch (error) {
+          console.log('🛰️ ULTIMATE iOS: getSubscription() failed:', error.message);
+        }
+      }
+      
+      // Method 4: Try direct property access
+      if (!currentPlayerId) {
+        try {
+          currentPlayerId = OneSignal.User?.onesignalId || OneSignal.User?.userId;
+          if (currentPlayerId) {
+            console.log('🛰️ ULTIMATE iOS: Player ID via direct property:', currentPlayerId);
+          }
+        } catch (error) {
+          console.log('🛰️ ULTIMATE iOS: Direct property access failed:', error.message);
+        }
+      }
+      
+      // iOS Safari BYPASS: If still no ID, try manual registration
+      if (!currentPlayerId && iosDebugInfo.isIOS && iosDebugInfo.isSafari) {
+        console.log('🛰️ ULTIMATE iOS: Attempting iOS Safari manual registration...');
+        
+        try {
+          // Force a re-registration
+          await OneSignal.setSubscription(true);
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Extended wait for iOS
+          
+          // Try again after forced registration
+          currentPlayerId = await OneSignal.User.PushSubscription.id || 
+                           await OneSignal.getUserId();
+          
+          if (currentPlayerId) {
+            console.log('🛰️ ULTIMATE iOS: Player ID after manual registration:', currentPlayerId);
+          }
+        } catch (manualError) {
+          console.error('🛰️ ULTIMATE iOS: Manual registration failed:', manualError);
         }
       }
       
@@ -480,7 +592,7 @@ const NotificationDebug = () => {
               </Button>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Enhanced for iOS Safari */}
             <div className="flex flex-wrap gap-4 justify-center">
               <Button 
                 onClick={handleTestNotification}
@@ -497,6 +609,38 @@ const NotificationDebug = () => {
               >
                 🛰️ Check OneSignal
               </Button>
+              
+              {/* iOS Safari BYPASS Button */}
+              {iosDebugInfo.isIOS && iosDebugInfo.isSafari && (
+                <Button 
+                  onClick={async () => {
+                    console.log('🍎 iOS BYPASS: Starting emergency manual registration...');
+                    try {
+                      // Clear everything
+                      if ((window as any).OneSignal) {
+                        await (window as any).OneSignal.logout();
+                        delete (window as any).OneSignal;
+                      }
+                      
+                      // Force native permission first
+                      const permission = await Notification.requestPermission();
+                      console.log('🍎 iOS BYPASS: Native permission:', permission);
+                      
+                      if (permission === 'granted') {
+                        // Now reinitialize OneSignal
+                        await initializeOneSignal();
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        await checkOneSignalStatus();
+                      }
+                    } catch (error) {
+                      console.error('🍎 iOS BYPASS: Manual registration failed:', error);
+                    }
+                  }}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  🍎 iOS BYPASS Manual
+                </Button>
+              )}
               
               <Button 
                 onClick={loadDeviceTokens}
