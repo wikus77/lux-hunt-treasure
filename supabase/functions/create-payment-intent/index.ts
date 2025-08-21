@@ -67,13 +67,17 @@ serve(async (req) => {
     
     logStep('📋 Payment intent request', { user_id, plan, amount, currency, payment_type, description });
 
-    // Validate amount
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Validate amount
     if (!amount || amount < 50) { // Minimum 0.50 EUR
       throw new Error('Invalid amount - minimum 0.50 EUR required');
     }
+    
+    logStep('✅ Amount validation passed', { amount, currency });
 
-    // Initialize Stripe
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Initialize Stripe with enhanced logging
+    logStep('🔗 Initializing Stripe client', { keyPresent: !!stripeKey, keyLength: stripeKey.length });
     const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+    logStep('✅ Stripe client initialized successfully');
 
     // Find or create customer
     let customerId: string;
