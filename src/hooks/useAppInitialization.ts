@@ -1,8 +1,10 @@
-// M1SSION™ - App Initialization Hook for iOS Capacitor
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// M1SSION™ - App Initialization Hook for PWA Mode (No Capacitor)
+
 import { useEffect, useState } from 'react';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { pwaNavigationHandler } from '@/utils/pwaStubs';
+import { detectPWAEnvironment } from '@/utils/pwaStubs';
 
 interface AppInitializationState {
   isInitialized: boolean;
@@ -24,61 +26,48 @@ export const useAppInitialization = () => {
     deviceInfo: null
   });
 
-  // Detect Capacitor environment with explicit function names
-  const detectCapacitorEnvironment = (): boolean => {
-    return typeof window !== 'undefined' && 
-      (!!(window as any).Capacitor || window.location.protocol === 'capacitor:');
-  };
-
-  // Initialize app with explicit function names for iOS compatibility
+  // Initialize app for PWA mode only - no Capacitor logic
   const initializeApp = async () => {
-    console.log('🚀 M1SSION App Initialization starting...');
+    console.log('🚀 M1SSION PWA App Initialization starting...');
     
     try {
-      const isCapacitor = detectCapacitorEnvironment();
+      const isPWA = detectPWAEnvironment();
       
-      // Update navigation store
-      setCapacitorMode(isCapacitor);
+      // Always set Capacitor mode to false for web builds
+      setCapacitorMode(false);
       
-      // Get device info if in Capacitor
-      let deviceInfo = null;
-      if (isCapacitor && (window as any).Capacitor) {
-        try {
-          const { Device } = (window as any).Capacitor;
-          if (Device) {
-            deviceInfo = await Device.getInfo();
-            console.log('📱 Device Info:', deviceInfo);
-          }
-        } catch (error) {
-          console.warn('⚠️ Could not get device info:', error);
-        }
-      }
+      // PWA device info instead of Capacitor
+      const deviceInfo = {
+        platform: 'web',
+        userAgent: navigator.userAgent,
+        isPWA: isPWA
+      };
 
       // Check if intro was completed
       const hasCompletedIntro = localStorage.getItem('m1ssion-intro-completed') === 'true';
       
       // Set initial route based on auth and intro status
-      if (isCapacitor && isAuthenticated && !authLoading) {
+      if (isPWA && isAuthenticated && !authLoading) {
         setCurrentTab('/home');
       }
 
       setState({
         isInitialized: true,
-        isCapacitor,
+        isCapacitor: false, // Always false in PWA build
         hasCompletedIntro,
         appVersion: '1.0.0',
         deviceInfo
       });
 
-      console.log('✅ M1SSION App Initialization completed:', {
-        isCapacitor,
+      console.log('✅ M1SSION PWA App Initialization completed:', {
+        isCapacitor: false,
         isAuthenticated,
         hasCompletedIntro,
-        deviceInfo: deviceInfo?.platform || 'web'
+        deviceInfo: deviceInfo.platform
       });
 
     } catch (error) {
-      console.error('❌ App Initialization error:', error);
+      console.error('❌ PWA App Initialization error:', error);
       setState(prev => ({ ...prev, isInitialized: true }));
     }
   };
@@ -88,14 +77,14 @@ export const useAppInitialization = () => {
     initializeApp();
   }, [isAuthenticated, authLoading]);
 
-  // iOS-specific optimizations
+  // iOS PWA-specific optimizations (no Capacitor dependencies)
   useEffect(() => {
-    if (state.isCapacitor && state.isInitialized) {
+    if (state.isInitialized) {
       // Prevent iOS bounce scroll
       document.body.style.overscrollBehavior = 'none';
       (document.body.style as any).WebkitOverflowScrolling = 'touch';
       
-      // Add safe area CSS variables for iOS
+      // Add safe area CSS variables for iOS PWA
       const addSafeAreaStyles = () => {
         const style = document.createElement('style');
         style.textContent = `
@@ -111,7 +100,7 @@ export const useAppInitialization = () => {
       
       addSafeAreaStyles();
     }
-  }, [state.isCapacitor, state.isInitialized]);
+  }, [state.isInitialized]);
 
   return {
     ...state,
