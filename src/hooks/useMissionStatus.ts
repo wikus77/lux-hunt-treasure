@@ -33,6 +33,26 @@ export const useMissionStatus = () => {
       setLoading(true);
       setError(null);
 
+      // 🔥 FIRST: Get REAL clues count from user_clues table
+      const { count: realCluesCount, error: cluesError } = await supabase
+        .from('user_clues')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (cluesError) {
+        console.error('❌ Error loading user clues count:', cluesError);
+        setError('Errore nel caricamento indizi');
+        return;
+      }
+
+      const actualCluesFound = realCluesCount || 0;
+      const actualProgress = Math.round((actualCluesFound / 200) * 100);
+
+      console.log('🔥 REAL CLUES COUNT FROM DATABASE:', {
+        realCluesCount: actualCluesFound,
+        actualProgress: actualProgress
+      });
+
       // Fetch user mission status from database
       const { data: userMissionData, error: missionError } = await supabase
         .from('user_mission_status')
@@ -75,23 +95,18 @@ export const useMissionStatus = () => {
         const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
         const daysRemaining = Math.max(0, 30 - daysPassed);
 
-        setMissionStatus({
-          id: "M001",
-          title: "Caccia al Tesoro Urbano",
-          state: daysRemaining > 0 ? "ATTIVA" : "SCADUTA",
-          startDate: missionStart,
-          daysRemaining: daysRemaining,
-          totalDays: 30,
-          cluesFound: newMissionData.clues_found || 0,
-          totalClues: 200,
-          progressPercent: newMissionData.mission_progress_percent || 0
-        });
-      } else {
-        // Calculate remaining days based on mission_started_at
-        const missionStart = new Date(userMissionData.mission_started_at);
-        const now = new Date();
-        const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
-        const daysRemaining = Math.max(0, 30 - daysPassed);
+        // 🔥 AUTO-UPDATE mission status with real clues count
+        const { error: updateError } = await supabase
+          .from('user_mission_status')
+          .update({
+            clues_found: actualCluesFound,
+            mission_progress_percent: actualProgress
+          })
+          .eq('user_id', user.id);
+
+        if (updateError) {
+          console.error('❌ Error updating mission status:', updateError);
+        }
 
         setMissionStatus({
           id: "M001",
@@ -100,9 +115,42 @@ export const useMissionStatus = () => {
           startDate: missionStart,
           daysRemaining: daysRemaining,
           totalDays: 30,
-          cluesFound: userMissionData.clues_found || 0,
+          cluesFound: actualCluesFound,
           totalClues: 200,
-          progressPercent: userMissionData.mission_progress_percent || 0
+          progressPercent: actualProgress
+        });
+      } else {
+        // Calculate remaining days based on mission_started_at
+        const missionStart = new Date(userMissionData.mission_started_at);
+        const now = new Date();
+        const daysPassed = Math.floor((now.getTime() - missionStart.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = Math.max(0, 30 - daysPassed);
+
+        // 🔥 AUTO-UPDATE mission status with real clues count
+        if ((userMissionData.clues_found || 0) !== actualCluesFound) {
+          const { error: updateError } = await supabase
+            .from('user_mission_status')
+            .update({
+              clues_found: actualCluesFound,
+              mission_progress_percent: actualProgress
+            })
+            .eq('user_id', user.id);
+
+          if (updateError) {
+            console.error('❌ Error updating mission status:', updateError);
+          }
+        }
+
+        setMissionStatus({
+          id: "M001",
+          title: "Caccia al Tesoro Urbano",
+          state: daysRemaining > 0 ? "ATTIVA" : "SCADUTA",
+          startDate: missionStart,
+          daysRemaining: daysRemaining,
+          totalDays: 30,
+          cluesFound: actualCluesFound,
+          totalClues: 200,
+          progressPercent: actualProgress
         });
       }
 
@@ -120,9 +168,22 @@ export const useMissionStatus = () => {
 
     loadMissionStatus();
 
-    // Set up real-time subscription
+    // Set up real-time subscription for CLUES changes
     const subscription = supabase
-      .channel('user_mission_status_changes')
+      .channel('user_clues_mission_updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'user_clues',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('🔄 User clues changed, reloading mission status...');
+          loadMissionStatus();
+        }
+      )
       .on(
         'postgres_changes',
         {

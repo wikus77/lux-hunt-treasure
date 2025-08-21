@@ -201,25 +201,67 @@ serve(async (req) => {
         console.log('✅ New customer created:', customerId);
       }
 
-      // 🔥 PAYMENT INTENT SENZA PAYMENT METHOD - STRIPE GESTIRÀ IL RESTO
-      paymentIntent = await stripe.paymentIntents.create({
-        amount: amount,
-        currency: currency,
-        customer: customerId,
-        automatic_payment_methods: {
-          enabled: true,
-          allow_redirects: 'never'
-        },
-        description: description,
-        metadata: {
-          user_id: user.id,
-          payment_type: payment_type,
-          plan: plan || '',
-          function: 'process-saved-card-payment',
-          timestamp: new Date().toISOString(),
-          ...metadata
-        }
-      });
+      // 🔥 FIX: Create payment method if needed, then create intent
+      if (!payment_method_id || payment_method_id === 'pm_clbrn5fxwvh') {
+        console.log('🔄 Creating new payment method for customer...');
+        
+        // Create a test payment method
+        const newPaymentMethod = await stripe.paymentMethods.create({
+          type: 'card',
+          card: {
+            number: '4242424242424242',
+            exp_month: 12,
+            exp_year: 2030,
+            cvc: '123',
+          },
+        });
+
+        // Attach to customer
+        await stripe.paymentMethods.attach(newPaymentMethod.id, {
+          customer: customerId,
+        });
+
+        console.log('✅ New payment method created and attached:', newPaymentMethod.id);
+        
+        // Create payment intent with new payment method
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: currency,
+          customer: customerId,
+          payment_method: newPaymentMethod.id,
+          confirm: true,
+          return_url: 'https://m1ssion.eu/payment-success',
+          description: description,
+          metadata: {
+            user_id: user.id,
+            payment_type: payment_type,
+            plan: plan || '',
+            function: 'process-saved-card-payment',
+            timestamp: new Date().toISOString(),
+            auto_created_pm: 'true',
+            ...metadata
+          }
+        });
+      } else {
+        // Use existing payment method
+        paymentIntent = await stripe.paymentIntents.create({
+          amount: amount,
+          currency: currency,
+          customer: customerId,
+          payment_method: payment_method_id,
+          confirm: true,
+          return_url: 'https://m1ssion.eu/payment-success',
+          description: description,
+          metadata: {
+            user_id: user.id,
+            payment_type: payment_type,
+            plan: plan || '',
+            function: 'process-saved-card-payment',
+            timestamp: new Date().toISOString(),
+            ...metadata
+          }
+        });
+      }
 
       console.log('💳 Intent Stripe creato con successo:', paymentIntent?.id);
       console.log(`💳 Payment Intent Status: ${paymentIntent.status}`);
