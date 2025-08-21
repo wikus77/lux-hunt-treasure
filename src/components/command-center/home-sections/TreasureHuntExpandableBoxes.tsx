@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Clock, Target, CheckCircle, AlertCircle, Timer } from "lucide-react";
+import FoundCluesDisplay from "@/components/clues/FoundCluesDisplay";
 
 interface TreasureHuntExpandableBoxesProps {
   progress: number;
@@ -91,22 +92,8 @@ export function TreasureHuntExpandableBoxes({
                 className="overflow-hidden"
               >
                 <div className="px-4 pb-4 border-t border-white/10">
-                  <div className="pt-4 space-y-3">
-                    {purchasedClues.length > 0 ? (
-                      purchasedClues.map((clue, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-[#0a0a0a] rounded-lg">
-                          <div>
-                            <p className="text-white font-medium">{clue.title}</p>
-                            <p className="text-sm text-white/60">{clue.code}</p>
-                          </div>
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-center py-4 text-white/50">
-                        Nessun indizio acquistato ancora
-                      </div>
-                    )}
+                  <div className="pt-4">
+                    <FoundCluesDisplay />
                   </div>
                 </div>
               </motion.div>
