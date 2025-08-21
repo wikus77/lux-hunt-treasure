@@ -138,6 +138,18 @@ export const useBuzzFeature = () => {
           window.plausible('clue_unlocked');
         }
         
+        // 🔥 SALVA L'INDIZIO NELLE NOTIFICHE
+        console.log("💾 Salvando indizio nelle notifiche...");
+        await addNotification({
+          title: "Nuovo Indizio BUZZ!",
+          description: uniqueClueContent,
+          type: "buzz"
+        });
+        
+        // 🔥 INCREMENTA CONTATORE INDIZI TROVATI
+        console.log("📊 Incrementando contatore indizi trovati...");
+        incrementUnlockedCluesAndAddClue();
+        
         // Forza reload immediato delle notifiche
         await reloadNotifications();
         
@@ -192,30 +204,28 @@ export const useBuzzFeature = () => {
       setLastVagueClue(uniqueClue);
       setLastDynamicClue(uniqueClue);
       
+      // 🔥 SALVA L'INDIZIO NELLE NOTIFICHE
+      console.log("💾 Salvando indizio extra nelle notifiche...");
+      await addNotification({
+        title: "Nuovo Indizio Extra!",
+        description: uniqueClue,
+        type: "buzz"
+      });
+      
+      // 🔥 INCREMENTA CONTATORE INDIZI TROVATI
+      console.log("📊 Incrementando contatore indizi trovati...");
       incrementUnlockedCluesAndAddClue();
       
-      console.log("💾 Creando notifica indizio extra UNIVOCA...");
-      createBuzzNotification(
-        "Nuovo Indizio Extra!", 
-        uniqueClue
-      ).then(async () => {
-        console.log("✅ Notifica indizio extra UNIVOCA creata");
-        await reloadNotifications();
-        
-        toast.success("Hai ricevuto un nuovo indizio extra!", {
-          description: uniqueClue,
-          duration: 4000,
-        });
-        
-        setShowDialog(false);
-        setShowExplosion(true);
-      }).catch(error => {
-        console.error("❌ Error creating notification:", error);
-        toast.error("Errore nel salvataggio dell'indizio", {
-          duration: 3000,
-        });
-        setShowDialog(false);
+      console.log("✅ Indizio extra UNIVOCO salvato e contatore aggiornato");
+      await reloadNotifications();
+      
+      toast.success("Hai ricevuto un nuovo indizio extra!", {
+        description: uniqueClue,
+        duration: 4000,
       });
+      
+      setShowDialog(false);
+      setShowExplosion(true);
     } catch (error) {
       console.error("❌ Error in handle clue button click:", error);
       toast.error("Si è verificato un errore");

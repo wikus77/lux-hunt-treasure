@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Clock, Target, CheckCircle, AlertCircle, Timer, ChevronDown } from "lucide-react";
+import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface ActiveMissionBoxProps {
   mission: {
@@ -20,6 +22,13 @@ interface ActiveMissionBoxProps {
 
 export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }: ActiveMissionBoxProps) {
   const [expandedBox, setExpandedBox] = useState<string | null>(null);
+  
+  // 🔥 Hook per ottenere il conteggio degli indizi BUZZ
+  const { unlockedClues } = useBuzzClues();
+  const { notifications } = useNotifications();
+  
+  // 🔥 Filtra le notifiche BUZZ per mostrarle nel container
+  const buzzClues = notifications.filter(n => n.type === 'buzz');
 
   const toggleBox = (boxId: string) => {
     setExpandedBox(expandedBox === boxId ? null : boxId);
@@ -61,16 +70,20 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <span className="text-white/80 text-sm">Indizi trovati</span>
           </div>
           <div className="text-2xl font-bold text-green-400 mb-2">
-            {mission.foundClues}/{mission.totalClues}
+            {unlockedClues}/200
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
-              className="bg-green-400 h-2 rounded-full transition-all duration-500"
-              style={{ width: `${(mission.foundClues / mission.totalClues) * 100}%` }}
+              className={`h-2 rounded-full transition-all duration-500 ${
+                unlockedClues === 0 ? 'bg-gray-500' :
+                unlockedClues < 50 ? 'bg-blue-400' :
+                unlockedClues < 150 ? 'bg-green-400' : 'bg-yellow-400'
+              }`}
+              style={{ width: `${(unlockedClues / 200) * 100}%` }}
             />
           </div>
           <span className="text-xs text-white/60">
-            {Math.round((mission.foundClues / mission.totalClues) * 100)}% completato
+            {Math.round((unlockedClues / 200) * 100)}% completato
           </span>
 
           <AnimatePresence>
@@ -82,34 +95,34 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 transition={{ duration: 0.3, ease: "easeInOut" }}
                 className="overflow-hidden mt-4 pt-4 border-t border-white/10"
               >
-                <h4 className="text-white font-medium mb-3">Indizi BUZZ Scoperti</h4>
+                <h4 className="text-white font-medium mb-3">Indizi BUZZ Scoperti ({buzzClues.length})</h4>
                 <div className="space-y-2">
-                  {purchasedClues.length > 0 ? (
-                    purchasedClues.map((clue, index) => (
+                  {buzzClues.length > 0 ? (
+                    buzzClues.map((clue, index) => (
                       <motion.div
-                        key={clue.clue_id || index}
+                        key={clue.id}
                         className="bg-white/5 rounded-lg p-3 border border-white/10 hover:border-white/20 transition-colors"
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <h5 className="text-sm font-medium text-white">{clue.title_it || clue.title}</h5>
+                          <h5 className="text-sm font-medium text-white">{clue.title}</h5>
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-white/50">
-                              {new Date(clue.created_at || Date.now()).toLocaleDateString('it-IT')}
+                              {new Date(clue.date).toLocaleDateString('it-IT')}
                             </span>
                             <span className="inline-block px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-full">
-                              {clue.clue_type || 'BUZZ'}
+                              BUZZ
                             </span>
                           </div>
                         </div>
                         <p className="text-sm text-white/80 leading-relaxed mb-3">
-                          {clue.description_it || clue.content || 'Indizio scoperto tramite BUZZ'}
+                          {clue.description}
                         </p>
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-green-400">
-                            ✅ Costo: €{clue.buzz_cost ? (clue.buzz_cost / 100).toFixed(2) : (clue.cost || 0)}
+                            ✅ Scoperto via BUZZ
                           </span>
                           <button className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 text-xs rounded-lg border border-blue-500/30 transition-colors">
                             📍 Visualizza
