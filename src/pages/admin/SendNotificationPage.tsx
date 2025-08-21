@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -39,29 +39,40 @@ const SendNotificationPage: React.FC = () => {
     setIsSending(true);
 
     try {
-      // Call edge function to send push notifications
-      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+      // Log admin notification send
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'firebase_push_test',
+          note: `Admin Page Send - Title: ${title}, Body: ${body}`,
+          context: 'admin_page_notification'
+        });
+
+      // Call Firebase edge function to send push notifications
+      const { data, error } = await supabase.functions.invoke('send-firebase-push', {
         body: {
           title: title.trim(),
           body: body.trim(),
-          data: {
+          broadcast: true,
+          additionalData: {
             url: '/notifications',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            source: 'admin_page'
           }
         }
       });
 
       if (error) {
-        console.error('Error sending push notification:', error);
+        console.error('Error sending Firebase push notification:', error);
         toast({
-          title: "❌ Errore invio",
-          description: error.message || "Impossibile inviare la notifica.",
+          title: "❌ Errore invio Firebase",
+          description: error.message || "Impossibile inviare la notifica Firebase.",
           variant: "destructive"
         });
       } else {
         toast({
-          title: "✅ Notifica inviata",
-          description: `Inviata a ${data?.sent || 0} dispositivi`,
+          title: "🔥 Notifica Firebase inviata",
+          description: `Inviata a ${data?.sent_count || 0} dispositivi FCM`,
         });
         
         // Reset form
@@ -69,10 +80,10 @@ const SendNotificationPage: React.FC = () => {
         setBody('');
       }
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('Error sending Firebase notification:', error);
       toast({
-        title: "❌ Errore",
-        description: "Errore durante l'invio della notifica.",
+        title: "❌ Errore Firebase",
+        description: "Errore durante l'invio della notifica Firebase.",
         variant: "destructive"
       });
     } finally {
@@ -87,19 +98,19 @@ const SendNotificationPage: React.FC = () => {
           <CardHeader>
             <CardTitle className="text-2xl font-orbitron text-white flex items-center gap-3">
               <Bell className="w-6 h-6 text-[#00D1FF]" />
-              Invio Notifiche Push - M1SSION™
+              🔥 Firebase Push Notifications - M1SSION™
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-4">
               <div>
                 <label className="block text-white/70 text-sm font-medium mb-2">
-                  Titolo notifica
+                  Titolo notifica Firebase
                 </label>
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Inserisci il titolo..."
+                  placeholder="Inserisci il titolo Firebase..."
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
                   maxLength={50}
                 />
@@ -115,7 +126,7 @@ const SendNotificationPage: React.FC = () => {
                 <Textarea
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  placeholder="Inserisci il messaggio della notifica..."
+                  placeholder="Inserisci il messaggio della notifica Firebase..."
                   className="bg-white/5 border-white/20 text-white placeholder:text-white/50 min-h-[120px]"
                   maxLength={200}
                 />
@@ -125,19 +136,19 @@ const SendNotificationPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-[#00D1FF]/10 border border-[#00D1FF]/30 rounded-lg p-4">
-              <h3 className="text-[#00D1FF] font-medium mb-2">Anteprima notifica:</h3>
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+              <h3 className="text-orange-400 font-medium mb-2">🔥 Anteprima notifica Firebase:</h3>
               <div className="bg-black/50 rounded-lg p-3 border border-white/10">
                 <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-[#00D1FF] rounded-sm flex-shrink-0 flex items-center justify-center">
-                    <span className="text-black text-xs font-bold">M1</span>
+                  <div className="w-6 h-6 bg-orange-500 rounded-sm flex-shrink-0 flex items-center justify-center">
+                    <span className="text-black text-xs font-bold">🔥</span>
                   </div>
                   <div className="flex-1">
                     <h4 className="text-white font-medium text-sm">
-                      {title || 'Titolo notifica'}
+                      {title || 'Titolo notifica Firebase'}
                     </h4>
                     <p className="text-white/70 text-sm">
-                      {body || 'Messaggio della notifica'}
+                      {body || 'Messaggio della notifica Firebase'}
                     </p>
                   </div>
                 </div>
@@ -147,23 +158,23 @@ const SendNotificationPage: React.FC = () => {
             <Button
               onClick={handleSendNotification}
               disabled={isSending || !title.trim() || !body.trim()}
-              className="w-full bg-gradient-to-r from-[#00D1FF] to-[#0099CC] hover:from-[#0099CC] hover:to-[#007799] text-black font-medium"
+              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium"
             >
               {isSending ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin mr-2" />
-                  Invio in corso...
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin mr-2" />
+                  🔥 Invio Firebase in corso...
                 </>
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Invia notifica a tutti
+                  🔥 Invia notifica Firebase a tutti
                 </>
               )}
             </Button>
 
             <p className="text-white/50 text-xs text-center">
-              La notifica verrà inviata a tutti i dispositivi registrati che hanno attivato le notifiche push.
+              🔥 La notifica verrà inviata tramite Firebase Cloud Messaging a tutti i dispositivi con token FCM attivi.
             </p>
           </CardContent>
         </Card>

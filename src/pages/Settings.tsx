@@ -20,7 +20,7 @@ import AppSection from "@/components/settings/AppSection";
 import NotificationSection from "@/components/settings/NotificationSection";
 import SupportSection from "@/components/settings/SupportSection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
-import { PushNotificationTest } from "@/components/admin/PushNotificationTest";
+import { FirebasePushNotificationTest } from "@/components/admin/FirebasePushNotificationTest";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = () => {
@@ -146,7 +146,7 @@ const Settings = () => {
 
           <TabsContent value="push-test" className="mt-6">
             <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-700">
-              <PushNotificationTest />
+              <FirebasePushNotificationTest />
             </div>
           </TabsContent>
         </Tabs>
