@@ -24,6 +24,7 @@ import { M1ssionPushTestForm } from './M1ssionPushTestForm';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import { FCMTokenGenerator } from '@/components/debug/FCMTokenGenerator';
 import { FCMCompleteTestSuite } from '@/components/debug/FCMCompleteTestSuite';
+import { FCMTestPanel } from '@/components/fcm/FCMTestPanel';
 
 
 const PanelAccessPage = () => {
@@ -32,7 +33,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'push-test-form'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'push-test-form' | 'fcm-test'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -234,6 +235,35 @@ const PanelAccessPage = () => {
         {/* Complete FCM Test Suite */}
         <FCMCompleteTestSuite />
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'fcm-test' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">🔥 FCM Diagnostics & Test</h1>
+              <p className="text-gray-400">Sistema completo diagnostica e test FCM</p>
+            </div>
+            <FCMTestPanel />
           </div>
         </div>
       </div>
@@ -515,7 +545,27 @@ const PanelAccessPage = () => {
                   </motion.div>
                 )}
 
-                {/* 🔥 FIREBASE DEBUG TEST - Admin Only per Debug Avanzato */}
+                {/* 🧪 FCM DIAGNOSTICS & TEST - Admin Only */}
+                {user?.email === 'wikus77@hotmail.it' && (
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentView('fcm-test')}
+                    className="glass-card p-4 border border-green-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-green-600 to-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        🧪
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">🧪 FCM Diagnostics & Test</h3>
+                        <p className="text-gray-400 text-sm">Sistema completo diagnostica FCM end-to-end</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                 {/* 🔥 FIREBASE DEBUG TEST - Admin Only per Debug Avanzato */}
                 {user?.email === 'wikus77@hotmail.it' && (
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
