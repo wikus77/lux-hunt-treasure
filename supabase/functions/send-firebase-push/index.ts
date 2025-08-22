@@ -37,9 +37,11 @@ serve(async (req: Request) => {
 
     // Validate required fields
     if (!title || !body) {
+      console.error('❌ Missing required fields:', { title: !!title, body: !!body });
       return new Response(JSON.stringify({
         success: false,
-        error: 'Title and body are required'
+        error: 'Title and body are required',
+        status: 'validation_error'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -55,9 +57,21 @@ serve(async (req: Request) => {
     const firebaseServerKey = Deno.env.get('FIREBASE_SERVER_KEY');
     if (!firebaseServerKey) {
       console.error('❌ Firebase Server Key not configured');
+      
+      // Log to admin_logs
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'firebase_push_error',
+          user_id: user_id || null,
+          note: 'Firebase Server Key not configured',
+          context: 'firebase_fcm'
+        });
+      
       return new Response(JSON.stringify({
         success: false,
-        error: 'Firebase Server Key not configured'
+        error: 'Firebase Server Key not configured',
+        status: 'server_key_missing'
       }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -90,10 +104,27 @@ serve(async (req: Request) => {
 
     if (!tokens || tokens.length === 0) {
       console.warn('⚠️ No FCM tokens found for user(s)');
+      
+      // Log specific case for user
+      const logNote = user_id ? 
+        `No FCM tokens found for user ${user_id}` : 
+        'No active FCM tokens found for broadcast';
+      
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'firebase_push_no_tokens',
+          user_id: user_id || null,
+          note: logNote,
+          context: 'firebase_fcm'
+        });
+      
       return new Response(JSON.stringify({
         success: true,
         message: 'No active FCM tokens found',
-        sent_count: 0
+        sent_count: 0,
+        status: user_id ? 'no_token' : 'no_tokens',
+        user_id: user_id || null
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -199,38 +230,65 @@ serve(async (req: Request) => {
       }
     };
 
-    // Save diagnostic log
+    // Save diagnostic log with enhanced details
     await supabase
       .from('admin_logs')
       .insert({
         event_type: 'firebase_push_notification_sent',
         user_id: user_id || null,
-        note: `FCM push sent: ${title} (${fcmResult.success || 0} success, ${fcmResult.failure || 0} failed)`,
-        context: 'firebase_fcm',
-        details: diagnosticDetails
+        note: `FCM push sent: "${title}" (${fcmResult.success || 0} success, ${fcmResult.failure || 0} failed)`,
+        context: 'firebase_fcm'
       });
 
     // Count successful sends
     const successCount = fcmResult.success || 0;
     const failureCount = fcmResult.failure || 0;
 
+    console.log('✅ FCM notification processing completed:', {
+      successCount,
+      failureCount,
+      totalTokens: tokens.length
+    });
+
     return new Response(JSON.stringify({
-      success: fcmResponse.ok,
-      message: `FCM notification sent successfully`,
+      success: fcmResponse.ok && successCount > 0,
+      message: successCount > 0 ? 
+        `FCM notification sent successfully` : 
+        'FCM notification failed - no successful deliveries',
       sent_count: successCount,
       failed_count: failureCount,
       total_tokens: tokens.length,
+      status: successCount > 0 ? 'delivered' : 'failed',
       fcm_response: fcmResult
     }), {
-      status: fcmResponse.ok ? 200 : 400,
+      status: fcmResponse.ok && successCount > 0 ? 200 : 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
     console.error('❌ Firebase push notification error:', error);
+    
+    // Log error to admin_logs
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      await supabase
+        .from('admin_logs')
+        .insert({
+          event_type: 'firebase_push_error',
+          note: `FCM push error: ${error.message}`,
+          context: 'firebase_fcm'
+        });
+    } catch (logError) {
+      console.error('❌ Failed to log error:', logError);
+    }
+    
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error.message,
+      status: 'critical_error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
