@@ -163,17 +163,19 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ preferred_rewards: newPreferences });
   };
 
-  // Enhanced push notifications toggle with Safari-specific fixes
+  // Enhanced push notifications toggle - SIMPLIFIED & FIXED
   const handlePushNotificationsToggle = async (enabled: boolean) => {
-    console.log('🔄 FCM Push toggle clicked:', enabled, {
+    console.log('🚀 FCM TOGGLE ACTIVATED:', enabled, {
       isSupported,
-      permission,
+      currentPermission: permission,
       pushTokenExists,
-      userAgent: navigator.userAgent
+      browser: navigator.userAgent.includes('Safari') ? 'Safari' : 'Chrome/Other'
     });
     
     if (enabled) {
+      // Check browser support first
       if (!isSupported) {
+        console.error('❌ Browser not supported for FCM');
         toast({
           title: "❌ Browser Non Supportato",
           description: "Le notifiche push non sono supportate in questo browser.",
@@ -182,54 +184,56 @@ const NotificationsSettings: React.FC = () => {
         return;
       }
 
-      if (permission === 'denied') {
-        toast({
-          title: "🚫 Permessi Bloccati",
-          description: "Abilita le notifiche nelle Preferenze Safari > Siti web > Notifiche per questo sito.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('📱 Requesting FCM notification permission...');
+      console.log('✅ FCM Browser supported, requesting permission...');
       setLoading(true);
       
       try {
-        // Request FCM notification permission
+        // Always try to request permission - let FCM handle the logic
+        console.log('📱 Calling FCM requestPermission...');
         const success = await requestPermission();
         
-        console.log('📋 FCM Permission request result:', success);
+        console.log('📋 FCM requestPermission result:', success);
         
         if (success) {
-          console.log('✅ FCM Permission granted - re-checking tokens');
+          console.log('✅ FCM Permission SUCCESS - enabling toggle');
           
-          // Wait a moment for token to be saved
+          // Force recheck tokens after successful permission
           setTimeout(async () => {
+            console.log('🔄 Rechecking FCM tokens after success...');
             await checkFCMTokenStatus();
-          }, 1000);
+          }, 2000);
           
           setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
           
           toast({
             title: "✅ Notifiche Push Attivate!",
-            description: "🔥 Firebase FCM configurato con successo. Riceverai notifiche push su questo dispositivo."
+            description: "🔥 Firebase FCM configurato. Riceverai notifiche push su questo dispositivo."
           });
         } else {
-          console.log('❌ FCM Permission denied or failed');
+          console.error('❌ FCM Permission FAILED');
           setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
           
-          toast({
-            title: "❌ Permesso Negato",
-            description: "Non è stato possibile ottenere il permesso per le notifiche push.",
-            variant: "destructive"
-          });
+          // Show specific error based on permission state
+          if (permission === 'denied') {
+            toast({
+              title: "🚫 Permesso Negato",
+              description: "Sblocca le notifiche in Impostazioni Safari > Siti web > Notifiche.",
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: "❌ Errore Attivazione",
+              description: "Non è stato possibile ottenere il permesso per le notifiche.",
+              variant: "destructive"
+            });
+          }
         }
       } catch (error) {
-        console.error('❌ Error in FCM toggle:', error);
+        console.error('❌ FCM Toggle Exception:', error);
         setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
         
         toast({
-          title: "❌ Errore Attivazione",
+          title: "❌ Errore Critico",
           description: "Si è verificato un errore durante l'attivazione delle notifiche.",
           variant: "destructive"
         });
@@ -237,10 +241,11 @@ const NotificationsSettings: React.FC = () => {
         setLoading(false);
       }
     } else {
-      console.log('🔕 Disabling FCM notifications - removing tokens');
+      console.log('🔕 DISABLING FCM notifications - removing tokens');
       setLoading(true);
       
       try {
+        // Remove all FCM tokens for this user
         const { error } = await supabase
           .from('user_push_tokens')
           .delete()
