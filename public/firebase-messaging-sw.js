@@ -67,7 +67,7 @@ messaging.onBackgroundMessage(function(payload) {
     });
 });
 
-// Handle notification click events - ENHANCED
+// Handle notification click events with click_action support
 self.addEventListener('notificationclick', function(event) {
   console.log('🔥 FCM Notification clicked:', event);
   
@@ -79,25 +79,33 @@ self.addEventListener('notificationclick', function(event) {
   }
 
   if (event.action === 'open' || !event.action) {
-    console.log('🔥 FCM SW: Opening M1SSION™ app...');
+    // Get click_action from notification data
+    const clickAction = event.notification.data?.click_action || '/';
+    console.log('🔥 FCM SW: Opening URL:', clickAction);
+    
     event.waitUntil(
       clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
         console.log('🔥 FCM SW: Found clients:', clientList.length);
         
-        // Try to focus an existing M1SSION™ window
+        // Try to focus an existing window with same origin
         for (let i = 0; i < clientList.length; i++) {
           const client = clientList[i];
           
-          if ((client.url.includes('m1ssion') || client.url.includes('lovable')) && 'focus' in client) {
-            console.log('✅ FCM SW: Focusing existing M1SSION™ window');
-            return client.focus();
+          if ('focus' in client) {
+            console.log('✅ FCM SW: Focusing existing window and navigating to:', clickAction);
+            return client.focus().then(() => {
+              if ('navigate' in client) {
+                return client.navigate(clickAction);
+              }
+              return client;
+            });
           }
         }
         
-        // If no existing window, open new one
+        // If no existing window, open new one with click_action URL
         if (clients.openWindow) {
-          console.log('🔥 FCM SW: Opening new M1SSION™ window');
-          return clients.openWindow('/');
+          console.log('🔥 FCM SW: Opening new window with URL:', clickAction);
+          return clients.openWindow(clickAction);
         }
       }).catch(error => {
         console.error('❌ FCM SW: Error handling click:', error);

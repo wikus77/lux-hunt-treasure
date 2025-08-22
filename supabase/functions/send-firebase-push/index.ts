@@ -18,7 +18,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 // Firebase configuration
 const FIREBASE_PROJECT_ID = "lux-hunt-treasure";
 
-// Get Firebase Admin credentials
+// Get Firebase Admin credentials with proper base64 decoding
 const getFirebaseCredentials = () => {
   try {
     const serviceAccountB64 = Deno.env.get('FIREBASE_SERVICE_ACCOUNT_B64');
@@ -27,15 +27,22 @@ const getFirebaseCredentials = () => {
       throw new Error('FIREBASE_SERVICE_ACCOUNT_B64 environment variable not set');
     }
 
-    // Decode base64 and parse JSON
-    const serviceAccountJson = new TextDecoder().decode(
-      Uint8Array.from(atob(serviceAccountB64), c => c.charCodeAt(0))
-    );
-    // Normalize newlines
+    console.log('🔄 FCM-PUSH: Decoding Firebase service account...');
+    
+    // Proper base64 decoding for JSON
+    const serviceAccountJson = atob(serviceAccountB64);
+    
+    // Normalize escaped newlines in private key
     const normalizedJson = serviceAccountJson.replace(/\\n/g, '\n');
+    
     const serviceAccount = JSON.parse(normalizedJson);
     
-    console.log('✅ FCM-PUSH: Firebase credentials loaded successfully');
+    // Validate required fields
+    if (!serviceAccount.private_key || !serviceAccount.client_email || !serviceAccount.project_id) {
+      throw new Error('Invalid service account: missing required fields');
+    }
+    
+    console.log('✅ FCM-PUSH: Firebase credentials loaded and validated');
     return serviceAccount;
   } catch (error) {
     console.error('❌ FCM-PUSH: Failed to load Firebase credentials:', error);

@@ -73,13 +73,21 @@ export const FCMTestPanel: React.FC = () => {
       // Test 2: Service Worker
       await new Promise(resolve => setTimeout(resolve, 500));
       try {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        const hasFCMSW = registrations.some(reg => 
-          reg.scope.includes('firebase-messaging-sw') || 
-          reg.active?.scriptURL.includes('firebase-messaging-sw')
-        );
-        updateTestResult(1, hasFCMSW ? 'PASS' : 'WARNING', 
-          hasFCMSW ? 'Firebase SW registered' : 'Firebase SW not found - will register');
+        // Test specific FCM service worker path
+        const response = await fetch('/firebase-messaging-sw.js');
+        const swExists = response.ok;
+        
+        if (swExists) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          const fcmSWReg = registrations.find(reg => 
+            reg.scope === location.origin + '/' && 
+            reg.active?.scriptURL.includes('firebase-messaging-sw')
+          );
+          updateTestResult(1, fcmSWReg ? 'PASS' : 'WARNING', 
+            fcmSWReg ? `SW registered at scope: ${fcmSWReg.scope}` : 'SW file exists, will register with correct scope');
+        } else {
+          updateTestResult(1, 'FAIL', 'firebase-messaging-sw.js not found at /firebase-messaging-sw.js');
+        }
       } catch (error) {
         updateTestResult(1, 'FAIL', `Service Worker check failed: ${error}`);
       }
@@ -104,8 +112,14 @@ export const FCMTestPanel: React.FC = () => {
       // Test 5: VAPID Key
       await new Promise(resolve => setTimeout(resolve, 500));
       const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
-      updateTestResult(4, vapidKey ? 'PASS' : 'FAIL', 
-        vapidKey ? `VAPID key from ENV: ...${vapidKey.slice(-6)}` : 'VAPID key missing from ENV - REQUIRED');
+      if (vapidKey) {
+        // Validate VAPID key format (base64url)
+        const isValidFormat = /^[A-Za-z0-9_-]{87}$/.test(vapidKey);
+        updateTestResult(4, isValidFormat ? 'PASS' : 'WARNING', 
+          isValidFormat ? `VAPID key from ENV: ...${vapidKey.slice(-6)} (valid format)` : `VAPID key from ENV: ...${vapidKey.slice(-6)} (format may be invalid)`);
+      } else {
+        updateTestResult(4, 'FAIL', 'VAPID key missing from ENV - REQUIRED');
+      }
 
       // Test 6: Token Generation
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -148,8 +162,11 @@ export const FCMTestPanel: React.FC = () => {
 
         if (error) {
           updateTestResult(7, 'FAIL', `Edge Function error: ${error.message}`);
-        } else if (data?.success && data?.sent >= 0) {
-          updateTestResult(7, 'PASS', `Edge Function OK: sent=${data.sent}, failures=${data.failures || 0}`);
+        } else if (data?.success === true) {
+          // Accept sent: 0 as success (no tokens scenario)
+          const sent = data.sent || 0;
+          const failures = data.failures || 0;
+          updateTestResult(7, 'PASS', `Edge Function OK: sent=${sent}, failures=${failures}`);
         } else {
           updateTestResult(7, 'FAIL', `Edge Function unexpected response: ${JSON.stringify(data)}`);
         }

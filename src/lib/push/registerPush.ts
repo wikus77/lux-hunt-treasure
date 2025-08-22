@@ -13,44 +13,50 @@ if (!VAPID_KEY) {
   throw new Error('VITE_FIREBASE_VAPID_PUBLIC_KEY environment variable is required');
 }
 
-// Service Worker registration
-export const registerServiceWorker = async (): Promise<boolean> => {
+// Service Worker registration with proper scope validation
+export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
   try {
     if (!('serviceWorker' in navigator)) {
       console.warn('❌ FCM-REGISTER: Service Workers not supported');
-      return false;
+      return null;
     }
 
-    // Check if firebase-messaging-sw.js is already registered
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    const fcmSW = registrations.find(reg => 
-      reg.scope.includes('firebase-messaging-sw') || 
-      reg.active?.scriptURL.includes('firebase-messaging-sw')
-    );
-
-    if (!fcmSW) {
-      // Register service worker
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-        scope: '/'
-      });
-      console.log('✅ FCM-REGISTER: Service Worker registered', registration.scope);
-      
-      // Wait for service worker to be active
-      if (registration.installing) {
-        await new Promise(resolve => {
-          registration.installing!.addEventListener('statechange', function() {
-            if (this.state === 'activated') resolve(true);
-          });
+    // Register or get existing FCM service worker with explicit scope
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/'
+    });
+    
+    console.log('✅ FCM-REGISTER: Service Worker registered with scope:', registration.scope);
+    
+    // Wait for service worker to be ready
+    if (registration.installing) {
+      await new Promise(resolve => {
+        registration.installing!.addEventListener('statechange', function() {
+          if (this.state === 'activated') resolve(true);
         });
-      }
-    } else {
-      console.log('✅ FCM-REGISTER: Service Worker already registered');
+      });
     }
     
-    return true;
+    // Ensure service worker is active
+    if (!registration.active) {
+      await new Promise(resolve => {
+        const checkActive = () => {
+          if (registration.active) {
+            resolve(true);
+          } else {
+            setTimeout(checkActive, 100);
+          }
+        };
+        checkActive();
+      });
+    }
+    
+    console.log('✅ FCM-REGISTER: Service Worker is active and ready');
+    return registration;
+    
   } catch (error) {
     console.error('❌ FCM-REGISTER: Service Worker registration failed:', error);
-    return false;
+    return null;
   }
 };
 
@@ -192,9 +198,9 @@ export const registerPush = async (
   try {
     console.log('🚀 FCM-REGISTER: Starting push registration process...');
 
-    // Step 1: Register Service Worker
-    const swRegistered = await registerServiceWorker();
-    if (!swRegistered) {
+    // Step 1: Register Service Worker with explicit registration return
+    const swRegistration = await registerServiceWorker();
+    if (!swRegistration) {
       return { 
         success: false, 
         error: 'Service Worker registration failed' 
@@ -210,9 +216,8 @@ export const registerPush = async (
       };
     }
 
-    // Step 3: Generate Token
-    const swRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
-    const token = await generateFCMToken(swRegistration || undefined);
+    // Step 3: Generate Token with explicit SW registration
+    const token = await generateFCMToken(swRegistration);
     if (!token) {
       return { 
         success: false, 
