@@ -14,8 +14,8 @@ const firebaseConfig = {
   appId: "1:654321987654:web:abcd1234efgh5678ijkl90"
 };
 
-// VAPID Key for Web Push - NUOVA CHIAVE VALIDA 2025  
-const VAPID_KEY = "BGpT3b3wYCGGCw3HZpnzgNhS5oMePa7X7KhE2x1ZGvD_QrJ4rAmI7J9T3QNTQ4oKlJQmPKhL5w8wTHhIUf8RoZo";
+// VAPID Key for Web Push - CHIAVE P-256 VALIDA 2025  
+const VAPID_KEY = "BKqY8rVp3mF2Gh2BhEFVE1wkX0cDgGvK_Y5tUdL0zSf1bM4HhE9wGpJ4YQHC7Zx0nPqDGhGhCgLmPvWqOyGhJxQ";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

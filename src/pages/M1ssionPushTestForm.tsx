@@ -36,16 +36,13 @@ export const M1ssionPushTestForm = () => {
       console.log('🚀 M1SSION™ CUSTOM PUSH TEST START');
       console.log('📤 Payload:', { title: title.trim(), body: body.trim(), target_user_id: user.id });
 
-      const { data, error } = await supabase.functions.invoke('send-push-notification', {
+      // Use Firebase Edge Function for Firebase FCM
+      const { data, error } = await supabase.functions.invoke('send-firebase-push', {
         body: {
+          user_id: user.id,
           title: title.trim(),
           body: body.trim(),
-          target_user_id: user.id,
-          data: {
-            url: '/notifications',
-            timestamp: new Date().toISOString(),
-            test_mode: true
-          }
+          broadcast: false
         }
       });
 
@@ -67,8 +64,8 @@ export const M1ssionPushTestForm = () => {
         toast.error(`❌ Test fallito: ${error.message}`);
       } else {
         console.log('✅ Push Test Success:', data);
-        toast.success(`✅ Notifica inviata!`, {
-          description: `Dispositivi: ${data?.total || 0} | Inviati: ${data?.sent || 0}`
+        toast.success(`✅ Firebase FCM Test inviato!`, {
+          description: `Status: ${data?.success ? 'SUCCESS' : 'FAILED'} | Sent: ${data?.sent_count || 0}`
         });
       }
 
@@ -115,7 +112,7 @@ export const M1ssionPushTestForm = () => {
             <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
               <Send className="w-5 h-5 text-white" />
             </div>
-            🚀 M1SSION™ Push Test Custom
+            🔥 M1SSION™ Firebase Push Test Custom
             <Badge variant="secondary">LIVE TEST</Badge>
           </CardTitle>
         </CardHeader>
@@ -123,8 +120,8 @@ export const M1ssionPushTestForm = () => {
           <Alert>
             <Bell className="w-4 h-4" />
             <AlertDescription>
-              <strong>Test Personalizzato:</strong> Inserisci il tuo messaggio personalizzato e invia una notifica push di test.
-              La notifica verrà inviata solo al tuo dispositivo registrato.
+              <strong>Test Personalizzato Firebase FCM:</strong> Inserisci il tuo messaggio personalizzato e invia una notifica push Firebase di test.
+              La notifica verrà inviata solo al tuo dispositivo registrato con Firebase FCM.
             </AlertDescription>
           </Alert>
 
@@ -225,7 +222,7 @@ export const M1ssionPushTestForm = () => {
             ) : (
               <>
                 <Send className="w-4 h-4 mr-2" />
-                🚀 INVIA TEST PUSH
+                🔥 INVIA FIREBASE FCM TEST
               </>
             )}
           </Button>
@@ -275,10 +272,11 @@ export const M1ssionPushTestForm = () => {
                 <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg">
                   <h4 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ Dettagli Successo:</h4>
                   <div className="text-sm text-green-700 dark:text-green-300">
-                    <p><strong>Dispositivi totali:</strong> {lastResult.data.total || 0}</p>
-                    <p><strong>Notifiche inviate:</strong> {lastResult.data.sent || 0}</p>
-                    {lastResult.data.notification_id && (
-                      <p><strong>OneSignal ID:</strong> {lastResult.data.notification_id}</p>
+                    <p><strong>Firebase FCM Status:</strong> {lastResult.data.success ? 'SUCCESS' : 'FAILED'}</p>
+                    <p><strong>Notifiche inviate:</strong> {lastResult.data.sent_count || 0}</p>
+                    <p><strong>Notifiche fallite:</strong> {lastResult.data.failed_count || 0}</p>
+                    {lastResult.data.firebase_response_id && (
+                      <p><strong>Firebase Response ID:</strong> {lastResult.data.firebase_response_id}</p>
                     )}
                   </div>
                 </div>
