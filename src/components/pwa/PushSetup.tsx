@@ -78,8 +78,8 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
     try {
       const registration = await navigator.serviceWorker.ready;
       
-      // VAPID public key - generated for M1SSION™
-      const vapidPublicKey = 'BH2P8Q8Z-QqKs6VE8_Fq2J4KmWH9n3FxVUl_JQm4CK7eL0Y9M5b3-gN4xRt8oX_aP2sQwE6rT9y5vN8j3L7kQ2M';
+      // VAPID public key - CORRETTA per M1SSION™ (stessa di firebase.ts)
+      const vapidPublicKey = 'BAI6FkKumBrWhuHT4RDnKkL17Ruv82o7QpYcYFQ8QtqkRcpD6XkYJvJrUofEfY_jIfv60KM4sNxeBNhfeoBPrw';
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,

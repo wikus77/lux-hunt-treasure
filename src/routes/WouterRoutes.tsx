@@ -39,6 +39,7 @@ import PushTest from "@/pages/debug/PushTest";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
+import VAPIDKeyTest from "@/pages/VAPIDKeyTest";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
@@ -269,6 +270,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/firebase-notification-debug">
             <ProtectedRoute>
               <GlobalLayout><FirebaseNotificationDebug /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* 🧪 VAPID Key Test Route - CRITICAL DEBUG */}
+          <Route path="/vapid-test">
+            <ProtectedRoute>
+              <GlobalLayout><VAPIDKeyTest /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
