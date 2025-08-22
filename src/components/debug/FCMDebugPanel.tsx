@@ -192,6 +192,30 @@ export const FCMDebugPanel = () => {
     addLog('info', `Invio notifica test ID: ${testId}...`);
 
     try {
+      // First: Test Service Worker directly
+      if ('serviceWorker' in navigator) {
+        addLog('info', 'Test Service Worker diretto...');
+        
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration && registration.active) {
+          // Send test message to Service Worker
+          registration.active.postMessage({
+            type: 'TEST_NOTIFICATION',
+            testId: testId
+          });
+          
+          addLog('success', 'Test notifica Service Worker inviato');
+          
+          // Wait a moment then test FCM
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } else {
+          addLog('warning', 'Service Worker non attivo');
+        }
+      }
+
+      // Second: Test FCM via Edge Function
+      addLog('info', 'Invio notifica FCM via Edge Function...');
+      
       const { data, error } = await supabase.functions.invoke('send-firebase-push', {
         body: {
           user_id: user.id,
@@ -200,28 +224,49 @@ export const FCMDebugPanel = () => {
           data: {
             test_id: testId.toString(),
             source: 'debug_panel',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            requireInteraction: 'true'
           }
         }
       });
 
       if (error) {
-        addLog('error', 'Errore invio notifica test', { error: error.message });
-        toast.error(`Errore: ${error.message}`);
+        addLog('error', 'Errore invio notifica FCM', { error: error.message });
+        toast.error(`Errore FCM: ${error.message}`);
         return;
       }
 
       if (data?.success) {
-        addLog('success', `Notifica inviata! Delivered: ${data.sent_count}`, { response: data });
+        addLog('success', `✅ Notifica FCM inviata! Delivered: ${data.sent_count}`, { 
+          response: data,
+          testId: testId,
+          timestamp: new Date().toLocaleTimeString()
+        });
+        
         toast.success(`🚀 Notifica inviata! (${data.sent_count} delivered)`);
+        
+        // Check if notification appears in next 10 seconds
+        addLog('info', '⏱️ Controllo arrivo notifica nei prossimi 10 secondi...');
+        
+        setTimeout(() => {
+          addLog('warning', '⚠️ Se non hai ricevuto la notifica, controlla:');
+          addLog('info', '1. Service Worker attivo nella console (F12 > Application > Service Workers)');
+          addLog('info', '2. Notifiche abilitate nel browser (icona 🔒 nella barra URL)'); 
+          addLog('info', '3. PWA installata se su iOS Safari');
+          addLog('info', '4. Console per errori FCM');
+        }, 10000);
+        
       } else {
         addLog('warning', 'Notifica inviata ma nessun token trovato', { response: data });
-        toast.warning('Notifica inviata ma nessun token trovato');
+        toast.warning('⚠️ Notifica inviata ma nessun token trovato');
       }
 
     } catch (error: any) {
-      addLog('error', 'Errore critico invio notifica', { error: error.message });
-      toast.error(`Errore critico: ${error.message}`);
+      addLog('error', 'Errore critico invio notifica', { 
+        error: error.message, 
+        stack: error.stack 
+      });
+      toast.error(`❌ Errore critico: ${error.message}`);
     } finally {
       setIsSendingTest(false);
     }
