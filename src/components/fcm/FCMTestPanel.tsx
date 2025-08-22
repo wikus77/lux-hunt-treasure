@@ -12,7 +12,9 @@ import {
   registerPush, 
   isFCMSupported, 
   getPermissionStatus,
-  getUserTokens 
+  getUserTokens,
+  getBrowserDetails,
+  validateFirebaseConfig
 } from '@/lib/push/registerPush';
 
 interface TestResult {
@@ -98,27 +100,46 @@ export const FCMTestPanel: React.FC = () => {
       updateTestResult(2, permission === 'granted' ? 'PASS' : 'WARNING', 
         `Notification permission: ${permission}`);
 
-      // Test 4: Firebase Library
+      // Test 4: Firebase Library & Config
       await new Promise(resolve => setTimeout(resolve, 500));
       try {
-        // Try to access firebase messaging
-        const { messaging } = await import('@/lib/firebase');
-        updateTestResult(3, messaging ? 'PASS' : 'FAIL', 
-          messaging ? 'Firebase messaging initialized' : 'Firebase messaging not available');
+        const configValidation = validateFirebaseConfig();
+        const browserInfo = getBrowserDetails();
+        
+        let configMessage = '';
+        let configStatus: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
+        
+        if (!configValidation.hasMessagingSenderId) {
+          configStatus = 'FAIL';
+          configMessage = 'Missing messagingSenderId in Firebase config';
+        } else if (browserInfo.isIOS && browserInfo.isSafari && !browserInfo.isStandalone) {
+          configStatus = 'WARNING';
+          configMessage = `iOS Safari detected - PWA install required. Current: ${browserInfo.isStandalone ? 'Installed' : 'Browser only'}`;
+        } else {
+          configMessage = `Firebase config valid, messagingSenderId present`;
+        }
+        
+        updateTestResult(3, configStatus, configMessage);
       } catch (error) {
-        updateTestResult(3, 'FAIL', `Firebase library error: ${error}`);
+        updateTestResult(3, 'FAIL', `Firebase config validation error: ${error}`);
       }
 
       // Test 5: VAPID Key
       await new Promise(resolve => setTimeout(resolve, 500));
-      const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
-      if (vapidKey) {
-        // Validate VAPID key format (base64url)
-        const isValidFormat = /^[A-Za-z0-9_-]{87}$/.test(vapidKey);
-        updateTestResult(4, isValidFormat ? 'PASS' : 'WARNING', 
-          isValidFormat ? `VAPID key from ENV: ...${vapidKey.slice(-6)} (valid format)` : `VAPID key from ENV: ...${vapidKey.slice(-6)} (format may be invalid)`);
-      } else {
-        updateTestResult(4, 'FAIL', 'VAPID key missing from ENV - REQUIRED');
+      try {
+        const configValidation = validateFirebaseConfig();
+        
+        if (configValidation.hasVapidKey) {
+          // Validate VAPID key format (base64url, should be 87 chars)
+          const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
+          const isValidFormat = /^[A-Za-z0-9_-]{87}$/.test(vapidKey);
+          updateTestResult(4, isValidFormat ? 'PASS' : 'WARNING', 
+            `VAPID source: ${configValidation.vapidSource}, format: ${isValidFormat ? 'VALID' : 'INVALID'} (...${configValidation.vapidFormat})`);
+        } else {
+          updateTestResult(4, 'FAIL', 'VAPID key missing from ENV - VITE_FIREBASE_VAPID_PUBLIC_KEY required');
+        }
+      } catch (error) {
+        updateTestResult(4, 'FAIL', `VAPID validation error: ${error}`);
       }
 
       // Test 6: Token Generation
@@ -128,6 +149,10 @@ export const FCMTestPanel: React.FC = () => {
         if (result.success && result.token) {
           setCurrentToken(result.token);
           updateTestResult(5, 'PASS', `Token generated: ${result.token.substring(0, 20)}...`);
+          console.log('📊 FCM-TOKEN-SAVED: Token successfully saved to database');
+        } else if (result.error?.includes('PWA_INSTALL_REQUIRED')) {
+          updateTestResult(5, 'WARNING', 'SKIPPED: iOS Safari requires PWA installation for Web Push');
+          // Don't return early for PWA requirement, continue with other tests
         } else {
           updateTestResult(5, 'FAIL', `Token generation failed: ${result.error}`);
           setIsRunning(false);
