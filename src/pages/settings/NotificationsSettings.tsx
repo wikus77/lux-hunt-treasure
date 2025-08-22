@@ -78,10 +78,11 @@ const NotificationsSettings: React.FC = () => {
         console.log('❌ No active FCM tokens found');
         setPushTokenExists(false);
         
-        // Don't auto-disable if user manually enabled
-        if (permission !== 'granted') {
+        // Only disable if permission is explicitly denied
+        if (permission === 'denied') {
           setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
         }
+        // If permission is granted but no token, keep toggle enabled but show it needs setup
       }
     } catch (error) {
       console.error('❌ Error in comprehensive FCM check:', error);
@@ -368,7 +369,7 @@ const NotificationsSettings: React.FC = () => {
                   type="checkbox"
                   checked={settings.push_notifications_enabled}
                   onChange={(e) => handlePushNotificationsToggle(e.target.checked)}
-                  disabled={loading || pushLoading || !isSupported || permission === 'denied'}
+                  disabled={loading || pushLoading || !isSupported}
                   className="sr-only"
                   id="push-notifications-toggle"
                 />
@@ -380,7 +381,7 @@ const NotificationsSettings: React.FC = () => {
                       ? 'bg-[#00D1FF]' 
                       : 'bg-gray-600'
                     }
-                    ${(loading || pushLoading || !isSupported || permission === 'denied') 
+                    ${(loading || pushLoading || !isSupported) 
                       ? 'opacity-50 cursor-not-allowed' 
                       : ''
                     }

@@ -17,7 +17,7 @@ import { useAuthContext } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
 import AccountSection from "@/components/settings/AccountSection";
 import AppSection from "@/components/settings/AppSection";
-import NotificationSection from "@/components/settings/NotificationSection";
+
 import SupportSection from "@/components/settings/SupportSection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
 import { FirebasePushNotificationTest } from "@/components/admin/FirebasePushNotificationTest";
@@ -33,9 +33,6 @@ const Settings = () => {
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
   
-  // Add state for notification settings
-  const [pushNotifications, setPushNotifications] = useState(true);
-  const [emailNotifications, setEmailNotifications] = useState(true);
   
   const handleLogout = async () => {
     try {
@@ -98,13 +95,16 @@ const Settings = () => {
               setSoundEffects={setSoundEffects}
             />
             
-            {/* Notification Settings */}
-            <NotificationSection 
-              pushNotifications={pushNotifications}
-              emailNotifications={emailNotifications}
-              setPushNotifications={setPushNotifications}
-              setEmailNotifications={setEmailNotifications}
-            />
+            {/* Notification Settings Link */}
+            <Link to="/settings/notifications" className="block">
+              <div className="glass-card flex justify-between items-center p-4 hover:bg-white/10 transition-colors">
+                <div className="flex items-center">
+                  <Bell className="h-5 w-5 mr-3 text-white" />
+                  <span className="text-white font-medium">Gestione Notifiche</span>
+                </div>
+                <ChevronRight className="h-5 w-5 text-white/70" />
+              </div>
+            </Link>
             
             {/* Support & Help */}
             <SupportSection />
