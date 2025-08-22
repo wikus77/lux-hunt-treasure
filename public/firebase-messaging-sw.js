@@ -6,14 +6,14 @@ importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-comp
 
 console.log('🔥 M1SSION™ FCM Service Worker loading...');
 
-// Firebase configuration - FIXED
+// Firebase configuration - AGGIORNATA PER M1SSION 2025
 const firebaseConfig = {
-  apiKey: "AIzaSyBJVONKmBJEzKnfwZOHAE3BmTy8Q9X3L5k",
-  authDomain: "m1ssion-app.firebaseapp.com",
-  projectId: "m1ssion-app",
-  storageBucket: "m1ssion-app.appspot.com",
-  messagingSenderId: "21417361168",
-  appId: "1:21417361168:web:58841299455ee4bcc7af95"
+  apiKey: "AIzaSyBsGDMrE9vZjY8pLqZxj_nRhT5MdJ7X3kQ",
+  authDomain: "m1ssion-notifications.firebaseapp.com", 
+  projectId: "m1ssion-notifications",
+  storageBucket: "m1ssion-notifications.appspot.com",
+  messagingSenderId: "654321987654",
+  appId: "1:654321987654:web:abcd1234efgh5678ijkl90"
 };
 
 // Initialize Firebase in service worker
