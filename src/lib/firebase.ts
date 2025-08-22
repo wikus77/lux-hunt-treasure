@@ -14,7 +14,7 @@ const firebaseConfig = {
   appId: "1:21417361168:web:58841299455ee4bcc7af95"
 };
 
-// VAPID Key for Web Push - CORREZIONE CRITICA: Chiave completa
+// VAPID Key for Web Push - CORREZIONE FINALE 2025
 const VAPID_KEY = "BAI6FkKumBrWhuHT4RDnKkL17Ruv82o7QpYcYFQ8QtqkRcpD6XkYJvJrUofEfY_jIfv60KM4sNxeBNhfeoBPrw";
 
 // Initialize Firebase
@@ -41,6 +41,7 @@ export const getFCMToken = async (): Promise<string | null> => {
 
   try {
     console.log('🔥 FCM-TRACE: Requesting token with VAPID key...');
+    console.log('🔥 FCM-TRACE: VAPID Key being used:', VAPID_KEY.substring(0, 20) + '...');
     const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
     if (currentToken) {
       console.log('✅ FCM Token retrieved:', currentToken.substring(0, 20) + '...');
