@@ -93,6 +93,7 @@ export const FCMDebugPanel = () => {
   const activateNotifications = async () => {
     if (!user) {
       addLog('error', 'Utente non autenticato');
+      toast.error('Utente non autenticato');
       return;
     }
 
@@ -100,38 +101,80 @@ export const FCMDebugPanel = () => {
     addLog('info', 'Inizio processo attivazione notifiche...');
 
     try {
-      // Step 1: Request permission
-      addLog('info', 'Richiesta permessi notifiche...');
-      const granted = await fcm.requestPermission();
+      // Check if already granted
+      if (Notification.permission === 'granted') {
+        addLog('info', 'Permessi già concessi, generazione token...');
+        
+        // Force token generation
+        if (fcm.token) {
+          await refreshTokenData(user.id);
+          addLog('success', 'Notifiche già attive!');
+          toast.success('🔥 Notifiche già attive!');
+          return;
+        }
+      }
+
+      // Step 1: Request permission with proper handling
+      addLog('info', 'Richiesta permessi notifiche al browser...');
       
-      if (!granted) {
-        addLog('error', 'Permessi notifiche negati dall\'utente');
-        toast.error('Permessi notifiche negati');
+      let permission: NotificationPermission;
+      try {
+        permission = await Notification.requestPermission();
+      } catch (error: any) {
+        addLog('error', 'Errore richiesta permessi', { error: error.message });
+        
+        // Fallback for older browsers
+        permission = await new Promise((resolve) => {
+          Notification.requestPermission((result) => {
+            resolve(result as NotificationPermission);
+          });
+        });
+      }
+      
+      addLog('info', `Risposta permessi: ${permission}`);
+
+      if (permission !== 'granted') {
+        addLog('error', `Permessi negati: ${permission}`);
+        toast.error('Permessi notifiche negati. Abilitali nelle impostazioni del browser.');
+        
+        // Show instructions for enabling notifications
+        addLog('info', 'ISTRUZIONI: Clicca sull\'icona del lucchetto/info nella barra degli indirizzi e abilita le notifiche');
         return;
       }
 
-      addLog('success', 'Permessi notifiche concessi');
+      addLog('success', 'Permessi notifiche concessi!');
 
-      // Step 2: Wait for token
-      addLog('info', 'Attesa generazione token FCM...');
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for token generation
+      // Step 2: Wait for FCM hook to update
+      addLog('info', 'Attesa aggiornamento hook FCM...');
+      
+      // Give time for the hook to detect permission change
+      for (let i = 0; i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (fcm.token) break;
+        addLog('info', `Attesa token FCM... tentativo ${i + 1}/10`);
+      }
 
       if (!fcm.token) {
-        addLog('error', 'Token FCM non generato');
-        toast.error('Errore generazione token FCM');
+        addLog('error', 'Token FCM non generato dopo 10 secondi');
+        toast.error('Errore generazione token FCM. Riprova.');
         return;
       }
 
       addLog('success', `Token FCM generato: ${fcm.token.substring(0, 30)}...`);
 
-      // Step 3: Save to database (handled by the hook)
+      // Step 3: Refresh database data
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for DB save
       await refreshTokenData(user.id);
 
-      addLog('success', 'Notifiche attivate con successo!');
+      addLog('success', '🔥 Notifiche M1SSION™ attivate con successo!');
       toast.success('🔥 Notifiche M1SSION™ attivate!');
 
     } catch (error: any) {
-      addLog('error', 'Errore attivazione notifiche', { error: error.message });
+      addLog('error', 'Errore critico attivazione notifiche', { 
+        error: error.message, 
+        stack: error.stack,
+        permission: Notification.permission 
+      });
       toast.error(`Errore: ${error.message}`);
     } finally {
       setIsActivating(false);
@@ -222,6 +265,54 @@ export const FCMDebugPanel = () => {
           </p>
         </div>
 
+        {/* Permission Denied Warning */}
+        {fcm.permission === 'denied' && (
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <XCircle className="h-6 w-6 text-red-400 mt-1" />
+              <div>
+                <h3 className="text-xl font-semibold text-red-400 mb-3">
+                  🚫 Permessi Notifiche Negati
+                </h3>
+                <div className="space-y-3 text-gray-300">
+                  <p className="font-semibold">Per abilitare le notifiche push:</p>
+                  
+                  <div className="bg-gray-800 p-4 rounded border border-gray-600">
+                    <h4 className="font-semibold text-blue-400 mb-2">📱 Su Safari iOS (iPhone/iPad):</h4>
+                    <ol className="list-decimal list-inside space-y-1 text-sm">
+                      <li>Apri la pagina in Safari</li>
+                      <li>Tocca il pulsante "Condividi" (quadrato con freccia)</li>
+                      <li>Scorri e tocca "Aggiungi alla schermata Home"</li>
+                      <li>Apri l'app dalla home screen</li>
+                      <li>Riprova ad attivare le notifiche</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-gray-800 p-4 rounded border border-gray-600">
+                    <h4 className="font-semibold text-green-400 mb-2">🌐 Su Chrome/Firefox Desktop:</h4>
+                    <ol className="list-decimal list-inside space-y-1 text-sm">
+                      <li>Clicca sull'icona del lucchetto 🔒 nella barra degli indirizzi</li>
+                      <li>Trova "Notifiche" e cambia in "Consenti"</li>
+                      <li>Ricarica la pagina</li>
+                      <li>Riprova ad attivare le notifiche</li>
+                    </ol>
+                  </div>
+
+                  <div className="bg-gray-800 p-4 rounded border border-gray-600">
+                    <h4 className="font-semibold text-purple-400 mb-2">🔧 Alternativa Chrome:</h4>
+                    <ol className="list-decimal list-inside space-y-1 text-sm">
+                      <li>Vai su Impostazioni Chrome → Privacy e sicurezza → Impostazioni sito</li>
+                      <li>Trova "Notifiche"</li>
+                      <li>Rimuovi questo sito dall'elenco "Bloccato"</li>
+                      <li>Ricarica e riprova</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
@@ -299,16 +390,17 @@ export const FCMDebugPanel = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
             onClick={activateNotifications}
-            disabled={isActivating || fcm.permission === 'granted'}
+            disabled={isActivating}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg flex items-center justify-center gap-3 text-lg transition-all duration-200 transform hover:scale-105"
           >
             <Smartphone className="h-6 w-6" />
-            {isActivating ? '🔄 Attivazione...' : '📲 Attiva Notifiche'}
+            {isActivating ? '🔄 Attivazione...' : 
+             fcm.permission === 'granted' ? '🔄 Rigenera Token' : '📲 Attiva Notifiche'}
           </button>
 
           <button
             onClick={sendTestNotification}
-            disabled={isSendingTest || !user || !fcm.token}
+            disabled={isSendingTest || !user}
             className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg flex items-center justify-center gap-3 text-lg transition-all duration-200 transform hover:scale-105"
           >
             <Send className="h-6 w-6" />
