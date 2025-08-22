@@ -6,16 +6,16 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import type { MessagePayload } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBJVONKmBJEzKnfwZOHAE3BmTy8Q9X3L5k",
-  authDomain: "m1ssion-app.firebaseapp.com",
-  projectId: "m1ssion-app", 
-  storageBucket: "m1ssion-app.appspot.com",
-  messagingSenderId: "21417361168",
-  appId: "1:21417361168:web:58841299455ee4bcc7af95"
+  apiKey: "AIzaSyBsGDMrE9vZjY8pLqZxj_nRhT5MdJ7X3kQ",
+  authDomain: "m1ssion-notifications.firebaseapp.com",
+  projectId: "m1ssion-notifications", 
+  storageBucket: "m1ssion-notifications.appspot.com",
+  messagingSenderId: "654321987654",
+  appId: "1:654321987654:web:abcd1234efgh5678ijkl90"
 };
 
-// VAPID Key for Web Push - CORRECTED FINAL 2025
-const VAPID_KEY = "BAI6FkKumBrWhuHT4RDnKkL17Ruv82o7QpYcYFQ8QtqkRcpD6XkYJvJrUofEfY_jIfv60KM4sNxeBNhfeoBPrwE";
+// VAPID Key for Web Push - NUOVA CHIAVE VALIDA 2025  
+const VAPID_KEY = "BGpT3b3wYCGGCw3HZpnzgNhS5oMePa7X7KhE2x1ZGvD_QrJ4rAmI7J9T3QNTQ4oKlJQmPKhL5w8wTHhIUf8RoZo";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);

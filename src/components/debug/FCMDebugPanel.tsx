@@ -332,24 +332,26 @@ export const FCMDebugPanel = () => {
         }
       }
 
-      // Step 3: SAFARI - Istruzioni specifiche per abilitare notifiche
+      // Step 3: Request permission (works with all browsers including Safari)
       if (Notification.permission !== 'granted') {
-        addLog('error', '❌ SAFARI: PERMESSI NOTIFICHE BLOCCATI');
-        addLog('info', '🍎 ISTRUZIONI SAFARI SPECIFICHE:');
-        addLog('info', '1. Clicca su "Safari" nella barra menu in alto');
-        addLog('info', '2. Scegli "Preferenze..." (o premi Cmd+,)');
-        addLog('info', '3. Clicca su "Siti web" nella barra superiore');
-        addLog('info', '4. Clicca su "Notifiche" nella lista sinistra');
-        addLog('info', '5. Trova "lovable.dev" e cambia da "Nega" a "Consenti"');
-        addLog('info', '6. Chiudi preferenze e ricarica questa pagina');
-        addLog('info', '7. Riprova "Auto-Fix" ');
-        
-        toast.error('🍎 Safari: Abilita notifiche manualmente', {
-          description: 'Safari > Preferenze > Siti web > Notifiche > lovable.dev = Consenti'
-        });
-        
-        setIsAutoFixing(false);
-        return;
+        addLog('info', '🔔 Richiesta permessi notifiche...');
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            addLog('success', '✅ Permessi notifiche concessi!');
+          } else {
+            addLog('error', '❌ Permessi notifiche negati dall\'utente');
+            toast.error('❌ Permessi negati', {
+              description: 'Abilita le notifiche nelle impostazioni del browser'
+            });
+            setIsAutoFixing(false);
+            return;
+          }
+        } catch (error: any) {
+          addLog('error', `❌ Errore richiesta permessi: ${error.message}`);
+          setIsAutoFixing(false);
+          return;
+        }
       }
 
       // Step 4: Generate new FCM token
