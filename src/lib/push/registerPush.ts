@@ -1,17 +1,59 @@
 // © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
 // FCM Push Registration & Token Management
 
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getMessaging, getToken, onMessage, isSupported } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
-import { messaging } from '@/lib/firebase';
 import type { MessagePayload } from 'firebase/messaging';
+
+// Firebase Configuration - must include messagingSenderId
+const firebaseConfig = {
+  apiKey: "AIzaSyDt7BJ9kV8Jm9aH3GbS6kL4fP2eR9xW7qZ",
+  authDomain: "lux-hunt-treasure.firebaseapp.com",
+  projectId: "lux-hunt-treasure",
+  storageBucket: "lux-hunt-treasure.appspot.com",
+  messagingSenderId: "987654321098",
+  appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l"
+};
 
 // VAPID Key from environment - NO FALLBACK
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
 
-if (!VAPID_KEY) {
-  throw new Error('VITE_FIREBASE_VAPID_PUBLIC_KEY environment variable is required');
-}
+// Browser detection
+const getBrowserInfo = () => {
+  const userAgent = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+  
+  return { isIOS, isSafari, isStandalone };
+};
+
+// Initialize Firebase app once
+let app: any = null;
+let messaging: any = null;
+
+const initializeFirebase = async () => {
+  try {
+    // Initialize app if not already done
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    
+    // Check messaging support first
+    const supported = await isSupported();
+    if (!supported) {
+      console.warn('❌ FCM-REGISTER: Firebase messaging not supported in this browser');
+      return false;
+    }
+    
+    // Initialize messaging
+    messaging = getMessaging(app);
+    console.log('✅ FCM-REGISTER: Firebase messaging initialized');
+    return true;
+  } catch (error) {
+    console.error('❌ FCM-REGISTER: Firebase initialization failed:', error);
+    return false;
+  }
+};
 
 // Service Worker registration with proper scope validation
 export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
@@ -98,15 +140,25 @@ export const generateFCMToken = async (serviceWorkerRegistration?: ServiceWorker
     }
 
     console.log('🔄 FCM-REGISTER: Generating token with ENV VAPID key...');
+    console.log('🔍 FCM-REGISTER: VAPID source: ENV variable');
+    console.log('🔍 FCM-REGISTER: VAPID format: ...', VAPID_KEY.slice(-6));
+    
+    // Wait for service worker to be ready
+    if (serviceWorkerRegistration) {
+      await navigator.serviceWorker.ready;
+    }
+    
     const tokenOptions: any = { vapidKey: VAPID_KEY };
     if (serviceWorkerRegistration) {
       tokenOptions.serviceWorkerRegistration = serviceWorkerRegistration;
+      console.log('🔍 FCM-REGISTER: Using SW registration with scope:', serviceWorkerRegistration.scope);
     }
     
     const token = await getToken(messaging, tokenOptions);
     
     if (token) {
       console.log('✅ FCM-REGISTER: Token generated successfully', token.substring(0, 20) + '...');
+      console.log('📊 FCM-TOKEN-GENERATED: Token masked for security');
       return token;
     } else {
       console.warn('⚠️ FCM-REGISTER: No registration token available');
@@ -114,6 +166,15 @@ export const generateFCMToken = async (serviceWorkerRegistration?: ServiceWorker
     }
   } catch (error) {
     console.error('❌ FCM-REGISTER: Token generation failed:', error);
+    
+    // Log specific error types for better diagnostics
+    if (error instanceof Error) {
+      console.error('❌ FCM-REGISTER: Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    }
     return null;
   }
 };
@@ -198,7 +259,44 @@ export const registerPush = async (
   try {
     console.log('🚀 FCM-REGISTER: Starting push registration process...');
 
-    // Step 1: Register Service Worker with explicit registration return
+    // Step 0: Check browser compatibility first
+    const browserInfo = getBrowserInfo();
+    console.log('🔍 FCM-REGISTER: Browser info:', browserInfo);
+    
+    // Special handling for iOS Safari
+    if (browserInfo.isIOS && browserInfo.isSafari && !browserInfo.isStandalone) {
+      return {
+        success: false,
+        error: 'PWA_INSTALL_REQUIRED: Per iOS Safari, i Web Push richiedono l\'app installata nella Home. Installa la PWA e riapri per generare il token.'
+      };
+    }
+
+    // Step 1: Initialize Firebase
+    const firebaseInitialized = await initializeFirebase();
+    if (!firebaseInitialized) {
+      return {
+        success: false,
+        error: 'Firebase messaging not supported or initialization failed'
+      };
+    }
+
+    // Step 2: Validate VAPID key
+    if (!VAPID_KEY) {
+      return {
+        success: false,
+        error: 'Missing VAPID key - VITE_FIREBASE_VAPID_PUBLIC_KEY environment variable required'
+      };
+    }
+
+    // Step 3: Validate Firebase config
+    if (!firebaseConfig.messagingSenderId) {
+      return {
+        success: false,
+        error: 'Missing messagingSenderId in Firebase configuration'
+      };
+    }
+
+    // Step 4: Register Service Worker with explicit registration return
     const swRegistration = await registerServiceWorker();
     if (!swRegistration) {
       return { 
@@ -207,7 +305,7 @@ export const registerPush = async (
       };
     }
 
-    // Step 2: Request Permission
+    // Step 5: Request Permission
     const permission = await requestNotificationPermission();
     if (permission !== 'granted') {
       return { 
@@ -216,7 +314,7 @@ export const registerPush = async (
       };
     }
 
-    // Step 3: Generate Token with explicit SW registration
+    // Step 6: Generate Token with explicit SW registration
     const token = await generateFCMToken(swRegistration);
     if (!token) {
       return { 
@@ -225,7 +323,7 @@ export const registerPush = async (
       };
     }
 
-    // Step 4: Save to Database
+    // Step 7: Save to Database
     const saved = await saveTokenToDatabase(token);
     if (!saved) {
       return { 
@@ -234,7 +332,7 @@ export const registerPush = async (
       };
     }
 
-    // Step 5: Setup Foreground Listener
+    // Step 8: Setup Foreground Listener
     setupForegroundListener(onMessageReceived);
 
     console.log('🎉 FCM-REGISTER: Push registration completed successfully!');
@@ -257,6 +355,19 @@ export const isFCMSupported = (): boolean => {
   return typeof window !== 'undefined' && 
          'serviceWorker' in navigator && 
          'Notification' in window;
+};
+
+// Export browser detection for diagnostics
+export const getBrowserDetails = () => getBrowserInfo();
+
+// Export Firebase config validation
+export const validateFirebaseConfig = () => {
+  return {
+    hasMessagingSenderId: !!firebaseConfig.messagingSenderId,
+    hasVapidKey: !!VAPID_KEY,
+    vapidSource: VAPID_KEY ? 'ENV' : 'MISSING',
+    vapidFormat: VAPID_KEY ? VAPID_KEY.slice(-6) : 'N/A'
+  };
 };
 
 // Get current permission status
