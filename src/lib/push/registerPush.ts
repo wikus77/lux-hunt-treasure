@@ -6,8 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { messaging } from '@/lib/firebase';
 import type { MessagePayload } from 'firebase/messaging';
 
-// VAPID Key from environment
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY || "BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA";
+// VAPID Key from environment - NO FALLBACK
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
+
+if (!VAPID_KEY) {
+  throw new Error('VITE_FIREBASE_VAPID_PUBLIC_KEY environment variable is required');
+}
 
 // Service Worker registration
 export const registerServiceWorker = async (): Promise<boolean> => {
@@ -75,15 +79,25 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
 };
 
 // Generate FCM token
-export const generateFCMToken = async (): Promise<string | null> => {
+export const generateFCMToken = async (serviceWorkerRegistration?: ServiceWorkerRegistration): Promise<string | null> => {
   try {
     if (!messaging) {
       console.error('❌ FCM-REGISTER: Firebase messaging not initialized');
       return null;
     }
 
-    console.log('🔄 FCM-REGISTER: Generating token with VAPID key...');
-    const token = await getToken(messaging, { vapidKey: VAPID_KEY });
+    if (!VAPID_KEY) {
+      console.error('❌ FCM-REGISTER: VAPID key not configured');
+      return null;
+    }
+
+    console.log('🔄 FCM-REGISTER: Generating token with ENV VAPID key...');
+    const tokenOptions: any = { vapidKey: VAPID_KEY };
+    if (serviceWorkerRegistration) {
+      tokenOptions.serviceWorkerRegistration = serviceWorkerRegistration;
+    }
+    
+    const token = await getToken(messaging, tokenOptions);
     
     if (token) {
       console.log('✅ FCM-REGISTER: Token generated successfully', token.substring(0, 20) + '...');
@@ -197,11 +211,12 @@ export const registerPush = async (
     }
 
     // Step 3: Generate Token
-    const token = await generateFCMToken();
+    const swRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+    const token = await generateFCMToken(swRegistration || undefined);
     if (!token) {
       return { 
         success: false, 
-        error: 'Failed to generate FCM token' 
+        error: 'Failed to generate FCM token - check VAPID key configuration' 
       };
     }
 
