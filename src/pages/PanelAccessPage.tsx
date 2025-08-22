@@ -23,6 +23,7 @@ import { OneSignalRegistration } from '@/components/debug/OneSignalRegistration'
 import { M1ssionPushTestForm } from './M1ssionPushTestForm';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import { FCMTokenGenerator } from '@/components/debug/FCMTokenGenerator';
+import { FCMCompleteTestSuite } from '@/components/debug/FCMCompleteTestSuite';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -227,7 +228,10 @@ const PanelAccessPage = () => {
                 <h2 className="text-xl font-bold text-white mb-2">🔥 FIREBASE FCM TOKEN GENERATOR</h2>
                 <p className="text-gray-400 text-sm">Genera un token FCM e salvalo nel database per testare le notifiche</p>
               </div>
-              <FCMTokenGenerator />
+        <FCMTokenGenerator />
+        
+        {/* Complete FCM Test Suite */}
+        <FCMCompleteTestSuite />
             </div>
           </div>
         </div>
