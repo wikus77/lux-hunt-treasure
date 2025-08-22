@@ -6,7 +6,7 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compa
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDxxxxxxxxxxxxxxx", // TODO: Replace with real API key
+  apiKey: "AIzaSyBJVONKmBJEzKnfwZOHAE3BmTy8Q9X3L5k",
   authDomain: "m1ssion-app.firebaseapp.com",
   projectId: "m1ssion-app",
   storageBucket: "m1ssion-app.appspot.com",

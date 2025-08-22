@@ -168,6 +168,48 @@ serve(async (req: Request) => {
       console.log('✅ Notifications saved to database successfully');
     }
 
+    // Log comprehensive diagnostic information to admin_logs
+    const diagnosticDetails = {
+      fcm_request: {
+        user_id,
+        title,
+        body,
+        broadcast,
+        timestamp: new Date().toISOString()
+      },
+      fcm_tokens: {
+        total_found: tokens.length,
+        tokens_preview: tokens.map(t => ({
+          user_id: t.user_id,
+          token_length: t.fcm_token?.length,
+          token_prefix: t.fcm_token?.substring(0, 10)
+        }))
+      },
+      fcm_response: {
+        status_code: fcmResponse.status,
+        success_count: fcmResult.success || 0,
+        failure_count: fcmResult.failure || 0,
+        results: fcmResult.results || [],
+        multicast_id: fcmResult.multicast_id,
+        canonical_ids: fcmResult.canonical_ids || 0
+      },
+      supabase_operations: {
+        notifications_saved: !notificationError,
+        notification_error: notificationError?.message || null
+      }
+    };
+
+    // Save diagnostic log
+    await supabase
+      .from('admin_logs')
+      .insert({
+        event_type: 'firebase_push_notification_sent',
+        user_id: user_id || null,
+        note: `FCM push sent: ${title} (${fcmResult.success || 0} success, ${fcmResult.failure || 0} failed)`,
+        context: 'firebase_fcm',
+        details: diagnosticDetails
+      });
+
     // Count successful sends
     const successCount = fcmResult.success || 0;
     const failureCount = fcmResult.failure || 0;

@@ -6,7 +6,7 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import type { MessagePayload } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDxxxxxxxxxxxxxxx", // TODO: Replace with real API key
+  apiKey: "AIzaSyBJVONKmBJEzKnfwZOHAE3BmTy8Q9X3L5k",
   authDomain: "m1ssion-app.firebaseapp.com",
   projectId: "m1ssion-app", 
   storageBucket: "m1ssion-app.appspot.com",
