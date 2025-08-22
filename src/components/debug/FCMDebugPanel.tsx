@@ -332,32 +332,22 @@ export const FCMDebugPanel = () => {
         }
       }
 
-      // Step 3: Force permission request con istruzioni dettagliate
+      // Step 3: SAFARI - Istruzioni specifiche per abilitare notifiche
       if (Notification.permission !== 'granted') {
-        addLog('error', '❌ PERMESSI NOTIFICHE NEGATI - RISOLUZIONE NECESSARIA');
-        addLog('info', '🔧 ISTRUZIONI MANUALI:');
-        addLog('info', '1. Nelle impostazioni browser cerca "Notifiche"');
-        addLog('info', '2. Trova questo sito e cambia da "Blocca" a "Consenti"');
-        addLog('info', '3. Ricarica la pagina e riprova Auto-Fix');
+        addLog('error', '❌ SAFARI: PERMESSI NOTIFICHE BLOCCATI');
+        addLog('info', '🍎 ISTRUZIONI SAFARI SPECIFICHE:');
+        addLog('info', '1. Clicca su "Safari" nella barra menu in alto');
+        addLog('info', '2. Scegli "Preferenze..." (o premi Cmd+,)');
+        addLog('info', '3. Clicca su "Siti web" nella barra superiore');
+        addLog('info', '4. Clicca su "Notifiche" nella lista sinistra');
+        addLog('info', '5. Trova "lovable.dev" e cambia da "Nega" a "Consenti"');
+        addLog('info', '6. Chiudi preferenze e ricarica questa pagina');
+        addLog('info', '7. Riprova "Auto-Fix" ');
         
-        toast.error('❌ Permessi notifiche NEGATI', {
-          description: 'Cambia manualmente nelle impostazioni browser: Notifiche > Consenti per questo sito'
+        toast.error('🍎 Safari: Abilita notifiche manualmente', {
+          description: 'Safari > Preferenze > Siti web > Notifiche > lovable.dev = Consenti'
         });
         
-        // Mostra popup con istruzioni dettagliate per i browser più comuni
-        const userAgent = navigator.userAgent;
-        let browserInstructions = '';
-        if (userAgent.includes('Chrome')) {
-          browserInstructions = 'Chrome: ⚙️ > Privacy e sicurezza > Impostazioni siti > Notifiche';
-        } else if (userAgent.includes('Firefox')) {
-          browserInstructions = 'Firefox: ☰ > Impostazioni > Privacy e sicurezza > Notifiche';
-        } else if (userAgent.includes('Safari')) {
-          browserInstructions = 'Safari: Preferenze > Siti web > Notifiche';
-        } else if (userAgent.includes('Opera')) {
-          browserInstructions = 'Opera: ☰ > Impostazioni > Privacy e sicurezza > Notifiche';
-        }
-        
-        addLog('info', `Browser rilevato: ${browserInstructions}`);
         setIsAutoFixing(false);
         return;
       }
