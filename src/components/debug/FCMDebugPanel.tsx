@@ -332,22 +332,34 @@ export const FCMDebugPanel = () => {
         }
       }
 
-      // Step 3: Force permission request
+      // Step 3: Force permission request con istruzioni dettagliate
       if (Notification.permission !== 'granted') {
-        addLog('info', 'Richiesta permessi notifiche...');
-        try {
-          const permission = await Notification.requestPermission();
-          if (permission === 'granted') {
-            addLog('success', '✅ Permessi notifiche concessi');
-          } else {
-            addLog('error', `❌ Permessi negati: ${permission}`);
-            toast.error('Devi concedere i permessi manualmente nelle impostazioni browser');
-            return;
-          }
-        } catch (error: any) {
-          addLog('error', `Errore richiesta permessi: ${error.message}`);
-          return;
+        addLog('error', '❌ PERMESSI NOTIFICHE NEGATI - RISOLUZIONE NECESSARIA');
+        addLog('info', '🔧 ISTRUZIONI MANUALI:');
+        addLog('info', '1. Nelle impostazioni browser cerca "Notifiche"');
+        addLog('info', '2. Trova questo sito e cambia da "Blocca" a "Consenti"');
+        addLog('info', '3. Ricarica la pagina e riprova Auto-Fix');
+        
+        toast.error('❌ Permessi notifiche NEGATI', {
+          description: 'Cambia manualmente nelle impostazioni browser: Notifiche > Consenti per questo sito'
+        });
+        
+        // Mostra popup con istruzioni dettagliate per i browser più comuni
+        const userAgent = navigator.userAgent;
+        let browserInstructions = '';
+        if (userAgent.includes('Chrome')) {
+          browserInstructions = 'Chrome: ⚙️ > Privacy e sicurezza > Impostazioni siti > Notifiche';
+        } else if (userAgent.includes('Firefox')) {
+          browserInstructions = 'Firefox: ☰ > Impostazioni > Privacy e sicurezza > Notifiche';
+        } else if (userAgent.includes('Safari')) {
+          browserInstructions = 'Safari: Preferenze > Siti web > Notifiche';
+        } else if (userAgent.includes('Opera')) {
+          browserInstructions = 'Opera: ☰ > Impostazioni > Privacy e sicurezza > Notifiche';
         }
+        
+        addLog('info', `Browser rilevato: ${browserInstructions}`);
+        setIsAutoFixing(false);
+        return;
       }
 
       // Step 4: Generate new FCM token
