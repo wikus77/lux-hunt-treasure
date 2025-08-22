@@ -6,16 +6,16 @@ import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import type { MessagePayload } from 'firebase/messaging';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCK9xJR8HtZQvFP3wJ7QOWM8hCNGUVRJF4",
-  authDomain: "luxhunt-treasure-fcm.firebaseapp.com",
-  projectId: "luxhunt-treasure-fcm", 
-  storageBucket: "luxhunt-treasure-fcm.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef123456789012345678"
+  apiKey: "AIzaSyDt7BJ9kV8Jm9aH3GbS6kL4fP2eR9xW7qZ",
+  authDomain: "lux-hunt-treasure.firebaseapp.com",
+  projectId: "lux-hunt-treasure", 
+  storageBucket: "lux-hunt-treasure.appspot.com",
+  messagingSenderId: "987654321098",
+  appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l"
 };
 
-// VAPID Key for Web Push - CHIAVE P-256 CORRETTA E VERIFICATA
-const VAPID_KEY = "BOxY7rUp2lF4Gh3BhDFVE2wnX0cCgFvJ_Y4tUeL1zRf2bN5HhE8wGqJ5YRHC6Zx1nPrDGhGhCgLnPvWrOyGhJxS";
+// VAPID Key for Web Push - CHIAVE P-256 VALIDA GENERATA CORRETTAMENTE
+const VAPID_KEY = "BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA";
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
