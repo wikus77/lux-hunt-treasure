@@ -104,8 +104,8 @@ export const FCMTestPanel: React.FC = () => {
       // Test 5: VAPID Key
       await new Promise(resolve => setTimeout(resolve, 500));
       const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
-      updateTestResult(4, vapidKey ? 'PASS' : 'WARNING', 
-        vapidKey ? 'VAPID key configured' : 'Using fallback VAPID key');
+      updateTestResult(4, vapidKey ? 'PASS' : 'FAIL', 
+        vapidKey ? `VAPID key from ENV: ...${vapidKey.slice(-6)}` : 'VAPID key missing from ENV - REQUIRED');
 
       // Test 6: Token Generation
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -148,10 +148,10 @@ export const FCMTestPanel: React.FC = () => {
 
         if (error) {
           updateTestResult(7, 'FAIL', `Edge Function error: ${error.message}`);
-        } else if (data?.sent > 0) {
-          updateTestResult(7, 'PASS', `Edge Function sent: ${data.sent} notifications`);
+        } else if (data?.success && data?.sent >= 0) {
+          updateTestResult(7, 'PASS', `Edge Function OK: sent=${data.sent}, failures=${data.failures || 0}`);
         } else {
-          updateTestResult(7, 'WARNING', `Edge Function response: ${JSON.stringify(data)}`);
+          updateTestResult(7, 'FAIL', `Edge Function unexpected response: ${JSON.stringify(data)}`);
         }
       } catch (error) {
         updateTestResult(7, 'FAIL', `Edge Function failed: ${error}`);

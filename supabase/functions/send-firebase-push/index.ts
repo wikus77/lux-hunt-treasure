@@ -28,7 +28,9 @@ const getFirebaseCredentials = () => {
     }
 
     // Decode base64 and parse JSON
-    const serviceAccountJson = atob(serviceAccountB64);
+    const serviceAccountJson = new TextDecoder().decode(
+      Uint8Array.from(atob(serviceAccountB64), c => c.charCodeAt(0))
+    );
     // Normalize newlines
     const normalizedJson = serviceAccountJson.replace(/\\n/g, '\n');
     const serviceAccount = JSON.parse(normalizedJson);
@@ -266,7 +268,13 @@ serve(async (req) => {
     if (tokens.length === 0) {
       console.warn('⚠️ FCM-PUSH: No FCM tokens found for specified criteria');
       return new Response(
-        JSON.stringify({ success: true, sent: 0, message: 'No tokens found' }),
+        JSON.stringify({ 
+          success: true, 
+          sent: 0, 
+          failures: 0,
+          total_tokens: 0,
+          reason: 'No tokens found for specified criteria' 
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
