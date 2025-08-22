@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useFCMPushNotifications } from '@/hooks/useFCMPushNotifications';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -25,7 +25,7 @@ const NotificationsSettings: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [pushTokenExists, setPushTokenExists] = useState(false);
-  const { isSupported, permission, requestPermission, loading: pushLoading } = usePushNotifications();
+  const { isSupported, permission, requestPermission, loading: pushLoading } = useFCMPushNotifications();
   
   const [settings, setSettings] = useState<NotificationSettings>({
     notifications_enabled: true,
@@ -52,27 +52,27 @@ const NotificationsSettings: React.FC = () => {
     if (!user) return;
     
     try {
-      console.log('🔍 Checking push tokens for user:', user.id);
+      console.log('🔍 Checking FCM tokens for user:', user.id);
       
       const { data, error } = await supabase
-        .from('device_tokens')
-        .select('id, device_type, token')
+        .from('user_push_tokens')
+        .select('id, fcm_token')
         .eq('user_id', user.id)
-        .in('device_type', ['ios', 'android', 'web_push']);
+        .eq('is_active', true);
 
-      console.log('📱 Push tokens found:', data);
+      console.log('📱 FCM tokens found:', data);
       
       if (!error && data && data.length > 0) {
-        console.log('✅ Push tokens exist - enabling toggle');
+        console.log('✅ FCM tokens exist - enabling toggle');
         setPushTokenExists(true);
         setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
       } else {
-        console.log('❌ No push tokens found');
+        console.log('❌ No FCM tokens found');
         setPushTokenExists(false);
         setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
       }
     } catch (error) {
-      console.error('Error checking push token:', error);
+      console.error('Error checking FCM token:', error);
     }
   };
 
@@ -150,69 +150,68 @@ const NotificationsSettings: React.FC = () => {
   };
 
   const handlePushNotificationsToggle = async (enabled: boolean) => {
-    console.log('🔄 Push toggle clicked:', enabled);
+    console.log('🔄 FCM Push toggle clicked:', enabled);
     
     if (enabled) {
-      console.log('📱 Requesting push notification permission...');
+      console.log('📱 Requesting FCM notification permission...');
       setLoading(true);
       
-      // Request push notification permission
-      const result = await requestPermission();
+      // Request FCM notification permission
+      const success = await requestPermission();
       
-      console.log('📋 Permission request result:', result);
+      console.log('📋 FCM Permission request result:', success);
       
-      if (result.success) {
-        console.log('✅ Permission granted - checking tokens again');
+      if (success) {
+        console.log('✅ FCM Permission granted - checking tokens again');
         
         // Re-check tokens after permission grant
         await checkPushTokenExists();
         
         toast({
-          title: "✅ Notifiche Push Attivate",
-          description: "Riceverai notifiche push su questo dispositivo."
+          title: "✅ Notifiche Push FCM Attivate",
+          description: "Riceverai notifiche push Firebase su questo dispositivo."
         });
       } else {
-        console.log('❌ Permission denied or failed');
+        console.log('❌ FCM Permission denied or failed');
         setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
         toast({
-          title: "❌ Permesso Negato",
-          description: result.reason || "Le notifiche push non sono state autorizzate.",
+          title: "❌ Permesso FCM Negato",
+          description: "Le notifiche push Firebase non sono state autorizzate.",
           variant: "destructive"
         });
       }
       setLoading(false);
     } else {
-      console.log('🔕 Disabling push notifications - removing tokens');
+      console.log('🔕 Disabling FCM notifications - removing tokens');
       setLoading(true);
       
       try {
-        // Remove all push tokens for this user
+        // Remove all FCM tokens for this user
         const { error } = await supabase
-          .from('device_tokens')
+          .from('user_push_tokens')
           .delete()
-          .eq('user_id', user?.id)
-          .in('device_type', ['ios', 'android', 'web_push']);
+          .eq('user_id', user?.id);
           
         if (error) {
-          console.error('❌ Error removing push tokens:', error);
+          console.error('❌ Error removing FCM tokens:', error);
           toast({
-            title: "❌ Errore Disattivazione",
-            description: "Non è stato possibile disattivare le notifiche push.",
+            title: "❌ Errore Disattivazione FCM",
+            description: "Non è stato possibile disattivare le notifiche push Firebase.",
             variant: "destructive"
           });
         } else {
-          console.log('✅ Push tokens removed successfully');
+          console.log('✅ FCM tokens removed successfully');
           setPushTokenExists(false);
           setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
           toast({
-            title: "🔕 Notifiche Push Disattivate",
-            description: "Non riceverai più notifiche push su questo dispositivo."
+            title: "🔕 Notifiche Push FCM Disattivate",
+            description: "Non riceverai più notifiche push Firebase su questo dispositivo."
           });
         }
       } catch (error) {
-        console.error('❌ Exception removing push tokens:', error);
+        console.error('❌ Exception removing FCM tokens:', error);
         toast({
-          title: "❌ Errore Disattivazione",
+          title: "❌ Errore Disattivazione FCM",
           description: "Si è verificato un errore durante la disattivazione.",
           variant: "destructive"
         });
