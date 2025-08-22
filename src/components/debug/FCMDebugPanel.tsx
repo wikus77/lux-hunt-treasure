@@ -431,6 +431,7 @@ export const FCMDebugPanel = () => {
   const sendAdvancedTest = async () => {
     if (!user) {
       addLog('error', 'Utente non autenticato');
+      toast.error('❌ Utente non autenticato');
       return;
     }
 
@@ -439,30 +440,48 @@ export const FCMDebugPanel = () => {
     addLog('info', `🚀 INVIO TEST NOTIFICA AVANZATO ID: ${testId}`);
 
     try {
-      // Multi-channel test
-      const testPromises = [];
-
-      // 1. Service Worker direct test
+      // Test 1: Service Worker direct test  
       if ('serviceWorker' in navigator) {
+        addLog('info', '1️⃣ Test Service Worker diretto...');
         const registration = await navigator.serviceWorker.getRegistration();
         if (registration?.active) {
+          // Create a MessageChannel for two-way communication
+          const messageChannel = new MessageChannel();
+          
+          // Listen for response from service worker
+          messageChannel.port1.onmessage = (event) => {
+            if (event.data.type === 'TEST_NOTIFICATION_SUCCESS') {
+              addLog('success', `✅ Service Worker test completato (ID: ${event.data.testId})`);
+              toast.success('🔔 Test Service Worker riuscito!');
+            } else if (event.data.type === 'TEST_NOTIFICATION_ERROR') {
+              addLog('error', `❌ Service Worker test fallito: ${event.data.error}`);
+              toast.error(`❌ SW Test fallito: ${event.data.error}`);
+            }
+          };
+          
+          // Send test message to service worker
           registration.active.postMessage({
             type: 'TEST_NOTIFICATION',
             testId: testId,
-            title: '🔥 M1SSION™ SW Test',
-            body: `Service Worker test diretto - ${new Date().toLocaleTimeString()}`
-          });
+            title: '🔥 M1SSION™ SW Test Avanzato',
+            body: `Test Service Worker - ${new Date().toLocaleTimeString()}`,
+            source: 'advanced_debug_panel'
+          }, [messageChannel.port2]);
+          
           addLog('success', '✅ Test Service Worker inviato');
+        } else {
+          addLog('error', '❌ Service Worker non attivo');
+          toast.error('❌ Service Worker non disponibile');
         }
       }
 
-      // 2. FCM via Edge Function test
-      addLog('info', 'Invio notifica FCM completa...');
+      // Test 2: FCM via Edge Function test
+      addLog('info', '2️⃣ Test notifica FCM completa...');
       const { data, error } = await supabase.functions.invoke('send-firebase-push', {
         body: {
           user_id: user.id,
           title: `🔥 M1SSION™ Test Completo ${testId}`,
-          body: `Test notifica avanzato - ${new Date().toLocaleTimeString()}`,
+          body: `Test notifica avanzato Firebase FCM - ${new Date().toLocaleTimeString()}`,
           data: {
             test_id: testId.toString(),
             source: 'advanced_debug_panel',
@@ -475,30 +494,57 @@ export const FCMDebugPanel = () => {
       });
 
       if (error) {
-        addLog('error', `Errore FCM: ${error.message}`, { error });
+        addLog('error', `❌ Errore FCM Edge Function: ${error.message}`, { error });
         toast.error(`❌ Errore FCM: ${error.message}`);
       } else if (data?.success) {
         addLog('success', `✅ Notifica FCM inviata! Delivered: ${data.sent_count || 0}`, { data });
-        toast.success(`🚀 Test inviato! (${data.sent_count || 0} delivered)`);
+        toast.success(`🚀 FCM Test inviato! (${data.sent_count || 0} devices reached)`, {
+          description: 'Controlla se la notifica è arrivata'
+        });
 
-        // Arrival check
+        // Show arrival check instructions
         addLog('info', '⏱️ Monitoraggio arrivo notifica per 15 secondi...');
         
         setTimeout(() => {
           addLog('info', '📱 Se la notifica non è arrivata, verifica:');
-          addLog('info', '1. 🔧 Service Worker attivo (F12 → Application → Service Workers)');
-          addLog('info', '2. 🔒 Notifiche abilitate nel browser');
-          addLog('info', '3. 📱 App PWA installata (iOS Safari)');
-          addLog('info', '4. 🌐 Connessione internet stabile');
-          addLog('info', '5. 🔍 Console per errori FCM');
+          addLog('info', '• 🔧 Service Worker attivo (F12 → Application → Service Workers)');
+          addLog('info', '• 🔒 Notifiche abilitate nel browser');
+          addLog('info', '• 📱 App PWA installata (iOS Safari)');
+          addLog('info', '• 🌐 Connessione internet stabile');
+          addLog('info', '• 🔍 Console per errori FCM');
         }, 15000);
       } else {
         addLog('warning', 'Notifica inviata ma nessun dispositivo raggiunto', { data });
-        toast.warning('⚠️ Nessun dispositivo registrato per le notifiche');
+        toast.warning('⚠️ Nessun dispositivo FCM raggiunto');
       }
 
+      // Test 3: Browser native notification (fallback)
+      if (Notification.permission === 'granted') {
+        addLog('info', '3️⃣ Test notifica browser nativa (fallback)...');
+        try {
+          const notification = new Notification('🔥 M1SSION™ Test Browser Nativo', {
+            body: `Test notifica browser - ${new Date().toLocaleTimeString()}`,
+            icon: '/icon-192x192.png',
+            tag: 'browser-test',
+            requireInteraction: true
+          });
+
+          notification.onclick = () => {
+            addLog('info', '🖱️ Test browser nativo cliccato dall\'utente');
+            notification.close();
+          };
+
+          setTimeout(() => notification.close(), 10000);
+          addLog('success', '✅ Test browser nativo creato');
+        } catch (error: any) {
+          addLog('error', `❌ Test browser nativo fallito: ${error.message}`);
+        }
+      }
+
+      addLog('success', '🎉 TEST NOTIFICA AVANZATO COMPLETATO!');
+      
     } catch (error: any) {
-      addLog('error', `Errore critico test: ${error.message}`, { error: error.stack });
+      addLog('error', `Errore critico durante test: ${error.message}`, { error });
       toast.error(`❌ Errore test: ${error.message}`);
     } finally {
       setIsSendingTest(false);
