@@ -312,7 +312,7 @@ const NotificationsSettings: React.FC = () => {
               <div className="relative">
                 <input
                   type="checkbox"
-                  checked={settings.push_notifications_enabled && pushTokenExists}
+                  checked={settings.push_notifications_enabled}
                   onChange={(e) => handlePushNotificationsToggle(e.target.checked)}
                   disabled={loading || pushLoading || !isSupported || permission === 'denied'}
                   className="sr-only"
@@ -322,7 +322,7 @@ const NotificationsSettings: React.FC = () => {
                   htmlFor="push-notifications-toggle"
                   className={`
                     relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF] focus:ring-offset-2 focus:ring-offset-black
-                    ${(settings.push_notifications_enabled && pushTokenExists) 
+                    ${settings.push_notifications_enabled
                       ? 'bg-[#00D1FF]' 
                       : 'bg-gray-600'
                     }
@@ -335,7 +335,7 @@ const NotificationsSettings: React.FC = () => {
                   <span
                     className={`
                       inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-lg
-                      ${(settings.push_notifications_enabled && pushTokenExists) 
+                      ${settings.push_notifications_enabled
                         ? 'translate-x-6' 
                         : 'translate-x-1'
                       }
