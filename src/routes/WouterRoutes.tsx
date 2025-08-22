@@ -58,6 +58,7 @@ import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
 import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
+import FcmTest from "@/pages/FcmTest";
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading } = useUnifiedAuth();
@@ -278,6 +279,10 @@ const WouterRoutes: React.FC = () => {
             <ProtectedRoute>
               <GlobalLayout><VAPIDKeyTest /></GlobalLayout>
             </ProtectedRoute>
+          </Route>
+
+          <Route path="/fcm-test">
+            <FcmTest />
           </Route>
 
           {/* QR Routes REMOVED - rewards now handled by popup in map */}
