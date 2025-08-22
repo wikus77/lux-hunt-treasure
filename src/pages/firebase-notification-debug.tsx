@@ -5,6 +5,8 @@ import { FCMDebugTrace } from '@/components/admin/FCMDebugTrace';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import { FirebaseNotificationDiagnostic } from '@/components/admin/FirebaseNotificationDiagnostic';
 import { FirebaseNotificationReport } from '@/components/admin/FirebaseNotificationReport';
+import { FCMComprehensiveTest } from '@/components/admin/FCMComprehensiveTest';
+import { FCMDiagnosticReport } from '@/components/admin/FCMDiagnosticReport';
 import { Badge } from '@/components/ui/badge';
 
 export default function FirebaseNotificationDebug() {
@@ -27,6 +29,12 @@ export default function FirebaseNotificationDebug() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Executive Summary Report */}
+        <FCMDiagnosticReport />
+
+        {/* Comprehensive Test Suite - Priority */}
+        <FCMComprehensiveTest />
 
         {/* FCM Real-time Diagnostics */}
         <FCMDebugTrace />
