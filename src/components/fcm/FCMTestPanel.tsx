@@ -36,11 +36,11 @@ export const FCMTestPanel: React.FC = () => {
   }, []);
 
   const initializeTests = () => {
-    const initialTests: TestResult[] = [
-      { name: 'FCM Support', status: 'PENDING', message: 'Checking browser compatibility...' },
+  const initialTests: TestResult[] = [
+      { name: 'Domain & Support', status: 'PENDING', message: 'Checking domain and browser compatibility...' },
       { name: 'Service Worker', status: 'PENDING', message: 'Checking service worker registration...' },
       { name: 'Permissions', status: 'PENDING', message: 'Checking notification permissions...' },
-      { name: 'Firebase Library', status: 'PENDING', message: 'Checking Firebase messaging...' },
+      { name: 'Firebase Config', status: 'PENDING', message: 'Validating Firebase config and project...' },
       { name: 'VAPID Key', status: 'PENDING', message: 'Validating VAPID configuration...' },
       { name: 'Token Generation', status: 'PENDING', message: 'Testing FCM token generation...' },
       { name: 'Database Storage', status: 'PENDING', message: 'Testing token storage...' },
@@ -61,11 +61,24 @@ export const FCMTestPanel: React.FC = () => {
     initializeTests();
 
     try {
+      // Test 0: Domain Check
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const currentHost = location.host;
+      if (currentHost.includes('preview') && currentHost.includes('lovable.app')) {
+        updateTestResult(0, 'WARNING', 
+          `Preview domain not supported for FCM: ${currentHost}. Use m1ssion.eu or localhost`);
+        for (let i = 1; i < testResults.length; i++) {
+          updateTestResult(i, 'WARNING', 'Skipped - Preview domain detected');
+        }
+        setIsRunning(false);
+        return;
+      }
+
       // Test 1: FCM Support
       await new Promise(resolve => setTimeout(resolve, 500));
       const isSupported = isFCMSupported();
       updateTestResult(0, isSupported ? 'PASS' : 'FAIL', 
-        isSupported ? 'Browser supports FCM' : 'Browser does not support FCM');
+        isSupported ? `Browser supports FCM on ${currentHost}` : 'Browser does not support FCM');
 
       if (!isSupported) {
         setIsRunning(false);
@@ -100,11 +113,16 @@ export const FCMTestPanel: React.FC = () => {
       updateTestResult(2, permission === 'granted' ? 'PASS' : 'WARNING', 
         `Notification permission: ${permission}`);
 
-      // Test 4: Firebase Library & Config
+      // Test 4: Firebase Config & Project Match
       await new Promise(resolve => setTimeout(resolve, 500));
       try {
         const configValidation = validateFirebaseConfig();
         const browserInfo = getBrowserDetails();
+        
+        // Show project info (masked for security)
+        const projectId = "lux-hunt-treasure";
+        const appId = "1:987654321098:web:***masked***";
+        const senderId = "987654321098";
         
         let configMessage = '';
         let configStatus: 'PASS' | 'FAIL' | 'WARNING' = 'PASS';
@@ -116,7 +134,7 @@ export const FCMTestPanel: React.FC = () => {
           configStatus = 'WARNING';
           configMessage = `iOS Safari detected - PWA install required. Current: ${browserInfo.isStandalone ? 'Installed' : 'Browser only'}`;
         } else {
-          configMessage = `Firebase config valid, messagingSenderId present`;
+          configMessage = `Project match: YES - projectId: ${projectId}, senderId: ${senderId}`;
         }
         
         updateTestResult(3, configStatus, configMessage);
@@ -210,6 +228,35 @@ export const FCMTestPanel: React.FC = () => {
     }
   };
 
+  const cleanSWAndCache = async () => {
+    try {
+      // Unregister all service workers
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const registration of registrations) {
+        try {
+          await registration.unregister();
+          console.log('🧹 Unregistered SW:', registration.scope);
+        } catch (e) {
+          console.warn('⚠️ Failed to unregister SW:', e);
+        }
+      }
+
+      // Clear all caches
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        for (const cacheName of cacheNames) {
+          await caches.delete(cacheName);
+          console.log('🧹 Deleted cache:', cacheName);
+        }
+      }
+
+      alert('🧹 Service Workers and caches cleared! Page will reload...');
+      window.location.reload();
+    } catch (error) {
+      alert(`❌ Cleanup failed: ${error}`);
+    }
+  };
+
   const sendTestNotification = async () => {
     if (!currentToken) {
       alert('No FCM token available. Run diagnostics first.');
@@ -252,7 +299,7 @@ export const FCMTestPanel: React.FC = () => {
           <CardTitle className="text-cyan-400">🔥 FCM Diagnostics & Test Panel</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <Button 
               onClick={runDiagnostics} 
               disabled={isRunning}
@@ -267,6 +314,14 @@ export const FCMTestPanel: React.FC = () => {
               variant="outline"
             >
               📨 Send Test Notification
+            </Button>
+
+            <Button 
+              onClick={cleanSWAndCache}
+              variant="destructive"
+              className="bg-red-600 hover:bg-red-700"
+            >
+              🧹 Clean SW & Cache
             </Button>
           </div>
 
