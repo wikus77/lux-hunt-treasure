@@ -21,6 +21,7 @@ import { M1ssionDebugTest } from './M1ssionDebugTest';
 import { EdgeFunctionTester } from '@/components/debug/EdgeFunctionTester';
 import { OneSignalRegistration } from '@/components/debug/OneSignalRegistration';
 import { M1ssionPushTestForm } from './M1ssionPushTestForm';
+import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -28,7 +29,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'push-test-form'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'push-test-form'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -217,10 +218,39 @@ const PanelAccessPage = () => {
               >
                 ← Torna al Panel
               </button>
-              <h1 className="text-2xl font-bold text-white">🚀 Push Test Custom</h1>
-              <p className="text-gray-400">Test personalizzato notifiche push</p>
+              <h1 className="text-2xl font-bold text-white">🔥 Firebase Push Test Custom</h1>
+              <p className="text-gray-400">Test personalizzato Firebase FCM notifiche push</p>
             </div>
             <M1ssionPushTestForm />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'firebase-debug-test' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center gap-4 mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">🔥 Firebase Debug Test</h1>
+              <p className="text-gray-400">Test completo Firebase FCM con debug avanzato</p>
+            </div>
+            <M1ssionFirebasePushTestPanel />
           </div>
         </div>
       </div>
@@ -403,52 +433,60 @@ const PanelAccessPage = () => {
                         <Send className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">🚀 Push Test Custom</h3>
-                        <p className="text-gray-400 text-sm">Test personalizzato con messaggio custom</p>
+                        <h3 className="font-semibold text-white">🔥 Firebase Push Test Custom</h3>
+                        <p className="text-gray-400 text-sm">Test personalizzato Firebase FCM con messaggio custom</p>
                       </div>
                     </div>
                   </motion.div>
                 )}
 
-                {/* 🔥 PUSH TEST BUTTON - Solo per Admin AG-X0197 */}
+                 {/* 🔥 FIREBASE PUSH TEST QUICK - Solo per Admin AG-X0197 */}
                 {user?.email === 'wikus77@hotmail.it' && (
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={async () => {
-                      console.log('[PUSH-TEST] Inizio test → utente:', user?.id);
+                      console.log('[FIREBASE-PUSH-TEST] Inizio test → utente:', user?.id);
                       
                       if (!user?.id) {
-                        toast.error('❌ PUSH-TEST: Utente non autenticato');
+                        toast.error('❌ FIREBASE-PUSH-TEST: Utente non autenticato');
                         return;
                       }
                       
                       if (user?.email !== 'wikus77@hotmail.it') {
-                        toast.error('❌ PUSH-TEST: Accesso negato - non admin');
+                        toast.error('❌ FIREBASE-PUSH-TEST: Accesso negato - non admin');
                         return;
                       }
                       
                       try {
-                        const { data, error } = await supabase.functions.invoke('send-push-notification', {
-                          body: {
-                            title: "🔔 PUSH Test M1SSION™",
-                            body: "Questa è una notifica test ricevuta dal M1SSION Panel",
-                            target_user_id: user.id
-                          }
+                        // Use Firebase Edge Function with quick test payload
+                        const testPayload = {
+                          user_id: user.id,
+                          title: `🔥 M1SSION™ Test Completo ${Date.now()}`,
+                          body: `Test notifica avanzato Firebase FCM - ${new Date().toLocaleTimeString()}`,
+                          broadcast: false
+                        };
+
+                        console.log('[FIREBASE-PUSH-TEST] Payload:', testPayload);
+
+                        const { data, error } = await supabase.functions.invoke('send-firebase-push', {
+                          body: testPayload
                         });
                         
-                        console.log('[PUSH-TEST] Risposta funzione:', data);
+                        console.log('[FIREBASE-PUSH-TEST] Risposta funzione:', { data, error });
                         
                         if (error) {
-                          console.error('[PUSH-TEST] Errore:', error);
-                          toast.error(`❌ PUSH Test fallito: ${error.message}`);
+                          console.error('[FIREBASE-PUSH-TEST] Errore:', error);
+                          toast.error(`❌ Firebase Push Test fallito: ${error.message}`);
                         } else {
-                          console.log('[PUSH-TEST] Successo:', data);
-                          toast.success(`✅ PUSH Test inviato! Dispositivi: ${data?.total || 0}, Inviati: ${data?.sent || 0}`);
+                          console.log('[FIREBASE-PUSH-TEST] Successo:', data);
+                          toast.success(`✅ Firebase Push Test inviato!`, {
+                            description: `Status: ${data?.success ? 'SUCCESS' : 'FAILED'} | Sent: ${data?.sent_count || 0}`
+                          });
                         }
                       } catch (err) {
-                        console.error('[PUSH-TEST] Eccezione:', err);
-                        toast.error('❌ PUSH Test: Errore di connessione');
+                        console.error('[FIREBASE-PUSH-TEST] Eccezione:', err);
+                        toast.error('❌ Firebase Push Test: Errore di connessione');
                       }
                     }}
                     className="glass-card p-4 border border-orange-500/30 cursor-pointer group"
@@ -458,28 +496,28 @@ const PanelAccessPage = () => {
                         <AlertTriangle className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">Push Test Quick</h3>
-                        <p className="text-gray-400 text-sm">Test veloce con messaggio predefinito</p>
+                        <h3 className="font-semibold text-white">🔥 Firebase Push Test Quick</h3>
+                        <p className="text-gray-400 text-sm">Test veloce Firebase FCM predefinito</p>
                       </div>
                     </div>
                   </motion.div>
                 )}
 
-                {/* 🧪 ONESIGNAL DEBUG TEST - Admin Only per Emergenza */}
+                {/* 🔥 FIREBASE DEBUG TEST - Admin Only per Debug Avanzato */}
                 {user?.email === 'wikus77@hotmail.it' && (
                   <motion.div 
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setCurrentView('debug-test')}
-                    className="glass-card p-4 border border-yellow-500/30 cursor-pointer group"
+                    onClick={() => setCurrentView('firebase-debug-test')}
+                    className="glass-card p-4 border border-cyan-500/30 cursor-pointer group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-yellow-600 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        🧪
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        🔥
                       </div>
                       <div>
-                        <h3 className="font-semibold text-white">OneSignal Debug Test</h3>
-                        <p className="text-gray-400 text-sm">Test diretto API OneSignal (EMERGENZA)</p>
+                        <h3 className="font-semibold text-white">🔥 Firebase Debug Test</h3>
+                        <p className="text-gray-400 text-sm">Test completo Firebase FCM con debug</p>
                       </div>
                     </div>
                   </motion.div>
