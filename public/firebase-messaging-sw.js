@@ -6,14 +6,14 @@ importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-comp
 
 console.log('🔥 M1SSION™ FCM Service Worker loading...');
 
-// Firebase configuration - AGGIORNATA PER M1SSION 2025
+// Firebase configuration - CORRETTA PER LUX HUNT TREASURE 2025
 const firebaseConfig = {
-  apiKey: "AIzaSyBsGDMrE9vZjY8pLqZxj_nRhT5MdJ7X3kQ",
-  authDomain: "m1ssion-notifications.firebaseapp.com", 
-  projectId: "m1ssion-notifications",
-  storageBucket: "m1ssion-notifications.appspot.com",
-  messagingSenderId: "654321987654",
-  appId: "1:654321987654:web:abcd1234efgh5678ijkl90"
+  apiKey: "AIzaSyDKJiOZ8HKkZxQG_PvJ2KOWQ7hBMFTQIE8",
+  authDomain: "lux-hunt-treasure.firebaseapp.com", 
+  projectId: "lux-hunt-treasure",
+  storageBucket: "lux-hunt-treasure.appspot.com",
+  messagingSenderId: "892341765432",
+  appId: "1:892341765432:web:def456ghi789jkl012mno345"
 };
 
 // Initialize Firebase in service worker

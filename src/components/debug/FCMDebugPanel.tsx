@@ -332,10 +332,37 @@ export const FCMDebugPanel = () => {
         }
       }
 
-      // Step 3: Request permission (works with all browsers including Safari)
+      // Step 3: Complete Service Worker cleanup and re-registration
+      addLog('info', '🧹 Pulizia completa Service Workers...');
+      try {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const registration of registrations) {
+          await registration.unregister();
+          addLog('info', `🗑️ Service Worker disinstallato: ${registration.scope}`);
+        }
+        
+        // Force new registration
+        await navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
+          scope: '/',
+          updateViaCache: 'none'
+        });
+        
+        // Wait for activation
+        await navigator.serviceWorker.ready;
+        addLog('success', '✅ Service Worker completamente reinstallato');
+      } catch (error: any) {
+        addLog('warning', `Service Worker cleanup: ${error.message}`);
+      }
+
+      // Step 4: Request permission with enhanced handling
       if (Notification.permission !== 'granted') {
-        addLog('info', '🔔 Richiesta permessi notifiche...');
+        addLog('info', '🔔 Richiesta permessi notifiche avanzata...');
         try {
+          // Safari-specific handling
+          if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
+            addLog('info', '🍎 Browser Safari rilevato - permessi ottimizzati');
+          }
+          
           const permission = await Notification.requestPermission();
           if (permission === 'granted') {
             addLog('success', '✅ Permessi notifiche concessi!');
@@ -354,66 +381,126 @@ export const FCMDebugPanel = () => {
         }
       }
 
-      // Step 4: Generate new FCM token
+      // Step 5: Generate new FCM token with robust handling
       if (Notification.permission === 'granted') {
-        addLog('info', 'Generazione nuovo token FCM...');
+        addLog('info', 'Generazione nuovo token FCM con retry...');
         try {
-          // Force token regeneration
-          const newToken = await getFCMToken();
-          if (newToken) {
-            addLog('success', `✅ Nuovo token FCM: ${newToken.substring(0, 30)}...`);
+          let newToken = null;
+          let attempts = 0;
+          const maxAttempts = 3;
+          
+          while (!newToken && attempts < maxAttempts) {
+            attempts++;
+            addLog('info', `Tentativo ${attempts}/${maxAttempts} generazione token...`);
             
-            // Step 5: Save to database
+            try {
+              newToken = await getFCMToken();
+              if (newToken) {
+                addLog('success', `✅ Token FCM generato (tentativo ${attempts}): ${newToken.substring(0, 30)}...`);
+                break;
+              }
+            } catch (tokenError: any) {
+              addLog('warning', `Tentativo ${attempts} fallito: ${tokenError.message}`);
+              if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+              }
+            }
+          }
+          
+          if (newToken) {
+            
+            // Step 6: Save to database with enhanced error handling
             if (user) {
               addLog('info', 'Salvataggio token nel database...');
-              const { error } = await supabase
-                .from('user_push_tokens')
-                .upsert({
-                  user_id: user.id,
-                  fcm_token: newToken,
-                  device_info: {
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform,
-                    timestamp: new Date().toISOString(),
-                    autoFixed: true,
-                    fixedAt: new Date().toISOString()
-                  },
-                  is_active: true
-                }, {
-                  onConflict: 'user_id,fcm_token'
-                });
+              
+              try {
+                // First, deactivate old tokens
+                await supabase
+                  .from('user_push_tokens')
+                  .update({ is_active: false })
+                  .eq('user_id', user.id);
+                
+                // Insert new token
+                const { error } = await supabase
+                  .from('user_push_tokens')
+                  .insert({
+                    user_id: user.id,
+                    fcm_token: newToken,
+                    device_info: {
+                      userAgent: navigator.userAgent,
+                      platform: navigator.platform,
+                      timestamp: new Date().toISOString(),
+                      autoFixed: true,
+                      fixedAt: new Date().toISOString(),
+                      browser: navigator.userAgent.includes('Safari') ? 'Safari' : 
+                              navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Other',
+                      debugPanelGenerated: true
+                    },
+                    is_active: true
+                  });
 
-              if (!error) {
-                addLog('success', '✅ Token salvato nel database');
-                await refreshTokenData(user.id);
-              } else {
-                addLog('error', `Errore salvataggio DB: ${error.message}`);
+                if (!error) {
+                  addLog('success', '✅ Token salvato nel database con successo');
+                  await refreshTokenData(user.id);
+                } else {
+                  addLog('error', `Errore salvataggio DB: ${error.message}`);
+                }
+              } catch (dbError: any) {
+                addLog('error', `Errore critico database: ${dbError.message}`);
               }
             }
           } else {
-            addLog('error', '❌ Impossibile generare token FCM');
+            addLog('error', '❌ Impossibile generare token FCM dopo 3 tentativi');
+            toast.error('❌ Token FCM non generabile', {
+              description: 'Verifica Service Worker e riprova'
+            });
           }
         } catch (error: any) {
           addLog('error', `Errore generazione token: ${error.message}`);
         }
       }
 
-      // Step 6: Test notification
-      addLog('info', 'Test notifica finale...');
+      // Step 7: Comprehensive final tests
+      addLog('info', 'Test completo sistema Firebase...');
       try {
+        // Test Service Worker
         if ('serviceWorker' in navigator) {
           const registration = await navigator.serviceWorker.getRegistration();
           if (registration?.active) {
             registration.active.postMessage({
               type: 'TEST_NOTIFICATION',
               testId: Date.now(),
-              source: 'auto_fix'
+              source: 'auto_fix_comprehensive',
+              title: '🎉 Sistema Firebase Riparato!',
+              body: 'Auto-Fix completato con successo!'
             });
-            addLog('success', '✅ Test notifica Service Worker inviato');
+            addLog('success', '✅ Test Service Worker completo inviato');
+          }
+        }
+        
+        // Test Edge Function connectivity
+        if (user) {
+          try {
+            const { data: testResult, error: testError } = await supabase.functions.invoke('send-firebase-push', {
+              body: {
+                user_id: user.id,
+                title: '🔧 Test Auto-Fix Completo',
+                body: 'Sistema Firebase riparato automaticamente!',
+                data: { source: 'auto_fix_test', timestamp: new Date().toISOString() }
+              }
+            });
+            
+            if (!testError && testResult) {
+              addLog('success', '✅ Test Edge Function completato');
+            } else {
+              addLog('warning', `Test Edge Function: ${testError?.message || 'Risposta inattesa'}`);
+            }
+          } catch (edgeFunctionError: any) {
+            addLog('warning', `Test Edge Function fallito: ${edgeFunctionError.message}`);
           }
         }
       } catch (error: any) {
-        addLog('warning', `Test notifica: ${error.message}`);
+        addLog('warning', `Test finale: ${error.message}`);
       }
 
       addLog('success', '🎉 RIPARAZIONE AUTOMATICA COMPLETATA!');
