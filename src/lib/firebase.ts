@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 // Firebase Cloud Messaging Configuration
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import type { MessagePayload } from 'firebase/messaging';
 
@@ -17,8 +17,8 @@ const firebaseConfig = {
 // VAPID Key for Web Push - CHIAVE P-256 VALIDA GENERATA CORRETTAMENTE
 const VAPID_KEY = "BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA";
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase - Check if app already exists to prevent duplicate error
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Firebase Cloud Messaging
 let messaging: any = null;
