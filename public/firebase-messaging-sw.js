@@ -1,8 +1,9 @@
-// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
-// M1SSION™ Firebase Cloud Messaging Service Worker - FIXED VERSION
+// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
+// Firebase Cloud Messaging Service Worker
 
-importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
+// Import Firebase scripts for compat mode
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
 console.log('🔥 M1SSION™ FCM Service Worker loading...');
 
