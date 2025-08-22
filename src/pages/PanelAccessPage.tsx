@@ -22,6 +22,7 @@ import { EdgeFunctionTester } from '@/components/debug/EdgeFunctionTester';
 import { OneSignalRegistration } from '@/components/debug/OneSignalRegistration';
 import { M1ssionPushTestForm } from './M1ssionPushTestForm';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
+import { FCMTokenGenerator } from '@/components/debug/FCMTokenGenerator';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -221,7 +222,13 @@ const PanelAccessPage = () => {
               <h1 className="text-2xl font-bold text-white">🔥 Firebase Push Test Custom</h1>
               <p className="text-gray-400">Test personalizzato Firebase FCM notifiche push</p>
             </div>
-            <M1ssionPushTestForm />
+            <div className="space-y-6">
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-white mb-2">🔥 FIREBASE FCM TOKEN GENERATOR</h2>
+                <p className="text-gray-400 text-sm">Genera un token FCM e salvalo nel database per testare le notifiche</p>
+              </div>
+              <FCMTokenGenerator />
+            </div>
           </div>
         </div>
       </div>

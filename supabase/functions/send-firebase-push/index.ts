@@ -164,7 +164,18 @@ serve(async (req: Request) => {
       body: JSON.stringify(fcmPayload)
     });
 
-    const fcmResult = await fcmResponse.json();
+    let fcmResult;
+    try {
+      fcmResult = await fcmResponse.json();
+    } catch (jsonError) {
+      console.error('❌ FCM Response JSON Parse Error:', jsonError);
+      fcmResult = { 
+        error: 'Invalid JSON response from FCM',
+        success: 0,
+        failure: 1,
+        rawResponse: await fcmResponse.text()
+      };
+    }
     console.log('🔥 FCM API Response:', fcmResult);
     console.log('🔥 FCM VERBOSE DEBUG - Full response details:', {
       status: fcmResponse.status,
