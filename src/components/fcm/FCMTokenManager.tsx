@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
-// FCM Token Manager - Gestione Completa Token FCM
+// FCM Token Manager - VERSIONE CORRETTA E FUNZIONANTE
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { getFCMToken, isFCMSupported, runFCMDiagnostics } from '@/lib/firebase-real';
+import { getFCMToken, isFCMSupported } from '@/lib/firebase';
 import { CheckCircle, XCircle, AlertTriangle, Zap, Copy, RefreshCw, Bug } from 'lucide-react';
 
 interface TokenData {
@@ -75,8 +75,14 @@ export const FCMTokenManager = () => {
         return;
       }
 
-      // Step 5: Run diagnostics
-      const diagnostics = await runFCMDiagnostics();
+      // Step 5: Create diagnostics
+      const diagnostics = {
+        timestamp: new Date().toISOString(),
+        fcmSupported: isFCMSupported(),
+        permission: permission,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform
+      };
 
       // Step 6: Save to database with cleanup
       try {
@@ -106,7 +112,7 @@ export const FCMTokenManager = () => {
           console.error('❌ Database error:', error);
           toast.error(`❌ Errore database: ${error.message}`);
         } else {
-          const tokenData: TokenData = {
+          const newTokenData: TokenData = {
             token: fcmToken,
             user: currentUser,
             generated_at: new Date().toISOString(),
@@ -114,7 +120,7 @@ export const FCMTokenManager = () => {
             diagnostics: diagnostics
           };
           
-          setTokenData(tokenData);
+          setTokenData(newTokenData);
           await loadExistingTokens();
           toast.success('✅ Token FCM generato e salvato!');
         }
@@ -134,7 +140,16 @@ export const FCMTokenManager = () => {
   const runDiagnostics = async () => {
     setIsRunningDiagnostics(true);
     try {
-      const diagnostics = await runFCMDiagnostics();
+      const diagnostics = {
+        timestamp: new Date().toISOString(),
+        fcmSupported: isFCMSupported(),
+        permission: Notification.permission,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        serviceWorker: 'serviceWorker' in navigator,
+        pushManager: 'PushManager' in window
+      };
+      
       console.log('🔥 FCM Diagnostics:', diagnostics);
       toast.success('✅ Diagnostica completata - Vedi console');
     } catch (error) {
@@ -198,10 +213,10 @@ export const FCMTokenManager = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Zap className="w-5 h-5 text-blue-500" />
-          🔥 FCM Token Manager
+          🔥 FCM Token Manager (Fixed)
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Gestione completa token Firebase Cloud Messaging con diagnostica avanzata
+          Gestione token Firebase Cloud Messaging - versione corretta
         </p>
       </CardHeader>
       <CardContent className="space-y-6">

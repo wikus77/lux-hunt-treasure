@@ -24,7 +24,7 @@ import { M1ssionPushTestForm } from './M1ssionPushTestForm';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import { FCMTokenGenerator } from '@/components/debug/FCMTokenGenerator';
 import { FCMCompleteTestSuite } from '@/components/debug/FCMCompleteTestSuite';
-import { FCMTokenManager } from '@/components/fcm/FCMTokenManager';
+
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -233,9 +233,6 @@ const PanelAccessPage = () => {
         
         {/* Complete FCM Test Suite */}
         <FCMCompleteTestSuite />
-        
-        {/* NEW: FCM Token Manager */}
-        <FCMTokenManager />
             </div>
           </div>
         </div>
