@@ -3,6 +3,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FCMDebugTrace } from '@/components/admin/FCMDebugTrace';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
+import { FirebaseNotificationDiagnostic } from '@/components/admin/FirebaseNotificationDiagnostic';
+import { FirebaseNotificationReport } from '@/components/admin/FirebaseNotificationReport';
 import { Badge } from '@/components/ui/badge';
 
 export default function FirebaseNotificationDebug() {
@@ -31,6 +33,12 @@ export default function FirebaseNotificationDebug() {
 
         {/* Firebase Test Panel */}
         <M1ssionFirebasePushTestPanel />
+
+        {/* Comprehensive Diagnostic System */}
+        <FirebaseNotificationDiagnostic />
+
+        {/* Comprehensive Report Generator */}
+        <FirebaseNotificationReport />
 
         {/* Technical Info */}
         <Card>
