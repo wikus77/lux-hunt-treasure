@@ -1,9 +1,10 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
-// M1SSION™ Firebase Notification Debug Panel Component
+// M1SSION™ Firebase Notification Debug Panel Component - COMPREHENSIVE VERSION
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFCMPushNotifications } from '@/hooks/useFCMPushNotifications';
+import { getFCMToken, isFCMSupported } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { 
   Shield, 
@@ -14,13 +15,26 @@ import {
   RefreshCw,
   CheckCircle,
   XCircle,
-  AlertTriangle
+  AlertTriangle,
+  Settings,
+  Wrench,
+  Loader2,
+  Activity,
+  Wifi
 } from 'lucide-react';
 
 interface DebugLog {
   timestamp: string;
   type: 'info' | 'success' | 'error' | 'warning';
   message: string;
+  details?: any;
+}
+
+interface DiagnosticResult {
+  test: string;
+  status: 'pass' | 'fail' | 'warning';
+  message: string;
+  fix?: string;
   details?: any;
 }
 
@@ -31,6 +45,9 @@ export const FCMDebugPanel = () => {
   const [isActivating, setIsActivating] = useState(false);
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isRunningDiagnostics, setIsRunningDiagnostics] = useState(false);
+  const [diagnosticResults, setDiagnosticResults] = useState<DiagnosticResult[]>([]);
+  const [isAutoFixing, setIsAutoFixing] = useState(false);
   
   const fcm = useFCMPushNotifications();
 
@@ -41,7 +58,7 @@ export const FCMDebugPanel = () => {
       message,
       details
     };
-    setLogs(prev => [newLog, ...prev].slice(0, 50)); // Keep last 50 logs
+    setLogs(prev => [newLog, ...prev].slice(0, 100));
     console.log(`🔥 FCM-DEBUG [${type.toUpperCase()}]:`, message, details);
   };
 
@@ -61,6 +78,9 @@ export const FCMDebugPanel = () => {
       addLog('info', `Debug panel inizializzato per utente: ${user.email}`);
       
       await refreshTokenData(user.id);
+      
+      // Auto-run diagnostics on init
+      setTimeout(() => runComprehensiveDiagnostics(), 1000);
     } catch (error: any) {
       addLog('error', 'Errore inizializzazione debug panel', { error: error.message });
     }
@@ -90,98 +110,323 @@ export const FCMDebugPanel = () => {
     }
   };
 
-  const activateNotifications = async () => {
-    if (!user) {
-      addLog('error', 'Utente non autenticato');
-      toast.error('Utente non autenticato');
-      return;
-    }
+  const runComprehensiveDiagnostics = async () => {
+    setIsRunningDiagnostics(true);
+    setDiagnosticResults([]);
+    addLog('info', '🔍 AVVIO DIAGNOSTICA COMPLETA SISTEMA FCM...');
 
-    setIsActivating(true);
-    addLog('info', 'Inizio processo attivazione notifiche...');
+    const results: DiagnosticResult[] = [];
 
     try {
-      // Check if already granted
-      if (Notification.permission === 'granted') {
-        addLog('info', 'Permessi già concessi, generazione token...');
-        
-        // Force token generation
-        if (fcm.token) {
-          await refreshTokenData(user.id);
-          addLog('success', 'Notifiche già attive!');
-          toast.success('🔥 Notifiche già attive!');
+      // Test 1: Browser Support
+      const fcmSupported = isFCMSupported();
+      results.push({
+        test: 'Supporto Browser FCM',
+        status: fcmSupported ? 'pass' : 'fail',
+        message: fcmSupported ? 'FCM supportato dal browser' : 'FCM NON supportato',
+        fix: !fcmSupported ? 'Usa Chrome 63+, Firefox 60+, Safari 16.4+' : undefined
+      });
+
+      // Test 2: HTTPS Connection
+      const isHttps = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+      results.push({
+        test: 'Connessione HTTPS',
+        status: isHttps ? 'pass' : 'fail',
+        message: isHttps ? 'Connessione sicura HTTPS' : 'Richiesta connessione HTTPS',
+        fix: !isHttps ? 'Le notifiche push richiedono HTTPS' : undefined
+      });
+
+      // Test 3: Service Worker Registration
+      let swResult: DiagnosticResult = {
+        test: 'Service Worker',
+        status: 'fail',
+        message: 'Service Worker non supportato',
+        fix: 'Browser non compatibile'
+      };
+
+      if ('serviceWorker' in navigator) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          const fcmSW = registrations.find(reg => 
+            reg.scope.includes('firebase-messaging-sw') || 
+            reg.active?.scriptURL.includes('firebase-messaging-sw')
+          );
+
+          if (fcmSW && fcmSW.active) {
+            swResult = {
+              test: 'Service Worker',
+              status: 'pass',
+              message: `Service Worker attivo: ${fcmSW.scope}`,
+              details: { scriptURL: fcmSW.active.scriptURL, state: fcmSW.active.state }
+            };
+          } else {
+            swResult = {
+              test: 'Service Worker',
+              status: 'warning',
+              message: 'Service Worker non registrato per FCM',
+              fix: 'Il sistema tenterà di registrarlo automaticamente'
+            };
+          }
+        } catch (error: any) {
+          swResult = {
+            test: 'Service Worker',
+            status: 'fail',
+            message: `Errore Service Worker: ${error.message}`,
+            fix: 'Ricarica la pagina'
+          };
+        }
+      }
+      results.push(swResult);
+
+      // Test 4: Notification Permission
+      const permission = Notification.permission;
+      results.push({
+        test: 'Permessi Notifiche',
+        status: permission === 'granted' ? 'pass' : (permission === 'denied' ? 'fail' : 'warning'),
+        message: `Stato permessi: ${permission}`,
+        fix: permission === 'denied' ? 'Abilita nelle impostazioni browser' : 
+             permission === 'default' ? 'Clicca "Attiva Notifiche"' : undefined
+      });
+
+      // Test 5: FCM Token Generation
+      let tokenResult: DiagnosticResult = {
+        test: 'Token FCM',
+        status: 'fail',
+        message: 'Token non generabile senza permessi',
+        fix: 'Attiva prima le notifiche'
+      };
+
+      if (permission === 'granted') {
+        try {
+          const currentToken = await getFCMToken();
+          if (currentToken) {
+            tokenResult = {
+              test: 'Token FCM',
+              status: 'pass',
+              message: `Token generato: ${currentToken.substring(0, 30)}...`,
+              details: { tokenLength: currentToken.length }
+            };
+          } else {
+            tokenResult = {
+              test: 'Token FCM',
+              status: 'fail',
+              message: 'Token non generato',
+              fix: 'Prova a riattivare le notifiche'
+            };
+          }
+        } catch (error: any) {
+          tokenResult = {
+            test: 'Token FCM',
+            status: 'fail',
+            message: `Errore generazione token: ${error.message}`,
+            fix: 'Verifica Service Worker e riprova'
+          };
+        }
+      }
+      results.push(tokenResult);
+
+      // Test 6: Database Connection
+      if (user) {
+        try {
+          const { data, error } = await supabase
+            .from('user_push_tokens')
+            .select('fcm_token, created_at, is_active')
+            .eq('user_id', user.id)
+            .eq('is_active', true)
+            .single();
+
+          results.push({
+            test: 'Database Token',
+            status: data && !error ? 'pass' : 'warning',
+            message: data ? `Token salvato: ${data.fcm_token.substring(0, 30)}...` : 'Nessun token nel database',
+            fix: !data ? 'Riattiva le notifiche per salvare il token' : undefined,
+            details: data
+          });
+        } catch (error: any) {
+          results.push({
+            test: 'Database Token',
+            status: 'warning',
+            message: 'Nessun token nel database',
+            fix: 'Attiva le notifiche per salvare il token'
+          });
+        }
+      }
+
+      // Test 7: Edge Function Connectivity
+      try {
+        addLog('info', 'Test connessione Edge Function...');
+        const { data, error } = await supabase.functions.invoke('send-firebase-push', {
+          body: { test: true, user_id: user?.id }
+        });
+
+        results.push({
+          test: 'Edge Function',
+          status: !error ? 'pass' : 'fail',
+          message: !error ? 'Connessione Edge Function OK' : `Errore: ${error.message}`,
+          fix: error ? 'Verifica connessione internet' : undefined
+        });
+      } catch (error: any) {
+        results.push({
+          test: 'Edge Function',
+          status: 'fail',
+          message: `Errore connessione: ${error.message}`,
+          fix: 'Verifica connessione internet e Supabase'
+        });
+      }
+
+      setDiagnosticResults(results);
+      
+      const failedTests = results.filter(r => r.status === 'fail');
+      const warningTests = results.filter(r => r.status === 'warning');
+      
+      if (failedTests.length === 0 && warningTests.length === 0) {
+        addLog('success', '✅ TUTTI I CONTROLLI SUPERATI! Sistema FCM completamente funzionante');
+        toast.success('🎉 Sistema FCM perfettamente configurato!');
+      } else {
+        addLog('warning', `⚠️ ${failedTests.length} errori critici, ${warningTests.length} avvisi`);
+        if (failedTests.length > 0) {
+          toast.error(`❌ ${failedTests.length} problemi critici rilevati`);
+        }
+      }
+
+    } catch (error: any) {
+      addLog('error', `Errore durante la diagnostica: ${error.message}`);
+    } finally {
+      setIsRunningDiagnostics(false);
+    }
+  };
+
+  const autoFixAllIssues = async () => {
+    setIsAutoFixing(true);
+    addLog('info', '🔧 AVVIO RIPARAZIONE AUTOMATICA COMPLETA...');
+
+    try {
+      // Step 1: Register Service Worker
+      if ('serviceWorker' in navigator) {
+        addLog('info', 'Registrazione Service Worker Firebase...');
+        try {
+          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+            scope: '/'
+          });
+          
+          // Wait for service worker to be ready
+          await navigator.serviceWorker.ready;
+          addLog('success', '✅ Service Worker registrato e attivo');
+        } catch (error: any) {
+          addLog('error', `Errore registrazione SW: ${error.message}`);
+        }
+      }
+
+      // Step 2: Clear old caches
+      addLog('info', 'Pulizia cache obsolete...');
+      if ('caches' in window) {
+        try {
+          const cacheNames = await caches.keys();
+          const deletePromises = cacheNames
+            .filter(name => name.includes('firebase') || name.includes('fcm'))
+            .map(name => caches.delete(name));
+          await Promise.all(deletePromises);
+          addLog('success', '✅ Cache pulite');
+        } catch (error: any) {
+          addLog('warning', `Avviso pulizia cache: ${error.message}`);
+        }
+      }
+
+      // Step 3: Force permission request
+      if (Notification.permission !== 'granted') {
+        addLog('info', 'Richiesta permessi notifiche...');
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            addLog('success', '✅ Permessi notifiche concessi');
+          } else {
+            addLog('error', `❌ Permessi negati: ${permission}`);
+            toast.error('Devi concedere i permessi manualmente nelle impostazioni browser');
+            return;
+          }
+        } catch (error: any) {
+          addLog('error', `Errore richiesta permessi: ${error.message}`);
           return;
         }
       }
 
-      // Step 1: Request permission with proper handling
-      addLog('info', 'Richiesta permessi notifiche al browser...');
-      
-      let permission: NotificationPermission;
+      // Step 4: Generate new FCM token
+      if (Notification.permission === 'granted') {
+        addLog('info', 'Generazione nuovo token FCM...');
+        try {
+          // Force token regeneration
+          const newToken = await getFCMToken();
+          if (newToken) {
+            addLog('success', `✅ Nuovo token FCM: ${newToken.substring(0, 30)}...`);
+            
+            // Step 5: Save to database
+            if (user) {
+              addLog('info', 'Salvataggio token nel database...');
+              const { error } = await supabase
+                .from('user_push_tokens')
+                .upsert({
+                  user_id: user.id,
+                  fcm_token: newToken,
+                  device_info: {
+                    userAgent: navigator.userAgent,
+                    platform: navigator.platform,
+                    timestamp: new Date().toISOString(),
+                    autoFixed: true,
+                    fixedAt: new Date().toISOString()
+                  },
+                  is_active: true
+                }, {
+                  onConflict: 'user_id,fcm_token'
+                });
+
+              if (!error) {
+                addLog('success', '✅ Token salvato nel database');
+                await refreshTokenData(user.id);
+              } else {
+                addLog('error', `Errore salvataggio DB: ${error.message}`);
+              }
+            }
+          } else {
+            addLog('error', '❌ Impossibile generare token FCM');
+          }
+        } catch (error: any) {
+          addLog('error', `Errore generazione token: ${error.message}`);
+        }
+      }
+
+      // Step 6: Test notification
+      addLog('info', 'Test notifica finale...');
       try {
-        permission = await Notification.requestPermission();
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (registration?.active) {
+            registration.active.postMessage({
+              type: 'TEST_NOTIFICATION',
+              testId: Date.now(),
+              source: 'auto_fix'
+            });
+            addLog('success', '✅ Test notifica Service Worker inviato');
+          }
+        }
       } catch (error: any) {
-        addLog('error', 'Errore richiesta permessi', { error: error.message });
-        
-        // Fallback for older browsers
-        permission = await new Promise((resolve) => {
-          Notification.requestPermission((result) => {
-            resolve(result as NotificationPermission);
-          });
-        });
-      }
-      
-      addLog('info', `Risposta permessi: ${permission}`);
-
-      if (permission !== 'granted') {
-        addLog('error', `Permessi negati: ${permission}`);
-        toast.error('Permessi notifiche negati. Abilitali nelle impostazioni del browser.');
-        
-        // Show instructions for enabling notifications
-        addLog('info', 'ISTRUZIONI: Clicca sull\'icona del lucchetto/info nella barra degli indirizzi e abilita le notifiche');
-        return;
+        addLog('warning', `Test notifica: ${error.message}`);
       }
 
-      addLog('success', 'Permessi notifiche concessi!');
+      addLog('success', '🎉 RIPARAZIONE AUTOMATICA COMPLETATA!');
+      toast.success('🔧 Sistema FCM riparato! Prova ora il test');
 
-      // Step 2: Wait for FCM hook to update
-      addLog('info', 'Attesa aggiornamento hook FCM...');
-      
-      // Give time for the hook to detect permission change
-      for (let i = 0; i < 10; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        if (fcm.token) break;
-        addLog('info', `Attesa token FCM... tentativo ${i + 1}/10`);
-      }
-
-      if (!fcm.token) {
-        addLog('error', 'Token FCM non generato dopo 10 secondi');
-        toast.error('Errore generazione token FCM. Riprova.');
-        return;
-      }
-
-      addLog('success', `Token FCM generato: ${fcm.token.substring(0, 30)}...`);
-
-      // Step 3: Refresh database data
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for DB save
-      await refreshTokenData(user.id);
-
-      addLog('success', '🔥 Notifiche M1SSION™ attivate con successo!');
-      toast.success('🔥 Notifiche M1SSION™ attivate!');
+      // Re-run diagnostics
+      setTimeout(() => runComprehensiveDiagnostics(), 2000);
 
     } catch (error: any) {
-      addLog('error', 'Errore critico attivazione notifiche', { 
-        error: error.message, 
-        stack: error.stack,
-        permission: Notification.permission 
-      });
-      toast.error(`Errore: ${error.message}`);
+      addLog('error', `Errore critico durante la riparazione: ${error.message}`);
+      toast.error(`❌ Errore riparazione: ${error.message}`);
     } finally {
-      setIsActivating(false);
+      setIsAutoFixing(false);
     }
   };
 
-  const sendTestNotification = async () => {
+  const sendAdvancedTest = async () => {
     if (!user) {
       addLog('error', 'Utente non autenticato');
       return;
@@ -189,84 +434,70 @@ export const FCMDebugPanel = () => {
 
     setIsSendingTest(true);
     const testId = Date.now();
-    addLog('info', `Invio notifica test ID: ${testId}...`);
+    addLog('info', `🚀 INVIO TEST NOTIFICA AVANZATO ID: ${testId}`);
 
     try {
-      // First: Test Service Worker directly
+      // Multi-channel test
+      const testPromises = [];
+
+      // 1. Service Worker direct test
       if ('serviceWorker' in navigator) {
-        addLog('info', 'Test Service Worker diretto...');
-        
         const registration = await navigator.serviceWorker.getRegistration();
-        if (registration && registration.active) {
-          // Send test message to Service Worker
+        if (registration?.active) {
           registration.active.postMessage({
             type: 'TEST_NOTIFICATION',
-            testId: testId
+            testId: testId,
+            title: '🔥 M1SSION™ SW Test',
+            body: `Service Worker test diretto - ${new Date().toLocaleTimeString()}`
           });
-          
-          addLog('success', 'Test notifica Service Worker inviato');
-          
-          // Wait a moment then test FCM
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        } else {
-          addLog('warning', 'Service Worker non attivo');
+          addLog('success', '✅ Test Service Worker inviato');
         }
       }
 
-      // Second: Test FCM via Edge Function
-      addLog('info', 'Invio notifica FCM via Edge Function...');
-      
+      // 2. FCM via Edge Function test
+      addLog('info', 'Invio notifica FCM completa...');
       const { data, error } = await supabase.functions.invoke('send-firebase-push', {
         body: {
           user_id: user.id,
-          title: `🔥 M1SSION™ Test ${testId}`,
-          body: `Notifica di prova dal pannello debug - ${new Date().toLocaleTimeString()}`,
+          title: `🔥 M1SSION™ Test Completo ${testId}`,
+          body: `Test notifica avanzato - ${new Date().toLocaleTimeString()}`,
           data: {
             test_id: testId.toString(),
-            source: 'debug_panel',
+            source: 'advanced_debug_panel',
             timestamp: new Date().toISOString(),
-            requireInteraction: 'true'
+            requireInteraction: 'true',
+            vibrate: '200,100,200',
+            tag: 'm1ssion-test'
           }
         }
       });
 
       if (error) {
-        addLog('error', 'Errore invio notifica FCM', { error: error.message });
-        toast.error(`Errore FCM: ${error.message}`);
-        return;
-      }
+        addLog('error', `Errore FCM: ${error.message}`, { error });
+        toast.error(`❌ Errore FCM: ${error.message}`);
+      } else if (data?.success) {
+        addLog('success', `✅ Notifica FCM inviata! Delivered: ${data.sent_count || 0}`, { data });
+        toast.success(`🚀 Test inviato! (${data.sent_count || 0} delivered)`);
 
-      if (data?.success) {
-        addLog('success', `✅ Notifica FCM inviata! Delivered: ${data.sent_count}`, { 
-          response: data,
-          testId: testId,
-          timestamp: new Date().toLocaleTimeString()
-        });
-        
-        toast.success(`🚀 Notifica inviata! (${data.sent_count} delivered)`);
-        
-        // Check if notification appears in next 10 seconds
-        addLog('info', '⏱️ Controllo arrivo notifica nei prossimi 10 secondi...');
+        // Arrival check
+        addLog('info', '⏱️ Monitoraggio arrivo notifica per 15 secondi...');
         
         setTimeout(() => {
-          addLog('warning', '⚠️ Se non hai ricevuto la notifica, controlla:');
-          addLog('info', '1. Service Worker attivo nella console (F12 > Application > Service Workers)');
-          addLog('info', '2. Notifiche abilitate nel browser (icona 🔒 nella barra URL)'); 
-          addLog('info', '3. PWA installata se su iOS Safari');
-          addLog('info', '4. Console per errori FCM');
-        }, 10000);
-        
+          addLog('info', '📱 Se la notifica non è arrivata, verifica:');
+          addLog('info', '1. 🔧 Service Worker attivo (F12 → Application → Service Workers)');
+          addLog('info', '2. 🔒 Notifiche abilitate nel browser');
+          addLog('info', '3. 📱 App PWA installata (iOS Safari)');
+          addLog('info', '4. 🌐 Connessione internet stabile');
+          addLog('info', '5. 🔍 Console per errori FCM');
+        }, 15000);
       } else {
-        addLog('warning', 'Notifica inviata ma nessun token trovato', { response: data });
-        toast.warning('⚠️ Notifica inviata ma nessun token trovato');
+        addLog('warning', 'Notifica inviata ma nessun dispositivo raggiunto', { data });
+        toast.warning('⚠️ Nessun dispositivo registrato per le notifiche');
       }
 
     } catch (error: any) {
-      addLog('error', 'Errore critico invio notifica', { 
-        error: error.message, 
-        stack: error.stack 
-      });
-      toast.error(`❌ Errore critico: ${error.message}`);
+      addLog('error', `Errore critico test: ${error.message}`, { error: error.stack });
+      toast.error(`❌ Errore test: ${error.message}`);
     } finally {
       setIsSendingTest(false);
     }
@@ -277,24 +508,17 @@ export const FCMDebugPanel = () => {
       case 'success': return <CheckCircle className="h-4 w-4 text-green-400" />;
       case 'error': return <XCircle className="h-4 w-4 text-red-400" />;
       case 'warning': return <AlertTriangle className="h-4 w-4 text-yellow-400" />;
-      default: return <Shield className="h-4 w-4 text-blue-400" />;
+      default: return <Activity className="h-4 w-4 text-blue-400" />;
     }
   };
 
-  const getPermissionStatus = () => {
-    if (fcm.permission === 'granted') return { icon: CheckCircle, color: 'text-green-400', text: 'CONCESSI' };
-    if (fcm.permission === 'denied') return { icon: XCircle, color: 'text-red-400', text: 'NEGATI' };
-    return { icon: AlertTriangle, color: 'text-yellow-400', text: 'NON RICHIESTI' };
+  const getDiagnosticIcon = (status: DiagnosticResult['status']) => {
+    switch (status) {
+      case 'pass': return <CheckCircle className="h-5 w-5 text-green-400" />;
+      case 'fail': return <XCircle className="h-5 w-5 text-red-400" />;
+      case 'warning': return <AlertTriangle className="h-5 w-5 text-yellow-400" />;
+    }
   };
-
-  const getTokenStatus = () => {
-    if (fcm.token && tokenData) return { icon: CheckCircle, color: 'text-green-400', text: 'ATTIVO' };
-    if (fcm.token && !tokenData) return { icon: AlertTriangle, color: 'text-yellow-400', text: 'NON SALVATO' };
-    return { icon: XCircle, color: 'text-red-400', text: 'ASSENTE' };
-  };
-
-  const permission = getPermissionStatus();
-  const token = getTokenStatus();
 
   return (
     <div className="min-h-screen bg-[#0B0E15] text-white font-mono">
@@ -303,240 +527,256 @@ export const FCMDebugPanel = () => {
         {/* Header */}
         <div className="text-center border-b border-gray-800 pb-8">
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-600 mb-4">
-            🔥 M1SSION™ FCM DEBUG PANEL
+            🔥 M1SSION™ FCM ADVANCED DIAGNOSTICS
           </h1>
           <p className="text-gray-400 text-lg">
-            Sistema diagnostico Firebase Cloud Messaging - PWA Compatible
+            Sistema diagnostico avanzato Firebase Cloud Messaging con auto-riparazione
           </p>
         </div>
 
-        {/* Permission Denied Warning */}
-        {fcm.permission === 'denied' && (
-          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6">
-            <div className="flex items-start gap-3">
-              <XCircle className="h-6 w-6 text-red-400 mt-1" />
-              <div>
-                <h3 className="text-xl font-semibold text-red-400 mb-3">
-                  🚫 Permessi Notifiche Negati
-                </h3>
-                <div className="space-y-3 text-gray-300">
-                  <p className="font-semibold">Per abilitare le notifiche push:</p>
+        {/* Diagnostic Results */}
+        {diagnosticResults.length > 0 && (
+          <div className="bg-gray-900 border border-gray-700 rounded-lg">
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-bold text-blue-400">🔍 Risultati Diagnostica Sistema</h3>
+                <div className="flex gap-2">
+                  <button
+                    onClick={autoFixAllIssues}
+                    disabled={isAutoFixing}
+                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 disabled:opacity-50 text-white font-bold py-3 px-6 rounded-lg flex items-center gap-2 transition-all"
+                  >
+                    {isAutoFixing ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Riparando...
+                      </>
+                    ) : (
+                      <>
+                        <Wrench className="h-5 w-5" />
+                        🔧 Auto-Fix
+                      </>
+                    )}
+                  </button>
                   
-                  <div className="bg-gray-800 p-4 rounded border border-gray-600">
-                    <h4 className="font-semibold text-blue-400 mb-2">📱 Su Safari iOS (iPhone/iPad):</h4>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Apri la pagina in Safari</li>
-                      <li>Tocca il pulsante "Condividi" (quadrato con freccia)</li>
-                      <li>Scorri e tocca "Aggiungi alla schermata Home"</li>
-                      <li>Apri l'app dalla home screen</li>
-                      <li>Riprova ad attivare le notifiche</li>
-                    </ol>
-                  </div>
-
-                  <div className="bg-gray-800 p-4 rounded border border-gray-600">
-                    <h4 className="font-semibold text-green-400 mb-2">🌐 Su Chrome/Firefox Desktop:</h4>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Clicca sull'icona del lucchetto 🔒 nella barra degli indirizzi</li>
-                      <li>Trova "Notifiche" e cambia in "Consenti"</li>
-                      <li>Ricarica la pagina</li>
-                      <li>Riprova ad attivare le notifiche</li>
-                    </ol>
-                  </div>
-
-                  <div className="bg-gray-800 p-4 rounded border border-gray-600">
-                    <h4 className="font-semibold text-purple-400 mb-2">🔧 Alternativa Chrome:</h4>
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Vai su Impostazioni Chrome → Privacy e sicurezza → Impostazioni sito</li>
-                      <li>Trova "Notifiche"</li>
-                      <li>Rimuovi questo sito dall'elenco "Bloccato"</li>
-                      <li>Ricarica e riprova</li>
-                    </ol>
-                  </div>
+                  <button
+                    onClick={runComprehensiveDiagnostics}
+                    disabled={isRunningDiagnostics}
+                    className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg"
+                  >
+                    {isRunningDiagnostics ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-5 w-5" />
+                    )}
+                  </button>
                 </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid gap-4">
+                {diagnosticResults.map((result, index) => (
+                  <div key={index} className={`p-4 rounded-lg border-l-4 ${
+                    result.status === 'pass' ? 'bg-green-900/20 border-green-400' :
+                    result.status === 'fail' ? 'bg-red-900/20 border-red-400' :
+                    'bg-yellow-900/20 border-yellow-400'
+                  }`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        {getDiagnosticIcon(result.status)}
+                        <div>
+                          <h4 className="font-semibold text-lg">{result.test}</h4>
+                          <p className="text-gray-300">{result.message}</p>
+                          {result.fix && (
+                            <p className="text-sm text-orange-400 mt-1">
+                              💡 Fix: {result.fix}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                        result.status === 'pass' ? 'bg-green-600 text-white' :
+                        result.status === 'fail' ? 'bg-red-600 text-white' :
+                        'bg-yellow-600 text-black'
+                      }`}>
+                        {result.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         )}
 
-        {/* Status Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* Permissions Status */}
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Shield className="h-6 w-6 text-blue-400" />
-              <h3 className="text-xl font-semibold">Permessi Notifiche</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <permission.icon className={`h-5 w-5 ${permission.color}`} />
-              <span className={`font-bold ${permission.color}`}>
-                {permission.text}
-              </span>
-            </div>
-            <p className="text-gray-400 text-sm mt-2">
-              {fcm.permission || 'Non determinato'}
+        {/* Quick Start Diagnostic */}
+        {diagnosticResults.length === 0 && (
+          <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-lg p-8 text-center">
+            <div className="text-6xl mb-4">🔍</div>
+            <h3 className="text-3xl font-bold mb-4 text-blue-400">Diagnostica Sistema FCM</h3>
+            <p className="text-gray-300 mb-6 text-lg">
+              Esegui un controllo completo per identificare e risolvere automaticamente tutti i problemi
             </p>
-          </div>
-
-          {/* Token Status */}
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Key className="h-6 w-6 text-purple-400" />
-              <h3 className="text-xl font-semibold">Token FCM</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              <token.icon className={`h-5 w-5 ${token.color}`} />
-              <span className={`font-bold ${token.color}`}>
-                {token.text}
-              </span>
-            </div>
-            {fcm.token && (
-              <p className="text-gray-400 text-xs mt-2 break-all">
-                {fcm.token.substring(0, 40)}...
-              </p>
-            )}
-          </div>
-
-          {/* Database Status */}
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Database className="h-6 w-6 text-green-400" />
-              <h3 className="text-xl font-semibold">Database</h3>
-              <button
-                onClick={() => user && refreshTokenData(user.id)}
-                disabled={refreshing}
-                className="ml-auto"
-              >
-                <RefreshCw className={`h-4 w-4 text-gray-400 hover:text-white ${refreshing ? 'animate-spin' : ''}`} />
-              </button>
-            </div>
-            <div className="flex items-center gap-2">
-              {tokenData ? (
+            <button
+              onClick={runComprehensiveDiagnostics}
+              disabled={isRunningDiagnostics}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-white font-bold py-4 px-8 rounded-lg text-xl flex items-center gap-3 mx-auto transition-all"
+            >
+              {isRunningDiagnostics ? (
                 <>
-                  <CheckCircle className="h-5 w-5 text-green-400" />
-                  <span className="font-bold text-green-400">SALVATO</span>
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  Analizzando sistema...
                 </>
               ) : (
                 <>
-                  <XCircle className="h-5 w-5 text-red-400" />
-                  <span className="font-bold text-red-400">NON TROVATO</span>
+                  <Settings className="h-6 w-6" />
+                  🚀 Avvia Diagnostica Completa
                 </>
               )}
-            </div>
-            {tokenData && (
-              <p className="text-gray-400 text-xs mt-2">
-                Creato: {new Date(tokenData.created_at).toLocaleString()}
-              </p>
-            )}
+            </button>
           </div>
-        </div>
+        )}
 
         {/* Action Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <button
-            onClick={activateNotifications}
-            disabled={isActivating}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg flex items-center justify-center gap-3 text-lg transition-all duration-200 transform hover:scale-105"
+            onClick={sendAdvancedTest}
+            disabled={isSendingTest || !user}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-6 px-8 rounded-lg flex items-center justify-center gap-3 text-xl transition-all duration-200 transform hover:scale-105"
           >
-            <Smartphone className="h-6 w-6" />
-            {isActivating ? '🔄 Attivazione...' : 
-             fcm.permission === 'granted' ? '🔄 Rigenera Token' : '📲 Attiva Notifiche'}
+            <Send className="h-6 w-6" />
+            {isSendingTest ? '🚀 Invio Test...' : '🚀 Test Notifica Avanzato'}
           </button>
 
           <button
-            onClick={sendTestNotification}
-            disabled={isSendingTest || !user}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-8 rounded-lg flex items-center justify-center gap-3 text-lg transition-all duration-200 transform hover:scale-105"
+            onClick={() => user && refreshTokenData(user.id)}
+            disabled={refreshing}
+            className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-50 text-white font-bold py-6 px-8 rounded-lg flex items-center justify-center gap-3 text-xl transition-all duration-200 transform hover:scale-105"
           >
-            <Send className="h-6 w-6" />
-            {isSendingTest ? '🚀 Invio...' : '🚀 Invia Test'}
+            {refreshing ? (
+              <>
+                <Loader2 className="h-6 w-6 animate-spin" />
+                Aggiornando...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-6 w-6" />
+                🔄 Aggiorna Stato
+              </>
+            )}
           </button>
+        </div>
+
+        {/* Quick Status */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Wifi className="h-5 w-5 text-blue-400" />
+              <span className="font-semibold">Connessione</span>
+            </div>
+            <span className="text-green-400 font-bold">✅ ONLINE</span>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="h-5 w-5 text-purple-400" />
+              <span className="font-semibold">Permessi</span>
+            </div>
+            <span className={`font-bold ${
+              fcm.permission === 'granted' ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {fcm.permission === 'granted' ? '✅ CONCESSI' : '❌ NEGATI'}
+            </span>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Key className="h-5 w-5 text-yellow-400" />
+              <span className="font-semibold">Token FCM</span>
+            </div>
+            <span className={`font-bold ${fcm.token ? 'text-green-400' : 'text-red-400'}`}>
+              {fcm.token ? '✅ ATTIVO' : '❌ ASSENTE'}
+            </span>
+          </div>
+
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Database className="h-5 w-5 text-green-400" />
+              <span className="font-semibold">Database</span>
+            </div>
+            <span className={`font-bold ${tokenData ? 'text-green-400' : 'text-yellow-400'}`}>
+              {tokenData ? '✅ SALVATO' : '⏳ VUOTO'}
+            </span>
+          </div>
         </div>
 
         {/* Debug Logs */}
         <div className="bg-gray-900 border border-gray-700 rounded-lg">
           <div className="p-6 border-b border-gray-700">
-            <h3 className="text-xl font-semibold text-white">📝 Debug Logs Real-time</h3>
-            <p className="text-gray-400 text-sm mt-1">
-              Ultimi 50 eventi del sistema FCM
-            </p>
+            <h3 className="text-2xl font-bold text-green-400">📊 Debug Logs Real-time</h3>
+            <p className="text-gray-400 mt-2">Status ed eventi del sistema FCM</p>
           </div>
-          <div className="p-4 max-h-96 overflow-y-auto">
-            {logs.length === 0 ? (
-              <p className="text-gray-500 text-center py-8">
-                Nessun log disponibile. Esegui un'azione per vedere i dettagli.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {logs.map((log, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 bg-gray-800 rounded border border-gray-700">
+          
+          <div className="p-6">
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {logs.length === 0 ? (
+                <p className="text-gray-500 text-center py-8">
+                  Nessun log disponibile. Esegui la diagnostica per iniziare.
+                </p>
+              ) : (
+                logs.map((log, index) => (
+                  <div key={index} className="flex items-start gap-3 py-2 px-3 bg-gray-800 rounded">
                     {getStatusIcon(log.type)}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm text-gray-300">
-                          {new Date(log.timestamp).toLocaleTimeString()}
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          log.type === 'success' ? 'bg-green-900 text-green-300' :
-                          log.type === 'error' ? 'bg-red-900 text-red-300' :
-                          log.type === 'warning' ? 'bg-yellow-900 text-yellow-300' :
-                          'bg-blue-900 text-blue-300'
-                        }`}>
-                          {log.type.toUpperCase()}
-                        </span>
+                      <div className="text-sm text-gray-400">
+                        {new Date(log.timestamp).toLocaleTimeString()}
                       </div>
-                      <p className="text-white text-sm">{log.message}</p>
+                      <div className={`font-medium ${
+                        log.type === 'success' ? 'text-green-300' :
+                        log.type === 'error' ? 'text-red-300' :
+                        log.type === 'warning' ? 'text-yellow-300' :
+                        'text-blue-300'
+                      }`}>
+                        {log.message}
+                      </div>
                       {log.details && (
-                        <details className="mt-2">
-                          <summary className="text-xs text-gray-400 cursor-pointer hover:text-white">
-                            Mostra dettagli tecnici
+                        <details className="mt-1">
+                          <summary className="text-xs text-gray-500 cursor-pointer">
+                            Dettagli tecnici
                           </summary>
-                          <pre className="mt-2 p-2 bg-gray-700 rounded text-xs text-gray-300 overflow-auto">
+                          <pre className="text-xs bg-gray-700 p-2 rounded mt-1 overflow-x-auto">
                             {JSON.stringify(log.details, null, 2)}
                           </pre>
                         </details>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
 
         {/* System Info */}
         <div className="bg-gray-900 border border-gray-700 rounded-lg p-6">
-          <h3 className="text-xl font-semibold text-white mb-4">🔧 Informazioni Sistema</h3>
+          <h3 className="text-xl font-bold text-gray-400 mb-4">ℹ️ Informazioni Sistema</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-gray-400">User ID:</span>
-              <span className="ml-2 text-white font-mono">
-                {user?.id?.substring(0, 20) || 'Non disponibile'}...
-              </span>
+              <span className="ml-2 text-blue-400 font-mono">{user?.id || 'Non autenticato'}</span>
             </div>
             <div>
               <span className="text-gray-400">Email:</span>
-              <span className="ml-2 text-white">{user?.email || 'Non disponibile'}</span>
+              <span className="ml-2 text-green-400">{user?.email || 'N/A'}</span>
             </div>
             <div>
               <span className="text-gray-400">FCM Support:</span>
-              <span className="ml-2 text-white">{fcm.isSupported ? '✅ Supportato' : '❌ Non supportato'}</span>
+              <span className="ml-2 text-blue-400">{isFCMSupported() ? '✅ Supportato' : '❌ Non supportato'}</span>
             </div>
             <div>
               <span className="text-gray-400">Service Worker:</span>
-              <span className="ml-2 text-white">
-                {'serviceWorker' in navigator ? '✅ Disponibile' : '❌ Non disponibile'}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-400">PWA Mode:</span>
-              <span className="ml-2 text-white">
-                {window.matchMedia('(display-mode: standalone)').matches ? '✅ Installata' : '🌐 Browser'}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-400">Platform:</span>
-              <span className="ml-2 text-white">{navigator.platform}</span>
+              <span className="ml-2 text-purple-400">{'serviceWorker' in navigator ? '✅ Disponibile' : '❌ Non disponibile'}</span>
             </div>
           </div>
         </div>
