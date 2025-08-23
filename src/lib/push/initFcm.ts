@@ -3,20 +3,23 @@ export async function initFcmAndGetToken(): Promise<string | null> {
   // 1) config centralizzata da Supabase (pubblica)
   const cfg = await fetch("https://vkjrqirvdvjbemsfzxof.functions.supabase.co/fcm-config", { cache: "no-store" }).then(r => r.json());
 
-  // 2) SDK modular - use dynamic imports with @ts-ignore
+  // 2) SDK compat - use dynamic imports with @ts-ignore
   // @ts-ignore
-  const firebaseApp = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js");
+  await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
   // @ts-ignore
-  const firebaseMessaging = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js");
+  await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
   
-  // @ts-ignore - Skip TypeScript checks for Firebase CDN imports
-  const { initializeApp } = firebaseApp;
-  // @ts-ignore - Skip TypeScript checks for Firebase CDN imports  
-  const { getMessaging, getToken, isSupported } = firebaseMessaging;
+  // @ts-ignore - Use global firebase object
+  if (!window.firebase) {
+    console.error('Firebase compat SDK not loaded');
+    return null;
+  }
   
-  if (!(await isSupported())) return null;
+  // Check messaging support
+  // @ts-ignore
+  if (!firebase.messaging.isSupported()) return null;
 
-  // 3) assicura SW
+  // 3) assicura SW (should be /firebase-messaging-sw.js for m1ssion.eu)
   const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
   await navigator.serviceWorker.ready;
 
@@ -26,8 +29,9 @@ export async function initFcmAndGetToken(): Promise<string | null> {
     if (p !== "granted") return null;
   }
 
-  // 5) init + token
-  const app = initializeApp({
+  // 5) init + token using compat SDK
+  // @ts-ignore
+  const app = firebase.initializeApp({
     apiKey: cfg.apiKey,
     authDomain: cfg.authDomain,
     projectId: cfg.projectId,
@@ -35,7 +39,14 @@ export async function initFcmAndGetToken(): Promise<string | null> {
     messagingSenderId: cfg.messagingSenderId,
     appId: cfg.appId,
   });
-  const messaging = getMessaging(app);
-  const token = await getToken(messaging, { vapidKey: cfg.vapidPublicKey, serviceWorkerRegistration: reg });
+  
+  // @ts-ignore
+  const messaging = firebase.messaging();
+  // @ts-ignore
+  const token = await messaging.getToken({ 
+    vapidKey: cfg.vapidPublicKey, 
+    serviceWorkerRegistration: reg 
+  });
+  
   return token ?? null;
 }
