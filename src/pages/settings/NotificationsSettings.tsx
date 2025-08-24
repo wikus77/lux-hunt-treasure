@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useFCMPushNotifications } from '@/hooks/useFCMPushNotifications';
+import { useFcm } from '@/hooks/useFcm';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -25,7 +25,7 @@ const NotificationsSettings: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [pushTokenExists, setPushTokenExists] = useState(false);
-  const { isSupported, permission, requestPermission, loading: pushLoading } = useFCMPushNotifications();
+  const { status, error, token, generate, isSupported, permission } = useFcm(user?.id);
   
   const [settings, setSettings] = useState<NotificationSettings>({
     notifications_enabled: true,
@@ -48,7 +48,7 @@ const NotificationsSettings: React.FC = () => {
     checkFCMTokenStatus();
   }, [user, permission]); // Re-check when permission changes
 
-  // Enhanced FCM token check with browser compatibility
+  // Check FCM token status with new hook
   const checkFCMTokenStatus = async () => {
     if (!user) {
       console.log('🔍 No user - skipping FCM check');
@@ -56,17 +56,13 @@ const NotificationsSettings: React.FC = () => {
     }
     
     try {
-      console.log('🔍 Comprehensive FCM check for user:', user.id, {
-        isSupported,
-        permission,
-        browser: navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'
-      });
+      console.log('🔍 FCM status check:', { token, status, isSupported, permission });
       
       const { data, error } = await supabase
-        .from('user_push_tokens')
-        .select('id, fcm_token, created_at')
+        .from('push_tokens')
+        .select('token, created_at')
         .eq('user_id', user.id)
-        .eq('is_active', true);
+        .limit(1);
 
       console.log('📱 FCM token query result:', { data, error });
       
@@ -75,17 +71,15 @@ const NotificationsSettings: React.FC = () => {
         setPushTokenExists(true);
         setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
       } else {
-        console.log('❌ No active FCM tokens found');
+        console.log('❌ No FCM tokens found');
         setPushTokenExists(false);
         
-        // Only disable if permission is explicitly denied
         if (permission === 'denied') {
           setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
         }
-        // If permission is granted but no token, keep toggle enabled but show it needs setup
       }
     } catch (error) {
-      console.error('❌ Error in comprehensive FCM check:', error);
+      console.error('❌ Error in FCM check:', error);
       setPushTokenExists(false);
     }
   };
@@ -163,19 +157,12 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ preferred_rewards: newPreferences });
   };
 
-  // Enhanced push notifications toggle - SIMPLIFIED & FIXED
+  // FCM push notifications toggle with new hook
   const handlePushNotificationsToggle = async (enabled: boolean) => {
-    console.log('🚀 FCM TOGGLE ACTIVATED:', enabled, {
-      isSupported,
-      currentPermission: permission,
-      pushTokenExists,
-      browser: navigator.userAgent.includes('Safari') ? 'Safari' : 'Chrome/Other'
-    });
+    console.log('🚀 FCM TOGGLE:', enabled, { isSupported, permission, token, status });
     
     if (enabled) {
-      // Check browser support first
       if (!isSupported) {
-        console.error('❌ Browser not supported for FCM');
         toast({
           title: "❌ Browser Non Supportato",
           description: "Le notifiche push non sono supportate in questo browser.",
@@ -184,70 +171,42 @@ const NotificationsSettings: React.FC = () => {
         return;
       }
 
-      console.log('✅ FCM Browser supported, requesting permission...');
       setLoading(true);
       
       try {
-        // Always try to request permission - let FCM handle the logic
-        console.log('📱 Calling FCM requestPermission...');
-        const success = await requestPermission();
+        console.log('📱 Generating FCM token...');
+        await generate();
         
-        console.log('📋 FCM requestPermission result:', success);
+        console.log('✅ FCM Token generated successfully');
+        setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+        setPushTokenExists(true);
         
-        if (success) {
-          console.log('✅ FCM Permission SUCCESS - enabling toggle');
-          
-          // Force recheck tokens after successful permission
-          setTimeout(async () => {
-            console.log('🔄 Rechecking FCM tokens after success...');
-            await checkFCMTokenStatus();
-          }, 2000);
-          
-          setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
-          
-          toast({
-            title: "✅ Notifiche Push Attivate!",
-            description: "🔥 Firebase FCM configurato. Riceverai notifiche push su questo dispositivo."
-          });
-        } else {
-          console.error('❌ FCM Permission FAILED');
-          setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-          
-          // Show specific error based on permission state
-          if (permission === 'denied') {
-            toast({
-              title: "🚫 Permesso Negato",
-              description: "Sblocca le notifiche in Impostazioni Safari > Siti web > Notifiche.",
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: "❌ Errore Attivazione",
-              description: "Non è stato possibile ottenere il permesso per le notifiche.",
-              variant: "destructive"
-            });
-          }
-        }
-      } catch (error) {
-        console.error('❌ FCM Toggle Exception:', error);
+        toast({
+          title: "✅ Notifiche Push Attivate!",
+          description: "🔥 M1SSION™ FCM configurato con VAPID 22/08. Token salvato su Supabase."
+        });
+        
+        // Recheck status
+        setTimeout(() => checkFCMTokenStatus(), 1000);
+        
+      } catch (error: any) {
+        console.error('❌ FCM Generation failed:', error);
         setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
         
         toast({
-          title: "❌ Errore Critico",
-          description: "Si è verificato un errore durante l'attivazione delle notifiche.",
+          title: "❌ Errore Attivazione",
+          description: error || "Non è stato possibile attivare le notifiche push.",
           variant: "destructive"
         });
       } finally {
         setLoading(false);
       }
     } else {
-      console.log('🔕 DISABLING FCM notifications - removing tokens');
       setLoading(true);
       
       try {
-        // Remove all FCM tokens for this user
         const { error } = await supabase
-          .from('user_push_tokens')
+          .from('push_tokens')
           .delete()
           .eq('user_id', user?.id);
           
@@ -259,19 +218,18 @@ const NotificationsSettings: React.FC = () => {
             variant: "destructive"
           });
         } else {
-          console.log('✅ FCM tokens removed successfully');
           setPushTokenExists(false);
           setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
           
           toast({
             title: "🔕 Notifiche Push Disattivate",
-            description: "Non riceverai più notifiche push su questo dispositivo."
+            description: "Token FCM rimosso. Non riceverai più notifiche push."
           });
         }
       } catch (error) {
         console.error('❌ Exception removing FCM tokens:', error);
         toast({
-          title: "❌ Errore Disattivazione",
+          title: "❌ Errore Disattivazione", 
           description: "Si è verificato un errore durante la disattivazione.",
           variant: "destructive"
         });
@@ -374,7 +332,7 @@ const NotificationsSettings: React.FC = () => {
                   type="checkbox"
                   checked={settings.push_notifications_enabled}
                   onChange={(e) => handlePushNotificationsToggle(e.target.checked)}
-                  disabled={loading || pushLoading || !isSupported}
+                  disabled={loading || status === 'loading' || !isSupported}
                   className="sr-only"
                   id="push-notifications-toggle"
                 />
@@ -386,7 +344,7 @@ const NotificationsSettings: React.FC = () => {
                       ? 'bg-[#00D1FF]' 
                       : 'bg-gray-600'
                     }
-                    ${(loading || pushLoading || !isSupported) 
+                    ${(loading || status === 'loading' || !isSupported) 
                       ? 'opacity-50 cursor-not-allowed' 
                       : ''
                     }
@@ -404,7 +362,7 @@ const NotificationsSettings: React.FC = () => {
                 </label>
                 
                 {/* Loading indicator */}
-                {(loading || pushLoading) && (
+                {(loading || status === 'loading') && (
                   <div className="absolute -right-8 top-1">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D1FF]"></div>
                   </div>
