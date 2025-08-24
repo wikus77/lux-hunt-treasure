@@ -1,5 +1,8 @@
 project_id = "vkjrqirvdvjbemsfzxof"
 
+[functions.send-firebase-push]
+verify_jwt = false
+
 [functions.fcm-config]
 verify_jwt = false
 
