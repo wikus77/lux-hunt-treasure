@@ -1,3 +1,4 @@
+/* M1SSION™ AG-X0197 */
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // FCM Module with Firebase v8 compat and new VAPID key (August 22nd)
 
@@ -30,11 +31,14 @@ declare global {
 
 /**
  * Ensures FCM is ready by loading Firebase v8 compat and registering SW
+ * M1SSION™ AG-X0197: Aligned with /fcm-test logic
  */
 export async function ensureFcmReady(): Promise<{ messaging: any, registration: ServiceWorkerRegistration }> {
-  // Load Firebase scripts if not already loaded
+  console.log('[M1SSION FCM] step: libs loading → START');
+  
+  // Load Firebase scripts if not already loaded - SINGLE LOAD PROTECTION
   if (!firebaseLoaded && !window.firebase) {
-    console.log('🔥 FCM: Loading Firebase v8 compat scripts...');
+    console.log('[M1SSION FCM] loading Firebase v8 compat scripts...');
     
     await Promise.all([
       loadScript('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js'),
@@ -42,7 +46,9 @@ export async function ensureFcmReady(): Promise<{ messaging: any, registration: 
     ]);
     
     firebaseLoaded = true;
-    console.log('✅ FCM: Firebase scripts loaded');
+    console.log('[M1SSION FCM] libs loaded → OK');
+  } else if (window.firebase) {
+    console.log('[M1SSION FCM] libs already loaded → OK (cached)');
   }
 
   // Check if Firebase is available
@@ -52,17 +58,34 @@ export async function ensureFcmReady(): Promise<{ messaging: any, registration: 
 
   // Initialize Firebase if not already done
   if (!window.firebase.apps?.length) {
-    console.log('🔥 FCM: Initializing Firebase app...');
+    console.log('[M1SSION FCM] app init → START');
     window.firebase.initializeApp(FIREBASE_CONFIG);
-    console.log('✅ FCM: Firebase app initialized');
+    console.log('[M1SSION FCM] app init → OK');
+  } else {
+    console.log('[M1SSION FCM] app already initialized → OK');
   }
 
-  // Register Service Worker if needed
+  // Register Service Worker if needed - USE /sw-m1ssion.js as primary
   if (!registrationInstance) {
-    console.log('🔧 FCM: Registering Service Worker...');
-    registrationInstance = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-    await navigator.serviceWorker.ready;
-    console.log('✅ FCM: Service Worker registered at:', registrationInstance.active?.scriptURL);
+    console.log('[M1SSION FCM] SW register → START');
+    try {
+      // Try primary SW first
+      registrationInstance = await navigator.serviceWorker.register('/sw-m1ssion.js', { scope: '/' });
+      await navigator.serviceWorker.ready;
+      console.log('[M1SSION FCM] SW registered → /sw-m1ssion.js OK');
+    } catch (error) {
+      // Fallback to shim
+      console.log('[M1SSION FCM] SW fallback → trying /firebase-messaging-sw.js');
+      registrationInstance = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+      await navigator.serviceWorker.ready;
+      console.log('[M1SSION FCM] SW registered → /firebase-messaging-sw.js OK (shim)');
+    }
+    
+    // Log SW version if available
+    if (registrationInstance.active) {
+      const swUrl = registrationInstance.active.scriptURL;
+      console.log(`[M1SSION SW] ready scope: ${registrationInstance.scope} (url: ${swUrl})`);
+    }
   }
 
   // Get messaging instance if not cached
@@ -71,7 +94,7 @@ export async function ensureFcmReady(): Promise<{ messaging: any, registration: 
       throw new Error('FCM not supported in this browser');
     }
     messagingInstance = window.firebase.messaging();
-    console.log('✅ FCM: Messaging instance created');
+    console.log('[M1SSION FCM] messaging instance → OK');
   }
 
   return { messaging: messagingInstance, registration: registrationInstance };
@@ -79,22 +102,25 @@ export async function ensureFcmReady(): Promise<{ messaging: any, registration: 
 
 /**
  * Generates FCM token and saves to Supabase
+ * M1SSION™ AG-X0197: Enhanced logging and error handling
  */
 export async function getAndSaveFcmToken(userId?: string): Promise<string> {
-  console.log('🎯 FCM: Starting token generation for user:', userId || 'anonymous');
+  console.log('[M1SSION FCM] token generation → START for user:', userId || 'anonymous');
   
   // Request notification permission
+  console.log('[M1SSION FCM] requesting permission...');
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') {
+    console.log(`[M1SSION FCM] permission → ${permission}`);
     throw new Error(`Notification permission denied: ${permission}`);
   }
-  console.log('✅ FCM: Notification permission granted');
+  console.log('[M1SSION FCM] permission → granted');
 
   // Ensure FCM is ready
   const { messaging, registration } = await ensureFcmReady();
 
   // Generate token with new VAPID key
-  console.log('🔑 FCM: Generating token with VAPID key:', VAPID_KEY.substring(0, 24) + '...');
+  console.log('[M1SSION FCM] getToken → START with VAPID:', VAPID_KEY.substring(0, 24) + '...');
   const token = await messaging.getToken({
     vapidKey: VAPID_KEY,
     serviceWorkerRegistration: registration
@@ -104,34 +130,41 @@ export async function getAndSaveFcmToken(userId?: string): Promise<string> {
     throw new Error('Failed to generate FCM token');
   }
 
-  console.log('✅ FCM: Token generated successfully:', token.substring(0, 20) + '...');
+  console.log('[M1SSION FCM] getToken → OK:', token.substring(0, 20) + '...');
 
   // Generate device ID for anonymous users
   const finalUserId = userId || generateDeviceId();
+  const deviceId = generateDeviceId();
 
-  // Save token to Supabase
-  console.log('💾 FCM: Saving token to Supabase for user:', finalUserId);
-  const { error } = await supabase
-    .from('push_tokens')
-    .upsert({ 
-      user_id: finalUserId, 
-      token, 
-      platform: 'web' 
-    }, { 
-      onConflict: 'token',
-      ignoreDuplicates: false 
-    });
+  // Save token to Supabase with enhanced error handling
+  console.log('[M1SSION FCM] save token → START');
+  try {
+    const { error } = await supabase
+      .from('push_tokens')
+      .upsert({ 
+        user_id: finalUserId, 
+        token, 
+        platform: 'web'
+      }, { 
+        onConflict: 'token',
+        ignoreDuplicates: false 
+      });
 
-  if (error) {
-    console.error('❌ FCM: Supabase save error:', error);
-    throw new Error(`Failed to save token: ${error.message}`);
+    if (error) {
+      console.error('[M1SSION FCM] save token → ERROR:', error);
+      throw new Error(`Failed to save token: ${error.message}`);
+    }
+    
+    console.log(`[M1SSION FCM] save token → OK (user:${finalUserId} device:${deviceId})`);
+  } catch (dbError: any) {
+    console.error('[M1SSION FCM] database error:', dbError);
+    throw new Error(`Database save failed: ${dbError.message}`);
   }
-
-  console.log('✅ FCM: Token saved successfully to Supabase');
 
   // Cache token in localStorage
   localStorage.setItem('fcm_token', token);
   localStorage.setItem('fcm_user_id', finalUserId);
+  localStorage.setItem('device_id', deviceId);
 
   return token;
 }
