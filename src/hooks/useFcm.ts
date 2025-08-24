@@ -1,3 +1,4 @@
+/* M1SSION™ AG-X0197 */
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // FCM React Hook
 
@@ -71,9 +72,11 @@ export function useFcm(userId?: string): UseFcmReturn {
     }));
 
     try {
+      console.log('[M1SSION FCM] hook generate → START');
       const finalUserId = userId || getCachedUserId();
       const token = await getAndSaveFcmToken(finalUserId || undefined);
       
+      console.log('[M1SSION FCM] hook generate → SUCCESS');
       setState({
         status: 'success',
         error: null,
@@ -81,7 +84,7 @@ export function useFcm(userId?: string): UseFcmReturn {
         userId: finalUserId
       });
     } catch (error: any) {
-      console.error('❌ FCM: Generate error:', error);
+      console.error('[M1SSION FCM] hook generate → ERROR:', error);
       setState(prev => ({
         ...prev,
         status: 'error',

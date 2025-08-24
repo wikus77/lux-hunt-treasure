@@ -1,3 +1,4 @@
+/* M1SSION™ AG-X0197 */
 import './styles/map.css';
 
 import React from 'react';
@@ -196,6 +197,57 @@ if (document.readyState === 'loading') {
   console.log("📄 DOM already loaded - initializing enhanced app immediately");
   renderApp();
 }
+
+// M1SSION™ AG-X0197: Enhanced Service Worker registration
+const registerServiceWorker = async () => {
+  if ('serviceWorker' in navigator) {
+    try {
+      console.log('[M1SSION SW] registering service worker...');
+      
+      // Register primary SW
+      const registration = await navigator.serviceWorker.register('/sw-m1ssion.js', { 
+        scope: '/' 
+      });
+      
+      await navigator.serviceWorker.ready;
+      
+      // Check for SW version header
+      const swUrl = registration.active?.scriptURL || '/sw-m1ssion.js';
+      console.log(`[M1SSION SW] ready scope: ${registration.scope} (url: ${swUrl})`);
+      
+      // Log x-sw-version if available (will be in network response)
+      try {
+        const swResponse = await fetch('/sw-m1ssion.js', { method: 'HEAD' });
+        const version = swResponse.headers.get('x-sw-version');
+        if (version) {
+          console.log(`[M1SSION SW] version: ${version}`);
+        }
+      } catch (e) {
+        console.log('[M1SSION SW] version check skipped (CORS/network)');
+      }
+      
+    } catch (error) {
+      console.error('[M1SSION SW] registration failed:', error);
+      
+      // Fallback to shim
+      try {
+        console.log('[M1SSION SW] trying fallback /firebase-messaging-sw.js...');
+        const fallbackReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
+          scope: '/' 
+        });
+        await navigator.serviceWorker.ready;
+        console.log('[M1SSION SW] fallback registered successfully');
+      } catch (fallbackError) {
+        console.error('[M1SSION SW] fallback registration failed:', fallbackError);
+      }
+    }
+  } else {
+    console.warn('[M1SSION SW] Service Worker not supported');
+  }
+};
+
+// Register SW early
+registerServiceWorker();
 
 // Enhanced global error handling
 window.addEventListener('error', (event) => {
