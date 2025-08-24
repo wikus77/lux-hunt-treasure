@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { useFCMPushNotifications } from '@/hooks/useFCMPushNotifications';
+import { useFcm } from '@/hooks/useFcm';
 import { Bell, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,9 +16,9 @@ export const FirebasePushSetup: React.FC<FirebasePushSetupProps> = ({ className 
     isSupported,
     permission,
     token,
-    loading,
-    requestPermission
-  } = useFCMPushNotifications();
+    status,
+    generate
+  } = useFcm();
 
   // Don't render if not supported
   if (!isSupported) {
@@ -31,14 +31,11 @@ export const FirebasePushSetup: React.FC<FirebasePushSetupProps> = ({ className 
   }
 
   const handleActivateNotifications = async () => {
-    const success = await requestPermission();
-    if (success) {
-      console.log('✅ Firebase push notifications activated successfully');
-    }
+    await generate();
   };
 
   const getStatusIcon = () => {
-    if (loading) {
+    if (status === 'loading') {
       return <Loader2 className="h-4 w-4 animate-spin text-primary" />;
     }
     
@@ -54,7 +51,7 @@ export const FirebasePushSetup: React.FC<FirebasePushSetupProps> = ({ className 
   };
 
   const getStatusText = () => {
-    if (loading) {
+    if (status === 'loading') {
       return 'Attivazione in corso...';
     }
     
@@ -85,11 +82,11 @@ export const FirebasePushSetup: React.FC<FirebasePushSetupProps> = ({ className 
       {permission !== 'granted' && permission !== 'denied' && (
         <Button
           onClick={handleActivateNotifications}
-          disabled={loading}
+          disabled={status === 'loading'}
           variant="outline"
           size="sm"
         >
-          {loading ? (
+          {status === 'loading' ? (
             <Loader2 className="h-4 w-4 animate-spin mr-2" />
           ) : (
             <Bell className="h-4 w-4 mr-2" />
