@@ -6,10 +6,19 @@ export interface FcmTokenResult {
   success: boolean;
 }
 
+// TypeScript declarations for Firebase globals
 declare global {
   interface Window {
     firebase?: any;
-    __FIREBASE_CFG__?: any;
+    __FIREBASE_CFG__?: {
+      apiKey: string;
+      authDomain: string;
+      projectId: string;
+      storageBucket: string;
+      messagingSenderId: string;
+      appId: string;
+      vapidKey: string;
+    };
   }
 }
 
