@@ -3796,6 +3796,22 @@ export type Database = {
         Args: { p_credit_type: string; p_user_id: string }
         Returns: boolean
       }
+      count_distinct_push_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      count_push_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      count_push_tokens_since: {
+        Args: { since: string }
+        Returns: number
+      }
+      exec_sql: {
+        Args: { sql: string }
+        Returns: Json
+      }
       force_subscription_sync: {
         Args: { p_user_id: string }
         Returns: boolean
