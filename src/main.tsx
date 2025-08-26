@@ -12,6 +12,9 @@ import { setupProductionConsole, enableProductionOptimizations } from './utils/p
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
 
+// M1SSION™ AG-X0197: Import FCM test utility for console access
+import './lib/push/testFcm';
+
 
 // Initialize production optimizations
 setupProductionConsole();
