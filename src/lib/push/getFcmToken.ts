@@ -8,8 +8,8 @@ export interface FcmTokenResult {
 
 declare global {
   interface Window {
-    firebase: any;
-    __FIREBASE_CFG__: any;
+    firebase?: any;
+    __FIREBASE_CFG__?: any;
   }
 }
 
