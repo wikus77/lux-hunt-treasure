@@ -1,0 +1,12 @@
+/firebase-init.js
+  Cache-Control: no-store, must-revalidate
+  Access-Control-Allow-Origin: *
+
+/firebase-messaging-sw.js
+  Cache-Control: no-store, must-revalidate
+  Service-Worker-Allowed: /
+  Access-Control-Allow-Origin: *
+
+/fcm-diag.html
+  Cache-Control: no-store, must-revalidate
+  Access-Control-Allow-Origin: *
