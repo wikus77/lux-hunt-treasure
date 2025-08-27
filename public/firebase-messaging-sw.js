@@ -1,50 +1,40 @@
-/* M1SSION™ AG-X0197 */
-// Firebase Cloud Messaging Service Worker (Compat Mode)
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+/* M1SSION™ – Firebase Messaging SW (compat) */
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 importScripts('/firebase-init.js');
 
-try {
-  // Initialize Firebase with global config
-  if (self.__FIREBASE_CFG__) {
-    firebase.initializeApp(self.__FIREBASE_CFG__);
-    const messaging = firebase.messaging();
+if (self.__FIREBASE_CFG__) {
+  firebase.initializeApp(self.__FIREBASE_CFG__);
+  const messaging = firebase.messaging();
+  
+  messaging.onBackgroundMessage((payload) => {
+    console.log('[M1SSION SW] Background message received:', payload);
     
-    // Handle background messages
-    messaging.onBackgroundMessage((payload) => {
-      console.log('[M1SSION FCM SW] Background message received:', payload);
-      
-      const notification = payload.notification || {};
-      const data = payload.data || {};
-      
-      const notificationTitle = notification.title || data.title || 'M1SSION';
-      const notificationOptions = {
-        body: notification.body || data.body || 'Nuova notifica dall\'app',
-        icon: notification.icon || data.icon || '/icons/icon-m1-192x192.png',
-        badge: notification.badge || data.badge || '/icons/icon-m1-192x192.png',
-        data: data,
-        tag: 'm1ssion-notification',
-        requireInteraction: true
-      };
-
-      return self.registration.showNotification(notificationTitle, notificationOptions);
-    });
+    const title = payload.notification?.title || 'M1SSION';
+    const options = {
+      body: payload.notification?.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: payload.data || {},
+      tag: 'm1ssion-notification',
+      requireInteraction: true
+    };
     
-    console.log('[M1SSION FCM SW] Service Worker initialized successfully');
-  } else {
-    console.error('[M1SSION FCM SW] Firebase config not available');
-  }
-} catch (error) {
-  console.error('[M1SSION FCM SW] Initialization error:', error);
+    self.registration.showNotification(title, options);
+  });
+  
+  console.log('[M1SSION SW] Firebase Messaging initialized');
+} else {
+  console.error('[M1SSION SW] Firebase config not available');
 }
 
 // Handle notification click
 self.addEventListener('notificationclick', (event) => {
-  console.log('[M1SSION FCM SW] Notification click received:', event);
+  console.log('[M1SSION SW] Notification clicked:', event);
   
   event.notification.close();
   
-  const url = event.notification.data?.click_action || 'https://m1ssion.eu';
+  const url = event.notification.data?.link || 'https://m1ssion.eu';
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
@@ -59,3 +49,5 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+
+// © 2025 M1SSION™
