@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.fcm-config]
 verify_jwt = false
 
+[functions.fcmTestSend]
+verify_jwt = false
+
 [api]
 enabled = true
 port = 54321
