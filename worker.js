@@ -4,18 +4,17 @@ addEventListener('fetch', event => {
 
 async function handleRequest(request) {
   const url = new URL(request.url);
-  const workerVersion = "m1ssion-fcm-v1.2.0";
+  const workerVersion = "m1ssion-fcm-v1.3.0";
 
   // Common headers for all worker responses
   const workerHeaders = {
     'x-worker-version': workerVersion,
-    'cache-control': 'no-store, must-revalidate',
     'x-content-type-options': 'nosniff'
   };
 
   // ---- firebase-messaging-sw.js (compat v8) ----
   if (url.pathname === '/firebase-messaging-sw.js') {
-    const sw = `/* M1SSION SW (compat v8) */
+    const sw = `/* M1SSION SW (compat v8) - Worker v1.3.0 */
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
@@ -55,6 +54,7 @@ self.addEventListener('notificationclick', function(event) {
     return new Response(sw, {
       headers: {
         'content-type': 'application/javascript; charset=utf-8',
+        'cache-control': 'no-cache, no-store, must-revalidate',
         'referrer-policy': 'origin-when-cross-origin',
         ...workerHeaders
       }
@@ -63,7 +63,7 @@ self.addEventListener('notificationclick', function(event) {
 
   // ---- sw-m1ssion.js (fallback identico a firebase-messaging-sw.js) ----
   if (url.pathname === '/sw-m1ssion.js') {
-    const sw = `/* M1SSION SW (compat v8) */
+    const sw = `/* M1SSION SW (compat v8) - Worker v1.3.0 */
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
@@ -103,6 +103,7 @@ self.addEventListener('notificationclick', function(event) {
     return new Response(sw, {
       headers: {
         'content-type': 'application/javascript; charset=utf-8',
+        'cache-control': 'no-cache, no-store, must-revalidate',
         'referrer-policy': 'origin-when-cross-origin',
         ...workerHeaders
       }
@@ -111,7 +112,7 @@ self.addEventListener('notificationclick', function(event) {
 
   // ---- firebase-init.js (IIFE + self.__FIREBASE_CFG__) ----
   if (url.pathname === '/firebase-init.js') {
-    const js = `/* M1SSION™ AG-X0197 */
+    const js = `/* M1SSION™ FCM Config v1.3.0 */
 (function(){ try {
   var config = {
     apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
@@ -131,6 +132,7 @@ self.addEventListener('notificationclick', function(event) {
     return new Response(js, {
       headers: {
         'content-type': 'application/javascript; charset=utf-8',
+        'cache-control': 'no-store, must-revalidate',
         'referrer-policy': 'origin-when-cross-origin',
         ...workerHeaders
       }
@@ -139,11 +141,13 @@ self.addEventListener('notificationclick', function(event) {
 
   // ---- badge PNG (content-type corretto) ----
   if (url.pathname === '/icons/badge-72.png') {
+    // Minimal transparent PNG 1x1 pixel
     const b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMBAp0wQy0AAAAASUVORK5CYII=";
     const bin = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
     return new Response(bin, {
       headers: {
         'content-type': 'image/png',
+        'cache-control': 'no-store, must-revalidate',
         ...workerHeaders
       }
     });
