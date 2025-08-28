@@ -1,132 +1,55 @@
-// © 2025 M1SSION™ - Store FCM Token Edge Function (FIXED)
-import { serve } from "https://deno.land/std@0.192.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { serve } from "https://deno.land/std/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Content-Type': 'application/json',
-};
+const ALLOW = [
+  "https://m1ssion.eu",
+  "https://www.m1ssion.eu",
+  "http://localhost:3000",
+  "http://localhost:5173"
+];
 
 serve(async (req) => {
-  console.log(`[FCM Store] ${req.method} request received`);
-  
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('[FCM Store] CORS preflight request');
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    console.log(`[FCM Store] Method ${req.method} not allowed`);
-    return new Response(
-      JSON.stringify({ error: 'Method not allowed', allowed: ['POST'] }),
-      { 
-        status: 405, 
-        headers: corsHeaders
-      }
-    );
-  }
+  const origin = req.headers.get("origin") || "";
+  const cors = {
+    "access-control-allow-origin": ALLOW.includes(origin) ? origin : "https://m1ssion.eu",
+    "access-control-allow-headers": "authorization, content-type",
+    "access-control-allow-methods": "POST, OPTIONS",
+    "vary": "origin"
+  };
+  if (req.method === "OPTIONS") return new Response(null, { headers: cors });
 
   try {
-    console.log('[FCM Store] Processing POST request...');
-    // Parse request body first
-    let requestData;
-    try {
-      requestData = await req.json();
-      console.log('[FCM Store] Request data parsed:', { 
-        hasFid: !!requestData.fid, 
-        hasToken: !!requestData.token 
-      });
-    } catch (error) {
-      console.error('[FCM Store] Invalid JSON:', error);
-      return new Response(
-        JSON.stringify({ error: 'Invalid JSON in request body' }),
-        { status: 400, headers: corsHeaders }
-      );
+    // JWT obbligatorio in prod
+    const auth = req.headers.get("authorization") || "";
+    if (!auth.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Missing JWT" }), { status: 401, headers: { ...cors, "content-type": "application/json" }});
     }
 
-    const { fid, token } = requestData;
+    const { fid, token } = await req.json();
     if (!fid || !token) {
-      console.error('[FCM Store] Missing fid or token:', { fid: !!fid, token: !!token });
-      return new Response(
-        JSON.stringify({ 
-          error: 'Missing required fields', 
-          required: ['fid', 'token'],
-          received: { fid: !!fid, token: !!token }
-        }),
-        { status: 400, headers: corsHeaders }
-      );
+      return new Response(JSON.stringify({ error: "fid and token required" }), { status: 400, headers: { ...cors, "content-type": "application/json" }});
     }
 
-    // Initialize Supabase client (for demo, we'll bypass auth for now)
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-    );
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+      global: { headers: { Authorization: auth } }
+    });
 
-    // Get client info for audit
-    const userAgent = req.headers.get('user-agent') || 'unknown';
-    const forwardedFor = req.headers.get('x-forwarded-for');
-    const clientIp = forwardedFor ? forwardedFor.split(',')[0] : 'unknown';
+    const user = await supabase.auth.getUser();
+    if (!user.data.user) return new Response(JSON.stringify({ error: "Invalid JWT" }), { status: 401, headers: { ...cors, "content-type": "application/json" }});
 
-    console.log(`[FCM Store] Storing token - FID: ${fid.substring(0, 8)}..., IP: ${clientIp}`);
+    const ua = req.headers.get("user-agent") || "";
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
 
-    // For demo purposes, we'll create a test record without user authentication
-    // In production, you'd validate the JWT and get the actual user_id
-    const testUserId = '00000000-0000-0000-0000-000000000000'; // Demo UUID
-
-    // Insert/update FCM token record
     const { data, error } = await supabase
-      .from('fcm_tokens')
-      .upsert({
-        user_id: testUserId, // Demo user ID
-        fid,
-        token,
-        user_agent: userAgent,
-        ip: clientIp,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'fid',
-      })
+      .from("fcm_tokens")
+      .upsert({ user_id: user.data.user.id, fid, token, user_agent: ua, ip }, { onConflict: "fid" })
       .select()
       .single();
 
-    if (error) {
-      console.error('[FCM Store] Database error:', error);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Failed to store token',
-          details: error.message,
-          code: error.code
-        }),
-        { status: 500, headers: corsHeaders }
-      );
-    }
+    if (error) throw error;
 
-    console.log(`[FCM Store] ✅ Token stored successfully - ID: ${data.id}`);
-
-    return new Response(
-      JSON.stringify({ 
-        success: true,
-        id: data.id,
-        message: 'FCM token stored successfully (demo mode)',
-        timestamp: new Date().toISOString(),
-        demo: true
-      }),
-      { status: 200, headers: corsHeaders }
-    );
-
-  } catch (error) {
-    console.error('[FCM Store] Unexpected error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        details: error.message,
-        timestamp: new Date().toISOString()
-      }),
-      { status: 500, headers: corsHeaders }
-    );
+    return new Response(JSON.stringify({ ok: true, data }), { headers: { ...cors, "content-type": "application/json" }});
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e) }), { status: 500, headers: { ...cors, "content-type": "application/json" }});
   }
 });
