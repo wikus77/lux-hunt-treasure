@@ -95,6 +95,34 @@ serve(async (req) => {
 
     console.log(`[M1SSION FCM] req_${reqId} → user authenticated: ${userData.user.id}`);
 
+    // Check if FID exists with different user_id
+    const { data: existingToken, error: checkError } = await supabase
+      .from("fcm_tokens")
+      .select("user_id, fid")
+      .eq("fid", fid)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.log(`[M1SSION FCM] req_${reqId} → check error → ERROR: ${checkError.message}`);
+      throw checkError;
+    }
+    
+    // If FID exists for different user, return conflict
+    if (existingToken && existingToken.user_id !== userData.user.id) {
+      console.log(`[M1SSION FCM] req_${reqId} → FID conflict → ERROR: fid ${fid} belongs to different user`);
+      return new Response(
+        JSON.stringify({ 
+          error: "FID already associated with different user", 
+          reqId,
+          conflictingFid: fid
+        }), 
+        { 
+          status: 409, 
+          headers: { ...finalCors, "content-type": "application/json" }
+        }
+      );
+    }
+
     // Upsert FCM token
     const { data, error } = await supabase
       .from("fcm_tokens")
@@ -111,19 +139,7 @@ serve(async (req) => {
       .single();
 
     if (error) {
-      console.log(`[M1SSION FCM] req_${reqId} → database error → ERROR: ${error.message}`);
-      
-      // Handle specific conflict errors
-      if (error.code === '23505') {
-        return new Response(
-          JSON.stringify({ error: "Conflict: FID already exists", reqId }), 
-          { 
-            status: 409, 
-            headers: { ...finalCors, "content-type": "application/json" }
-          }
-        );
-      }
-      
+      console.log(`[M1SSION FCM] req_${reqId} → upsert error → ERROR: ${error.message}`);
       throw error;
     }
 
@@ -133,7 +149,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        data,
+        fid: data.fid,
+        user_id: data.user_id,
+        token_id: data.id,
         reqId,
         duration: `${duration}ms`
       }), 

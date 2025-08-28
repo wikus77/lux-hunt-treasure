@@ -4,6 +4,14 @@ addEventListener('fetch', event => {
 
 async function handleRequest(request) {
   const url = new URL(request.url);
+  const workerVersion = "m1ssion-fcm-v1.2.0";
+
+  // Common headers for all worker responses
+  const workerHeaders = {
+    'x-worker-version': workerVersion,
+    'cache-control': 'no-store, must-revalidate',
+    'x-content-type-options': 'nosniff'
+  };
 
   // ---- firebase-messaging-sw.js (compat v8) ----
   if (url.pathname === '/firebase-messaging-sw.js') {
@@ -47,9 +55,56 @@ self.addEventListener('notificationclick', function(event) {
     return new Response(sw, {
       headers: {
         'content-type': 'application/javascript; charset=utf-8',
-        'cache-control': 'no-cache, no-store, must-revalidate',
-        'x-content-type-options': 'nosniff',
-        'referrer-policy': 'origin-when-cross-origin'
+        'referrer-policy': 'origin-when-cross-origin',
+        ...workerHeaders
+      }
+    });
+  }
+
+  // ---- sw-m1ssion.js (fallback identico a firebase-messaging-sw.js) ----
+  if (url.pathname === '/sw-m1ssion.js') {
+    const sw = `/* M1SSION SW (compat v8) */
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
+importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+
+firebase.initializeApp({
+  apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
+  authDomain: "m1ssion-app.firebaseapp.com",
+  projectId: "m1ssion-app",
+  storageBucket: "m1ssion-app.firebasestorage.app",
+  messagingSenderId: "21417361168",
+  appId: "1:21417361168:web:58841299455ee4bcc7af95"
+});
+
+const messaging = firebase.messaging();
+
+messaging.setBackgroundMessageHandler(function(payload) {
+  try {
+    const n = (payload && payload.notification) || {};
+    const d = (payload && payload.data) || {};
+    const title = n.title || d.title || 'M1SSION';
+    const body  = n.body  || d.body  || '';
+    const link  = (payload && payload.fcmOptions && payload.fcmOptions.link) || d.link || 'https://m1ssion.eu/';
+    const options = { body, icon: '/icons/icon-192.png', badge: '/icons/badge-72.png', data: { link } };
+    return self.registration.showNotification(title, options);
+  } catch (e) {}
+});
+
+self.addEventListener('notificationclick', function(event) {
+  const url = (event.notification && event.notification.data && event.notification.data.link) || 'https://m1ssion.eu/';
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) { if (c.url === url && 'focus' in c) return c.focus(); }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});`;
+    return new Response(sw, {
+      headers: {
+        'content-type': 'application/javascript; charset=utf-8',
+        'referrer-policy': 'origin-when-cross-origin',
+        ...workerHeaders
       }
     });
   }
@@ -76,9 +131,8 @@ self.addEventListener('notificationclick', function(event) {
     return new Response(js, {
       headers: {
         'content-type': 'application/javascript; charset=utf-8',
-        'cache-control': 'no-store, must-revalidate',
-        'x-content-type-options': 'nosniff',
-        'referrer-policy': 'origin-when-cross-origin'
+        'referrer-policy': 'origin-when-cross-origin',
+        ...workerHeaders
       }
     });
   }
@@ -90,8 +144,7 @@ self.addEventListener('notificationclick', function(event) {
     return new Response(bin, {
       headers: {
         'content-type': 'image/png',
-        'cache-control': 'no-store, must-revalidate',
-        'x-content-type-options': 'nosniff'
+        ...workerHeaders
       }
     });
   }
