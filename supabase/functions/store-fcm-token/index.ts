@@ -112,6 +112,18 @@ serve(async (req) => {
 
     if (error) {
       console.log(`[M1SSION FCM] req_${reqId} → database error → ERROR: ${error.message}`);
+      
+      // Handle specific conflict errors
+      if (error.code === '23505') {
+        return new Response(
+          JSON.stringify({ error: "Conflict: FID already exists", reqId }), 
+          { 
+            status: 409, 
+            headers: { ...finalCors, "content-type": "application/json" }
+          }
+        );
+      }
+      
       throw error;
     }
 
