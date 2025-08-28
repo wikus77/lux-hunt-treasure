@@ -217,15 +217,52 @@ async function saveToken() {
   }
   
   try {
-    log('💾 Saving token to Supabase...');
+    log('💾 Starting token save to Supabase...');
     
-    // This would normally require authentication
-    // For demo purposes, we'll just log the token
-    log('📝 Token would be saved: ' + currentToken.substring(0, 20) + '...');
-    log('💾 Save to Supabase feature requires authentication');
+    // Check if we have access to Supabase client (would need auth)
+    const hasSupabaseAuth = window.supabase && window.supabase.auth;
+    if (!hasSupabaseAuth) {
+      log('⚠️ Save skipped: Supabase auth not available (requires app integration)');
+      log('📝 Token ready for save: ' + currentToken.substring(0, 20) + '...');
+      return;
+    }
+    
+    // Get current user session
+    const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
+    if (sessionError || !session) {
+      log('⚠️ Save skipped: User not authenticated');
+      log('📝 Token ready for save: ' + currentToken.substring(0, 20) + '...');
+      return;
+    }
+    
+    log('🔐 User authenticated, proceeding with save...');
+    
+    // Generate a Firebase Installation ID (FID) - simplified version
+    const fid = 'fid_' + Date.now() + '_' + Math.random().toString(36).substring(2);
+    
+    // Call store-fcm-token edge function
+    const { data, error } = await window.supabase.functions.invoke('store-fcm-token', {
+      body: {
+        fid: fid,
+        token: currentToken
+      }
+    });
+    
+    if (error) {
+      throw new Error(`Supabase function error: ${error.message}`);
+    }
+    
+    if (data.success) {
+      log('✅ Token saved successfully to Supabase!');
+      log(`📝 Database record ID: ${data.data.id}`);
+      log(`⏱️ Save duration: ${data.duration}`);
+    } else {
+      throw new Error(`Save failed: ${data.error || 'Unknown error'}`);
+    }
     
   } catch (e) {
     log('❌ Save failed: ' + e.message);
+    log('📝 Token available for manual save: ' + currentToken.substring(0, 20) + '...');
   }
 }
 
@@ -286,6 +323,41 @@ async function testServiceWorkerNotification() {
     
   } catch (e) {
     log('❌ SW notification failed: ' + e.message);
+  }
+}
+
+async function checkSupabaseStatus() {
+  try {
+    log('🗄️ Checking Supabase connection...');
+    
+    const hasSupabase = window.supabase;
+    if (!hasSupabase) {
+      setStatus('supabase-auth', 'warning', 'Not Available');
+      setStatus('token-storage', 'warning', 'Requires App Integration');
+      log('⚠️ Supabase client not available (standalone diagnostics mode)');
+      return;
+    }
+    
+    setStatus('supabase-auth', 'ok', 'Available');
+    log('✅ Supabase client available');
+    
+    // Check auth status
+    const { data: { session }, error } = await window.supabase.auth.getSession();
+    if (error) {
+      setStatus('token-storage', 'error', 'Auth Error');
+      log('❌ Supabase auth error: ' + error.message);
+    } else if (session) {
+      setStatus('token-storage', 'ok', 'Ready');
+      log('✅ User authenticated, storage ready');
+    } else {
+      setStatus('token-storage', 'warning', 'Not Authenticated');
+      log('⚠️ User not authenticated, storage requires login');
+    }
+    
+  } catch (e) {
+    setStatus('supabase-auth', 'error', 'Check Failed');
+    setStatus('token-storage', 'error', 'Unavailable');
+    log('❌ Supabase check failed: ' + e.message);
   }
 }
 
