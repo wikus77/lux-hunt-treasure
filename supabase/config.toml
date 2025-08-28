@@ -42,3 +42,7 @@ verify_jwt = false
 [functions.send-push-notification]
 # Public function for push notifications
 verify_jwt = false
+
+[functions.store-fcm-token]
+# Requires JWT authentication for token storage
+verify_jwt = true

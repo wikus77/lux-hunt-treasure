@@ -1,16 +1,16 @@
-/* M1SSION™ AG-X0197 */
+/* M1SSION™ - Firebase Config for Production */
 // Firebase Config Initialization for FCM Web Push
 (function() {
   try {
-    // Build Firebase config from environment or fallback
+    // PRODUCTION Firebase config - CORRECT values for m1ssion.eu
     const config = {
-      apiKey: "AIzaSyAI4vsOdZoGq89tNEt5qKJJHkOJWlzULw8",
-      authDomain: "m1ssion-app.firebaseapp.com", 
+      apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
+      authDomain: "m1ssion-app.firebaseapp.com",
       projectId: "m1ssion-app",
-      storageBucket: "m1ssion-app.appspot.com",
+      storageBucket: "m1ssion-app.firebasestorage.app",
       messagingSenderId: "21417361168",
-      appId: "1:21417361168:web:a4d5c3b1f2e1a9b8c7d9e0",
-      vapidKey: "BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA"
+      appId: "1:21417361168:web:58841299455ee4bcc7af95",
+      vapidKey: "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o"
     };
 
     // Validate required fields
