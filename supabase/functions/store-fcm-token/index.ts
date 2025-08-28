@@ -3,9 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ALLOW = [
   "https://m1ssion.eu",
-  "https://www.m1ssion.eu", 
-  "http://localhost:3000",
-  "http://localhost:5173"
+  "https://www.m1ssion.eu"
 ];
 
 const corsHeaders = {
