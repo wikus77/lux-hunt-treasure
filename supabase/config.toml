@@ -44,5 +44,5 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.store-fcm-token]
-# Requires JWT authentication for token storage
-verify_jwt = true
+# Demo mode - no JWT required for testing
+verify_jwt = false
