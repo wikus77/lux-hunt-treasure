@@ -22,56 +22,48 @@ const messaging = firebase.messaging();
 console.log('[M1SSION SW] Firebase app initialized, setting up message handlers...');
 
 // Background message handler
-messaging.setBackgroundMessageHandler(async (payload) => {
+messaging.setBackgroundMessageHandler(function(payload) {
   console.log('[M1SSION SW] Background message received:', payload);
   
-  const notificationTitle = (payload.notification && payload.notification.title) || 
-                           payload.data?.title || 
-                           'M1SSION™';
-                           
-  const notificationBody = (payload.notification && payload.notification.body) || 
-                          payload.data?.body || 
-                          'Nuova notifica disponibile';
-
-  const notificationOptions = {
-    body: notificationBody,
+  const title = (payload.notification && payload.notification.title) ||
+                (payload.data && payload.data.title) || 'M1SSION';
+  const body  = (payload.notification && payload.notification.body) ||
+                (payload.data && payload.data.body) || '';
+  const link  = (payload.fcmOptions && payload.fcmOptions.link) ||
+                (payload.data && payload.data.link) || 'https://m1ssion.eu/';
+  
+  const options = {
+    body,
     icon: '/icons/icon-192.png',
     badge: '/icons/badge-72.png',
-    data: payload.data || {},
-    requireInteraction: true,
-    tag: 'm1ssion-notification'
+    data: { link }
   };
-
-  console.log('[M1SSION SW] Showing notification:', notificationTitle, notificationOptions);
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  
+  console.log('[M1SSION SW] Showing notification:', title, options);
+  return self.registration.showNotification(title, options);
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   console.log('[M1SSION SW] Notification clicked:', event.notification);
   
+  const url = (event.notification && event.notification.data && event.notification.data.link) || 'https://m1ssion.eu/';
   event.notification.close();
   
-  const targetUrl = (event.notification.data && event.notification.data.link) || 
-                   'https://m1ssion.eu/';
-  
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clientList => {
-        console.log('[M1SSION SW] Looking for existing client for URL:', targetUrl);
-        
-        // Look for existing window with the target URL
-        for (const client of clientList) {
-          if (client.url.startsWith(targetUrl) && 'focus' in client) {
-            console.log('[M1SSION SW] Focusing existing client:', client.url);
-            return client.focus();
-          }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      console.log('[M1SSION SW] Looking for existing client for URL:', url);
+      
+      for (const c of list) { 
+        if (c.url === url && 'focus' in c) {
+          console.log('[M1SSION SW] Focusing existing client:', c.url);
+          return c.focus(); 
         }
-        
-        // No existing window found, open new one
-        console.log('[M1SSION SW] Opening new window for URL:', targetUrl);
-        return clients.openWindow(targetUrl);
-      })
+      }
+      
+      console.log('[M1SSION SW] Opening new window for URL:', url);
+      if (clients.openWindow) return clients.openWindow(url);
+    })
   );
 });
 
