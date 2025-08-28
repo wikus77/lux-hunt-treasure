@@ -9,9 +9,9 @@ const ALLOW = [
 ];
 
 const corsHeaders = {
-  "access-control-allow-headers": "authorization, content-type, x-client-info, apikey",
+  "access-control-allow-headers": "authorization, content-type",
   "access-control-allow-methods": "POST, OPTIONS",
-  "access-control-allow-credentials": "true"
+  "vary": "origin"
 };
 
 function generateRequestId() {
@@ -31,8 +31,7 @@ serve(async (req) => {
 
   const finalCors = {
     ...corsHeaders,
-    "access-control-allow-origin": ALLOW.includes(origin) ? origin : "https://m1ssion.eu",
-    "vary": "origin"
+    "access-control-allow-origin": ALLOW.includes(origin) ? origin : "https://m1ssion.eu"
   };
 
   // Handle CORS preflight
