@@ -1,301 +1,308 @@
-// © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ - FCM Diagnostics
-let currentConfig = null;
-let currentToken = null;
+/* M1SSION™ FCM Diagnostics - Advanced Testing Module */
 
-// Debug logging
-function log(message) {
-    const timestamp = new Date().toISOString().substr(11, 8);
-    const logElement = document.getElementById('debug-log');
-    logElement.innerHTML += `[${timestamp}] ${message}\n`;
-    logElement.scrollTop = logElement.scrollHeight;
-    console.log(`[FCM-DIAG] ${message}`);
+let log = [];
+let messaging = null;
+let swRegistration = null;
+
+function logMessage(msg) {
+    const timestamp = new Date().toISOString().split('T')[1].substring(0, 8);
+    const logEntry = `[${timestamp}] ${msg}`;
+    log.push(logEntry);
+    console.log(logEntry);
+    updateLogDisplay();
 }
 
-function clearLog() {
-    document.getElementById('debug-log').innerHTML = '';
+function updateLogDisplay() {
+    const logElement = document.getElementById('debug-log');
+    if (logElement) {
+        logElement.textContent = log.join('\n');
+        logElement.scrollTop = logElement.scrollHeight;
+    }
 }
 
 function setStatus(elementId, status, text) {
     const element = document.getElementById(elementId);
-    element.className = `status ${status}`;
-    element.textContent = text || status.toUpperCase();
+    if (element) {
+        element.className = `status ${status}`;
+        element.textContent = text;
+    }
 }
 
-// Initialize diagnostics
-async function initDiagnostics() {
-    log('🚀 Initializing FCM Diagnostics...');
-    
-    // Domain check
-    document.getElementById('domain').textContent = window.location.origin;
-    
-    // Check basic support
-    if ('serviceWorker' in navigator) {
-        setStatus('fcm-support', 'ok', 'Supported');
-    } else {
-        setStatus('fcm-support', 'error', 'Not Supported');
-        log('❌ Service Worker not supported');
-        return;
+function updateConfigDisplay(config) {
+    const display = document.getElementById('config-display');
+    if (display) {
+        display.textContent = JSON.stringify(config, null, 2);
     }
-    
-    if ('Notification' in window) {
-        setStatus('notification-api', 'ok', 'Available');
-    } else {
-        setStatus('notification-api', 'error', 'Not Available');
-        log('❌ Notification API not available');
-        return;
-    }
-    
-    // Check service worker
-    await checkServiceWorker();
-    
-    // Check permissions
-    checkPermissions();
-    
-    // Load config
-    await loadConfig();
-    
-    log('✅ Diagnostics initialization complete');
 }
 
-async function checkServiceWorker() {
-    try {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        log(`📡 Found ${registrations.length} service worker(s)`);
-        
-        const swReg = registrations.find(reg => 
-            reg.active && reg.active.scriptURL.includes('firebase-messaging-sw.js')
-        );
-        
-        if (swReg && swReg.active) {
-            setStatus('sw-active', 'ok', 'Active');
-            document.getElementById('sw-url').textContent = swReg.active.scriptURL;
-            
-            if (swReg.active.scriptURL === 'https://m1ssion.eu/firebase-messaging-sw.js') {
-                log('✅ Correct SW URL detected');
-            } else {
-                log(`⚠️ SW URL mismatch: ${swReg.active.scriptURL}`);
-            }
+function updateTokenDisplay(token) {
+    const display = document.getElementById('token-display');
+    if (display) {
+        if (token) {
+            display.textContent = token.substring(0, 50) + '...' + token.substring(token.length - 10);
         } else {
-            setStatus('sw-active', 'error', 'Not Found');
-            document.getElementById('sw-url').textContent = 'No firebase-messaging-sw.js found';
-            log('❌ Firebase messaging service worker not found');
+            display.textContent = 'No token generated';
         }
-    } catch (error) {
-        setStatus('sw-active', 'error', 'Error');
-        log(`❌ SW check error: ${error.message}`);
-    }
-}
-
-function checkPermissions() {
-    const permission = Notification.permission;
-    document.getElementById('notification-permission').textContent = permission;
-    
-    if (permission === 'granted') {
-        setStatus('notification-permission', 'ok');
-        log('✅ Notification permission granted');
-    } else if (permission === 'denied') {
-        setStatus('notification-permission', 'error');
-        log('❌ Notification permission denied');
-    } else {
-        setStatus('notification-permission', 'warning', 'Default');
-        log('⚠️ Notification permission not requested');
-    }
-}
-
-async function requestPermission() {
-    try {
-        log('🔐 Requesting notification permission...');
-        const permission = await Notification.requestPermission();
-        log(`🔐 Permission result: ${permission}`);
-        checkPermissions();
-    } catch (error) {
-        log(`❌ Permission request error: ${error.message}`);
     }
 }
 
 async function loadConfig() {
     try {
-        log('⚙️ Loading Firebase config from Supabase...');
-        const response = await fetch('https://vkjrqirvdvjbemsfzxof.functions.supabase.co/fcm-config', { 
-            cache: 'no-store' 
-        });
+        logMessage('🔄 Loading Firebase config...');
         
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        // Import Firebase config
+        const module = await import('/firebase-init.js');
+        const config = self.__FIREBASE_CFG__;
+        
+        if (config) {
+            logMessage('✅ Firebase config loaded successfully');
+            setStatus('config-loaded', 'ok', 'Loaded');
+            updateConfigDisplay(config);
+            
+            // Verify it's the correct config
+            if (config.appId === '1:21417361168:web:58841299455ee4bcc7af95') {
+                logMessage('✅ CORRECT appId detected for production');
+            } else {
+                logMessage(`❌ WRONG appId: ${config.appId}`);
+            }
+            
+            if (config.apiKey === 'AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs') {
+                logMessage('✅ CORRECT apiKey detected for production');
+            } else {
+                logMessage(`❌ WRONG apiKey: ${config.apiKey}`);
+            }
+            
+        } else {
+            logMessage('❌ Firebase config not found in global scope');
+            setStatus('config-loaded', 'error', 'Failed');
+        }
+    } catch (error) {
+        logMessage(`❌ Error loading config: ${error.message}`);
+        setStatus('config-loaded', 'error', 'Failed');
+    }
+}
+
+async function registerServiceWorker() {
+    try {
+        logMessage('🔄 Registering Service Worker...');
+        
+        if (!('serviceWorker' in navigator)) {
+            throw new Error('Service Worker not supported');
         }
         
-        currentConfig = await response.json();
-        setStatus('config-loaded', 'ok', 'Loaded');
+        swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        logMessage('✅ Service Worker registered successfully');
+        setStatus('sw-active', 'ok', 'Active');
         
-        // Display config (truncated sensitive data)
-        const displayConfig = {
-            projectId: currentConfig.projectId,
-            messagingSenderId: currentConfig.messagingSenderId,
-            vapidKey: currentConfig.vapidPublicKey ? 
-                currentConfig.vapidPublicKey.substring(0, 24) + '...' : 'Missing',
-            apiKey: currentConfig.apiKey ? 
-                currentConfig.apiKey.substring(0, 10) + '...' : 'Missing'
-        };
+        const swUrl = document.getElementById('sw-url');
+        if (swUrl) {
+            swUrl.textContent = swRegistration.scope;
+        }
         
-        document.getElementById('config-display').textContent = JSON.stringify(displayConfig, null, 2);
-        
-        log(`✅ Config loaded - ProjectID: ${currentConfig.projectId}, SenderID: ${currentConfig.messagingSenderId}`);
-        log(`✅ VAPID key: ${currentConfig.vapidPublicKey ? currentConfig.vapidPublicKey.substring(0, 24) + '...' : 'Missing'}`);
-        
+        return swRegistration;
     } catch (error) {
-        setStatus('config-loaded', 'error', 'Failed');
-        document.getElementById('config-display').textContent = `Error: ${error.message}`;
-        log(`❌ Config loading error: ${error.message}`);
+        logMessage(`❌ Service Worker registration failed: ${error.message}`);
+        setStatus('sw-active', 'error', 'Failed');
+        throw error;
+    }
+}
+
+async function requestPermission() {
+    try {
+        logMessage('🔄 Requesting notification permission...');
+        
+        if (!('Notification' in window)) {
+            throw new Error('Notifications not supported');
+        }
+        
+        const permission = await Notification.requestPermission();
+        logMessage(`📋 Permission result: ${permission}`);
+        
+        if (permission === 'granted') {
+            setStatus('notification-permission', 'ok', 'Granted');
+        } else {
+            setStatus('notification-permission', 'error', permission);
+        }
+        
+        return permission;
+    } catch (error) {
+        logMessage(`❌ Permission request failed: ${error.message}`);
+        setStatus('notification-permission', 'error', 'Failed');
+        throw error;
     }
 }
 
 async function generateToken() {
-    if (!currentConfig) {
-        log('❌ No config loaded. Please load config first.');
-        return;
-    }
-    
-    if (Notification.permission !== 'granted') {
-        log('❌ Notification permission required. Please grant permission first.');
-        return;
-    }
-    
     try {
-        log('🎯 Generating FCM token...');
-        setStatus('token-status', 'warning', 'Generating...');
+        logMessage('🔄 Generating FCM token...');
         
-        // Load Firebase compat SDK
-        await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
-        await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+        // Load Firebase v9 modular SDK
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js');
+        const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging.js');
         
-        if (!window.firebase || !firebase.messaging.isSupported()) {
-            throw new Error('Firebase messaging not supported');
+        const config = self.__FIREBASE_CFG__;
+        if (!config) {
+            throw new Error('Firebase config not available');
         }
         
-        // Get service worker registration
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-        await navigator.serviceWorker.ready;
-        log('✅ Service worker registered and ready');
-        
         // Initialize Firebase
-        const app = firebase.initializeApp({
-            apiKey: currentConfig.apiKey,
-            authDomain: currentConfig.authDomain,
-            projectId: currentConfig.projectId,
-            storageBucket: currentConfig.storageBucket,
-            messagingSenderId: currentConfig.messagingSenderId,
-            appId: currentConfig.appId,
-        });
+        const app = initializeApp(config);
+        messaging = getMessaging(app);
         
-        log('✅ Firebase initialized');
+        // Register service worker if not already done
+        if (!swRegistration) {
+            swRegistration = await registerServiceWorker();
+        }
         
-        // Get messaging and token
-        const messaging = firebase.messaging();
-        const token = await messaging.getToken({
-            vapidKey: currentConfig.vapidPublicKey,
-            serviceWorkerRegistration: registration
+        // Request permission if not granted
+        if (Notification.permission !== 'granted') {
+            await requestPermission();
+        }
+        
+        if (Notification.permission !== 'granted') {
+            throw new Error('Notification permission not granted');
+        }
+        
+        // Generate token
+        logMessage('🎯 Generating token with VAPID key...');
+        const token = await getToken(messaging, {
+            vapidKey: config.vapidKey,
+            serviceWorkerRegistration: swRegistration
         });
         
         if (token) {
-            currentToken = token;
+            logMessage('✅ FCM token generated successfully');
+            logMessage(`📝 Token length: ${token.length} characters`);
             setStatus('token-status', 'ok', 'Generated');
-            document.getElementById('token-display').textContent = token;
-            log(`✅ FCM Token generated: ${token.substring(0, 20)}...`);
+            updateTokenDisplay(token);
+            
+            // Store in localStorage for debugging
+            localStorage.setItem('fcm_token', token);
+            return token;
         } else {
-            throw new Error('No token received');
+            throw new Error('No token received from Firebase');
         }
         
     } catch (error) {
+        logMessage(`❌ Token generation failed: ${error.message}`);
         setStatus('token-status', 'error', 'Failed');
-        document.getElementById('token-display').textContent = `Error: ${error.message}`;
-        log(`❌ Token generation error: ${error.message}`);
+        throw error;
     }
 }
 
 async function saveToken() {
-    if (!currentToken) {
-        log('❌ No token to save. Please generate a token first.');
-        return;
-    }
-    
     try {
-        log('💾 Saving token to Supabase...');
-        
-        const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-        const supabase = createClient(
-            'https://vkjrqirvdvjbemsfzxof.supabase.co',
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
-        );
-        
-        const { error } = await supabase
-            .from('push_tokens')
-            .upsert({ 
-                user_id: 'fcm-diagnostics', 
-                token: currentToken, 
-                platform: 'web' 
-            }, { 
-                onConflict: 'token' 
-            });
-        
-        if (error) {
-            throw error;
+        const token = localStorage.getItem('fcm_token');
+        if (!token) {
+            throw new Error('No token to save. Generate token first.');
         }
         
-        log('✅ Token saved to Supabase successfully');
+        logMessage('💾 Saving token to Supabase...');
+        
+        // Create a fake FID for testing (in real app, this comes from Firebase Installations)
+        const fid = 'fid_' + Math.random().toString(36).substring(2);
+        
+        const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/store-fcm-token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer test-token-for-demo' // In real app, use actual Supabase JWT
+            },
+            body: JSON.stringify({
+                fid: fid,
+                token: token
+            })
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            logMessage('✅ Token saved to Supabase successfully');
+            logMessage(`📝 Response: ${JSON.stringify(result)}`);
+        } else {
+            const error = await response.text();
+            logMessage(`❌ Failed to save token: ${error}`);
+        }
         
     } catch (error) {
-        log(`❌ Token save error: ${error.message}`);
+        logMessage(`❌ Save token failed: ${error.message}`);
     }
 }
 
-function sendLocalNotification() {
+async function sendLocalNotification() {
     try {
-        log('📱 Sending local notification...');
+        logMessage('📱 Sending local notification...');
         
         if (Notification.permission !== 'granted') {
-            log('❌ Notification permission required');
-            return;
+            throw new Error('Notification permission not granted');
         }
         
-        new Notification('M1SSION™ - Local Test', {
-            body: 'This is a local test notification from FCM Diagnostics',
-            icon: '/icon-192x192.png',
-            badge: '/icon-192x192.png',
-            tag: 'fcm-diagnostics-local',
-            data: { source: 'diagnostics', type: 'local' }
+        new Notification('M1SSION™ Test', {
+            body: 'Local notification test successful!',
+            icon: '/icons/icon-192.png',
+            tag: 'test-notification'
         });
         
-        log('✅ Local notification sent');
-        
+        logMessage('✅ Local notification sent');
     } catch (error) {
-        log(`❌ Local notification error: ${error.message}`);
+        logMessage(`❌ Local notification failed: ${error.message}`);
     }
 }
 
 async function testServiceWorkerNotification() {
     try {
-        log('📱 Testing service worker notification...');
+        logMessage('🔧 Testing Service Worker notification...');
         
-        const registration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
-        if (!registration) {
-            log('❌ Service worker not found');
-            return;
+        if (!swRegistration) {
+            throw new Error('Service Worker not registered');
         }
         
-        await registration.showNotification('M1SSION™ - SW Test', {
-            body: 'This is a service worker test notification',
-            icon: '/icon-192x192.png',
-            badge: '/icon-192x192.png',
-            tag: 'fcm-diagnostics-sw',
-            data: { source: 'diagnostics', type: 'sw' }
+        swRegistration.showNotification('M1SSION™ SW Test', {
+            body: 'Service Worker notification test!',
+            icon: '/icons/icon-192.png',
+            badge: '/icons/icon-192.png',
+            tag: 'sw-test-notification'
         });
         
-        log('✅ Service worker notification sent');
-        
+        logMessage('✅ Service Worker notification sent');
     } catch (error) {
-        log(`❌ SW notification error: ${error.message}`);
+        logMessage(`❌ Service Worker notification failed: ${error.message}`);
     }
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', initDiagnostics);
+function clearLog() {
+    log = [];
+    updateLogDisplay();
+    logMessage('📋 Log cleared');
+}
+
+// Initialize diagnostics when page loads
+document.addEventListener('DOMContentLoaded', async function() {
+    logMessage('🚀 M1SSION™ FCM Diagnostics Started');
+    
+    // Set domain info
+    const domainElement = document.getElementById('domain');
+    if (domainElement) {
+        domainElement.textContent = window.location.origin;
+    }
+    
+    // Check FCM support
+    const fcmSupported = 'serviceWorker' in navigator && 'Notification' in window && 'fetch' in window;
+    setStatus('fcm-support', fcmSupported ? 'ok' : 'error', fcmSupported ? 'Supported' : 'Not Supported');
+    
+    // Check Notification API
+    const notificationSupported = 'Notification' in window;
+    setStatus('notification-api', notificationSupported ? 'ok' : 'error', notificationSupported ? 'Available' : 'Not Available');
+    
+    // Check current permission
+    if (notificationSupported) {
+        const permission = Notification.permission;
+        setStatus('notification-permission', 
+            permission === 'granted' ? 'ok' : permission === 'denied' ? 'error' : 'warning', 
+            permission);
+    }
+    
+    // Load config automatically
+    await loadConfig();
+    
+    logMessage('✅ Diagnostics initialization complete');
+});
