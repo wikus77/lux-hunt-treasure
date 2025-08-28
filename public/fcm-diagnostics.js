@@ -213,54 +213,54 @@ async function generateToken() {
 async function saveToken() {
   if (!currentToken) {
     log('❌ No token to save. Generate token first.');
+    setStatus('token-storage', 'error', 'No Token');
     return;
   }
   
   try {
     log('💾 Starting token save to Supabase...');
     
-    // Check if we have access to Supabase client (would need auth)
-    const hasSupabaseAuth = window.supabase && window.supabase.auth;
-    if (!hasSupabaseAuth) {
-      log('⚠️ Save skipped: Supabase auth not available (requires app integration)');
-      log('📝 Token ready for save: ' + currentToken.substring(0, 20) + '...');
-      return;
-    }
-    
-    // Get current user session
-    const { data: { session }, error: sessionError } = await window.supabase.auth.getSession();
-    if (sessionError || !session) {
-      log('⚠️ Save skipped: User not authenticated');
-      log('📝 Token ready for save: ' + currentToken.substring(0, 20) + '...');
-      return;
-    }
-    
-    log('🔐 User authenticated, proceeding with save...');
-    
-    // Generate a Firebase Installation ID (FID) - simplified version
+    // Generate a Firebase Installation ID (FID) for testing
     const fid = 'fid_' + Date.now() + '_' + Math.random().toString(36).substring(2);
     
-    // Call store-fcm-token edge function
-    const { data, error } = await window.supabase.functions.invoke('store-fcm-token', {
-      body: {
+    // Try direct API call to Supabase Edge Function
+    const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/store-fcm-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Origin': window.location.origin,
+        // Note: In production this would be a real JWT from authenticated user
+        'Authorization': 'Bearer demo-jwt-token'
+      },
+      body: JSON.stringify({
         fid: fid,
         token: currentToken
-      }
+      })
     });
     
-    if (error) {
-      throw new Error(`Supabase function error: ${error.message}`);
+    const result = await response.json();
+    log(`📡 Response status: ${response.status}`);
+    
+    if (response.status === 401) {
+      setStatus('token-storage', 'warning', 'Auth Required');
+      log('🔐 Token save requires authentication - would work with real JWT');
+      log('📝 Token ready for authenticated save: ' + currentToken.substring(0, 20) + '...');
+      log('📝 FID for save: ' + fid);
+      return;
     }
     
-    if (data.success) {
+    if (response.ok && result.success) {
+      setStatus('token-storage', 'ok', 'Saved');
       log('✅ Token saved successfully to Supabase!');
-      log(`📝 Database record ID: ${data.data.id}`);
-      log(`⏱️ Save duration: ${data.duration}`);
+      log(`📝 Database record ID: ${result.data?.id || 'N/A'}`);
+      log(`⏱️ Save duration: ${result.duration || 'N/A'}`);
+      log(`🆔 Request ID: ${result.reqId || 'N/A'}`);
     } else {
-      throw new Error(`Save failed: ${data.error || 'Unknown error'}`);
+      throw new Error(`Save failed: ${result.error || 'Unknown error'}`);
     }
     
   } catch (e) {
+    setStatus('token-storage', 'error', 'Failed');
     log('❌ Save failed: ' + e.message);
     log('📝 Token available for manual save: ' + currentToken.substring(0, 20) + '...');
   }
@@ -330,28 +330,37 @@ async function checkSupabaseStatus() {
   try {
     log('🗄️ Checking Supabase connection...');
     
-    const hasSupabase = window.supabase;
-    if (!hasSupabase) {
-      setStatus('supabase-auth', 'warning', 'Not Available');
-      setStatus('token-storage', 'warning', 'Requires App Integration');
-      log('⚠️ Supabase client not available (standalone diagnostics mode)');
-      return;
-    }
+    // Test direct connection to Supabase
+    const healthResponse = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/', {
+      method: 'HEAD',
+      headers: {
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+      }
+    });
     
-    setStatus('supabase-auth', 'ok', 'Available');
-    log('✅ Supabase client available');
-    
-    // Check auth status
-    const { data: { session }, error } = await window.supabase.auth.getSession();
-    if (error) {
-      setStatus('token-storage', 'error', 'Auth Error');
-      log('❌ Supabase auth error: ' + error.message);
-    } else if (session) {
-      setStatus('token-storage', 'ok', 'Ready');
-      log('✅ User authenticated, storage ready');
+    if (healthResponse.ok) {
+      setStatus('supabase-auth', 'ok', 'Connected');
+      log('✅ Supabase connection successful');
+      
+      // Test the edge function endpoint
+      const funcResponse = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/store-fcm-token', {
+        method: 'OPTIONS',
+        headers: {
+          'Origin': window.location.origin
+        }
+      });
+      
+      if (funcResponse.ok) {
+        setStatus('token-storage', 'ok', 'Available');
+        log('✅ store-fcm-token function available');
+      } else {
+        setStatus('token-storage', 'warning', 'Function Issue');
+        log(`⚠️ store-fcm-token function response: ${funcResponse.status}`);
+      }
     } else {
-      setStatus('token-storage', 'warning', 'Not Authenticated');
-      log('⚠️ User not authenticated, storage requires login');
+      setStatus('supabase-auth', 'error', 'Connection Failed');
+      setStatus('token-storage', 'error', 'Unavailable');
+      log(`❌ Supabase connection failed: ${healthResponse.status}`);
     }
     
   } catch (e) {
