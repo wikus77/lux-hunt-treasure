@@ -44,5 +44,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.store-fcm-token]
-# Demo mode - no JWT required for testing
-verify_jwt = false
+verify_jwt = true
