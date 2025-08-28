@@ -886,6 +886,39 @@ export type Database = {
         }
         Relationships: []
       }
+      fcm_tokens: {
+        Row: {
+          created_at: string | null
+          fid: string
+          id: string
+          ip: unknown | null
+          token: string
+          updated_at: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          fid: string
+          id?: string
+          ip?: unknown | null
+          token: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          fid?: string
+          id?: string
+          ip?: unknown | null
+          token?: string
+          updated_at?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       final_shot_rules: {
         Row: {
           cooldown_hours: number | null
