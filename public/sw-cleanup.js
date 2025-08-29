@@ -79,10 +79,23 @@ async function selectiveSWCleanup() {
 async function ensureServiceWorkerRegistered() {
   if (!('serviceWorker' in navigator)) return;
 
-  const WANT = [
-    { url: '/firebase-messaging-sw.js', scope: '/' },
-    { url: '/sw-m1ssion.js', scope: '/' },
-  ];
+  // Detect iOS Safari PWA
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+               (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+  
+  const WANT = [];
+  
+  // iOS PWA: only use sw-m1ssion.js (no Firebase)
+  if (isIOS && isPWA) {
+    WANT.push({ url: '/sw-m1ssion.js', scope: '/' });
+    console.log('🍎 iOS PWA detected - using VAPID SW only');
+  } else {
+    // Desktop: prefer Firebase, fallback to M1SSION
+    WANT.push({ url: '/firebase-messaging-sw.js', scope: '/' });
+    WANT.push({ url: '/sw-m1ssion.js', scope: '/' });
+    console.log('🖥️ Desktop detected - using Firebase + M1SSION SW');
+  }
 
   try {
     const regs = await navigator.serviceWorker.getRegistrations();

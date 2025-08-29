@@ -1,155 +1,151 @@
-/* M1SSION™ AG-X0197 */
-// Supabase Edge Function: send-push
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-
-const FCM_KEY = Deno.env.get("FCM_SERVER_KEY");
-const FCM_URL = "https://fcm.googleapis.com/fcm/send";
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-};
+}
 
-// Generate request ID for logging
-const generateRequestId = () => `req_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+interface PushNotificationPayload {
+  title: string;
+  body: string;
+  link?: string;
+  user_ids?: string[];
+  all_users?: boolean;
+}
 
 serve(async (req) => {
-  const requestId = generateRequestId();
-  const startTime = Date.now();
-  
-  console.log(`[M1SSION FCM] ${requestId} → ${req.method} request started`);
-  
-  // Handle CORS preflight
+  // Handle CORS
   if (req.method === 'OPTIONS') {
-    console.log(`[M1SSION FCM] ${requestId} → CORS preflight → OK`);
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
-    console.log(`[M1SSION FCM] ${requestId} → method ${req.method} not allowed`);
-    return new Response(
-      JSON.stringify({ success: false, error: "Method Not Allowed", requestId }), 
-      { 
-        status: 405,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
-  }
-
-  if (!FCM_KEY) {
-    console.error(`[M1SSION FCM] ${requestId} → FCM_SERVER_KEY not configured`);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: "Server configuration error",
-        requestId 
-      }), 
-      { 
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
-  }
-
   try {
-    const { token, title, body, data } = await req.json();
-    console.log(`[M1SSION FCM] ${requestId} → payload parsed`);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
 
-    if (!token) {
-      console.log(`[M1SSION FCM] ${requestId} → token missing → ERROR`);
+    const { title, body, link = 'https://m1ssion.eu/', user_ids, all_users } = await req.json() as PushNotificationPayload;
+
+    console.log('🔔 Send push request:', { title, body, link, user_ids, all_users });
+
+    // Get VAPID keys from secrets
+    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+    const vapidEmail = Deno.env.get('VAPID_EMAIL') || 'mailto:admin@m1ssion.eu';
+
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      throw new Error('VAPID keys not configured');
+    }
+
+    // Build query for subscriptions
+    let query = supabase.from('push_subscriptions').select('*');
+    
+    if (!all_users && user_ids && user_ids.length > 0) {
+      query = query.in('user_id', user_ids);
+    }
+
+    const { data: subscriptions, error: fetchError } = await query;
+    
+    if (fetchError) {
+      throw fetchError;
+    }
+
+    if (!subscriptions || subscriptions.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: "Token is required",
-          requestId 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
+        JSON.stringify({ success: true, sent: 0, message: 'No subscriptions found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`[M1SSION FCM] ${requestId} → sending to token: ${token.substring(0, 20)}...`);
+    console.log(`📱 Found ${subscriptions.length} push subscriptions`);
 
-    const payload = {
-      to: token,
-      notification: { 
-        title: title ?? "M1SSION", 
-        body: body ?? "Nuova notifica dall'app",
-        icon: "/icons/icon-m1-192x192.png",
-        badge: "/icons/icon-m1-192x192.png"
-      },
-      data: data ?? {},
-      webpush: { 
-        fcm_options: { 
-          link: "https://m1ssion.eu" 
-        } 
-      }
-    };
-
-    const response = await fetch(FCM_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `key=${FCM_KEY}`,
-      },
-      body: JSON.stringify(payload),
+    // Prepare push payload
+    const pushPayload = JSON.stringify({
+      title,
+      body,
+      link,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-72.png'
     });
 
-    const responseText = await response.text();
-    const duration = Date.now() - startTime;
-    
-    console.log(`[M1SSION FCM] ${requestId} → FCM response (${response.status}) in ${duration}ms:`, responseText);
+    // Send push notifications using web-push
+    const results = await Promise.allSettled(
+      subscriptions.map(async (sub) => {
+        try {
+          // Use Deno's built-in WebCrypto for web-push
+          const subscription = {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth
+            }
+          };
 
-    if (!response.ok) {
-      console.log(`[M1SSION FCM] ${requestId} → FCM send failed → STATUS ${response.status}`);
-      return new Response(
-        JSON.stringify({ 
-          success: false,
-          error: "FCM send failed", 
-          details: responseText,
-          status: response.status,
-          requestId,
-          duration
-        }),
-        { 
-          status: response.status,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
+          // Create VAPID headers
+          const vapidHeaders = {
+            'Authorization': `WebPush ${vapidPrivateKey}`,
+            'Crypto-Key': `p256ecdsa=${vapidPublicKey}`,
+            'Content-Type': 'application/octet-stream',
+            'TTL': '86400'
+          };
+
+          // Send push notification
+          const response = await fetch(sub.endpoint, {
+            method: 'POST',
+            headers: vapidHeaders,
+            body: pushPayload
+          });
+
+          if (!response.ok) {
+            if (response.status === 410 || response.status === 404) {
+              // Subscription expired, remove it
+              console.log(`🗑️ Removing expired subscription: ${sub.endpoint}`);
+              await supabase
+                .from('push_subscriptions')
+                .delete()
+                .eq('id', sub.id);
+              return { success: false, reason: 'subscription_expired' };
+            }
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          console.log(`✅ Push sent successfully to ${sub.platform} device`);
+          return { success: true };
+
+        } catch (error) {
+          console.error(`❌ Push failed for subscription ${sub.id}:`, error);
+          return { success: false, error: error.message };
         }
-      );
-    }
-
-    console.log(`[M1SSION FCM] ${requestId} → success in ${duration}ms`);
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        fcm_response: responseText,
-        message: "Push notification sent successfully",
-        requestId,
-        duration
-      }),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
+      })
     );
 
-  } catch (error: any) {
-    const duration = Date.now() - startTime;
-    console.error(`[M1SSION FCM] ${requestId} → error after ${duration}ms:`, error);
+    // Count results
+    const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+    const failed = results.length - successful;
+
+    console.log(`📊 Push notification results: ${successful} sent, ${failed} failed`);
+
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: "Internal server error", 
-        details: error?.message || String(error),
-        requestId,
-        duration
+      JSON.stringify({
+        success: true,
+        total: subscriptions.length,
+        sent: successful,
+        failed,
+        results: results.map(r => r.status === 'fulfilled' ? r.value : { success: false, error: 'rejected' })
       }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('❌ Send push error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
       { 
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
   }
