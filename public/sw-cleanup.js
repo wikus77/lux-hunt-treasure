@@ -47,42 +47,104 @@ try {
   console.error('❌ Error clearing OneSignal data:', error);
 }
 
-// Unregister all service workers and register FCM
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-    console.log('🧹 Found', registrations.length, 'service worker registrations');
+// Selective SW cleanup - preserve our official SWs
+async function selectiveSWCleanup() {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    console.log('🧹 Found', regs.length, 'service worker registrations');
     
-    const unregisterPromises = registrations.map(registration => {
-      const scriptURL = registration.active?.scriptURL || '';
-      console.log('🧹 Unregistering SW:', registration.scope, scriptURL);
+    for (const r of regs) {
+      const url = (r.scriptURL || '').toString();
+      // Don't touch our official SWs
+      const keep = /\/(firebase-messaging-sw\.js|sw-m1ssion\.js)(\?|$)/.test(url);
       
-      return registration.unregister().then(function(success) {
-        if (success) {
-          console.log('✅ SW unregistered:', registration.scope);
-        } else {
-          console.log('❌ SW unregister failed:', registration.scope);
+      if (!keep) {
+        console.log('🧹 Unregistering non-official SW:', r.scope, url);
+        try { 
+          await r.unregister(); 
+          console.log('✅ SW unregistered:', r.scope);
+        } catch (error) {
+          console.log('❌ SW unregister failed:', r.scope, error);
         }
-        return success;
+      } else {
+        console.log('✅ Keeping official SW:', r.scope, url);
+      }
+    }
+  } catch (error) {
+    console.error('❌ Error during selective SW cleanup:', error);
+  }
+}
+
+// Ensure our official SWs are registered
+async function ensureServiceWorkerRegistered() {
+  if (!('serviceWorker' in navigator)) return;
+
+  const WANT = [
+    { url: '/firebase-messaging-sw.js', scope: '/' },
+    { url: '/sw-m1ssion.js', scope: '/' },
+  ];
+
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    const byURL = new Map(regs.map(r => [r.scriptURL, r]));
+
+    // Register missing ones
+    for (const { url, scope } of WANT) {
+      const absolute = new URL(url, location.origin).toString();
+      if (!byURL.has(absolute)) {
+        try {
+          console.log('📝 Registering missing SW:', url);
+          await navigator.serviceWorker.register(url, { scope });
+          console.log('✅ SW registered successfully:', url);
+        } catch (e) {
+          console.warn('❌ SW register failed for', url, e);
+        }
+      }
+    }
+
+    // Wait for controller if needed
+    if (!navigator.serviceWorker.controller) {
+      console.log('⏳ Waiting for SW controller...');
+      await new Promise(res => {
+        const onCtrl = () => { 
+          navigator.serviceWorker.removeEventListener('controllerchange', onCtrl); 
+          console.log('✅ SW controller ready');
+          res(); 
+        };
+        navigator.serviceWorker.addEventListener('controllerchange', onCtrl, { once: true });
+        // Fallback timer
+        setTimeout(() => {
+          console.log('⏰ SW controller timeout, continuing...');
+          res();
+        }, 3000);
       });
-    });
+    }
+
+    // Ensure ready
+    try { 
+      await navigator.serviceWorker.ready; 
+      console.log('✅ SW ready state confirmed');
+    } catch (error) {
+      console.warn('⚠️ SW ready failed:', error);
+    }
+  } catch (error) {
+    console.error('❌ Error ensuring SW registration:', error);
+  }
+}
+
+// Execute cleanup and registration
+if ('serviceWorker' in navigator) {
+  (async () => {
+    console.log('🚀 Starting M1SSION™ SW management...');
     
-    // Wait for all unregistrations to complete, then register FCM
-    Promise.all(unregisterPromises).then(() => {
-      console.log('🧹 All SW cleanup completed');
-      
-      // Wait a moment for cleanup to complete
-      setTimeout(() => {
-        // Register FCM service worker
-        navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-          scope: '/'
-        }).then(function(registration) {
-          console.log('✅ FCM SW registered successfully:', registration.scope);
-        }).catch(function(error) {
-          console.error('❌ FCM SW registration failed:', error);
-        });
-      }, 1000);
-    });
-  }).catch(function(error) {
-    console.error('❌ Error during SW cleanup:', error);
+    // 1. Selective cleanup (preserve our official SWs)
+    await selectiveSWCleanup();
+    
+    // 2. Ensure our SWs are active
+    await ensureServiceWorkerRegistered();
+    
+    console.log('🎯 M1SSION™ SW management completed');
+  })().catch(error => {
+    console.error('❌ Error in SW management:', error);
   });
 }
