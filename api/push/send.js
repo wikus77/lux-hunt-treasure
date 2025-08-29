@@ -17,8 +17,13 @@ if (process.env.VAPID_PUBLIC && process.env.VAPID_PRIVATE) {
 }
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS headers - restrict to allowed origins
+  const allowedOrigins = process.env.ALLOW_ORIGINS?.split(',') || ['https://m1ssion.eu', 'https://www.m1ssion.eu', 'http://localhost:3000'];
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   

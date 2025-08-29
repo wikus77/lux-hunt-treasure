@@ -11,8 +11,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
+const allowedOrigins = process.env.ALLOW_ORIGINS?.split(',') || ['https://m1ssion.eu', 'https://www.m1ssion.eu', 'http://localhost:3000'];
 app.use(cors({
-  origin: ['https://m1ssion.eu', 'https://www.m1ssion.eu', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -29,8 +30,10 @@ app.get('/health', (req, res) => {
 });
 
 // Push notification endpoints
+import sendUserHandler from './api/push/send-user.js';
 app.use('/api/push/subscribe', subscribeHandler);
 app.use('/api/push/send', sendHandler);
+app.use('/api/push/send-user', sendUserHandler);
 
 // 404 handler
 app.use('*', (req, res) => {

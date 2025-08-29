@@ -26,8 +26,13 @@ function validateKey(keyStr, expectedBytes, name) {
 }
 
 export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS headers - restrict to allowed origins
+  const allowedOrigins = process.env.ALLOW_ORIGINS?.split(',') || ['https://m1ssion.eu', 'https://www.m1ssion.eu', 'http://localhost:3000'];
+  const origin = req.headers.origin;
+  
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   
@@ -40,7 +45,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    const { endpoint, keys, ua, userId } = req.body;
+    const { endpoint, keys, ua, user_id } = req.body;
     
     if (!endpoint || !keys || !keys.p256dh || !keys.auth) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -50,15 +55,25 @@ export default async function handler(req, res) {
     validateKey(keys.p256dh, 65, 'p256dh');
     validateKey(keys.auth, 16, 'auth');
     
+    // Extract platform from user agent
+    const platform = ua ? (
+      ua.includes('iPhone') || ua.includes('iPad') ? 'iOS' :
+      ua.includes('Android') ? 'Android' :
+      ua.includes('Windows') ? 'Windows' :
+      ua.includes('Mac') ? 'macOS' :
+      'Unknown'
+    ) : null;
+
     // Upsert subscription
     const { error } = await supabase
       .from('push_subscriptions')
       .upsert({
         endpoint,
-        user_id: userId || null,
+        user_id: user_id || null,
         p256dh: keys.p256dh,
         auth: keys.auth,
-        ua: ua || null
+        ua: ua || null,
+        platform
       }, {
         onConflict: 'endpoint'
       });
