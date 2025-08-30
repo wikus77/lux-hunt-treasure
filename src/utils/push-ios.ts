@@ -1,0 +1,105 @@
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+/* Web Push VAPID for iOS PWA */
+
+/**
+ * Converts VAPID public key from base64url to Uint8Array
+ */
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+/**
+ * Detects if running on iOS in standalone mode (PWA)
+ */
+function isIOSPWA(): boolean {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isIOS = /iphone|ipad|ipod/.test(userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                      (window.navigator as any).standalone === true;
+  
+  return isIOS && isStandalone;
+}
+
+/**
+ * Enables Web Push notifications for iOS PWA using VAPID
+ * @param vapidPublicKey - VAPID public key in base64url format
+ * @returns Subscription object or null if failed/not supported
+ */
+export async function enableWebPushIOS(vapidPublicKey: string): Promise<any | null> {
+  try {
+    // Check basic support
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn('[PUSH-IOS] Service Worker or PushManager not supported');
+      return null;
+    }
+
+    // Only run on iOS PWA
+    if (!isIOSPWA()) {
+      console.warn('[PUSH-IOS] Not running on iOS PWA, skipping');
+      return null;
+    }
+
+    console.log('[PUSH-IOS] Initializing Web Push for iOS PWA');
+
+    // Wait for service worker to be ready
+    const registration = await navigator.serviceWorker.ready;
+    
+    if (!registration) {
+      console.error('[PUSH-IOS] No service worker registration found');
+      return null;
+    }
+
+    // Check current permission
+    let permission = Notification.permission;
+    
+    // Request permission if default
+    if (permission === 'default') {
+      console.log('[PUSH-IOS] Requesting notification permission');
+      permission = await Notification.requestPermission();
+    }
+
+    if (permission !== 'granted') {
+      console.warn('[PUSH-IOS] Notification permission not granted:', permission);
+      return null;
+    }
+
+    // Check for existing subscription
+    let subscription = await registration.pushManager.getSubscription();
+    
+    if (!subscription) {
+      console.log('[PUSH-IOS] Creating new push subscription');
+      
+      // Convert VAPID key
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+      
+      // Subscribe to push
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey
+      });
+    } else {
+      console.log('[PUSH-IOS] Using existing push subscription');
+    }
+
+    // Return subscription as JSON
+    const subscriptionJson = subscription.toJSON();
+    console.log('[PUSH-IOS] Push subscription ready:', subscriptionJson);
+    
+    return subscriptionJson;
+    
+  } catch (error) {
+    console.error('[PUSH-IOS] Failed to enable Web Push:', error);
+    return null;
+  }
+}
