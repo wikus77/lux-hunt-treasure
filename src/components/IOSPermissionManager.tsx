@@ -68,6 +68,13 @@ export const IOSPermissionManager: React.FC<IOSPermissionManagerProps> = ({
       return;
     }
 
+    // Kill switch check
+    if (localStorage.getItem('push:disable') === '1') {
+      console.warn('[IOS-PERM] Emergency disable flag active');
+      setIsVisible(false);
+      return;
+    }
+
     setIsRequestingPermission(true);
     setHasRequestedOnce(true);
 
