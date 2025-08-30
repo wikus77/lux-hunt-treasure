@@ -38,6 +38,12 @@ function isIOSPWA(): boolean {
  */
 export async function enableWebPushIOS(vapidPublicKey: string): Promise<any | null> {
   try {
+    // Kill switch check
+    if (localStorage.getItem('push:disable') === '1') {
+      console.warn('[PUSH-IOS] Emergency disable flag active');
+      return null;
+    }
+
     // Check basic support
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
       console.warn('[PUSH-IOS] Service Worker or PushManager not supported');
@@ -52,11 +58,16 @@ export async function enableWebPushIOS(vapidPublicKey: string): Promise<any | nu
 
     console.log('[PUSH-IOS] Initializing Web Push for iOS PWA');
 
-    // Wait for service worker to be ready
-    const registration = await navigator.serviceWorker.ready;
+    // Wait for service worker to be ready with timeout
+    const swReadyPromise = navigator.serviceWorker.ready;
+    const timeoutPromise = new Promise<ServiceWorkerRegistration>((_, reject) => 
+      setTimeout(() => reject(new Error('SW ready timeout')), 5000)
+    );
+
+    const registration = await Promise.race([swReadyPromise, timeoutPromise]);
     
-    if (!registration) {
-      console.error('[PUSH-IOS] No service worker registration found');
+    if (!registration || !registration.active) {
+      console.error('[PUSH-IOS] No active service worker found');
       return null;
     }
 

@@ -12,8 +12,62 @@ import { setupProductionConsole, enableProductionOptimizations } from './utils/p
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
 
-// M1SSION™ AG-X0197: Import FCM test utility for console access
-import './lib/push/testFcm';
+// M1SSION™ AG-X0197: Safe push initialization with feature detection and fallback
+const initPushSafely = async () => {
+  // Kill switch for emergency disable
+  if (localStorage.getItem('push:disable') === '1') {
+    console.warn('[PUSH] Emergency disable flag active, skipping push init');
+    return;
+  }
+
+  // Check query param for hotfix
+  if (window.location.search.includes('__noPush=1')) {
+    localStorage.setItem('push:disable', '1');
+    console.warn('[PUSH] Hotfix disable param detected, skipping push init');
+    return;
+  }
+
+  try {
+    // Basic feature detection
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      console.warn('[PUSH] Push notifications not supported, skipping init');
+      return;
+    }
+
+    // Wait for SW to be ready with timeout
+    const swReadyPromise = navigator.serviceWorker.ready;
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('SW ready timeout')), 5000)
+    );
+
+    const registration = await Promise.race([swReadyPromise, timeoutPromise]) as ServiceWorkerRegistration;
+    
+    if (!registration || !registration.active) {
+      console.warn('[PUSH] No active service worker, deferring push init');
+      return;
+    }
+
+    console.log('[PUSH] Service worker ready, importing push modules safely');
+    
+    // Dynamic import to avoid blocking main thread
+    const { testFcmFlow } = await import('./lib/push/testFcm');
+    
+    // Make available for console testing
+    (window as any).testFcmFlow = testFcmFlow;
+    console.log('🔧 FCM Test available as: window.testFcmFlow()');
+
+  } catch (error) {
+    console.warn('[PUSH] Push initialization failed (non-critical):', error);
+    // Don't throw - let app continue
+  }
+};
+
+// Initialize push after SW registration, non-blocking
+setTimeout(() => {
+  initPushSafely().catch(err => 
+    console.warn('[PUSH] Deferred push init failed (non-critical):', err)
+  );
+}, 2000);
 
 
 // Initialize production optimizations

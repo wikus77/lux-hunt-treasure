@@ -140,8 +140,8 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
         // Desktop: Try Firebase first, fallback to VAPID
         console.log('🖥️ Desktop: trying Firebase FCM subscription');
         try {
-          // Try to use Firebase messaging if available
-          if (window.firebase?.messaging) {
+          // Try to use Firebase messaging if available and supported
+          if (window.firebase?.messaging?.isSupported?.() && window.firebase.messaging.isSupported()) {
             const messaging = window.firebase.messaging();
             const token = await messaging.getToken({
               vapidKey: VAPID_PUBLIC_KEY,
