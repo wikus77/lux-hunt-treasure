@@ -2016,26 +2016,35 @@ export type Database = {
       }
       push_subscriptions: {
         Row: {
+          app_version: string | null
           auth: string
           created_at: string
           endpoint: string
+          last_seen_at: string | null
           p256dh: string
+          platform: string | null
           ua: string | null
           user_id: string | null
         }
         Insert: {
+          app_version?: string | null
           auth: string
           created_at?: string
           endpoint: string
+          last_seen_at?: string | null
           p256dh: string
+          platform?: string | null
           ua?: string | null
           user_id?: string | null
         }
         Update: {
+          app_version?: string | null
           auth?: string
           created_at?: string
           endpoint?: string
+          last_seen_at?: string | null
           p256dh?: string
+          platform?: string | null
           ua?: string | null
           user_id?: string | null
         }

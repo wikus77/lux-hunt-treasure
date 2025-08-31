@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { isPushDisabled, enablePush, disablePush } from '@/utils/pushKillSwitch';
+import { subscribeToPush, sendTestPush } from '@/utils/pushSubscribe';
 
 interface PushHealthState {
   // Feature Detection
@@ -215,57 +216,35 @@ export default function PushHealth() {
   };
 
   const testSubscribe = async () => {
-    if (!state.swRegistration) {
-      setState(prev => ({
-        ...prev,
-        subscribeTest: { status: 'error', message: 'No SW registration' }
-      }));
-      return;
-    }
-
     try {
-      addLog('🔍 Testing subscription...');
       setState(prev => ({
         ...prev,
         subscribeTest: { status: 'testing', message: 'Subscribing...' }
       }));
 
-      // Get VAPID public key
-      const vapidPublicKey = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
-      
-      const subscription = await state.swRegistration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+      const result = await subscribeToPush({ 
+        onLog: addLog 
       });
 
-      // Save to Supabase
-      const { data, error } = await supabase.functions.invoke('push_subscribe', {
-        body: {
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(subscription.getKey('p256dh')!),
-            auth: arrayBufferToBase64(subscription.getKey('auth')!)
-          },
-          ua: navigator.userAgent,
-          platform: detectPlatform()
-        }
-      });
-
-      if (error) {
-        throw error;
+      if (result.success) {
+        setState(prev => ({
+          ...prev,
+          subscribeTest: { 
+            status: 'success', 
+            message: 'Subscription successful',
+            data: result.data 
+          }
+        }));
+        await runFullDiagnostic(); // Refresh all info
+      } else {
+        setState(prev => ({
+          ...prev,
+          subscribeTest: { 
+            status: 'error', 
+            message: result.error || 'Unknown error' 
+          }
+        }));
       }
-
-      setState(prev => ({
-        ...prev,
-        subscribeTest: { 
-          status: 'success', 
-          message: 'Subscription successful',
-          data 
-        }
-      }));
-
-      addLog('✅ Subscription test successful');
-      await checkCurrentSubscription(); // Refresh subscription info
       
     } catch (error) {
       addLog(`❌ Subscription test failed: ${error}`);
@@ -289,37 +268,31 @@ export default function PushHealth() {
     }
 
     try {
-      addLog('🔍 Testing push send...');
       setState(prev => ({
         ...prev,
         sendTest: { status: 'testing', message: 'Sending test push...' }
       }));
 
-      const { data, error } = await supabase.functions.invoke('push_send', {
-        body: {
-          endpoint: state.currentSubscription.endpoint,
-          payload: {
-            title: 'M1SSION™ Push Test',
-            body: `Test notification - ${new Date().toLocaleTimeString()}`,
-            data: { url: '/' }
+      const result = await sendTestPush(state.currentSubscription, addLog);
+
+      if (result.success) {
+        setState(prev => ({
+          ...prev,
+          sendTest: { 
+            status: 'success', 
+            message: 'Push sent successfully',
+            data: result.data 
           }
-        }
-      });
-
-      if (error) {
-        throw error;
+        }));
+      } else {
+        setState(prev => ({
+          ...prev,
+          sendTest: { 
+            status: 'error', 
+            message: result.error || 'Unknown error' 
+          }
+        }));
       }
-
-      setState(prev => ({
-        ...prev,
-        sendTest: { 
-          status: 'success', 
-          message: 'Push sent successfully',
-          data 
-        }
-      }));
-
-      addLog('✅ Push send test successful');
       
     } catch (error) {
       addLog(`❌ Push send test failed: ${error}`);
@@ -414,7 +387,7 @@ export default function PushHealth() {
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold mb-2">🔧 Push Health Diagnostic</h1>
+          <h1 className="text-3xl font-bold mb-2">🔧 Push Health</h1>
           <p className="text-gray-400">End-to-end push notification system validation</p>
         </div>
 
