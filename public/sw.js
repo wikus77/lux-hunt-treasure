@@ -1,13 +1,10 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Enhanced Service Worker with Push Support
+// SW IMPORT sw-push.js ✅ 2025-08-31T06:40:00.000Z
 
-// Import push notifications handler first
-try {
-  importScripts("/sw-push.js");
-  console.log('[M1SSION SW] Push handler imported successfully');
-} catch (error) {
-  console.warn('[M1SSION SW] Push handler import failed (non-critical):', error);
-}
+// Import push notifications handler first - CRITICAL for push functionality
+importScripts('/sw-push.js');
+console.log('[M1SSION SW] Push handler imported successfully');
 
 // Cache configuration
 const CACHE_NAME = 'mission-v2.0.0';

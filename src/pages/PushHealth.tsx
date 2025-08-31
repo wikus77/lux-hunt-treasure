@@ -98,12 +98,30 @@ export default function PushHealth() {
       const registrations = await navigator.serviceWorker.getRegistrations();
       addLog(`📊 Found ${registrations.length} SW registrations`);
       
-      const registration = registrations.find(reg => 
+      // Try to get the registration with main scope first
+      let registration = registrations.find(reg => 
         reg.scope === window.location.origin + '/'
       );
       
+      // If not found, try to register SW
       if (!registration) {
-        addLog('❌ No SW registration found for current scope');
+        addLog('⚙️ No SW registration found, attempting to register...');
+        try {
+          registration = await navigator.serviceWorker.register('/sw.js', { 
+            scope: '/',
+            updateViaCache: 'none'
+          });
+          addLog('✅ SW Registration successful');
+          await navigator.serviceWorker.ready;
+          addLog('✅ SW ready');
+        } catch (regError) {
+          addLog(`❌ SW registration failed: ${regError}`);
+          return;
+        }
+      }
+
+      if (!registration) {
+        addLog('❌ No SW registration available');
         return;
       }
 
@@ -212,8 +230,8 @@ export default function PushHealth() {
         subscribeTest: { status: 'testing', message: 'Subscribing...' }
       }));
 
-      // Get VAPID public key (you'll need to set this)
-      const vapidPublicKey = 'BK8b_7OyTe6z3eXW3L6L8LQkAbLzP4eXEBOUQbMyaXPaE-VaBMGXeJvhAXfXFwsZJ3v9c8bw9BH3zD5s8ZJ5XOw'; // Replace with your actual VAPID public key
+      // Get VAPID public key
+      const vapidPublicKey = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
       
       const subscription = await state.swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -487,9 +505,25 @@ export default function PushHealth() {
               <div className="mt-3">
                 <Button
                   size="sm"
-                  onClick={() => {
-                    navigator.clipboard.writeText(JSON.stringify(state.currentSubscription?.toJSON(), null, 2));
-                    addLog('📋 Subscription JSON copied to clipboard');
+                  onClick={async () => {
+                    try {
+                      const subscriptionJson = JSON.stringify(state.currentSubscription?.toJSON(), null, 2);
+                      if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(subscriptionJson);
+                        addLog('📋 Subscription JSON copied to clipboard');
+                      } else {
+                        // Fallback for older browsers
+                        const textArea = document.createElement('textarea');
+                        textArea.value = subscriptionJson;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textArea);
+                        addLog('📋 Subscription JSON copied to clipboard (fallback)');
+                      }
+                    } catch (error) {
+                      addLog(`❌ Copy failed: ${error}`);
+                    }
                   }}
                 >
                   📋 Copy JSON
