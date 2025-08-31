@@ -12,62 +12,69 @@ import { setupProductionConsole, enableProductionOptimizations } from './utils/p
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
 
-// M1SSION™ AG-X0197: Safe push initialization with feature detection and fallback
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// Import and apply kill switch utilities
+import { isPushDisabled, checkHotfixDisable } from './utils/pushKillSwitch';
+
+// Safe push initialization with robust error handling
 const initPushSafely = async () => {
-  // Kill switch for emergency disable
-  if (localStorage.getItem('push:disable') === '1') {
-    console.warn('[PUSH] Emergency disable flag active, skipping push init');
-    return;
-  }
-
-  // Check query param for hotfix
-  if (window.location.search.includes('__noPush=1')) {
-    localStorage.setItem('push:disable', '1');
-    console.warn('[PUSH] Hotfix disable param detected, skipping push init');
-    return;
-  }
-
   try {
+    // Kill switch checks (URL param and localStorage)
+    if (checkHotfixDisable() || isPushDisabled()) {
+      console.warn('[PUSH] Kill switch active, skipping push initialization');
+      return;
+    }
+
     // Basic feature detection
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[PUSH] Push notifications not supported, skipping init');
+      console.warn('[PUSH] Push notifications not supported');
       return;
     }
 
-    // Wait for SW to be ready with timeout
-    const swReadyPromise = navigator.serviceWorker.ready;
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('SW ready timeout')), 5000)
-    );
+    // Wait for SW to be ready with extended timeout and fallback
+    let registration;
+    try {
+      const swReadyPromise = navigator.serviceWorker.ready;
+      const timeoutPromise = new Promise<never>((_, reject) => 
+        setTimeout(() => reject(new Error('SW ready timeout')), 8000)
+      );
 
-    const registration = await Promise.race([swReadyPromise, timeoutPromise]) as ServiceWorkerRegistration;
-    
-    if (!registration || !registration.active) {
-      console.warn('[PUSH] No active service worker, deferring push init');
+      registration = await Promise.race([swReadyPromise, timeoutPromise]);
+      
+      if (!registration?.active) {
+        console.warn('[PUSH] No active service worker found, deferring');
+        return;
+      }
+    } catch (swError) {
+      console.warn('[PUSH] Service worker not ready:', swError);
       return;
     }
 
-    console.log('[PUSH] Service worker ready, importing push modules safely');
+    console.log('[PUSH] Service worker ready, loading push modules safely');
     
-    // Dynamic import to avoid blocking main thread
-    const { testFcmFlow } = await import('./lib/push/testFcm');
-    
-    // Make available for console testing
-    (window as any).testFcmFlow = testFcmFlow;
-    console.log('🔧 FCM Test available as: window.testFcmFlow()');
+    // Dynamic import with additional safety
+    try {
+      const pushModule = await import('./lib/push/testFcm');
+      if (pushModule?.testFcmFlow) {
+        (window as any).testFcmFlow = pushModule.testFcmFlow;
+        console.log('🔧 FCM Test available: window.testFcmFlow()');
+      }
+    } catch (importError) {
+      console.warn('[PUSH] Push module import failed (non-critical):', importError);
+    }
 
   } catch (error) {
     console.warn('[PUSH] Push initialization failed (non-critical):', error);
-    // Don't throw - let app continue
+    // Never throw - let app continue
   }
 };
 
-// Initialize push after SW registration, non-blocking
+// Defer push initialization to avoid blocking app boot
 setTimeout(() => {
   initPushSafely().catch(err => 
-    console.warn('[PUSH] Deferred push init failed (non-critical):', err)
+    console.warn('[PUSH] Deferred push init error (non-critical):', err)
   );
-}, 2000);
+}, 3000);
 
 
 // Initialize production optimizations
@@ -255,55 +262,34 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// M1SSION™ AG-X0197: Enhanced Service Worker registration
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// Service Worker registration - simplified and safe
 const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
-      console.log('[M1SSION SW] registering service worker...');
+      console.log('[M1SSION SW] Registering service worker...');
       
-      // Register primary SW
-      const registration = await navigator.serviceWorker.register('/sw-m1ssion.js', { 
+      // Use the existing Workbox SW with push patch
+      const registration = await navigator.serviceWorker.register('/sw.js', { 
         scope: '/' 
       });
       
+      console.log('[M1SSION SW] Registration successful:', registration.scope);
+      
+      // Make sure SW is ready
       await navigator.serviceWorker.ready;
-      
-      // Check for SW version header
-      const swUrl = registration.active?.scriptURL || '/sw-m1ssion.js';
-      console.log(`[M1SSION SW] ready scope: ${registration.scope} (url: ${swUrl})`);
-      
-      // Log x-sw-version if available (will be in network response)
-      try {
-        const swResponse = await fetch('/sw-m1ssion.js', { method: 'HEAD' });
-        const version = swResponse.headers.get('x-sw-version');
-        if (version) {
-          console.log(`[M1SSION SW] version: ${version}`);
-        }
-      } catch (e) {
-        console.log('[M1SSION SW] version check skipped (CORS/network)');
-      }
+      console.log('[M1SSION SW] Service worker ready');
       
     } catch (error) {
-      console.error('[M1SSION SW] registration failed:', error);
-      
-      // Fallback to shim
-      try {
-        console.log('[M1SSION SW] trying fallback /firebase-messaging-sw.js...');
-        const fallbackReg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { 
-          scope: '/' 
-        });
-        await navigator.serviceWorker.ready;
-        console.log('[M1SSION SW] fallback registered successfully');
-      } catch (fallbackError) {
-        console.error('[M1SSION SW] fallback registration failed:', fallbackError);
-      }
+      console.warn('[M1SSION SW] Registration failed (non-critical):', error);
+      // Don't throw - let app continue without SW
     }
   } else {
     console.warn('[M1SSION SW] Service Worker not supported');
   }
 };
 
-// Register SW early
+// Register SW early but non-blocking
 registerServiceWorker();
 
 // Enhanced global error handling
