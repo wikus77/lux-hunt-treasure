@@ -1,6 +1,15 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Enhanced Service Worker for M1SSION™ PWA
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// M1SSION™ Enhanced Service Worker with Push Support
 
+// Import push notifications handler first
+try {
+  importScripts("/sw-push.js");
+  console.log('[M1SSION SW] Push handler imported successfully');
+} catch (error) {
+  console.warn('[M1SSION SW] Push handler import failed (non-critical):', error);
+}
+
+// Cache configuration
 const CACHE_NAME = 'mission-v2.0.0';
 const STATIC_CACHE = 'mission-static-v2.0.0';
 const DYNAMIC_CACHE = 'mission-dynamic-v2.0.0';
@@ -21,31 +30,43 @@ const DYNAMIC_ASSETS = [
   'https://vkjrqirvdvjbemsfzxof.supabase.co'
 ];
 
-// Install event - cache static assets
+// Override install/activate events with caching
 self.addEventListener('install', (event) => {
+  console.log('[M1SSION SW] Installing with cache...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
+        console.log('[M1SSION SW] Caching static assets...');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
+        console.log('[M1SSION SW] Cache complete, skipping waiting...');
+        return self.skipWaiting();
+      })
+      .catch(error => {
+        console.warn('[M1SSION SW] Cache install failed (non-critical):', error);
         return self.skipWaiting();
       })
   );
 });
 
-// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
+  console.log('[M1SSION SW] Activating with cleanup...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+            console.log('[M1SSION SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(() => {
+      console.log('[M1SSION SW] Cache cleanup complete, claiming clients...');
+      return self.clients.claim();
+    }).catch(error => {
+      console.warn('[M1SSION SW] Cache cleanup failed (non-critical):', error);
       return self.clients.claim();
     })
   );
@@ -131,42 +152,5 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Push notification handler
-self.addEventListener('push', (event) => {
-  if (event.data) {
-    const data = event.data.json();
-    
-    const options = {
-      body: data.body || 'Nuova notifica da M1SSION™',
-      icon: '/icons/icon-192x192.png',
-      badge: '/icons/icon-96x96.png',
-      vibrate: [100, 50, 100],
-      data: data.data || {},
-      actions: [
-        {
-          action: 'open',
-          title: 'Apri App'
-        },
-        {
-          action: 'close',
-          title: 'Chiudi'
-        }
-      ]
-    };
-
-    event.waitUntil(
-      self.registration.showNotification(data.title || 'M1SSION™', options)
-    );
-  }
-});
-
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-
-  if (event.action === 'open' || !event.action) {
-    event.waitUntil(
-      clients.openWindow('/')
-    );
-  }
-});
+// Push handlers are imported from sw-push.js
+console.log('[M1SSION SW] Service Worker setup complete with push support');

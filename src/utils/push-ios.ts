@@ -38,9 +38,10 @@ function isIOSPWA(): boolean {
  */
 export async function enableWebPushIOS(vapidPublicKey: string): Promise<any | null> {
   try {
-    // Kill switch check
-    if (localStorage.getItem('push:disable') === '1') {
-      console.warn('[PUSH-IOS] Emergency disable flag active');
+    // Kill switch check - import the utility
+    const { isPushDisabled } = await import('./pushKillSwitch');
+    if (isPushDisabled()) {
+      console.warn('[PUSH-IOS] Kill switch active, aborting');
       return null;
     }
 
