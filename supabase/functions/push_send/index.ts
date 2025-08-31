@@ -131,8 +131,9 @@ serve(async (req) => {
         success: true, 
         status: response.status,
         subscription_id: subscription.id,
-        endpoint_type: subscription.endpoint.includes('web.push.apple.com') ? 'APNs' : 
+        endpoint_type: subscription.endpoint.includes('web.push.apple.com') || subscription.endpoint.includes('api.push.apple.com') ? 'APNs' : 
                       subscription.endpoint.includes('fcm.googleapis.com') ? 'FCM' : 'Other',
+        endpoint_host: new URL(subscription.endpoint).hostname,
         timestamp: new Date().toISOString()
       }), 
       { 
@@ -143,7 +144,11 @@ serve(async (req) => {
   } catch (error) {
     console.error("[PUSH-SEND] Error sending push:", error);
     return new Response(
-      JSON.stringify({ error: "Failed to send push notification" }), 
+      JSON.stringify({ 
+        error: "Failed to send push notification", 
+        details: error.message,
+        timestamp: new Date().toISOString()
+      }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, "content-type": "application/json" }

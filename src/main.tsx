@@ -279,28 +279,36 @@ const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null
     }
 
     try {
-      console.log('[M1SSION SW] Registering service worker...');
+      console.log('[M1SSION SW] Checking for existing registrations...');
       
       // Check for existing registration first
       const existingReg = await navigator.serviceWorker.getRegistration('/');
-      if (existingReg) {
-        console.log('[M1SSION SW] Using existing registration:', existingReg.scope);
+      if (existingReg?.active?.scriptURL?.includes('/sw.js')) {
+        console.log('[M1SSION SW] Using existing SW registration:', existingReg.scope);
+        console.log('[M1SSION SW] Script URL:', existingReg.active.scriptURL);
         return existingReg;
       }
       
       // Register new SW
+      console.log('[M1SSION SW] Registering new service worker...');
       const registration = await navigator.serviceWorker.register('/sw.js', { 
         scope: '/',
         updateViaCache: 'none' // Ensure fresh SW content
       });
       
       console.log('[M1SSION SW] Registration successful:', registration.scope);
+      console.log('[M1SSION SW] Script URL:', registration.active?.scriptURL || 'pending');
       
-      // Wait for SW to be ready
-      await navigator.serviceWorker.ready;
+      // Wait for SW to be ready with timeout
+      const readyPromise = navigator.serviceWorker.ready;
+      const timeoutPromise = new Promise<ServiceWorkerRegistration>((_, reject) => 
+        setTimeout(() => reject(new Error('SW ready timeout')), 10000)
+      );
+      
+      const readyRegistration = await Promise.race([readyPromise, timeoutPromise]);
       console.log('[M1SSION SW] Service worker ready');
       
-      return registration;
+      return readyRegistration;
       
     } catch (error) {
       console.warn('[M1SSION SW] Registration failed (non-critical):', error);

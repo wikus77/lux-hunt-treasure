@@ -45,14 +45,18 @@ serve(async (req) => {
     }
 
     // Validate endpoint format for supported platforms
-    const isApnsEndpoint = endpoint.includes('web.push.apple.com');
+    const isApnsEndpoint = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
     const isFcmEndpoint = endpoint.includes('fcm.googleapis.com');
     const isWnsEndpoint = endpoint.includes('wns.notify.windows.com');
     
     if (!isApnsEndpoint && !isFcmEndpoint && !isWnsEndpoint) {
       console.warn("[PUSH-SUBSCRIBE] Unsupported endpoint format:", endpoint.substring(0, 50) + "...");
       return new Response(
-        JSON.stringify({ error: "Unsupported endpoint format. Only APNs, FCM, and WNS endpoints are supported." }), 
+        JSON.stringify({ 
+          error: "Unsupported endpoint format. Only APNs, FCM, and WNS endpoints are supported.",
+          endpoint_type: 'unknown',
+          supported_types: ['APNs (web.push.apple.com)', 'FCM (fcm.googleapis.com)', 'WNS (wns.notify.windows.com)']
+        }), 
         { 
           status: 400, 
           headers: { ...corsHeaders, "content-type": "application/json" }
@@ -92,8 +96,15 @@ serve(async (req) => {
 
     console.log("[PUSH-SUBSCRIBE] Subscription registered successfully:", data.id);
 
+    const endpointType = isApnsEndpoint ? 'APNs' : isFcmEndpoint ? 'FCM' : 'WNS';
+    
     return new Response(
-      JSON.stringify({ success: true, subscription: data }), 
+      JSON.stringify({ 
+        success: true, 
+        subscription: data,
+        endpoint_type: endpointType,
+        stored_at: new Date().toISOString()
+      }), 
       { 
         headers: { ...corsHeaders, "content-type": "application/json" }
       }
