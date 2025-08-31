@@ -40,6 +40,7 @@ import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
 import VAPIDKeyTest from "@/pages/VAPIDKeyTest";
+import PushHealth from "@/pages/PushHealth";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
@@ -231,6 +232,12 @@ const WouterRoutes: React.FC = () => {
           {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
           <Route path="/push-test">
             <PushTestPage />
+          </Route>
+          
+          <Route path="/push-health">
+            <GlobalLayout>
+              <PushHealth />
+            </GlobalLayout>
           </Route>
 
           {/* 🔍 NOTIFICATION DEBUG ROUTE - M1SSION™ ULTIMATE */}

@@ -263,30 +263,52 @@ if (document.readyState === 'loading') {
 }
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Service Worker registration - simplified and safe
-const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator) {
+// Service Worker registration - single, safe registration
+let swRegistrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
+
+const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
+  // Ensure only one registration attempt
+  if (swRegistrationPromise) {
+    return swRegistrationPromise;
+  }
+
+  swRegistrationPromise = (async (): Promise<ServiceWorkerRegistration | null> => {
+    if (!('serviceWorker' in navigator)) {
+      console.warn('[M1SSION SW] Service Worker not supported');
+      return null;
+    }
+
     try {
       console.log('[M1SSION SW] Registering service worker...');
       
-      // Use the existing Workbox SW with push patch
+      // Check for existing registration first
+      const existingReg = await navigator.serviceWorker.getRegistration('/');
+      if (existingReg) {
+        console.log('[M1SSION SW] Using existing registration:', existingReg.scope);
+        return existingReg;
+      }
+      
+      // Register new SW
       const registration = await navigator.serviceWorker.register('/sw.js', { 
-        scope: '/' 
+        scope: '/',
+        updateViaCache: 'none' // Ensure fresh SW content
       });
       
       console.log('[M1SSION SW] Registration successful:', registration.scope);
       
-      // Make sure SW is ready
+      // Wait for SW to be ready
       await navigator.serviceWorker.ready;
       console.log('[M1SSION SW] Service worker ready');
       
+      return registration;
+      
     } catch (error) {
       console.warn('[M1SSION SW] Registration failed (non-critical):', error);
-      // Don't throw - let app continue without SW
+      return null;
     }
-  } else {
-    console.warn('[M1SSION SW] Service Worker not supported');
-  }
+  })();
+
+  return swRegistrationPromise;
 };
 
 // Register SW early but non-blocking
