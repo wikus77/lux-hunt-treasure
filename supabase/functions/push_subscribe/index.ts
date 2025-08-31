@@ -43,6 +43,22 @@ serve(async (req) => {
       );
     }
 
+    // Validate endpoint format for supported platforms
+    const isApnsEndpoint = endpoint.includes('web.push.apple.com');
+    const isFcmEndpoint = endpoint.includes('fcm.googleapis.com');
+    const isWnsEndpoint = endpoint.includes('wns.notify.windows.com');
+    
+    if (!isApnsEndpoint && !isFcmEndpoint && !isWnsEndpoint) {
+      console.warn("[PUSH-SUBSCRIBE] Unsupported endpoint format:", endpoint.substring(0, 50) + "...");
+      return new Response(
+        JSON.stringify({ error: "Unsupported endpoint format. Only APNs, FCM, and WNS endpoints are supported." }), 
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "content-type": "application/json" }
+        }
+      );
+    }
+
     console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 50) + "...");
 
     // Upsert subscription by endpoint

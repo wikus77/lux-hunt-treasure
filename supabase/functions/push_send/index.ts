@@ -84,14 +84,15 @@ serve(async (req) => {
       );
     }
 
-    // Prepare payload
-    const payload = typeof body.payload === "string" 
-      ? body.payload 
-      : JSON.stringify(body.payload ?? { 
-          title: "M1SSION", 
-          body: "Test push notification",
-          data: { url: "/" }
-        });
+    // Prepare payload with proper structure
+    const defaultPayload = { 
+      title: "M1SSION™", 
+      body: "Test push notification",
+      data: { url: "/" }
+    };
+    
+    const payloadData = body.payload ?? defaultPayload;
+    const payload = typeof payloadData === "string" ? payloadData : JSON.stringify(payloadData);
 
     console.log("[PUSH-SEND] Sending push to:", subscription.endpoint.substring(0, 50) + "...");
     console.log("[PUSH-SEND] Payload:", payload);
@@ -128,7 +129,10 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         status: response.status,
-        subscription_id: subscription.id
+        subscription_id: subscription.id,
+        endpoint_type: subscription.endpoint.includes('web.push.apple.com') ? 'APNs' : 
+                      subscription.endpoint.includes('fcm.googleapis.com') ? 'FCM' : 'Other',
+        timestamp: new Date().toISOString()
       }), 
       { 
         headers: { ...corsHeaders, "content-type": "application/json" }

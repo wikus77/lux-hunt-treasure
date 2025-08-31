@@ -1,245 +1,200 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// Push Notification Test Page - Production Only
+
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { Send, Bell, Users, User, Shield, CheckCircle } from 'lucide-react';
+import { isPushDisabled, disablePush, enablePush } from '@/utils/pushKillSwitch';
 
-const PushTestPage: React.FC = () => {
-  console.log('🔔 PUSH-TEST PAGE COMPONENT INSTANTIATED:', {
-    url: window.location.href,
-    pathname: window.location.pathname,
-    timestamp: new Date().toISOString(),
-    userAgent: navigator.userAgent,
-    referrer: document.referrer
+interface PushTestState {
+  supported: boolean;
+  permission: NotificationPermission | null;
+  subscription: PushSubscription | null;
+  isIOS: boolean;
+  isPWA: boolean;
+  swRegistration: ServiceWorkerRegistration | null;
+}
+
+const VAPID_PUBLIC = 'BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA';
+
+export default function PushTestPage() {
+  const [state, setState] = useState<PushTestState>({
+    supported: false,
+    permission: null,
+    subscription: null,
+    isIOS: false,
+    isPWA: false,
+    swRegistration: null
   });
   
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
-  const [targetType, setTargetType] = useState<'all' | 'user'>('all');
-  const [targetUserId, setTargetUserId] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const { user } = useUnifiedAuth();
-  const { toast } = useToast();
-
-  // 🚨 EMERGENCY FIX: Admin bypass per wikus77@hotmail.it + emergency access
-  const currentEmail = user?.email?.toLowerCase();
-  const isAdmin = currentEmail === 'wikus77@hotmail.it';
-  
-  // EMERGENCY BYPASS: Se non autenticato ma URL contiene token emergency
-  const urlParams = new URLSearchParams(window.location.search);
-  const emergencyBypass = urlParams.get('emergency') === 'admin' || 
-                          localStorage.getItem('emergency_admin_access') === 'true';
-  
-  console.log('🚨 PUSH-TEST PAGE - EMERGENCY DEBUG:', {
-    user: user,
-    userEmail: user?.email,
-    currentEmail: currentEmail,
-    isAdmin: isAdmin,
-    emergencyBypass: emergencyBypass,
-    authState: user ? 'AUTHENTICATED' : 'NOT_AUTHENTICATED',
-    finalAccess: isAdmin || emergencyBypass
+  const [loading, setLoading] = useState(false);
+  const [testPayload, setTestPayload] = useState({
+    title: 'M1SSION™ Test',
+    body: '🚀 Push notification test successful!',
+    url: '/'
   });
 
+  // Feature detection
   useEffect(() => {
-    console.log('🔔 PUSH-TEST PAGE MOUNTED SUCCESSFULLY');
-    console.log('🔔 User state:', { email: user?.email, isAdmin });
-    console.log('🔔 Current timestamp:', new Date().toISOString());
-  }, [user, isAdmin]);
-
-  const handleSendNotification = async () => {
-    console.log('🔔 PUSH-TEST: Starting REAL PUSH send process...');
-    console.log('🔔 PUSH-TEST: iPhone PWA compatibility check:', {
-      userAgent: navigator.userAgent,
-      isIOSMobile: /iPhone|iPad|iPod/.test(navigator.userAgent),
-      isIOSSafari: /iPad|iPhone|iPod/.test(navigator.userAgent),
-      serviceWorkerSupported: 'serviceWorker' in navigator,
-      notificationSupported: 'Notification' in window,
-      pushSupported: 'PushManager' in window,
-      currentURL: window.location.href,
-      notificationPermission: typeof Notification !== 'undefined' ? Notification.permission : 'unavailable',
-      isPWA: (window.navigator as any).standalone || window.matchMedia('(display-mode: standalone)').matches,
-      isFirebaseReady: (window as any).firebase !== undefined
-    });
-
-    // Force request notification permission if not granted
-    if ('Notification' in window && Notification.permission !== 'granted') {
-      console.log('🔔 REQUESTING notification permission for iOS...');
-      const permission = await Notification.requestPermission();
-      console.log('🔔 Permission result:', permission);
-      if (permission !== 'granted') {
-        toast({
-          title: "⚠️ Permission richiesto",
-          description: "Attiva le notifiche per testare le push reali",
-          variant: "destructive"
-        });
-      }
-    }
-    
-    if (!title.trim() || !message.trim()) {
-      console.log('❌ PUSH-TEST: Missing title or message');
-      toast({
-        title: "⚠️ Campi obbligatori",
-        description: "Inserisci titolo e messaggio.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!isAdmin && !emergencyBypass) {
-      console.log('❌ PUSH-TEST: Access denied - not admin');
-      toast({
-        title: "❌ Accesso negato",
-        description: "Solo gli admin possono inviare notifiche.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (targetType === 'user' && !targetUserId.trim()) {
-      console.log('❌ PUSH-TEST: Missing user ID for user target');
-      toast({
-        title: "⚠️ User ID richiesto",
-        description: "Inserisci l'ID utente per l'invio singolo.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSending(true);
-    console.log('🔔 PUSH-TEST: Setting sending state to true');
-
-    try {
-      const requestBody: any = {
-        title: title.trim(),
-        body: message.trim(),
-        data: {
-          url: '/notifications',
-          timestamp: new Date().toISOString(),
-          source: 'admin_push_test',
-          device_info: {
-            userAgent: navigator.userAgent,
-            platform: navigator.platform,
-            language: navigator.language,
-            isIOSMobile: /iPhone|iPad|iPod/.test(navigator.userAgent),
-            testId: Date.now()
-          }
+    const detect = async () => {
+      const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isIOS = /iphone|ipad|ipod/.test(userAgent);
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                     (navigator as any).standalone === true;
+      
+      let swReg: ServiceWorkerRegistration | null = null;
+      let currentSub: PushSubscription | null = null;
+      
+      if (isSupported && !isPushDisabled()) {
+        try {
+          swReg = await navigator.serviceWorker.ready;
+          currentSub = await swReg.pushManager.getSubscription();
+        } catch (error) {
+          console.warn('[PUSH-TEST] SW ready failed:', error);
         }
-      };
-
-      // Add target user if specified
-      if (targetType === 'user') {
-        requestBody.targetUserId = targetUserId.trim();
-        console.log('🎯 PUSH-TEST: Targeting specific user:', targetUserId.trim());
-      } else {
-        console.log('📢 PUSH-TEST: Broadcasting to all users');
       }
 
-      console.log('🚨 CRITICAL PUSH DEBUG - iPhone Compatible Request:', requestBody);
-      console.log('🚨 CRITICAL PUSH DEBUG - About to invoke edge function...');
+      setState({
+        supported: isSupported,
+        permission: Notification.permission,
+        subscription: currentSub,
+        isIOS,
+        isPWA,
+        swRegistration: swReg
+      });
+    };
 
-      // Call edge function to send push notifications
-      const { data, error } = await supabase.functions.invoke('send-push-notification', {
-        body: requestBody
+    detect();
+  }, []);
+
+  // Convert VAPID key from base64url to Uint8Array
+  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
+  // Enable notifications
+  const enableNotifications = async () => {
+    if (isPushDisabled()) {
+      toast.error('Push disabled by kill switch');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Request permission
+      const permission = await Notification.requestPermission();
+      
+      if (permission !== 'granted') {
+        toast.error('Permission denied');
+        return;
+      }
+
+      // Wait for service worker with timeout
+      if (!state.swRegistration) {
+        const swPromise = navigator.serviceWorker.ready;
+        const timeoutPromise = new Promise<never>((_, reject) => 
+          setTimeout(() => reject(new Error('SW timeout')), 8000)
+        );
+        
+        const registration = await Promise.race([swPromise, timeoutPromise]);
+        setState(prev => ({ ...prev, swRegistration: registration }));
+      }
+
+      // Subscribe to push
+      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC);
+      const subscription = await state.swRegistration!.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey
       });
 
-      console.log('🚨 CRITICAL PUSH DEBUG - Raw Edge Function Response:', {
-        data: data,
-        error: error,
-        dataJSON: JSON.stringify(data, null, 2),
-        errorJSON: JSON.stringify(error, null, 2)
+      // Save to Supabase
+      const subscriptionJson = subscription.toJSON();
+      const { error } = await supabase.functions.invoke('push_subscribe', {
+        body: {
+          endpoint: subscriptionJson.endpoint,
+          keys: subscriptionJson.keys,
+          ua: navigator.userAgent,
+          platform: state.isIOS ? 'iOS' : 'desktop'
+        }
       });
 
       if (error) {
-        console.error('❌ PUSH-TEST: Error from edge function:', error);
-        console.error('❌ PUSH-TEST: Error details:', JSON.stringify(error, null, 2));
-        toast({
-          title: "❌ Errore invio",
-          description: error.message || "Impossibile inviare la notifica.",
-          variant: "destructive"
-        });
+        console.error('Save subscription error:', error);
+        toast.error('Failed to save subscription');
       } else {
-        console.log('✅ PUSH-TEST: Success response from edge function:', data);
-        console.log('✅ PUSH-TEST: Devices found:', data?.total || 0);
-        console.log('✅ PUSH-TEST: Notifications sent:', data?.sent || 0);
-        console.log('✅ PUSH-TEST: Target type:', data?.targetType || 'unknown');
-        
-        toast({
-          title: "✅ NOTIFICA PUSH REALE INVIATA",
-          description: targetType === 'all' 
-            ? `📱 Push iOS inviata a ${data?.sent || 0} dispositivi` 
-            : `📱 Push iOS inviata all'utente ${targetUserId}`,
-        });
-        
-        // Show immediate test notification for verification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          console.log('🔔 SHOWING immediate test notification...');
-          new Notification('M1SSION™ Test Immediato', {
-            body: 'Se vedi questa notifica, il sistema funziona!',
-            icon: '/icons/icon-192x192.png',
-            badge: '/icons/icon-72x72.png',
-            tag: 'test-immediate'
-          });
-        }
-        
-        // Keep form data for easier re-testing on iPhone
-        console.log('✅ PUSH-TEST: iPhone test completed successfully - form data preserved for retesting');
+        setState(prev => ({ 
+          ...prev, 
+          subscription, 
+          permission: 'granted' 
+        }));
+        toast.success('Notifications enabled successfully!');
       }
+
     } catch (error) {
-      console.error('❌ Error sending notification:', error);
-      toast({
-        title: "❌ Errore",
-        description: "Errore durante l'invio della notifica.",
-        variant: "destructive"
-      });
+      console.error('Enable notifications error:', error);
+      toast.error(`Failed to enable: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      setIsSending(false);
+      setLoading(false);
     }
   };
 
-  // 🚨 EMERGENCY FIX: Access control con bypass d'emergenza
-  if (!isAdmin && !emergencyBypass) {
-    console.error('🚨 ACCESS DENIED - EMERGENCY DEBUG:', {
-      user: user,
-      userEmail: user?.email,
-      expectedEmail: 'wikus77@hotmail.it',
-      emailMatch: user?.email?.toLowerCase() === 'wikus77@hotmail.it',
-      isAdmin: isAdmin,
-      emergencyBypass: emergencyBypass,
-      urlParams: window.location.search,
-      localStorage: localStorage.getItem('emergency_admin_access'),
-      timestamp: new Date().toISOString()
-    });
-    
+  // Send test notification
+  const sendTestNotification = async () => {
+    if (!state.subscription) {
+      toast.error('No subscription available');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const subscriptionJson = state.subscription.toJSON();
+      const { data, error } = await supabase.functions.invoke('push_send', {
+        body: {
+          endpoint: subscriptionJson.endpoint,
+          payload: testPayload
+        }
+      });
+
+      if (error) {
+        console.error('Send test error:', error);
+        toast.error('Failed to send test notification');
+      } else {
+        console.log('Send test success:', data);
+        toast.success('Test notification sent! Check your device.');
+      }
+
+    } catch (error) {
+      console.error('Send test error:', error);
+      toast.error('Failed to send test notification');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Only show in production
+  if (!window.location.hostname.includes('m1ssion.eu') && !window.location.hostname.includes('m1ssion-pwa.pages.dev')) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20 flex items-center justify-center">
-        <Card className="bg-black/80 border-red-500/30 backdrop-blur-xl max-w-md">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-bold text-red-400 mb-4">❌ Accesso Negato</h2>
-            <p className="text-white/70 mb-4">
-              Solo gli amministratori possono accedere a questa pagina.
-            </p>
-            <div className="text-xs text-white/50 p-3 bg-black/30 rounded border border-white/10">
-              <strong>EMERGENCY DEBUG:</strong><br />
-              User: {user?.email || 'NON_AUTENTICATO'}<br />
-              Required: wikus77@hotmail.it<br />
-              Match: {user?.email?.toLowerCase() === 'wikus77@hotmail.it' ? 'YES' : 'NO'}<br />
-              Emergency: {emergencyBypass ? 'ENABLED' : 'DISABLED'}
-            </div>
-            <Button 
-              onClick={() => {
-                localStorage.setItem('emergency_admin_access', 'true');
-                window.location.reload();
-              }}
-              className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white"
-            >
-              🚨 EMERGENCY ACCESS
-            </Button>
+      <div className="container mx-auto p-4">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-muted-foreground">Push test page only available in production</p>
           </CardContent>
         </Card>
       </div>
@@ -247,147 +202,138 @@ const PushTestPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black p-4 pt-20">
-      <div className="max-w-2xl mx-auto">
-        <Card className="bg-black/80 border-[#00D1FF]/30 backdrop-blur-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl font-orbitron text-white flex items-center gap-3">
-              <Bell className="w-6 h-6 text-[#00D1FF]" />
-              Test Notifiche Push - M1SSION™
-            </CardTitle>
-            <p className="text-white/60">Pannello di test per amministratori</p>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-white/70 text-sm font-medium mb-2">
-                  Destinatario
-                </label>
-                <Select value={targetType} onValueChange={(value: 'all' | 'user') => setTargetType(value)}>
-                  <SelectTrigger className="bg-white/5 border-white/20 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-900 border-white/20">
-                    <SelectItem value="all" className="text-white hover:bg-white/10">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4" />
-                        Tutti gli utenti
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="user" className="text-white hover:bg-white/10">
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4" />
-                        Utente specifico
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {targetType === 'user' && (
-                <div>
-                  <label className="block text-white/70 text-sm font-medium mb-2">
-                    User ID Destinatario
-                  </label>
-                  <Input
-                    value={targetUserId}
-                    onChange={(e) => setTargetUserId(e.target.value)}
-                    placeholder="Inserisci l'UUID dell'utente..."
-                    className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
-                  />
-                </div>
-              )}
-
-              <div>
-                <label className="block text-white/70 text-sm font-medium mb-2">
-                  Titolo notifica
-                </label>
-                <Input
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Inserisci il titolo..."
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50"
-                  maxLength={50}
-                />
-                <p className="text-white/50 text-xs mt-1">
-                  {title.length}/50 caratteri
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-white/70 text-sm font-medium mb-2">
-                  Messaggio
-                </label>
-                <Textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Inserisci il messaggio della notifica..."
-                  className="bg-white/5 border-white/20 text-white placeholder:text-white/50 min-h-[120px]"
-                  maxLength={200}
-                />
-                <p className="text-white/50 text-xs mt-1">
-                  {message.length}/200 caratteri
-                </p>
-              </div>
+    <div className="container mx-auto p-4 space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            🔔 Push Notification Test
+            {isPushDisabled() && <Badge variant="destructive">DISABLED</Badge>}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Status Display */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium">Browser Support</label>
+              <Badge variant={state.supported ? "default" : "destructive"}>
+                {state.supported ? "✅ Supported" : "❌ Not Supported"}
+              </Badge>
             </div>
-
-            <div className="bg-[#00D1FF]/10 border border-[#00D1FF]/30 rounded-lg p-4">
-              <h3 className="text-[#00D1FF] font-medium mb-2">Anteprima notifica:</h3>
-              <div className="bg-black/50 rounded-lg p-3 border border-white/10">
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-[#00D1FF] rounded-sm flex-shrink-0 flex items-center justify-center">
-                    <span className="text-black text-xs font-bold">M1</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-white font-medium text-sm">
-                      {title || 'Titolo notifica'}
-                    </h4>
-                    <p className="text-white/70 text-sm">
-                      {message || 'Messaggio della notifica'}
-                    </p>
-                    <p className="text-white/50 text-xs mt-1">
-                      Destinatario: {targetType === 'all' ? 'Tutti gli utenti' : `Utente ${targetUserId || '[ID]'}`}
-                    </p>
-                  </div>
-                </div>
-              </div>
+            
+            <div>
+              <label className="text-sm font-medium">Platform</label>
+              <Badge variant="outline">
+                {state.isIOS ? (state.isPWA ? "📱 iOS PWA" : "📱 iOS Web") : "🖥️ Desktop"}
+              </Badge>
             </div>
+            
+            <div>
+              <label className="text-sm font-medium">Permission</label>
+              <Badge variant={
+                state.permission === 'granted' ? "default" : 
+                state.permission === 'denied' ? "destructive" : "secondary"
+              }>
+                {state.permission || "default"}
+              </Badge>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium">Subscription</label>
+              <Badge variant={state.subscription ? "default" : "secondary"}>
+                {state.subscription ? "✅ Active" : "❌ None"}
+              </Badge>
+            </div>
+          </div>
 
-            <Button
-              onClick={handleSendNotification}
-              disabled={isSending || !title.trim() || !message.trim() || (targetType === 'user' && !targetUserId.trim())}
-              className="w-full bg-gradient-to-r from-[#00D1FF] to-[#0099CC] hover:from-[#0099CC] hover:to-[#007799] text-black font-medium"
+          {/* Kill Switch Controls */}
+          <div className="p-4 border rounded-lg">
+            <h3 className="font-medium mb-2">Kill Switch Controls</h3>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="destructive" 
+                onClick={disablePush}
+              >
+                Disable Push
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={enablePush}
+              >
+                Enable Push
+              </Button>
+            </div>
+          </div>
+
+          {/* Enable Button */}
+          {state.supported && !state.subscription && !isPushDisabled() && (
+            <Button 
+              onClick={enableNotifications}
+              disabled={loading}
+              className="w-full"
             >
-              {isSending ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin mr-2" />
-                  Invio in corso...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  {targetType === 'all' ? 'Invia a tutti' : 'Invia all\'utente'}
-                </>
-              )}
+              {loading ? "Enabling..." : "🔔 Enable Notifications"}
             </Button>
+          )}
 
-            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3">
-              <h4 className="text-yellow-400 font-medium text-sm mb-1">⚠️ Nota per il test:</h4>
-              <p className="text-white/70 text-xs">
-                Questa è una pagina di test. Le notifiche verranno inviate realmente ai dispositivi. 
-                Usa con cautela in produzione.
-              </p>
+          {/* Subscription JSON */}
+          {state.subscription && (
+            <div>
+              <label className="text-sm font-medium mb-2 block">Subscription JSON</label>
+              <Textarea
+                value={JSON.stringify(state.subscription.toJSON(), null, 2)}
+                readOnly
+                className="font-mono text-xs"
+                rows={8}
+              />
             </div>
+          )}
 
-            <p className="text-white/50 text-xs text-center">
-              Solo amministratori autorizzati possono accedere a questa funzione. 
-              Tutti gli invii vengono registrati nei log di sistema.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Test Payload */}
+          {state.subscription && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Test Payload</label>
+              <Input
+                placeholder="Title"
+                value={testPayload.title}
+                onChange={(e) => setTestPayload(prev => ({ ...prev, title: e.target.value }))}
+              />
+              <Input
+                placeholder="Body"
+                value={testPayload.body}
+                onChange={(e) => setTestPayload(prev => ({ ...prev, body: e.target.value }))}
+              />
+              <Input
+                placeholder="URL"
+                value={testPayload.url}
+                onChange={(e) => setTestPayload(prev => ({ ...prev, url: e.target.value }))}
+              />
+              <Button 
+                onClick={sendTestNotification}
+                disabled={loading}
+                className="w-full"
+              >
+                {loading ? "Sending..." : "🚀 Send Test"}
+              </Button>
+            </div>
+          )}
+
+          {/* Debug Info */}
+          <details className="text-xs">
+            <summary className="cursor-pointer font-medium">Debug Info</summary>
+            <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
+              {JSON.stringify({
+                userAgent: navigator.userAgent,
+                standalone: (navigator as any).standalone,
+                displayMode: window.matchMedia('(display-mode: standalone)').matches,
+                pushDisabled: isPushDisabled(),
+                vapidKey: VAPID_PUBLIC.substring(0, 20) + '...'
+              }, null, 2)}
+            </pre>
+          </details>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default PushTestPage;
+}

@@ -6,30 +6,40 @@ self.addEventListener('activate', e => e.waitUntil?.(self.clients.claim()));
 
 self.addEventListener('push', (event) => {
   let data = {};
+  const notificationId = Math.random().toString(36).substring(2, 8);
+  
   try { 
     data = event.data?.json() || {}; 
   } catch (e) {
-    console.warn('[SW-PUSH] Failed to parse push data:', e);
+    console.warn(`[SW-PUSH:${notificationId}] Failed to parse push data:`, e);
   }
   
-  const title = data.title || 'M1SSION';
-  const body = data.body || 'Push di test';
+  const title = data.title || 'M1SSION™';
+  const body = data.body || 'Push notification received';
   const url = (data.data && data.data.url) || '/';
-  const icon = '/icons/icon-192.png';
-  const badge = '/icons/badge-72.png';
+  const icon = '/icons/icon-192x192.png';
+  const badge = '/icons/icon-96x96.png';
   
   const options = {
     body,
     icon,
     badge,
-    data: { url },
+    data: { url, notificationId },
     requireInteraction: false,
-    vibrate: [200, 100, 200]
+    vibrate: [200, 100, 200],
+    tag: `m1ssion-${Date.now()}`
   };
   
-  console.log('[SW-PUSH] Showing notification:', title, options);
+  console.log(`[SW-PUSH:${notificationId}] Showing notification:`, title, options);
+  
   event.waitUntil(
     self.registration.showNotification(title, options)
+      .then(() => {
+        console.log(`[SW-PUSH:${notificationId}] Notification displayed successfully`);
+      })
+      .catch(error => {
+        console.error(`[SW-PUSH:${notificationId}] Failed to show notification:`, error);
+      })
   );
 });
 
