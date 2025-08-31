@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Push Health - M1SSION™</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #000;
+      color: #0f0;
+      padding: 20px;
+      margin: 0;
+    }
+    .status { margin: 10px 0; }
+    .ok { color: #0f0; }
+    .error { color: #f00; }
+    .info { color: #0af; }
+    pre { background: #111; padding: 10px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>🔧 Push Health Diagnostic</h1>
+  <p>Static health check for Web Push system validation</p>
+  
+  <div class="status" id="feature-support">
+    <h3>Feature Support:</h3>
+    <div id="features"></div>
+  </div>
+  
+  <div class="status" id="sw-status">
+    <h3>Service Worker Status:</h3>
+    <div id="sw-info"></div>
+  </div>
+  
+  <div class="status" id="subscription-status">
+    <h3>Push Subscription:</h3>
+    <div id="sub-info"></div>
+  </div>
+  
+  <div class="status">
+    <h3>Diagnostic Results:</h3>
+    <pre id="results">Running diagnostics...</pre>
+  </div>
+
+  <script>
+    const log = (msg) => {
+      const results = document.getElementById('results');
+      results.textContent += new Date().toISOString() + ': ' + msg + '\n';
+    };
+
+    async function runDiagnostics() {
+      log('🚀 Starting Push Health diagnostic...');
+      
+      // Feature Support
+      const hasServiceWorker = 'serviceWorker' in navigator;
+      const hasPushManager = 'PushManager' in window;
+      const hasNotification = 'Notification' in window;
+      const permission = Notification?.permission || 'default';
+      
+      document.getElementById('features').innerHTML = `
+        ServiceWorker: <span class="${hasServiceWorker ? 'ok' : 'error'}">${hasServiceWorker}</span><br>
+        PushManager: <span class="${hasPushManager ? 'ok' : 'error'}">${hasPushManager}</span><br>
+        Notification: <span class="${hasNotification ? 'ok' : 'error'}">${hasNotification}</span><br>
+        Permission: <span class="${permission === 'granted' ? 'ok' : 'error'}">${permission}</span>
+      `;
+      
+      log(`✅ Feature detection complete`);
+      
+      // Service Worker Status
+      if (hasServiceWorker) {
+        try {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          log(`📊 Found ${registrations.length} SW registrations`);
+          
+          const mainReg = registrations.find(reg => reg.scope === location.origin + '/');
+          if (mainReg) {
+            document.getElementById('sw-info').innerHTML = `
+              Registration: <span class="ok">Found</span><br>
+              Script URL: <span class="info">${mainReg.active?.scriptURL || 'None'}</span><br>
+              State: <span class="info">${mainReg.active?.state || 'Unknown'}</span>
+            `;
+            
+            // Check SW imports
+            try {
+              const response = await fetch('/sw.js');
+              const swContent = await response.text();
+              const hasImport = swContent.includes("importScripts('/sw-push.js')");
+              log(`${hasImport ? '✅' : '❌'} SW imports sw-push.js: ${hasImport}`);
+            } catch (e) {
+              log(`❌ SW import check failed: ${e.message}`);
+            }
+            
+            // Check subscription
+            try {
+              const subscription = await mainReg.pushManager.getSubscription();
+              if (subscription) {
+                const url = new URL(subscription.endpoint);
+                document.getElementById('sub-info').innerHTML = `
+                  Status: <span class="ok">Active</span><br>
+                  Host: <span class="info">${url.hostname}</span><br>
+                  Keys: <span class="info">p256dh: ${subscription.getKey('p256dh')?.byteLength}B, auth: ${subscription.getKey('auth')?.byteLength}B</span>
+                `;
+                log(`✅ Active subscription found`);
+              } else {
+                document.getElementById('sub-info').innerHTML = `Status: <span class="error">No subscription</span>`;
+                log(`📭 No active subscription found`);
+              }
+            } catch (e) {
+              log(`❌ Subscription check failed: ${e.message}`);
+            }
+          } else {
+            document.getElementById('sw-info').innerHTML = `Registration: <span class="error">Not Found</span>`;
+            log(`❌ No main SW registration found`);
+          }
+        } catch (e) {
+          log(`❌ SW check failed: ${e.message}`);
+        }
+      }
+      
+      log(`✅ Push Health diagnostic complete`);
+    }
+
+    // Auto-run diagnostics
+    runDiagnostics();
+  </script>
+</body>
+</html>

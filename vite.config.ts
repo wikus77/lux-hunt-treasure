@@ -33,12 +33,13 @@ export default defineConfig(({ mode }) => ({
       brotliSize: true,
     }),
     VitePWA({
-      // Disable automatic service worker registration to use custom Firebase SW
+      // Force import of sw-push.js for Web Push VAPID
       injectRegister: null,
       registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB - increased for large bundle
-        // Don't generate default service worker - we use firebase-messaging-sw.js
+        // Force include sw-push.js for Web Push VAPID
+        importScripts: ['/sw-push.js'],
         skipWaiting: true,
         clientsClaim: true,
         globIgnores: [
@@ -83,7 +84,7 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['favicon.ico', 'sw-push.js', 'push-health.txt'],
       manifest: {
         name: 'M1SSION™',
         short_name: 'M1SSION',
