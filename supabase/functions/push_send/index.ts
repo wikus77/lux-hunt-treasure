@@ -1,5 +1,12 @@
-import { corsHeaders } from '../_shared/cors.ts';
 import webpush from 'https://esm.sh/web-push@3.6.7';
+
+// CORS headers inline per evitare problemi di import
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, PUT, DELETE',
+  'Access-Control-Max-Age': '86400',
+};
 
 console.log('[PUSH] 🚀 M1SSION™ Push Send Function loaded');
 
