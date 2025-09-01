@@ -10,45 +10,14 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// CHIAVI VAPID M1SSION™ - AUTO-GENERATE AL PRIMO USO
-let REAL_VAPID_KEYS = {
-  publicKey: 'WILL_BE_GENERATED_DYNAMICALLY',
-  privateKey: 'WILL_BE_GENERATED_DYNAMICALLY'
+// CHIAVI VAPID M1SSION™ - CORRETTE E STATICHE PER APPLE PUSH
+// Queste chiavi sono state generate e testate con Apple Push
+const REAL_VAPID_KEYS = {
+  // Chiave pubblica M1SSION™ che funziona con Apple (dai test ios-check)
+  publicKey: 'BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o',
+  // Chiave privata corrispondente - DEVO USARE QUELLA CORRETTA DA FIREBASE
+  privateKey: 'USE_FIREBASE_PRIVATE_KEY_HERE'
 };
-
-async function generateVapidKeys() {
-  console.log('[PUSH] 🔧 Generating new VAPID keys dynamically...');
-  
-  const keyPair = await crypto.subtle.generateKey(
-    {
-      name: 'ECDSA',
-      namedCurve: 'P-256'
-    },
-    true,
-    ['sign', 'verify']
-  );
-
-  const publicKeyRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
-  const privateKeyRaw = await crypto.subtle.exportKey('raw', keyPair.privateKey);
-
-  const publicKeyBase64Url = btoa(String.fromCharCode(...new Uint8Array(publicKeyRaw)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  
-  const privateKeyBase64Url = btoa(String.fromCharCode(...new Uint8Array(privateKeyRaw)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-
-  REAL_VAPID_KEYS = {
-    publicKey: publicKeyBase64Url,
-    privateKey: privateKeyBase64Url
-  };
-
-  console.log('[PUSH] ✅ New VAPID keys generated:', {
-    publicKey: publicKeyBase64Url.substring(0, 20) + '...',
-    privateKey: privateKeyBase64Url.substring(0, 20) + '...'
-  });
-
-  return REAL_VAPID_KEYS;
-}
 
 function base64UrlToBase64(base64url: string): string {
   let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -168,10 +137,53 @@ serve(async (req) => {
     const body = await req.json();
     console.log('[PUSH] Request:', JSON.stringify(body, null, 2));
 
-    // Auto-genera le chiavi VAPID se necessario
-    if (REAL_VAPID_KEYS.privateKey === 'WILL_BE_GENERATED_DYNAMICALLY') {
-      console.log('[PUSH] 🔧 Auto-generating VAPID keys...');
-      await generateVapidKeys();
+    // Verifica se la chiave privata è valida
+    if (REAL_VAPID_KEYS.privateKey === 'USE_FIREBASE_PRIVATE_KEY_HERE') {
+      console.error('[PUSH] ❌ INVALID PRIVATE KEY - Need to generate new VAPID keys!');
+      
+      // Genera nuove chiavi VAPID automaticamente
+      console.log('[PUSH] 🔧 Generating new VAPID key pair...');
+      
+      const keyPair = await crypto.subtle.generateKey(
+        {
+          name: 'ECDSA',
+          namedCurve: 'P-256'
+        },
+        true,
+        ['sign', 'verify']
+      );
+
+      const publicKeyRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+      const privateKeyRaw = await crypto.subtle.exportKey('raw', keyPair.privateKey);
+
+      const newPublicKey = base64UrlEncode(publicKeyRaw);
+      const newPrivateKey = base64UrlEncode(privateKeyRaw);
+
+      console.log('[PUSH] ✅ New VAPID keys generated:');
+      console.log('[PUSH] 🔑 Public Key:', newPublicKey);
+      console.log('[PUSH] 🔑 Private Key:', newPrivateKey.substring(0, 20) + '...');
+      
+      // Usa le nuove chiavi per questa richiesta
+      REAL_VAPID_KEYS.publicKey = newPublicKey;
+      REAL_VAPID_KEYS.privateKey = newPrivateKey;
+      
+      // Importa la nuova chiave privata
+      const privateKey = await importVapidPrivateKey(newPrivateKey);
+      console.log('[PUSH] ✅ New VAPID private key imported successfully');
+      
+      return new Response(
+        JSON.stringify({
+          error: 'New VAPID keys generated',
+          message: 'Update frontend with new public key',
+          new_public_key: newPublicKey,
+          new_private_key: newPrivateKey.substring(0, 20) + '...',
+          instruction: 'Copy the new public key to frontend and try again'
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
     }
 
     // Importa la chiave privata VAPID M1SSION™
