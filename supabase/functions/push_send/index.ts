@@ -131,15 +131,32 @@ Deno.serve(async (req) => {
         
         let pushResponse;
         
-        // Apple Push Service richiede un approccio diverso da VAPID
+        // Apple Push Service richiede un approccio completamente diverso
         if (isApplePush) {
-          // Per Apple, usiamo semplici header HTTP senza JWT
+          // Apple richiede un payload specifico e headers diversi
+          const applePayload = {
+            aps: {
+              alert: {
+                title: notification.title,
+                body: notification.body
+              },
+              sound: 'default',
+              'mutable-content': 1
+            },
+            data: notification.data
+          };
+          
+          console.log('[PUSH] 🍎 Apple payload:', JSON.stringify(applePayload, null, 2));
+          
+          // Apple Push Service usa formato diverso - NO JWT/VAPID
           pushResponse = await fetch(subscription.endpoint, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'apns-priority': '10',
+              'apns-topic': 'lovable.apps.2716f91b957c47ba91e06f572f3ce00d'
             },
-            body: JSON.stringify(notification)
+            body: JSON.stringify(applePayload)
           });
         } else {
           // Per FCM e altri provider, usiamo VAPID
