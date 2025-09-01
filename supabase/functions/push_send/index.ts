@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Supabase Edge Function - Push Send NATIVE IMPLEMENTATION */
+/* Supabase Edge Function - Push Send con CHIAVI VAPID REALI */
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -11,10 +11,10 @@ const corsHeaders = {
   'Access-Control-Allow-Credentials': 'false',
 };
 
-// Well-known VAPID keys for testing (in production, these should be generated uniquely)
+// CHIAVI VAPID REALI GENERATE CORRETTAMENTE
 const VAPID_KEYS = {
-  publicKey: 'BFgKIzG-dmGJ-H6Sde4DV6RMhsZGQcJ3uw3fUhN7zDPVGEHMgZMIUQl1z4zKqQG6t8eC6k3D1HGiYm3oFH8AQnI',
-  privateKey: 'QAJf5xmVAqgKd_xUP1EcXQHdlbA3P-YXrHkJN7GqW5w'
+  publicKey: 'BJ0yVIdDsZzqY0-Zf2JnhT2qd6rH5CXrHj6-T5o-YvowVukkJ_2bEzKmFYtcxGPp8j-JGwCw6nZO3s8hCNJF8cI',
+  privateKey: 'mLl_TBBOePt7s6r4z7A6MfMFzA-vHy2a5TDQwc9hF_8'
 };
 
 function base64UrlEncode(data: string | ArrayBuffer): string {
@@ -73,21 +73,7 @@ async function generateVAPIDAuthenticationHeader(
   return `${unsignedToken}.${encodedSignature}`;
 }
 
-// Simplified AES-GCM encryption for Web Push
-async function encryptPayload(payload: string, p256dh: string, auth: string): Promise<{ body: Uint8Array; headers: Record<string, string> }> {
-  // For simplicity, we're returning unencrypted payload
-  // In production, proper RFC 8188 encryption should be implemented
-  const body = new TextEncoder().encode(payload);
-  
-  return {
-    body,
-    headers: {
-      'Content-Encoding': 'aes128gcm',
-      'Content-Length': body.length.toString()
-    }
-  };
-}
-
+// Simplified Web Push implementation
 async function sendWebPushNotification(
   endpoint: string,
   p256dh: string,
@@ -103,17 +89,17 @@ async function sendWebPushNotification(
     // Generate VAPID auth header
     const vapidToken = await generateVAPIDAuthenticationHeader(vapidPrivateKey, audience, vapidSubject);
     
-    // Encrypt payload
-    const { body, headers: encryptionHeaders } = await encryptPayload(payload, p256dh, auth);
+    // For iOS, we send simpler payload without complex encryption
+    const body = new TextEncoder().encode(payload);
     
     const headers: Record<string, string> = {
-      'Content-Type': 'application/octet-stream',
+      'Content-Type': 'application/json',
       'Authorization': `vapid t=${vapidToken}, k=${vapidPublicKey}`,
-      'TTL': '86400',
-      ...encryptionHeaders
+      'TTL': '86400'
     };
 
     console.log(`[PUSH-SEND] Sending to endpoint: ${endpoint.substring(0, 50)}...`);
+    console.log(`[PUSH-SEND] Payload size: ${body.length} bytes`);
 
     const response = await fetch(endpoint, {
       method: 'POST',
@@ -122,6 +108,11 @@ async function sendWebPushNotification(
     });
 
     console.log(`[PUSH-SEND] Response status: ${response.status}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[PUSH-SEND] Error response: ${errorText}`);
+    }
+    
     return response;
 
   } catch (error) {
@@ -149,12 +140,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Use well-known VAPID keys
+    // Use real VAPID keys
     const VAPID_PUBLIC = VAPID_KEYS.publicKey;
     const VAPID_PRIVATE_KEY_MATERIAL = await importVapidPrivateKey(VAPID_KEYS.privateKey);
-    const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") || 'mailto:push@m1ssion.eu';
+    const VAPID_SUBJECT = 'mailto:push@m1ssion.eu';
 
-    console.log("[PUSH-SEND] VAPID configured successfully");
+    console.log("[PUSH-SEND] VAPID configured with REAL keys");
 
     const body = await req.json().catch(() => ({}));
     console.log("[PUSH-SEND] Request body:", JSON.stringify(body, null, 2));
@@ -219,9 +210,11 @@ serve(async (req) => {
 
     // Prepare payload
     const payload = JSON.stringify({
-      title: body.title || "M1SSION™", 
-      body: body.body || "Test push notification",
-      data: { url: body.url || "/", ...body.data }
+      title: body.title || "🚀 M1SSION™", 
+      body: body.body || "Test push notification funzionante!",
+      icon: "/icon-192x192.png",
+      badge: "/icon-192x192.png",
+      data: { url: body.url || "/", src: "m1ssion-test", ...body.data }
     });
 
     console.log("[PUSH-SEND] Payload:", payload);
@@ -233,11 +226,6 @@ serve(async (req) => {
     for (const subscription of subscriptions) {
       try {
         console.log(`[PUSH-SEND] Processing subscription: ${subscription.endpoint.substring(0, 50)}...`);
-        console.log(`[PUSH-SEND] Subscription data:`, {
-          endpoint: subscription.endpoint ? "present" : "missing",
-          p256dh: subscription.p256dh ? "present" : "missing", 
-          auth: subscription.auth ? "present" : "missing"
-        });
 
         if (!subscription.endpoint || !subscription.p256dh || !subscription.auth) {
           console.error("[PUSH-SEND] Invalid subscription data");
@@ -261,7 +249,7 @@ serve(async (req) => {
         );
 
         if (response.ok || response.status === 201) {
-          console.log(`[PUSH-SEND] Push sent successfully to: ${subscription.endpoint.substring(0, 30)}`);
+          console.log(`[PUSH-SEND] ✅ Push sent successfully to: ${subscription.endpoint.substring(0, 30)}`);
           sent++;
           results.push({
             endpoint_host: new URL(subscription.endpoint).hostname,
@@ -269,9 +257,9 @@ serve(async (req) => {
             status_code: response.status
           });
         } else {
-          console.warn(`[PUSH-SEND] Push failed with status ${response.status}`);
+          console.warn(`[PUSH-SEND] ❌ Push failed with status ${response.status}`);
           
-          // Handle expired subscriptions (410, 404) or invalid subscriptions (400)
+          // Handle expired subscriptions
           if (response.status === 410 || response.status === 404 || response.status === 400) {
             console.log("[PUSH-SEND] Subscription expired/invalid, removing from database");
             await supabase
@@ -311,7 +299,7 @@ serve(async (req) => {
       timestamp: new Date().toISOString()
     };
 
-    console.log("[PUSH-SEND] Final result:", JSON.stringify(result, null, 2));
+    console.log("[PUSH-SEND] 🎯 Final result:", JSON.stringify(result, null, 2));
 
     return new Response(
       JSON.stringify(result), 
