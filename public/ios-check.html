@@ -26,7 +26,7 @@
     <button onclick="testSend()" id="send-btn" disabled>🚀 Test Send Push</button>
     
     <script>
-        const VAPID_KEY = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
+        const VAPID_KEY = 'BFgKIzG-dmGJ-H6Sde4DV6RMhsZGQcJ3uw3fUhN7zDPVGEHMgZMIUQl1z4zKqQG6t8eC6k3D1HGiYm3oFH8AQnI'; // CHIAVI FUNZIONANTI
         let currentSubscription = null;
         
         function log(message, type = 'info') {
@@ -54,12 +54,23 @@
         async function runCheck() {
             document.getElementById('results').innerHTML = '';
             
-            // 1. Platform Detection
+            // 1. Platform Detection MIGLIORATA 
             const ua = navigator.userAgent;
-            const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            console.log('🔍 User Agent completo:', ua);
+            console.log('🔍 Platform:', navigator.platform);
+            console.log('🔍 maxTouchPoints:', navigator.maxTouchPoints);
+            
+            // Rilevamento iOS più accurato
+            const isRealIOS = /iPad|iPhone|iPod/.test(ua);
+            const isIOSWebView = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+            const isMacSafari = navigator.platform === 'MacIntel' && navigator.maxTouchPoints === 0;
+            const isIOS = isRealIOS || isIOSWebView || isMacSafari; // Include Mac Safari per test
             const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
             
             log(`🔍 Platform: ${navigator.platform}`, 'info');
+            log(`📱 Real iOS Device: ${isRealIOS ? 'YES' : 'NO'}`, isRealIOS ? 'ok' : 'info');
+            log(`📱 iOS WebView: ${isIOSWebView ? 'YES' : 'NO'}`, isIOSWebView ? 'ok' : 'info');
+            log(`🖥️ Mac Safari: ${isMacSafari ? 'YES' : 'NO'}`, isMacSafari ? 'ok' : 'info');
             log(`📱 iOS Device: ${isIOS ? 'YES' : 'NO'}`, isIOS ? 'ok' : 'warning');
             log(`🦁 Safari Browser: ${isSafari ? 'YES' : 'NO'}`, isSafari ? 'ok' : 'warning');
             
