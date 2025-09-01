@@ -21,8 +21,8 @@ interface UsePushNotificationsReturn {
   unsubscribe: () => Promise<boolean>;
 }
 
-// VAPID public key for iOS PWA
-const VAPID_PUBLIC_KEY = 'BHd3xsKYGQMx7MnLF4-jYK9x7Q_wX8VFqM6q2TzK3B0PnF4F-O6qZ3RrDJGJT1VfOoZ_j4O8GXJT0qX8X8F-J4Y';
+// VAPID public key - UNIFIED FOR ALL PLATFORMS
+const VAPID_PUBLIC_KEY = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
 
 export const usePushNotifications = (): UsePushNotificationsReturn => {
   const [isSupported, setIsSupported] = useState(false);
