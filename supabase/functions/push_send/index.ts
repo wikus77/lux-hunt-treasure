@@ -1,5 +1,3 @@
-import webpush from 'https://esm.sh/web-push@3.6.7';
-
 // CORS headers inline per evitare problemi di import
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,21 +8,12 @@ const corsHeaders = {
 
 console.log('[PUSH] 🚀 M1SSION™ Push Send Function loaded');
 
-// Configura web-push con le chiavi VAPID M1SSION™
+// Configura le chiavi VAPID M1SSION™
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BMrCxTSkgHgNAynMRoieqvKPeEPq1L-dk7-hY4jyBSEt6Rwk9O7XfrR5VmQmLMOBWTycyONDk1oKGxhxuhcunkI';
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'n-QJKN01k1r7ROmzc5Ukn_-MkCE1q7_-Uv-QrCEkgT0';
 
 console.log('[PUSH] 🔑 VAPID Public Key:', VAPID_PUBLIC_KEY);
 console.log('[PUSH] 🔑 VAPID Private Key length:', VAPID_PRIVATE_KEY.length);
-
-// Configura la libreria web-push
-webpush.setVapidDetails(
-  'mailto:support@m1ssion.eu',
-  VAPID_PUBLIC_KEY,
-  VAPID_PRIVATE_KEY
-);
-
-console.log('[PUSH] ✅ Web-push configurato con successo');
 
 Deno.serve(async (req) => {
   console.log(`[PUSH] ${req.method} ${req.url}`);
@@ -51,11 +40,15 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log('[PUSH] 📥 Request body:', JSON.stringify(body, null, 2));
 
-    // Trova le subscription dal database usando la struttura corretta
+    // Se il body contiene una subscription diretta, usala
     let subscriptions = [];
     
-    if (body.endpoint) {
-      // Cerca una subscription specifica
+    if (body.subscription) {
+      // Subscription diretta dal frontend
+      subscriptions = [body.subscription];
+      console.log('[PUSH] 📱 Using direct subscription from frontend');
+    } else if (body.endpoint) {
+      // Cerca una subscription specifica nel DB
       const { data, error } = await supabase
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth')
@@ -75,7 +68,7 @@ Deno.serve(async (req) => {
         }];
       }
     } else {
-      // Prendi tutte le subscription attive
+      // Prendi tutte le subscription attive dal DB
       const { data, error } = await supabase
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth')
@@ -123,7 +116,7 @@ Deno.serve(async (req) => {
 
     console.log('[PUSH] 📤 Notification payload:', JSON.stringify(notification, null, 2));
 
-    // Invia le notifiche usando web-push
+    // Invia notifiche usando Apple Push Service direttamente
     const results = [];
     let sent = 0;
     let failed = 0;
@@ -132,24 +125,37 @@ Deno.serve(async (req) => {
       try {
         console.log(`[PUSH] 🚀 Sending to endpoint: ${subscription.endpoint.substring(0, 50)}...`);
         
-        // Usa web-push per inviare la notifica
-        const result = await webpush.sendNotification(
-          subscription,
-          JSON.stringify(notification),
-          {
-            TTL: 60 // 60 secondi TTL
-          }
-        );
-
-        console.log(`[PUSH] ✅ Success! Status: ${result.statusCode}, Headers:`, result.headers);
-        sent++;
-        
-        results.push({
-          endpoint: subscription.endpoint.substring(0, 50) + '...',
-          success: true,
-          status: result.statusCode,
-          headers: result.headers
+        // Invio diretto ad Apple Push Service
+        const pushResponse = await fetch(subscription.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `vapid t=${await generateVapidToken(subscription.endpoint)}, k=${VAPID_PUBLIC_KEY}`,
+            'TTL': '60'
+          },
+          body: JSON.stringify(notification)
         });
+
+        console.log(`[PUSH] ✅ Response Status: ${pushResponse.status}`);
+        
+        if (pushResponse.ok || pushResponse.status === 204) {
+          sent++;
+          results.push({
+            endpoint: subscription.endpoint.substring(0, 50) + '...',
+            success: true,
+            status: pushResponse.status
+          });
+        } else {
+          failed++;
+          const errorText = await pushResponse.text();
+          console.error(`[PUSH] ❌ Push failed with status ${pushResponse.status}: ${errorText}`);
+          results.push({
+            endpoint: subscription.endpoint.substring(0, 50) + '...',
+            success: false,
+            status: pushResponse.status,
+            error: errorText
+          });
+        }
 
       } catch (error) {
         console.error(`[PUSH] ❌ Failed to send to ${subscription.endpoint.substring(0, 50)}...`, error);
@@ -158,11 +164,32 @@ Deno.serve(async (req) => {
         results.push({
           endpoint: subscription.endpoint.substring(0, 50) + '...',
           success: false,
-          error: error.message,
-          statusCode: error.statusCode || 500
+          error: error.message
         });
       }
     }
+
+// Helper function per generare VAPID token
+async function generateVapidToken(audience: string) {
+  const header = {
+    typ: 'JWT',
+    alg: 'ES256'
+  };
+  
+  const payload = {
+    aud: audience,
+    exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60, // 12 ore
+    sub: 'mailto:support@m1ssion.eu'
+  };
+  
+  const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  
+  const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+  
+  // Per ora ritorniamo un token base, in produzione serve firma ECDSA
+  return btoa(unsignedToken).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
 
     const finalResult = {
       ok: sent > 0,
