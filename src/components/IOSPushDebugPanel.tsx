@@ -139,13 +139,13 @@ export const IOSPushDebugPanel = () => {
   const testNotification = async () => {
     try {
       if (user) {
-        console.log('🧪 TESTING: Sending test notification via Supabase...');
+        console.log('🧪 TESTING: Sending iOS test notification via Apple Push Service...');
         
-        const { error } = await supabase.functions.invoke('send-push-notification', {
+        const { data, error } = await supabase.functions.invoke('send-ios-push', {
           body: {
             title: '🧪 M1SSION™ Test iOS',
-            body: 'Test notifica push iOS PWA - Se ricevi questo messaggio, le notifiche funzionano!',
-            target_user_id: user.id,
+            body: 'Test notifica push iOS PWA - Se ricevi questo messaggio, le notifiche Apple funzionano!',
+            targetUserId: user.id,
             data: {
               url: '/home',
               timestamp: new Date().toISOString(),
@@ -159,7 +159,8 @@ export const IOSPushDebugPanel = () => {
           throw error;
         }
 
-        toast.success('🧪 Test notification sent via Supabase');
+        console.log('📊 Send result:', data);
+        toast.success(`🧪 Test sent: ${data?.sent || 0} successful, ${data?.failed || 0} failed`);
       } else {
         toast.error('User not authenticated');
       }
