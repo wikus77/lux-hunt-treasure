@@ -299,6 +299,36 @@ export type Database = {
         }
         Relationships: []
       }
+      apple_push_config: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          id: string
+          key_id: string
+          private_key: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          key_id: string
+          private_key: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          key_id?: string
+          private_key?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       backup_logs: {
         Row: {
           backup_date: string
@@ -2020,10 +2050,12 @@ export type Database = {
           auth: string
           created_at: string
           endpoint: string
+          keys: Json | null
           last_seen_at: string | null
           p256dh: string
           platform: string | null
           ua: string | null
+          updated_at: string | null
           user_id: string | null
         }
         Insert: {
@@ -2031,10 +2063,12 @@ export type Database = {
           auth: string
           created_at?: string
           endpoint: string
+          keys?: Json | null
           last_seen_at?: string | null
           p256dh: string
           platform?: string | null
           ua?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Update: {
@@ -2042,10 +2076,12 @@ export type Database = {
           auth?: string
           created_at?: string
           endpoint?: string
+          keys?: Json | null
           last_seen_at?: string | null
           p256dh?: string
           platform?: string | null
           ua?: string | null
+          updated_at?: string | null
           user_id?: string | null
         }
         Relationships: []
