@@ -23,9 +23,11 @@
     
     <button onclick="runCheck()">🔍 Verifica iOS Push</button>
     <button onclick="testSubscribe()">📱 Test Subscribe</button>
+    <button onclick="testSend()" id="send-btn" disabled>🚀 Test Send Push</button>
     
     <script>
         const VAPID_KEY = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
+        let currentSubscription = null;
         
         function log(message, type = 'info') {
             const div = document.createElement('div');
@@ -125,7 +127,9 @@
                     applicationServerKey: urlBase64ToUint8Array(VAPID_KEY)
                 });
                 
-                const endpoint = subscription.endpoint;
+                // Get complete subscription data using toJSON()
+                const subscriptionJSON = subscription.toJSON();
+                const endpoint = subscriptionJSON.endpoint;
                 const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
                 const isFCM = endpoint.includes('fcm.googleapis.com');
                 
@@ -134,7 +138,19 @@
                 log(`🍎 Apple Push: ${isApple ? 'YES' : 'NO'}`, isApple ? 'ok' : 'warning');
                 log(`🟢 FCM Push: ${isFCM ? 'YES' : 'NO'}`, isFCM ? 'ok' : 'warning');
                 
-                // Save to Supabase
+                // Save to Supabase with complete subscription data
+                const platform = endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm';
+                const client_id = crypto.randomUUID();
+                
+                const savePayload = {
+                    subscription: subscriptionJSON, // Complete subscription with endpoint and keys
+                    client_id,
+                    platform,
+                    ua: navigator.userAgent
+                };
+                
+                log(`💾 Saving to database... Payload: ${JSON.stringify(savePayload, null, 2)}`, 'info');
+                
                 const saveResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_subscribe', {
                     method: 'POST',
                     headers: {
@@ -142,26 +158,72 @@
                         'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
                         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
                     },
-                    body: JSON.stringify({
-                        keys: {
-                            p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')))),
-                            auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth'))))
-                        },
-                        endpoint: subscription.endpoint,
-                        ua: navigator.userAgent,
-                        platform: endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm'
-                    })
+                    body: JSON.stringify(savePayload)
                 });
                 
                 if (saveResult.ok) {
                     const data = await saveResult.json();
-                    log(`💾 Saved to database: ${data.endpoint_type}`, 'ok');
+                    log(`💾 Saved to database: ${data.endpoint_type || 'Success'}`, 'ok');
+                    log(`📊 Response: ${JSON.stringify(data, null, 2)}`, 'info');
+                    
+                    // Enable send button and store subscription
+                    currentSubscription = subscription;
+                    document.getElementById('send-btn').disabled = false;
                 } else {
-                    log(`⚠️ Failed to save to database: ${saveResult.status}`, 'warning');
+                    const errorText = await saveResult.text();
+                    log(`⚠️ Failed to save to database: ${saveResult.status} - ${errorText}`, 'error');
                 }
                 
             } catch (error) {
                 log(`❌ Subscription failed: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testSend() {
+            try {
+                if (!currentSubscription) {
+                    log(`⚠️ No subscription found. Subscribe first.`, 'warning');
+                    return;
+                }
+                
+                log(`🚀 Sending test push notification...`, 'info');
+                
+                const sendPayload = {
+                    endpoint: currentSubscription.endpoint,
+                    title: 'M1SSION™ iOS Test ✅',
+                    body: 'iOS Safari push working perfectly!',
+                    data: { url: '/ios-check.html', src: 'ios-test' }
+                };
+                
+                log(`📤 Send payload: ${JSON.stringify(sendPayload, null, 2)}`, 'info');
+                
+                const sendResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                    },
+                    body: JSON.stringify(sendPayload)
+                });
+                
+                if (sendResult.ok) {
+                    const result = await sendResult.json();
+                    log(`✅ Push sent successfully!`, 'ok');
+                    log(`📊 Send result: ${JSON.stringify(result, null, 2)}`, 'info');
+                    
+                    if (result.sent > 0) {
+                        log(`🎉 Check your device for the notification!`, 'ok');
+                    } else if (result.failed > 0) {
+                        log(`⚠️ Push failed to send. Check results above.`, 'warning');
+                    }
+                } else {
+                    const errorText = await sendResult.text();
+                    log(`❌ Failed to send push: ${sendResult.status} - ${errorText}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Send test failed: ${error.message}`, 'error');
             }
         }
         
