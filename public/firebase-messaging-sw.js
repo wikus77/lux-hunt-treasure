@@ -1,80 +1,93 @@
-/* M1SSION™ FCM Service Worker (Firebase v8 Compat) */
-console.log('[M1SSION SW] Loading Firebase v8 compat scripts...');
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+/* FIREBASE CLOUD MESSAGING SERVICE WORKER */
 
+console.log('🔥 M1SSION Firebase SW loaded');
+
+// Importa gli script Firebase
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
 importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
 
-console.log('[M1SSION SW] Firebase scripts loaded, initializing app...');
-
-// Firebase configuration - matches /firebase-init.js
+// Configurazione Firebase - deve corrispondere al client
 const firebaseConfig = {
-  apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
-  authDomain: "m1ssion-app.firebaseapp.com",
-  projectId: "m1ssion-app",
-  storageBucket: "m1ssion-app.firebasestorage.app",
-  messagingSenderId: "21417361168",
-  appId: "1:21417361168:web:58841299455ee4bcc7af95"
+  apiKey: "AIzaSyDt7BJ9kV8Jm9aH3GbS6kL4fP2eR9xW7qZ",
+  authDomain: "lux-hunt-treasure.firebaseapp.com",
+  projectId: "lux-hunt-treasure",
+  storageBucket: "lux-hunt-treasure.appspot.com",
+  messagingSenderId: "987654321098",
+  appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l"
 };
 
+// Inizializza Firebase
 firebase.initializeApp(firebaseConfig);
+
+// Ottieni l'istanza messaging
 const messaging = firebase.messaging();
 
-console.log('[M1SSION SW] Firebase app initialized, setting up message handlers...');
-
-// Background message handler
+// Gestisci messaggi in background
 messaging.setBackgroundMessageHandler(function(payload) {
-  console.log('[M1SSION SW] Background message received:', payload);
+  console.log('🔥 FCM Background message received:', payload);
   
-  const title = (payload.notification && payload.notification.title) ||
-                (payload.data && payload.data.title) || 'M1SSION';
-  const body  = (payload.notification && payload.notification.body) ||
-                (payload.data && payload.data.body) || '';
-  const link  = (payload.fcmOptions && payload.fcmOptions.link) ||
-                (payload.data && payload.data.link) || 'https://m1ssion.eu/';
-  
-  const options = {
-    body,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/badge-72.png',
-    data: { link }
+  const notificationTitle = payload.notification?.title || payload.data?.title || 'M1SSION™';
+  const notificationOptions = {
+    body: payload.notification?.body || payload.data?.body || 'Nuova notifica',
+    icon: payload.notification?.icon || '/icon-192x192.png',
+    badge: '/icon-192x192.png',
+    tag: 'mission-notification',
+    data: {
+      url: payload.data?.url || payload.notification?.click_action || '/',
+      ...payload.data
+    },
+    actions: [
+      {
+        action: 'open',
+        title: 'Apri M1SSION'
+      }
+    ]
   };
+
+  console.log('🔥 FCM Showing notification:', notificationTitle, notificationOptions);
   
-  console.log('[M1SSION SW] Showing notification:', title, options);
-  return self.registration.showNotification(title, options);
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-// Notification click handler
-self.addEventListener('notificationclick', (event) => {
-  console.log('[M1SSION SW] Notification clicked:', event.notification);
+// Gestisci click sulla notifica
+self.addEventListener('notificationclick', function(event) {
+  console.log('🔥 FCM Notification clicked:', event);
   
-  const url = (event.notification && event.notification.data && event.notification.data.link) || 'https://m1ssion.eu/';
   event.notification.close();
   
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      console.log('[M1SSION SW] Looking for existing client for URL:', url);
-      
-      for (const c of list) { 
-        if (c.url === url && 'focus' in c) {
-          console.log('[M1SSION SW] Focusing existing client:', c.url);
-          return c.focus(); 
-        }
-      }
-      
-      console.log('[M1SSION SW] Opening new window for URL:', url);
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
+  const url = event.notification.data?.url || '/';
+  
+  if (event.action === 'open' || !event.action) {
+    event.waitUntil(
+      clients.matchAll({ type: 'window', includeUncontrolled: true })
+        .then(function(clientList) {
+          // Se c'è già una finestra aperta, focusala
+          for (let i = 0; i < clientList.length; i++) {
+            const client = clientList[i];
+            if (client.url.includes(new URL(url).pathname) && 'focus' in client) {
+              return client.focus();
+            }
+          }
+          // Altrimenti apri una nuova finestra
+          if (clients.openWindow) {
+            return clients.openWindow(url);
+          }
+        })
+    );
+  }
 });
 
-// Service worker activation
-self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Service Worker activated');
-});
-
-self.addEventListener('install', (event) => {
-  console.log('[M1SSION SW] Service Worker installed');
+// Gestisci installazione SW
+self.addEventListener('install', function(event) {
+  console.log('🔥 FCM SW installed');
   self.skipWaiting();
 });
 
-console.log('[M1SSION SW] Service Worker setup complete');
+// Gestisci attivazione SW
+self.addEventListener('activate', function(event) {
+  console.log('🔥 FCM SW activated');
+  event.waitUntil(self.clients.claim());
+});
+
+console.log('🔥 M1SSION Firebase SW setup complete');

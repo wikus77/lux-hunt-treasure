@@ -1,155 +1,227 @@
-/* M1SSION™ AG-X0197 */
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Firebase Cloud Messaging Push Notification Sender
+/* SISTEMA FIREBASE CLOUD MESSAGING DEFINITIVO */
 
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-
-const FCM_URL = "https://fcm.googleapis.com/fcm/send";
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// M1SSION™ AG-X0197: Generate request ID for logging
-const generateRequestId = () => `req_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+// Firebase Server Key - AGGIUNGI LA TUA CHIAVE FIREBASE SERVER
+const FIREBASE_SERVER_KEY = Deno.env.get('FIREBASE_SERVER_KEY') || 'your_firebase_server_key';
+const FCM_URL = 'https://fcm.googleapis.com/fcm/send';
+
+interface FCMPayload {
+  to?: string;
+  registration_ids?: string[];
+  notification: {
+    title: string;
+    body: string;
+    icon?: string;
+    click_action?: string;
+  };
+  data?: Record<string, any>;
+}
+
+async function sendFCMNotification(payload: FCMPayload): Promise<any> {
+  try {
+    console.log('[FCM] Sending notification:', JSON.stringify(payload, null, 2));
+    
+    const response = await fetch(FCM_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `key=${FIREBASE_SERVER_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    console.log('[FCM] Response:', JSON.stringify(result, null, 2));
+    
+    if (!response.ok) {
+      throw new Error(`FCM request failed: ${response.status} - ${JSON.stringify(result)}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('[FCM] Send error:', error);
+    throw error;
+  }
+}
 
 serve(async (req) => {
-  const requestId = generateRequestId();
-  const startTime = Date.now();
-  
-  console.log(`[M1SSION FCM] ${requestId} → ${req.method} request started`);
-  
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    console.log(`[M1SSION FCM] ${requestId} → CORS preflight → OK`);
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
-    console.log(`[M1SSION FCM] ${requestId} → method ${req.method} not allowed`);
-    return new Response("Method Not Allowed", { 
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', {
       status: 405,
-      headers: corsHeaders 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
-  }
-
-  const SERVER_KEY = Deno.env.get("FIREBASE_SERVER_KEY");
-  if (!SERVER_KEY) {
-    console.error(`[M1SSION FCM] ${requestId} → FIREBASE_SERVER_KEY not configured`);
-    return new Response(
-      JSON.stringify({ 
-        error: "Server configuration error",
-        requestId,
-        success: false 
-      }), 
-      { 
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
   }
 
   try {
-    const { token, title, body, data, badge, icon } = await req.json();
-    console.log(`[M1SSION FCM] ${requestId} → payload parsed`);
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
 
-    if (!token) {
-      console.log(`[M1SSION FCM] ${requestId} → token missing → ERROR`);
+    const body = await req.json();
+    console.log('[FCM] Request body:', JSON.stringify(body, null, 2));
+
+    // Valida i parametri
+    if (!body.title || !body.body) {
       return new Response(
-        JSON.stringify({ 
-          error: "Token is required",
-          requestId,
-          success: false 
-        }),
+        JSON.stringify({ error: 'Title and body are required' }),
         { 
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    console.log(`[M1SSION FCM] ${requestId} → sending to token: ${token.substring(0, 20)}...`);
+    // Recupera tutti i token FCM attivi
+    const { data: tokens, error: tokensError } = await supabase
+      .from('fcm_tokens')
+      .select('token, user_id')
+      .not('token', 'is', null);
 
-    const payload = {
-      to: token,
-      notification: { 
-        title: title || "M1SSION™", 
-        body: body || "Nuova notifica dall'app",
-        icon: icon || "/icon-192x192.png",
-        badge: badge || "/icon-192x192.png"
-      },
-      data: data || {},
-      priority: "high",
-      webpush: {
-        fcm_options: {
-          link: "https://m1ssion.eu"
+    if (tokensError) {
+      console.error('[FCM] Error fetching tokens:', tokensError);
+      throw new Error(`Database error: ${tokensError.message}`);
+    }
+
+    if (!tokens || tokens.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'No FCM tokens found',
+          sent_count: 0,
+          failed_count: 0
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
-      }
+      );
+    }
+
+    console.log(`[FCM] Found ${tokens.length} FCM tokens`);
+
+    // Prepara il payload della notifica
+    const notification = {
+      title: body.title,
+      body: body.body,
+      icon: '/icon-192x192.png',
+      click_action: body.url || 'https://m1ssion.eu'
     };
 
-    const response = await fetch(FCM_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `key=${SERVER_KEY}`,
-      },
-      body: JSON.stringify(payload),
-    });
+    const data = {
+      url: body.url || '/',
+      timestamp: Date.now().toString(),
+      source: 'M1SSION',
+      ...body.additionalData
+    };
 
-    const responseText = await response.text();
-    const duration = Date.now() - startTime;
+    let sentCount = 0;
+    let failedCount = 0;
+    const results = [];
+
+    // Invia notifiche in batch (massimo 1000 per volta - limite FCM)
+    const batchSize = 1000;
+    const tokenBatches = [];
     
-    console.log(`[M1SSION FCM] ${requestId} → FCM response (${response.status}) in ${duration}ms:`, responseText);
-
-    if (!response.ok) {
-      console.log(`[M1SSION FCM] ${requestId} → FCM send failed → STATUS ${response.status}`);
-      return new Response(
-        JSON.stringify({ 
-          error: "FCM send failed", 
-          details: responseText,
-          status: response.status,
-          requestId,
-          duration,
-          success: false
-        }),
-        { 
-          status: response.status,
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        }
-      );
+    for (let i = 0; i < tokens.length; i += batchSize) {
+      tokenBatches.push(tokens.slice(i, i + batchSize));
     }
 
-    console.log(`[M1SSION FCM] ${requestId} → success in ${duration}ms`);
+    for (const batch of tokenBatches) {
+      try {
+        const tokenList = batch.map(t => t.token);
+        
+        const fcmPayload: FCMPayload = {
+          registration_ids: tokenList,
+          notification,
+          data
+        };
+
+        const result = await sendFCMNotification(fcmPayload);
+        
+        if (result.success !== undefined) {
+          sentCount += result.success;
+          failedCount += result.failure;
+        } else {
+          // FCM non restituisce sempre i contatori, conta manualmente
+          sentCount += tokenList.length;
+        }
+
+        results.push({
+          batch_size: tokenList.length,
+          result: result
+        });
+
+      } catch (error) {
+        console.error(`[FCM] Batch send failed:`, error);
+        failedCount += batch.length;
+        results.push({
+          batch_size: batch.length,
+          error: error.message
+        });
+      }
+    }
+
+    // Log dell'operazione
+    await supabase
+      .from('admin_logs')
+      .insert({
+        event_type: 'firebase_notification_sent',
+        note: `FCM notification sent: ${body.title}`,
+        context: JSON.stringify({
+          title: body.title,
+          body: body.body,
+          total_tokens: tokens.length,
+          sent_count: sentCount,
+          failed_count: failedCount
+        })
+      });
+
+    const finalResult = {
+      success: true,
+      message: 'Firebase notification sending completed',
+      sent_count: sentCount,
+      failed_count: failedCount,
+      total_tokens: tokens.length,
+      batch_results: results,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log('[FCM] Final result:', JSON.stringify(finalResult, null, 2));
+
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        fcm_response: responseText,
-        message: "Push notification sent successfully",
-        requestId,
-        duration
-      }),
-      { 
+      JSON.stringify(finalResult),
+      {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
-  } catch (error: any) {
-    const duration = Date.now() - startTime;
-    console.error(`[M1SSION FCM] ${requestId} → error after ${duration}ms:`, error);
+  } catch (error) {
+    console.error('[FCM] Fatal error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: "Internal server error", 
-        details: error?.message || String(error),
-        requestId,
-        duration,
-        success: false 
+      JSON.stringify({
+        success: false,
+        error: 'Internal server error',
+        details: error.message,
+        timestamp: new Date().toISOString()
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
