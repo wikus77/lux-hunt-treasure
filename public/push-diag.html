@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head><meta charset="utf-8"/><title>Push Diag</title></head>
+<body>
+<h1>Push Subscribe – Diag</h1>
+<button id="btn">Subscribe & Save</button>
+<pre id="log" style="white-space:pre-wrap"></pre>
+<script>
+const SUPA_URL = "https://vkjrqirvdvjbemsfzxof.supabase.co";
+const VAPID_PUBLIC = "BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A";
+
+function log(...a){ document.getElementById('log').textContent += a.join(" ") + "\n"; }
+
+function urlB64ToUint8Array(b64) {
+  const pad = "=".repeat((4 - b64.length % 4) % 4);
+  const b64n = (b64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(b64n);
+  const out = new Uint8Array(raw.length);
+  for (let i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+async function ensureSW() {
+  if (!('serviceWorker' in navigator)) throw new Error("SW non supportato");
+  // Registra esplicitamente /sw.js (VitePWA lo genera in dist/)
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  log("SW registrato:", reg.scope);
+  // Se la pagina non è ancora controllata, ricarica una volta per attivare il controllo
+  if (!navigator.serviceWorker.controller) {
+    log("Prima attivazione SW → ricarico la pagina...");
+    setTimeout(()=>location.reload(), 500);
+    await new Promise(()=>{}); // interrompe il flusso fino al reload
+  }
+  // Attendi che sia "ready"
+  return await navigator.serviceWorker.ready;
+}
+
+async function subscribeAndSave(){
+  try{
+    if (!("PushManager" in window)) { log("❌ Push non supportato"); return; }
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") { log("❌ Permesso negato"); return; }
+
+    const reg = await ensureSW();
+
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC)
+    });
+    log("✅ Subscribed:", sub.endpoint);
+
+    const res = await fetch(`${SUPA_URL}/functions/v1/push_subscribe`, {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({
+        subscription: sub.toJSON(),
+        platform: navigator.platform || null,
+        ua: navigator.userAgent,
+        app_version: "diag",
+        user_id: null
+      })
+    });
+    const txt = await res.text();
+    log("save status", res.status, txt||"(empty)");
+    if (!res.ok) throw new Error(txt||"save failed");
+    log("🎉 Done. Ora puoi inviare la push di prova.");
+  }catch(e){ log("ERR:", e && e.message ? e.message : String(e)); }
+}
+
+document.getElementById('btn').onclick = subscribeAndSave;
+</script>
+</body>
+</html>
