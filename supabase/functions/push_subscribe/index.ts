@@ -31,7 +31,26 @@ serve(async (req) => {
     );
 
     const body = await req.json();
-    const { endpoint, keys, ua, platform, user_id } = body;
+    
+    // Handle both flat structure and nested subscription structure
+    let endpoint, keys, ua, platform, user_id;
+    
+    if (body.subscription) {
+      // Nested structure from push-diag.html
+      const subscription = body.subscription;
+      endpoint = subscription.endpoint;
+      keys = subscription.keys;
+      ua = body.ua;
+      platform = body.platform;
+      user_id = body.user_id;
+    } else {
+      // Flat structure
+      endpoint = body.endpoint;
+      keys = body.keys;
+      ua = body.ua;
+      platform = body.platform;
+      user_id = body.user_id;
+    }
 
     // Validate required fields
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
@@ -73,7 +92,7 @@ serve(async (req) => {
         endpoint,
         p256dh: keys.p256dh,
         auth: keys.auth,
-        user_agent: ua ?? null,
+        ua: ua ?? null,
         platform: platform ?? null,
         user_id: user_id ?? null,
         updated_at: new Date().toISOString()
