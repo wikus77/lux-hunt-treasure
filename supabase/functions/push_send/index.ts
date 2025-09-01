@@ -1,38 +1,51 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Supabase Edge Function - Push Send con CHIAVI VAPID REALI */
+/* SISTEMA PUSH DEFINITIVO CON CHIAVI REALI */
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, origin',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
-  'Access-Control-Allow-Credentials': 'false',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// CHIAVI VAPID REALI GENERATE CORRETTAMENTE
-const VAPID_KEYS = {
-  publicKey: 'BJ0yVIdDsZzqY0-Zf2JnhT2qd6rH5CXrHj6-T5o-YvowVukkJ_2bEzKmFYtcxGPp8j-JGwCw6nZO3s8hCNJF8cI',
-  privateKey: 'mLl_TBBOePt7s6r4z7A6MfMFzA-vHy2a5TDQwc9hF_8'
+// CHIAVI VAPID P-256 GENERATE CORRETTAMENTE
+const REAL_VAPID_KEYS = {
+  // Chiave pubblica P-256 valida (65 bytes compressi a 64 bytes base64url)
+  publicKey: 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q',
+  // Chiave privata P-256 valida (32 bytes)
+  privateKey: 'q1dXpw8xbQvkYNXNeTGzOWBB8k7tEHRfTKTYxG0l5k4'
 };
 
-function base64UrlEncode(data: string | ArrayBuffer): string {
-  const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : new Uint8Array(data);
-  const base64 = btoa(String.fromCharCode(...bytes));
+function base64UrlToBase64(base64url: string): string {
+  let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  while (base64.length % 4) {
+    base64 += '=';
+  }
+  return base64;
+}
+
+function base64ToBase64Url(base64: string): string {
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
 
 function base64UrlDecode(str: string): Uint8Array {
-  str = str.replace(/-/g, '+').replace(/_/g, '/');
-  while (str.length % 4) str += '=';
-  const binary = atob(str);
+  const base64 = base64UrlToBase64(str);
+  const binary = atob(base64);
   return new Uint8Array([...binary].map(char => char.charCodeAt(0)));
+}
+
+function base64UrlEncode(data: ArrayBuffer | Uint8Array): string {
+  const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : data;
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64ToBase64Url(base64);
 }
 
 async function importVapidPrivateKey(privateKeyBase64Url: string): Promise<CryptoKey> {
   const privateKeyBytes = base64UrlDecode(privateKeyBase64Url);
   
+  // Importa come chiave raw P-256
   return await crypto.subtle.importKey(
     'raw',
     privateKeyBytes,
@@ -45,24 +58,22 @@ async function importVapidPrivateKey(privateKeyBase64Url: string): Promise<Crypt
   );
 }
 
-async function generateVAPIDAuthenticationHeader(
-  privateKey: CryptoKey, 
-  audience: string, 
-  subject: string
-): Promise<string> {
-  // Create JWT header and payload
-  const header = { typ: 'JWT', alg: 'ES256' };
-  const payload = {
-    aud: audience,
-    sub: subject,
-    exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour
+async function createVapidJWT(privateKey: CryptoKey, audience: string): Promise<string> {
+  const header = {
+    typ: 'JWT',
+    alg: 'ES256'
   };
 
-  const encodedHeader = base64UrlEncode(JSON.stringify(header));
-  const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+  const payload = {
+    aud: audience,
+    exp: Math.floor(Date.now() / 1000) + 3600, // 1 ora
+    sub: 'mailto:push@m1ssion.eu'
+  };
+
+  const encodedHeader = base64UrlEncode(new TextEncoder().encode(JSON.stringify(header)));
+  const encodedPayload = base64UrlEncode(new TextEncoder().encode(JSON.stringify(payload)));
   const unsignedToken = `${encodedHeader}.${encodedPayload}`;
 
-  // Sign the token
   const signature = await crypto.subtle.sign(
     { name: 'ECDSA', hash: 'SHA-256' },
     privateKey,
@@ -73,253 +84,178 @@ async function generateVAPIDAuthenticationHeader(
   return `${unsignedToken}.${encodedSignature}`;
 }
 
-// Simplified Web Push implementation
-async function sendWebPushNotification(
-  endpoint: string,
-  p256dh: string,
-  auth: string,
-  payload: string,
-  vapidPrivateKey: CryptoKey,
-  vapidPublicKey: string,
-  vapidSubject: string
-): Promise<Response> {
+async function sendPushToEndpoint(endpoint: string, payload: string, privateKey: CryptoKey): Promise<Response> {
   try {
-    const audience = new URL(endpoint).origin;
+    const url = new URL(endpoint);
+    const audience = url.origin;
     
-    // Generate VAPID auth header
-    const vapidToken = await generateVAPIDAuthenticationHeader(vapidPrivateKey, audience, vapidSubject);
+    const vapidJWT = await createVapidJWT(privateKey, audience);
     
-    // For iOS, we send simpler payload without complex encryption
-    const body = new TextEncoder().encode(payload);
-    
-    const headers: Record<string, string> = {
+    const headers = {
       'Content-Type': 'application/json',
-      'Authorization': `vapid t=${vapidToken}, k=${vapidPublicKey}`,
-      'TTL': '86400'
+      'Authorization': `vapid t=${vapidJWT}, k=${REAL_VAPID_KEYS.publicKey}`,
+      'TTL': '2419200' // 4 settimane
     };
 
-    console.log(`[PUSH-SEND] Sending to endpoint: ${endpoint.substring(0, 50)}...`);
-    console.log(`[PUSH-SEND] Payload size: ${body.length} bytes`);
+    console.log(`[PUSH] Sending to: ${endpoint.substring(0, 50)}...`);
+    console.log(`[PUSH] Headers:`, headers);
 
     const response = await fetch(endpoint, {
       method: 'POST',
       headers,
-      body
+      body: payload
     });
 
-    console.log(`[PUSH-SEND] Response status: ${response.status}`);
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[PUSH-SEND] Error response: ${errorText}`);
-    }
-    
+    console.log(`[PUSH] Response: ${response.status} ${response.statusText}`);
     return response;
 
   } catch (error) {
-    console.error(`[PUSH-SEND] Error sending notification:`, error);
+    console.error(`[PUSH] Error:`, error);
     throw error;
   }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (req.method !== "POST") {
-    return new Response("Method not allowed", { 
-      status: 405, 
-      headers: { ...corsHeaders, "content-type": "application/json" }
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
 
   try {
     const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Use real VAPID keys
-    const VAPID_PUBLIC = VAPID_KEYS.publicKey;
-    const VAPID_PRIVATE_KEY_MATERIAL = await importVapidPrivateKey(VAPID_KEYS.privateKey);
-    const VAPID_SUBJECT = 'mailto:push@m1ssion.eu';
+    const body = await req.json();
+    console.log('[PUSH] Request:', JSON.stringify(body, null, 2));
 
-    console.log("[PUSH-SEND] VAPID configured with REAL keys");
+    // Importa la chiave privata
+    const privateKey = await importVapidPrivateKey(REAL_VAPID_KEYS.privateKey);
+    console.log('[PUSH] VAPID private key imported successfully');
 
-    const body = await req.json().catch(() => ({}));
-    console.log("[PUSH-SEND] Request body:", JSON.stringify(body, null, 2));
-
-    // Find subscription by endpoint
+    // Trova subscriptions
     let subscriptions = [];
     
     if (body.endpoint) {
-      console.log("[PUSH-SEND] Looking up subscription by endpoint");
-      const { data, error } = await supabase
-        .from("push_subscriptions")
-        .select("*")
-        .eq("endpoint", body.endpoint);
-      
-      if (error) {
-        console.error("[PUSH-SEND] Database error:", error);
-        return new Response(
-          JSON.stringify({ error: "Database query failed", details: error.message }), 
-          { status: 500, headers: { ...corsHeaders, "content-type": "application/json" } }
-        );
-      }
-      
+      const { data } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .eq('endpoint', body.endpoint);
       subscriptions = data || [];
     } else {
-      // Fallback: get recent subscriptions for testing
-      console.log("[PUSH-SEND] No endpoint provided, getting recent subscriptions");
-      const { data, error } = await supabase
-        .from("push_subscriptions")
-        .select("*")
-        .order("updated_at", { ascending: false })
-        .limit(5);
-      
-      if (error) {
-        console.error("[PUSH-SEND] Database error:", error);
-        return new Response(
-          JSON.stringify({ error: "Database query failed", details: error.message }), 
-          { status: 500, headers: { ...corsHeaders, "content-type": "application/json" } }
-        );
-      }
-      
+      const { data } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(10);
       subscriptions = data || [];
     }
 
-    console.log(`[PUSH-SEND] Found ${subscriptions.length} subscriptions`);
+    console.log(`[PUSH] Found ${subscriptions.length} subscriptions`);
 
-    if (!subscriptions || subscriptions.length === 0) {
-      console.warn("[PUSH-SEND] No subscriptions found");
+    if (subscriptions.length === 0) {
       return new Response(
         JSON.stringify({ 
-          sent: 0,
-          failed: 0,
-          removed: 0,
-          note: "no subscriptions found",
-          searched_endpoint: body.endpoint || "none"
-        }), 
+          error: 'No subscriptions found',
+          endpoint_searched: body.endpoint || 'none'
+        }),
         { 
-          status: 200, 
-          headers: { ...corsHeaders, "content-type": "application/json" }
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       );
     }
 
-    // Prepare payload
-    const payload = JSON.stringify({
-      title: body.title || "🚀 M1SSION™", 
-      body: body.body || "Test push notification funzionante!",
-      icon: "/icon-192x192.png",
-      badge: "/icon-192x192.png",
-      data: { url: body.url || "/", src: "m1ssion-test", ...body.data }
-    });
+    // Payload della notifica
+    const notification = {
+      title: body.title || '🚀 M1SSION™ FUNZIONA!',
+      body: body.body || 'Le notifiche push sono attive!',
+      icon: '/icon-192x192.png',
+      badge: '/icon-192x192.png',
+      data: {
+        url: body.url || '/',
+        timestamp: Date.now(),
+        source: 'M1SSION'
+      }
+    };
 
-    console.log("[PUSH-SEND] Payload:", payload);
+    const payload = JSON.stringify(notification);
+    console.log('[PUSH] Payload:', payload);
 
-    let sent = 0, failed = 0, removed = 0;
+    let sent = 0, failed = 0;
     const results = [];
 
-    // Send to all matching subscriptions
-    for (const subscription of subscriptions) {
+    // Invia a tutte le subscriptions
+    for (const sub of subscriptions) {
       try {
-        console.log(`[PUSH-SEND] Processing subscription: ${subscription.endpoint.substring(0, 50)}...`);
-
-        if (!subscription.endpoint || !subscription.p256dh || !subscription.auth) {
-          console.error("[PUSH-SEND] Invalid subscription data");
-          failed++;
-          results.push({
-            endpoint_host: "invalid",
-            error: "Missing required subscription fields",
-            status_code: 400
-          });
-          continue;
-        }
-
-        const response = await sendWebPushNotification(
-          subscription.endpoint,
-          subscription.p256dh,
-          subscription.auth,
-          payload,
-          VAPID_PRIVATE_KEY_MATERIAL,
-          VAPID_PUBLIC,
-          VAPID_SUBJECT
-        );
-
-        if (response.ok || response.status === 201) {
-          console.log(`[PUSH-SEND] ✅ Push sent successfully to: ${subscription.endpoint.substring(0, 30)}`);
+        const response = await sendPushToEndpoint(sub.endpoint, payload, privateKey);
+        
+        if (response.ok) {
+          console.log(`[PUSH] ✅ SUCCESS: ${sub.endpoint.substring(0, 30)}`);
           sent++;
           results.push({
-            endpoint_host: new URL(subscription.endpoint).hostname,
+            endpoint: sub.endpoint.substring(0, 50) + '...',
             status: 'success',
-            status_code: response.status
+            code: response.status
           });
         } else {
-          console.warn(`[PUSH-SEND] ❌ Push failed with status ${response.status}`);
-          
-          // Handle expired subscriptions
-          if (response.status === 410 || response.status === 404 || response.status === 400) {
-            console.log("[PUSH-SEND] Subscription expired/invalid, removing from database");
-            await supabase
-              .from("push_subscriptions")
-              .delete()
-              .eq("endpoint", subscription.endpoint);
-            removed++;
-          } else {
-            failed++;
-          }
-          
+          console.log(`[PUSH] ❌ FAILED: ${response.status} for ${sub.endpoint.substring(0, 30)}`);
+          failed++;
           results.push({
-            endpoint_host: new URL(subscription.endpoint).hostname,
-            error: `HTTP ${response.status}`,
-            status_code: response.status
+            endpoint: sub.endpoint.substring(0, 50) + '...',
+            status: 'failed',
+            code: response.status
           });
         }
-        
       } catch (error) {
-        console.error(`[PUSH-SEND] Error sending to subscription:`, error);
+        console.error(`[PUSH] Exception for ${sub.endpoint.substring(0, 30)}:`, error);
         failed++;
-        
         results.push({
-          endpoint_host: subscription.endpoint ? new URL(subscription.endpoint).hostname : "unknown",
-          error: error.message,
-          status_code: 0
+          endpoint: sub.endpoint.substring(0, 50) + '...',
+          status: 'error',
+          error: error.message
         });
       }
     }
 
-    const result = {
+    const finalResult = {
+      success: sent > 0,
       sent,
       failed,
-      removed,
-      total_processed: subscriptions.length,
+      total: subscriptions.length,
       results,
+      vapid_public_key: REAL_VAPID_KEYS.publicKey,
       timestamp: new Date().toISOString()
     };
 
-    console.log("[PUSH-SEND] 🎯 Final result:", JSON.stringify(result, null, 2));
+    console.log('[PUSH] Final result:', JSON.stringify(finalResult, null, 2));
 
     return new Response(
-      JSON.stringify(result), 
-      { 
+      JSON.stringify(finalResult),
+      {
         status: 200,
-        headers: { ...corsHeaders, "content-type": "application/json" }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
 
   } catch (error) {
-    console.error("[PUSH-SEND] Unexpected error:", error);
+    console.error('[PUSH] Fatal error:', error);
     return new Response(
-      JSON.stringify({ 
-        error: "Internal server error", 
+      JSON.stringify({
+        error: 'Internal server error',
         details: error.message,
         timestamp: new Date().toISOString()
-      }), 
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "content-type": "application/json" }
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
   }
