@@ -54,32 +54,45 @@ serve(async (req) => {
     let subscription;
 
     // Find subscription by endpoint or user_id
+    let subscriptions = [];
+    
     if (body.endpoint) {
       console.log("[PUSH-SEND] Looking up subscription by endpoint");
       const { data } = await supabase
         .from("push_subscriptions")
         .select("*")
-        .eq("endpoint", body.endpoint)
-        .maybeSingle();
-      subscription = data;
+        .eq("endpoint", body.endpoint);
+      subscriptions = data || [];
     } else if (body.user_id) {
       console.log("[PUSH-SEND] Looking up subscription by user_id:", body.user_id);
       const { data } = await supabase
         .from("push_subscriptions")
         .select("*")
         .eq("user_id", body.user_id)
+        .order("updated_at", { ascending: false });
+      subscriptions = data || [];
+    } else {
+      // Fallback: get all subscriptions for testing
+      console.log("[PUSH-SEND] No endpoint or user_id provided, getting all subscriptions");
+      const { data } = await supabase
+        .from("push_subscriptions")
+        .select("*")
         .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      subscription = data;
+        .limit(10);
+      subscriptions = data || [];
     }
 
-    if (!subscription) {
-      console.warn("[PUSH-SEND] Subscription not found");
+    if (!subscriptions || subscriptions.length === 0) {
+      console.warn("[PUSH-SEND] No subscriptions found");
       return new Response(
-        JSON.stringify({ error: "Subscription not found" }), 
+        JSON.stringify({ 
+          sent: 0,
+          failed: 0,
+          removed: 0,
+          note: "no subscriptions"
+        }), 
         { 
-          status: 404, 
+          status: 202, 
           headers: { ...corsHeaders, "content-type": "application/json" }
         }
       );
@@ -87,56 +100,84 @@ serve(async (req) => {
 
     // Prepare payload with proper structure
     const defaultPayload = { 
-      title: "M1SSION™", 
-      body: "Test push notification",
-      data: { url: "/" }
+      title: body.title || "M1SSION™", 
+      body: body.body || "Test push notification",
+      data: { url: body.url || "/" }
     };
     
     const payloadData = body.payload ?? defaultPayload;
     const payload = typeof payloadData === "string" ? payloadData : JSON.stringify(payloadData);
 
-    console.log("[PUSH-SEND] Sending push to:", subscription.endpoint.substring(0, 50) + "...");
+    console.log("[PUSH-SEND] Sending push to", subscriptions.length, "subscriptions");
     console.log("[PUSH-SEND] Payload:", payload);
 
-    // Send push notification
-    const response = await sendPush({
-      subscription: {
-        endpoint: subscription.endpoint,
-        keys: { 
-          p256dh: subscription.p256dh, 
-          auth: subscription.auth 
+    let sent = 0, failed = 0, removed = 0;
+    const results = [];
+
+    // Send to all matching subscriptions
+    for (const subscription of subscriptions) {
+      try {
+        console.log("[PUSH-SEND] Sending to endpoint:", subscription.endpoint.substring(0, 50) + "...");
+        
+        const response = await sendPush({
+          subscription: {
+            endpoint: subscription.endpoint,
+            keys: { 
+              p256dh: subscription.p256dh, 
+              auth: subscription.auth 
+            }
+          },
+          vapidKeys: { 
+            publicKey: VAPID_PUBLIC, 
+            privateKey: VAPID_PRIVATE, 
+            subject: VAPID_SUBJECT 
+          },
+          payload
+        });
+
+        console.log("[PUSH-SEND] Push sent, status:", response.status);
+        
+        // Handle expired subscriptions
+        if (response.status === 410 || response.status === 404) {
+          console.log("[PUSH-SEND] Subscription expired, removing from database");
+          await supabase
+            .from("push_subscriptions")
+            .delete()
+            .eq("id", subscription.id);
+          removed++;
+        } else if (response.status >= 200 && response.status < 300) {
+          sent++;
+        } else {
+          failed++;
         }
-      },
-      vapidKeys: { 
-        publicKey: VAPID_PUBLIC, 
-        privateKey: VAPID_PRIVATE, 
-        subject: VAPID_SUBJECT 
-      },
-      payload
-    });
-
-    console.log("[PUSH-SEND] Push sent successfully, status:", response.status);
-
-    // Handle expired subscriptions
-    if (response.status === 410 || response.status === 404) {
-      console.log("[PUSH-SEND] Subscription expired, removing from database");
-      await supabase
-        .from("push_subscriptions")
-        .delete()
-        .eq("id", subscription.id);
+        
+        results.push({
+          subscription_id: subscription.id,
+          status: response.status,
+          endpoint_host: new URL(subscription.endpoint).hostname
+        });
+        
+      } catch (error) {
+        console.error("[PUSH-SEND] Error sending to subscription:", subscription.id, error);
+        failed++;
+        results.push({
+          subscription_id: subscription.id,
+          error: error.message
+        });
+      }
     }
 
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        status: response.status,
-        subscription_id: subscription.id,
-        endpoint_type: subscription.endpoint.includes('web.push.apple.com') || subscription.endpoint.includes('api.push.apple.com') ? 'APNs' : 
-                      subscription.endpoint.includes('fcm.googleapis.com') ? 'FCM' : 'Other',
-        endpoint_host: new URL(subscription.endpoint).hostname,
+        sent,
+        failed,
+        removed,
+        total_processed: subscriptions.length,
+        results,
         timestamp: new Date().toISOString()
       }), 
       { 
+        status: 202,
         headers: { ...corsHeaders, "content-type": "application/json" }
       }
     );
