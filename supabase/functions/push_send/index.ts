@@ -169,26 +169,83 @@ Deno.serve(async (req) => {
       }
     }
 
-// Helper function per generare VAPID token
+// Helper function per generare VAPID token con firma ECDSA
 async function generateVapidToken(audience: string) {
-  const header = {
-    typ: 'JWT',
-    alg: 'ES256'
-  };
+  try {
+    // Decodifica la chiave privata VAPID da base64url
+    const privateKeyBuffer = base64UrlDecode(VAPID_PRIVATE_KEY);
+    
+    // Importa la chiave privata ECDSA
+    const privateKey = await crypto.subtle.importKey(
+      'pkcs8',
+      privateKeyBuffer,
+      {
+        name: 'ECDSA',
+        namedCurve: 'P-256'
+      },
+      false,
+      ['sign']
+    );
+    
+    const header = {
+      typ: 'JWT',
+      alg: 'ES256'
+    };
+    
+    const payload = {
+      aud: new URL(audience).origin,
+      exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60, // 12 ore
+      sub: 'mailto:support@m1ssion.eu'
+    };
+    
+    const encodedHeader = base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+    
+    const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+    
+    // Firma il token con ECDSA
+    const signature = await crypto.subtle.sign(
+      {
+        name: 'ECDSA',
+        hash: 'SHA-256'
+      },
+      privateKey,
+      new TextEncoder().encode(unsignedToken)
+    );
+    
+    const encodedSignature = base64UrlEncode(new Uint8Array(signature));
+    
+    return `${unsignedToken}.${encodedSignature}`;
+  } catch (error) {
+    console.error('[PUSH] ❌ Error generating VAPID token:', error);
+    throw new Error('Failed to generate VAPID token');
+  }
+}
+
+// Helper functions per base64url encoding/decoding
+function base64UrlEncode(data: string | Uint8Array): string {
+  let base64: string;
+  if (typeof data === 'string') {
+    base64 = btoa(data);
+  } else {
+    const binary = String.fromCharCode(...data);
+    base64 = btoa(binary);
+  }
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+function base64UrlDecode(str: string): Uint8Array {
+  // Aggiungi padding se necessario
+  str += '='.repeat((4 - str.length % 4) % 4);
+  // Sostituisci caratteri URL-safe
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
   
-  const payload = {
-    aud: audience,
-    exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60, // 12 ore
-    sub: 'mailto:support@m1ssion.eu'
-  };
-  
-  const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  const encodedPayload = btoa(JSON.stringify(payload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-  
-  const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-  
-  // Per ora ritorniamo un token base, in produzione serve firma ECDSA
-  return btoa(unsignedToken).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
     const finalResult = {
