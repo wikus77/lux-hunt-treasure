@@ -100,30 +100,80 @@ serve(async (req) => {
       );
     }
 
-    // Build query for device tokens (iOS Web Push endpoints)
-    let query = supabase
+    // Build query for push subscriptions (check both tables)
+    let query1 = supabase
+      .from('push_subscriptions')
+      .select('endpoint, user_id, p256dh, auth');
+
+    let query2 = supabase
       .from('device_tokens')
       .select('token, user_id')
       .eq('device_type', 'web_push');
 
     // Filter by user if specified
     if (targetUserId) {
-      query = query.eq('user_id', targetUserId);
+      query1 = query1.eq('user_id', targetUserId);
+      query2 = query2.eq('user_id', targetUserId);
     }
 
-    const { data: deviceTokens, error: fetchError } = await query;
+    // Fetch from both tables
+    const [pushSubscriptionsResult, deviceTokensResult] = await Promise.all([
+      query1,
+      query2
+    ]);
 
-    if (fetchError) {
-      console.error('Error fetching device tokens:', fetchError);
+    if (pushSubscriptionsResult.error && deviceTokensResult.error) {
+      console.error('Error fetching subscriptions:', pushSubscriptionsResult.error, deviceTokensResult.error);
       return new Response(
-        JSON.stringify({ error: 'Error fetching device tokens' }),
+        JSON.stringify({ error: 'Error fetching device subscriptions' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!deviceTokens || deviceTokens.length === 0) {
+    // Combine results and normalize format
+    const allDevices: any[] = [];
+    
+    // Add push_subscriptions (Web Push format)
+    if (pushSubscriptionsResult.data && pushSubscriptionsResult.data.length > 0) {
+      pushSubscriptionsResult.data.forEach(sub => {
+        allDevices.push({
+          user_id: sub.user_id,
+          subscription: {
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: sub.p256dh,
+              auth: sub.auth
+            }
+          }
+        });
+      });
+    }
+    
+    // Add device_tokens (JSON format)
+    if (deviceTokensResult.data && deviceTokensResult.data.length > 0) {
+      deviceTokensResult.data.forEach(device => {
+        try {
+          const subscription = JSON.parse(device.token);
+          allDevices.push({
+            user_id: device.user_id,
+            subscription: subscription
+          });
+        } catch (error) {
+          console.warn('Invalid JSON token:', device.token);
+        }
+      });
+    }
+
+    console.log(`🔍 Found ${allDevices.length} total devices: ${pushSubscriptionsResult.data?.length || 0} from push_subscriptions, ${deviceTokensResult.data?.length || 0} from device_tokens`);
+
+    if (allDevices.length === 0) {
       return new Response(
-        JSON.stringify({ sent: 0, message: 'No registered devices' }),
+        JSON.stringify({ 
+          sent: 0, 
+          message: 'No registered devices found',
+          checked_tables: ['push_subscriptions', 'device_tokens'],
+          user_id: targetUserId 
+        }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -153,9 +203,9 @@ serve(async (req) => {
     };
 
     // Send push notifications
-    for (const device of deviceTokens) {
+    for (const device of allDevices) {
       try {
-        const subscription = JSON.parse(device.token);
+        const subscription = device.subscription;
         
         // Check if this is an Apple endpoint
         const isAppleEndpoint = subscription.endpoint?.includes('web.push.apple.com');
@@ -187,7 +237,8 @@ serve(async (req) => {
             endpoint: subscription.endpoint.substring(0, 50) + '...',
             success: pushResponse.ok,
             status: pushResponse.status,
-            user_id: device.user_id
+            user_id: device.user_id,
+            type: 'apple_push'
           };
 
           if (pushResponse.ok) {
@@ -204,6 +255,14 @@ serve(async (req) => {
         } else {
           // For non-Apple endpoints, you would use VAPID here
           console.log(`⚠️ Non-Apple endpoint, skipping: ${subscription.endpoint.substring(0, 50)}...`);
+          results.push({
+            endpoint: subscription.endpoint.substring(0, 50) + '...',
+            success: false,
+            status: 'skipped',
+            user_id: device.user_id,
+            type: 'non_apple',
+            error: 'Not an Apple endpoint'
+          });
         }
 
         // Save notification to database
@@ -225,7 +284,8 @@ serve(async (req) => {
           endpoint: 'unknown',
           success: false,
           error: error.message,
-          user_id: device.user_id
+          user_id: device.user_id,
+          type: 'error'
         });
       }
     }
@@ -237,7 +297,7 @@ serve(async (req) => {
         success: true,
         sent: sentCount,
         failed: failedCount,
-        total: deviceTokens.length,
+        total: allDevices.length,
         results,
         apple_config_used: {
           team_id: appleConfig.team_id,
