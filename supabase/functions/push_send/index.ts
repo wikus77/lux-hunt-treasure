@@ -136,13 +136,82 @@ serve(async (req) => {
     const body = await req.json();
     console.log('[PUSH] Request:', JSON.stringify(body, null, 2));
 
-    // Importa la chiave privata VAPID M1SSION™ Firebase (CORRETTA!)
-    console.log('[PUSH] 🔑 Using M1SSION Firebase VAPID keys');
+    // DIAGNOSI APPROFONDITA DELLE CHIAVI VAPID M1SSION™
+    console.log('[PUSH] 🔬 DIAGNOSI COMPLETA CHIAVI VAPID:');
     console.log('[PUSH] 🔑 Public Key:', REAL_VAPID_KEYS.publicKey);
+    console.log('[PUSH] 🔑 Public Key length:', REAL_VAPID_KEYS.publicKey.length);
+    console.log('[PUSH] 🔑 Private Key:', REAL_VAPID_KEYS.privateKey);
     console.log('[PUSH] 🔑 Private Key length:', REAL_VAPID_KEYS.privateKey.length);
     
-    const privateKey = await importVapidPrivateKey(REAL_VAPID_KEYS.privateKey);
-    console.log('[PUSH] ✅ M1SSION Firebase VAPID private key imported successfully');
+    // Test decodifica chiave pubblica
+    try {
+      const publicDecoded = base64UrlDecode(REAL_VAPID_KEYS.publicKey);
+      console.log('[PUSH] ✅ Public key decoded successfully, bytes:', publicDecoded.length);
+    } catch (e) {
+      console.log('[PUSH] ❌ Public key decode failed:', e.message);
+    }
+    
+    // Test decodifica chiave privata
+    try {
+      const privateDecoded = base64UrlDecode(REAL_VAPID_KEYS.privateKey);
+      console.log('[PUSH] ✅ Private key decoded successfully, bytes:', privateDecoded.length);
+      console.log('[PUSH] 🔍 Expected: 32 bytes for P-256, got:', privateDecoded.length);
+      
+      if (privateDecoded.length !== 32) {
+        console.log('[PUSH] ⚠️ PROBLEMA: Private key length incorrect! Expected 32 bytes for P-256');
+        
+        // Verifica se è una chiave pubblica invece di privata
+        if (privateDecoded.length === 65) {
+          console.log('[PUSH] ⚠️ PROBLEMA: This looks like a PUBLIC key (65 bytes), not private!');
+          return new Response(
+            JSON.stringify({
+              error: 'Invalid private key',
+              details: 'The provided private key is actually a public key (65 bytes instead of 32)',
+              received_length: privateDecoded.length,
+              expected_length: 32,
+              suggestion: 'Check Firebase console for the actual private key'
+            }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            }
+          );
+        }
+      }
+      
+    } catch (e) {
+      console.log('[PUSH] ❌ Private key decode failed:', e.message);
+      return new Response(
+        JSON.stringify({
+          error: 'Private key decode failed',
+          details: e.message,
+          suggestion: 'Check the private key format from Firebase console'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+    
+    // Test importazione chiave privata
+    try {
+      const privateKey = await importVapidPrivateKey(REAL_VAPID_KEYS.privateKey);
+      console.log('[PUSH] ✅ M1SSION Firebase VAPID private key imported successfully');
+    } catch (e) {
+      console.log('[PUSH] ❌ Private key import failed:', e.message);
+      return new Response(
+        JSON.stringify({
+          error: 'Private key import failed',
+          details: e.message,
+          suggestion: 'The private key format is invalid for VAPID signing'
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
 
     // Trova subscriptions
     let subscriptions = [];
