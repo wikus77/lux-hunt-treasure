@@ -4,8 +4,8 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Native Web Push implementation without external dependencies
-// Since deno.land/x/webpush may not be available, we'll implement VAPID Web Push directly
+// Import WebPush library from esm.sh
+import * as webpush from "https://esm.sh/web-push@3.6.7";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,47 +96,12 @@ serve(async (req) => {
       );
     }
 
-    // Native VAPID Web Push implementation
-    async function sendWebPush(subscription, payload, vapidKeys) {
-      const { endpoint, keys } = subscription;
-      const { publicKey, privateKey, subject } = vapidKeys;
-      
-      // Create VAPID JWT token
-      const encoder = new TextEncoder();
-      const now = Math.floor(Date.now() / 1000);
-      
-      const header = {
-        "typ": "JWT",
-        "alg": "ES256"
-      };
-      
-      const claims = {
-        "aud": new URL(endpoint).origin,
-        "exp": now + 12 * 60 * 60, // 12 hours
-        "sub": subject
-      };
-      
-      const encodedHeader = btoa(JSON.stringify(header)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-      const encodedClaims = btoa(JSON.stringify(claims)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-      
-      // For now, we'll send a simple HTTP request without JWT signature
-      // This is a simplified version - in production, you'd need proper VAPID JWT signing
-      
-      const headers = {
-        'TTL': '86400',
-        'Content-Type': 'application/json',
-        'Content-Encoding': 'aes128gcm'
-      };
-      
-      // Simple payload without encryption for testing
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: payload
-      });
-      
-      return response;
-    }
+    // Configure WebPush library
+    webpush.setVapidDetails(
+      VAPID_SUBJECT,
+      VAPID_PUBLIC,
+      VAPID_PRIVATE
+    );
 
     // Prepare payload with proper structure
     const defaultPayload = { 
@@ -159,45 +124,46 @@ serve(async (req) => {
       try {
         console.log("[PUSH-SEND] Sending to endpoint:", subscription.endpoint.substring(0, 50) + "...");
         
-        const response = await sendWebPush({
+        const pushSubscription = {
           endpoint: subscription.endpoint,
           keys: { 
             p256dh: subscription.p256dh, 
             auth: subscription.auth 
           }
-        }, payload, {
-          publicKey: VAPID_PUBLIC, 
-          privateKey: VAPID_PRIVATE, 
-          subject: VAPID_SUBJECT 
+        };
+
+        const response = await webpush.sendNotification(pushSubscription, payload, {
+          TTL: 86400, // 24 hours
+          urgency: 'normal'
         });
 
-        console.log("[PUSH-SEND] Push sent, status:", response.status);
+        console.log("[PUSH-SEND] Push sent successfully to:", subscription.endpoint.substring(0, 30));
+        sent++;
         
-        // Handle expired subscriptions
-        if (response.status === 410 || response.status === 404) {
-          console.log("[PUSH-SEND] Subscription expired, removing from database");
+        results.push({
+          endpoint_host: new URL(subscription.endpoint).hostname,
+          status: 'success'
+        });
+        
+      } catch (error) {
+        console.error("[PUSH-SEND] Error sending to subscription:", subscription.endpoint.substring(0, 30), error.message);
+        
+        // Handle expired subscriptions (410, 404) or invalid subscriptions (400)
+        if (error.statusCode === 410 || error.statusCode === 404 || error.statusCode === 400) {
+          console.log("[PUSH-SEND] Subscription expired/invalid, removing from database");
           await supabase
             .from("push_subscriptions")
             .delete()
             .eq("endpoint", subscription.endpoint);
           removed++;
-        } else if (response.status >= 200 && response.status < 300) {
-          sent++;
         } else {
           failed++;
         }
         
         results.push({
           endpoint_host: new URL(subscription.endpoint).hostname,
-          status: response.status
-        });
-        
-      } catch (error) {
-        console.error("[PUSH-SEND] Error sending to subscription:", subscription.endpoint.substring(0, 30), error.message);
-        failed++;
-        results.push({
-          endpoint_host: new URL(subscription.endpoint).hostname,
-          error: error.message
+          error: error.message,
+          status_code: error.statusCode
         });
       }
     }
