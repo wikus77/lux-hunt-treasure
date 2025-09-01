@@ -3,18 +3,19 @@
 
 console.log('🔥 M1SSION Firebase SW loaded');
 
-// Importa gli script Firebase
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js');
-importScripts('https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js');
+// Import Firebase scripts using the correct M1SSION™ config
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
+importScripts('/firebase-init.js');
 
-// Configurazione Firebase - deve corrispondere al client
-const firebaseConfig = {
-  apiKey: "AIzaSyDt7BJ9kV8Jm9aH3GbS6kL4fP2eR9xW7qZ",
-  authDomain: "lux-hunt-treasure.firebaseapp.com",
-  projectId: "lux-hunt-treasure",
-  storageBucket: "lux-hunt-treasure.appspot.com",
-  messagingSenderId: "987654321098",
-  appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l"
+// Use M1SSION™ configuration from firebase-init.js
+const firebaseConfig = self.__FIREBASE_CFG__ || {
+  apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
+  authDomain: "m1ssion-app.firebaseapp.com",
+  projectId: "m1ssion-app",
+  storageBucket: "m1ssion-app.firebasestorage.app",
+  messagingSenderId: "21417361168",
+  appId: "1:21417361168:web:58841299455ee4bcc7af95"
 };
 
 // Inizializza Firebase
@@ -23,8 +24,8 @@ firebase.initializeApp(firebaseConfig);
 // Ottieni l'istanza messaging
 const messaging = firebase.messaging();
 
-// Gestisci messaggi in background
-messaging.setBackgroundMessageHandler(function(payload) {
+// Gestisci messaggi in background (Firebase v10 compat)
+messaging.onBackgroundMessage(function(payload) {
   console.log('🔥 FCM Background message received:', payload);
   
   const notificationTitle = payload.notification?.title || payload.data?.title || 'M1SSION™';
