@@ -38,21 +38,36 @@ const Settings = () => {
   const [language, setLanguage] = useState("Italiano");
   const [pushEnabled, setPushEnabled] = useState(false);
 
-  // Check push subscription status on mount
+  // Check push subscription status on mount and refresh properly
   useEffect(() => {
-    (async () => {
+    const checkPushStatus = async () => {
       if ('serviceWorker' in navigator && 'PushManager' in window) {
         try {
-          const reg = await navigator.serviceWorker.getRegistration('/');
-          if (reg) {
-            const active = !!(await reg.pushManager.getSubscription());
-            setPushEnabled(active);
-          }
+          // Make sure we get the active registration, not just any registration
+          const reg = await navigator.serviceWorker.ready;
+          const subscription = await reg.pushManager.getSubscription();
+          const active = !!subscription;
+          
+          console.log('[Settings] Push subscription status:', { active, endpoint: subscription?.endpoint });
+          setPushEnabled(active);
         } catch (error) {
-          console.error('Error checking push subscription:', error);
+          console.error('[Settings] Error checking push subscription:', error);
+          setPushEnabled(false);
         }
+      } else {
+        setPushEnabled(false);
       }
-    })();
+    };
+    
+    checkPushStatus();
+    
+    // Also listen for focus events to refresh state when returning to page
+    const handleFocus = () => checkPushStatus();
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
   
   

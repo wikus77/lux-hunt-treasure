@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { useWebPush, type PushTestOptions } from '@/hooks/useWebPush';
+import { enableWebPush } from '@/lib/push/enableWebPush';
+import { disableWebPush } from '@/lib/push/disableWebPush';
+import { supabase } from '@/integrations/supabase/client';
 import { Bell, BellOff, Send, Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 // VAPID Public Key - safe to expose in frontend
@@ -26,29 +28,52 @@ export function PushEnableButton({
   className = ''
 }: PushEnableButtonProps) {
   const { toast } = useToast();
-  const {
-    isSupported,
-    isSubscribed,
-    isLoading,
-    permission,
-    subscribe,
-    saveSubscription,
-    testPush,
-    checkSubscription
-  } = useWebPush();
-
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState<any>(null);
   const [testLoading, setTestLoading] = useState(false);
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof window !== 'undefined' ? Notification.permission : 'default'
+  );
+
+  // Check browser support
+  const isSupported = typeof window !== 'undefined' && 
+    'serviceWorker' in navigator && 
+    'PushManager' in window && 
+    'Notification' in window;
 
   // Check subscription status on mount
   useEffect(() => {
-    checkSubscription().then(sub => {
-      if (sub) {
-        setSubscriptionData(sub);
-        onSubscriptionChange?.(true);
+    const checkSubscription = async () => {
+      if (!isSupported) return;
+      
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const subscription = await reg.pushManager.getSubscription();
+        
+        if (subscription) {
+          const subscriptionData = subscription.toJSON();
+          setSubscriptionData(subscriptionData);
+          setIsSubscribed(true);
+          onSubscriptionChange?.(true);
+        } else {
+          setIsSubscribed(false);
+          setSubscriptionData(null);
+          onSubscriptionChange?.(false);
+        }
+        
+        setPermission(Notification.permission);
+      } catch (error) {
+        console.error('[PushEnableButton] Error checking subscription:', error);
+        setIsSubscribed(false);
+        setSubscriptionData(null);
+        onSubscriptionChange?.(false);
       }
-    });
-  }, [checkSubscription, onSubscriptionChange]);
+    };
+    
+    checkSubscription();
+  }, [isSupported, onSubscriptionChange]);
 
   const handleEnablePush = async () => {
     if (!isSupported) {
@@ -60,20 +85,18 @@ export function PushEnableButton({
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      console.log('[PushEnableButton] Starting push enable process...');
+      console.log('[PushEnableButton] Starting W3C push enable process...');
       
-      // Step 1: Subscribe to push notifications
-      const subscription = await subscribe(VAPID_PUBLIC_KEY);
+      // Use our new W3C enableWebPush function
+      const subscription = await enableWebPush();
       console.log('[PushEnableButton] Subscription created:', subscription);
 
-      // Step 2: Save subscription to server
-      const saveResult = await saveSubscription(subscription, { 
-        user_id: userId 
-      });
-      console.log('[PushEnableButton] Subscription saved:', saveResult);
-
-      setSubscriptionData(subscription);
+      const subscriptionData = subscription.toJSON();
+      setSubscriptionData(subscriptionData);
+      setIsSubscribed(true);
       onSubscriptionChange?.(true);
 
       toast({
@@ -97,6 +120,39 @@ export function PushEnableButton({
         description: `Impossibile attivare le notifiche: ${errorMessage}`,
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDisablePush = async () => {
+    setIsLoading(true);
+
+    try {
+      console.log('[PushEnableButton] Disabling push notifications...');
+      
+      await disableWebPush();
+      
+      setSubscriptionData(null);
+      setIsSubscribed(false);
+      onSubscriptionChange?.(false);
+
+      toast({
+        title: "🔕 Notifiche disattivate",
+        description: "Non riceverai più notifiche push",
+        variant: "default"
+      });
+
+    } catch (error: any) {
+      console.error('[PushEnableButton] Disable push failed:', error);
+      
+      toast({
+        title: "❌ Errore",
+        description: `Impossibile disattivare le notifiche: ${error.message || error}`,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -115,27 +171,33 @@ export function PushEnableButton({
     try {
       console.log('[PushEnableButton] Sending test push...');
       
-      const testOptions: PushTestOptions = {
+      const testPayload = {
         endpoint: subscriptionData.endpoint,
-        user_id: userId,
         title: 'M1SSION™ Test ✅',
         body: 'Notifica di prova inviata con successo!',
-        url: '/home'
+        data: { url: '/settings', src: 'push-enable-button' }
       };
 
-      const result = await testPush(testOptions);
-      console.log('[PushEnableButton] Test push result:', result);
+      const { data, error } = await supabase.functions.invoke('push_send', {
+        body: testPayload
+      });
 
-      if (result?.sent > 0) {
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      console.log('[PushEnableButton] Test push result:', data);
+
+      if (data?.sent > 0) {
         toast({
           title: "🚀 Test inviato!",
-          description: `Notifica inviata con successo (${result.sent} inviate)`,
+          description: `Notifica inviata con successo (${data.sent} inviate)`,
           variant: "default"
         });
       } else {
         toast({
           title: "⚠️ Nessuna notifica inviata",
-          description: `Risultato: ${result?.note || 'Motivo sconosciuto'}`,
+          description: `Risultato: ${data?.note || 'Motivo sconosciuto'}`,
           variant: "default"
         });
       }
@@ -227,21 +289,36 @@ export function PushEnableButton({
               Attiva notifiche
             </Button>
           ) : (
-            showTestButton && (
+            <div className="flex gap-2 w-full">
+              {showTestButton && (
+                <Button
+                  onClick={handleTestPush}
+                  disabled={testLoading}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {testLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4 mr-2" />
+                  )}
+                  Invia test
+                </Button>
+              )}
               <Button
-                onClick={handleTestPush}
-                disabled={testLoading}
-                variant="outline"
-                className="flex-1"
+                onClick={handleDisablePush}
+                disabled={isLoading}
+                variant="destructive"
+                className={showTestButton ? "flex-1" : "w-full"}
               >
-                {testLoading ? (
+                {isLoading ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (
-                  <Send className="h-4 w-4 mr-2" />
+                  <BellOff className="h-4 w-4 mr-2" />
                 )}
-                Invia test
+                Disattiva
               </Button>
-            )
+            </div>
           )}
         </div>
 
