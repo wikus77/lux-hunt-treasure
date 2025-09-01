@@ -84,6 +84,8 @@ serve(async (req) => {
     }
 
     console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 50) + "...");
+    console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
+    console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
     // Upsert subscription by endpoint
     const { data, error } = await supabase
