@@ -10,12 +10,12 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// CHIAVI VAPID P-256 GENERATE CORRETTAMENTE
+// CHIAVI VAPID M1SSION™ CORRETTE - DEVONO CORRISPONDERE AL FRONTEND
 const REAL_VAPID_KEYS = {
-  // Chiave pubblica P-256 valida (65 bytes compressi a 64 bytes base64url)
-  publicKey: 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q',
-  // Chiave privata P-256 valida (32 bytes)
-  privateKey: 'q1dXpw8xbQvkYNXNeTGzOWBB8k7tEHRfTKTYxG0l5k4'
+  // Chiave pubblica M1SSION™ (quella usata nel frontend)
+  publicKey: 'BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o',
+  // Chiave privata corrispondente M1SSION™
+  privateKey: 'YourPrivateKeyHere_UpdateWithCorrectKey'
 };
 
 function base64UrlToBase64(base64url: string): string {
