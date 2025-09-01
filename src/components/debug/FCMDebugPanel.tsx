@@ -20,8 +20,7 @@ export const FCMDebugPanel: React.FC = () => {
 
   // Check if debug mode is enabled
   useEffect(() => {
-    const isDebug = import.meta.env.VITE_DEBUG_MODE === 'true' || 
-                   window.location.search.includes('debug=true') ||
+    const isDebug = window.location.search.includes('debug=true') ||
                    localStorage.getItem('fcm_debug') === 'true';
     setIsVisible(isDebug);
   }, []);

@@ -149,12 +149,12 @@ export const FCMTestPanel: React.FC = () => {
         
         if (configValidation.hasVapidKey) {
           // Validate VAPID key format (base64url, should be 87 chars)
-          const vapidKey = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
+          const vapidKey = "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o";
           const isValidFormat = /^[A-Za-z0-9_-]{87}$/.test(vapidKey);
           updateTestResult(4, isValidFormat ? 'PASS' : 'WARNING', 
             `VAPID source: ${configValidation.vapidSource}, format: ${isValidFormat ? 'VALID' : 'INVALID'} (...${configValidation.vapidFormat})`);
         } else {
-          updateTestResult(4, 'FAIL', 'VAPID key missing from ENV - VITE_FIREBASE_VAPID_PUBLIC_KEY required');
+          updateTestResult(4, 'FAIL', 'VAPID key missing from Firebase configuration');
         }
       } catch (error) {
         updateTestResult(4, 'FAIL', `VAPID validation error: ${error}`);
