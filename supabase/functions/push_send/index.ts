@@ -51,30 +51,47 @@ Deno.serve(async (req) => {
     const body = await req.json();
     console.log('[PUSH] 📥 Request body:', JSON.stringify(body, null, 2));
 
-    // Trova le subscription dal database
+    // Trova le subscription dal database usando la struttura corretta
     let subscriptions = [];
     
     if (body.endpoint) {
       // Cerca una subscription specifica
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('push_subscriptions')
-        .select('subscription')
-        .eq('subscription->>endpoint', body.endpoint)
+        .select('endpoint, p256dh, auth')
+        .eq('endpoint', body.endpoint)
         .limit(1);
       
-      if (data && data.length > 0) {
-        subscriptions = [data[0].subscription];
+      if (error) {
+        console.error('[PUSH] ❌ Database error:', error);
+      } else if (data && data.length > 0) {
+        const sub = data[0];
+        subscriptions = [{
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        }];
       }
     } else {
       // Prendi tutte le subscription attive
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('push_subscriptions')
-        .select('subscription')
+        .select('endpoint, p256dh, auth')
         .order('updated_at', { ascending: false })
         .limit(10);
       
-      if (data) {
-        subscriptions = data.map(row => row.subscription);
+      if (error) {
+        console.error('[PUSH] ❌ Database error:', error);
+      } else if (data) {
+        subscriptions = data.map(sub => ({
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          }
+        }));
       }
     }
 
