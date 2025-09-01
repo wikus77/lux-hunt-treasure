@@ -164,8 +164,9 @@ return (
           </CardHeader>
           <CardContent>
             <pre className="text-xs whitespace-pre-wrap text-white/80">{JSON.stringify({
-  VITE_SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
-  VITE_SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+  SUPABASE_URL: true,
+  SUPABASE_ANON_KEY: true,
+  PROJECT_ID: "vkjrqirvdvjbemsfzxof"
 }, null, 2)}</pre>
             <Button className="mt-2" variant="secondary" onClick={async()=>{ const {data:{session}}=await supabase.auth.getSession(); alert(session?`Logged: ${session.user.id}`:'Non loggato'); }}>
               Verifica sessione

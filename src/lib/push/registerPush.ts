@@ -16,8 +16,8 @@ const firebaseConfig = {
   appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l"
 };
 
-// VAPID Key from environment - NO FALLBACK
-const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY;
+// VAPID Key from Firebase config
+const VAPID_KEY = "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o";
 
 // Browser detection
 const getBrowserInfo = () => {
@@ -284,7 +284,7 @@ export const registerPush = async (
     if (!VAPID_KEY) {
       return {
         success: false,
-        error: 'Missing VAPID key - VITE_FIREBASE_VAPID_PUBLIC_KEY environment variable required'
+        error: 'Missing VAPID key - Firebase configuration required'
       };
     }
 

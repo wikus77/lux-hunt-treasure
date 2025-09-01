@@ -19,8 +19,8 @@ export async function enableWebPush() {
     const p = await Notification.requestPermission();
     if (p !== 'granted') throw new Error('permesso negato');
   }
-  const vapid = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
-  if (!vapid) throw new Error('VITE_VAPID_PUBLIC_KEY mancante');
+  const vapid = "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o";
+  if (!vapid) throw new Error('VAPID key mancante');
 
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
@@ -38,13 +38,13 @@ export async function enableWebPush() {
     };
   })();
 
-  const url = `${import.meta.env.VITE_SUPA_URL}/functions/v1/push_subscribe`;
+  const url = "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_subscribe";
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'apikey': import.meta.env.VITE_SUPA_ANON_KEY,
-      'Authorization': `Bearer ${import.meta.env.VITE_SUPA_ANON_KEY}`,
+      'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+      'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
       'Origin': window.location.origin,
     },
     body: JSON.stringify(body),

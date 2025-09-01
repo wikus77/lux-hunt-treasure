@@ -48,7 +48,7 @@ export const QRMapDisplay: React.FC<{ userLocation?: { lat:number; lng:number } 
   const RADIUS_M = 500;
   const NEAR_M = 75;
   // DISABLED: const watcher = useGeoWatcher();
-  const showGeoDebug = (import.meta.env.DEV) && (((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (new URLSearchParams(window.location.search).get('geo') === '1'));
+  const showGeoDebug = (import.meta.env.DEV) && (new URLSearchParams(window.location.search).get('geo') === '1');
   const TRACE_ID = 'M1QR-TRACE';
 
   const icon = (active:boolean) => L.divIcon({

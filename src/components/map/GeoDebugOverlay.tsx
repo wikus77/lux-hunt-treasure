@@ -20,7 +20,7 @@ function markNotified(code:string){ try{ localStorage.setItem(`qr-notified:${cod
 
 export const GeoDebugOverlay: React.FC = () => {
   const dev = !!import.meta.env.DEV;
-  const enabled = ((import.meta as any).env?.VITE_SHOW_GEO_DEBUG === '1') || (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('geo'));
+  const enabled = (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('geo'));
   const { granted, coords, ts, error, requestPermissions } = useGeoWatcher();
   if (!enabled) return null;
 
