@@ -125,13 +125,15 @@ Deno.serve(async (req) => {
       try {
         console.log(`[PUSH] 🚀 Sending to endpoint: ${subscription.endpoint.substring(0, 50)}...`);
         
-        // Invio diretto ad Apple Push Service
+        // Invio diretto ad Apple Push Service con header corretti
         const pushResponse = await fetch(subscription.endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `vapid t=${await generateVapidToken(subscription.endpoint)}, k=${VAPID_PUBLIC_KEY}`,
-            'TTL': '60'
+            'Authorization': `Bearer ${await generateVapidToken(subscription.endpoint)}`,
+            'apns-topic': 'app.lovable.2716f91b957c47ba91e06f572f3ce00d',
+            'apns-expiration': '0',
+            'apns-priority': '10'
           },
           body: JSON.stringify(notification)
         });
