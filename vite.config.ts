@@ -42,6 +42,7 @@ export default defineConfig(({ mode }) => ({
         importScripts: ['/sw-push.js'],
         skipWaiting: true,
         clientsClaim: true,
+        navigateFallbackDenylist: [/^\/ios-check\.html$/, /^\/push-diag\.html$/],
         globIgnores: [
           '**/lovable-uploads/**',
           '**/*.{png,jpg,jpeg}', // Exclude all images from precaching
@@ -84,7 +85,7 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      includeAssets: ['favicon.ico', 'sw-push.js', 'push-health.txt'],
+      includeAssets: ['favicon.ico', 'sw-push.js', 'push-health.txt', 'ios-check.html', 'push-diag.html'],
       manifest: {
         name: 'M1SSION™',
         short_name: 'M1SSION',

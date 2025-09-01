@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M1SSION™ - iOS Push Check</title>
+    <style>
+        body { font-family: system-ui; padding: 20px; background: #000; color: #fff; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 8px; }
+        .ok { background: #1f5f3f; border: 1px solid #22c55e; }
+        .error { background: #5f1f1f; border: 1px solid #ef4444; }
+        .warning { background: #5f4f1f; border: 1px solid #eab308; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2563eb; }
+        .endpoint { font-family: monospace; font-size: 12px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <h1>🍎 M1SSION™ iOS Push Check</h1>
+    <p>Questo tool verifica il supporto Web Push su iOS Safari.</p>
+    
+    <div id="results"></div>
+    
+    <button onclick="runCheck()">🔍 Verifica iOS Push</button>
+    <button onclick="testSubscribe()">📱 Test Subscribe</button>
+    
+    <script>
+        const VAPID_KEY = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            document.getElementById('results').appendChild(div);
+        }
+        
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+        
+        async function runCheck() {
+            document.getElementById('results').innerHTML = '';
+            
+            // 1. Platform Detection
+            const ua = navigator.userAgent;
+            const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+            
+            log(`🔍 Platform: ${navigator.platform}`, 'info');
+            log(`📱 iOS Device: ${isIOS ? 'YES' : 'NO'}`, isIOS ? 'ok' : 'warning');
+            log(`🦁 Safari Browser: ${isSafari ? 'YES' : 'NO'}`, isSafari ? 'ok' : 'warning');
+            
+            // 2. API Support
+            const hasSW = 'serviceWorker' in navigator;
+            const hasPush = 'PushManager' in window;
+            const hasNotif = 'Notification' in window;
+            
+            log(`⚙️ Service Worker: ${hasSW ? 'SUPPORTED' : 'NOT SUPPORTED'}`, hasSW ? 'ok' : 'error');
+            log(`📨 Push Manager: ${hasPush ? 'SUPPORTED' : 'NOT SUPPORTED'}`, hasPush ? 'ok' : 'error');
+            log(`🔔 Notifications: ${hasNotif ? 'SUPPORTED' : 'NOT SUPPORTED'}`, hasNotif ? 'ok' : 'error');
+            
+            // 3. Permissions
+            if (hasNotif) {
+                log(`🔐 Permission: ${Notification.permission}`, 
+                     Notification.permission === 'granted' ? 'ok' : 'warning');
+            }
+            
+            // 4. Check existing subscription
+            if (hasSW && hasPush) {
+                try {
+                    const registration = await navigator.serviceWorker.getRegistration();
+                    if (registration) {
+                        const subscription = await registration.pushManager.getSubscription();
+                        if (subscription) {
+                            const endpoint = subscription.endpoint;
+                            const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
+                            
+                            log(`✅ Existing Subscription Found`, 'ok');
+                            log(`🔗 Endpoint: <div class="endpoint">${endpoint}</div>`, 'info');
+                            log(`🍎 Apple Push: ${isApple ? 'YES' : 'NO'}`, isApple ? 'ok' : 'warning');
+                        } else {
+                            log(`ℹ️ No existing subscription`, 'info');
+                        }
+                    }
+                } catch (error) {
+                    log(`❌ Error checking subscription: ${error.message}`, 'error');
+                }
+            }
+            
+            // 5. Expected behavior
+            if (isIOS && isSafari && hasPush) {
+                log(`🎯 iOS Safari should create web.push.apple.com endpoints`, 'ok');
+            } else if (!isIOS && hasPush) {
+                log(`🎯 Non-iOS should create fcm.googleapis.com endpoints`, 'ok');
+            }
+        }
+        
+        async function testSubscribe() {
+            try {
+                log(`🚀 Starting subscription test...`, 'info');
+                
+                if (Notification.permission !== 'granted') {
+                    const permission = await Notification.requestPermission();
+                    if (permission !== 'granted') {
+                        throw new Error('Permission denied');
+                    }
+                }
+                
+                const registration = await navigator.serviceWorker.register('/sw.js');
+                await navigator.serviceWorker.ready;
+                
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(VAPID_KEY)
+                });
+                
+                const endpoint = subscription.endpoint;
+                const isApple = endpoint.includes('web.push.apple.com') || endpoint.includes('api.push.apple.com');
+                const isFCM = endpoint.includes('fcm.googleapis.com');
+                
+                log(`✅ Subscription successful!`, 'ok');
+                log(`🔗 Endpoint: <div class="endpoint">${endpoint}</div>`, 'info');
+                log(`🍎 Apple Push: ${isApple ? 'YES' : 'NO'}`, isApple ? 'ok' : 'warning');
+                log(`🟢 FCM Push: ${isFCM ? 'YES' : 'NO'}`, isFCM ? 'ok' : 'warning');
+                
+                // Save to Supabase
+                const saveResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                    },
+                    body: JSON.stringify({
+                        endpoint: subscription.endpoint,
+                        p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')))),
+                        auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')))),
+                        ua: navigator.userAgent,
+                        platform: navigator.platform
+                    })
+                });
+                
+                if (saveResult.ok) {
+                    const data = await saveResult.json();
+                    log(`💾 Saved to database: ${data.endpoint_type}`, 'ok');
+                } else {
+                    log(`⚠️ Failed to save to database: ${saveResult.status}`, 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Subscription failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-run check on load
+        window.addEventListener('load', runCheck);
+    </script>
+</body>
+</html>

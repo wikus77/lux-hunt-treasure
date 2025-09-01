@@ -20,8 +20,10 @@ import AppSection from "@/components/settings/AppSection";
 
 import SupportSection from "@/components/settings/SupportSection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
-import { FirebasePushNotificationTest } from "@/components/admin/FirebasePushNotificationTest";
+import { PushEnableButton } from "@/components/push/PushEnableButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { enableWebPush } from "@/lib/push/enableWebPush";
+import { disableWebPush } from "@/lib/push/disableWebPush";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
@@ -32,6 +34,24 @@ const Settings = () => {
   // Add state for app settings
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
+  const [pushEnabled, setPushEnabled] = useState(false);
+
+  // Check push subscription status on mount
+  useEffect(() => {
+    (async () => {
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        try {
+          const reg = await navigator.serviceWorker.getRegistration('/');
+          if (reg) {
+            const active = !!(await reg.pushManager.getSubscription());
+            setPushEnabled(active);
+          }
+        } catch (error) {
+          console.error('Error checking push subscription:', error);
+        }
+      }
+    })();
+  }, []);
   
   
   const handleLogout = async () => {
@@ -146,7 +166,11 @@ const Settings = () => {
 
           <TabsContent value="push-test" className="mt-6">
             <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-700">
-              <FirebasePushNotificationTest />
+              <PushEnableButton 
+                showTestButton={true}
+                onSubscriptionChange={(subscribed) => setPushEnabled(subscribed)}
+                className="bg-transparent border-zinc-700"
+              />
             </div>
           </TabsContent>
         </Tabs>
