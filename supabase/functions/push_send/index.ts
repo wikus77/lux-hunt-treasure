@@ -10,13 +10,12 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// CHIAVI VAPID M1SSION™ - CORRETTE E STATICHE PER APPLE PUSH
-// Queste chiavi sono state generate e testate con Apple Push
+// CHIAVI VAPID M1SSION™ - FIREBASE REALI FORNITE DALL'UTENTE
 const REAL_VAPID_KEYS = {
-  // Chiave pubblica M1SSION™ che funziona con Apple (dai test ios-check)
+  // Chiave pubblica M1SSION™ Firebase (quella che già funziona)
   publicKey: 'BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o',
-  // Chiave privata corrispondente - DEVO USARE QUELLA CORRETTA DA FIREBASE
-  privateKey: 'USE_FIREBASE_PRIVATE_KEY_HERE'
+  // Chiave privata M1SSION™ Firebase (fornita dall'utente)
+  privateKey: 'BOyD6i2o-KW1bAGOAFuQtxIYHpNqZpNJ0Q4YOuTYx8f8exw-DkZo_3KweeRXEKr91xDKMnTRe-yyY3PO5Jg-YBI'
 };
 
 function base64UrlToBase64(base64url: string): string {
@@ -137,58 +136,13 @@ serve(async (req) => {
     const body = await req.json();
     console.log('[PUSH] Request:', JSON.stringify(body, null, 2));
 
-    // Verifica se la chiave privata è valida
-    if (REAL_VAPID_KEYS.privateKey === 'USE_FIREBASE_PRIVATE_KEY_HERE') {
-      console.error('[PUSH] ❌ INVALID PRIVATE KEY - Need to generate new VAPID keys!');
-      
-      // Genera nuove chiavi VAPID automaticamente
-      console.log('[PUSH] 🔧 Generating new VAPID key pair...');
-      
-      const keyPair = await crypto.subtle.generateKey(
-        {
-          name: 'ECDSA',
-          namedCurve: 'P-256'
-        },
-        true,
-        ['sign', 'verify']
-      );
-
-      const publicKeyRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
-      const privateKeyRaw = await crypto.subtle.exportKey('raw', keyPair.privateKey);
-
-      const newPublicKey = base64UrlEncode(publicKeyRaw);
-      const newPrivateKey = base64UrlEncode(privateKeyRaw);
-
-      console.log('[PUSH] ✅ New VAPID keys generated:');
-      console.log('[PUSH] 🔑 Public Key:', newPublicKey);
-      console.log('[PUSH] 🔑 Private Key:', newPrivateKey.substring(0, 20) + '...');
-      
-      // Usa le nuove chiavi per questa richiesta
-      REAL_VAPID_KEYS.publicKey = newPublicKey;
-      REAL_VAPID_KEYS.privateKey = newPrivateKey;
-      
-      // Importa la nuova chiave privata
-      const privateKey = await importVapidPrivateKey(newPrivateKey);
-      console.log('[PUSH] ✅ New VAPID private key imported successfully');
-      
-      return new Response(
-        JSON.stringify({
-          error: 'New VAPID keys generated',
-          message: 'Update frontend with new public key',
-          new_public_key: newPublicKey,
-          new_private_key: newPrivateKey.substring(0, 20) + '...',
-          instruction: 'Copy the new public key to frontend and try again'
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      );
-    }
-
-    // Importa la chiave privata VAPID M1SSION™
+    // Importa la chiave privata VAPID M1SSION™ Firebase (CORRETTA!)
+    console.log('[PUSH] 🔑 Using M1SSION Firebase VAPID keys');
+    console.log('[PUSH] 🔑 Public Key:', REAL_VAPID_KEYS.publicKey);
+    console.log('[PUSH] 🔑 Private Key length:', REAL_VAPID_KEYS.privateKey.length);
+    
     const privateKey = await importVapidPrivateKey(REAL_VAPID_KEYS.privateKey);
-    console.log('[PUSH] ✅ M1SSION VAPID private key imported successfully');
+    console.log('[PUSH] ✅ M1SSION Firebase VAPID private key imported successfully');
 
     // Trova subscriptions
     let subscriptions = [];
