@@ -41,19 +41,72 @@ function base64UrlEncode(data: ArrayBuffer | Uint8Array): string {
 }
 
 async function importVapidPrivateKey(privateKeyBase64Url: string): Promise<CryptoKey> {
-  const privateKeyBytes = base64UrlDecode(privateKeyBase64Url);
+  console.log('[PUSH] 🔧 Importing VAPID private key...');
+  console.log('[PUSH] 🔧 Key length:', privateKeyBase64Url.length);
   
-  // Importa come chiave raw P-256
-  return await crypto.subtle.importKey(
-    'raw',
-    privateKeyBytes,
-    {
-      name: 'ECDSA',
-      namedCurve: 'P-256'
-    },
-    false,
-    ['sign']
-  );
+  const privateKeyBytes = base64UrlDecode(privateKeyBase64Url);
+  console.log('[PUSH] 🔧 Decoded bytes length:', privateKeyBytes.length);
+  
+  // Per VAPID, la chiave privata è raw bytes (32 bytes per P-256)
+  if (privateKeyBytes.length !== 32) {
+    throw new Error(`Invalid private key length: ${privateKeyBytes.length}, expected 32 bytes`);
+  }
+  
+  try {
+    // Importa come chiave raw P-256 per ECDSA
+    const key = await crypto.subtle.importKey(
+      'raw',
+      privateKeyBytes,
+      {
+        name: 'ECDSA',
+        namedCurve: 'P-256'
+      },
+      false,
+      ['sign']
+    );
+    console.log('[PUSH] ✅ Private key imported successfully');
+    return key;
+  } catch (error) {
+    console.error('[PUSH] ❌ Key import failed:', error);
+    
+    // Prova metodo alternativo - potrebbe essere in formato PKCS#8
+    try {
+      console.log('[PUSH] 🔧 Trying PKCS#8 format...');
+      
+      // Costruisce header PKCS#8 per chiave P-256
+      const pkcs8Header = new Uint8Array([
+        0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02, 0x01, 0x01, 0x04, 0x20
+      ]);
+      const pkcs8Suffix = new Uint8Array([
+        0xa1, 0x44, 0x03, 0x42, 0x00
+      ]);
+      
+      // Dobbiamo anche avere la chiave pubblica, usiamo quella dal vapid.json
+      const publicKeyBytes = base64UrlDecode('BMrCxTSkgHgNAynMRoieqvKPeEPq1L-dk7-hY4jyBSEt6Rwk9O7XfrR5VmQmLMOBWTycyONDk1oKGxhxuhcunkI');
+      
+      const pkcs8Key = new Uint8Array(pkcs8Header.length + 32 + pkcs8Suffix.length + publicKeyBytes.length);
+      pkcs8Key.set(pkcs8Header, 0);
+      pkcs8Key.set(privateKeyBytes, pkcs8Header.length);
+      pkcs8Key.set(pkcs8Suffix, pkcs8Header.length + 32);
+      pkcs8Key.set(publicKeyBytes, pkcs8Header.length + 32 + pkcs8Suffix.length);
+      
+      const keyPkcs8 = await crypto.subtle.importKey(
+        'pkcs8',
+        pkcs8Key,
+        {
+          name: 'ECDSA',
+          namedCurve: 'P-256'
+        },
+        false,
+        ['sign']
+      );
+      console.log('[PUSH] ✅ Private key imported with PKCS#8 format');
+      return keyPkcs8;
+    } catch (pkcs8Error) {
+      console.error('[PUSH] ❌ PKCS#8 import also failed:', pkcs8Error);
+      throw new Error(`Failed to import VAPID private key: ${error.message}`);
+    }
+  }
 }
 
 async function createVapidJWT(privateKey: CryptoKey, audience: string): Promise<string> {
