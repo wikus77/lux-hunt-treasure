@@ -45,3 +45,11 @@ verify_jwt = false
 
 [functions.store-fcm-token]
 verify_jwt = true
+
+[functions.push_subscribe]
+# Public function for push subscription
+verify_jwt = false
+
+[functions.push_send]
+# Public function for sending push notifications
+verify_jwt = false
