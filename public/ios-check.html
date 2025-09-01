@@ -239,7 +239,7 @@
                 log(`🚀 Sending test push notification...`, 'info');
                 
                 const sendPayload = {
-                    endpoint: currentSubscription.endpoint,
+                    subscription: currentSubscription,
                     title: 'M1SSION™ iOS Test ✅',
                     body: 'iOS Safari push working perfectly!',
                     data: { url: '/ios-check.html', src: 'ios-test' }
