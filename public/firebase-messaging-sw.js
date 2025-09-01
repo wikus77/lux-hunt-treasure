@@ -8,8 +8,8 @@ importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 importScripts('/firebase-init.js');
 
-// Use M1SSION™ configuration from firebase-init.js
-const firebaseConfig = self.__FIREBASE_CFG__ || {
+// M1SSION™ Firebase Configuration - UNIFIED
+const firebaseConfig = {
   apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
   authDomain: "m1ssion-app.firebaseapp.com",
   projectId: "m1ssion-app",

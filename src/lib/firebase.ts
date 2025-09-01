@@ -5,17 +5,18 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import type { MessagePayload } from 'firebase/messaging';
 
+// M1SSION™ Firebase Configuration - UNIFIED
 const firebaseConfig = {
-  apiKey: "AIzaSyDt7BJ9kV8Jm9aH3GbS6kL4fP2eR9xW7qZ",
-  authDomain: "lux-hunt-treasure.firebaseapp.com",
-  projectId: "lux-hunt-treasure", 
-  storageBucket: "lux-hunt-treasure.appspot.com",
-  messagingSenderId: "987654321098",
-  appId: "1:987654321098:web:1a2b3c4d5e6f7g8h9i0j1k2l"
+  apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
+  authDomain: "m1ssion-app.firebaseapp.com",
+  projectId: "m1ssion-app",
+  storageBucket: "m1ssion-app.firebasestorage.app",
+  messagingSenderId: "21417361168",
+  appId: "1:21417361168:web:58841299455ee4bcc7af95"
 };
 
-// VAPID Key for Web Push - CHIAVE P-256 VALIDA GENERATA CORRETTAMENTE
-const VAPID_KEY = "BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA";
+// M1SSION™ VAPID Key from vapid.json - UNIFIED
+const VAPID_KEY = "BMrCxTSkgHgNAynMRoieqvKPeEPq1L-dk7-hY4jyBSEt6Rwk9O7XfrR5VmQmLMOBWTycyONDk1oKGxhxuhcunkI";
 
 // Initialize Firebase - Check if app already exists to prevent duplicate error
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
