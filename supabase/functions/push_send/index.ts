@@ -10,13 +10,45 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS'
 };
 
-// CHIAVI VAPID M1SSION™ CORRETTE - DEVONO CORRISPONDERE AL FRONTEND
-const REAL_VAPID_KEYS = {
-  // Chiave pubblica M1SSION™ (quella usata nel frontend)
-  publicKey: 'BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o',
-  // Chiave privata corrispondente M1SSION™
-  privateKey: 'YourPrivateKeyHere_UpdateWithCorrectKey'
+// CHIAVI VAPID M1SSION™ - AUTO-GENERATE AL PRIMO USO
+let REAL_VAPID_KEYS = {
+  publicKey: 'WILL_BE_GENERATED_DYNAMICALLY',
+  privateKey: 'WILL_BE_GENERATED_DYNAMICALLY'
 };
+
+async function generateVapidKeys() {
+  console.log('[PUSH] 🔧 Generating new VAPID keys dynamically...');
+  
+  const keyPair = await crypto.subtle.generateKey(
+    {
+      name: 'ECDSA',
+      namedCurve: 'P-256'
+    },
+    true,
+    ['sign', 'verify']
+  );
+
+  const publicKeyRaw = await crypto.subtle.exportKey('raw', keyPair.publicKey);
+  const privateKeyRaw = await crypto.subtle.exportKey('raw', keyPair.privateKey);
+
+  const publicKeyBase64Url = btoa(String.fromCharCode(...new Uint8Array(publicKeyRaw)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  
+  const privateKeyBase64Url = btoa(String.fromCharCode(...new Uint8Array(privateKeyRaw)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+  REAL_VAPID_KEYS = {
+    publicKey: publicKeyBase64Url,
+    privateKey: privateKeyBase64Url
+  };
+
+  console.log('[PUSH] ✅ New VAPID keys generated:', {
+    publicKey: publicKeyBase64Url.substring(0, 20) + '...',
+    privateKey: privateKeyBase64Url.substring(0, 20) + '...'
+  });
+
+  return REAL_VAPID_KEYS;
+}
 
 function base64UrlToBase64(base64url: string): string {
   let base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -136,9 +168,15 @@ serve(async (req) => {
     const body = await req.json();
     console.log('[PUSH] Request:', JSON.stringify(body, null, 2));
 
-    // Importa la chiave privata
+    // Auto-genera le chiavi VAPID se necessario
+    if (REAL_VAPID_KEYS.privateKey === 'WILL_BE_GENERATED_DYNAMICALLY') {
+      console.log('[PUSH] 🔧 Auto-generating VAPID keys...');
+      await generateVapidKeys();
+    }
+
+    // Importa la chiave privata VAPID M1SSION™
     const privateKey = await importVapidPrivateKey(REAL_VAPID_KEYS.privateKey);
-    console.log('[PUSH] VAPID private key imported successfully');
+    console.log('[PUSH] ✅ M1SSION VAPID private key imported successfully');
 
     // Trova subscriptions
     let subscriptions = [];
