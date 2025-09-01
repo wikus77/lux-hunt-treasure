@@ -22,9 +22,10 @@
     <div id="results"></div>
     
     <button onclick="runCheck()">🔍 Verifica iOS Push</button>
-    <button onclick="testVAPIDKey()">🔑 Test VAPID Key</button>
+    <button onclick="clearSubscription()">🧹 Clear Subscription</button>
     <button onclick="testSubscribe()">📱 Test Subscribe</button>
     <button onclick="testSend()" id="send-btn" disabled>🚀 Test Send Push</button>
+    <button onclick="testVAPIDKey()">🔑 Test VAPID Key</button>
     <button onclick="generateNewKeys()">🔧 Generate New VAPID</button>
     
     <script>
@@ -121,6 +122,32 @@
             }
         }
         
+        async function clearSubscription() {
+            try {
+                log(`🧹 Clearing existing subscription...`, 'info');
+                
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    const subscription = await registration.pushManager.getSubscription();
+                    if (subscription) {
+                        await subscription.unsubscribe();
+                        log(`✅ Subscription cleared successfully!`, 'ok');
+                    } else {
+                        log(`ℹ️ No existing subscription to clear`, 'info');
+                    }
+                } else {
+                    log(`ℹ️ No service worker registration found`, 'info');
+                }
+                
+                // Clear current subscription reference
+                currentSubscription = null;
+                document.getElementById('send-btn').disabled = true;
+                
+            } catch (error) {
+                log(`❌ Failed to clear subscription: ${error.message}`, 'error');
+            }
+        }
+
         async function testSubscribe() {
             try {
                 log(`🚀 Starting subscription test...`, 'info');
@@ -129,6 +156,16 @@
                     const permission = await Notification.requestPermission();
                     if (permission !== 'granted') {
                         throw new Error('Permission denied');
+                    }
+                }
+                
+                // CRITICAL: Clear any existing subscription with different VAPID key
+                const existingReg = await navigator.serviceWorker.getRegistration();
+                if (existingReg) {
+                    const existingSub = await existingReg.pushManager.getSubscription();
+                    if (existingSub) {
+                        log(`⚠️ Found existing subscription, clearing to avoid key mismatch...`, 'warning');
+                        await existingSub.unsubscribe();
                     }
                 }
                 
@@ -289,7 +326,9 @@
                 const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/vapid_generator', {
                     method: 'GET',
                     headers: {
-                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+                        'Content-Type': 'application/json',
+                        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
                     }
                 });
                 
