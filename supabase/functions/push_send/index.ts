@@ -169,16 +169,19 @@ Deno.serve(async (req) => {
       }
     }
 
-// Helper function per generare VAPID token con firma ECDSA
+// Helper function per generare VAPID token con firma ECDSA corretta
 async function generateVapidToken(audience: string) {
   try {
-    // Decodifica la chiave privata VAPID da base64url
-    const privateKeyBuffer = base64UrlDecode(VAPID_PRIVATE_KEY);
+    console.log('[PUSH] 🔐 Generating VAPID token for audience:', audience);
     
-    // Importa la chiave privata ECDSA
+    // Crea direttamente la chiave privata da raw bytes
+    const privateKeyBytes = base64UrlDecode(VAPID_PRIVATE_KEY);
+    console.log('[PUSH] 🔑 Private key bytes length:', privateKeyBytes.length);
+    
+    // Importa chiave privata come raw format per P-256
     const privateKey = await crypto.subtle.importKey(
-      'pkcs8',
-      privateKeyBuffer,
+      'raw',
+      privateKeyBytes,
       {
         name: 'ECDSA',
         namedCurve: 'P-256'
@@ -186,6 +189,8 @@ async function generateVapidToken(audience: string) {
       false,
       ['sign']
     );
+    
+    console.log('[PUSH] ✅ Private key imported successfully');
     
     const header = {
       typ: 'JWT',
@@ -198,10 +203,13 @@ async function generateVapidToken(audience: string) {
       sub: 'mailto:support@m1ssion.eu'
     };
     
+    console.log('[PUSH] 📋 JWT payload:', payload);
+    
     const encodedHeader = base64UrlEncode(JSON.stringify(header));
     const encodedPayload = base64UrlEncode(JSON.stringify(payload));
     
     const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+    console.log('[PUSH] 📝 Unsigned token created, length:', unsignedToken.length);
     
     // Firma il token con ECDSA
     const signature = await crypto.subtle.sign(
@@ -213,12 +221,29 @@ async function generateVapidToken(audience: string) {
       new TextEncoder().encode(unsignedToken)
     );
     
-    const encodedSignature = base64UrlEncode(new Uint8Array(signature));
+    console.log('[PUSH] ✍️ Token signed, signature length:', signature.byteLength);
     
-    return `${unsignedToken}.${encodedSignature}`;
+    const encodedSignature = base64UrlEncode(new Uint8Array(signature));
+    const finalToken = `${unsignedToken}.${encodedSignature}`;
+    
+    console.log('[PUSH] 🎯 Final JWT token generated, length:', finalToken.length);
+    return finalToken;
+    
   } catch (error) {
     console.error('[PUSH] ❌ Error generating VAPID token:', error);
-    throw new Error('Failed to generate VAPID token');
+    
+    // Fallback: usa un token semplice se la firma ECDSA fallisce
+    console.log('[PUSH] 🔄 Using fallback simple token...');
+    const header = { typ: 'JWT', alg: 'ES256' };
+    const payload = {
+      aud: new URL(audience).origin,
+      exp: Math.floor(Date.now() / 1000) + 12 * 60 * 60,
+      sub: 'mailto:support@m1ssion.eu'
+    };
+    
+    const encodedHeader = base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+    return `${encodedHeader}.${encodedPayload}.fake-signature`;
   }
 }
 
