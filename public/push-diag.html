@@ -176,7 +176,7 @@
                 
                 // Register service worker
                 showStatus('subscription-status', '⚙️ Registering service worker...', 'info');
-                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                const registration = await navigator.serviceWorker.register('/sw-test.js', { scope: '/' });
                 await navigator.serviceWorker.ready;
                 log('Service worker registered');
                 
@@ -200,11 +200,13 @@
                 // Save to Supabase
                 showStatus('subscription-status', '💾 Saving to database...', 'info');
                 const subscriptionData = {
+                    keys: {
+                        p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')))),
+                        auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth'))))
+                    },
                     endpoint: subscription.endpoint,
-                    p256dh: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')))),
-                    auth: btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')))),
                     ua: navigator.userAgent,
-                    platform: navigator.platform,
+                    platform: endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm',
                     user_id: 'push-diag-test-' + Date.now()
                 };
                 

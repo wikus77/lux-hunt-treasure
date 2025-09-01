@@ -24,6 +24,8 @@ import { PushEnableButton } from "@/components/push/PushEnableButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { enableWebPush } from "@/lib/push/enableWebPush";
 import { disableWebPush } from "@/lib/push/disableWebPush";
+import { PushTest } from "@/components/push/PushTest";
+import { PushDiagnostics } from "@/components/push/PushDiagnostics";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
@@ -164,7 +166,9 @@ const Settings = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="push-test" className="mt-6">
+          <TabsContent value="push-test" className="mt-6 space-y-4">
+            <PushDiagnostics />
+            
             <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-700">
               <PushEnableButton 
                 showTestButton={true}
@@ -172,6 +176,10 @@ const Settings = () => {
                 className="bg-transparent border-zinc-700"
               />
             </div>
+            
+            {pushEnabled && (
+              <PushTest />
+            )}
           </TabsContent>
         </Tabs>
       </div>
