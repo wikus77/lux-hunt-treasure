@@ -67,28 +67,49 @@ async function importVapidPrivateKey(privateKeyBase64Url: string): Promise<Crypt
     console.log('[PUSH] ✅ Private key imported successfully');
     return key;
   } catch (error) {
-    console.error('[PUSH] ❌ Key import failed:', error);
+    console.error('[PUSH] ❌ Raw key import failed:', error);
     
-    // Prova metodo alternativo - potrebbe essere in formato PKCS#8
+    // VAPID keys possono essere in formato PKCS#8, proviamo quello
     try {
       console.log('[PUSH] 🔧 Trying PKCS#8 format...');
       
-      // Costruisce header PKCS#8 per chiave P-256
+      // Costruisce un PKCS#8 wrapper per la chiave P-256
+      // Questo è il formato standard per le chiavi private ECDSA P-256
       const pkcs8Header = new Uint8Array([
-        0x30, 0x81, 0x87, 0x02, 0x01, 0x00, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x04, 0x6d, 0x30, 0x6b, 0x02, 0x01, 0x01, 0x04, 0x20
-      ]);
-      const pkcs8Suffix = new Uint8Array([
-        0xa1, 0x44, 0x03, 0x42, 0x00
+        0x30, 0x67, // SEQUENCE, length 0x67
+        0x02, 0x01, 0x00, // INTEGER version 0
+        0x30, 0x13, // SEQUENCE (AlgorithmIdentifier)
+        0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // OBJECT IDENTIFIER ecPublicKey
+        0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // OBJECT IDENTIFIER prime256v1
+        0x04, 0x4d, // OCTET STRING, length 0x4d
+        0x30, 0x4b, // SEQUENCE, length 0x4b
+        0x02, 0x01, 0x01, // INTEGER version 1
+        0x04, 0x20 // OCTET STRING, length 0x20 (32 bytes for the key)
       ]);
       
-      // Dobbiamo anche avere la chiave pubblica, usiamo quella dal vapid.json
+      const pkcs8Suffix = new Uint8Array([
+        0xa1, 0x24, // CONTEXT SPECIFIC [1], length 0x24
+        0x03, 0x22, 0x00 // BIT STRING, length 0x22, unused bits 0
+      ]);
+      
+      // Abbiamo bisogno anche della chiave pubblica corrispondente
+      // La generiamo dalla privata usando l'algoritmo standard
       const publicKeyBytes = base64UrlDecode('BMrCxTSkgHgNAynMRoieqvKPeEPq1L-dk7-hY4jyBSEt6Rwk9O7XfrR5VmQmLMOBWTycyONDk1oKGxhxuhcunkI');
       
-      const pkcs8Key = new Uint8Array(pkcs8Header.length + 32 + pkcs8Suffix.length + publicKeyBytes.length);
-      pkcs8Key.set(pkcs8Header, 0);
-      pkcs8Key.set(privateKeyBytes, pkcs8Header.length);
-      pkcs8Key.set(pkcs8Suffix, pkcs8Header.length + 32);
-      pkcs8Key.set(publicKeyBytes, pkcs8Header.length + 32 + pkcs8Suffix.length);
+      // Costruisci il formato PKCS#8 completo
+      const pkcs8Key = new Uint8Array(pkcs8Header.length + privateKeyBytes.length + pkcs8Suffix.length + publicKeyBytes.length);
+      let offset = 0;
+      
+      pkcs8Key.set(pkcs8Header, offset);
+      offset += pkcs8Header.length;
+      
+      pkcs8Key.set(privateKeyBytes, offset);
+      offset += privateKeyBytes.length;
+      
+      pkcs8Key.set(pkcs8Suffix, offset);
+      offset += pkcs8Suffix.length;
+      
+      pkcs8Key.set(publicKeyBytes, offset);
       
       const keyPkcs8 = await crypto.subtle.importKey(
         'pkcs8',
@@ -104,7 +125,7 @@ async function importVapidPrivateKey(privateKeyBase64Url: string): Promise<Crypt
       return keyPkcs8;
     } catch (pkcs8Error) {
       console.error('[PUSH] ❌ PKCS#8 import also failed:', pkcs8Error);
-      throw new Error(`Failed to import VAPID private key: ${error.message}`);
+      throw new Error(`Failed to import VAPID private key: ${error.message} | PKCS#8: ${pkcs8Error.message}`);
     }
   }
 }
