@@ -5,7 +5,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -88,31 +88,38 @@ serve(async (req) => {
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
     // user_id può essere NULL per sottoscrizioni anonime
-    const finalUserId = user_id; // Non forzare un user_id di default
+    const finalUserId = user_id || null; // Explicitly allow NULL
     
     console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
 
-    // Upsert subscription by endpoint
-    const { data, error } = await supabase
-      .from("push_subscriptions")
-      .upsert({
+    // Upsert subscription by endpoint using REST API with SERVICE_ROLE_KEY
+    const upsertUrl = `${Deno.env.get("SUPABASE_URL")}/rest/v1/push_subscriptions`;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    const upsertResponse = await fetch(upsertUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceKey}`,
+        'apikey': serviceKey!,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
         endpoint,
         p256dh: keys.p256dh,
         auth: keys.auth,
         ua: ua ?? null,
         platform: platform ?? null,
-        user_id: finalUserId,  // Può essere NULL
+        user_id: finalUserId,
         updated_at: new Date().toISOString()
-      }, { 
-        onConflict: "endpoint" 
       })
-      .select()
-      .single();
+    });
 
-    if (error) {
-      console.error("[PUSH-SUBSCRIBE] Database error:", error);
+    if (!upsertResponse.ok) {
+      const errorText = await upsertResponse.text();
+      console.error("[PUSH-SUBSCRIBE] Upsert error:", upsertResponse.status, errorText);
       return new Response(
-        JSON.stringify({ error: error.message }), 
+        JSON.stringify({ error: `Database error: ${errorText}` }), 
         { 
           status: 500, 
           headers: { ...corsHeaders, "content-type": "application/json" }
@@ -120,7 +127,9 @@ serve(async (req) => {
       );
     }
 
-    console.log("[PUSH-SUBSCRIBE] Subscription registered successfully:", data.id);
+    const data = await upsertResponse.json();
+
+    console.log("[PUSH-SUBSCRIBE] Subscription registered successfully:", data);
 
     const endpointType = isApnsEndpoint ? 'APNs' : isFcmEndpoint ? 'FCM' : 'WNS';
     

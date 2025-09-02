@@ -6,7 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import webPush from "https://esm.sh/web-push@3.6.7";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -35,6 +35,14 @@ console.log('[PUSH] 🔑 VAPID verification:', {
   pub_fingerprint: Array.from(pubBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join(''),
   prv_fingerprint: Array.from(privBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join('')
 });
+
+// Verify VAPID key lengths
+if (pubBytes.length !== 65) {
+  console.error('[PUSH] ❌ VAPID PUBLIC KEY wrong length:', pubBytes.length, 'expected 65');
+}
+if (privBytes.length !== 32) {
+  console.error('[PUSH] ❌ VAPID PRIVATE KEY wrong length:', privBytes.length, 'expected 32');
+}
 
 // Configure web-push with VAPID
 webPush.setVapidDetails(
