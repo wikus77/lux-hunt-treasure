@@ -49,6 +49,7 @@
     <script>
         const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+        // Use SAME VAPID key from .env (BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q)
         const VAPID_PUBLIC_KEY = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
         
         let currentSubscription = null;
@@ -71,18 +72,33 @@
         }
         
         function urlB64ToUint8Array(base64String) {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding)
-                .replace(/-/g, '+')
-                .replace(/_/g, '/');
-            
-            const rawData = window.atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            
-            for (let i = 0; i < rawData.length; ++i) {
-                outputArray[i] = rawData.charCodeAt(i);
+            try {
+                const padding = '='.repeat((4 - base64String.length % 4) % 4);
+                const base64 = (base64String + padding)
+                    .replace(/-/g, '+')
+                    .replace(/_/g, '/');
+                
+                const rawData = window.atob(base64);
+                const outputArray = new Uint8Array(rawData.length);
+                
+                for (let i = 0; i < rawData.length; ++i) {
+                    outputArray[i] = rawData.charCodeAt(i);
+                }
+                
+                // Validate P-256 key format (65 bytes, starts with 0x04)
+                if (outputArray.length !== 65) {
+                    throw new Error(`Invalid VAPID key length: ${outputArray.length} bytes (expected 65)`);
+                }
+                if (outputArray[0] !== 0x04) {
+                    throw new Error(`Invalid VAPID key format: first byte 0x${outputArray[0].toString(16)} (expected 0x04)`);
+                }
+                
+                console.log('✅ VAPID key validation passed:', outputArray.length, 'bytes');
+                return outputArray;
+            } catch (error) {
+                console.error('❌ VAPID key conversion failed:', error);
+                throw error;
             }
-            return outputArray;
         }
         
         async function runSystemChecks() {
