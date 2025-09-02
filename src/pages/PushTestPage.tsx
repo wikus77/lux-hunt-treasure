@@ -20,7 +20,7 @@ interface PushTestState {
   swRegistration: ServiceWorkerRegistration | null;
 }
 
-const VAPID_PUBLIC = 'BHW33etXfpUnlLl5FwwsF1z7W48tPnlyJrF52zwEEEHiSIw0ED19ReIhFNm2DOiMTbJU_mPlFtqLGPboP6U-HHA';
+const VAPID_PUBLIC = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
 
 export default function PushTestPage() {
   const [state, setState] = useState<PushTestState>({
