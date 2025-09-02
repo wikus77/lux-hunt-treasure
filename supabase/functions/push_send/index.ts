@@ -37,6 +37,15 @@ console.log('[PUSH] 🔑 VAPID verification:', {
 });
 
 // Verify VAPID key lengths
+console.log('[PUSH] 🔑 VAPID key validation:', {
+  public_length: pubBytes.length,
+  private_length: privBytes.length,
+  expected_public: 65,
+  expected_private: 32,
+  public_valid: pubBytes.length === 65,
+  private_valid: privBytes.length === 32
+});
+
 if (pubBytes.length !== 65) {
   console.error('[PUSH] ❌ VAPID PUBLIC KEY wrong length:', pubBytes.length, 'expected 65');
 }
@@ -151,7 +160,7 @@ serve(async (req) => {
     for (const subscription of subscriptions) {
       try {
         const endpoint = subscription.endpoint;
-        console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 50)}...`);
+        console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 64)}...`);
         
         // Build proper subscription object for web-push
         const pushSubscription = {
@@ -162,7 +171,10 @@ serve(async (req) => {
           }
         };
         
-        console.log(`[PUSH] 📨 Subscription object:`, pushSubscription);
+        console.log(`[PUSH] 📨 Subscription keys:`, { 
+          p256dh_length: pushSubscription.keys.p256dh?.length,
+          auth_length: pushSubscription.keys.auth?.length 
+        });
         
         // Send using web-push library with VAPID
         const pushResult = await webPush.sendNotification(
@@ -175,30 +187,34 @@ serve(async (req) => {
           }
         );
 
-        console.log(`[PUSH] ✅ Web-push result:`, pushResult);
+        console.log(`[PUSH] ✅ Web-push result:`, pushResult.statusCode);
         
         sent++;
         results.push({
-          endpoint: endpoint.substring(0, 50) + '...',
+          endpoint: endpoint.substring(0, 64) + '...',
           ok: true,
           status: pushResult.statusCode || 200
         });
 
       } catch (error) {
-        console.error(`[PUSH] ❌ Web-push error:`, error);
+        console.error(`[PUSH] ❌ Web-push error:`, error.message);
         failed++;
         
         // Handle specific web-push errors
         if (error.statusCode === 404 || error.statusCode === 410) {
           console.log('[PUSH] 🗑️ Removing invalid subscription...');
-          await supabase
-            .from('push_subscriptions')
-            .delete()
-            .eq('endpoint', subscription.endpoint);
+          try {
+            await supabase
+              .from('push_subscriptions')
+              .delete()
+              .eq('endpoint', subscription.endpoint);
+          } catch (dbError) {
+            console.warn('[PUSH] Failed to clean up invalid subscription:', dbError.message);
+          }
         }
         
         results.push({
-          endpoint: subscription.endpoint?.substring(0, 50) + '...',
+          endpoint: subscription.endpoint?.substring(0, 64) + '...',
           ok: false,
           status: error.statusCode || 500,
           error: error.message

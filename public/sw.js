@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Service Worker - Web Push W3C Compliant
-// ver: push-20250902-061500
+// push-ver: 2025-09-02T070900Z
 
 const CACHE_NAME = 'mission-v2.1.0';
 const STATIC_CACHE = 'mission-static-v2.1.0';

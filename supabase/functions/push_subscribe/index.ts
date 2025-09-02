@@ -30,7 +30,19 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const body = await req.json();
+    let body;
+    try {
+      body = await req.json();
+    } catch (error) {
+      console.error("[PUSH-SUBSCRIBE] JSON parsing error:", error);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }), 
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "content-type": "application/json" }
+        }
+      );
+    }
     
     // Handle both flat structure and nested subscription structure
     let endpoint, keys, ua, platform, user_id;
@@ -83,7 +95,7 @@ serve(async (req) => {
       );
     }
 
-    console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 50) + "...");
+    console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 64) + "...");
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
