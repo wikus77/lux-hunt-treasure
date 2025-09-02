@@ -87,15 +87,8 @@ serve(async (req) => {
 
     const { user_id, title, body: messageBody, data: customData } = body;
     
-    if (!user_id) {
-      return new Response(JSON.stringify({ 
-        ok: false, 
-        error: 'user_id is required' 
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    // Allow null user_id for anonymous/test calls
+    const finalUserId = user_id || null;
 
     if (!title || !messageBody) {
       return new Response(JSON.stringify({ 
@@ -107,11 +100,17 @@ serve(async (req) => {
       });
     }
 
-    // Lookup all subscriptions for the user
-    const { data: subscriptions, error: dbError } = await supabase
-      .from('push_subscriptions')
-      .select('*')
-      .eq('user_id', user_id);
+    // Lookup subscriptions - handle both user_id and null user_id for testing
+    let query = supabase.from('push_subscriptions').select('*');
+    
+    if (finalUserId) {
+      query = query.eq('user_id', finalUserId);
+    } else {
+      // For testing, get recent subscriptions without user_id
+      query = query.is('user_id', null).order('created_at', { ascending: false }).limit(20);
+    }
+    
+    const { data: subscriptions, error: dbError } = await query;
 
     if (dbError) {
       console.error('[PUSH-SEND-CANARY] Database error:', dbError);
@@ -260,17 +259,29 @@ async function sendWebPushNotification(
     vapidPrivateKey
   );
   
-  // Prepare headers
+  // Prepare headers based on endpoint type
   const headers: Record<string, string> = {
     'Content-Type': 'application/octet-stream',
-    'Authorization': `vapid t=${vapidToken}, k=${vapidPublicKey}`,
     'TTL': '86400'
   };
   
-  // Add Crypto-Key header for VAPID authentication
-  headers['Crypto-Key'] = `p256ecdsa=${vapidPublicKey}`;
+  // Different header formats for different push services
+  if (subscription.endpoint.includes('fcm.googleapis.com')) {
+    // FCM requires WebPush format
+    headers['Authorization'] = `WebPush ${vapidToken}`;
+    headers['Crypto-Key'] = `p256ecdsa=${vapidPublicKey}`;
+  } else if (subscription.endpoint.includes('web.push.apple.com')) {
+    // Apple WebPush uses VAPID format
+    headers['Authorization'] = `vapid t=${vapidToken}, k=${vapidPublicKey}`;
+  } else {
+    // Default VAPID format for other services
+    headers['Authorization'] = `vapid t=${vapidToken}, k=${vapidPublicKey}`;
+    headers['Crypto-Key'] = `p256ecdsa=${vapidPublicKey}`;
+  }
   
   console.log(`[PUSH-SEND-CANARY] 🔐 Headers for ${url.origin}:`, {
+    endpointType: subscription.endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
+                  subscription.endpoint.includes('web.push.apple.com') ? 'APNS' : 'OTHER',
     hasAuth: !!headers.Authorization,
     hasCryptoKey: !!headers['Crypto-Key'],
     authFormat: headers.Authorization?.substring(0, 20) + '...',
