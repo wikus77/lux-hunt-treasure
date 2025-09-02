@@ -208,25 +208,46 @@ const NotificationsSettings: React.FC = () => {
         // Register service worker and get subscription
         const registration = await navigator.serviceWorker.ready;
         
-        // Convert VAPID key - UNIFIED FOR ALL PLATFORMS
+        // Convert VAPID key - UNIFIED FOR ALL PLATFORMS with validation
         const urlBase64ToUint8Array = (base64String: string) => {
-          const padding = '='.repeat((4 - base64String.length % 4) % 4);
-          const base64 = (base64String + padding)
-            .replace(/-/g, '+')
-            .replace(/_/g, '/');
-          const rawData = atob(base64);
-          const outputArray = new Uint8Array(rawData.length);
-          for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
+          try {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+              .replace(/-/g, '+')
+              .replace(/_/g, '/');
+            const rawData = atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+              outputArray[i] = rawData.charCodeAt(i);
+            }
+            
+            // Validate P-256 key length (65 bytes for uncompressed public key)
+            if (outputArray.length !== 65) {
+              throw new Error(`Invalid VAPID key length: ${outputArray.length} bytes (expected 65)`);
+            }
+            
+            // Validate P-256 key format (should start with 0x04 for uncompressed)
+            if (outputArray[0] !== 0x04) {
+              throw new Error(`Invalid VAPID key format: first byte is 0x${outputArray[0].toString(16)} (expected 0x04)`);
+            }
+            
+            console.log('✅ VAPID key validation passed:', outputArray.length, 'bytes');
+            return outputArray;
+          } catch (error) {
+            console.error('❌ VAPID key conversion failed:', error);
+            throw new Error(`VAPID key validation failed: ${error.message}`);
           }
-          return outputArray;
         };
         
         // Use UNIFIED VAPID key for ALL platforms (iOS Safari 16.4+ supports it)
         const UNIFIED_VAPID_KEY = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+        
+        console.log('🔑 Using VAPID key:', UNIFIED_VAPID_KEY);
+        const applicationServerKey = urlBase64ToUint8Array(UNIFIED_VAPID_KEY);
+        
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(UNIFIED_VAPID_KEY)
+          applicationServerKey
         });
         
         // Detect platform by endpoint (not UA)
