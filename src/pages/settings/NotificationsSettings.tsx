@@ -239,10 +239,22 @@ const NotificationsSettings: React.FC = () => {
           }
         };
         
-        // Use UNIFIED VAPID key for ALL platforms (iOS Safari 16.4+ supports it)
-        const UNIFIED_VAPID_KEY = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+        // Use UNIFIED VAPID key from env with P-256 validation
+        const UNIFIED_VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
         
-        console.log('🔑 Using VAPID key:', UNIFIED_VAPID_KEY);
+        // VALIDATE VAPID key format and length
+        console.log('🔑 VAPID key validation:', {
+          chars: UNIFIED_VAPID_KEY?.length,
+          startsWith04: (() => {
+            try {
+              const raw = atob(UNIFIED_VAPID_KEY.replace(/-/g, '+').replace(/_/g, '/'));
+              return raw.length === 65 && raw.charCodeAt(0) === 4;
+            } catch(e) {
+              return false;
+            }
+          })()
+        });
+        
         const applicationServerKey = urlBase64ToUint8Array(UNIFIED_VAPID_KEY);
         
         const subscription = await registration.pushManager.subscribe({
