@@ -238,15 +238,14 @@ const NotificationsSettings: React.FC = () => {
             return outputArray;
           };
           
-          const vapidPublicKey = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
-          const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
-          
+          // Per iOS Safari 16.4+, non usare VAPID keys custom
+          // iOS supporta Web Push standard senza applicationServerKey
           const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey
+            userVisibleOnly: true
+            // Rimuoviamo applicationServerKey per iOS
           });
           
-          // Save to Supabase
+          // Save to Supabase push_subscriptions table
           const { error } = await supabase
             .from('push_subscriptions')
             .upsert({
@@ -260,7 +259,18 @@ const NotificationsSettings: React.FC = () => {
             
           if (error) throw error;
           
-          console.log('✅ iOS Push subscription saved successfully');
+          // CRITICAL: Save push_notifications_enabled to profile
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .update({ push_notifications_enabled: true })
+            .eq('id', user?.id);
+            
+          if (profileError) {
+            console.error('❌ Failed to save push_notifications_enabled:', profileError);
+            throw profileError;
+          }
+          
+          console.log('✅ iOS Push subscription and profile state saved successfully');
           setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
           setPushTokenExists(true);
           
@@ -303,8 +313,8 @@ const NotificationsSettings: React.FC = () => {
       setLoading(true);
       
       try {
-        // Remove both FCM and iOS subscriptions
-        const [fcmResult, iosResult] = await Promise.all([
+        // Remove both FCM and iOS subscriptions AND update profile
+        const [fcmResult, iosResult, profileResult] = await Promise.all([
           supabase
             .from('push_tokens')
             .delete()
@@ -312,11 +322,15 @@ const NotificationsSettings: React.FC = () => {
           supabase
             .from('push_subscriptions')
             .delete()
-            .eq('user_id', user?.id)
+            .eq('user_id', user?.id),
+          supabase
+            .from('profiles')
+            .update({ push_notifications_enabled: false })
+            .eq('id', user?.id)
         ]);
         
-        if (fcmResult.error && iosResult.error) {
-          console.error('❌ Error removing push subscriptions:', fcmResult.error, iosResult.error);
+        if (fcmResult.error && iosResult.error && profileResult.error) {
+          console.error('❌ Error removing push subscriptions:', fcmResult.error, iosResult.error, profileResult.error);
           toast({
             title: "❌ Errore Disattivazione",
             description: "Non è stato possibile disattivare le notifiche push.",
