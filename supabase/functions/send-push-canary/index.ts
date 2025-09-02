@@ -34,6 +34,67 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Handle diagnostics endpoint
+  const url = new URL(req.url);
+  if (req.method === 'GET' && url.searchParams.has('info')) {
+    try {
+      const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY');
+      const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY');
+      const VAPID_SUBJECT = Deno.env.get('VAPID_SUBJECT');
+
+      // Base64url decode for length check
+      function b64urlToUint8Array(base64url: string): Uint8Array {
+        const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
+        const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/') + padding;
+        const binary = atob(base64);
+        return Uint8Array.from(binary, char => char.charCodeAt(0));
+      }
+
+      let pubKeyLength = 0;
+      let privKeyLength = 0;
+      let keyValidation = 'unknown';
+
+      try {
+        if (VAPID_PUBLIC_KEY) {
+          const pubBytes = b64urlToUint8Array(VAPID_PUBLIC_KEY);
+          pubKeyLength = pubBytes.length;
+        }
+        if (VAPID_PRIVATE_KEY) {
+          const privBytes = b64urlToUint8Array(VAPID_PRIVATE_KEY);
+          privKeyLength = privBytes.length;
+        }
+        
+        keyValidation = (pubKeyLength === 65 && privKeyLength === 32) ? 'valid' : 'invalid';
+      } catch (error) {
+        keyValidation = `decode_error: ${error.message}`;
+      }
+
+      const info = {
+        fn: 'send-push-canary',
+        audience: 'auto',
+        env: {
+          VAPID_PUBLIC_KEY_len: pubKeyLength,
+          VAPID_PRIVATE_KEY_len: privKeyLength,
+          VAPID_SUBJECT_present: !!VAPID_SUBJECT
+        },
+        build: Deno.env.get('BUILD_SHA') || 'dev',
+        timestamp: new Date().toISOString()
+      };
+
+      return new Response(JSON.stringify(info, null, 2), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({
+        error: error.message,
+        timestamp: new Date().toISOString()
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  }
+
   if (req.method !== 'POST') {
     return new Response('Method not allowed', {
       status: 405,

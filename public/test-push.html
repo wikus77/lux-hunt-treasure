@@ -160,7 +160,7 @@
                     data: { url: '/test-push.html', src: 'quick-test' }
                 };
                 
-                const sendResponse = await fetch(`${SUPABASE_URL}/functions/v1/push_send`, {
+                const sendResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-push-canary`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
