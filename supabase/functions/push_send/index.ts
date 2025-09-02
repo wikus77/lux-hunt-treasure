@@ -6,20 +6,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import webPush from "https://esm.sh/web-push@3.6.7";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
-  'Vary': 'Origin'
 };
 
 console.log('[PUSH] 🚀 M1SSION™ W3C Web Push Function loaded');
 
-// VAPID Keys aligned with client
+// VAPID Keys allineate con il client
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'n-QJKN01k1r7ROmzc5Ukn_-MkCE1q7_-Uv-QrCEkgT0';
 
-// Base64url decoder for VAPID verification
+// Base64url decoder per verifiche VAPID
 const b64urlToUint8 = (s: string) => {
   const p = '='.repeat((4 - s.length % 4) % 4);
   const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
@@ -30,18 +29,12 @@ const b64urlToUint8 = (s: string) => {
 const pubBytes = b64urlToUint8(VAPID_PUBLIC_KEY);
 const privBytes = b64urlToUint8(VAPID_PRIVATE_KEY);
 
-console.log('[PUSH] 🔑 VAPID lens:', {
-  pub: pubBytes.length,
-  priv: privBytes.length
+console.log('[PUSH] 🔑 VAPID verification:', {
+  pub_length: pubBytes.length,
+  prv_length: privBytes.length,
+  pub_fingerprint: Array.from(pubBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join(''),
+  prv_fingerprint: Array.from(privBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join('')
 });
-
-// Verify VAPID key lengths (expected: public=65, private=32)
-if (pubBytes.length !== 65) {
-  console.error('[PUSH] ❌ VAPID PUBLIC KEY wrong length:', pubBytes.length, 'expected 65');
-}
-if (privBytes.length !== 32) {
-  console.error('[PUSH] ❌ VAPID PRIVATE KEY wrong length:', privBytes.length, 'expected 32');
-}
 
 // Configure web-push with VAPID
 webPush.setVapidDetails(
@@ -150,7 +143,7 @@ serve(async (req) => {
     for (const subscription of subscriptions) {
       try {
         const endpoint = subscription.endpoint;
-        console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 60)}...`);
+        console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 50)}...`);
         
         // Build proper subscription object for web-push
         const pushSubscription = {
@@ -161,10 +154,7 @@ serve(async (req) => {
           }
         };
         
-        console.log(`[PUSH] 📨 Subscription keys:`, { 
-          p256dh_length: pushSubscription.keys.p256dh?.length,
-          auth_length: pushSubscription.keys.auth?.length 
-        });
+        console.log(`[PUSH] 📨 Subscription object:`, pushSubscription);
         
         // Send using web-push library with VAPID
         const pushResult = await webPush.sendNotification(
@@ -177,37 +167,33 @@ serve(async (req) => {
           }
         );
 
-        console.log(`[PUSH] ✅ Web-push result:`, pushResult.statusCode);
+        console.log(`[PUSH] ✅ Web-push result:`, pushResult);
         
         sent++;
         results.push({
-          endpoint: endpoint.substring(0, 60) + '...',
+          endpoint: endpoint.substring(0, 50) + '...',
           ok: true,
           status: pushResult.statusCode || 200
         });
 
       } catch (error) {
-        console.error(`[PUSH] ❌ Web-push error:`, error.message);
+        console.error(`[PUSH] ❌ Web-push error:`, error);
         failed++;
         
         // Handle specific web-push errors
         if (error.statusCode === 404 || error.statusCode === 410) {
           console.log('[PUSH] 🗑️ Removing invalid subscription...');
-          try {
-            await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('endpoint', subscription.endpoint);
-          } catch (dbError) {
-            console.warn('[PUSH] Failed to clean up invalid subscription:', dbError.message);
-          }
+          await supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('endpoint', subscription.endpoint);
         }
         
         results.push({
-          endpoint: subscription.endpoint?.substring(0, 60) + '...',
+          endpoint: subscription.endpoint?.substring(0, 50) + '...',
           ok: false,
           status: error.statusCode || 500,
-          error: String(error?.statusCode || error?.message)
+          error: error.message
         });
       }
     }
@@ -228,7 +214,6 @@ serve(async (req) => {
     console.log('[PUSH] 📊 Result:', JSON.stringify(finalResult, null, 2));
 
     return new Response(JSON.stringify(finalResult), {
-      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
@@ -238,10 +223,10 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       ok: false,
       error: 'Internal server error',
-      details: String(error?.message || error),
+      details: error.message,
       timestamp: new Date().toISOString()
     }), {
-      status: 200,
+      status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }

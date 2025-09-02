@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Service Worker - Web Push W3C Compliant
-// sw-push-ver: 2025-09-02T080000Z
+// ver: push-20250902-044500
 
 const CACHE_NAME = 'mission-v2.1.0';
 const STATIC_CACHE = 'mission-static-v2.1.0';
@@ -59,75 +59,125 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Push event handler - W3C Web Push  
+// Push event handler - W3C Web Push
 self.addEventListener('push', (event) => {
-  const data = (() => { 
-    try { 
-      return event.data?.json() ?? {}; 
-    } catch { 
-      return {}; 
-    }
-  })();
+  console.log('[M1SSION SW] 📨 Push event received:', event);
   
-  const title = data.title || 'M1SSION';
-  const body = data.body || '';
-  const options = { 
-    body, 
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (error) {
+    console.warn('[M1SSION SW] Failed to parse push data:', error);
+    data = {};
+  }
+  
+  console.log('[M1SSION SW] 📨 Push data:', data);
+  
+  const title = data.title || 'M1SSION™';
+  const options = {
+    body: data.body || 'Nuova notifica disponibile',
     icon: '/favicon.ico',
     badge: '/favicon.ico',
-    data: data.data || {} 
+    data: data.data || { url: '/' },
+    tag: 'mission-notification',
+    renotify: true,
+    requireInteraction: false,
+    actions: [
+      { action: 'open', title: 'Apri App' },
+      { action: 'close', title: 'Chiudi' }
+    ]
   };
   
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('[M1SSION SW] ✅ Notification shown successfully');
+      })
+      .catch(error => {
+        console.error('[M1SSION SW] ❌ Failed to show notification:', error);
+      })
+  );
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
+  console.log('[M1SSION SW] 🔔 Notification clicked:', event.notification.tag);
+  
   event.notification.close();
-  const url = '/';
+  
+  if (event.action === 'close') {
+    return;
+  }
+  
+  const urlToOpen = event.notification.data?.url || '/';
+  
   event.waitUntil(
-    clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
-      const c = list.find(w => w.url.includes(url));
-      return c ? c.focus() : clients.openWindow(url);
-    })
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Try to focus existing window
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.navigate(urlToOpen);
+            return client.focus();
+          }
+        }
+        
+        // Open new window
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+      .catch(error => {
+        console.error('[M1SSION SW] ❌ Failed to handle notification click:', error);
+      })
   );
 });
 
-// Fetch event handler - only handle specific requests, always return Response
+// Fetch event handler
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests except Supabase - NEVER respondWith null
+  // Skip cross-origin requests except Supabase
   if (url.origin !== location.origin && !url.hostname.includes('supabase.co')) {
-    return; // Let browser handle normally
+    return;
   }
 
-  // Only handle specific static assets
+  // Cache strategies
   if (STATIC_ASSETS.includes(url.pathname)) {
+    // Cache First for static assets
     event.respondWith(
       caches.match(request)
         .then((response) => {
-          if (response) {
-            return response;
-          }
-          return fetch(request)
+          return response || fetch(request)
             .then((fetchResponse) => {
-              if (fetchResponse && fetchResponse.status === 200) {
-                const responseClone = fetchResponse.clone();
-                caches.open(STATIC_CACHE)
-                  .then((cache) => {
-                    cache.put(request, responseClone);
-                  });
-              }
-              return fetchResponse;
+              return caches.open(STATIC_CACHE)
+                .then((cache) => {
+                  cache.put(request, fetchResponse.clone());
+                  return fetchResponse;
+                });
             });
         })
+    );
+  } else if (url.hostname.includes('supabase.co')) {
+    // Network First for Supabase API
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(DYNAMIC_CACHE)
+              .then((cache) => {
+                cache.put(request, responseClone);
+              });
+          }
+          return response;
+        })
         .catch(() => {
-          return new Response('Offline', { status: 503 });
+          return caches.match(request);
         })
     );
   }
 });
 
-console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support - sw-push-ver: 2025-09-02T080000Z');
+console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support');
