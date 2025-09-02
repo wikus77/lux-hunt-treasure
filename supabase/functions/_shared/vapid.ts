@@ -20,6 +20,13 @@ function uint8ArrayToBase64url(uint8Array: Uint8Array): string {
 }
 
 /**
+ * Checks if signature is in DER format
+ */
+function isDerFormat(signature: Uint8Array): boolean {
+  return signature.length > 0 && signature[0] === 0x30;
+}
+
+/**
  * Converts DER signature to JOSE format (R|S concatenation)
  */
 function derToJose(der: Uint8Array): Uint8Array {
@@ -55,6 +62,28 @@ function derToJose(der: Uint8Array): Uint8Array {
   result.set(sPadded, 32);
   
   return result;
+}
+
+/**
+ * Processes ECDSA signature - converts from DER to RAW if needed
+ */
+function processEcdsaSignature(signature: Uint8Array, aud: string): Uint8Array {
+  const isDER = isDerFormat(signature);
+  
+  console.log('🔧 Signature processing:', {
+    length: signature.length,
+    isDER,
+    audience: aud,
+    firstBytes: Array.from(signature.slice(0, 4)).map(b => '0x' + b.toString(16).padStart(2, '0')).join(' ')
+  });
+  
+  if (isDER) {
+    console.log('📝 Converting DER to JOSE RAW format');
+    return derToJose(signature);
+  } else {
+    console.log('📝 Signature already in RAW format, using as-is');
+    return signature;
+  }
 }
 
 /**
@@ -142,8 +171,8 @@ export async function generateVapidJWT(
     new TextEncoder().encode(unsignedToken)
   );
   
-  // Convert DER signature to JOSE format
-  const joseSignature = derToJose(new Uint8Array(signature));
+  // Process signature with auto-detection (DER vs RAW)
+  const joseSignature = processEcdsaSignature(new Uint8Array(signature), aud);
   const encodedSignature = uint8ArrayToBase64url(joseSignature);
   
   const jwt = `${unsignedToken}.${encodedSignature}`;
