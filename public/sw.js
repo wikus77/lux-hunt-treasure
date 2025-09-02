@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Service Worker - Web Push W3C Compliant
-// ver: push-20250902-044500
+// ver: push-20250902-061500
 
 const CACHE_NAME = 'mission-v2.1.0';
 const STATIC_CACHE = 'mission-static-v2.1.0';
@@ -133,7 +133,7 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Fetch event handler
+// Fetch event handler - simplified to avoid respondWith(null) errors
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -143,20 +143,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache strategies
+  // Only handle specific static assets and Supabase requests
   if (STATIC_ASSETS.includes(url.pathname)) {
     // Cache First for static assets
     event.respondWith(
       caches.match(request)
         .then((response) => {
-          return response || fetch(request)
+          if (response) {
+            return response;
+          }
+          return fetch(request)
             .then((fetchResponse) => {
-              return caches.open(STATIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, fetchResponse.clone());
-                  return fetchResponse;
-                });
+              if (fetchResponse && fetchResponse.status === 200) {
+                const responseClone = fetchResponse.clone();
+                caches.open(STATIC_CACHE)
+                  .then((cache) => {
+                    cache.put(request, responseClone);
+                  });
+              }
+              return fetchResponse;
             });
+        })
+        .catch(() => {
+          // Return a basic response if all else fails
+          return new Response('Offline', { status: 503 });
         })
     );
   } else if (url.hostname.includes('supabase.co')) {
@@ -164,7 +174,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.status === 200) {
+          if (response && response.status === 200) {
             const responseClone = response.clone();
             caches.open(DYNAMIC_CACHE)
               .then((cache) => {
@@ -174,7 +184,7 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          return caches.match(request);
+          return caches.match(request) || new Response('Offline', { status: 503 });
         })
     );
   }
