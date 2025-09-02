@@ -97,7 +97,7 @@
                     }
                 }
                 
-                // Register service worker (/sw.js ONLY)
+                // Register service worker (/sw.js ONLY - unified)
                 const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
                 await navigator.serviceWorker.ready;
                 log('✅ Service worker registered: /sw.js', 'ok');
