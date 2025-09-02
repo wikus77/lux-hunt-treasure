@@ -2051,41 +2051,47 @@ export type Database = {
         Row: {
           app_version: string | null
           auth: string
+          client: string | null
           created_at: string
           endpoint: string
+          endpoint_type: string | null
           keys: Json | null
           last_seen_at: string | null
           p256dh: string
           platform: string | null
           ua: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           app_version?: string | null
           auth: string
+          client?: string | null
           created_at?: string
           endpoint: string
+          endpoint_type?: string | null
           keys?: Json | null
           last_seen_at?: string | null
           p256dh: string
           platform?: string | null
           ua?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           app_version?: string | null
           auth?: string
+          client?: string | null
           created_at?: string
           endpoint?: string
+          endpoint_type?: string | null
           keys?: Json | null
           last_seen_at?: string | null
           p256dh?: string
           platform?: string | null
           ua?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
