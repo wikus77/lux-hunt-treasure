@@ -185,7 +185,7 @@ const NotificationsSettings: React.FC = () => {
       if (!isSupported) {
         toast({
           title: "❌ Browser Non Supportato",
-          description: "Le notifiche push non sono supportate in questo browser.",
+          description: "Le notifiche push richiedono un browser moderno con supporto Service Worker e Push API.",
           variant: "destructive"
         });
         return;
@@ -580,6 +580,30 @@ const NotificationsSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* DEV-Only Canary Test Push Button */}
+      {import.meta.env.DEV && settings.push_notifications_enabled && (
+        <Card className="bg-orange-950/40 border-orange-500/30 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-orange-400 font-orbitron flex items-center">
+              🧪 DEV: Canary Push Test
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Button
+              onClick={handleSendTestPush}
+              disabled={loading}
+              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+              variant="default"
+            >
+              {loading ? 'Inviando...' : '🚀 Invia Test Push (Canary)'}
+            </Button>
+            <p className="text-orange-300/70 text-xs mt-2">
+              Test endpoint: /functions/v1/push_send_canary - Solo in development
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Weekly Hints Preferences */}
       <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
