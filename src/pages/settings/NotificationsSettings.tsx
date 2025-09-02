@@ -66,11 +66,11 @@ const NotificationsSettings: React.FC = () => {
         .eq('user_id', user.id)
         .limit(1);
 
-      // Check iOS push subscriptions 
+      // Check iOS push subscriptions con user_id corretto
       const { data: iosData, error: iosError } = await supabase
         .from('push_subscriptions')
         .select('endpoint, created_at')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id)  // CRITICO: cercare con user_id corretto
         .limit(1);
 
       // Check device tokens for iOS devices

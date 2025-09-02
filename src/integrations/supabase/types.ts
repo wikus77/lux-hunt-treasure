@@ -2059,7 +2059,7 @@ export type Database = {
           platform: string | null
           ua: string | null
           updated_at: string | null
-          user_id: string | null
+          user_id: string
         }
         Insert: {
           app_version?: string | null
@@ -2072,7 +2072,7 @@ export type Database = {
           platform?: string | null
           ua?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id: string
         }
         Update: {
           app_version?: string | null
@@ -2085,7 +2085,7 @@ export type Database = {
           platform?: string | null
           ua?: string | null
           updated_at?: string | null
-          user_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }

@@ -47,32 +47,34 @@ Deno.serve(async (req) => {
       // Subscription diretta dal frontend
       subscriptions = [body.subscription];
       console.log('[PUSH] 📱 Using direct subscription from frontend');
-    } else if (body.endpoint) {
-      // Cerca una subscription specifica nel DB
+    } else if (body.user_id) {
+      // CRITICO: Cerca per user_id invece di endpoint
+      console.log('[PUSH] 🔍 Searching subscriptions for user_id:', body.user_id);
       const { data, error } = await supabase
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth')
-        .eq('endpoint', body.endpoint)
-        .limit(1);
+        .eq('user_id', body.user_id)  // Cerca per USER_ID
+        .order('created_at', { ascending: false })
+        .limit(5);
       
       if (error) {
         console.error('[PUSH] ❌ Database error:', error);
       } else if (data && data.length > 0) {
-        const sub = data[0];
-        subscriptions = [{
+        subscriptions = data.map(sub => ({
           endpoint: sub.endpoint,
           keys: {
             p256dh: sub.p256dh,
             auth: sub.auth
           }
-        }];
+        }));
+        console.log(`[PUSH] 📋 Found ${subscriptions.length} subscriptions for user`);
       }
     } else {
-      // Prendi tutte le subscription attive dal DB
+      // Fallback: prendi tutte le subscription attive (per admin)
       const { data, error } = await supabase
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth')
-        .order('updated_at', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(10);
       
       if (error) {
@@ -85,6 +87,7 @@ Deno.serve(async (req) => {
             auth: sub.auth
           }
         }));
+        console.log(`[PUSH] 📋 Found ${subscriptions.length} subscriptions (admin mode)`);
       }
     }
 
