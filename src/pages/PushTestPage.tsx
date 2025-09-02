@@ -20,7 +20,7 @@ interface PushTestState {
   swRegistration: ServiceWorkerRegistration | null;
 }
 
-const VAPID_PUBLIC = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+const VAPID_PUBLIC = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
 
 export default function PushTestPage() {
   const [state, setState] = useState<PushTestState>({
@@ -124,12 +124,14 @@ export default function PushTestPage() {
         applicationServerKey
       });
 
-      // Save to Supabase
+      // Save to Supabase with UNIFIED payload format
       const subscriptionJson = subscription.toJSON();
+      const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase.functions.invoke('push_subscribe', {
         body: {
-          endpoint: subscriptionJson.endpoint,
-          keys: subscriptionJson.keys,
+          subscription: subscriptionJson, // Complete subscription with endpoint and keys
+          user_id: user?.id || null,
+          client: 'test_page',
           ua: navigator.userAgent,
           platform: state.isIOS ? 'iOS' : 'desktop'
         }

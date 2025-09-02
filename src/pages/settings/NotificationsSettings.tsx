@@ -191,6 +191,15 @@ const NotificationsSettings: React.FC = () => {
         return;
       }
 
+      if (Notification.permission === 'denied') {
+        toast({
+          title: "🚫 Permesso Negato",
+          description: "Le notifiche sono state bloccate. Abilita nelle impostazioni del browser.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       setLoading(true);
       
       try {
@@ -272,18 +281,17 @@ const NotificationsSettings: React.FC = () => {
           endpoint: subscription.endpoint.substring(0, 50) + '...'
         });
         
-        // Save to Supabase push_subscriptions table con USER_ID corretto
+        // Save to Supabase push_subscriptions table with UNIFIED payload format
         console.log('💾 Saving subscription with user_id:', user?.id);
-        const { error } = await supabase
-          .from('push_subscriptions')
-          .upsert({
-            user_id: user?.id,  // CRITICO: assicurati che non sia undefined
-            endpoint: subscription.endpoint,
-            p256dh: subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))) : null,
-            auth: subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))) : null
-          }, {
-            onConflict: 'endpoint'
-          });
+        const subscriptionJSON = subscription.toJSON();
+        const { error } = await supabase.functions.invoke('push_subscribe', {
+          body: {
+            subscription: subscriptionJSON, // Complete subscription with endpoint and keys
+            user_id: user?.id || null,
+            client: 'app',
+            ua: navigator.userAgent
+          }
+        });
           
         if (error) throw error;
         
@@ -378,6 +386,53 @@ const NotificationsSettings: React.FC = () => {
     }
   };
 
+  // Send test push notification via canary endpoint
+  const handleSendTestPush = async () => {
+    if (!user) {
+      toast({
+        title: "❌ Errore",
+        description: "Devi essere loggato per inviare test push",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      console.log('🚀 Sending test push via canary endpoint...');
+      
+      const { data, error } = await supabase.functions.invoke('push_send_canary', {
+        body: {
+          user_id: user.id,
+          title: 'M1SSION™ Test',
+          body: 'E2E test from settings - canary endpoint working!',
+          data: { src: 'settings', timestamp: Date.now() }
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      console.log('✅ Test push result:', data);
+      
+      toast({
+        title: "🚀 Test Push Inviato!",
+        description: `Risultato: ${data.sent || 0} inviati, ${data.failed || 0} falliti`
+      });
+
+    } catch (error: any) {
+      console.error('❌ Test push failed:', error);
+      toast({
+        title: "❌ Errore Test Push",
+        description: error.message || "Impossibile inviare il test push",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -464,7 +519,6 @@ const NotificationsSettings: React.FC = () => {
                   </p>
                 )}
               </div>
-              
               {/* Apple Style Toggle Switch */}
               <div className="relative">
                 <input
@@ -508,6 +562,21 @@ const NotificationsSettings: React.FC = () => {
                 )}
               </div>
             </div>
+            
+            {/* Test Push Button (Development) */}
+            {import.meta.env.DEV && settings.push_notifications_enabled && (
+              <div className="border-t border-white/10 pt-4">
+                <Button
+                  onClick={handleSendTestPush}
+                  disabled={loading}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  🚀 Invia Test Push (canary)
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

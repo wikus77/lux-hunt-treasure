@@ -15,8 +15,8 @@ const firebaseConfig = {
   appId: "1:21417361168:web:58841299455ee4bcc7af95"
 };
 
-// M1SSION™ VAPID Key - UNIFIED ACROSS ALL COMPONENTS
-const VAPID_KEY = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
+// M1SSION™ VAPID Key - UNIFIED FROM ENV ACROSS ALL COMPONENTS
+const VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
 
 // Initialize Firebase - Check if app already exists to prevent duplicate error
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
