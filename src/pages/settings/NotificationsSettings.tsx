@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX, Smartphone } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useFcm } from '@/hooks/useFcm';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -22,20 +23,9 @@ interface NotificationSettings {
 const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSupported, setIsSupported] = useState(false);
-
-  // VAPID key decoder
-  // VAPID base64url decoder (sicuro)
-  const b64urlToUint8 = (b64url: string) => {
-    const pad = '='.repeat((4 - (b64url.length % 4)) % 4);
-    const b64 = (b64url + pad).replace(/-/g, '+').replace(/_/g, '/');
-    const raw = atob(b64);
-    const out = new Uint8Array(raw.length);
-    for(let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-    return out;
-  };
+  const [loading, setLoading] = useState(false);
+  const [pushTokenExists, setPushTokenExists] = useState(false);
+  const { status, error, token, generate, isSupported, permission } = useFcm(user?.id);
   
   const [settings, setSettings] = useState<NotificationSettings>({
     notifications_enabled: true,
@@ -54,39 +44,51 @@ const NotificationsSettings: React.FC = () => {
   ];
 
   useEffect(() => {
-    const checkSupport = async () => {
-      // Feature detection ONLY (no UA detection)
-      const supportsPush = location.protocol === 'https:' &&
-        'Notification' in window && 
-        'serviceWorker' in navigator && 
-        'PushManager' in window;
-      
-      setIsSupported(supportsPush);
-      console.log('Push API supported:', supportsPush);
-      
-      if (supportsPush) {
-        try {
-          // Register /sw.js (unified service worker)
-          await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-          const registration = await navigator.serviceWorker.ready;
-          
-          // SOURCE OF TRUTH: getSubscription()
-          const subscription = await registration.pushManager.getSubscription();
-          setIsEnabled(!!subscription);
-          
-          console.log('Subscription status:', !!subscription);
-          if (subscription) {
-            console.log('Active subscription:', subscription.toJSON());
-          }
-        } catch (error) {
-          console.error('Error checking push subscription:', error);
-        }
-      }
-    };
-
-    checkSupport();
     loadNotificationSettings();
-  }, [user]);
+    checkPushSubscriptionStatus();
+  }, [user]); // Check real subscription status on mount
+
+  // Check push subscription status using getSubscription() (SORGENTE VERITÀ)
+  const checkPushSubscriptionStatus = async () => {
+    if (!user) {
+      console.log('🔍 No user - skipping push check');
+      return;
+    }
+    
+    try {
+      console.log('🔍 Checking real push subscription status...');
+      
+      // SORGENTE VERITÀ: getSubscription() 
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration) {
+        const subscription = await registration.pushManager.getSubscription();
+        const isActive = !!subscription;
+        
+        console.log('📱 getSubscription() result:', { 
+          hasSubscription: isActive,
+          endpoint: subscription?.endpoint?.substring(0, 50) + '...'
+        });
+        
+        // Toggle enabled = stato reale del pushManager (NON il DB)
+        setSettings(prev => ({ ...prev, push_notifications_enabled: isActive }));
+        setPushTokenExists(isActive);
+        
+        if (isActive) {
+          console.log('✅ Active push subscription found');
+        } else {
+          console.log('❌ No active push subscription');
+        }
+      } else {
+        console.log('❌ No service worker registration');
+        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+        setPushTokenExists(false);
+      }
+    } catch (error) {
+      console.error('❌ Error checking push subscription:', error);
+      setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+      setPushTokenExists(false);
+    }
+  };
 
   const loadNotificationSettings = async () => {
     if (!user) return;
@@ -114,7 +116,7 @@ const NotificationsSettings: React.FC = () => {
   const saveSettings = async (newSettings: Partial<NotificationSettings>) => {
     if (!user) return;
 
-    setIsLoading(true);
+    setLoading(true);
     try {
       const updatedSettings = { ...settings, ...newSettings };
       
@@ -142,7 +144,7 @@ const NotificationsSettings: React.FC = () => {
         variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -162,115 +164,153 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ preferred_rewards: newPreferences });
   };
 
-  const handleToggle = async () => {
-    if (!isSupported) return;
+  // Enhanced push notifications toggle W3C + VAPID
+  const handlePushNotificationsToggle = async (enabled: boolean) => {
+    console.log('🚀 PUSH TOGGLE:', enabled, { isSupported, permission });
     
-    setIsLoading(true);
-    
-    try {
-      const registration = await navigator.serviceWorker.ready;
+    if (enabled) {
+      if (!isSupported) {
+        toast({
+          title: "❌ Browser Non Supportato",
+          description: "Le notifiche push non sono supportate in questo browser.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      setLoading(true);
       
-      if (isEnabled) {
-        // OFF: unsubscribe + best-effort delete
-        const subscription = await registration.pushManager.getSubscription();
-        
-        if (subscription) {
-          await subscription.unsubscribe();
-          console.log('Unsubscribed successfully');
-          
-          // Best-effort delete from DB
-          try {
-            const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-            const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
-            
-            await fetch(`${SUPA}/functions/v1/push_subscribe`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${ANON}`,
-                'apikey': ANON
-              },
-              body: JSON.stringify({ user_id: user?.id, unsubscribe: true })
-            });
-          } catch (e) {
-            console.warn('DB delete failed (non-critical):', e);
+      try {
+        // Request permission first
+        if (Notification.permission === 'default') {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') {
+            throw new Error('Notification permission denied');
           }
         }
         
-        setIsEnabled(false);
-        toast({
-          title: "🔕 Notifiche disabilitate",
-          description: "Push notifications disattivate"
-        });
+        // Register service worker (/sw.js ONLY)
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        await navigator.serviceWorker.ready;
         
-      } else {
-        // ON: request permission + subscribe + save
-        const permission = await Notification.requestPermission();
-        
-        if (permission !== 'granted') {
-          toast({
-            title: "❌ Permessi negati",
-            description: "Permessi per le notifiche negati"
-          });
-          return;
-        }
-        
-        // ALWAYS use applicationServerKey
-        const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
-        
-        console.log('VAPID public bytes:', b64urlToUint8(vapidKey).length); // must be 65
-        
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: b64urlToUint8(vapidKey)
-        });
-        
-        const subJSON = subscription.toJSON();
-        console.log('New subscription:', subJSON);
-        
-        // Save using subscription.toJSON()
-        const subscriptionData = {
-          subscription: subJSON,
-          user_id: user?.id,
-          client_id: crypto.randomUUID(),
-          platform: subJSON.endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm',
-          ua: navigator.userAgent
+        // Base64url decoder per VAPID (OBBLIGATORIO)
+        const b64urlToUint8 = (s: string) => {
+          const p = '='.repeat((4 - s.length % 4) % 4);
+          const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
+          const raw = atob(b64);
+          return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
         };
         
-        const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-        const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
-        
-        const saveResponse = await fetch(`${SUPA}/functions/v1/push_subscribe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${ANON}`,
-            'apikey': ANON
-          },
-          body: JSON.stringify(subscriptionData)
+        // OBBLIGATORIO: sempre usare applicationServerKey (W3C + VAPID)
+        const VAPID_PUBLIC_KEY = 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64urlToUint8(VAPID_PUBLIC_KEY)
         });
         
-        const saveText = await saveResponse.text();
-        console.log('Save response:', saveResponse.status, saveText);
+        // Get subscription JSON per Supabase
+        const subJSON = subscription.toJSON();
+        console.log('📱 Subscription JSON:', subJSON);
         
-        if (saveResponse.status >= 200 && saveResponse.status <= 299) {
-          setIsEnabled(true);
-          toast({
-            title: "✅ Notifiche abilitate",
-            description: "Push notifications attivate"
-          });
-        } else {
-          throw new Error(`Save failed: ${saveResponse.status} - ${saveText}`);
+        // Save via Supabase edge function 
+        const savePayload = {
+          subscription: subJSON,
+          client_id: crypto.randomUUID(),
+          platform: subJSON.endpoint?.includes('web.push.apple.com') ? 'apple' : 'fcm',
+          ua: navigator.userAgent,
+          user_id: user?.id
+        };
+        
+        console.log('💾 Saving subscription to Supabase...');
+        const { data, error } = await supabase.functions.invoke('push_subscribe', {
+          body: savePayload
+        });
+        
+        if (error) {
+          console.error('❌ Supabase edge function error:', error);
+          throw new Error(error.message);
         }
+        
+        console.log('✅ Subscription saved:', data);
+        
+        // Update local state AND profile
+        await supabase
+          .from('profiles')
+          .update({ push_notifications_enabled: true })
+          .eq('id', user?.id);
+        
+        setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+        setPushTokenExists(true);
+        
+        const isApple = subJSON.endpoint?.includes('web.push.apple.com');
+        toast({
+          title: `✅ Notifiche Push Attivate!`,
+          description: `${isApple ? '🍎 Apple' : '🟢 FCM'} Push Service configurato correttamente.`
+        });
+        
+        // Recheck real status
+        setTimeout(() => checkPushSubscriptionStatus(), 1000);
+        
+      } catch (error: any) {
+        console.error('❌ Push notification setup failed:', error);
+        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+        
+        toast({
+          title: "❌ Errore Attivazione",
+          description: error.message || "Non è stato possibile attivare le notifiche push.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(true);
       }
-    } catch (error) {
-      console.error('Error toggling notifications:', error);
-      toast({
-        title: "❌ Errore",
-        description: `Errore: ${error.message}`
-      });
-    } finally {
-      setIsLoading(false);
+    } else {
+      setLoading(true);
+      
+      try {
+        // Unsubscribe from push manager (SORGENTE VERITÀ)
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          const subscription = await registration.pushManager.getSubscription();
+          if (subscription) {
+            await subscription.unsubscribe();
+            console.log('✅ Push subscription unsubscribed');
+          }
+        }
+        
+        // Remove from database and update profile
+        const [subscriptionsResult, tokensResult, profileResult] = await Promise.all([
+          supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('user_id', user?.id),
+          supabase
+            .from('push_tokens')
+            .delete()
+            .eq('user_id', user?.id),
+          supabase
+            .from('profiles')
+            .update({ push_notifications_enabled: false })
+            .eq('id', user?.id)
+        ]);
+        
+        setPushTokenExists(false);
+        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+        
+        toast({
+          title: "🔕 Notifiche Push Disattivate",
+          description: "Sottoscrizioni rimosse correttamente."
+        });
+        
+      } catch (error) {
+        console.error('❌ Exception removing push subscriptions:', error);
+        toast({
+          title: "❌ Errore Disattivazione", 
+          description: "Si è verificato un errore durante la disattivazione.",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -297,14 +337,48 @@ const NotificationsSettings: React.FC = () => {
               </p>
             </div>
             
-            <Switch
-              checked={settings.notifications_enabled}
-              onCheckedChange={handleNotificationsToggle}
-              disabled={isLoading}
-            />
+            {/* Apple Style Toggle Switch */}
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={settings.notifications_enabled}
+                onChange={(e) => handleNotificationsToggle(e.target.checked)}
+                disabled={loading}
+                className="sr-only"
+                id="notifications-toggle"
+              />
+              <label
+                htmlFor="notifications-toggle"
+                className={`
+                  relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF] focus:ring-offset-2 focus:ring-offset-black
+                  ${settings.notifications_enabled 
+                    ? 'bg-[#00D1FF]' 
+                    : 'bg-gray-600'
+                  }
+                  ${loading ? 'opacity-50 cursor-not-allowed' : ''}
+                `}
+              >
+                <span
+                  className={`
+                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-lg
+                    ${settings.notifications_enabled 
+                      ? 'translate-x-6' 
+                      : 'translate-x-1'
+                    }
+                  `}
+                />
+              </label>
+              
+              {/* Loading indicator */}
+              {loading && (
+                <div className="absolute -right-8 top-1">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D1FF]"></div>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Push Notifications Toggle */}
+          {/* Push Notifications Toggle - Apple Style */}
           <div className="border-t border-white/10 pt-4">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
@@ -313,20 +387,62 @@ const NotificationsSettings: React.FC = () => {
                   Notifiche Push
                 </Label>
                 <p className="text-white/70 text-sm">
-                  Ricevi notifiche push native su questo dispositivo.
+                  Ricevi notifiche push OS-native (iOS/Android) su questo dispositivo.
                 </p>
                 {!isSupported && (
                   <p className="text-red-400 text-xs">
                     ⚠️ Notifiche push non supportate su questo dispositivo
                   </p>
                 )}
+                {permission === 'denied' && (
+                  <p className="text-red-400 text-xs">
+                    🚫 Permesso notifiche bloccato - modifica impostazioni browser
+                  </p>
+                )}
               </div>
               
-              <Switch
-                checked={isEnabled}
-                onCheckedChange={handleToggle}
-                disabled={isLoading || !isSupported}
-              />
+              {/* Apple Style Toggle Switch */}
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={settings.push_notifications_enabled}
+                  onChange={(e) => handlePushNotificationsToggle(e.target.checked)}
+                  disabled={loading || status === 'loading' || !isSupported}
+                  className="sr-only"
+                  id="push-notifications-toggle"
+                />
+                <label
+                  htmlFor="push-notifications-toggle"
+                  className={`
+                    relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF] focus:ring-offset-2 focus:ring-offset-black
+                    ${settings.push_notifications_enabled
+                      ? 'bg-[#00D1FF]' 
+                      : 'bg-gray-600'
+                    }
+                    ${(loading || status === 'loading' || !isSupported) 
+                      ? 'opacity-50 cursor-not-allowed' 
+                      : ''
+                    }
+                  `}
+                >
+                  <span
+                    className={`
+                      inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-lg
+                      ${settings.push_notifications_enabled
+                        ? 'translate-x-6' 
+                        : 'translate-x-1'
+                      }
+                    `}
+                  />
+                </label>
+                
+                {/* Loading indicator */}
+                {(loading || status === 'loading') && (
+                  <div className="absolute -right-8 top-1">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D1FF]"></div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </CardContent>
@@ -343,23 +459,26 @@ const NotificationsSettings: React.FC = () => {
             <Select
               value={settings.weekly_hints}
               onValueChange={handleWeeklyHintsChange}
-              disabled={isLoading || !settings.notifications_enabled}
+              disabled={loading || !settings.notifications_enabled}
             >
-              <SelectTrigger className="bg-black/60 border-[#00D1FF]/30 text-white">
-                <SelectValue placeholder="Seleziona frequenza" />
+              <SelectTrigger className="bg-black/20 border-white/20 text-white">
+                <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-black border-[#00D1FF]/30">
-                <SelectItem value="all" className="text-white hover:bg-[#00D1FF]/20">
+              <SelectContent className="bg-black/90 border-white/20">
+                <SelectItem value="all" className="text-white">
                   Tutti gli indizi
                 </SelectItem>
-                <SelectItem value="only-premium" className="text-white hover:bg-[#00D1FF]/20">
+                <SelectItem value="only-premium" className="text-white">
                   Solo indizi premium
                 </SelectItem>
-                <SelectItem value="none" className="text-white hover:bg-[#00D1FF]/20">
+                <SelectItem value="none" className="text-white">
                   Nessun indizio
                 </SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-white/70 text-sm">
+              Scegli quale tipo di indizi ricevere via notifica ogni settimana.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -367,72 +486,67 @@ const NotificationsSettings: React.FC = () => {
       {/* Reward Preferences */}
       <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-white font-orbitron">Preferenze Premi</CardTitle>
+          <CardTitle className="text-white font-orbitron">Premi Preferiti</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <Label className="text-white font-medium">Categorie di Interesse</Label>
-            <p className="text-white/70 text-sm">
-              Seleziona le categorie di premi che ti interessano di più.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {rewardOptions.map((reward) => (
-                <div key={reward.id} className="flex items-center space-x-3">
-                  <Checkbox
-                    id={reward.id}
-                    checked={settings.preferred_rewards.includes(reward.id)}
-                    onCheckedChange={(checked) => 
-                      handleRewardPreferenceChange(reward.id, checked as boolean)
-                    }
-                    disabled={isLoading || !settings.notifications_enabled}
-                    className="border-[#00D1FF]/30 data-[state=checked]:bg-[#00D1FF]"
-                  />
-                  <Label 
-                    htmlFor={reward.id} 
-                    className="text-white cursor-pointer flex items-center"
-                  >
-                    <span className="mr-2">{reward.icon}</span>
-                    {reward.label}
-                  </Label>
-                </div>
-              ))}
-            </div>
+          <p className="text-white/70 text-sm">
+            Seleziona le categorie di premi che ti interessano di più per ricevere notifiche mirate.
+          </p>
+          
+          <div className="grid grid-cols-1 gap-3">
+            {rewardOptions.map((reward) => (
+              <div
+                key={reward.id}
+                className="flex items-center space-x-3 p-3 bg-black/20 rounded-lg border border-white/10"
+              >
+                <Checkbox
+                  id={reward.id}
+                  checked={settings.preferred_rewards.includes(reward.id)}
+                  onCheckedChange={(checked) => 
+                    handleRewardPreferenceChange(reward.id, checked as boolean)
+                  }
+                  disabled={loading || !settings.notifications_enabled}
+                  className="border-white/30 data-[state=checked]:bg-[#00D1FF] data-[state=checked]:border-[#00D1FF]"
+                />
+                <Label
+                  htmlFor={reward.id}
+                  className="text-white font-medium flex items-center space-x-2 cursor-pointer flex-1"
+                >
+                  <span className="text-lg">{reward.icon}</span>
+                  <span>{reward.label}</span>
+                </Label>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4">
+            <Button
+              onClick={() => saveSettings({})}
+              disabled={loading || !settings.notifications_enabled}
+              className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
+            >
+              {loading ? 'Salvataggio...' : 'Salva Preferenze'}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Audio Preferences */}
-      <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white font-orbitron">Audio & Suoni</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <Label className="text-white font-medium flex items-center">
-                <Volume2 className="w-4 h-4 mr-2" />
-                Suoni di Notifica
-              </Label>
-              <p className="text-white/70 text-sm">
-                Riproduci suoni quando arrivano nuove notifiche.
-              </p>
+      {/* Notification Status */}
+      {!settings.notifications_enabled && (
+        <Card className="bg-yellow-900/20 border-yellow-500/20 backdrop-blur-sm">
+          <CardContent className="pt-6">
+            <div className="flex items-center space-x-3">
+              <VolumeX className="w-5 h-5 text-yellow-400" />
+              <div>
+                <p className="text-yellow-400 font-medium">Notifiche Disabilitate</p>
+                <p className="text-yellow-300/70 text-sm">
+                  Attiva le notifiche per ricevere aggiornamenti sui premi e nuovi indizi.
+                </p>
+              </div>
             </div>
-            
-            <Switch
-              checked={true}
-              disabled={true}
-              className="opacity-50"
-            />
-          </div>
-          
-          <div className="text-center">
-            <p className="text-white/50 text-sm">
-              Le preferenze audio verranno implementate nelle prossime versioni.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </motion.div>
   );
 };

@@ -5,11 +5,10 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
-  'Vary': 'Origin'
 };
 
 serve(async (req) => {
@@ -31,29 +30,12 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    let body;
-    try {
-      body = await req.json();
-    } catch (error) {
-      console.error("[PUSH-SUBSCRIBE] JSON parsing error:", error);
-      return new Response(
-        JSON.stringify({ error: "Invalid JSON in request body" }), 
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, "content-type": "application/json" }
-        }
-      );
-    }
+    const body = await req.json();
     
     // Handle both flat structure and nested subscription structure
-    let endpoint, keys, ua, platform, user_id, unsubscribe;
+    let endpoint, keys, ua, platform, user_id;
     
-    if (body.unsubscribe) {
-      // Handle unsubscribe request
-      unsubscribe = true;
-      user_id = body.user_id;
-      endpoint = body.endpoint;
-    } else if (body.subscription) {
+    if (body.subscription) {
       // Nested structure from push-diag.html
       const subscription = body.subscription;
       endpoint = subscription.endpoint;
@@ -70,45 +52,7 @@ serve(async (req) => {
       user_id = body.user_id;
     }
 
-    if (unsubscribe) {
-      // Delete subscription
-      const deleteUrl = `${Deno.env.get("SUPABASE_URL")}/rest/v1/push_subscriptions`;
-      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-      
-      let deleteQuery = '';
-      if (endpoint) {
-        deleteQuery = `?endpoint=eq.${encodeURIComponent(endpoint)}`;
-      } else if (user_id) {
-        deleteQuery = `?user_id=eq.${user_id}`;
-      } else {
-        return new Response(
-          JSON.stringify({ error: "Missing endpoint or user_id for unsubscribe" }), 
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, "content-type": "application/json" }
-          }
-        );
-      }
-      
-      const deleteResponse = await fetch(deleteUrl + deleteQuery, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${serviceKey}`,
-          'apikey': serviceKey!
-        }
-      });
-      
-      console.log(`[PUSH-SUBSCRIBE] Delete response: ${deleteResponse.status}`);
-      
-      return new Response(
-        JSON.stringify({ ok: true, unsubscribed: true }), 
-        { 
-          headers: { ...corsHeaders, "content-type": "application/json" }
-        }
-      );
-    }
-
-    // Validate required fields for subscription
+    // Validate required fields
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: endpoint, keys.p256dh, keys.auth" }), 
@@ -139,46 +83,36 @@ serve(async (req) => {
       );
     }
 
-    const endpoint_type = isApnsEndpoint ? 'APNS' : isFcmEndpoint ? 'FCM' : 'WNS';
-    
-    console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 60) + "...");
+    console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 50) + "...");
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
-    // user_id can be NULL for anonymous subscriptions
-    const finalUserId = user_id || null;
+    // user_id può essere NULL per sottoscrizioni anonime
+    const finalUserId = user_id; // Non forzare un user_id di default
     
     console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
 
-    // UPSERT subscription by endpoint using REST API with SERVICE_ROLE_KEY
-    const upsertUrl = `${Deno.env.get("SUPABASE_URL")}/rest/v1/push_subscriptions`;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    
-    const upsertResponse = await fetch(upsertUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${serviceKey}`,
-        'apikey': serviceKey!,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({
+    // Upsert subscription by endpoint
+    const { data, error } = await supabase
+      .from("push_subscriptions")
+      .upsert({
         endpoint,
         p256dh: keys.p256dh,
         auth: keys.auth,
-        endpoint_type,
         ua: ua ?? null,
         platform: platform ?? null,
-        user_id: finalUserId,
+        user_id: finalUserId,  // Può essere NULL
         updated_at: new Date().toISOString()
+      }, { 
+        onConflict: "endpoint" 
       })
-    });
+      .select()
+      .single();
 
-    if (!upsertResponse.ok) {
-      const errorText = await upsertResponse.text();
-      console.error("[PUSH-SUBSCRIBE] Upsert error:", upsertResponse.status, errorText);
+    if (error) {
+      console.error("[PUSH-SUBSCRIBE] Database error:", error);
       return new Response(
-        JSON.stringify({ error: `Database error: ${errorText}` }), 
+        JSON.stringify({ error: error.message }), 
         { 
           status: 500, 
           headers: { ...corsHeaders, "content-type": "application/json" }
@@ -186,15 +120,15 @@ serve(async (req) => {
       );
     }
 
-    const data = await upsertResponse.json();
+    console.log("[PUSH-SUBSCRIBE] Subscription registered successfully:", data.id);
 
-    console.log("[PUSH-SUBSCRIBE] Subscription registered successfully:", data);
+    const endpointType = isApnsEndpoint ? 'APNs' : isFcmEndpoint ? 'FCM' : 'WNS';
     
     return new Response(
       JSON.stringify({ 
-        ok: true, 
-        saved: { endpoint: endpoint.substring(0, 60) + "..." },
-        endpoint_type,
+        success: true, 
+        subscription: data,
+        endpoint_type: endpointType,
         stored_at: new Date().toISOString()
       }), 
       { 
@@ -205,11 +139,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("[PUSH-SUBSCRIBE] Unexpected error:", error);
     return new Response(
-      JSON.stringify({ 
-        ok: false, 
-        error: "Internal server error",
-        details: error.message 
-      }), 
+      JSON.stringify({ error: "Internal server error" }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, "content-type": "application/json" }
