@@ -21,7 +21,7 @@ interface UsePushNotificationsReturn {
   unsubscribe: () => Promise<boolean>;
 }
 
-import { VAPID_PUBLIC_KEY, validateAndDecodeVAPIDKey } from '@/lib/constants/vapid';
+import { VAPID_PUBLIC_KEY, getAppServerKey } from '@/lib/vapid';
 
 export const usePushNotifications = (): UsePushNotificationsReturn => {
   const [isSupported, setIsSupported] = useState(false);
@@ -64,8 +64,8 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     }
   };
 
-  // Use unified VAPID validation from constants
-  const urlBase64ToUint8Array = validateAndDecodeVAPIDKey;
+  // Use unified VAPID validation from lib
+  const urlBase64ToUint8Array = getAppServerKey;
 
   // Convert Uint8Array to base64url
   const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
@@ -115,18 +115,19 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
       // Subscribe with appropriate method based on platform
       let subscription: PushSubscription;
       
-      if (isIOSPWA) {
-        // iOS PWA: Use VAPID directly
-        console.log('🍎 iOS PWA: subscribing with VAPID');
+        if (isIOSPWA) {
+        // iOS PWA: Use validated VAPID key
+        console.log('🍎 iOS PWA: subscribing with validated VAPID');
+        const applicationServerKey = getAppServerKey(); // Pre-validated above
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+          applicationServerKey
         });
       } else {
-        // VAPID key validation BEFORE subscribe
-        console.log('🔑 Validating VAPID key before subscription...');
-        const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
-        console.log('✅ VAPID validation passed, creating subscription...');
+        // VAPID key validation BEFORE subscribe - CRITICAL P0 fix
+        console.log('🔑 Pre-subscription VAPID validation...');
+        const applicationServerKey = getAppServerKey(); // Throws if invalid
+        console.log('✅ VAPID pre-validation passed, proceeding...');
 
         // Use Firebase messaging if available, otherwise fallback to W3C
         if (window.firebase && window.firebase.messaging) {
