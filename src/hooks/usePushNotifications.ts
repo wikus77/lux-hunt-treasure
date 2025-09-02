@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getAppServerKey, VAPID_PUBLIC_KEY } from '@/lib/vapid';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -9,6 +10,7 @@ interface PushSubscriptionData {
   auth: string;
   ua: string;
   platform: string;
+  endpoint_type: string;
 }
 
 interface UsePushNotificationsReturn {
@@ -16,24 +18,27 @@ interface UsePushNotificationsReturn {
   permission: NotificationPermission | null;
   isSubscribed: boolean;
   loading: boolean;
+  platform: string;
+  endpointShort: string | null;
   requestPermission: () => Promise<boolean>;
   subscribe: () => Promise<boolean>;
   unsubscribe: () => Promise<boolean>;
 }
-
-import { VAPID_PUBLIC_KEY, getAppServerKey } from '@/lib/vapid';
 
 export const usePushNotifications = (): UsePushNotificationsReturn => {
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [endpointShort, setEndpointShort] = useState<string | null>(null);
 
-  // Detect platform
+  // Detect platform with enhanced logic
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isPWA = window.matchMedia('(display-mode: standalone)').matches;
   const isIOSPWA = isIOS && isPWA;
+  
+  const platform = isIOSPWA ? 'ios_pwa' : 'desktop';
 
   // Check support and current state
   useEffect(() => {
@@ -52,20 +57,25 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     checkSupport();
   }, []);
 
-  // Check if already subscribed
+  // Check if already subscribed and get endpoint info
   const checkCurrentSubscription = async () => {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      setIsSubscribed(!!subscription);
+      
+      if (subscription) {
+        setIsSubscribed(true);
+        setEndpointShort(subscription.endpoint.substring(0, 50) + '...');
+      } else {
+        setIsSubscribed(false);
+        setEndpointShort(null);
+      }
     } catch (error) {
       console.warn('Error checking subscription:', error);
       setIsSubscribed(false);
+      setEndpointShort(null);
     }
   };
-
-  // Use unified VAPID validation from lib
-  const urlBase64ToUint8Array = getAppServerKey;
 
   // Convert Uint8Array to base64url
   const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
@@ -78,6 +88,36 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
       .replace(/\+/g, '-')
       .replace(/\//g, '_')
       .replace(/=/g, '');
+  };
+
+  // Detect endpoint type from URL
+  const detectEndpointType = (endpoint: string): string => {
+    if (endpoint.includes('web.push.apple.com')) return 'apns';
+    if (endpoint.includes('fcm.googleapis.com')) return 'fcm';
+    if (endpoint.includes('wns.notify.windows.com')) return 'wns';
+    return 'unknown';
+  };
+
+  // Validate subscription keys (65 bytes p256dh, 16 bytes auth)
+  const validateSubscriptionKeys = (p256dh: string, auth: string): boolean => {
+    try {
+      const pad = (str: string) => str + '='.repeat((4 - str.length % 4) % 4);
+      const p256dhBytes = atob(pad(p256dh).replace(/-/g, '+').replace(/_/g, '/'));
+      const authBytes = atob(pad(auth).replace(/-/g, '+').replace(/_/g, '/'));
+      
+      const p256dhValid = p256dhBytes.length === 65;
+      const authValid = authBytes.length === 16;
+      
+      console.log('🔍 Key validation:', { 
+        p256dh: { length: p256dhBytes.length, valid: p256dhValid },
+        auth: { length: authBytes.length, valid: authValid }
+      });
+      
+      return p256dhValid && authValid;
+    } catch (error) {
+      console.error('❌ Key validation error:', error);
+      return false;
+    }
   };
 
   // Request notification permission
@@ -103,35 +143,33 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
 
     setLoading(true);
     try {
+      // Pre-validate VAPID key before any subscription attempt
+      console.log('🔑 Pre-subscription VAPID validation...');
+      const applicationServerKey = getAppServerKey(); // Throws if invalid
+      console.log('✅ VAPID pre-validation passed');
+
       // Get service worker registration
       const registration = await navigator.serviceWorker.ready;
       
-      // Unsubscribe existing subscription first
+      // Unsubscribe existing subscription first to avoid duplicates
       const existingSubscription = await registration.pushManager.getSubscription();
       if (existingSubscription) {
         await existingSubscription.unsubscribe();
       }
 
-      // Subscribe with appropriate method based on platform
       let subscription: PushSubscription;
       
-        if (isIOSPWA) {
-        // iOS PWA: Use validated VAPID key
-        console.log('🍎 iOS PWA: subscribing with validated VAPID');
-        const applicationServerKey = getAppServerKey(); // Pre-validated above
+      if (isIOSPWA) {
+        // iOS PWA: Use VAPID Web Push standard
+        console.log('🍎 iOS PWA: subscribing with VAPID Web Push');
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey
         });
       } else {
-        // VAPID key validation BEFORE subscribe - CRITICAL P0 fix
-        console.log('🔑 Pre-subscription VAPID validation...');
-        const applicationServerKey = getAppServerKey(); // Throws if invalid
-        console.log('✅ VAPID pre-validation passed, proceeding...');
-
-        // Use Firebase messaging if available, otherwise fallback to W3C
+        // Desktop: Try Firebase first, fallback to W3C
         if (window.firebase && window.firebase.messaging) {
-          console.log('🔥 Using Firebase for subscription...');
+          console.log('🔥 Desktop: attempting Firebase + W3C hybrid');
           try {
             const messaging = window.firebase.messaging();
             const token = await messaging.getToken({
@@ -140,11 +178,11 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
             });
             
             if (token) {
+              // Also create W3C subscription for consistency
               subscription = await registration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey
               });
-              
               console.log('🔥 Firebase + W3C subscription created');
             } else {
               throw new Error('Firebase token generation failed');
@@ -158,6 +196,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
           }
         } else {
           // W3C Push API (standard)
+          console.log('📱 Desktop: using W3C Push API');
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey
@@ -165,25 +204,40 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
         }
       }
 
-      // Prepare subscription data
+      // Extract and validate subscription data
+      const p256dh = arrayBufferToBase64(subscription.getKey('p256dh')!);
+      const auth = arrayBufferToBase64(subscription.getKey('auth')!);
+      const endpoint_type = detectEndpointType(subscription.endpoint);
+      
+      // Validate byte lengths before saving
+      if (!validateSubscriptionKeys(p256dh, auth)) {
+        throw new Error('Invalid subscription key lengths (expected: p256dh=65B, auth=16B)');
+      }
+
       const subscriptionData: PushSubscriptionData = {
         endpoint: subscription.endpoint,
-        p256dh: arrayBufferToBase64(subscription.getKey('p256dh')!),
-        auth: arrayBufferToBase64(subscription.getKey('auth')!),
+        p256dh,
+        auth,
         ua: navigator.userAgent,
-        platform: isIOSPWA ? 'ios_pwa' : 'desktop'
+        platform,
+        endpoint_type
       };
+
+      console.log('📤 Subscription data prepared:', {
+        endpoint: subscription.endpoint.substring(0, 50) + '...',
+        endpoint_type,
+        platform,
+        p256dh_length: p256dh.length,
+        auth_length: auth.length
+      });
 
       // Save to Supabase
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
+      
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
-          user_id: user.id,
+          user_id: user?.id || null, // Support guest subscriptions
           ...subscriptionData
         }, {
           onConflict: 'endpoint'
@@ -192,18 +246,19 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
       if (error) throw error;
 
       setIsSubscribed(true);
+      setEndpointShort(subscription.endpoint.substring(0, 50) + '...');
       toast.success('🔔 Notifiche push attivate!');
       console.log('✅ Push subscription saved successfully');
       return true;
 
     } catch (error) {
       console.error('Error subscribing to push notifications:', error);
-      toast.error('Errore attivazione notifiche push');
+      toast.error(`Errore attivazione notifiche: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return false;
     } finally {
       setLoading(false);
     }
-  }, [isSupported, permission, isIOSPWA]);
+  }, [isSupported, permission, isIOSPWA, platform]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async (): Promise<boolean> => {
@@ -227,6 +282,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
       }
 
       setIsSubscribed(false);
+      setEndpointShort(null);
       toast.success('🔕 Notifiche push disattivate');
       return true;
 
@@ -244,6 +300,8 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     permission,
     isSubscribed,
     loading,
+    platform,
+    endpointShort,
     requestPermission,
     subscribe,
     unsubscribe
