@@ -21,8 +21,7 @@ interface UsePushNotificationsReturn {
   unsubscribe: () => Promise<boolean>;
 }
 
-// VAPID public key - UNIFIED FROM ENV FOR ALL PLATFORMS
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+import { VAPID_PUBLIC_KEY, validateAndDecodeVAPIDKey } from '@/lib/constants/vapid';
 
 export const usePushNotifications = (): UsePushNotificationsReturn => {
   const [isSupported, setIsSupported] = useState(false);
@@ -65,21 +64,8 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     }
   };
 
-  // Convert base64url to Uint8Array for VAPID
-  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
+  // Use unified VAPID validation from constants
+  const urlBase64ToUint8Array = validateAndDecodeVAPIDKey;
 
   // Convert Uint8Array to base64url
   const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
@@ -137,31 +123,43 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
           applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
         });
       } else {
-        // Desktop: Try Firebase first, fallback to VAPID
-        console.log('🖥️ Desktop: trying Firebase FCM subscription');
-        try {
-          // Try to use Firebase messaging if available and supported
-          if (window.firebase?.messaging?.isSupported?.() && window.firebase.messaging.isSupported()) {
+        // VAPID key validation BEFORE subscribe
+        console.log('🔑 Validating VAPID key before subscription...');
+        const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+        console.log('✅ VAPID validation passed, creating subscription...');
+
+        // Use Firebase messaging if available, otherwise fallback to W3C
+        if (window.firebase && window.firebase.messaging) {
+          console.log('🔥 Using Firebase for subscription...');
+          try {
             const messaging = window.firebase.messaging();
             const token = await messaging.getToken({
               vapidKey: VAPID_PUBLIC_KEY,
               serviceWorkerRegistration: registration
             });
-            console.log('✅ Firebase FCM token obtained:', token);
             
-            // Convert FCM token to subscription format for compatibility
+            if (token) {
+              subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey
+              });
+              
+              console.log('🔥 Firebase + W3C subscription created');
+            } else {
+              throw new Error('Firebase token generation failed');
+            }
+          } catch (firebaseError) {
+            console.warn('🔥 Firebase failed, using W3C fallback:', firebaseError);
             subscription = await registration.pushManager.subscribe({
               userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+              applicationServerKey
             });
-          } else {
-            throw new Error('Firebase not available, using VAPID');
           }
-        } catch (fcmError) {
-          console.warn('Firebase FCM failed, falling back to VAPID:', fcmError);
+        } else {
+          // W3C Push API (standard)
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+            applicationServerKey
           });
         }
       }
