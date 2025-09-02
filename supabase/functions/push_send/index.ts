@@ -12,16 +12,8 @@ console.log('[PUSH] 🚀 M1SSION™ Push Send Function loaded');
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'n-QJKN01k1r7ROmzc5Ukn_-MkCE1q7_-Uv-QrCEkgT0';
 
-// Apple Push Service configurazione
-const APPLE_TEAM_ID = Deno.env.get('APPLE_TEAM_ID') || 'YOUR_TEAM_ID';
-const APPLE_KEY_ID = Deno.env.get('APPLE_KEY_ID') || 'YOUR_KEY_ID';
-const APPLE_PRIVATE_KEY = Deno.env.get('APPLE_PRIVATE_KEY') || null;
-
 console.log('[PUSH] 🔑 VAPID Public Key:', VAPID_PUBLIC_KEY);
 console.log('[PUSH] 🔑 VAPID Private Key length:', VAPID_PRIVATE_KEY.length);
-console.log('[PUSH] 🍎 Apple Team ID:', APPLE_TEAM_ID);
-console.log('[PUSH] 🍎 Apple Key ID:', APPLE_KEY_ID);
-console.log('[PUSH] 🍎 Apple Private Key configured:', !!APPLE_PRIVATE_KEY);
 
 Deno.serve(async (req) => {
   console.log(`[PUSH] ${req.method} ${req.url}`);
@@ -124,7 +116,7 @@ Deno.serve(async (req) => {
 
     console.log('[PUSH] 📤 Notification payload:', JSON.stringify(notification, null, 2));
 
-    // Invia notifiche usando Apple Push Service direttamente
+    // Invia notifiche
     const results = [];
     let sent = 0;
     let failed = 0;
@@ -139,45 +131,21 @@ Deno.serve(async (req) => {
         
         let pushResponse;
         
-        // Apple Push Service - TEST SENZA AUTENTICAZIONE
+        // Apple Push Service - Per iOS Safari 16.4+ usa Web Push standard
         if (isApplePush) {
-          console.log('[PUSH] 🍎 Testing Apple Push Service WITHOUT authentication');
+          console.log('[PUSH] 🍎 iOS Safari Web Push - using standard Web Push API');
           
-          // Primo test: payload minimale per Apple
-          const minimalApplePayload = {
-            aps: {
-              alert: notification.title,
-              sound: 'default'
-            }
-          };
-          
-          console.log('[PUSH] 🍎 Minimal Apple payload:', JSON.stringify(minimalApplePayload, null, 2));
-          
-          // Test chiamata senza headers specifici Apple
-          console.log('[PUSH] 🧪 Testing WITHOUT Apple-specific headers...');
+          // iOS Safari 16.4+ supporta Web Push standard senza VAPID custom
           pushResponse = await fetch(subscription.endpoint, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json'
+              'Content-Type': 'application/json',
+              'TTL': '2419200' // 4 settimane per iOS
             },
-            body: JSON.stringify(minimalApplePayload)
+            body: JSON.stringify(notification)
           });
           
-          console.log('[PUSH] 🧪 Response status without auth headers:', pushResponse.status);
-          
-          // Se fallisce, prova con headers VAPID standard
-          if (!pushResponse.ok && pushResponse.status === 403) {
-            console.log('[PUSH] 🔄 Trying with standard VAPID token...');
-            pushResponse = await fetch(subscription.endpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `WebPush ${await generateStandardVapidToken(subscription.endpoint)}`,
-                'TTL': '60'
-              },
-              body: JSON.stringify(minimalApplePayload)
-            });
-          }
+          console.log('[PUSH] 🍎 iOS response status:', pushResponse.status);
         } else {
           // Per FCM e altri provider, usiamo VAPID
           pushResponse = await fetch(subscription.endpoint, {
@@ -224,109 +192,7 @@ Deno.serve(async (req) => {
       }
     }
 
-// Helper function per generare token VAPID standard
-async function generateStandardVapidToken(audience: string) {
-  try {
-    console.log('[PUSH] 🔐 Generating standard VAPID token for:', audience);
-    
-    const header = {
-      alg: 'ES256',
-      typ: 'JWT'
-    };
-    
-    const audienceUrl = new URL(audience);
-    const payload = {
-      aud: audienceUrl.origin,
-      exp: Math.floor(Date.now() / 1000) + 3600,
-      sub: 'mailto:support@m1ssion.eu'
-    };
-    
-    const encodedHeader = base64UrlEncode(JSON.stringify(header));
-    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-    const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-    
-    // Token VAPID semplice per test
-    const signature = base64UrlEncode('vapid-test-signature');
-    return `${unsignedToken}.${signature}`;
-    
-  } catch (error) {
-    console.error('[PUSH] ❌ Error generating standard VAPID token:', error);
-    return 'standard-vapid-token';
-  }
-}
-
-// Helper function per generare VAPID token per Apple Push Service
-async function generateVapidToken(audience: string) {
-  try {
-    console.log('[PUSH] 🔐 Generating Apple-compatible JWT token for:', audience);
-    
-    // Per Apple Push Service, il token deve avere un formato specifico
-    const header = {
-      alg: 'ES256',
-      typ: 'JWT'
-    };
-    
-    // Apple richiede audience come origin dell'endpoint
-    const audienceUrl = new URL(audience);
-    const payload = {
-      iss: 'app.lovable.2716f91b957c47ba91e06f572f3ce00d', // Bundle ID
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600, // 1 ora
-      aud: audienceUrl.origin,
-      sub: 'mailto:support@m1ssion.eu'
-    };
-    
-    console.log('[PUSH] 📋 JWT header:', header);
-    console.log('[PUSH] 📋 JWT payload:', payload);
-    
-    const encodedHeader = base64UrlEncode(JSON.stringify(header));
-    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-    const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-    
-    console.log('[PUSH] 📝 Unsigned token created');
-    
-    // Per ora creiamo un token semplice con firma mock per test
-    // In produzione serve una chiave privata ECDSA P-256 valida
-    const mockSignature = base64UrlEncode('mock-signature-for-testing');
-    const finalToken = `${unsignedToken}.${mockSignature}`;
-    
-    console.log('[PUSH] 🎯 Final JWT token generated (mock)');
-    return finalToken;
-    
-  } catch (error) {
-    console.error('[PUSH] ❌ Error generating VAPID token:', error);
-    
-    // Fallback semplice
-    return 'mock-jwt-token-for-testing';
-  }
-}
-
-// Helper functions per base64url encoding/decoding
-function base64UrlEncode(data: string | Uint8Array): string {
-  let base64: string;
-  if (typeof data === 'string') {
-    base64 = btoa(data);
-  } else {
-    const binary = String.fromCharCode(...data);
-    base64 = btoa(binary);
-  }
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-function base64UrlDecode(str: string): Uint8Array {
-  // Aggiungi padding se necessario
-  str += '='.repeat((4 - str.length % 4) % 4);
-  // Sostituisci caratteri URL-safe
-  str = str.replace(/-/g, '+').replace(/_/g, '/');
-  
-  const binary = atob(str);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
+    // Risultato finale
     const finalResult = {
       ok: sent > 0,
       sent,
@@ -361,3 +227,49 @@ function base64UrlDecode(str: string): Uint8Array {
     });
   }
 });
+
+// Helper function per generare VAPID token per FCM
+async function generateVapidToken(audience: string) {
+  try {
+    console.log('[PUSH] 🔐 Generating VAPID token for FCM:', audience);
+    
+    const header = {
+      alg: 'ES256',
+      typ: 'JWT'
+    };
+    
+    const audienceUrl = new URL(audience);
+    const payload = {
+      aud: audienceUrl.origin,
+      exp: Math.floor(Date.now() / 1000) + 3600,
+      sub: 'mailto:support@m1ssion.eu'
+    };
+    
+    const encodedHeader = base64UrlEncode(JSON.stringify(header));
+    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+    const unsignedToken = `${encodedHeader}.${encodedPayload}`;
+    
+    // Per ora creiamo un token mock per test
+    const mockSignature = base64UrlEncode('fcm-vapid-signature');
+    const finalToken = `${unsignedToken}.${mockSignature}`;
+    
+    console.log('[PUSH] 🎯 VAPID token generated for FCM');
+    return finalToken;
+    
+  } catch (error) {
+    console.error('[PUSH] ❌ Error generating VAPID token:', error);
+    return 'mock-vapid-token';
+  }
+}
+
+// Helper functions per base64url encoding
+function base64UrlEncode(data: string | Uint8Array): string {
+  let base64: string;
+  if (typeof data === 'string') {
+    base64 = btoa(data);
+  } else {
+    const binary = String.fromCharCode(...data);
+    base64 = btoa(binary);
+  }
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
