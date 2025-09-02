@@ -3,9 +3,10 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import webPush from "https://esm.sh/web-push@3.6.7";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
@@ -17,12 +18,30 @@ console.log('[PUSH] 🚀 M1SSION™ W3C Web Push Function loaded');
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'n-QJKN01k1r7ROmzc5Ukn_-MkCE1q7_-Uv-QrCEkgT0';
 
-console.log('[PUSH] 🔑 VAPID fingerprint:', {
-  public_length: VAPID_PUBLIC_KEY.length,
-  private_length: VAPID_PRIVATE_KEY.length,
-  public_prefix: VAPID_PUBLIC_KEY.substring(0, 10),
-  private_prefix: VAPID_PRIVATE_KEY.substring(0, 8)
+// Base64url decoder per verifiche VAPID
+const b64urlToUint8 = (s: string) => {
+  const p = '='.repeat((4 - s.length % 4) % 4);
+  const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+};
+
+const pubBytes = b64urlToUint8(VAPID_PUBLIC_KEY);
+const privBytes = b64urlToUint8(VAPID_PRIVATE_KEY);
+
+console.log('[PUSH] 🔑 VAPID verification:', {
+  pub_length: pubBytes.length,
+  prv_length: privBytes.length,
+  pub_fingerprint: Array.from(pubBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join(''),
+  prv_fingerprint: Array.from(privBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join('')
 });
+
+// Configure web-push with VAPID
+webPush.setVapidDetails(
+  'mailto:push@m1ssion.eu',
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
 serve(async (req) => {
   console.log(`[PUSH] ${req.method} ${req.url}`);
@@ -116,7 +135,7 @@ serve(async (req) => {
 
     console.log('[PUSH] 📤 Notification:', JSON.stringify(notification, null, 2));
 
-    // Send notifications using W3C Web Push
+    // Send notifications using web-push library
     const results = [];
     let sent = 0;
     let failed = 0;
@@ -126,84 +145,54 @@ serve(async (req) => {
         const endpoint = subscription.endpoint;
         console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 50)}...`);
         
-        const isApplePush = endpoint.includes('web.push.apple.com');
-        const isFCM = endpoint.includes('fcm.googleapis.com');
-        
-        console.log(`[PUSH] 🍎 Apple: ${isApplePush}, 🟢 FCM: ${isFCM}`);
-        
-        let pushResponse;
-        
-        if (isApplePush) {
-          // iOS Safari Web Push (standard W3C)
-          pushResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'TTL': '2419200' // 4 weeks
-            },
-            body: JSON.stringify(notification)
-          });
-        } else if (isFCM) {
-          // FCM Web Push with VAPID
-          const vapidToken = await generateVapidJWT(endpoint);
-          pushResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `WebPush ${vapidToken}`,
-              'TTL': '60'
-            },
-            body: JSON.stringify(notification)
-          });
-        } else {
-          // Generic Web Push
-          pushResponse = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'TTL': '60'
-            },
-            body: JSON.stringify(notification)
-          });
-        }
-
-        console.log(`[PUSH] ✅ Response: ${pushResponse.status}`);
-        
-        if (pushResponse.ok || pushResponse.status === 204) {
-          sent++;
-          results.push({
-            endpoint: endpoint.substring(0, 50) + '...',
-            ok: true,
-            status: pushResponse.status
-          });
-        } else {
-          failed++;
-          const errorText = await pushResponse.text();
-          console.error(`[PUSH] ❌ Failed: ${pushResponse.status} - ${errorText}`);
-          
-          // Remove 404/410 subscriptions
-          if (pushResponse.status === 404 || pushResponse.status === 410) {
-            console.log('[PUSH] 🗑️ Removing invalid subscription...');
-            await supabase
-              .from('push_subscriptions')
-              .delete()
-              .eq('endpoint', endpoint);
+        // Build proper subscription object for web-push
+        const pushSubscription = {
+          endpoint: endpoint,
+          keys: subscription.keys || {
+            p256dh: subscription.p256dh,
+            auth: subscription.auth
           }
-          
-          results.push({
-            endpoint: endpoint.substring(0, 50) + '...',
-            ok: false,
-            status: pushResponse.status,
-            error: errorText
-          });
-        }
+        };
+        
+        console.log(`[PUSH] 📨 Subscription object:`, pushSubscription);
+        
+        // Send using web-push library with VAPID
+        const pushResult = await webPush.sendNotification(
+          pushSubscription,
+          JSON.stringify(notification),
+          {
+            TTL: 60,
+            urgency: 'normal',
+            topic: 'mission-notification'
+          }
+        );
+
+        console.log(`[PUSH] ✅ Web-push result:`, pushResult);
+        
+        sent++;
+        results.push({
+          endpoint: endpoint.substring(0, 50) + '...',
+          ok: true,
+          status: pushResult.statusCode || 200
+        });
 
       } catch (error) {
-        console.error(`[PUSH] ❌ Exception:`, error);
+        console.error(`[PUSH] ❌ Web-push error:`, error);
         failed++;
+        
+        // Handle specific web-push errors
+        if (error.statusCode === 404 || error.statusCode === 410) {
+          console.log('[PUSH] 🗑️ Removing invalid subscription...');
+          await supabase
+            .from('push_subscriptions')
+            .delete()
+            .eq('endpoint', subscription.endpoint);
+        }
+        
         results.push({
           endpoint: subscription.endpoint?.substring(0, 50) + '...',
           ok: false,
+          status: error.statusCode || 500,
           error: error.message
         });
       }
@@ -243,36 +232,7 @@ serve(async (req) => {
   }
 });
 
-// Generate VAPID JWT for FCM
-async function generateVapidJWT(audience: string): Promise<string> {
-  try {
-    const audienceUrl = new URL(audience);
-    
-    const header = {
-      alg: 'ES256',
-      typ: 'JWT'
-    };
-    
-    const payload = {
-      aud: audienceUrl.origin,
-      exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour
-      sub: 'mailto:support@m1ssion.eu'
-    };
-    
-    const encodedHeader = base64UrlEncode(JSON.stringify(header));
-    const encodedPayload = base64UrlEncode(JSON.stringify(payload));
-    const unsignedToken = `${encodedHeader}.${encodedPayload}`;
-    
-    // For now, use mock signature (real implementation would use VAPID_PRIVATE_KEY)
-    const mockSignature = base64UrlEncode('vapid-signature-' + Date.now());
-    return `${unsignedToken}.${mockSignature}`;
-    
-  } catch (error) {
-    console.error('[PUSH] ❌ VAPID JWT error:', error);
-    return 'vapid-jwt-fallback';
-  }
-}
-
+// Helper function for base64url encoding (not needed with web-push library)
 function base64UrlEncode(data: string): string {
   const base64 = btoa(data);
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
