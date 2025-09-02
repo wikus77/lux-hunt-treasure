@@ -51,12 +51,17 @@ const NotificationsSettings: React.FC = () => {
 
   useEffect(() => {
     const checkSupport = async () => {
-      const supported = 'serviceWorker' in navigator && 'PushManager' in window;
-      setIsSupported(supported);
+      // Feature detection for Push API support (works on all platforms)
+      const pushSupported = 'Notification' in window && 
+                           'serviceWorker' in navigator && 
+                           'PushManager' in window && 
+                           location.protocol === 'https:';
       
-      console.log('Push notifications supported:', supported);
+      setIsSupported(pushSupported);
       
-      if (supported) {
+      console.log('Push notifications supported:', pushSupported);
+      
+      if (pushSupported) {
         try {
           // Register service worker first
           await navigator.serviceWorker.register('/sw.js');
@@ -182,10 +187,10 @@ const NotificationsSettings: React.FC = () => {
         if (permission === 'granted') {
           const registration = await navigator.serviceWorker.ready;
           
-          // Use the VAPID public key with proper decoder
-          const vapidKey = 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
+          // Use the VAPID public key from environment variables
+          const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
           
-          console.log('VAPID public key bytes:', b64urlToUint8(vapidKey).length);
+          console.log('VAPID public bytes:', b64urlToUint8(vapidKey).length); // must be 65
           
           const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
@@ -203,18 +208,24 @@ const NotificationsSettings: React.FC = () => {
             ua: navigator.userAgent
           };
           
-          const saveResponse = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_subscribe`, {
+          const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+          const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+          
+          const saveResponse = await fetch(`${SUPA}/functions/v1/push_subscribe`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
-              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+              'Authorization': `Bearer ${ANON}`,
+              'apikey': ANON
             },
             body: JSON.stringify(subscriptionData)
           });
           
+          const saveText = await saveResponse.text();
+          console.log('Save response:', saveResponse.status, saveText);
+          
           if (!saveResponse.ok) {
-            throw new Error(`Save failed: ${saveResponse.status}`);
+            throw new Error(`Save failed: ${saveResponse.status} - ${saveText}`);
           }
           
           setIsEnabled(true);
