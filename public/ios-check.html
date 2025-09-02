@@ -274,7 +274,7 @@
                 
                 log(`📤 Send payload: ${JSON.stringify(sendPayload, null, 2)}`, 'info');
                 
-                const sendResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send_canary', {
+                const sendResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/send-push-canary', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

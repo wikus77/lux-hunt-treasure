@@ -318,7 +318,7 @@
                 
                 showStatus('send-status', '🚀 Sending test push via canary...', 'info');
                 
-                const response = await fetch(`${SUPABASE_URL}/functions/v1/push_send_canary`, {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/send-push-canary`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
