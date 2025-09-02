@@ -60,7 +60,7 @@ export default function PushHealth() {
 
       // Check VAPID Keys (try to create a test subscription structure)
       try {
-        const testKey = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
+        const testKey = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
         // Simple validation - check if it's a valid base64url string of correct length
         const decoded = atob(testKey.replace(/-/g, '+').replace(/_/g, '/'));
         newStatus.vapidKeys = decoded.length === 65 ? 'ok' : 'error';
