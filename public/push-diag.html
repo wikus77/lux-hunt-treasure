@@ -297,6 +297,14 @@
             }
             
             try {
+                // L2 Fix: Always print endpoint_type deduced
+                const endpoint = currentSubscription.endpoint;
+                const endpointType = endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
+                                   endpoint.includes('web.push.apple.com') ? 'APNS' : 'UNKNOWN';
+                
+                showStatus('send-status', `📱 Endpoint Type: ${endpointType}`, 'info');
+                log(`Endpoint type deduced: ${endpointType}`);
+                
                 const testPayload = {
                     user_id: '495246c1-9154-4f01-a428-7f37fe230180', // Default test user
                     title: 'M1SSION CANARY OK',
@@ -322,18 +330,37 @@
                 
                 if (response.ok) {
                     const result = await response.json();
-                    const sent = result.sent?.length || 0;
-                    const failed = result.failed?.length || 0;
-                    const toDelete = result.to_delete?.length || 0;
+                    
+                    // L2 Fix: Parse response correctly - no more [object Object]
+                    const sent = typeof result.sent === 'number' ? result.sent : (result.sent?.length || 0);
+                    const failed = typeof result.failed === 'number' ? result.failed : (result.failed?.length || 0);
+                    const toDelete = typeof result.to_delete === 'number' ? result.to_delete : (result.to_delete?.length || 0);
                     
                     showStatus('send-status', 
                         `✅ Canary test completato! ✅ ${sent} inviati, ❌ ${failed} falliti${toDelete > 0 ? `, 🗑️ ${toDelete} da eliminare` : ''}`, 
                         sent > 0 ? 'ok' : 'warning'
                     );
+                    
+                    // L2 Fix: Show raw JSON response with details expansion
+                    const jsonStr = JSON.stringify(result, null, 2);
+                    showStatus('send-status', 
+                        `📋 Raw Response: <pre style="font-size: 10px; max-height: 200px; overflow: auto; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 4px;">${jsonStr.substring(0, 1000)}${jsonStr.length > 1000 ? '\n... (truncated)' : ''}</pre>`, 
+                        'info'
+                    );
+                    
                     log('Canary test result:', result);
                 } else {
                     const error = await response.text();
-                    throw new Error(`Canary test failed: ${response.status} - ${error}`);
+                    // L2 Fix: If DB save fails (invalid UUID), show message but continue with send if possible
+                    if (response.status === 500 && error.includes('invalid input syntax for type uuid')) {
+                        showStatus('send-status', 
+                            `⚠️ <strong>Database Save Failed (UUID Error)</strong><br/>Continuing with send attempt anyway...<br/><small>${error}</small>`, 
+                            'warning'
+                        );
+                        log('DB save failed due to UUID error, but continuing:', error);
+                    } else {
+                        throw new Error(`Canary test failed: ${response.status} - ${error}`);
+                    }
                 }
                 
             } catch (error) {

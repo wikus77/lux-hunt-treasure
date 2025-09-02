@@ -386,7 +386,14 @@ const NotificationsSettings: React.FC = () => {
     }
   };
 
-  // Send test push notification via canary endpoint
+  // Gate L0 Verification & Enhanced Test Push with detailed logging
+  const [testResults, setTestResults] = useState<{
+    request?: any;
+    response?: any;
+    hints?: string[];
+    passRate?: number;
+  }>({});
+
   const handleSendTestPush = async () => {
     if (!user) {
       toast({
@@ -397,32 +404,123 @@ const NotificationsSettings: React.FC = () => {
       return;
     }
 
+    // Check permission state first
+    if (Notification.permission === 'denied') {
+      toast({
+        title: "🔒 Permessi Bloccati",
+        description: "Le notifiche sono bloccate. Vai alle impostazioni del browser per abilitarle.",
+        variant: "destructive",
+        action: (
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => window.open('https://support.google.com/chrome/answer/3220216?hl=it', '_blank')}
+          >
+            Guida
+          </Button>
+        )
+      });
+      return;
+    }
+
+    // Get current subscription for payload
+    let subscription = null;
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          subscription = await registration.pushManager.getSubscription();
+        }
+      } catch (e) {
+        console.warn('Could not get subscription:', e);
+      }
+    }
+
     setLoading(true);
+    
+    const requestPayload = {
+      user_id: user.id,
+      title: 'M1SSION™ Test',
+      body: 'E2E test from settings - canary endpoint working!',
+      data: { src: 'settings', timestamp: Date.now() }
+    };
+
     try {
-      console.log('🚀 Sending test push via canary endpoint...');
+      // L0 GATE: Log complete payload being sent to edge function
+      console.log('🚀 [L0-GATE] Sending test push via CANARY endpoint: push_send_canary');
+      console.log('📤 [L0-GATE] Request payload (REDACTED):', {
+        user_id: requestPayload.user_id,
+        title: requestPayload.title,
+        body: requestPayload.body,
+        subscription_endpoint: subscription?.endpoint ? 
+          subscription.endpoint.substring(0, 50) + '...' : 'No subscription',
+        subscription_keys: subscription?.toJSON() ? {
+          p256dh: subscription.toJSON().keys?.p256dh?.substring(0, 16) + '...',
+          auth: subscription.toJSON().keys?.auth?.substring(0, 8) + '...'
+        } : 'No keys',
+        endpoint_type: subscription?.endpoint ? 
+          (subscription.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 
+           subscription.endpoint.includes('web.push.apple.com') ? 'apns' : 'unknown') : 'none'
+      });
       
       const { data, error } = await supabase.functions.invoke('push_send_canary', {
-        body: {
-          user_id: user.id,
-          title: 'M1SSION™ Test',
-          body: 'E2E test from settings - canary endpoint working!',
-          data: { src: 'settings', timestamp: Date.now() }
-        }
+        body: requestPayload
       });
 
       if (error) {
         throw new Error(error.message);
       }
 
-      console.log('✅ Test push result:', data);
+      // L0 GATE: Log raw response from edge function
+      console.log('✅ [L0-GATE] Raw Edge Response:', JSON.stringify(data, null, 2));
+
+      // L1 Fix: Parse response correctly (no more [object Object])
+      const sent = typeof data.sent === 'number' ? data.sent : (data.sent?.length || 0);
+      const failed = typeof data.failed === 'number' ? data.failed : (data.failed?.length || 0);
+      const removed = typeof data.removed === 'number' ? data.removed : (data.to_delete?.length || 0);
+      
+      // L1 Fix: Calculate pass rate and generate hints
+      const total = sent + failed;
+      const passRate = total > 0 ? (sent / total) : 0;
+      const hints = [];
+      
+      if (failed > 0 && data.results) {
+        const errorCounts: { [key: string]: number } = {};
+        data.results.forEach((result: any) => {
+          if (!result.success && result.error) {
+            const errorKey = `${result.status || 'unknown'}-${result.error.split(':')[0] || 'error'}`;
+            errorCounts[errorKey] = (errorCounts[errorKey] || 0) + 1;
+          }
+        });
+        
+        Object.entries(errorCounts).forEach(([error, count]) => {
+          hints.push(`${error}: ${count} occorrenze`);
+        });
+      }
+
+      // Update test results state for UI display
+      setTestResults({
+        request: requestPayload,
+        response: data,
+        hints,
+        passRate
+      });
       
       toast({
-        title: "🚀 Test Push Inviato!",
-        description: `Risultato: ${data.sent || 0} inviati, ${data.failed || 0} falliti`
+        title: passRate >= 0.99 ? "🟢 Test Push Inviato!" : "🟡 Test Push Completato",
+        description: `Inviati: ${sent} • Falliti: ${failed} • Pass Rate: ${(passRate * 100).toFixed(1)}%`
       });
 
     } catch (error: any) {
-      console.error('❌ Test push failed:', error);
+      console.error('❌ [L0-GATE] Test push failed:', error);
+      
+      setTestResults({
+        request: requestPayload,
+        response: { error: error.message },
+        hints: [`Error: ${error.message}`],
+        passRate: 0
+      });
+      
       toast({
         title: "❌ Errore Test Push",
         description: error.message || "Impossibile inviare il test push",
@@ -430,6 +528,147 @@ const NotificationsSettings: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // L3 Test Runner (DEV only) - Execute 20 consecutive sends
+  const [runnerResults, setRunnerResults] = useState<{
+    passRate?: number;
+    avgLatency?: number;
+    stdDev?: number;
+    errorDistribution?: { [key: string]: number };
+    harBlob?: Blob;
+  }>({});
+  const [isRunningBatch, setIsRunningBatch] = useState(false);
+
+  const handleBatchTest = async () => {
+    if (!user) return;
+    
+    setIsRunningBatch(true);
+    const results: any[] = [];
+    const latencies: number[] = [];
+    const errorCounts: { [key: string]: number } = {};
+    
+    try {
+      console.log('🧪 [L3-BATCH] Starting 20 consecutive test sends...');
+      
+      for (let i = 0; i < 20; i++) {
+        const startTime = Date.now();
+        
+        try {
+          const { data, error } = await supabase.functions.invoke('push_send_canary', {
+            body: {
+              user_id: user.id,
+              title: `M1SSION™ Batch Test ${i + 1}/20`,
+              body: `Batch test execution ${Date.now()}`,
+              data: { src: 'batch-test', batch: i + 1, timestamp: Date.now() }
+            }
+          });
+          
+          const latency = Date.now() - startTime;
+          latencies.push(latency);
+          
+          if (error) {
+            errorCounts['edge-error'] = (errorCounts['edge-error'] || 0) + 1;
+            results.push({ success: false, error: error.message, latency });
+          } else {
+            const sent = typeof data.sent === 'number' ? data.sent : (data.sent?.length || 0);
+            const failed = typeof data.failed === 'number' ? data.failed : (data.failed?.length || 0);
+            
+            results.push({ success: sent > 0, sent, failed, latency });
+            
+            if (failed > 0 && data.results) {
+              data.results.forEach((res: any) => {
+                if (!res.success) {
+                  const errorKey = `${res.status || 'unknown'}-${res.error?.split(':')[0] || 'error'}`;
+                  errorCounts[errorKey] = (errorCounts[errorKey] || 0) + 1;
+                }
+              });
+            }
+          }
+        } catch (err: any) {
+          const latency = Date.now() - startTime;
+          latencies.push(latency);
+          errorCounts['network-error'] = (errorCounts['network-error'] || 0) + 1;
+          results.push({ success: false, error: err.message, latency });
+        }
+        
+        // Small delay between requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      // Calculate statistics
+      const successful = results.filter(r => r.success).length;
+      const passRate = successful / 20;
+      const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
+      const variance = latencies.reduce((a, b) => a + Math.pow(b - avgLatency, 2), 0) / latencies.length;
+      const stdDev = Math.sqrt(variance);
+      
+      // Create HAR-like data blob for download
+      const harData = {
+        log: {
+          version: "1.2",
+          creator: { name: "M1SSION™ Batch Test", version: "1.0" },
+          entries: results.map((result, i) => ({
+            startedDateTime: new Date().toISOString(),
+            time: result.latency,
+            request: {
+              method: "POST",
+              url: "push_send_canary",
+              httpVersion: "HTTP/1.1",
+              headers: [],
+              postData: { mimeType: "application/json", text: `Test ${i + 1}` }
+            },
+            response: {
+              status: result.success ? 200 : 500,
+              statusText: result.success ? "OK" : "Error",
+              httpVersion: "HTTP/1.1",
+              headers: [],
+              content: { size: 0, mimeType: "application/json", text: JSON.stringify(result) }
+            }
+          }))
+        }
+      };
+      
+      const harBlob = new Blob([JSON.stringify(harData, null, 2)], { type: 'application/json' });
+      
+      setRunnerResults({
+        passRate,
+        avgLatency,
+        stdDev,
+        errorDistribution: errorCounts,
+        harBlob
+      });
+      
+      console.log('🧪 [L3-BATCH] Results:', { passRate, avgLatency, stdDev, errorCounts });
+      
+      toast({
+        title: passRate >= 0.99 ? "🟢 Batch Test Passed!" : "🟡 Batch Test Completed",
+        description: `Pass Rate: ${(passRate * 100).toFixed(1)}% • Avg Latency: ${avgLatency.toFixed(0)}ms`
+      });
+      
+    } catch (error: any) {
+      console.error('🧪 [L3-BATCH] Batch test failed:', error);
+      toast({
+        title: "❌ Batch Test Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsRunningBatch(false);
+    }
+  };
+
+  const downloadHAR = () => {
+    if (runnerResults.harBlob) {
+      const url = URL.createObjectURL(runnerResults.harBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `m1ssion-push-batch-test-${Date.now()}.har`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   };
 
@@ -565,16 +804,59 @@ const NotificationsSettings: React.FC = () => {
             
             {/* Test Push Button (Development) */}
             {import.meta.env.DEV && settings.push_notifications_enabled && (
-              <div className="border-t border-white/10 pt-4">
+              <div className="border-t border-white/10 pt-4 space-y-3">
                 <Button
                   onClick={handleSendTestPush}
-                  disabled={loading}
+                  disabled={loading || Notification.permission === 'denied' || !pushTokenExists}
                   variant="outline"
                   size="sm"
                   className="w-full"
                 >
                   🚀 Invia Test Push (canary)
                 </Button>
+                
+                {/* L1 Fix: Three panels for request/response/hints */}
+                {testResults.request && (
+                  <div className="space-y-2 text-xs">
+                    <details className="bg-white/5 rounded p-2">
+                      <summary className="font-medium cursor-pointer">📤 Request Preview</summary>
+                      <pre className="mt-2 overflow-auto text-[10px]">
+                        {JSON.stringify(testResults.request, null, 2)}
+                      </pre>
+                    </details>
+                    
+                    <details className="bg-white/5 rounded p-2">
+                      <summary className="font-medium cursor-pointer">📥 Response Preview</summary>
+                      <pre className="mt-2 overflow-auto text-[10px]">
+                        {JSON.stringify(testResults.response, null, 2).substring(0, 2000)}
+                        {JSON.stringify(testResults.response, null, 2).length > 2000 && (
+                          <span className="text-yellow-400">... (Mostra tutto: {JSON.stringify(testResults.response, null, 2).length} chars)</span>
+                        )}
+                      </pre>
+                    </details>
+                    
+                    {testResults.hints && testResults.hints.length > 0 && (
+                      <div className="bg-orange-500/10 border border-orange-500/20 rounded p-2">
+                        <div className="font-medium text-orange-400">💡 Hints</div>
+                        <ul className="mt-1 space-y-1">
+                          {testResults.hints.map((hint, i) => (
+                            <li key={i} className="text-orange-300">• {hint}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {typeof testResults.passRate === 'number' && (
+                      <div className={`rounded p-2 border ${testResults.passRate >= 0.99 
+                        ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+                        : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                        <span className={testResults.passRate >= 0.99 ? '🟢' : '🔴'}>
+                          {' '}Pass Rate: {(testResults.passRate * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -600,6 +882,70 @@ const NotificationsSettings: React.FC = () => {
             </Button>
             <p className="text-orange-300/70 text-xs mt-2">
               Test endpoint: /functions/v1/push_send_canary - Solo in development
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* L3: Test Runner (DEV only) */}
+      {import.meta.env.DEV && settings.push_notifications_enabled && (
+        <Card className="bg-purple-950/40 border-purple-500/30 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-purple-400 font-orbitron flex items-center">
+              🔬 L3: Batch Test Runner (20x consecutive)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={handleBatchTest}
+              disabled={isRunningBatch || loading || Notification.permission === 'denied' || !pushTokenExists}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              variant="default"
+            >
+              {isRunningBatch ? '🔄 Running Batch Test...' : '🔬 Esegui 20 invii consecutivi'}
+            </Button>
+            
+            {/* L3 Results Display */}
+            {typeof runnerResults.passRate === 'number' && (
+              <div className="space-y-2 text-xs">
+                <div className={`rounded p-3 border ${runnerResults.passRate >= 0.99 
+                  ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+                  : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+                  <div className="font-medium">
+                    {runnerResults.passRate >= 0.99 ? '🟢' : '🔴'} PASS RATE: {(runnerResults.passRate * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-[10px] mt-1 space-y-1">
+                    <div>⏱️ Avg Latency: {runnerResults.avgLatency?.toFixed(0)}ms</div>
+                    <div>📊 Std Dev: ±{runnerResults.stdDev?.toFixed(0)}ms</div>
+                  </div>
+                </div>
+                
+                {runnerResults.errorDistribution && Object.keys(runnerResults.errorDistribution).length > 0 && (
+                  <div className="bg-orange-500/10 border border-orange-500/20 rounded p-2">
+                    <div className="font-medium text-orange-400">📈 Error Distribution</div>
+                    <ul className="mt-1 space-y-1 text-[10px]">
+                      {Object.entries(runnerResults.errorDistribution).map(([error, count]) => (
+                        <li key={error} className="text-orange-300">• {error}: {count}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {runnerResults.harBlob && (
+                  <Button
+                    onClick={downloadHAR}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-[10px] h-7"
+                  >
+                    📥 Download HAR (Network Export)
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            <p className="text-purple-300/70 text-xs">
+              Military-grade testing: 20 consecutive sends to measure reliability
             </p>
           </CardContent>
         </Card>

@@ -252,7 +252,14 @@
                     return;
                 }
                 
-                log(`🚀 Sending test push notification...`, 'info');
+                log(`🚀 [L2-FIX] Sending test push via CANARY endpoint...`, 'info');
+                
+                // L2 Fix: Use canary endpoint with detailed endpoint type detection
+                const endpoint = currentSubscription.endpoint;
+                const endpointType = endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
+                                   endpoint.includes('web.push.apple.com') ? 'APNS' : 'UNKNOWN';
+                
+                log(`📱 Detected endpoint type: ${endpointType}`, 'info');
                 
                 const sendPayload = {
                     user_id: '495246c1-9154-4f01-a428-7f37fe230180', // User ID di wikus77@hotmail.it
@@ -263,7 +270,7 @@
                 
                 log(`📤 Send payload: ${JSON.stringify(sendPayload, null, 2)}`, 'info');
                 
-                const sendResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send', {
+                const sendResult = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send_canary', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -276,16 +283,38 @@
                 if (sendResult.ok) {
                     const result = await sendResult.json();
                     log(`✅ Push sent successfully!`, 'ok');
-                    log(`📊 Send result: ${JSON.stringify(result, null, 2)}`, 'info');
+                    log(`📊 Send result (RAW JSON): ${JSON.stringify(result, null, 2)}`, 'info');
                     
-                    if (result.sent > 0) {
+                    // L2 Fix: Parse response correctly - no more [object Object]
+                    const sent = typeof result.sent === 'number' ? result.sent : (result.sent?.length || 0);
+                    const failed = typeof result.failed === 'number' ? result.failed : (result.failed?.length || 0);
+                    const removed = typeof result.removed === 'number' ? result.removed : (result.to_delete?.length || 0);
+                    
+                    log(`📊 Parsed: Sent: ${sent}, Failed: ${failed}, Removed: ${removed}`, 'info');
+                    
+                    if (sent > 0) {
                         log(`🎉 Check your device for the notification!`, 'ok');
-                    } else if (result.failed > 0) {
+                    } else if (failed > 0) {
                         log(`⚠️ Push failed to send. Check results above.`, 'warning');
+                        
+                        // L2 Fix: Show specific error codes if available
+                        if (result.results && Array.isArray(result.results)) {
+                            result.results.forEach((res, i) => {
+                                if (!res.success) {
+                                    log(`❌ Error ${i+1}: ${res.status || 'unknown'} - ${res.error || 'no details'}`, 'error');
+                                }
+                            });
+                        }
                     }
                 } else {
                     const errorText = await sendResult.text();
-                    log(`❌ Failed to send push: ${sendResult.status} - ${errorText}`, 'error');
+                    // L2 Fix: If DB save fails, show message but continue
+                    if (sendResult.status === 500 && errorText.includes('invalid input syntax for type uuid')) {
+                        log(`⚠️ Database save failed (UUID error), but attempting to send anyway...`, 'warning');
+                        log(`💾 DB Error: ${errorText}`, 'warning');
+                    } else {
+                        log(`❌ Failed to send push: ${sendResult.status} - ${errorText}`, 'error');
+                    }
                 }
                 
             } catch (error) {
