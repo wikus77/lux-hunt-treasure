@@ -148,8 +148,21 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
       const applicationServerKey = getAppServerKey(); // Throws if invalid
       console.log('✅ VAPID pre-validation passed');
 
-      // Get service worker registration
-      const registration = await navigator.serviceWorker.ready;
+      // P0 FIX: Ensure unified SW registration
+      console.log('🔄 Ensuring unified SW registration...');
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      
+      // Unregister any firebase-messaging-sw to prevent conflicts
+      for (const reg of registrations) {
+        if (reg.scope.includes('firebase-messaging-sw') || 
+            (reg.active?.scriptURL && reg.active.scriptURL.includes('firebase-messaging-sw'))) {
+          console.log('🧹 Removing conflicting Firebase SW:', reg.scope);
+          await reg.unregister();
+        }
+      }
+      
+      // Register unified SW if needed
+      let registration = await navigator.serviceWorker.ready;
       
       // Unsubscribe existing subscription first to avoid duplicates
       const existingSubscription = await registration.pushManager.getSubscription();
