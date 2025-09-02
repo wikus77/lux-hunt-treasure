@@ -28,29 +28,61 @@ const DYNAMIC_ASSETS = [
 
 // Note: Install/activate events are defined below with push handlers
 
-// Fetch event - serve from cache with network fallback
+// Fetch event - FIXED: always return Response to prevent "Loading..." issue
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests
+  // Skip cross-origin requests that we don't cache
   if (url.origin !== location.origin && !DYNAMIC_ASSETS.some(asset => url.href.includes(asset))) {
-    return;
+    return; // Let browser handle it
   }
 
-  // Cache strategy: Cache First for static assets, Network First for API calls
-  if (STATIC_ASSETS.includes(url.pathname)) {
+  // CRITICAL FIX: Always use event.respondWith() to prevent null responses
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    // Navigation requests - MUST have fallback to prevent Loading issue
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          // Cache successful navigation responses
+          if (response.status === 200) {
+            caches.open(STATIC_CACHE).then(cache => {
+              cache.put(request, response.clone());
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // CRITICAL: fallback to cached index.html for SPA routing
+          return caches.match('/index.html').then(cached => {
+            return cached || new Response('<!DOCTYPE html><html><body><h1>Offline</h1><script>setTimeout(() => location.reload(), 3000)</script></body></html>', {
+              headers: { 'Content-Type': 'text/html' }
+            });
+          });
+        })
+    );
+  } else if (STATIC_ASSETS.includes(url.pathname)) {
     // Cache First strategy for static assets
     event.respondWith(
       caches.match(request)
         .then((response) => {
           return response || fetch(request)
             .then((fetchResponse) => {
-              return caches.open(STATIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, fetchResponse.clone());
-                  return fetchResponse;
-                });
+              if (fetchResponse.status === 200) {
+                return caches.open(STATIC_CACHE)
+                  .then((cache) => {
+                    cache.put(request, fetchResponse.clone());
+                    return fetchResponse;
+                  });
+              }
+              return fetchResponse;
+            })
+            .catch(() => {
+              // Return fallback for critical assets
+              return new Response('/* cached asset unavailable */', {
+                status: 200,
+                headers: { 'Content-Type': 'text/plain' }
+              });
             });
         })
     );
@@ -71,23 +103,32 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => {
           // Fallback to cache if network fails
-          return caches.match(request);
+          return caches.match(request).then(cached => {
+            return cached || new Response('{"error":"offline"}', {
+              status: 503,
+              headers: { 'Content-Type': 'application/json' }
+            });
+          });
         })
     );
   } else {
-    // Stale While Revalidate for other resources
+    // Stale While Revalidate for other resources with guaranteed Response
     event.respondWith(
       caches.match(request)
         .then((response) => {
           const fetchPromise = fetch(request)
             .then((fetchResponse) => {
-              caches.open(DYNAMIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, fetchResponse.clone());
-                });
+              if (fetchResponse.status === 200) {
+                caches.open(DYNAMIC_CACHE)
+                  .then((cache) => {
+                    cache.put(request, fetchResponse.clone());
+                  });
+              }
               return fetchResponse;
-            });
+            })
+            .catch(() => response); // Return cached version on network error
           
+          // Return cached immediately, or wait for network
           return response || fetchPromise;
         })
     );
