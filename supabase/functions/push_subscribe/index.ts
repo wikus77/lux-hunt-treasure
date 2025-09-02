@@ -6,9 +6,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, origin',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+  'Access-Control-Allow-Credentials': 'false',
 };
 
 serve(async (req) => {
@@ -87,8 +87,8 @@ serve(async (req) => {
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
-    // user_id può essere NULL per sottoscrizioni anonime
-    const finalUserId = user_id; // Non forzare un user_id di default
+    // CRITICO: Se user_id non è fornito, usa l'user_id di default (wikus)
+    const finalUserId = user_id || '495246c1-9154-4f01-a428-7f37fe230180';
     
     console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
 
@@ -101,7 +101,7 @@ serve(async (req) => {
         auth: keys.auth,
         ua: ua ?? null,
         platform: platform ?? null,
-        user_id: finalUserId,  // Può essere NULL
+        user_id: finalUserId,  // SEMPRE un user_id valido
         updated_at: new Date().toISOString()
       }, { 
         onConflict: "endpoint" 
