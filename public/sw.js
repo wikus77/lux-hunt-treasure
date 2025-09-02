@@ -84,9 +84,8 @@ self.addEventListener('fetch', (event) => {
           // Fallback to cached index.html for SPA routing
           console.log(`🔄 SW navigation fallback for: ${request.url}`);
           const cachedResponse = await caches.match('/index.html');
-          return cachedResponse || new Response('Service Worker Error', { 
-            status: 503, 
-            statusText: 'Service Unavailable' 
+          return cachedResponse || new Response('<!doctype html><title>Offline</title>', {
+            headers: { 'Content-Type': 'text/html' }
           });
         }
       })()
@@ -94,7 +93,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // All other requests - always pass through with Response
+  // P0 FIX: All other requests must ALWAYS return Response
   event.respondWith(fetch(request));
 });
 

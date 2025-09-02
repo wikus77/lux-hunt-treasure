@@ -15,23 +15,25 @@ export function buildPushHeaders(
 ): Record<string, string> {
   const hostname = endpointURL.hostname;
   
+  // P0 FIX: Correct headers per push service spec
   if (hostname.endsWith('web.push.apple.com')) {
     // Apple Web Push (iOS Safari 16.4+)
     console.log('🍎 Building Apple Web Push headers');
     return {
-      'authorization': `vapid t=${vapidJWT}, k=${publicKey}`,
-      'Content-Type': 'application/json',
+      'Authorization': `vapid t=${vapidJWT}, k=${publicKey}`,
+      'Content-Type': 'application/octet-stream',  // P0 FIX: binary payload
       'TTL': '2419200' // 4 weeks for iOS
+      // P0 FIX: NO Crypto-Key header for Apple
     };
   }
   
   if (hostname.endsWith('fcm.googleapis.com')) {
-    // Firebase Cloud Messaging
+    // Firebase Cloud Messaging Web Push
     console.log('🔥 Building FCM Web Push headers');
     return {
-      'Authorization': `WebPush ${vapidJWT}`,
-      'Crypto-Key': `p256ecdsa=${publicKey}`,
-      'Content-Type': 'application/json',
+      'Authorization': `WebPush ${vapidJWT}`,        // P0 FIX: WebPush prefix
+      'Crypto-Key': `p256ecdsa=${publicKey}`,        // P0 FIX: Required for FCM
+      'Content-Type': 'application/octet-stream',    // P0 FIX: binary payload
       'TTL': '86400' // 24 hours for FCM
     };
   }
@@ -42,7 +44,7 @@ export function buildPushHeaders(
     return {
       'Authorization': `WebPush ${vapidJWT}`,
       'Crypto-Key': `p256ecdsa=${publicKey}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/octet-stream',
       'TTL': '86400'
     };
   }
@@ -52,7 +54,7 @@ export function buildPushHeaders(
   return {
     'Authorization': `WebPush ${vapidJWT}`,
     'Crypto-Key': `p256ecdsa=${publicKey}`,
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/octet-stream',
     'TTL': '86400'
   };
 }
