@@ -14,11 +14,11 @@ const corsHeaders = {
 
 console.log('[PUSH] 🚀 M1SSION™ W3C Web Push Function loaded');
 
-// VAPID Keys allineate con il client
+// VAPID Keys aligned with client
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY') || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY') || 'n-QJKN01k1r7ROmzc5Ukn_-MkCE1q7_-Uv-QrCEkgT0';
 
-// Base64url decoder per verifiche VAPID
+// Base64url decoder for VAPID verification
 const b64urlToUint8 = (s: string) => {
   const p = '='.repeat((4 - s.length % 4) % 4);
   const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
@@ -29,23 +29,12 @@ const b64urlToUint8 = (s: string) => {
 const pubBytes = b64urlToUint8(VAPID_PUBLIC_KEY);
 const privBytes = b64urlToUint8(VAPID_PRIVATE_KEY);
 
-console.log('[PUSH] 🔑 VAPID verification:', {
-  pub_length: pubBytes.length,
-  prv_length: privBytes.length,
-  pub_fingerprint: Array.from(pubBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join(''),
-  prv_fingerprint: Array.from(privBytes.slice(0, 8)).map(x => x.toString(16).padStart(2, '0')).join('')
+console.log('[PUSH] 🔑 VAPID lens:', {
+  pub: pubBytes.length,
+  priv: privBytes.length
 });
 
-// Verify VAPID key lengths
-console.log('[PUSH] 🔑 VAPID key validation:', {
-  public_length: pubBytes.length,
-  private_length: privBytes.length,
-  expected_public: 65,
-  expected_private: 32,
-  public_valid: pubBytes.length === 65,
-  private_valid: privBytes.length === 32
-});
-
+// Verify VAPID key lengths (expected: public=65, private=32)
 if (pubBytes.length !== 65) {
   console.error('[PUSH] ❌ VAPID PUBLIC KEY wrong length:', pubBytes.length, 'expected 65');
 }
@@ -160,7 +149,7 @@ serve(async (req) => {
     for (const subscription of subscriptions) {
       try {
         const endpoint = subscription.endpoint;
-        console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 64)}...`);
+        console.log(`[PUSH] 🚀 Sending to: ${endpoint.substring(0, 60)}...`);
         
         // Build proper subscription object for web-push
         const pushSubscription = {
@@ -191,7 +180,7 @@ serve(async (req) => {
         
         sent++;
         results.push({
-          endpoint: endpoint.substring(0, 64) + '...',
+          endpoint: endpoint.substring(0, 60) + '...',
           ok: true,
           status: pushResult.statusCode || 200
         });
@@ -214,10 +203,10 @@ serve(async (req) => {
         }
         
         results.push({
-          endpoint: subscription.endpoint?.substring(0, 64) + '...',
+          endpoint: subscription.endpoint?.substring(0, 60) + '...',
           ok: false,
           status: error.statusCode || 500,
-          error: error.message
+          error: String(error?.statusCode || error?.message)
         });
       }
     }
@@ -247,7 +236,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       ok: false,
       error: 'Internal server error',
-      details: error.message,
+      details: String(error?.message || error),
       timestamp: new Date().toISOString()
     }), {
       status: 500,

@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Service Worker - Web Push W3C Compliant
-// push-ver: 2025-09-02T070900Z
+// sw-push-ver: 2025-09-02T07:30Z
 
 const CACHE_NAME = 'mission-v2.1.0';
 const STATIC_CACHE = 'mission-static-v2.1.0';
@@ -59,78 +59,29 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Push event handler - W3C Web Push
+// Push event handler - W3C Web Push  
 self.addEventListener('push', (event) => {
-  console.log('[M1SSION SW] 📨 Push event received:', event);
-  
   let data = {};
   try {
-    data = event.data ? event.data.json() : {};
+    data = event.data?.json() ?? {};
   } catch (error) {
     console.warn('[M1SSION SW] Failed to parse push data:', error);
-    data = {};
   }
   
-  console.log('[M1SSION SW] 📨 Push data:', data);
-  
-  const title = data.title || 'M1SSION™';
-  const options = {
-    body: data.body || 'Nuova notifica disponibile',
-    icon: '/favicon.ico',
-    badge: '/favicon.ico',
-    data: data.data || { url: '/' },
-    tag: 'mission-notification',
-    renotify: true,
-    requireInteraction: false,
-    actions: [
-      { action: 'open', title: 'Apri App' },
-      { action: 'close', title: 'Chiudi' }
-    ]
-  };
-  
   event.waitUntil(
-    self.registration.showNotification(title, options)
-      .then(() => {
-        console.log('[M1SSION SW] ✅ Notification shown successfully');
-      })
-      .catch(error => {
-        console.error('[M1SSION SW] ❌ Failed to show notification:', error);
-      })
+    self.registration.showNotification(data.title || 'M1SSION™', {
+      body: data.body || '',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      data: data.data || {}
+    })
   );
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[M1SSION SW] 🔔 Notification clicked:', event.notification.tag);
-  
   event.notification.close();
-  
-  if (event.action === 'close') {
-    return;
-  }
-  
-  const urlToOpen = event.notification.data?.url || '/';
-  
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then((clientList) => {
-        // Try to focus existing window
-        for (const client of clientList) {
-          if (client.url.includes(self.location.origin) && 'focus' in client) {
-            client.navigate(urlToOpen);
-            return client.focus();
-          }
-        }
-        
-        // Open new window
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
-      .catch(error => {
-        console.error('[M1SSION SW] ❌ Failed to handle notification click:', error);
-      })
-  );
+  event.waitUntil(clients.openWindow('/'));
 });
 
 // Fetch event handler - simplified to avoid respondWith(null) errors
@@ -190,4 +141,4 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support');
+console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support - sw-push-ver: 2025-09-02T07:30Z');
