@@ -26,6 +26,7 @@ import { enableWebPush } from "@/lib/push/enableWebPush";
 import { disableWebPush } from "@/lib/push/disableWebPush";
 import { PushTest } from "@/components/push/PushTest";
 import { PushDiagnostics } from "@/components/push/PushDiagnostics";
+import { OperaResetButton } from "@/components/layout/OperaResetButton";
 
 const Settings = () => {
   const { profileImage } = useProfileImage();
@@ -190,6 +191,11 @@ const Settings = () => {
                 onSubscriptionChange={(subscribed) => setPushEnabled(subscribed)}
                 className="bg-transparent border-zinc-700"
               />
+            </div>
+            
+            {/* Opera Fix Button */}
+            <div className="flex justify-center">
+              <OperaResetButton />
             </div>
             
             {pushEnabled && (

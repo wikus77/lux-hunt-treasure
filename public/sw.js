@@ -1,297 +1,209 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// M1SSION™ Unified Service Worker with Push Support
-// SW VERSION: push-2025-01-02T08:00:00.000Z
+/*
+ * M1SSION™ Service Worker - PWA Enhanced - P0 OPERA FIX
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
+ * Fixed: Opera loading freeze + always return Response
+ */
 
-self.__SW_VERSION = 'push-2025-01-02T08:00:00.000Z';
-console.log('[M1SSION SW] Unified SW starting, version:', self.__SW_VERSION);
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkFirst, CacheFirst } from 'workbox-strategies';
 
-// Cache configuration
-const CACHE_NAME = 'mission-v2.0.0';
-const STATIC_CACHE = 'mission-static-v2.0.0';
-const DYNAMIC_CACHE = 'mission-dynamic-v2.0.0';
+// Version bump for cache invalidation - P0 Fix
+const SW_VERSION = "v2025-09-02-01";
+console.log(`🔄 M1SSION™ SW ${SW_VERSION} starting...`);
 
-const STATIC_ASSETS = [
-  '/',
-  '/home',
-  '/map',
-  '/profile',
-  '/subscriptions',
-  '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
-];
+// Precache Workbox-generated assets
+precacheAndRoute(self.__WB_MANIFEST);
+cleanupOutdatedCaches();
 
-const DYNAMIC_ASSETS = [
-  'https://js.stripe.com/v3/',
-  'https://vkjrqirvdvjbemsfzxof.supabase.co'
-];
+// Cache Supabase API calls with network-first strategy
+registerRoute(
+  ({ url }) => url.hostname.includes('supabase.co'),
+  new NetworkFirst({
+    cacheName: 'supabase-api',
+    networkTimeoutSeconds: 10,
+  })
+);
 
-// Note: Install/activate events are defined below with push handlers
+// Cache images with cache-first strategy
+registerRoute(
+  ({ request }) => request.destination === 'image',
+  new CacheFirst({
+    cacheName: 'images',
+  })
+);
 
-// Fetch event - FIXED: always return Response to prevent "Loading..." issue
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+// Cache CSS and JS files
+registerRoute(
+  ({ request }) => request.destination === 'style' || request.destination === 'script',
+  new CacheFirst({
+    cacheName: 'static-resources',
+  })
+);
 
-  // Skip cross-origin requests that we don't cache
-  if (url.origin !== location.origin && !DYNAMIC_ASSETS.some(asset => url.href.includes(asset))) {
-    return; // Let browser handle it
-  }
+// Handle navigation requests with fallback
+registerRoute(
+  ({ request }) => request.mode === 'navigate',
+  new NetworkFirst({
+    cacheName: 'pages',
+    networkTimeoutSeconds: 3,
+  })
+);
 
-  // CRITICAL FIX: Always use event.respondWith() to prevent null responses
-  if (request.mode === 'navigate' || request.destination === 'document') {
-    // Navigation requests - MUST have fallback to prevent Loading issue
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Cache successful navigation responses
-          if (response.status === 200) {
-            caches.open(STATIC_CACHE).then(cache => {
-              cache.put(request, response.clone());
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // CRITICAL: fallback to cached index.html for SPA routing
-          return caches.match('/index.html').then(cached => {
-            return cached || new Response('<!DOCTYPE html><html><body><h1>Offline</h1><script>setTimeout(() => location.reload(), 3000)</script></body></html>', {
-              headers: { 'Content-Type': 'text/html' }
-            });
-          });
-        })
-    );
-  } else if (STATIC_ASSETS.includes(url.pathname)) {
-    // Cache First strategy for static assets
-    event.respondWith(
-      caches.match(request)
-        .then((response) => {
-          return response || fetch(request)
-            .then((fetchResponse) => {
-              if (fetchResponse.status === 200) {
-                return caches.open(STATIC_CACHE)
-                  .then((cache) => {
-                    cache.put(request, fetchResponse.clone());
-                    return fetchResponse;
-                  });
-              }
-              return fetchResponse;
-            })
-            .catch(() => {
-              // Return fallback for critical assets
-              return new Response('/* cached asset unavailable */', {
-                status: 200,
-                headers: { 'Content-Type': 'text/plain' }
-              });
-            });
-        })
-    );
-  } else if (url.hostname.includes('supabase.co') || url.pathname.includes('/api/')) {
-    // Network First strategy for API calls
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Only cache successful responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(request).then(cached => {
-            return cached || new Response('{"error":"offline"}', {
-              status: 503,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          });
-        })
-    );
-  } else {
-    // Stale While Revalidate for other resources with guaranteed Response
-    event.respondWith(
-      caches.match(request)
-        .then((response) => {
-          const fetchPromise = fetch(request)
-            .then((fetchResponse) => {
-              if (fetchResponse.status === 200) {
-                caches.open(DYNAMIC_CACHE)
-                  .then((cache) => {
-                    cache.put(request, fetchResponse.clone());
-                  });
-              }
-              return fetchResponse;
-            })
-            .catch(() => response); // Return cached version on network error
-          
-          // Return cached immediately, or wait for network
-          return response || fetchPromise;
-        })
-    );
+// CRITICAL P0 FIX: Enhanced install/activate for Opera compatibility
+self.addEventListener('install', (event) => {
+  console.log(`🚀 SW ${SW_VERSION} installing...`);
+  self.skipWaiting(); // Force immediate activation
+});
+
+self.addEventListener('activate', (event) => {
+  console.log(`✅ SW ${SW_VERSION} activated`);
+  event.waitUntil(clients.claim()); // Take control immediately
+});
+
+// Handle messages from main thread
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
   }
 });
 
-// Background sync for failed payments
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'payment-retry') {
+// CRITICAL P0 FIX: Opera loading freeze - ALWAYS return Response
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  
+  // Navigation requests - prevent Opera loading freeze
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          // Try network first
+          const response = await fetch(request);
+          return response;
+        } catch (error) {
+          // Fallback to cached index.html for SPA routing
+          console.log(`🔄 SW navigation fallback for: ${request.url}`);
+          const cachedResponse = await caches.match('/index.html');
+          return cachedResponse || new Response('Service Worker Error', { 
+            status: 503, 
+            statusText: 'Service Unavailable' 
+          });
+        }
+      })()
+    );
+    return;
+  }
+  
+  // All other requests - always pass through with Response
+  event.respondWith(fetch(request));
+});
+
+// Push notification handler with iOS compatibility
+self.addEventListener('push', (event) => {
+  console.log('🔔 Push received:', event);
+  
+  if (!event.data) {
+    console.warn('Push event has no data');
+    return;
+  }
+  
+  try {
+    let notificationData;
+    
+    // Try parsing as JSON first
+    try {
+      notificationData = event.data.json();
+    } catch {
+      // Fallback for text data
+      notificationData = {
+        title: 'M1SSION™',
+        body: event.data.text() || 'Nuova notifica',
+        icon: '/icon-192x192.png',
+        badge: '/icon-192x192.png',
+        data: { url: 'https://m1ssion.eu' }
+      };
+    }
+    
+    // Handle nested data structure
+    if (notificationData.data && typeof notificationData.data === 'string') {
+      try {
+        const nestedData = JSON.parse(notificationData.data);
+        notificationData = { ...notificationData, ...nestedData };
+      } catch {
+        // Keep original if parsing fails
+      }
+    }
+    
+    const notificationOptions = {
+      body: notificationData.body || 'Nuova notifica',
+      icon: notificationData.icon || '/icon-192x192.png',
+      badge: notificationData.badge || '/icon-192x192.png',
+      data: notificationData.data || { url: 'https://m1ssion.eu' },
+      tag: notificationData.tag || 'mission-notification',
+      requireInteraction: false,
+      silent: false
+    };
+    
     event.waitUntil(
-      // Retry failed payment requests
+      self.registration.showNotification(
+        notificationData.title || 'M1SSION™',
+        notificationOptions
+      ).then(() => {
+        console.log('✅ Notification displayed successfully');
+        // Send message back to clients
+        return self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'PUSH_RECEIVED',
+              notification: notificationData
+            });
+          });
+        });
+      })
+    );
+    
+  } catch (error) {
+    console.error('❌ Push notification error:', error);
+    
+    // Fallback notification
+    event.waitUntil(
       self.registration.showNotification('M1SSION™', {
-        body: 'Retrying failed payment...',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-96x96.png'
+        body: 'Errore nella notifica',
+        icon: '/icon-192x192.png',
+        data: { url: 'https://m1ssion.eu' }
       })
     );
   }
 });
 
-// =============================================================================
-// PUSH NOTIFICATION HANDLERS (UNIFIED - NO IMPORTSCRIPTS)
-// =============================================================================
-
-// Push event handler - receives notifications
-self.addEventListener('push', (event) => {
-  console.log('[M1SSION SW] Push received:', event);
-  
-  event.waitUntil(
-    (async () => {
-      try {
-        let notificationData;
-        
-        // Parse notification data
-        if (event.data) {
-          try {
-            notificationData = event.data.json();
-          } catch (e) {
-            notificationData = { title: 'M1SSION™', body: event.data.text() };
-          }
-        } else {
-          notificationData = { title: 'M1SSION™', body: 'New notification' };
-        }
-        
-        // Set defaults
-        const title = notificationData.title || 'M1SSION™';
-        const options = {
-          body: notificationData.body || 'New notification available',
-          icon: notificationData.icon || '/icons/icon-192x192.png',
-          badge: notificationData.badge || '/icons/icon-96x96.png',
-          data: notificationData.data || { url: '/' },
-          vibrate: notificationData.vibrate || [200, 100, 200],
-          requireInteraction: true,
-          actions: notificationData.actions || []
-        };
-        
-        console.log('[M1SSION SW] Showing notification:', title, options);
-        
-        // Show notification
-        await self.registration.showNotification(title, options);
-        
-      } catch (error) {
-        console.error('[M1SSION SW] Push notification error:', error);
-        // Fallback notification
-        await self.registration.showNotification('M1SSION™', {
-          body: 'New notification received',
-          icon: '/icons/icon-192x192.png'
-        });
-      }
-    })()
-  );
-});
-
-// Notification click handler - handles user interaction
+// Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[M1SSION SW] Notification clicked:', event);
+  console.log('🎯 Notification click:', event);
   
   event.notification.close();
   
+  const urlToOpen = event.notification.data?.url || 'https://m1ssion.eu';
+  
   event.waitUntil(
-    (async () => {
-      try {
-        const data = event.notification.data || {};
-        const url = data.url || '/';
-        
-        console.log('[M1SSION SW] Opening URL:', url);
-        
-        // Get all windows
-        const windowClients = await clients.matchAll({
-          type: 'window',
-          includeUncontrolled: true
-        });
-        
-        // Check if there's already a window/tab open with the target URL
-        for (const client of windowClients) {
-          if (client.url === url && 'focus' in client) {
-            console.log('[M1SSION SW] Focusing existing window');
-            return client.focus();
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clientList => {
+        // Check if app is already open
+        for (const client of clientList) {
+          if (client.url.includes('m1ssion.eu') && 'focus' in client) {
+            return client.focus().then(() => {
+              // Navigate to specific URL if provided
+              if (urlToOpen !== client.url) {
+                return client.navigate(urlToOpen);
+              }
+            });
           }
         }
-        
-        // If no window is open, open a new one
-        if (clients.openWindow) {
-          console.log('[M1SSION SW] Opening new window');
-          return clients.openWindow(url);
+        // Open new window if app not open
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(urlToOpen);
         }
-        
-      } catch (error) {
-        console.error('[M1SSION SW] Notification click error:', error);
-        // Fallback: try to open main page
-        if (clients.openWindow) {
-          return clients.openWindow('/');
-        }
-      }
-    })()
-  );
-});
-
-// Enhanced install event with proper versioning
-self.addEventListener('install', (event) => {
-  console.log('[M1SSION SW] Installing version:', self.__SW_VERSION);
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('[M1SSION SW] Caching static assets...');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('[M1SSION SW] Cache complete, force activating...');
-        return self.skipWaiting(); // Force activation
-      })
-      .catch(error => {
-        console.warn('[M1SSION SW] Cache install failed (non-critical):', error);
-        return self.skipWaiting(); // Still proceed
       })
   );
 });
 
-// Enhanced activate event with proper client claiming
-self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Activating version:', self.__SW_VERSION);
-  event.waitUntil(
-    Promise.all([
-      // Clean old caches
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-              console.log('[M1SSION SW] Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      // Claim all clients immediately
-      self.clients.claim()
-    ]).then(() => {
-      console.log('[M1SSION SW] Activation complete, controlling all clients');
-    }).catch(error => {
-      console.warn('[M1SSION SW] Activation issues (non-critical):', error);
-      return self.clients.claim(); // Still claim clients
-    })
-  );
-});
-
-console.log('[M1SSION SW] Unified Service Worker setup complete with integrated push support');
+console.log(`🎯 M1SSION™ SW ${SW_VERSION} ready`);

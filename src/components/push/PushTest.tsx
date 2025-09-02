@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Send, AlertCircle, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { PushTestResults } from './PushTestResults';
 
 interface PushTestResult {
   sent: number;
@@ -65,10 +66,17 @@ export const PushTest = () => {
       console.log('Push result:', data);
       setResult(data);
 
-      if (data.sent > 0) {
-        toast.success(`Push notification sent successfully! Check your device.`);
-      } else if (data.failed > 0) {
-        toast.error(`Push failed. Check console for details.`);
+      // P0 Fix: Real success only if no failures
+      const sent = data.sent || 0;
+      const failed = data.failed || 0;
+      const passRate = sent + failed > 0 ? ((sent / (sent + failed)) * 100).toFixed(1) : '0.0';
+      
+      if (failed === 0 && sent > 0) {
+        toast.success(`✅ Test completato con successo! Inviati: ${sent}, Pass rate: ${passRate}%`);
+      } else if (sent > 0 && failed > 0) {
+        toast.error(`⚠️ Test parzialmente fallito! Inviati: ${sent}, Falliti: ${failed}, Pass rate: ${passRate}%`);
+      } else if (failed > 0) {
+        toast.error(`❌ Test fallito! Inviati: ${sent}, Falliti: ${failed}`);
       } else {
         toast.warning('No subscriptions found to send to.');
       }
@@ -102,39 +110,7 @@ export const PushTest = () => {
           {isLoading ? 'Sending...' : '🚀 Send Test Push'}
         </Button>
 
-        {result && (
-          <div className="mt-4 space-y-3">
-            <div className="flex gap-2">
-              <Badge variant={result.sent > 0 ? 'default' : 'secondary'}>
-                <CheckCircle className="h-3 w-3 mr-1" />
-                Sent: {result.sent}
-              </Badge>
-              <Badge variant={result.failed > 0 ? 'destructive' : 'secondary'}>
-                <AlertCircle className="h-3 w-3 mr-1" />
-                Failed: {result.failed}
-              </Badge>
-              {result.removed > 0 && (
-                <Badge variant="outline">
-                  Removed: {result.removed}
-                </Badge>
-              )}
-            </div>
-
-            {result.results.length > 0 && (
-              <div className="text-xs space-y-1">
-                <p className="font-medium">Results:</p>
-                {result.results.map((r, i) => (
-                  <div key={i} className="flex justify-between text-muted-foreground">
-                    <span>{r.endpoint_host}</span>
-                    <span className={r.error ? 'text-red-500' : 'text-green-500'}>
-                      {r.error || r.status || 'success'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+        <PushTestResults result={result} loading={isLoading} />
       </CardContent>
     </Card>
   );
