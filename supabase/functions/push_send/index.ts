@@ -10,6 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin'
 };
 
 console.log('[PUSH] 🚀 M1SSION™ W3C Web Push Function loaded');
@@ -227,6 +228,7 @@ serve(async (req) => {
     console.log('[PUSH] 📊 Result:', JSON.stringify(finalResult, null, 2));
 
     return new Response(JSON.stringify(finalResult), {
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
@@ -239,7 +241,7 @@ serve(async (req) => {
       details: String(error?.message || error),
       timestamp: new Date().toISOString()
     }), {
-      status: 500,
+      status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }

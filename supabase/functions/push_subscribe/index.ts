@@ -9,6 +9,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin'
 };
 
 serve(async (req) => {
@@ -45,9 +46,14 @@ serve(async (req) => {
     }
     
     // Handle both flat structure and nested subscription structure
-    let endpoint, keys, ua, platform, user_id;
+    let endpoint, keys, ua, platform, user_id, unsubscribe;
     
-    if (body.subscription) {
+    if (body.unsubscribe) {
+      // Handle unsubscribe request
+      unsubscribe = true;
+      user_id = body.user_id;
+      endpoint = body.endpoint;
+    } else if (body.subscription) {
       // Nested structure from push-diag.html
       const subscription = body.subscription;
       endpoint = subscription.endpoint;
@@ -64,7 +70,45 @@ serve(async (req) => {
       user_id = body.user_id;
     }
 
-    // Validate required fields
+    if (unsubscribe) {
+      // Delete subscription
+      const deleteUrl = `${Deno.env.get("SUPABASE_URL")}/rest/v1/push_subscriptions`;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+      
+      let deleteQuery = '';
+      if (endpoint) {
+        deleteQuery = `?endpoint=eq.${encodeURIComponent(endpoint)}`;
+      } else if (user_id) {
+        deleteQuery = `?user_id=eq.${user_id}`;
+      } else {
+        return new Response(
+          JSON.stringify({ error: "Missing endpoint or user_id for unsubscribe" }), 
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, "content-type": "application/json" }
+          }
+        );
+      }
+      
+      const deleteResponse = await fetch(deleteUrl + deleteQuery, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${serviceKey}`,
+          'apikey': serviceKey!
+        }
+      });
+      
+      console.log(`[PUSH-SUBSCRIBE] Delete response: ${deleteResponse.status}`);
+      
+      return new Response(
+        JSON.stringify({ ok: true, unsubscribed: true }), 
+        { 
+          headers: { ...corsHeaders, "content-type": "application/json" }
+        }
+      );
+    }
+
+    // Validate required fields for subscription
     if (!endpoint || !keys?.p256dh || !keys?.auth) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: endpoint, keys.p256dh, keys.auth" }), 
@@ -95,6 +139,8 @@ serve(async (req) => {
       );
     }
 
+    const endpoint_type = isApnsEndpoint ? 'APNS' : isFcmEndpoint ? 'FCM' : 'WNS';
+    
     console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 60) + "...");
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
@@ -104,7 +150,7 @@ serve(async (req) => {
     
     console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
 
-    // Upsert subscription by endpoint using REST API with SERVICE_ROLE_KEY
+    // UPSERT subscription by endpoint using REST API with SERVICE_ROLE_KEY
     const upsertUrl = `${Deno.env.get("SUPABASE_URL")}/rest/v1/push_subscriptions`;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     
@@ -120,6 +166,7 @@ serve(async (req) => {
         endpoint,
         p256dh: keys.p256dh,
         auth: keys.auth,
+        endpoint_type,
         ua: ua ?? null,
         platform: platform ?? null,
         user_id: finalUserId,
@@ -142,14 +189,12 @@ serve(async (req) => {
     const data = await upsertResponse.json();
 
     console.log("[PUSH-SUBSCRIBE] Subscription registered successfully:", data);
-
-    const endpointType = isApnsEndpoint ? 'APNs' : isFcmEndpoint ? 'FCM' : 'WNS';
     
     return new Response(
       JSON.stringify({ 
         ok: true, 
         saved: { endpoint: endpoint.substring(0, 60) + "..." },
-        endpoint_type: endpointType,
+        endpoint_type,
         stored_at: new Date().toISOString()
       }), 
       { 
