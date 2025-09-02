@@ -4,6 +4,13 @@
  * Fixed: Opera loading freeze + always return Response
  */
 
+// Import push notification handler
+try { 
+  importScripts('/sw-push.js'); 
+} catch (e) { 
+  console.warn('sw-push import failed', e); 
+}
+
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, CacheFirst } from 'workbox-strategies';

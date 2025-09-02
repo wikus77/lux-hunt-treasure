@@ -182,19 +182,23 @@ const NotificationsSettings: React.FC = () => {
     console.log('🚀 PUSH TOGGLE:', enabled, { isSupported, permission, token, status });
     
     if (enabled) {
-      if (!isSupported) {
+      try {
+        // Import and use the new push subscription function
+        const { ensurePushSubscription } = await import('@/push/ensurePushSubscription');
+        await ensurePushSubscription();
+        
         toast({
-          title: "❌ Browser Non Supportato",
-          description: "Le notifiche push richiedono un browser moderno con supporto Service Worker e Push API.",
-          variant: "destructive"
+          title: "✅ Notifiche Attivate",
+          description: "Le notifiche push sono state attivate con successo.",
+          variant: "default"
         });
+        
+        await saveSettings({ push_notifications_enabled: true });
         return;
-      }
-
-      if (Notification.permission === 'denied') {
+      } catch (error: any) {
         toast({
-          title: "🚫 Permesso Negato",
-          description: "Le notifiche sono state bloccate. Abilita nelle impostazioni del browser.",
+          title: "❌ Errore Attivazione",
+          description: error.message || "Impossibile attivare le notifiche push.",
           variant: "destructive"
         });
         return;

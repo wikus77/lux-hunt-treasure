@@ -16,113 +16,149 @@
     .ok { color: #0f0; }
     .error { color: #f00; }
     .info { color: #0af; }
+    button {
+      background: #333;
+      color: #0f0;
+      border: 1px solid #0f0;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    button:hover { background: #0f0; color: #000; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     pre { background: #111; padding: 10px; border-radius: 4px; }
+    #results { min-height: 200px; }
   </style>
 </head>
 <body>
   <h1>🔧 Push Health Diagnostic</h1>
-  <p>Static health check for Web Push system validation</p>
+  <p>End-to-end push notification testing</p>
   
-  <div class="status" id="feature-support">
-    <h3>Feature Support:</h3>
-    <div id="features"></div>
-  </div>
-  
-  <div class="status" id="sw-status">
-    <h3>Service Worker Status:</h3>
-    <div id="sw-info"></div>
-  </div>
-  
-  <div class="status" id="subscription-status">
-    <h3>Push Subscription:</h3>
-    <div id="sub-info"></div>
+  <div class="status">
+    <button id="subscribeBtn">Subscribe</button>
+    <button id="canaryBtn">Send Canary</button>
+    <button id="clearBtn">Clear Log</button>
   </div>
   
   <div class="status">
-    <h3>Diagnostic Results:</h3>
-    <pre id="results">Running diagnostics...</pre>
+    <h3>Results:</h3>
+    <pre id="results">Ready for testing...</pre>
   </div>
 
-  <script>
+  <script type="module">
+    const EDGE = 'https://vkjrqirvdvjbemsfzxof.functions.supabase.co';
+    const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+    
     const log = (msg) => {
       const results = document.getElementById('results');
       results.textContent += new Date().toISOString() + ': ' + msg + '\n';
+      results.scrollTop = results.scrollHeight;
     };
 
-    async function runDiagnostics() {
-      log('🚀 Starting Push Health diagnostic...');
-      
-      // Feature Support
-      const hasServiceWorker = 'serviceWorker' in navigator;
-      const hasPushManager = 'PushManager' in window;
-      const hasNotification = 'Notification' in window;
-      const permission = Notification?.permission || 'default';
-      
-      document.getElementById('features').innerHTML = `
-        ServiceWorker: <span class="${hasServiceWorker ? 'ok' : 'error'}">${hasServiceWorker}</span><br>
-        PushManager: <span class="${hasPushManager ? 'ok' : 'error'}">${hasPushManager}</span><br>
-        Notification: <span class="${hasNotification ? 'ok' : 'error'}">${hasNotification}</span><br>
-        Permission: <span class="${permission === 'granted' ? 'ok' : 'error'}">${permission}</span>
-      `;
-      
-      log(`✅ Feature detection complete`);
-      
-      // Service Worker Status
-      if (hasServiceWorker) {
-        try {
-          const registrations = await navigator.serviceWorker.getRegistrations();
-          log(`📊 Found ${registrations.length} SW registrations`);
-          
-          const mainReg = registrations.find(reg => reg.scope === location.origin + '/');
-          if (mainReg) {
-            document.getElementById('sw-info').innerHTML = `
-              Registration: <span class="ok">Found</span><br>
-              Script URL: <span class="info">${mainReg.active?.scriptURL || 'None'}</span><br>
-              State: <span class="info">${mainReg.active?.state || 'Unknown'}</span>
-            `;
-            
-            // Check SW imports
-            try {
-              const response = await fetch('/sw.js');
-              const swContent = await response.text();
-              const hasImport = swContent.includes("importScripts('/sw-push.js')");
-              log(`${hasImport ? '✅' : '❌'} SW imports sw-push.js: ${hasImport}`);
-            } catch (e) {
-              log(`❌ SW import check failed: ${e.message}`);
-            }
-            
-            // Check subscription
-            try {
-              const subscription = await mainReg.pushManager.getSubscription();
-              if (subscription) {
-                const url = new URL(subscription.endpoint);
-                document.getElementById('sub-info').innerHTML = `
-                  Status: <span class="ok">Active</span><br>
-                  Host: <span class="info">${url.hostname}</span><br>
-                  Keys: <span class="info">p256dh: ${subscription.getKey('p256dh')?.byteLength}B, auth: ${subscription.getKey('auth')?.byteLength}B</span>
-                `;
-                log(`✅ Active subscription found`);
-              } else {
-                document.getElementById('sub-info').innerHTML = `Status: <span class="error">No subscription</span>`;
-                log(`📭 No active subscription found`);
-              }
-            } catch (e) {
-              log(`❌ Subscription check failed: ${e.message}`);
-            }
-          } else {
-            document.getElementById('sw-info').innerHTML = `Registration: <span class="error">Not Found</span>`;
-            log(`❌ No main SW registration found`);
-          }
-        } catch (e) {
-          log(`❌ SW check failed: ${e.message}`);
-        }
-      }
-      
-      log(`✅ Push Health diagnostic complete`);
+    function b64uToUint8(s) {
+      const p = '='.repeat((4 - (s.length % 4)) % 4);
+      return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + p), c => c.charCodeAt(0));
     }
 
-    // Auto-run diagnostics
-    runDiagnostics();
+    window.ensurePushSubscription = async function() {
+      try {
+        log('🚀 Starting push subscription...');
+        
+        if (!('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
+          throw new Error('Web Push non supportato');
+        }
+        
+        const perm = await Notification.requestPermission();
+        log(`📱 Permission: ${perm}`);
+        if (perm !== 'granted') throw new Error(`Permission ${perm}`);
+        
+        const reg = (await navigator.serviceWorker.getRegistration('/')) || 
+                     (await navigator.serviceWorker.register('/sw.js', { scope: '/' }));
+        await navigator.serviceWorker.ready;
+        log('✅ Service Worker ready');
+        
+        // VAPID dall'edge
+        log('🔑 Getting VAPID key...');
+        const r = await fetch(`${EDGE}/get-vapid`, { 
+          headers: { 
+            Authorization: `Bearer ${ANON}`, 
+            apikey: ANON 
+          } 
+        });
+        if (!r.ok) throw new Error(`get-vapid ${r.status}`);
+        const { publicKey } = await r.json();
+        if (!publicKey) throw new Error('VAPID publicKey mancante');
+        log(`🔑 VAPID key received (${publicKey.length} chars)`);
+        
+        // subscribe
+        log('📱 Subscribing to push...');
+        const sub = await reg.pushManager.subscribe({ 
+          userVisibleOnly: true, 
+          applicationServerKey: b64uToUint8(publicKey) 
+        });
+        log('✅ Push subscription created');
+        
+        // invio a edge
+        log('💾 Saving subscription...');
+        const resp = await fetch(`${EDGE}/push_subscribe`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json', 
+            Authorization: `Bearer ${ANON}`, 
+            apikey: ANON 
+          },
+          body: JSON.stringify({ subscription: sub, ua: navigator.userAgent })
+        });
+        if (!resp.ok) throw new Error(`push_subscribe ${resp.status}`);
+        
+        const result = await resp.json();
+        log(`✅ Subscription saved: ${JSON.stringify(result)}`);
+        return { sub: result };
+      } catch (error) {
+        log(`❌ Error: ${error.message}`);
+        throw error;
+      }
+    };
+
+    async function sendCanary() {
+      try {
+        log('🧪 Sending canary push...');
+        const resp = await fetch(`${EDGE}/send-push-canary`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ANON}`,
+            apikey: ANON,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            dry: false,
+            title: 'Diag',
+            body: 'It works!'
+          })
+        });
+        
+        if (!resp.ok) throw new Error(`send-push-canary ${resp.status}`);
+        const result = await resp.json();
+        log(`📤 Canary result: ${JSON.stringify(result)}`);
+      } catch (error) {
+        log(`❌ Canary error: ${error.message}`);
+      }
+    }
+
+    function clearLog() {
+      document.getElementById('results').textContent = 'Log cleared...\n';
+    }
+
+    // Event listeners
+    document.getElementById('subscribeBtn').addEventListener('click', () => {
+      window.ensurePushSubscription().catch(console.error);
+    });
+
+    document.getElementById('canaryBtn').addEventListener('click', sendCanary);
+    document.getElementById('clearBtn').addEventListener('click', clearLog);
+
+    log('🎯 Push Health loaded - click Subscribe to start');
   </script>
 </body>
 </html>
