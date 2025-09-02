@@ -38,8 +38,7 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB - increased for large bundle
-        // Force include sw-push.js for Web Push VAPID
-        importScripts: ['/sw-push.js'],
+        // Removed importScripts - unified SW handles all push functionality
         skipWaiting: true,
         clientsClaim: true,
         navigateFallbackDenylist: [/^\/ios-check\.html$/, /^\/push-diag\.html$/],
