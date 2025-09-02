@@ -29,7 +29,7 @@
     <button onclick="clearAll()">🧹 Clear All</button>
     
     <script>
-        // VAPID KEY ALLINEATA (M1SSION™ PRODUCTION)
+        // VAPID KEY ALIGNED (M1SSION™ PRODUCTION)
         const VAPID_KEY = 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
         const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
         const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
@@ -39,6 +39,8 @@
             div.className = `status ${type}`;
             div.innerHTML = message;
             document.getElementById('results').appendChild(div);
+            // Auto-scroll to bottom
+            div.scrollIntoView({ behavior: 'smooth' });
         }
         
         // Base64url decoder OBBLIGATORIO per VAPID
@@ -145,8 +147,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'apikey': ANON,
-                        'Authorization': `Bearer ${ANON}`
+                        'Authorization': `Bearer ${ANON}`,
+                        'apikey': ANON
                     },
                     body: JSON.stringify(savePayload)
                 });
@@ -178,8 +180,8 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'apikey': ANON,
-                        'Authorization': `Bearer ${ANON}`
+                        'Authorization': `Bearer ${ANON}`,
+                        'apikey': ANON
                     },
                     body: JSON.stringify(payload)
                 });

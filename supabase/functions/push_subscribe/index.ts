@@ -95,12 +95,12 @@ serve(async (req) => {
       );
     }
 
-    console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 64) + "...");
+    console.log("[PUSH-SUBSCRIBE] Registering subscription for endpoint:", endpoint.substring(0, 60) + "...");
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
-    // user_id può essere NULL per sottoscrizioni anonime
-    const finalUserId = user_id || null; // Explicitly allow NULL
+    // user_id can be NULL for anonymous subscriptions
+    const finalUserId = user_id || null;
     
     console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
 
@@ -147,8 +147,8 @@ serve(async (req) => {
     
     return new Response(
       JSON.stringify({ 
-        success: true, 
-        subscription: data,
+        ok: true, 
+        saved: { endpoint: endpoint.substring(0, 60) + "..." },
         endpoint_type: endpointType,
         stored_at: new Date().toISOString()
       }), 
@@ -160,7 +160,11 @@ serve(async (req) => {
   } catch (error) {
     console.error("[PUSH-SUBSCRIBE] Unexpected error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error" }), 
+      JSON.stringify({ 
+        ok: false, 
+        error: "Internal server error",
+        details: error.message 
+      }), 
       { 
         status: 500, 
         headers: { ...corsHeaders, "content-type": "application/json" }
