@@ -48,7 +48,7 @@ const NotificationsSettings: React.FC = () => {
     checkFCMTokenStatus();
   }, [user, permission]); // Re-check when permission changes
 
-  // Check FCM token status with new hook
+  // Check FCM and iOS token status  
   const checkFCMTokenStatus = async () => {
     if (!user) {
       console.log('🔍 No user - skipping FCM check');
@@ -73,19 +73,30 @@ const NotificationsSettings: React.FC = () => {
         .eq('user_id', user.id)
         .limit(1);
 
+      // Check device tokens for iOS devices
+      const { data: deviceData, error: deviceError } = await supabase
+        .from('device_tokens')
+        .select('token, created_at')
+        .eq('user_id', user.id)
+        .eq('device_type', 'ios')
+        .limit(1);
+
       console.log('📱 Token query results:', { 
         fcm: { data: fcmData, error: fcmError },
-        ios: { data: iosData, error: iosError }
+        ios: { data: iosData, error: iosError },
+        device: { data: deviceData, error: deviceError }
       });
       
       const hasFcmTokens = !fcmError && fcmData && fcmData.length > 0;
       const hasIosTokens = !iosError && iosData && iosData.length > 0;
-      const hasAnyTokens = hasFcmTokens || hasIosTokens;
+      const hasDeviceTokens = !deviceError && deviceData && deviceData.length > 0;
+      const hasAnyTokens = hasFcmTokens || hasIosTokens || hasDeviceTokens;
       
       if (hasAnyTokens) {
         console.log('✅ Push tokens found - user can use push notifications', {
           fcm: hasFcmTokens,
-          ios: hasIosTokens
+          ios: hasIosTokens,
+          device: hasDeviceTokens
         });
         setPushTokenExists(true);
         setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
@@ -109,7 +120,7 @@ const NotificationsSettings: React.FC = () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('notifications_enabled, weekly_hints, preferred_rewards')
+        .select('notifications_enabled, weekly_hints, preferred_rewards, push_notifications_enabled')
         .eq('id', user.id)
         .single();
 
@@ -118,7 +129,7 @@ const NotificationsSettings: React.FC = () => {
           notifications_enabled: profile.notifications_enabled ?? true,
           weekly_hints: (profile.weekly_hints as 'all' | 'only-premium' | 'none') || 'all',
           preferred_rewards: profile.preferred_rewards || [],
-          push_notifications_enabled: pushTokenExists
+          push_notifications_enabled: profile.push_notifications_enabled ?? false
         });
       }
     } catch (error) {
