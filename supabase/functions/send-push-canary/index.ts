@@ -194,9 +194,12 @@ Deno.serve(async (req) => {
         const headers = buildPushHeaders(endpointURL, jwt, VAPID_PUBLIC_KEY);
         
         console.log(`🔐 Headers for ${endpoint_type}:`, {
-          authorization: headers.authorization?.substring(0, 25) + '...' || '(not set)',
-          'crypto-key': headers['Crypto-Key']?.substring(0, 35) + '...' || '(not set)',
-          aud
+          authorization: headers.authorization?.substring(0, 50) + '...' || '(not set)',
+          'crypto-key': headers['Crypto-Key']?.substring(0, 50) + '...' || '(not set)',
+          'content-type': headers['Content-Type'] || '(not set)',
+          'ttl': headers['TTL'] || '(not set)',
+          aud,
+          endpoint_host
         });
 
         // P0 FIX: Send binary payload for compatibility
