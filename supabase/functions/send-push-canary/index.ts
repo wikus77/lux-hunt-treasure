@@ -138,11 +138,13 @@ Deno.serve(async (req) => {
           aud
         });
 
-        // Send push notification
+        // P0 FIX: Send binary payload for compatibility
+        const payloadBuffer = new TextEncoder().encode(JSON.stringify(notification));
+        
         const response = await fetch(sub.endpoint, {
           method: 'POST',
           headers,
-          body: JSON.stringify(notification)
+          body: payloadBuffer
         });
 
         if (response.ok || response.status === 204) {

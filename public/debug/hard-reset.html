@@ -5,163 +5,186 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M1SSION™ - Hard Reset PWA</title>
     <style>
-        body { 
-            font-family: system-ui; 
-            padding: 20px; 
-            background: #000; 
-            color: #fff; 
-            line-height: 1.6; 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 500px;
             text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
         }
-        .container { max-width: 600px; margin: 0 auto; }
-        .status { padding: 15px; margin: 10px 0; border-radius: 8px; }
-        .warning { background: #5f4f1f; border: 1px solid #eab308; }
-        .ok { background: #1f5f3f; border: 1px solid #22c55e; }
-        .error { background: #5f1f1f; border: 1px solid #ef4444; }
-        button { 
-            background: #ef4444; 
-            color: white; 
-            border: none; 
-            padding: 15px 30px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            margin: 10px; 
-            font-weight: 600;
-            font-size: 16px;
+        
+        h1 {
+            color: #f59e0b;
+            margin-bottom: 1rem;
         }
-        button:hover { background: #dc2626; }
-        button:disabled { background: #374151; cursor: not-allowed; }
-        h1 { color: #ef4444; }
-        .back-link { color: #3b82f6; text-decoration: none; }
-        .back-link:hover { text-decoration: underline; }
+        
+        .warning {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid #22c55e;
+            color: #22c55e;
+        }
+        
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+        
+        .info {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid #3b82f6;
+            color: #3b82f6;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🧹 M1SSION™ Hard Reset</h1>
-        <p>Strumento per eliminare completamente Service Worker e cache PWA</p>
+        <h1>🔧 M1SSION™ Hard Reset</h1>
         
-        <div class="status warning">
-            ⚠️ <strong>ATTENZIONE</strong><br/>
-            Questa operazione eliminerà definitivamente:
-            <ul style="text-align: left; margin: 10px 0;">
-                <li>Tutti i Service Worker registrati</li>
-                <li>Tutte le cache PWA (immagini, API, pagine)</li>
-                <li>Sottoscrizioni push attive</li>
-            </ul>
-            Utile per risolvere problemi di caricamento o Service Worker bloccati.
+        <p>Questo strumento risolve problemi di cache e Service Worker, specialmente su <strong>Opera</strong>.</p>
+        
+        <div class="warning">
+            ⚠️ <strong>Attenzione:</strong> Questa operazione cancellerà tutti i Service Worker e la cache. La pagina si ricaricherà automaticamente.
         </div>
+        
+        <button id="resetBtn" onclick="performHardReset()">
+            🚀 Esegui Hard Reset
+        </button>
+        
+        <button onclick="window.close()">
+            ❌ Annulla
+        </button>
         
         <div id="status"></div>
         
-        <button onclick="performHardReset()" id="reset-btn">
-            🧹 ESEGUI HARD RESET
-        </button>
-        
-        <br/><br/>
-        <a href="/" class="back-link">← Torna alla Home</a>
-        
-        <div id="logs" style="margin-top: 20px; text-align: left;"></div>
+        <div style="margin-top: 2rem; font-size: 0.9rem; opacity: 0.7;">
+            <p><strong>Cosa viene fatto:</strong></p>
+            <ul style="text-align: left;">
+                <li>Disregistrazione di tutti i Service Worker</li>
+                <li>Cancellazione di tutte le cache</li>
+                <li>Ricaricamento forzato della pagina</li>
+                <li>Pulizia localStorage e sessionStorage</li>
+            </ul>
+        </div>
     </div>
-    
+
     <script>
-        function log(message) {
-            const div = document.createElement('div');
-            div.style.fontSize = '12px';
-            div.style.margin = '2px 0';
-            div.style.color = '#888';
-            div.textContent = new Date().toISOString() + ' - ' + message;
-            document.getElementById('logs').appendChild(div);
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.innerHTML = `<div class="status ${type}">${message}</div>`;
         }
-        
-        function showStatus(message, type = 'ok') {
-            const div = document.createElement('div');
-            div.className = `status ${type}`;
-            div.innerHTML = message;
-            document.getElementById('status').appendChild(div);
-        }
-        
-        function clearStatus() {
-            document.getElementById('status').innerHTML = '';
-        }
-        
+
         async function performHardReset() {
-            clearStatus();
-            const resetBtn = document.getElementById('reset-btn');
-            resetBtn.disabled = true;
-            resetBtn.textContent = '🔄 Resetting...';
+            const btn = document.getElementById('resetBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 Resettando...';
             
             try {
-                log('Starting hard reset process...');
+                showStatus('🔄 Avvio hard reset...', 'info');
                 
                 // Step 1: Unregister all service workers
-                showStatus('📝 Step 1: Unregistering Service Workers...', 'warning');
                 if ('serviceWorker' in navigator) {
+                    showStatus('📱 Disregistrazione Service Workers...', 'info');
                     const registrations = await navigator.serviceWorker.getRegistrations();
-                    log(`Found ${registrations.length} service worker(s)`);
+                    console.log(`Found ${registrations.length} service workers to unregister`);
                     
                     for (const registration of registrations) {
+                        console.log('Unregistering SW:', registration.scope);
                         await registration.unregister();
-                        log(`Unregistered SW: ${registration.scope}`);
                     }
-                    
-                    showStatus('✅ Service Workers unregistered', 'ok');
-                } else {
-                    showStatus('ℹ️ Service Workers not supported', 'warning');
+                    showStatus('✅ Service Workers disregistrati', 'success');
                 }
                 
                 // Step 2: Clear all caches
-                showStatus('📝 Step 2: Clearing all caches...', 'warning');
                 if ('caches' in window) {
+                    showStatus('🗑️ Cancellazione cache...', 'info');
                     const cacheNames = await caches.keys();
-                    log(`Found ${cacheNames.length} cache(s): ${cacheNames.join(', ')}`);
+                    console.log(`Found ${cacheNames.length} caches to delete`);
                     
                     for (const cacheName of cacheNames) {
+                        console.log('Deleting cache:', cacheName);
                         await caches.delete(cacheName);
-                        log(`Deleted cache: ${cacheName}`);
                     }
-                    
-                    showStatus('✅ All caches cleared', 'ok');
-                } else {
-                    showStatus('ℹ️ Cache API not supported', 'warning');
+                    showStatus('✅ Cache cancellate', 'success');
                 }
                 
-                // Step 3: Clear local storage and session storage
-                showStatus('📝 Step 3: Clearing storage...', 'warning');
-                try {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    showStatus('✅ Local/Session storage cleared', 'ok');
-                    log('Storage cleared');
-                } catch (error) {
-                    log(`Storage clear error: ${error.message}`);
-                }
+                // Step 3: Clear storage
+                showStatus('🧹 Pulizia storage...', 'info');
+                localStorage.clear();
+                sessionStorage.clear();
                 
-                // Step 4: Final confirmation
-                showStatus('🎉 <strong>Hard Reset Completato!</strong><br/>La pagina verrà ricaricata automaticamente in 3 secondi...', 'ok');
-                log('Hard reset completed successfully');
+                // Step 4: Force reload
+                showStatus('🔄 Ricaricamento forzato in 2 secondi...', 'success');
                 
-                // Auto-reload after 3 seconds
                 setTimeout(() => {
-                    log('Reloading page...');
-                    window.location.reload(true);
-                }, 3000);
+                    // Force hard reload with cache bypass
+                    window.location.href = '/?hard_reset=1&t=' + Date.now();
+                }, 2000);
                 
             } catch (error) {
-                showStatus(`❌ <strong>Reset Error</strong><br/>${error.message}`, 'error');
-                log(`Reset error: ${error.message}`);
-                resetBtn.disabled = false;
-                resetBtn.textContent = '🧹 ESEGUI HARD RESET';
+                console.error('Hard reset error:', error);
+                showStatus(`❌ Errore: ${error.message}`, 'error');
+                btn.disabled = false;
+                btn.textContent = '🚀 Riprova Hard Reset';
             }
         }
         
-        // Auto-detect if this page was loaded due to SW issues
-        window.addEventListener('load', () => {
-            const params = new URLSearchParams(window.location.search);
-            if (params.get('auto') === 'true') {
-                showStatus('🔍 <strong>Rilevato problema automatico</strong><br/>Si consiglia di eseguire il reset', 'warning');
-            }
-        });
+        // Auto-detect Opera and show hint
+        if (navigator.userAgent.includes('OPR/') || navigator.userAgent.includes('Opera/')) {
+            showStatus('🎭 Opera rilevato - questo reset dovrebbe risolvere i problemi di caricamento!', 'info');
+        }
     </script>
 </body>
 </html>
