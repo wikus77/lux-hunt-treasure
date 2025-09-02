@@ -1,8 +1,8 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Unified Service Worker with Push Support
-// SW VERSION: push-2025-01-02T06:40:00.000Z
+// SW VERSION: push-2025-01-02T06:45:00.000Z
 
-self.__SW_VERSION = 'push-2025-01-02T06:40:00.000Z';
+self.__SW_VERSION = 'push-2025-01-02T06:45:00.000Z';
 console.log('[M1SSION SW] Unified SW starting, version:', self.__SW_VERSION);
 
 // Cache configuration
