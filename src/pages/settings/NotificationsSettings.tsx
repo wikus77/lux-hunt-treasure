@@ -118,13 +118,13 @@ const NotificationsSettings: React.FC = () => {
     if (!user) return;
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('notifications_enabled, weekly_hints, preferred_rewards, push_notifications_enabled')
         .eq('id', user.id)
         .single();
 
-      if (profile) {
+      if (profile && !error) {
         setSettings({
           notifications_enabled: profile.notifications_enabled ?? true,
           weekly_hints: (profile.weekly_hints as 'all' | 'only-premium' | 'none') || 'all',
@@ -149,7 +149,8 @@ const NotificationsSettings: React.FC = () => {
         .update({
           notifications_enabled: updatedSettings.notifications_enabled,
           weekly_hints: updatedSettings.weekly_hints,
-          preferred_rewards: updatedSettings.preferred_rewards
+          preferred_rewards: updatedSettings.preferred_rewards,
+          push_notifications_enabled: updatedSettings.push_notifications_enabled
         })
         .eq('id', user.id);
 

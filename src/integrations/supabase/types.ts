@@ -1828,6 +1828,7 @@ export type Database = {
           pre_registration_date: string | null
           preferred_language: string | null
           preferred_rewards: string[] | null
+          push_notifications_enabled: boolean | null
           recovery_key: string | null
           referral_code: string | null
           role: string
@@ -1877,6 +1878,7 @@ export type Database = {
           pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
+          push_notifications_enabled?: boolean | null
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
@@ -1926,6 +1928,7 @@ export type Database = {
           pre_registration_date?: string | null
           preferred_language?: string | null
           preferred_rewards?: string[] | null
+          push_notifications_enabled?: boolean | null
           recovery_key?: string | null
           referral_code?: string | null
           role?: string
