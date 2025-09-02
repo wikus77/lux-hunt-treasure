@@ -176,7 +176,7 @@
                 
                 // Register service worker
                 showStatus('subscription-status', '⚙️ Registering service worker...', 'info');
-                const registration = await navigator.serviceWorker.register('/sw-test.js', { scope: '/' });
+                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
                 await navigator.serviceWorker.ready;
                 log('Service worker registered');
                 

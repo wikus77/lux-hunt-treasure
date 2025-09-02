@@ -1,10 +1,9 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// M1SSION™ Enhanced Service Worker with Push Support
-// SW IMPORT sw-push.js ✅ 2025-08-31T06:40:00.000Z
+// M1SSION™ Unified Service Worker with Push Support
+// SW VERSION: push-2025-01-02T06:40:00.000Z
 
-// Import push notifications handler first - CRITICAL for push functionality
-importScripts('/sw-push.js');
-console.log('[M1SSION SW] Push handler imported successfully');
+self.__SW_VERSION = 'push-2025-01-02T06:40:00.000Z';
+console.log('[M1SSION SW] Unified SW starting, version:', self.__SW_VERSION);
 
 // Cache configuration
 const CACHE_NAME = 'mission-v2.0.0';
@@ -27,47 +26,7 @@ const DYNAMIC_ASSETS = [
   'https://vkjrqirvdvjbemsfzxof.supabase.co'
 ];
 
-// Override install/activate events with caching
-self.addEventListener('install', (event) => {
-  console.log('[M1SSION SW] Installing with cache...');
-  event.waitUntil(
-    caches.open(STATIC_CACHE)
-      .then((cache) => {
-        console.log('[M1SSION SW] Caching static assets...');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        console.log('[M1SSION SW] Cache complete, skipping waiting...');
-        return self.skipWaiting();
-      })
-      .catch(error => {
-        console.warn('[M1SSION SW] Cache install failed (non-critical):', error);
-        return self.skipWaiting();
-      })
-  );
-});
-
-self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Activating with cleanup...');
-  event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-            console.log('[M1SSION SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('[M1SSION SW] Cache cleanup complete, claiming clients...');
-      return self.clients.claim();
-    }).catch(error => {
-      console.warn('[M1SSION SW] Cache cleanup failed (non-critical):', error);
-      return self.clients.claim();
-    })
-  );
-});
+// Note: Install/activate events are defined below with push handlers
 
 // Fetch event - serve from cache with network fallback
 self.addEventListener('fetch', (event) => {
@@ -149,5 +108,149 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Push handlers are imported from sw-push.js
-console.log('[M1SSION SW] Service Worker setup complete with push support');
+// =============================================================================
+// PUSH NOTIFICATION HANDLERS (UNIFIED - NO IMPORTSCRIPTS)
+// =============================================================================
+
+// Push event handler - receives notifications
+self.addEventListener('push', (event) => {
+  console.log('[M1SSION SW] Push received:', event);
+  
+  event.waitUntil(
+    (async () => {
+      try {
+        let notificationData;
+        
+        // Parse notification data
+        if (event.data) {
+          try {
+            notificationData = event.data.json();
+          } catch (e) {
+            notificationData = { title: 'M1SSION™', body: event.data.text() };
+          }
+        } else {
+          notificationData = { title: 'M1SSION™', body: 'New notification' };
+        }
+        
+        // Set defaults
+        const title = notificationData.title || 'M1SSION™';
+        const options = {
+          body: notificationData.body || 'New notification available',
+          icon: notificationData.icon || '/icons/icon-192x192.png',
+          badge: notificationData.badge || '/icons/icon-96x96.png',
+          data: notificationData.data || { url: '/' },
+          vibrate: notificationData.vibrate || [200, 100, 200],
+          requireInteraction: true,
+          actions: notificationData.actions || []
+        };
+        
+        console.log('[M1SSION SW] Showing notification:', title, options);
+        
+        // Show notification
+        await self.registration.showNotification(title, options);
+        
+      } catch (error) {
+        console.error('[M1SSION SW] Push notification error:', error);
+        // Fallback notification
+        await self.registration.showNotification('M1SSION™', {
+          body: 'New notification received',
+          icon: '/icons/icon-192x192.png'
+        });
+      }
+    })()
+  );
+});
+
+// Notification click handler - handles user interaction
+self.addEventListener('notificationclick', (event) => {
+  console.log('[M1SSION SW] Notification clicked:', event);
+  
+  event.notification.close();
+  
+  event.waitUntil(
+    (async () => {
+      try {
+        const data = event.notification.data || {};
+        const url = data.url || '/';
+        
+        console.log('[M1SSION SW] Opening URL:', url);
+        
+        // Get all windows
+        const windowClients = await clients.matchAll({
+          type: 'window',
+          includeUncontrolled: true
+        });
+        
+        // Check if there's already a window/tab open with the target URL
+        for (const client of windowClients) {
+          if (client.url === url && 'focus' in client) {
+            console.log('[M1SSION SW] Focusing existing window');
+            return client.focus();
+          }
+        }
+        
+        // If no window is open, open a new one
+        if (clients.openWindow) {
+          console.log('[M1SSION SW] Opening new window');
+          return clients.openWindow(url);
+        }
+        
+      } catch (error) {
+        console.error('[M1SSION SW] Notification click error:', error);
+        // Fallback: try to open main page
+        if (clients.openWindow) {
+          return clients.openWindow('/');
+        }
+      }
+    })()
+  );
+});
+
+// Enhanced install event with proper versioning
+self.addEventListener('install', (event) => {
+  console.log('[M1SSION SW] Installing version:', self.__SW_VERSION);
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then((cache) => {
+        console.log('[M1SSION SW] Caching static assets...');
+        return cache.addAll(STATIC_ASSETS);
+      })
+      .then(() => {
+        console.log('[M1SSION SW] Cache complete, force activating...');
+        return self.skipWaiting(); // Force activation
+      })
+      .catch(error => {
+        console.warn('[M1SSION SW] Cache install failed (non-critical):', error);
+        return self.skipWaiting(); // Still proceed
+      })
+  );
+});
+
+// Enhanced activate event with proper client claiming
+self.addEventListener('activate', (event) => {
+  console.log('[M1SSION SW] Activating version:', self.__SW_VERSION);
+  event.waitUntil(
+    Promise.all([
+      // Clean old caches
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
+              console.log('[M1SSION SW] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Claim all clients immediately
+      self.clients.claim()
+    ]).then(() => {
+      console.log('[M1SSION SW] Activation complete, controlling all clients');
+    }).catch(error => {
+      console.warn('[M1SSION SW] Activation issues (non-critical):', error);
+      return self.clients.claim(); // Still claim clients
+    })
+  );
+});
+
+console.log('[M1SSION SW] Unified Service Worker setup complete with integrated push support');
