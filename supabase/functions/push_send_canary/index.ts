@@ -4,17 +4,40 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Vary': 'Origin',
-};
+// Dynamic CORS headers based on request origin
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get('origin');
+  const allowedOrigins = [
+    'https://m1ssion.eu',
+    'https://lovable.dev',
+    /^https:\/\/.*\.lovable\.dev$/,
+    /^https:\/\/.*\.sandbox\.lovable\.dev$/
+  ];
+  
+  let allowOrigin = 'https://m1ssion.eu'; // default fallback
+  
+  if (origin) {
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') return allowed === origin;
+      return allowed.test(origin);
+    });
+    if (isAllowed) allowOrigin = origin;
+  }
+  
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+}
 
 console.log('[PUSH-SEND-CANARY] 🚀 M1SSION™ Push Send Canary Function loaded');
 
 serve(async (req) => {
   console.log(`[PUSH-SEND-CANARY] ${req.method} ${req.url}`);
+  
+  const corsHeaders = getCorsHeaders(req);
 
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -244,10 +267,15 @@ async function sendWebPushNotification(
     'TTL': '86400'
   };
   
-  // For FCM, we also need the legacy GCM format
-  if (subscription.endpoint.includes('fcm.googleapis.com')) {
-    headers['Authorization'] = `key=${vapidPrivateKey}`;
-  }
+  // Add Crypto-Key header for VAPID authentication
+  headers['Crypto-Key'] = `p256ecdsa=${vapidPublicKey}`;
+  
+  console.log(`[PUSH-SEND-CANARY] 🔐 Headers for ${url.origin}:`, {
+    hasAuth: !!headers.Authorization,
+    hasCryptoKey: !!headers['Crypto-Key'],
+    authFormat: headers.Authorization?.substring(0, 20) + '...',
+    cryptoKeyFormat: headers['Crypto-Key']?.substring(0, 30) + '...'
+  });
   
   // Send the actual push notification
   const response = await fetch(subscription.endpoint, {

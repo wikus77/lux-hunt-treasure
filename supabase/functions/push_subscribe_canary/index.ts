@@ -4,14 +4,37 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://m1ssion.eu',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Vary': 'Origin',
-};
+// Dynamic CORS headers based on request origin
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get('origin');
+  const allowedOrigins = [
+    'https://m1ssion.eu',
+    'https://lovable.dev',
+    /^https:\/\/.*\.lovable\.dev$/,
+    /^https:\/\/.*\.sandbox\.lovable\.dev$/
+  ];
+  
+  let allowOrigin = 'https://m1ssion.eu'; // default fallback
+  
+  if (origin) {
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (typeof allowed === 'string') return allowed === origin;
+      return allowed.test(origin);
+    });
+    if (isAllowed) allowOrigin = origin;
+  }
+  
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+}
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
