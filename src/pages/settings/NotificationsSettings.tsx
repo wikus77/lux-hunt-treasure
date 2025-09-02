@@ -245,11 +245,12 @@ const NotificationsSettings: React.FC = () => {
             // Rimuoviamo applicationServerKey per iOS
           });
           
-          // Save to Supabase push_subscriptions table
+          // Save to Supabase push_subscriptions table con USER_ID corretto
+          console.log('💾 Saving iOS subscription with user_id:', user?.id);
           const { error } = await supabase
             .from('push_subscriptions')
             .upsert({
-              user_id: user?.id,
+              user_id: user?.id,  // CRITICO: assicurati che non sia undefined
               endpoint: subscription.endpoint,
               p256dh: subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))) : null,
               auth: subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))) : null
