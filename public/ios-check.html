@@ -185,8 +185,12 @@
                     }
                 }
                 
-                const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+                // CRITICAL FIX: Register SW with correct scope "/" 
+                const registration = await navigator.serviceWorker.register('/sw.js', { 
+                  scope: '/' 
+                });
                 await navigator.serviceWorker.ready;
+                log(`⚙️ Service Worker registered with scope: ${registration.scope}`, 'ok');
                 
                 const subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,
@@ -282,29 +286,33 @@
                 
                 if (sendResult.ok) {
                     const result = await sendResult.json();
-                    log(`✅ Push sent successfully!`, 'ok');
-                    log(`📊 Send result (RAW JSON): ${JSON.stringify(result, null, 2)}`, 'info');
                     
-                    // L2 Fix: Parse response correctly - no more [object Object]
-                    const sent = typeof result.sent === 'number' ? result.sent : (result.sent?.length || 0);
-                    const failed = typeof result.failed === 'number' ? result.failed : (result.failed?.length || 0);
-                    const removed = typeof result.removed === 'number' ? result.removed : (result.to_delete?.length || 0);
+                    // L2 Fix: Parse response correctly - determine TRUE success/failure
+                    const sentCount = Array.isArray(result.sent) ? result.sent.length : (result.sent || 0);
+                    const failedCount = Array.isArray(result.failed) ? result.failed.length : (result.failed || 0);
+                    const removedCount = Array.isArray(result.to_delete) ? result.to_delete.length : (result.removed || 0);
                     
-                    log(`📊 Parsed: Sent: ${sent}, Failed: ${failed}, Removed: ${removed}`, 'info');
+                    // TRUE SUCCESS: Only if sent > 0 AND failed === 0
+                    const isTrueSuccess = sentCount > 0 && failedCount === 0;
                     
-                    if (sent > 0) {
-                        log(`🎉 Check your device for the notification!`, 'ok');
-                    } else if (failed > 0) {
-                        log(`⚠️ Push failed to send. Check results above.`, 'warning');
+                    log(`📊 RAW Response: ${JSON.stringify(result, null, 2)}`, 'info');
+                    log(`📊 Parsed Results: Sent: ${sentCount}, Failed: ${failedCount}, Removed: ${removedCount}`, 'info');
+                    
+                    if (isTrueSuccess) {
+                        log(`🎉 ✅ VERA SUCCESS: Push delivered successfully! Check your device.`, 'ok');
+                    } else if (failedCount > 0) {
+                        log(`❌ VERA FAILURE: ${failedCount} pushes failed, ${sentCount} succeeded`, 'error');
                         
-                        // L2 Fix: Show specific error codes if available
-                        if (result.results && Array.isArray(result.results)) {
-                            result.results.forEach((res, i) => {
-                                if (!res.success) {
-                                    log(`❌ Error ${i+1}: ${res.status || 'unknown'} - ${res.error || 'no details'}`, 'error');
-                                }
+                        // L2 Fix: Show specific error codes from results
+                        if (result.failed && Array.isArray(result.failed)) {
+                            result.failed.forEach((failure, i) => {
+                                const errorCode = failure.error_code || failure.status || 'unknown';
+                                const errorMsg = failure.error?.substring(0, 100) || 'no details';
+                                log(`❌ Error ${i+1}: ${errorCode} - ${errorMsg}`, 'error');
                             });
                         }
+                    } else {
+                        log(`⚠️ UNCLEAR: Response received but unclear success status`, 'warning');
                     }
                 } else {
                     const errorText = await sendResult.text();
