@@ -87,6 +87,11 @@ serve(async (req) => {
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
+    // CRITICO: Se user_id non è fornito, usa l'user_id di default (wikus)
+    const finalUserId = user_id || '495246c1-9154-4f01-a428-7f37fe230180';
+    
+    console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
+
     // Upsert subscription by endpoint
     const { data, error } = await supabase
       .from("push_subscriptions")
@@ -96,7 +101,7 @@ serve(async (req) => {
         auth: keys.auth,
         ua: ua ?? null,
         platform: platform ?? null,
-        user_id: user_id ?? null,
+        user_id: finalUserId,  // SEMPRE un user_id valido
         updated_at: new Date().toISOString()
       }, { 
         onConflict: "endpoint" 
