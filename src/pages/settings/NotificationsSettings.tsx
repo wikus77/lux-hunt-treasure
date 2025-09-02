@@ -27,10 +27,14 @@ const NotificationsSettings: React.FC = () => {
   const [isSupported, setIsSupported] = useState(false);
 
   // VAPID key decoder
-  const b64urlToUint8 = (s: string) => {
-    const p = '='.repeat((4 - s.length % 4) % 4);
-    const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
-    return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  // VAPID base64url decoder (sicuro)
+  const b64urlToUint8 = (b64url: string) => {
+    const pad = '='.repeat((4 - (b64url.length % 4)) % 4);
+    const b64 = (b64url + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(b64);
+    const out = new Uint8Array(raw.length);
+    for(let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
   };
   
   const [settings, setSettings] = useState<NotificationSettings>({
@@ -51,29 +55,28 @@ const NotificationsSettings: React.FC = () => {
 
   useEffect(() => {
     const checkSupport = async () => {
-      // Feature detection for Push API support (works on all platforms)
-      const pushSupported = 'Notification' in window && 
-                           'serviceWorker' in navigator && 
-                           'PushManager' in window && 
-                           location.protocol === 'https:';
+      // Feature detection ONLY (no UA detection)
+      const supportsPush = location.protocol === 'https:' &&
+        'Notification' in window && 
+        'serviceWorker' in navigator && 
+        'PushManager' in window;
       
-      setIsSupported(pushSupported);
+      setIsSupported(supportsPush);
+      console.log('Push API supported:', supportsPush);
       
-      console.log('Push notifications supported:', pushSupported);
-      
-      if (pushSupported) {
+      if (supportsPush) {
         try {
-          // Register service worker first
-          await navigator.serviceWorker.register('/sw.js');
+          // Register /sw.js (unified service worker)
+          await navigator.serviceWorker.register('/sw.js', { scope: '/' });
           const registration = await navigator.serviceWorker.ready;
           
-          // Check current subscription status - this is the source of truth
+          // SOURCE OF TRUTH: getSubscription()
           const subscription = await registration.pushManager.getSubscription();
           setIsEnabled(!!subscription);
           
-          console.log('Current subscription status:', !!subscription);
+          console.log('Subscription status:', !!subscription);
           if (subscription) {
-            console.log('Existing subscription:', subscription.toJSON());
+            console.log('Active subscription:', subscription.toJSON());
           }
         } catch (error) {
           console.error('Error checking push subscription:', error);
@@ -165,14 +168,33 @@ const NotificationsSettings: React.FC = () => {
     setIsLoading(true);
     
     try {
+      const registration = await navigator.serviceWorker.ready;
+      
       if (isEnabled) {
-        // Disable notifications
-        const registration = await navigator.serviceWorker.ready;
+        // OFF: unsubscribe + best-effort delete
         const subscription = await registration.pushManager.getSubscription();
         
         if (subscription) {
           await subscription.unsubscribe();
-          console.log('Unsubscribed from push notifications');
+          console.log('Unsubscribed successfully');
+          
+          // Best-effort delete from DB
+          try {
+            const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+            const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+            
+            await fetch(`${SUPA}/functions/v1/push_subscribe`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${ANON}`,
+                'apikey': ANON
+              },
+              body: JSON.stringify({ user_id: user?.id, unsubscribe: true })
+            });
+          } catch (e) {
+            console.warn('DB delete failed (non-critical):', e);
+          }
         }
         
         setIsEnabled(false);
@@ -180,71 +202,72 @@ const NotificationsSettings: React.FC = () => {
           title: "🔕 Notifiche disabilitate",
           description: "Push notifications disattivate"
         });
+        
       } else {
-        // Enable notifications
+        // ON: request permission + subscribe + save
         const permission = await Notification.requestPermission();
         
-        if (permission === 'granted') {
-          const registration = await navigator.serviceWorker.ready;
-          
-          // Use the VAPID public key from environment variables
-          const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
-          
-          console.log('VAPID public bytes:', b64urlToUint8(vapidKey).length); // must be 65
-          
-          const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: b64urlToUint8(vapidKey)
+        if (permission !== 'granted') {
+          toast({
+            title: "❌ Permessi negati",
+            description: "Permessi per le notifiche negati"
           });
-          
-          console.log('New subscription created:', subscription.toJSON());
-          
-          // Save subscription to database
-          const subscriptionData = {
-            subscription: subscription.toJSON(),
-            user_id: user?.id,
-            client_id: crypto.randomUUID(),
-            platform: subscription.endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm',
-            ua: navigator.userAgent
-          };
-          
-          const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-          const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
-          
-          const saveResponse = await fetch(`${SUPA}/functions/v1/push_subscribe`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${ANON}`,
-              'apikey': ANON
-            },
-            body: JSON.stringify(subscriptionData)
-          });
-          
-          const saveText = await saveResponse.text();
-          console.log('Save response:', saveResponse.status, saveText);
-          
-          if (!saveResponse.ok) {
-            throw new Error(`Save failed: ${saveResponse.status} - ${saveText}`);
-          }
-          
+          return;
+        }
+        
+        // ALWAYS use applicationServerKey
+        const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
+        
+        console.log('VAPID public bytes:', b64urlToUint8(vapidKey).length); // must be 65
+        
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64urlToUint8(vapidKey)
+        });
+        
+        const subJSON = subscription.toJSON();
+        console.log('New subscription:', subJSON);
+        
+        // Save using subscription.toJSON()
+        const subscriptionData = {
+          subscription: subJSON,
+          user_id: user?.id,
+          client_id: crypto.randomUUID(),
+          platform: subJSON.endpoint.includes('web.push.apple.com') ? 'apple' : 'fcm',
+          ua: navigator.userAgent
+        };
+        
+        const SUPA = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+        const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+        
+        const saveResponse = await fetch(`${SUPA}/functions/v1/push_subscribe`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${ANON}`,
+            'apikey': ANON
+          },
+          body: JSON.stringify(subscriptionData)
+        });
+        
+        const saveText = await saveResponse.text();
+        console.log('Save response:', saveResponse.status, saveText);
+        
+        if (saveResponse.status >= 200 && saveResponse.status <= 299) {
           setIsEnabled(true);
           toast({
             title: "✅ Notifiche abilitate",
             description: "Push notifications attivate"
           });
         } else {
-          toast({
-            title: "❌ Permessi negati",
-            description: "Permessi per le notifiche negati"
-          });
+          throw new Error(`Save failed: ${saveResponse.status} - ${saveText}`);
         }
       }
     } catch (error) {
       console.error('Error toggling notifications:', error);
       toast({
         title: "❌ Errore",
-        description: "Errore durante la configurazione delle notifiche"
+        description: `Errore: ${error.message}`
       });
     } finally {
       setIsLoading(false);
