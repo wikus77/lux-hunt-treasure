@@ -163,7 +163,7 @@ async function generateToken() {
     }
     
     // Register service worker
-    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const reg = await navigator.serviceWorker.register('/sw.js');
     await navigator.serviceWorker.ready;
     log('✅ Service Worker registered');
     

@@ -7,8 +7,8 @@ import { Bell, BellOff } from 'lucide-react';
 import { enableWebPushIOS } from '@/utils/push-ios';
 import { supabase } from '@/integrations/supabase/client';
 
-// VAPID Public Key - UNIFIED M1SSION KEY
-const VAPID_PUBLIC_KEY = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
+// VAPID Public Key - UNIFIED FROM ENV
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
 
 const WebPushToggle: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -44,16 +44,16 @@ const WebPushToggle: React.FC = () => {
         const subscription = await enableWebPushIOS(VAPID_PUBLIC_KEY);
         
         if (subscription) {
-          // Save subscription to Supabase
+          // Save subscription to Supabase with UNIFIED payload format
           const { data: { user } } = await supabase.auth.getUser();
           
           const { error } = await supabase.functions.invoke('push_subscribe', {
             body: {
-              endpoint: subscription.endpoint,
-              keys: subscription.keys,
+              subscription: subscription, // Complete subscription with endpoint and keys
+              user_id: user?.id || null,
+              client: 'ios_pwa',
               ua: navigator.userAgent,
-              platform: 'ios_pwa',
-              user_id: user?.id || null
+              platform: 'ios_pwa'
             }
           });
 

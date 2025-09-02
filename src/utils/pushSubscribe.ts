@@ -154,18 +154,16 @@ export async function subscribeToPush(options: SubscribeOptions = {}): Promise<S
       log('✅ Using existing push subscription');
     }
 
-    // Save subscription to Supabase
+    // Save subscription to Supabase with UNIFIED payload format
     log('💾 Saving subscription to Supabase...');
     
+    const subscriptionJSON = subscription.toJSON();
     const subscriptionData = {
-      endpoint: subscription.endpoint,
-      keys: {
-        p256dh: arrayBufferToBase64(subscription.getKey('p256dh')!),
-        auth: arrayBufferToBase64(subscription.getKey('auth')!)
-      },
+      subscription: subscriptionJSON, // Complete subscription with endpoint and keys
+      user_id: userId || null,
+      client: 'util',
       ua: navigator.userAgent,
-      platform: detectPlatform(),
-      ...(userId && { user_id: userId })
+      platform: detectPlatform()
     };
 
     const { data, error } = await supabase.functions.invoke('push_subscribe', {
