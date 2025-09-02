@@ -1,22 +1,26 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 /* M1SSION™ Universal Push Service Worker (iOS PWA + Desktop Compatible) */
 
-console.log('[M1SSION SW] Starting universal push service worker...');
+// Debug flag for detailed logging
+const DEBUG = new URLSearchParams(location.search).get('debug') === '1';
+const log = DEBUG ? console.log : () => {};
+
+log('[M1SSION SW] Starting universal push service worker with debug logging...');
 
 // Service worker activation
 self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Service Worker activated');
+  log('[M1SSION SW] Service Worker activated');
   event.waitUntil(clients.claim());
 });
 
 self.addEventListener('install', (event) => {
-  console.log('[M1SSION SW] Service Worker installed');
+  log('[M1SSION SW] Service Worker installed');
   self.skipWaiting();
 });
 
 // Universal push message handler (works for both VAPID and FCM)
 self.addEventListener('push', (event) => {
-  console.log('[M1SSION SW] Push message received:', event);
+  log('[M1SSION SW] Push message received:', event);
   
   let title = 'M1SSION™';
   let body = '';
@@ -27,7 +31,7 @@ self.addEventListener('push', (event) => {
   if (event.data) {
     try {
       const data = event.data.json();
-      console.log('[M1SSION SW] Push data:', data);
+      log('[M1SSION SW] Push data:', data);
       
       // Handle FCM format
       if (data.notification) {
@@ -35,7 +39,7 @@ self.addEventListener('push', (event) => {
         body = data.notification.body || body;
         link = data.fcmOptions?.link || data.data?.link || link;
       }
-      // Handle direct VAPID format
+      // Handle direct VAPID format  
       else if (data.title) {
         title = data.title;
         body = data.body || body;
@@ -62,7 +66,7 @@ self.addEventListener('push', (event) => {
     vibrate: [200, 100, 200]
   };
   
-  console.log('[M1SSION SW] Showing notification:', title, options);
+  log('[M1SSION SW] Showing notification:', title, options);
   event.waitUntil(
     self.registration.showNotification(title, options)
   );
@@ -70,25 +74,25 @@ self.addEventListener('push', (event) => {
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('[M1SSION SW] Notification clicked:', event.notification);
+  log('[M1SSION SW] Notification clicked:', event.notification);
   
   const url = (event.notification?.data?.link) || 'https://m1ssion.eu/';
   event.notification.close();
   
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      console.log('[M1SSION SW] Looking for existing client for URL:', url);
+      log('[M1SSION SW] Looking for existing client for URL:', url);
       
       // Try to focus existing window
       for (const client of list) { 
         if (client.url === url && 'focus' in client) {
-          console.log('[M1SSION SW] Focusing existing client:', client.url);
+          log('[M1SSION SW] Focusing existing client:', client.url);
           return client.focus(); 
         }
       }
       
       // Open new window
-      console.log('[M1SSION SW] Opening new window for URL:', url);
+      log('[M1SSION SW] Opening new window for URL:', url);
       if (clients.openWindow) {
         return clients.openWindow(url);
       }
@@ -96,4 +100,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-console.log('[M1SSION SW] Universal push service worker setup complete');
+log('[M1SSION SW] Universal push service worker setup complete');
