@@ -1,15 +1,10 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// M1SSION™ Enhanced Service Worker with Push Support
-// SW IMPORT sw-push.js ✅ 2025-08-31T06:40:00.000Z
+// M1SSION™ Service Worker - Web Push W3C Compliant
+// ver: push-20250902-044500
 
-// Import push notifications handler first - CRITICAL for push functionality
-importScripts('/sw-push.js');
-console.log('[M1SSION SW] Push handler imported successfully');
-
-// Cache configuration
-const CACHE_NAME = 'mission-v2.0.0';
-const STATIC_CACHE = 'mission-static-v2.0.0';
-const DYNAMIC_CACHE = 'mission-dynamic-v2.0.0';
+const CACHE_NAME = 'mission-v2.1.0';
+const STATIC_CACHE = 'mission-static-v2.1.0';
+const DYNAMIC_CACHE = 'mission-dynamic-v2.1.0';
 
 const STATIC_ASSETS = [
   '/',
@@ -18,18 +13,12 @@ const STATIC_ASSETS = [
   '/profile',
   '/subscriptions',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/favicon.ico'
 ];
 
-const DYNAMIC_ASSETS = [
-  'https://js.stripe.com/v3/',
-  'https://vkjrqirvdvjbemsfzxof.supabase.co'
-];
-
-// Override install/activate events with caching
+// Install event
 self.addEventListener('install', (event) => {
-  console.log('[M1SSION SW] Installing with cache...');
+  console.log('[M1SSION SW] Installing v2.1.0 with Web Push support...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -37,7 +26,7 @@ self.addEventListener('install', (event) => {
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
-        console.log('[M1SSION SW] Cache complete, skipping waiting...');
+        console.log('[M1SSION SW] Installation complete, skipping waiting...');
         return self.skipWaiting();
       })
       .catch(error => {
@@ -47,8 +36,9 @@ self.addEventListener('install', (event) => {
   );
 });
 
+// Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Activating with cleanup...');
+  console.log('[M1SSION SW] Activating v2.1.0...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -60,7 +50,7 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => {
-      console.log('[M1SSION SW] Cache cleanup complete, claiming clients...');
+      console.log('[M1SSION SW] Activation complete, claiming clients...');
       return self.clients.claim();
     }).catch(error => {
       console.warn('[M1SSION SW] Cache cleanup failed (non-critical):', error);
@@ -69,19 +59,93 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache with network fallback
+// Push event handler - W3C Web Push
+self.addEventListener('push', (event) => {
+  console.log('[M1SSION SW] 📨 Push event received:', event);
+  
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (error) {
+    console.warn('[M1SSION SW] Failed to parse push data:', error);
+    data = {};
+  }
+  
+  console.log('[M1SSION SW] 📨 Push data:', data);
+  
+  const title = data.title || 'M1SSION™';
+  const options = {
+    body: data.body || 'Nuova notifica disponibile',
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    data: data.data || { url: '/' },
+    tag: 'mission-notification',
+    renotify: true,
+    requireInteraction: false,
+    actions: [
+      { action: 'open', title: 'Apri App' },
+      { action: 'close', title: 'Chiudi' }
+    ]
+  };
+  
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+      .then(() => {
+        console.log('[M1SSION SW] ✅ Notification shown successfully');
+      })
+      .catch(error => {
+        console.error('[M1SSION SW] ❌ Failed to show notification:', error);
+      })
+  );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  console.log('[M1SSION SW] 🔔 Notification clicked:', event.notification.tag);
+  
+  event.notification.close();
+  
+  if (event.action === 'close') {
+    return;
+  }
+  
+  const urlToOpen = event.notification.data?.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Try to focus existing window
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.navigate(urlToOpen);
+            return client.focus();
+          }
+        }
+        
+        // Open new window
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+      .catch(error => {
+        console.error('[M1SSION SW] ❌ Failed to handle notification click:', error);
+      })
+  );
+});
+
+// Fetch event handler
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin && !DYNAMIC_ASSETS.some(asset => url.href.includes(asset))) {
+  // Skip cross-origin requests except Supabase
+  if (url.origin !== location.origin && !url.hostname.includes('supabase.co')) {
     return;
   }
 
-  // Cache strategy: Cache First for static assets, Network First for API calls
+  // Cache strategies
   if (STATIC_ASSETS.includes(url.pathname)) {
-    // Cache First strategy for static assets
+    // Cache First for static assets
     event.respondWith(
       caches.match(request)
         .then((response) => {
@@ -95,12 +159,11 @@ self.addEventListener('fetch', (event) => {
             });
         })
     );
-  } else if (url.hostname.includes('supabase.co') || url.pathname.includes('/api/')) {
-    // Network First strategy for API calls
+  } else if (url.hostname.includes('supabase.co')) {
+    // Network First for Supabase API
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Only cache successful responses
           if (response.status === 200) {
             const responseClone = response.clone();
             caches.open(DYNAMIC_CACHE)
@@ -111,43 +174,10 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // Fallback to cache if network fails
           return caches.match(request);
         })
     );
-  } else {
-    // Stale While Revalidate for other resources
-    event.respondWith(
-      caches.match(request)
-        .then((response) => {
-          const fetchPromise = fetch(request)
-            .then((fetchResponse) => {
-              caches.open(DYNAMIC_CACHE)
-                .then((cache) => {
-                  cache.put(request, fetchResponse.clone());
-                });
-              return fetchResponse;
-            });
-          
-          return response || fetchPromise;
-        })
-    );
   }
 });
 
-// Background sync for failed payments
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'payment-retry') {
-    event.waitUntil(
-      // Retry failed payment requests
-      self.registration.showNotification('M1SSION™', {
-        body: 'Retrying failed payment...',
-        icon: '/icons/icon-192x192.png',
-        badge: '/icons/icon-96x96.png'
-      })
-    );
-  }
-});
-
-// Push handlers are imported from sw-push.js
-console.log('[M1SSION SW] Service Worker setup complete with push support');
+console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support');

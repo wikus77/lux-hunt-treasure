@@ -69,7 +69,7 @@ const NotificationsSettings: React.FC = () => {
           endpoint: subscription?.endpoint?.substring(0, 50) + '...'
         });
         
-        // Toggle enabled = stato reale del pushManager
+        // Toggle enabled = stato reale del pushManager (NON il DB)
         setSettings(prev => ({ ...prev, push_notifications_enabled: isActive }));
         setPushTokenExists(isActive);
         
@@ -164,9 +164,9 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ preferred_rewards: newPreferences });
   };
 
-  // Enhanced push notifications toggle with iOS support
+  // Enhanced push notifications toggle W3C + VAPID
   const handlePushNotificationsToggle = async (enabled: boolean) => {
-    console.log('🚀 PUSH TOGGLE:', enabled, { isSupported, permission, token, status });
+    console.log('🚀 PUSH TOGGLE:', enabled, { isSupported, permission });
     
     if (enabled) {
       if (!isSupported) {
@@ -181,89 +181,72 @@ const NotificationsSettings: React.FC = () => {
       setLoading(true);
       
       try {
-        // Check if we're on iOS Safari
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isIOS = /iphone|ipad|ipod/.test(userAgent);
-        const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
-        
-        if (isIOS && isSafari) {
-          console.log('📱 iOS Safari detected - using Web Push API');
-          
-          // Request permission first
-          if (Notification.permission === 'default') {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-              throw new Error('Notification permission denied');
-            }
+        // Request permission first
+        if (Notification.permission === 'default') {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') {
+            throw new Error('Notification permission denied');
           }
-          
-          // Register service worker and get subscription
-          const registration = await navigator.serviceWorker.ready;
-          
-          // Base64url decoder per VAPID (OBBLIGATORIO)
-          const b64urlToUint8 = (s: string) => {
-            const p = '='.repeat((4 - s.length % 4) % 4);
-            const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
-            const raw = atob(b64);
-            return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-          };
-          
-          // OBBLIGATORIO: sempre usare applicationServerKey (W3C + VAPID)
-          const VAPID_PUBLIC_KEY = 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
-          const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: b64urlToUint8(VAPID_PUBLIC_KEY)
-          });
-          
-          // Save to Supabase push_subscriptions table con USER_ID corretto
-          console.log('💾 Saving iOS subscription with user_id:', user?.id);
-          const { error } = await supabase
-            .from('push_subscriptions')
-            .upsert({
-              user_id: user?.id,  // CRITICO: assicurati che non sia undefined
-              endpoint: subscription.endpoint,
-              p256dh: subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))) : null,
-              auth: subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))) : null
-            }, {
-              onConflict: 'endpoint'
-            });
-            
-          if (error) throw error;
-          
-          // CRITICAL: Save push_notifications_enabled to profile
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .update({ push_notifications_enabled: true })
-            .eq('id', user?.id);
-            
-          if (profileError) {
-            console.error('❌ Failed to save push_notifications_enabled:', profileError);
-            throw profileError;
-          }
-          
-          console.log('✅ iOS Push subscription and profile state saved successfully');
-          setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
-          setPushTokenExists(true);
-          
-          toast({
-            title: "✅ Notifiche Push iOS Attivate!",
-            description: "🍎 Apple Push Service configurato. Riceverai notifiche push native."
-          });
-          
-        } else {
-          // Use FCM for other platforms
-          console.log('📱 Generating FCM token...');
-          await generate();
-          
-          console.log('✅ FCM Token generated successfully');
-          setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
-          setPushTokenExists(true);
-          
-          toast({
-            title: "✅ Notifiche Push Attivate!",
-            description: "🔥 FCM configurato. Token salvato su Supabase."
-          });
         }
+        
+        // Register service worker (/sw.js ONLY)
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        await navigator.serviceWorker.ready;
+        
+        // Base64url decoder per VAPID (OBBLIGATORIO)
+        const b64urlToUint8 = (s: string) => {
+          const p = '='.repeat((4 - s.length % 4) % 4);
+          const b64 = (s + p).replace(/-/g, '+').replace(/_/g, '/');
+          const raw = atob(b64);
+          return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+        };
+        
+        // OBBLIGATORIO: sempre usare applicationServerKey (W3C + VAPID)
+        const VAPID_PUBLIC_KEY = 'BCboRJTDYR4W2lbR4_BLoSJUkbORYxmqyBi0oDZvbMUbwU-dq4U-tOkMLlpTSL9OYDAgQDmcswZ0eY8wRK5BV_U';
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64urlToUint8(VAPID_PUBLIC_KEY)
+        });
+        
+        // Get subscription JSON per Supabase
+        const subJSON = subscription.toJSON();
+        console.log('📱 Subscription JSON:', subJSON);
+        
+        // Save via Supabase edge function 
+        const savePayload = {
+          subscription: subJSON,
+          client_id: crypto.randomUUID(),
+          platform: subJSON.endpoint?.includes('web.push.apple.com') ? 'apple' : 'fcm',
+          ua: navigator.userAgent,
+          user_id: user?.id
+        };
+        
+        console.log('💾 Saving subscription to Supabase...');
+        const { data, error } = await supabase.functions.invoke('push_subscribe', {
+          body: savePayload
+        });
+        
+        if (error) {
+          console.error('❌ Supabase edge function error:', error);
+          throw new Error(error.message);
+        }
+        
+        console.log('✅ Subscription saved:', data);
+        
+        // Update local state AND profile
+        await supabase
+          .from('profiles')
+          .update({ push_notifications_enabled: true })
+          .eq('id', user?.id);
+        
+        setSettings(prev => ({ ...prev, push_notifications_enabled: true }));
+        setPushTokenExists(true);
+        
+        const isApple = subJSON.endpoint?.includes('web.push.apple.com');
+        toast({
+          title: `✅ Notifiche Push Attivate!`,
+          description: `${isApple ? '🍎 Apple' : '🟢 FCM'} Push Service configurato correttamente.`
+        });
         
         // Recheck real status
         setTimeout(() => checkPushSubscriptionStatus(), 1000);
@@ -278,20 +261,30 @@ const NotificationsSettings: React.FC = () => {
           variant: "destructive"
         });
       } finally {
-        setLoading(false);
+        setLoading(true);
       }
     } else {
       setLoading(true);
       
       try {
-        // Remove both FCM and iOS subscriptions AND update profile
-        const [fcmResult, iosResult, profileResult] = await Promise.all([
+        // Unsubscribe from push manager (SORGENTE VERITÀ)
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          const subscription = await registration.pushManager.getSubscription();
+          if (subscription) {
+            await subscription.unsubscribe();
+            console.log('✅ Push subscription unsubscribed');
+          }
+        }
+        
+        // Remove from database and update profile
+        const [subscriptionsResult, tokensResult, profileResult] = await Promise.all([
           supabase
-            .from('push_tokens')
+            .from('push_subscriptions')
             .delete()
             .eq('user_id', user?.id),
           supabase
-            .from('push_subscriptions')
+            .from('push_tokens')
             .delete()
             .eq('user_id', user?.id),
           supabase
@@ -300,22 +293,14 @@ const NotificationsSettings: React.FC = () => {
             .eq('id', user?.id)
         ]);
         
-        if (fcmResult.error && iosResult.error && profileResult.error) {
-          console.error('❌ Error removing push subscriptions:', fcmResult.error, iosResult.error, profileResult.error);
-          toast({
-            title: "❌ Errore Disattivazione",
-            description: "Non è stato possibile disattivare le notifiche push.",
-            variant: "destructive"
-          });
-        } else {
-          setPushTokenExists(false);
-          setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-          
-          toast({
-            title: "🔕 Notifiche Push Disattivate",
-            description: "Subscriptions rimosse. Non riceverai più notifiche push."
-          });
-        }
+        setPushTokenExists(false);
+        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
+        
+        toast({
+          title: "🔕 Notifiche Push Disattivate",
+          description: "Sottoscrizioni rimosse correttamente."
+        });
+        
       } catch (error) {
         console.error('❌ Exception removing push subscriptions:', error);
         toast({
