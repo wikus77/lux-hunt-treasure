@@ -61,7 +61,16 @@ serve(async (req) => {
     });
     
     // Extract subscription data - unified payload format
-    const { subscription, user_id, client = "app", ua, platform } = body;
+    let { subscription, user_id, client = "app", ua, platform } = body;
+    
+    // UUID validation - prevent 500 errors from invalid UUIDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (user_id && !uuidRegex.test(user_id)) {
+      console.log("[PUSH-SUBSCRIBE-CANARY] Invalid UUID format, setting to null:", user_id);
+      // Move the invalid ID to client field for tracking
+      client = user_id.toString();
+      user_id = null;
+    }
     
     if (!subscription || !subscription.endpoint || !subscription.keys?.p256dh || !subscription.keys?.auth) {
       return new Response(
@@ -118,6 +127,7 @@ serve(async (req) => {
         ua: ua ?? null,
         platform: platform ?? null,
         user_id: user_id ?? null,
+        client: client ?? null,
         updated_at: new Date().toISOString()
       }, { 
         onConflict: "endpoint" 
