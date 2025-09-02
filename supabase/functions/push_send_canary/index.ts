@@ -172,6 +172,10 @@ serve(async (req) => {
           }
         };
 
+        // Determine endpoint type for this subscription
+        const endpointType = subscription.endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
+                            subscription.endpoint.includes('web.push.apple.com') ? 'APNS' : 'OTHER';
+
         // Use Web Push API with real VAPID signing
         const response = await sendWebPushNotification(
           pushSubscription,
@@ -180,31 +184,50 @@ serve(async (req) => {
           VAPID_PRIVATE_KEY
         );
 
+        // AUDIT: Log the actual response status and headers
+        const responseHeaders = Object.fromEntries(response.headers.entries());
+        console.log(`[PUSH-SEND-CANARY] 📨 Response from ${endpointType}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: {
+            'Date': responseHeaders.date,
+            'apns-id': responseHeaders['apns-id'] || '(not present)',
+            'retry-after': responseHeaders['retry-after'] || '(not present)'
+          }
+        });
+
         if (response.ok) {
           results.sent.push({
             endpoint: subscription.endpoint.substring(0, 50) + '...',
-            endpoint_type: subscription.endpoint_type,
-            status: response.status
+            endpoint_type: subscription.endpoint_type || endpointType.toLowerCase(),
+            status: response.status,
+            success: true,
+            response_headers: {
+              'apns-id': responseHeaders['apns-id'],
+              'date': responseHeaders.date
+            }
           });
-          console.log(`[PUSH-SEND-CANARY] ✅ Sent to ${subscription.endpoint_type}`);
+          console.log(`[PUSH-SEND-CANARY] ✅ SUCCESS: ${endpointType} push delivered (${response.status})`);
         } else {
-          const errorStatus = response.status;
+          const errorText = await response.text();
           results.failed.push({
             endpoint: subscription.endpoint.substring(0, 50) + '...',
-            endpoint_type: subscription.endpoint_type,
-            status: errorStatus,
-            error: await response.text()
+            endpoint_type: subscription.endpoint_type || endpointType.toLowerCase(),
+            status: response.status,
+            success: false,
+            error: errorText,
+            error_code: `${response.status}-${response.statusText.toLowerCase().replace(/\s+/g, '-')}`
           });
           
           // Mark for deletion if expired (404/410)
-          if (errorStatus === 404 || errorStatus === 410) {
+          if (response.status === 404 || response.status === 410) {
             results.to_delete.push({
               endpoint: subscription.endpoint.substring(0, 50) + '...',
-              id: subscription.id
+              subscription_id: subscription.id || 'unknown'
             });
           }
           
-          console.log(`[PUSH-SEND-CANARY] ❌ Failed to send to ${subscription.endpoint_type}: ${errorStatus}`);
+          console.log(`[PUSH-SEND-CANARY] ❌ FAILED: ${endpointType} push rejected (${response.status}): ${errorText}`);
         }
       } catch (error) {
         results.failed.push({
@@ -265,27 +288,39 @@ async function sendWebPushNotification(
     'TTL': '86400'
   };
   
-  // Different header formats for different push services
-  if (subscription.endpoint.includes('fcm.googleapis.com')) {
-    // FCM requires WebPush format
+  // CRITICAL FIX: Different header formats for different push services
+  const isApns = subscription.endpoint.includes('web.push.apple.com');
+  const isFcm = subscription.endpoint.includes('fcm.googleapis.com');
+  
+  if (isFcm) {
+    // FCM requires Authorization: WebPush <jwt> AND Crypto-Key: p256ecdsa=<pubkey>
     headers['Authorization'] = `WebPush ${vapidToken}`;
     headers['Crypto-Key'] = `p256ecdsa=${vapidPublicKey}`;
-  } else if (subscription.endpoint.includes('web.push.apple.com')) {
-    // Apple WebPush uses VAPID format
+    headers['Content-Type'] = 'application/octet-stream';
+    headers['Content-Encoding'] = 'aes128gcm';
+  } else if (isApns) {
+    // Apple Web Push uses Authorization: vapid t=<jwt>, k=<pubkey> (NO Crypto-Key)
     headers['Authorization'] = `vapid t=${vapidToken}, k=${vapidPublicKey}`;
+    headers['Content-Type'] = 'application/json';
   } else {
-    // Default VAPID format for other services
+    // Default Web Push VAPID format for other services  
     headers['Authorization'] = `vapid t=${vapidToken}, k=${vapidPublicKey}`;
     headers['Crypto-Key'] = `p256ecdsa=${vapidPublicKey}`;
   }
   
-  console.log(`[PUSH-SEND-CANARY] 🔐 Headers for ${url.origin}:`, {
-    endpointType: subscription.endpoint.includes('fcm.googleapis.com') ? 'FCM' : 
-                  subscription.endpoint.includes('web.push.apple.com') ? 'APNS' : 'OTHER',
-    hasAuth: !!headers.Authorization,
-    hasCryptoKey: !!headers['Crypto-Key'],
-    authFormat: headers.Authorization?.substring(0, 20) + '...',
-    cryptoKeyFormat: headers['Crypto-Key']?.substring(0, 30) + '...'
+  // AUDIT LOG: Print exact headers being sent (redacted)
+  const endpointType = isFcm ? 'FCM' : isApns ? 'APNS' : 'OTHER';
+  console.log(`[PUSH-SEND-CANARY] 🔐 Headers for ${endpointType} ${url.origin}:`, {
+    endpointType,
+    method: 'POST', 
+    url: subscription.endpoint.substring(0, 60) + '...',
+    headers: {
+      'Authorization': headers.Authorization?.substring(0, 25) + '...',
+      'Crypto-Key': headers['Crypto-Key']?.substring(0, 35) + '...' || '(not set)',
+      'Content-Type': headers['Content-Type'],
+      'Content-Encoding': headers['Content-Encoding'] || '(not set)',
+      'TTL': headers.TTL
+    }
   });
   
   // Send the actual push notification
