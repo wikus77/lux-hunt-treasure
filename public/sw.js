@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // M1SSION™ Service Worker - Web Push W3C Compliant
-// sw-push-ver: 2025-09-02T07:30Z
+// sw-push-ver: 2025-09-02T080000Z
 
 const CACHE_NAME = 'mission-v2.1.0';
 const STATIC_CACHE = 'mission-static-v2.1.0';
@@ -61,42 +61,50 @@ self.addEventListener('activate', (event) => {
 
 // Push event handler - W3C Web Push  
 self.addEventListener('push', (event) => {
-  let data = {};
-  try {
-    data = event.data?.json() ?? {};
-  } catch (error) {
-    console.warn('[M1SSION SW] Failed to parse push data:', error);
-  }
+  const data = (() => { 
+    try { 
+      return event.data?.json() ?? {}; 
+    } catch { 
+      return {}; 
+    }
+  })();
   
-  event.waitUntil(
-    self.registration.showNotification(data.title || 'M1SSION™', {
-      body: data.body || '',
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
-      data: data.data || {}
-    })
-  );
+  const title = data.title || 'M1SSION';
+  const body = data.body || '';
+  const options = { 
+    body, 
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    data: data.data || {} 
+  };
+  
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.openWindow('/'));
+  const url = '/';
+  event.waitUntil(
+    clients.matchAll({type: 'window', includeUncontrolled: true}).then(list => {
+      const c = list.find(w => w.url.includes(url));
+      return c ? c.focus() : clients.openWindow(url);
+    })
+  );
 });
 
-// Fetch event handler - simplified to avoid respondWith(null) errors
+// Fetch event handler - only handle specific requests, always return Response
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Skip cross-origin requests except Supabase
+  // Skip cross-origin requests except Supabase - NEVER respondWith null
   if (url.origin !== location.origin && !url.hostname.includes('supabase.co')) {
-    return;
+    return; // Let browser handle normally
   }
 
-  // Only handle specific static assets and Supabase requests
+  // Only handle specific static assets
   if (STATIC_ASSETS.includes(url.pathname)) {
-    // Cache First for static assets
     event.respondWith(
       caches.match(request)
         .then((response) => {
@@ -116,29 +124,10 @@ self.addEventListener('fetch', (event) => {
             });
         })
         .catch(() => {
-          // Return a basic response if all else fails
           return new Response('Offline', { status: 503 });
-        })
-    );
-  } else if (url.hostname.includes('supabase.co')) {
-    // Network First for Supabase API
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(DYNAMIC_CACHE)
-              .then((cache) => {
-                cache.put(request, responseClone);
-              });
-          }
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request) || new Response('Offline', { status: 503 });
         })
     );
   }
 });
 
-console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support - sw-push-ver: 2025-09-02T07:30Z');
+console.log('[M1SSION SW] ✅ Service Worker v2.1.0 loaded with Web Push support - sw-push-ver: 2025-09-02T080000Z');
