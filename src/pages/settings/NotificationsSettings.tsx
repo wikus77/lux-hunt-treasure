@@ -187,9 +187,14 @@ const NotificationsSettings: React.FC = () => {
         const { ensurePushSubscription } = await import('@/push/ensurePushSubscription');
         await ensurePushSubscription();
         
+        // Get subscription info for display
+        const registration = await navigator.serviceWorker.getRegistration();
+        const subscription = registration ? await registration.pushManager.getSubscription() : null;
+        const endpointShort = subscription ? subscription.endpoint.substring(0, 50) + '...' : '';
+        
         toast({
           title: "✅ Notifiche Attivate",
-          description: "Le notifiche push sono state attivate con successo.",
+          description: `Push subscription created: ${endpointShort}`,
           variant: "default"
         });
         
@@ -350,32 +355,26 @@ const NotificationsSettings: React.FC = () => {
           }
         }
         
-        // Clean up database (secondary action)
-        const [fcmResult, iosResult, profileResult] = await Promise.all([
-          supabase
-            .from('push_tokens')
-            .delete()
-            .eq('user_id', user?.id),
-          supabase
-            .from('push_subscriptions')
-            .delete()
-            .eq('user_id', user?.id),
-          supabase
-            .from('profiles')
-            .update({ push_notifications_enabled: false })
-            .eq('id', user?.id)
-        ]);
+        // DELETE from database using endpoint
+        if (registration) {
+          const subscription = await registration.pushManager.getSubscription();
+          if (subscription) {
+            await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(subscription.endpoint)}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+              }
+            });
+          }
+        }
         
-        // UI state updated by checkPushSubscriptionStatus() - not DB
-        console.log('🗑️ Database cleanup results:', {
-          fcm: !fcmResult.error,
-          ios: !iosResult.error, 
-          profile: !profileResult.error
-        });
+        await saveSettings({ push_notifications_enabled: false });
         
         toast({
           title: "🔕 Notifiche Push Disattivate",
-          description: "Subscription rimossa. Non riceverai più notifiche push."
+          description: "Subscription rimossa e cancellata dal database."
         });
       } catch (error) {
         console.error('❌ Exception removing push subscriptions:', error);

@@ -8,10 +8,17 @@ self.addEventListener('push', (event) => {
   let data = {};
   const notificationId = Math.random().toString(36).substring(2, 8);
   
-  try { 
-    data = event.data?.json() || {}; 
-  } catch (e) {
-    console.warn(`[SW-PUSH:${notificationId}] Failed to parse push data:`, e);
+  // Handle event.data == null (canary or empty pushes)
+  if (!event.data) {
+    console.log(`[SW-PUSH:${notificationId}] No data in push event - showing default notification`);
+    data = { title: 'M1SSION™', body: 'Canary received' };
+  } else {
+    try { 
+      data = event.data.json() || {}; 
+    } catch (e) {
+      console.warn(`[SW-PUSH:${notificationId}] Failed to parse push data:`, e);
+      data = { title: 'M1SSION™', body: 'Push notification received' };
+    }
   }
   
   const title = data.title || 'M1SSION™';

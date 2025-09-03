@@ -18,6 +18,14 @@ export async function ensurePushSubscription() {
   const { publicKey } = await vapidRes.json();
   if (!publicKey) throw new Error('VAPID publicKey missing');
   const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToUint8(publicKey) });
+  
+  // Deduce endpoint_type for logging
+  const host = new URL(sub.endpoint).host;
+  const endpoint_type = host === 'web.push.apple.com' ? 'apns'
+                     : /fcm\.googleapis\.com$/.test(host) ? 'fcm'
+                     : 'unknown';
+  console.log(`📱 Created subscription: ${endpoint_type} endpoint`);
+  
   const save = await fetch(`${EDGE}/push_subscribe`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON}`, apikey: ANON },
     body: JSON.stringify({ subscription: sub, ua: navigator.userAgent })
