@@ -11,18 +11,27 @@ export async function ensurePushSubscription() {
   if (!('Notification' in window) && !('PushManager' in window)) throw new Error('Web Push non supportato');
   const perm = await Notification.requestPermission();
   if (perm !== 'granted') throw new Error(`Permission ${perm}`);
+  
+  // Register '/sw.js' if not registered
   const reg = (await navigator.serviceWorker.getRegistration('/')) || (await navigator.serviceWorker.register('/sw.js', { scope: '/' }));
   await navigator.serviceWorker.ready;
-  const vapidRes = await fetch(`${EDGE}/get-vapid`, { headers: { Authorization: `Bearer ${ANON}`, apikey: ANON } });
+  
+  // Get VAPID public key from our get-vapid endpoint
+  const vapidRes = await fetch('/functions/get-vapid');
   if (!vapidRes.ok) throw new Error(`get-vapid ${vapidRes.status}`);
   const { publicKey } = await vapidRes.json();
   if (!publicKey) throw new Error('VAPID publicKey missing');
-  const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToUint8(publicKey) });
   
-  // Deduce endpoint_type for logging
+  const sub = await reg.pushManager.subscribe({ 
+    userVisibleOnly: true, 
+    applicationServerKey: b64uToUint8(publicKey) 
+  });
+  
+  // Detect endpoint_type for logging
   const endpoint_type = classifyEndpoint(sub.endpoint);
   console.log(`📱 Created subscription: ${endpoint_type} endpoint`);
   
+  // Upsert to table push_subscriptions with endpoint, endpoint_type, ua
   const save = await fetch(`${EDGE}/push_subscribe`, {
     method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON}`, apikey: ANON },
     body: JSON.stringify({ subscription: sub, ua: navigator.userAgent })

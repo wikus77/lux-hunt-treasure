@@ -5,11 +5,9 @@
  */
 
 // Import push notification handler
-try { 
-  importScripts('/sw-push.js'); 
-} catch (e) { 
-  console.warn('sw-push import failed', e); 
-}
+importScripts('/sw-push.js');
+self.skipWaiting?.(); 
+self.addEventListener?.('activate', () => self.clients?.claim?.());
 
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
