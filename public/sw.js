@@ -1,3 +1,4 @@
+/* vSW-20250903-1 */
 /*
  * M1SSION™ Service Worker - PWA Enhanced - P0 OPERA FIX
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
