@@ -20,10 +20,7 @@ export async function ensurePushSubscription() {
   const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToUint8(publicKey) });
   
   // Deduce endpoint_type for logging
-  const host = new URL(sub.endpoint).host;
-  const endpoint_type = host === 'web.push.apple.com' ? 'apns'
-                     : /fcm\.googleapis\.com$/.test(host) ? 'fcm'
-                     : 'unknown';
+  const endpoint_type = classifyEndpoint(sub.endpoint);
   console.log(`📱 Created subscription: ${endpoint_type} endpoint`);
   
   const save = await fetch(`${EDGE}/push_subscribe`, {
@@ -31,7 +28,47 @@ export async function ensurePushSubscription() {
     body: JSON.stringify({ subscription: sub, ua: navigator.userAgent })
   });
   if (!save.ok) throw new Error(`push_subscribe ${save.status}`);
+  return { endpoint: sub.endpoint, endpoint_type };
+}
+
+export async function unsubscribePush() {
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  if (!reg) return false;
+  
+  const sub = await reg.pushManager.getSubscription();
+  if (!sub) return false;
+  
+  // Unsubscribe from browser
+  await sub.unsubscribe();
+  
+  // DELETE from database
+  await fetch(`${EDGE}/push_unsubscribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ANON}`, apikey: ANON },
+    body: JSON.stringify({ endpoint: sub.endpoint })
+  });
+  
   return true;
+}
+
+export function classifyEndpoint(endpoint: string): string {
+  if (endpoint.startsWith('https://web.push.apple.com/')) return 'apns';
+  if (endpoint.includes('fcm.googleapis.com')) return 'fcm';
+  return 'unknown';
+}
+
+export async function getCurrentSubscription() {
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  if (!reg) return null;
+  
+  const sub = await reg.pushManager.getSubscription();
+  if (!sub) return null;
+  
+  return {
+    endpoint: sub.endpoint,
+    endpoint_type: classifyEndpoint(sub.endpoint),
+    endpoint_short: sub.endpoint.substring(0, 50) + '...'
+  };
 }
 
 (window as any).ensurePushSubscription = ensurePushSubscription;

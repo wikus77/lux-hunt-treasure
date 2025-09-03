@@ -39,7 +39,13 @@
     <button id="subscribeBtn">Subscribe</button>
     <button id="canaryBtn">Send Canary</button>
     <button id="apnsCanaryBtn">Canary APNs (edge)</button>
+    <button id="unsubscribeBtn">Unsubscribe</button>
     <button id="clearBtn">Clear Log</button>
+  </div>
+  
+  <div class="status">
+    <h3>Current Subscription:</h3>
+    <pre id="subscription">Checking...</pre>
   </div>
   
   <div class="status">
@@ -177,14 +183,82 @@
     }
 
     // Event listeners
+    async function checkSubscriptionStatus() {
+      try {
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) {
+          document.getElementById('subscription').textContent = 'No service worker';
+          return;
+        }
+        
+        const sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          document.getElementById('subscription').textContent = 'No subscription';
+          return;
+        }
+        
+        const host = new URL(sub.endpoint).host;
+        const type = host === 'web.push.apple.com' ? 'APNs' : 
+                    host.includes('fcm.googleapis.com') ? 'FCM' : 'Unknown';
+        
+        document.getElementById('subscription').textContent = 
+          `Type: ${type}\nEndpoint: ${sub.endpoint.substring(0, 80)}...`;
+      } catch (error) {
+        document.getElementById('subscription').textContent = `Error: ${error.message}`;
+      }
+    }
+
+    async function unsubscribe() {
+      try {
+        log('🔕 Unsubscribing...');
+        const reg = await navigator.serviceWorker.getRegistration('/');
+        if (!reg) {
+          log('❌ No service worker');
+          return;
+        }
+        
+        const sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+          log('❌ No subscription');
+          return;
+        }
+        
+        await sub.unsubscribe();
+        log('✅ Browser unsubscribed');
+        
+        // DELETE from database
+        const resp = await fetch(`${EDGE}/push_unsubscribe`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ANON}`,
+            apikey: ANON,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ endpoint: sub.endpoint })
+        });
+        
+        if (!resp.ok) {
+          log(`❌ Database delete failed: ${resp.status}`);
+        } else {
+          log('✅ Database record deleted');
+        }
+        
+        checkSubscriptionStatus();
+      } catch (error) {
+        log(`❌ Unsubscribe error: ${error.message}`);
+      }
+    }
+
     document.getElementById('subscribeBtn').addEventListener('click', () => {
-      window.ensurePushSubscription().catch(console.error);
+      window.ensurePushSubscription().then(() => checkSubscriptionStatus()).catch(console.error);
     });
 
     document.getElementById('canaryBtn').addEventListener('click', sendCanary);
     document.getElementById('apnsCanaryBtn').addEventListener('click', sendApnsCanary);
+    document.getElementById('unsubscribeBtn').addEventListener('click', unsubscribe);
     document.getElementById('clearBtn').addEventListener('click', clearLog);
 
+    checkSubscriptionStatus();
     log('🎯 Push Health loaded - click Subscribe to start');
   </script>
 </body>
