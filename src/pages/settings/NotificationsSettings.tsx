@@ -185,16 +185,11 @@ const NotificationsSettings: React.FC = () => {
       try {
         // Import and use the new push subscription function
         const { ensurePushSubscription } = await import('@/push/ensurePushSubscription');
-        await ensurePushSubscription();
-        
-        // Get subscription info for display
-        const registration = await navigator.serviceWorker.getRegistration();
-        const subscription = registration ? await registration.pushManager.getSubscription() : null;
-        const endpointShort = subscription ? subscription.endpoint.substring(0, 50) + '...' : '';
+        const result = await ensurePushSubscription();
         
         toast({
           title: "✅ Notifiche Attivate",
-          description: `Push subscription created: ${endpointShort}`,
+          description: `${result.endpoint_type.toUpperCase()} subscription created`,
           variant: "default"
         });
         
@@ -345,30 +340,9 @@ const NotificationsSettings: React.FC = () => {
       setLoading(true);
       
       try {
-        // Unsubscribe from browser first (primary action)
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          const subscription = await registration.pushManager.getSubscription();
-          if (subscription) {
-            await subscription.unsubscribe();
-            console.log('✅ Browser subscription unsubscribed');
-          }
-        }
-        
-        // DELETE from database using endpoint
-        if (registration) {
-          const subscription = await registration.pushManager.getSubscription();
-          if (subscription) {
-            await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(subscription.endpoint)}`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-                'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
-              }
-            });
-          }
-        }
+        // Use the new unsubscribe function
+        const { unsubscribePush } = await import('@/push/ensurePushSubscription');
+        await unsubscribePush();
         
         await saveSettings({ push_notifications_enabled: false });
         
