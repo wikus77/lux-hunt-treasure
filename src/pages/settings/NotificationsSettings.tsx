@@ -194,6 +194,8 @@ const NotificationsSettings: React.FC = () => {
         });
         
         await saveSettings({ push_notifications_enabled: true });
+        // Recheck status using getSubscription()
+        setTimeout(() => checkPushSubscriptionStatus(), 1000);
         return;
       } catch (error: any) {
         toast({
