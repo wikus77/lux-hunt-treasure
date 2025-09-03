@@ -38,6 +38,7 @@
   <div class="status">
     <button id="subscribeBtn">Subscribe</button>
     <button id="canaryBtn">Send Canary</button>
+    <button id="apnsCanaryBtn">Canary APNs (edge)</button>
     <button id="clearBtn">Clear Log</button>
   </div>
   
@@ -146,6 +147,31 @@
       }
     }
 
+    async function sendApnsCanary() {
+      try {
+        log('🍎 Sending APNs minimal canary...');
+        const resp = await fetch(`${EDGE}/send-push-canary?apns_minimal=1`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ANON}`,
+            apikey: ANON,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            dry: false,
+            title: 'APNs Test',
+            body: 'Minimal APNs canary!'
+          })
+        });
+        
+        if (!resp.ok) throw new Error(`send-apns-canary ${resp.status}`);
+        const result = await resp.json();
+        log(`📤 APNs Canary result: ${JSON.stringify(result)}`);
+      } catch (error) {
+        log(`❌ APNs Canary error: ${error.message}`);
+      }
+    }
+
     function clearLog() {
       document.getElementById('results').textContent = 'Log cleared...\n';
     }
@@ -156,6 +182,7 @@
     });
 
     document.getElementById('canaryBtn').addEventListener('click', sendCanary);
+    document.getElementById('apnsCanaryBtn').addEventListener('click', sendApnsCanary);
     document.getElementById('clearBtn').addEventListener('click', clearLog);
 
     log('🎯 Push Health loaded - click Subscribe to start');
