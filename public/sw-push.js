@@ -4,50 +4,22 @@
 self.addEventListener('install', () => self.skipWaiting?.());
 self.addEventListener('activate', e => e.waitUntil?.(self.clients.claim()));
 
-self.addEventListener('push', (event) => {
+self.addEventListener('push', (evt) => { 
   let data = {};
-  const notificationId = Math.random().toString(36).substring(2, 8);
-  
-  // Handle event.data == null (canary or empty pushes)
-  if (!event.data) {
-    console.log(`[SW-PUSH:${notificationId}] No data in push event - showing default notification`);
-    data = { title: 'M1SSION™', body: 'Canary received' };
-  } else {
-    try { 
-      data = event.data.json() || {}; 
-    } catch (e) {
-      console.warn(`[SW-PUSH:${notificationId}] Failed to parse push data:`, e);
-      data = { title: 'M1SSION™', body: 'Push notification received' };
-    }
-  }
+  try { 
+    data = evt.data?.json?.() || {}; 
+  } catch(_) {}
   
   const title = data.title || 'M1SSION™';
-  const body = data.body || 'Push notification received';
-  const url = (data.data && data.data.url) || '/';
-  const icon = '/icons/icon-192x192.png';
-  const badge = '/icons/icon-96x96.png';
-  
-  const options = {
-    body,
-    icon,
-    badge,
-    data: { url, notificationId },
-    requireInteraction: false,
-    vibrate: [200, 100, 200],
-    tag: `m1ssion-${Date.now()}`
+  const body = data.body || 'Canary received';
+  const options = { 
+    body, 
+    data: data.data || {}, 
+    badge: '/badge.png', 
+    icon: '/icon-192.png' 
   };
   
-  console.log(`[SW-PUSH:${notificationId}] Showing notification:`, title, options);
-  
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-      .then(() => {
-        console.log(`[SW-PUSH:${notificationId}] Notification displayed successfully`);
-      })
-      .catch(error => {
-        console.error(`[SW-PUSH:${notificationId}] Failed to show notification:`, error);
-      })
-  );
+  evt.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener('notificationclick', (event) => {

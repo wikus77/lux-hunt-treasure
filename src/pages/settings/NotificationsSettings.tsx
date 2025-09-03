@@ -179,8 +179,6 @@ const NotificationsSettings: React.FC = () => {
 
   // Enhanced push notifications toggle with iOS support
   const handlePushNotificationsToggle = async (enabled: boolean) => {
-    console.log('🚀 PUSH TOGGLE:', enabled, { isSupported, permission, token, status });
-    
     if (enabled) {
       try {
         // Import and use the new push subscription function
@@ -340,7 +338,7 @@ const NotificationsSettings: React.FC = () => {
       setLoading(true);
       
       try {
-        // Use the new unsubscribe function
+        // Use the new unsubscribe function  
         const { unsubscribePush } = await import('@/push/ensurePushSubscription');
         await unsubscribePush();
         
@@ -503,6 +501,66 @@ const NotificationsSettings: React.FC = () => {
       toast({
         title: "❌ Errore Test Push",
         description: error.message || "Impossibile inviare il test push",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Send Canary APNs Direct Test
+  const handleSendCanaryAPNs = async () => {
+    if (!user) {
+      toast({
+        title: "❌ Errore",
+        description: "Devi essere loggato per inviare test APNs",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Get current subscription for payload
+    let subscription = null;
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      try {
+        const registration = await navigator.serviceWorker.getRegistration();
+        if (registration) {
+          subscription = await registration.pushManager.getSubscription();
+        }
+      } catch (e) {
+        console.warn('Could not get subscription:', e);
+      }
+    }
+
+    if (!subscription) {
+      toast({
+        title: "❌ Nessuna Subscription",
+        description: "Nessuna subscription push attiva trovata",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('send-apns-direct', {
+        body: { endpoint: subscription.endpoint }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "✅ APNs Direct Test",
+        description: `Status: ${data.status_code} ${data.apns_id ? `• ID: ${data.apns_id}` : ''}`,
+        variant: "default"
+      });
+
+    } catch (error: any) {
+      console.error('❌ APNs direct test failed:', error);
+      toast({
+        title: "❌ APNs Test Failed",
+        description: error.message || "Impossibile inviare il test APNs",
         variant: "destructive"
       });
     } finally {
@@ -784,15 +842,24 @@ const NotificationsSettings: React.FC = () => {
             {/* Test Push Button (Development) */}
             {import.meta.env.DEV && settings.push_notifications_enabled && (
               <div className="border-t border-white/10 pt-4 space-y-3">
-                <Button
-                  onClick={handleSendTestPush}
-                  disabled={loading || Notification.permission === 'denied' || !pushTokenExists}
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                >
-                  🚀 Invia Test Push (canary)
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={handleSendTestPush}
+                    disabled={loading || Notification.permission === 'denied' || !pushTokenExists}
+                    variant="outline"
+                    size="sm"
+                  >
+                    🚀 Test Canary
+                  </Button>
+                  <Button
+                    onClick={handleSendCanaryAPNs}
+                    disabled={loading || Notification.permission === 'denied' || !pushTokenExists}
+                    variant="outline"
+                    size="sm"
+                  >
+                    📡 Canary APNs (edge)
+                  </Button>
+                </div>
                 
                 {/* L1 Fix: Three panels for request/response/hints */}
                 {testResults.request && (
