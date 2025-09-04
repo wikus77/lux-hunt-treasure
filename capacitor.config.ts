@@ -1,0 +1,17 @@
+import { CapacitorConfig } from '@capacitor/core';
+
+const config: CapacitorConfig = {
+  appId: 'app.lovable.2716f91b957c47ba91e06f572f3ce00d',
+  appName: 'm1ssion',
+  webDir: 'dist',
+  server: {
+    androidScheme: 'https'
+  },
+  plugins: {
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"]
+    }
+  }
+};
+
+export default config;
