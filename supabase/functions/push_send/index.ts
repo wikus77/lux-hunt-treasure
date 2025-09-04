@@ -110,16 +110,13 @@ async function generateVAPIDToken(endpoint: string): Promise<string> {
     const privateKey = await importJWK(jwk, 'ES256');
     
     // Create and sign JWT with JOSE
-    const jwt = await new SignJWT({
-      aud: audience,
-      sub: subject,
-      exp: Math.floor(Date.now() / 1000) + (12 * 60 * 60), // 12 hours
-    })
-    .setProtectedHeader({ 
-      alg: 'ES256', 
-      typ: 'JWT' 
-    })
-    .sign(privateKey);
+    const jwt = await new SignJWT({})
+      .setProtectedHeader({ alg: 'ES256', typ: 'JWT' })
+      .setAudience(audience)
+      .setIssuer(subject)
+      .setSubject(subject)
+      .setExpirationTime('12h')
+      .sign(privateKey);
 
     console.log(`✅ VAPID JWT generated successfully for ${audience}`);
     return jwt;

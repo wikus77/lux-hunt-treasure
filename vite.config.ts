@@ -4,7 +4,6 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import { VitePWA } from 'vite-plugin-pwa';
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from "path";
@@ -31,31 +30,6 @@ export default defineConfig(({ mode }) => ({
       open: false,
       gzipSize: true,
       brotliSize: true,
-    }),
-    VitePWA({
-      // Completely disable VitePWA/Workbox generation
-      disable: true,
-      // Use only manual SW registration
-      injectRegister: false,
-      registerType: 'prompt',
-      includeAssets: ['favicon.ico', 'sw.js', 'sw-push.js', 'push-health.txt'],
-      manifest: {
-        name: 'M1SSION™',
-        short_name: 'M1SSION',
-        description: 'Un\'esperienza di gioco rivoluzionaria che unisce caccia al tesoro, enigmi e premi esclusivi',
-        theme_color: '#00D1FF',
-        background_color: '#000C18',
-        display: 'standalone',
-        orientation: 'portrait',
-        start_url: '/',
-        icons: [
-          {
-            src: '/favicon.ico',
-            sizes: '48x48',
-            type: 'image/x-icon'
-          }
-        ]
-      }
     })
   ].filter(Boolean),
   resolve: {
