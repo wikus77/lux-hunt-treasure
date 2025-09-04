@@ -196,14 +196,11 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const url = new URL(req.url);
+  
   // Health check endpoint
-  if (req.method === 'GET' && new URL(req.url).pathname === '/health') {
-    return new Response(JSON.stringify({ 
-      status: 'healthy', 
-      service: 'push_send',
-      vapid_configured: !!VAPID_PUBLIC_KEY && !!VAPID_PRIVATE_KEY,
-      timestamp: new Date().toISOString()
-    }), {
+  if (req.method === 'GET' && url.pathname.endsWith('/health')) {
+    return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
   }
@@ -219,11 +216,60 @@ serve(async (req) => {
   try {
     // Verify Service Role Key for security
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.includes(SUPABASE_SERVICE_ROLE_KEY)) {
+    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.slice(7) !== SUPABASE_SERVICE_ROLE_KEY) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
+    }
+
+    // Dry-run endpoint for diagnostics
+    if (url.pathname.endsWith('/dry-run')) {
+      const { endpoint } = await req.json();
+      
+      if (!endpoint) {
+        return new Response(JSON.stringify({ error: 'endpoint required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      try {
+        const audience = getAudience(endpoint);
+        const { x, y } = deriveXYFromPublic(VAPID_PUBLIC_KEY);
+        const endpointType = classifyEndpoint(endpoint);
+        
+        // Build diagnostic preview (mask sensitive data)
+        const xPreview = x.slice(0, 8) + '...';
+        const yPreview = y.slice(0, 8) + '...';
+        
+        const headerPreview = endpointType === 'apns' 
+          ? { 'Authorization': 'WebPush [JWT_MASKED]', 'Crypto-Key': `p256ecdsa=${VAPID_PUBLIC_KEY.slice(0, 20)}...` }
+          : { 'Authorization': `vapid t=[JWT_MASKED], k=${VAPID_PUBLIC_KEY.slice(0, 20)}...` };
+
+        return new Response(JSON.stringify({
+          ok: true,
+          audience,
+          endpoint_type: endpointType,
+          debug: {
+            x_preview: xPreview,
+            y_preview: yPreview,
+            pub_key_len: VAPID_PUBLIC_KEY.length,
+            priv_key_len: VAPID_PRIVATE_KEY.length,
+            header_preview: headerPreview
+          }
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ 
+          ok: false, 
+          error: `Dry-run failed: ${error.message}` 
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
     }
 
     const body = await req.json();
@@ -257,11 +303,10 @@ serve(async (req) => {
     }
 
     const response = {
-      success: result.success,
+      ok: result.success,
       status: result.status,
       endpoint_type: classifyEndpoint(endpoint),
-      stale: result.stale || false,
-      timestamp: new Date().toISOString()
+      stale: result.stale || false
     };
 
     console.log(`✅ Push operation completed:`, response);
