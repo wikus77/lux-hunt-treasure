@@ -134,14 +134,14 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       transition={{ duration: 0.5, ease: "easeOut" }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl"
       style={{
-        background: "rgba(19, 21, 33, 0.85)",
+        background: "var(--m1-header-bg-gradient)",
         backdropFilter: "blur(12px)",
         top: '0px',
         paddingTop: 'env(safe-area-inset-top, 0px)',
         marginTop: '0px',
-        height: 'calc(72px + env(safe-area-inset-top, 0px))',
+        height: 'calc(var(--header-height) + env(safe-area-inset-top, 0px))',
         // Safe area background matches header
-        backgroundImage: 'linear-gradient(rgba(19, 21, 33, 0.85) 0%, rgba(19, 21, 33, 0.85) 100%)'
+        backgroundImage: 'var(--m1-header-bg-gradient)'
       }}
     >
       <div className="container mx-auto h-full max-w-screen-xl">
