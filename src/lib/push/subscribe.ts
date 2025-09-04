@@ -7,9 +7,12 @@
 import { urlBase64ToUint8Array } from './base64url';
 import { supabase } from '@/integrations/supabase/client';
 
+const PUSH_BOUND_KEY = 'm1_push_bound';
+
 /**
- * Ensure Web Push subscription with VAPID
+ * Unified Web Push subscription with VAPID
  * Handles permission, service worker, and subscription registration
+ * Prevents multiple subscriptions per session
  */
 export async function ensureWebPushSubscription(): Promise<PushSubscription | null> {
   // Check browser support
@@ -18,7 +21,20 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     return null;
   }
 
-  // Check/request permission
+  // Prevent multiple subscriptions per session
+  if (sessionStorage.getItem(PUSH_BOUND_KEY)) {
+    console.log('✓ Push subscription already established this session');
+    
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      return await registration.pushManager.getSubscription();
+    } catch (error) {
+      console.error('❌ Failed to get existing subscription:', error);
+      return null;
+    }
+  }
+
+  // Handle permission request
   if (Notification.permission === 'default') {
     console.log('📢 Requesting notification permission...');
     const permission = await Notification.requestPermission();
@@ -38,14 +54,14 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     const registration = await navigator.serviceWorker.ready;
     console.log('✅ Service worker ready');
 
-    // Get VAPID public key
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || (window as any).VAPID_PUBLIC_KEY;
+    // Get VAPID public key from environment
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
     if (!vapidKey?.trim()) {
-      console.error('❌ VAPID_PUBLIC_KEY missing in environment');
+      console.error('❌ VITE_VAPID_PUBLIC_KEY missing in environment');
       return null;
     }
 
-    // Convert VAPID key
+    // Convert VAPID key to Uint8Array
     const applicationServerKey = urlBase64ToUint8Array(vapidKey.trim());
     console.log('🔑 VAPID key converted successfully');
 
@@ -66,8 +82,17 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
       console.log('✅ Using existing push subscription');
     }
 
-    // Register with our backend
-    await saveSubscriptionToDatabase(subscription);
+    // Register with our backend (only if authenticated)
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      await saveSubscriptionToDatabase(subscription);
+      
+      // Mark as bound for this session
+      sessionStorage.setItem(PUSH_BOUND_KEY, '1');
+      console.log('✅ Push subscription bound for session');
+    } else {
+      console.log('⚠️ User not authenticated - subscription not saved to backend');
+    }
 
     return subscription;
   } catch (error) {

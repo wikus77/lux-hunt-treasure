@@ -5,7 +5,7 @@
 
 import { useEffect } from 'react';
 import { runPWACleanupOnce } from '@/lib/pwa/cleanup';
-import { registerServiceWorker } from '@/lib/pwa/serviceWorker';
+import { initializePWARegistration } from '@/lib/pwa/registerSW';
 import { ensureWebPushSubscription } from '@/lib/push/subscribe';
 import { useAuth } from './use-auth';
 
@@ -24,30 +24,21 @@ export const usePWAStabilizer = () => {
         // 1. Run cleanup once per version (prevents reload loops)
         await runPWACleanupOnce();
 
-        // 2. Register service worker cleanly
-        const registration = await registerServiceWorker();
-        
-        if (registration) {
-          console.log('✅ PWA Stabilizer: Service worker registered');
-        }
+        // 2. Initialize PWA registration with controlled updates
+        await initializePWARegistration();
+        console.log('✅ PWA Stabilizer: Registration initialized');
 
         // 3. Handle push subscription if user is authenticated
         if (user && Notification.permission === 'granted') {
-          const PUSH_KEY = 'm1_push_bound';
+          console.log('🔔 PWA Stabilizer: Setting up push subscription...');
           
-          // Only subscribe once per session to prevent loops
-          if (!localStorage.getItem(PUSH_KEY)) {
-            console.log('🔔 PWA Stabilizer: Setting up push subscription...');
-            
-            try {
-              const subscription = await ensureWebPushSubscription();
-              if (subscription) {
-                localStorage.setItem(PUSH_KEY, '1');
-                console.log('✅ PWA Stabilizer: Push subscription established');
-              }
-            } catch (error) {
-              console.error('❌ PWA Stabilizer: Push subscription failed:', error);
+          try {
+            const subscription = await ensureWebPushSubscription();
+            if (subscription) {
+              console.log('✅ PWA Stabilizer: Push subscription established');
             }
+          } catch (error) {
+            console.error('❌ PWA Stabilizer: Push subscription failed:', error);
           }
         }
 
@@ -60,23 +51,7 @@ export const usePWAStabilizer = () => {
     initializePWA();
   }, [user]);
 
-  // Listen for SW updates
-  useEffect(() => {
-    const handleSWUpdate = (event: CustomEvent) => {
-      console.log('🔄 PWA Stabilizer: Service worker update available');
-      
-      // Show update notification (optional)
-      if (window.confirm('New version available. Update now?')) {
-        window.location.reload();
-      }
-    };
-
-    window.addEventListener('sw-update-available', handleSWUpdate as EventListener);
-    
-    return () => {
-      window.removeEventListener('sw-update-available', handleSWUpdate as EventListener);
-    };
-  }, []);
+  // No additional SW update listeners needed - handled by registerSW
 };
 
 /*

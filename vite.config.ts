@@ -33,8 +33,8 @@ export default defineConfig(({ mode }) => ({
       brotliSize: true,
     }),
     VitePWA({
-      // Force import of sw-push.js for Web Push VAPID
-      injectRegister: null,
+      // Use generateSW mode with manual registration
+      injectRegister: false,
       registerType: 'autoUpdate',
       workbox: {
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB - increased for large bundle
@@ -160,6 +160,7 @@ export default defineConfig(({ mode }) => ({
   define: {
     global: 'globalThis',
     'process.env.NODE_ENV': '"production"',
+    __PWA_VERSION__: JSON.stringify(new Date().toISOString()),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],

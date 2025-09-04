@@ -1,5 +1,6 @@
 
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 
 // Dichiarazione per Cookie Script
 interface Window {
@@ -32,11 +33,16 @@ interface Window {
 // Removed VITE_ variables for Capacitor compatibility
 interface ImportMetaEnv {
   readonly NODE_ENV: string;
+  readonly VITE_VAPID_PUBLIC_KEY: string;
+  readonly VITE_PWA_VERSION: string;
 }
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// PWA version constant
+declare const __PWA_VERSION__: string;
 
 // Mailjet response types
 interface MailjetResponse {
