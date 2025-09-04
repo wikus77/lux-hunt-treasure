@@ -15,6 +15,7 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 // OneSignal rimosso - usando solo FCM
 import { IOSPermissionManager } from "./components/IOSPermissionManager";
 import { AndroidPushSetup } from "./components/android/AndroidPushSetup";
+import { PushNotificationSetup } from "./components/PushNotificationSetup";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
@@ -65,6 +66,7 @@ function App() {
                 <InstallPrompt />
                 <IOSPermissionManager />
                 <AndroidPushSetup className="hidden" />
+                <PushNotificationSetup className="hidden" />
                 <XpSystemManager />
                 <Toaster />
                 </AuthProvider>

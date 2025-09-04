@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Push Notifications Entitlement -->
+	<key>aps-environment</key>
+	<string>development</string>
+	
+	<!-- App Groups (if needed for shared data) -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.app.lovable.2716f91b957c47ba91e06f572f3ce00d</string>
+	</array>
+	
+	<!-- Background App Refresh -->
+	<key>com.apple.developer.background-modes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+</dict>
+</plist>

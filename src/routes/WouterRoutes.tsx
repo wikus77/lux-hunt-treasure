@@ -313,6 +313,15 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* 📱 Native Push Test Route (iOS + Android) */}
+          <Route path="/native-push-test">
+            <ProtectedRoute>
+              <GlobalLayout>
+                {React.createElement(React.lazy(() => import('../pages/native-push-test')))}
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           {/* QR Routes REMOVED - rewards now handled by popup in map */}
           
 
