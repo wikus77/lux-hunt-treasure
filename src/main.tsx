@@ -10,7 +10,7 @@ import App from './App';
 import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
-import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider';
+// import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Import and apply kill switch utilities
@@ -154,10 +154,7 @@ const renderApp = () => {
     root.render(
       <React.StrictMode>
         <QueryClientProvider client={queryClient}>
-          <EnhancedToastProvider>
-            
-            <App />
-          </EnhancedToastProvider>
+          <App />
         </QueryClientProvider>
       </React.StrictMode>
     );
