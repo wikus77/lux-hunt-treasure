@@ -71,34 +71,10 @@ const BottomNavigationComponent = () => {
   ];
 
   // PWA compatible navigation handler
-  // PWA Haptic Feedback
-  const hapticFeedback = () => {
-    try {
-      // Android & some browsers
-      if ('vibrate' in navigator) {
-        navigator.vibrate(10);
-        return;
-      }
-      // Fallback: micro-animation
-      const buzzElement = document.querySelector('.buzz-button') as HTMLElement;
-      if (buzzElement) {
-        buzzElement.classList.add('animate-haptic');
-        setTimeout(() => buzzElement.classList.remove('animate-haptic'), 120);
-      }
-    } catch (error) {
-      console.log('Haptic feedback not supported');
-    }
-  };
-
   const handleNavigationPWA = async (link: typeof links[0], e: React.MouseEvent) => {
     e.preventDefault();
     
     console.log('🧭 Navigation clicked:', { path: link.path, isPWA });
-    
-    // Haptic feedback for Buzz button
-    if (link.path === '/buzz') {
-      hapticFeedback();
-    }
     
     // Execute Wouter navigation
     navigate(link.path);
@@ -136,17 +112,17 @@ const BottomNavigationComponent = () => {
       }}
     >
       <motion.div
-        className="bottom-nav-pwa backdrop-blur-xl border-t border-white/10 px-3 bottom-nav-hardware-acceleration rounded-t-lg"
+        className="backdrop-blur-xl border-t border-white/10 px-3 bottom-nav-hardware-acceleration rounded-t-lg"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
         style={{
           position: "relative",
           zIndex: "inherit",
-          height: "var(--bottom-nav-height)",
+          height: "var(--bottom-nav-height)", // Più bassa ma accessibile
           display: "flex",
           alignItems: "center",
-          background: "var(--m1-header-bg-gradient)",
+          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
           backdropFilter: "blur(12px)",
           borderTop: "1px solid rgba(255, 255, 255, 0.1)",
           WebkitTapHighlightColor: "transparent",
@@ -161,11 +137,11 @@ const BottomNavigationComponent = () => {
               <motion.button
                 key={link.path}
                 onClick={(e) => handleNavigationPWA(link, e)}
-                className={`relative flex flex-col items-center justify-center w-14 h-12 transition-colors bottom-nav-item cursor-pointer ${
+                className={`relative flex flex-col items-center justify-center w-14 h-12 transition-colors mobile-touch-target cursor-pointer ${
                   isActive
                     ? "text-[#00D1FF]"
                     : "text-gray-400 hover:text-gray-300"
-                } ${link.path === '/buzz' ? 'buzz-button' : ''}`}
+                }`}
                 style={{
                   background: "none",
                   border: "none",
