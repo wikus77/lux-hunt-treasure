@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
-import { ensureSubscription } from '@/lib/push/subscribe';
+import { ensureWebPushSubscription } from '@/lib/push/subscribe';
 
 interface PushSubscriptionState {
   isSupported: boolean;
@@ -53,7 +53,7 @@ export const useUnifiedPushSubscription = () => {
       
       try {
         console.log('🔔 [useUnifiedPushSubscription] Auto-subscribing for authenticated user...');
-        const subscription = await ensureSubscription();
+        const subscription = await ensureWebPushSubscription();
         
         setState(prev => ({
           ...prev,
@@ -87,7 +87,7 @@ export const useUnifiedPushSubscription = () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const subscription = await ensureSubscription();
+      const subscription = await ensureWebPushSubscription();
       const permission = Notification.permission;
       
       setState(prev => ({

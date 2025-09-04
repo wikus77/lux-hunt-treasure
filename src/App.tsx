@@ -17,8 +17,7 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { IOSPermissionManager } from "./components/IOSPermissionManager";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
-import { usePushNotificationProcessor } from "./hooks/usePushNotificationProcessor";
-import { useGlobalProfileSync } from "./hooks/useGlobalProfileSync";
+import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
 
 import LegalOnboarding from "./components/legal/LegalOnboarding";
@@ -26,11 +25,8 @@ import LegalOnboarding from "./components/legal/LegalOnboarding";
 function App() {
   // Production-ready logging removed
   
-  // Initialize push notification processor
-  usePushNotificationProcessor();
-  
-  // Initialize global profile sync for real-time updates across all components
-  useGlobalProfileSync();
+  // Initialize PWA stabilizer (prevents reload loops and manages push)
+  usePWAStabilizer();
 
   
   return (

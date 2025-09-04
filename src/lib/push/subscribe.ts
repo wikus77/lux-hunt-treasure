@@ -4,39 +4,50 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { getApplicationServerKey } from "./vapid";
-import { supabase } from "@/integrations/supabase/client";
+import { urlBase64ToUint8Array } from './base64url';
+import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Unified push subscription for both FCM (desktop/Android) and APNs (iOS Safari)
- * Stores complete PushSubscription in database for server-side sending
+ * Ensure Web Push subscription with VAPID
+ * Handles permission, service worker, and subscription registration
  */
-export async function ensureSubscription(): Promise<PushSubscription | null> {
-  console.log('🔔 Starting unified push subscription process...');
-
+export async function ensureWebPushSubscription(): Promise<PushSubscription | null> {
   // Check browser support
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn('❌ Push notifications not supported in this browser');
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    console.warn('❌ Web Push not supported in this browser');
     return null;
   }
 
-  // Request permission if needed
+  // Check/request permission
   if (Notification.permission === 'default') {
     console.log('📢 Requesting notification permission...');
-    await Notification.requestPermission();
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.warn('❌ Notification permission denied');
+      return null;
+    }
   }
 
   if (Notification.permission !== 'granted') {
-    console.warn('❌ Notification permission denied');
+    console.warn('❌ Notification permission not granted');
     return null;
   }
-
-  console.log('✅ Notification permission granted');
 
   try {
     // Ensure service worker is ready
     const registration = await navigator.serviceWorker.ready;
     console.log('✅ Service worker ready');
+
+    // Get VAPID public key
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY || (window as any).VAPID_PUBLIC_KEY;
+    if (!vapidKey?.trim()) {
+      console.error('❌ VAPID_PUBLIC_KEY missing in environment');
+      return null;
+    }
+
+    // Convert VAPID key
+    const applicationServerKey = urlBase64ToUint8Array(vapidKey.trim());
+    console.log('🔑 VAPID key converted successfully');
 
     // Check for existing subscription
     let subscription = await registration.pushManager.getSubscription();
@@ -44,10 +55,10 @@ export async function ensureSubscription(): Promise<PushSubscription | null> {
     if (!subscription) {
       console.log('📝 Creating new push subscription...');
       
-      // Create new subscription with unified VAPID key
+      // Create new subscription
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: getApplicationServerKey(),
+        applicationServerKey: applicationServerKey,
       });
       
       console.log('✅ Push subscription created');
@@ -55,16 +66,12 @@ export async function ensureSubscription(): Promise<PushSubscription | null> {
       console.log('✅ Using existing push subscription');
     }
 
-    // Detect platform/endpoint type
-    const endpointType = classifyEndpoint(subscription.endpoint);
-    console.log(`🎯 Endpoint type detected: ${endpointType}`);
-
-    // Save to Supabase unified push_tokens table
+    // Register with our backend
     await saveSubscriptionToDatabase(subscription);
 
     return subscription;
   } catch (error) {
-    console.error('❌ Push subscription failed:', error);
+    console.error('❌ Web Push subscription failed:', error);
     return null;
   }
 }
@@ -92,8 +99,8 @@ async function saveSubscriptionToDatabase(subscription: PushSubscription): Promi
       endpointType: classifyEndpoint(subscription.endpoint)
     };
 
-    // Call unified registration function
-    const { error } = await supabase.functions.invoke('register-push-subscription', {
+    // Call registration function
+    const { error } = await supabase.functions.invoke('push_register', {
       body: {
         subscription: {
           endpoint: subscription.endpoint,
