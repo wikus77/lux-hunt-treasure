@@ -21,6 +21,7 @@ export const useToast = () => {
   return { toast };
 };
 
-export const Toaster = () => {
-  return null; // Placeholder for toast container
-};
+// Toaster rimosso per evitare conflitti con sonner
+// export const Toaster = () => {
+//   return null; // Placeholder for toast container
+// };

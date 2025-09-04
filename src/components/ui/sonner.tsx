@@ -20,10 +20,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       expand={false}
       visibleToasts={3}
       offset={0}
-      style={{
-        top: 'calc(env(safe-area-inset-top, 47px) + 20px)',
-      }}
       toastOptions={{
+        className: 'enhanced-toast-apple-ios',
         style: {
           background: 'rgba(0, 12, 24, 0.95)',
           color: 'white',
@@ -37,10 +35,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
           minHeight: '56px',
           width: 'auto',
           maxWidth: '380px',
-          margin: '0 auto',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          textAlign: 'center',
           fontWeight: '500',
           letterSpacing: '0.025em',
           display: 'flex',
@@ -48,11 +42,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
           justifyContent: 'center',
           WebkitUserSelect: 'none',
           userSelect: 'none',
+          // Posizionamento fisso senza animazioni
+          position: 'fixed' as const,
+          top: 'calc(env(safe-area-inset-top, 47px) + 20px)',
           left: '50%',
           transform: 'translateX(-50%)',
-          position: 'relative'
+          margin: '0',
+          marginLeft: '0',
+          marginRight: '0'
         },
-        className: 'enhanced-toast-apple-ios',
         classNames: {
           toast: "group toast",
           description: "group-[.toast]:text-white/80",
