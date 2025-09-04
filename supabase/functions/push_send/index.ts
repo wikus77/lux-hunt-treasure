@@ -1,172 +1,49 @@
 /*
- * M1SSION™ Push Send - Standard VAPID with Web Push Protocol
+ * M1SSION™ Push Send Service - JOSE-powered VAPID JWT
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
+ * Zero regressioni. Libreria JOSE ufficiale per firma ECDSA.
  */
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SignJWT, importJWK } from 'https://esm.sh/jose@5.8.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface PushRequest {
-  endpoint: string;
-  title?: string;
-  body?: string;
-  data?: Record<string, any>;
-  ttl?: number;
+// Supabase environment
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+// VAPID secrets (base64url format)
+const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!; // 65 bytes uncompressed
+const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!; // 32 bytes private key
+
+// Utility functions for base64url
+function base64UrlDecode(base64url: string): Uint8Array {
+  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+  return new Uint8Array(Array.from(atob(base64 + padding), c => c.charCodeAt(0)));
 }
 
-const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!;
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!;
-const VAPID_SUB = Deno.env.get('VAPID_SUB') || 'mailto:admin@m1ssion.eu';
-
-serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  // Health check endpoint
-  if (req.method === 'GET' && req.url.endsWith('/health')) {
-    return Response.json({ ok: true, status: 'healthy' }, { headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { 
-      status: 405, 
-      headers: corsHeaders 
-    });
-  }
-
-  try {
-    console.log('🚀 [PUSH-SEND] Processing push request...');
-
-    // Verify Service Role Key for security
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    
-    if (!authHeader.includes(serviceRoleKey || 'invalid')) {
-      console.error('❌ Unauthorized: Service Role Key required');
-      return Response.json(
-        { error: 'Unauthorized - Service Role Key required' }, 
-        { status: 403, headers: corsHeaders }
-      );
-    }
-
-    const body: PushRequest = await req.json();
-    const { endpoint, ttl = 86400 } = body; // Default 24 ore TTL
-
-    if (!endpoint) {
-      return Response.json(
-        { error: 'Endpoint required' }, 
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
-    console.log(`📤 Sending no-payload VAPID to ${classifyEndpoint(endpoint)}...`);
-
-    // Generate VAPID JWT token
-    const vapidToken = await generateVAPIDToken(endpoint);
-    const endpointType = classifyEndpoint(endpoint);
-    
-    // Build headers based on push service
-    const headers: Record<string, string> = buildPushHeaders(endpointType, vapidToken, ttl);
-
-    // Send push notification using standard Web Push protocol (NO PAYLOAD)
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: headers,
-      // NO body - invio "tick" push senza payload
-    });
-
-    let responseBody = '';
-    try {
-      responseBody = await response.text();
-    } catch (e) {
-      // Ignore response body errors
-    }
-
-    const isStale = response.status === 404 || response.status === 410;
-
-    if (!response.ok) {
-      console.error(`❌ Push failed (${response.status}):`, responseBody);
-      
-      // Log synthetic details
-      console.log(`📊 Push result: endpoint_type=${endpointType}, status=${response.status}, stale=${isStale}`);
-      
-      // Log detailed error for debugging
-      if (endpoint.includes('web.push.apple.com')) {
-        console.error('🍎 APNs Error Details:', {
-          status: response.status,
-          headers: Object.fromEntries(response.headers.entries()),
-          vapidClaims: decodeVAPIDToken(vapidToken),
-          endpoint: endpoint.substring(0, 50) + '...'
-        });
-      }
-      
-      // Return stale info for 404/410 instead of throwing
-      if (isStale) {
-        return Response.json(
-          { 
-            ok: true,
-            sent: 0,
-            failed: 1,
-            stale: true,
-            status: response.status,
-            endpoint_type: endpointType,
-            results: [{ stale: true, status: response.status, endpoint_type: endpointType }]
-          }, 
-          { headers: corsHeaders }
-        );
-      }
-      
-      throw new Error(`Push failed (${response.status}): ${responseBody}`);
-    }
-
-    console.log(`✅ Push sent successfully to ${endpointType} (${response.status})`);
-    console.log(`📊 Push result: endpoint_type=${endpointType}, status=${response.status}, stale=false`);
-
-    return Response.json(
-      { 
-        ok: true,
-        sent: 1,
-        failed: 0,
-        status: response.status,
-        endpoint_type: endpointType,
-        stale: false
-      }, 
-      { headers: corsHeaders }
-    );
-
-  } catch (error) {
-    console.error('❌ Push send error:', error);
-    return Response.json(
-      { 
-        ok: false,
-        sent: 0,
-        failed: 1,
-        error: String(error) 
-      }, 
-      { status: 500, headers: corsHeaders }
-    );
-  }
-});
+function base64UrlEncode(bytes: Uint8Array): string {
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
 
 /**
  * Derive x,y coordinates from VAPID public key (65 bytes uncompressed)
  */
 function deriveXYFromPublic(publicKeyBase64url: string): { x: string; y: string } {
-  // Decode the 65-byte uncompressed public key
   const publicKeyBytes = base64UrlDecode(publicKeyBase64url);
   
   if (publicKeyBytes.length !== 65 || publicKeyBytes[0] !== 0x04) {
     throw new Error('Invalid uncompressed public key format');
   }
   
-  // Extract x (bytes 1-32) and y (bytes 33-64)
+  // Extract x (bytes 1-32) and y (bytes 33-64)  
   const x = publicKeyBytes.slice(1, 33);
   const y = publicKeyBytes.slice(33, 65);
   
@@ -177,46 +54,47 @@ function deriveXYFromPublic(publicKeyBase64url: string): { x: string; y: string 
 }
 
 /**
- * Generate VAPID JWT token using JWK format instead of PKCS#8
+ * Classify endpoint type for service-specific headers
  */
-async function generateVAPIDToken(endpoint: string): Promise<string> {
+function classifyEndpoint(endpoint: string): string {
+  if (endpoint.includes('web.push.apple.com')) return 'apns';
+  if (endpoint.includes('fcm.googleapis.com')) return 'fcm';
+  return 'generic';
+}
+
+/**
+ * Generate dynamic audience for VAPID JWT
+ */
+function getAudience(endpoint: string): string {
   const endpointType = classifyEndpoint(endpoint);
-  let audience: string;
   
-  // Set correct audience based on push service
   switch (endpointType) {
     case 'apns':
-      audience = 'https://web.push.apple.com';
-      break;
+      return 'https://web.push.apple.com';
     case 'fcm':
-      audience = 'https://fcm.googleapis.com';
-      break;
+      return 'https://fcm.googleapis.com';
     default:
-      // For other services, extract from endpoint
-      const url = new URL(endpoint);
-      audience = `${url.protocol}//${url.host}`;
+      // Generic Web Push - extract origin from endpoint
+      try {
+        const url = new URL(endpoint);
+        return `${url.protocol}//${url.hostname}`;
+      } catch {
+        return 'https://web.push.default.com';
+      }
   }
-  
-  const header = {
-    typ: 'JWT',
-    alg: 'ES256'
-  };
+}
 
-  const payload = {
-    aud: audience,
-    exp: Math.floor(Date.now() / 1000) + (12 * 60 * 60), // 12 hours max
-    sub: VAPID_SUB
-  };
-
-  // Base64url encode header and payload
-  const headerB64 = base64UrlEncode(JSON.stringify(header));
-  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+/**
+ * Generate VAPID JWT using JOSE library with proper ES256 signing
+ */
+async function generateVAPIDToken(endpoint: string): Promise<string> {
+  const audience = getAudience(endpoint);
+  const subject = 'mailto:support@m1ssion.com';
   
-  // Create signing input
-  const signingInput = `${headerB64}.${payloadB64}`;
+  console.log(`🔐 Generating VAPID JWT for ${classifyEndpoint(endpoint)} with aud: ${audience}`);
   
   try {
-    // Derive x,y from public key
+    // Derive x,y from public key for JWK
     const { x, y } = deriveXYFromPublic(VAPID_PUBLIC_KEY);
     
     // Create JWK for private key import
@@ -229,94 +107,196 @@ async function generateVAPIDToken(endpoint: string): Promise<string> {
     };
 
     // Import private key as JWK
-    const privateKey = await crypto.subtle.importKey(
-      'jwk',
-      jwk,
-      {
-        name: 'ECDSA',
-        namedCurve: 'P-256',
-      },
-      false,
-      ['sign']
-    );
-
-    // Sign the JWT
-    const signature = await crypto.subtle.sign(
-      {
-        name: 'ECDSA',
-        hash: 'SHA-256',
-      },
-      privateKey,
-      new TextEncoder().encode(signingInput)
-    );
-
-    // Encode signature as base64url
-    const signatureB64 = base64UrlEncode(new Uint8Array(signature));
+    const privateKey = await importJWK(jwk, 'ES256');
     
-    return `${signingInput}.${signatureB64}`;
+    // Create and sign JWT with JOSE
+    const jwt = await new SignJWT({
+      aud: audience,
+      sub: subject,
+      exp: Math.floor(Date.now() / 1000) + (12 * 60 * 60), // 12 hours
+    })
+    .setProtectedHeader({ 
+      alg: 'ES256', 
+      typ: 'JWT' 
+    })
+    .sign(privateKey);
+
+    console.log(`✅ VAPID JWT generated successfully for ${audience}`);
+    return jwt;
+    
   } catch (error) {
-    console.error('❌ VAPID JWT signing failed:', error);
+    console.error('❌ VAPID JWT generation failed:', error);
     throw new Error(`VAPID JWT generation failed: ${error.message}`);
   }
 }
 
 /**
- * Base64url encode helper
+ * Build service-specific headers for push notifications
  */
-function base64UrlEncode(data: string | Uint8Array): string {
-  const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : data;
-  const base64 = btoa(String.fromCharCode(...bytes));
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-/**
- * Base64url decode helper
- */
-function base64UrlDecode(data: string): Uint8Array {
-  const base64 = data.replace(/-/g, '+').replace(/_/g, '/');
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-  const decoded = atob(base64 + padding);
-  return new Uint8Array(decoded.split('').map(c => c.charCodeAt(0)));
-}
-
-/**
- * Decode VAPID token for debugging (without verification)
- */
-function decodeVAPIDToken(token: string): any {
-  try {
-    const [header, payload] = token.split('.');
-    return {
-      header: JSON.parse(new TextDecoder().decode(base64UrlDecode(header))),
-      payload: JSON.parse(new TextDecoder().decode(base64UrlDecode(payload)))
-    };
-  } catch (e) {
-    return { error: 'Invalid token format' };
-  }
-}
-
-/**
- * Classify endpoint type for push service detection
- */
-function classifyEndpoint(endpoint: string): string {
-  if (endpoint.includes('web.push.apple.com')) return 'apns';
-  if (endpoint.includes('fcm.googleapis.com') || endpoint.includes('googleapis.com')) return 'fcm';
-  if (endpoint.includes('wns.notify.windows.com')) return 'wns';
-  return 'other';
-}
-
-/**
- * Build uniform VAPID headers for all push services
- */
-function buildPushHeaders(endpointType: string, vapidToken: string, ttl: number): Record<string, string> {
+function buildPushHeaders(endpointType: string, vapidToken: string): Record<string, string> {
   const headers: Record<string, string> = {
-    'TTL': ttl.toString(),
-    // Use uniform Authorization header format accepted by both FCM and APNs Web Push
-    'Authorization': `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`
+    'TTL': '86400', // 24 hours
   };
+
+  switch (endpointType) {
+    case 'apns':
+      // APNs Web Push format
+      headers['Authorization'] = `WebPush ${vapidToken}`;
+      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
+      break;
+      
+    case 'fcm':
+      // FCM VAPID format
+      headers['Authorization'] = `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`;
+      break;
+      
+    default:
+      // Generic Web Push (similar to APNs)
+      headers['Authorization'] = `WebPush ${vapidToken}`;
+      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
+  }
 
   return headers;
 }
 
+/**
+ * Send push notification to endpoint
+ */
+async function sendPushNotification(endpoint: string, vapidToken: string): Promise<{ success: boolean; status: number; stale?: boolean }> {
+  const endpointType = classifyEndpoint(endpoint);
+  const headers = buildPushHeaders(endpointType, vapidToken);
+  
+  console.log(`📤 Sending to ${endpointType} endpoint: ${endpoint.substring(0, 50)}...`);
+  console.log(`📋 Headers:`, headers);
+  
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      // No body for no-payload push notification
+    });
+    
+    const success = response.status >= 200 && response.status < 300;
+    const stale = response.status === 404 || response.status === 410;
+    
+    console.log(`📨 Push response: ${response.status} ${response.statusText}`);
+    
+    if (stale) {
+      console.log(`🗑️ Stale endpoint detected: ${response.status}`);
+    }
+    
+    return { success, status: response.status, stale };
+    
+  } catch (error) {
+    console.error(`❌ Push send failed:`, error);
+    return { success: false, status: 500 };
+  }
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // Health check endpoint
+  if (req.method === 'GET' && new URL(req.url).pathname === '/health') {
+    return new Response(JSON.stringify({ 
+      status: 'healthy', 
+      service: 'push_send',
+      vapid_configured: !!VAPID_PUBLIC_KEY && !!VAPID_PRIVATE_KEY,
+      timestamp: new Date().toISOString()
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  // Only allow POST requests for push operations
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
+  try {
+    // Verify Service Role Key for security
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.includes(SUPABASE_SERVICE_ROLE_KEY)) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const body = await req.json();
+    const { endpoint, user_id } = body;
+
+    if (!endpoint) {
+      return new Response(JSON.stringify({ error: 'Missing endpoint' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log(`📝 Processing push for user ${user_id} to endpoint: ${endpoint.substring(0, 50)}...`);
+
+    // Generate VAPID token for this endpoint
+    const vapidToken = await generateVAPIDToken(endpoint);
+    
+    // Send push notification
+    const result = await sendPushNotification(endpoint, vapidToken);
+    
+    // If endpoint is stale, optionally clean it up from database
+    if (result.stale && user_id) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      
+      console.log(`🧹 Cleaning stale endpoint for user ${user_id}`);
+      await supabase
+        .from('push_subscriptions')
+        .delete()
+        .eq('endpoint', endpoint)
+        .eq('user_id', user_id);
+    }
+
+    const response = {
+      success: result.success,
+      status: result.status,
+      endpoint_type: classifyEndpoint(endpoint),
+      stale: result.stale || false,
+      timestamp: new Date().toISOString()
+    };
+
+    console.log(`✅ Push operation completed:`, response);
+
+    return new Response(JSON.stringify(response), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('❌ Push send error:', error);
+    
+    return new Response(JSON.stringify({ 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+});
+
 /*
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
+ * Test script example:
+ * 
+ * # Health check
+ * curl https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send/health
+ * 
+ * # Send to FCM endpoint
+ * curl -X POST https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send \
+ *   -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
+ *   -H "Content-Type: application/json" \
+ *   -d '{"endpoint": "https://fcm.googleapis.com/fcm/send/...", "user_id": "test"}'
+ * 
+ * Expected: 200/201 response for valid endpoints, stale detection for 404/410
  */

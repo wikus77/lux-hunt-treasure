@@ -6,6 +6,9 @@ verify_jwt = true
 [functions.push_send]
 verify_jwt = false
 
+[functions.push_gc]
+verify_jwt = false
+
 [functions.send-firebase-push]
 verify_jwt = false
 
@@ -54,10 +57,6 @@ verify_jwt = true
 
 [functions.push_subscribe]
 # Public function for push subscription
-verify_jwt = false
-
-[functions.push_send]
-# Public function for sending push notifications
 verify_jwt = false
 
 [functions.register-push-token]
