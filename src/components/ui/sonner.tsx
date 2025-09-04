@@ -14,28 +14,52 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
       position="top-center"
-      offset={20}
+      richColors={false}
+      closeButton={false}
+      duration={4000}
+      expand={false}
+      visibleToasts={3}
+      offset={0}
       style={{
-        top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+        top: 'calc(env(safe-area-inset-top, 47px) + 20px)',
       }}
       toastOptions={{
         style: {
+          background: 'rgba(0, 12, 24, 0.95)',
+          color: 'white',
+          border: '1px solid rgba(0, 209, 255, 0.5)',
+          borderRadius: '20px',
+          backdropFilter: 'blur(24px)',
+          boxShadow: '0 12px 40px rgba(0, 209, 255, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.2)',
+          fontFamily: 'Orbitron, -apple-system, BlinkMacSystemFont, sans-serif',
+          fontSize: '15px',
+          padding: '16px 24px',
+          minHeight: '56px',
+          width: 'auto',
+          maxWidth: '380px',
+          margin: '0 auto',
           marginLeft: 'auto',
           marginRight: 'auto',
-          width: 'min(92vw, 480px)',
+          textAlign: 'center',
+          fontWeight: '500',
+          letterSpacing: '0.025em',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
           left: '50%',
           transform: 'translateX(-50%)',
           position: 'relative'
         },
+        className: 'enhanced-toast-apple-ios',
         classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-black/80 group-[.toaster]:text-white group-[.toaster]:border-white/10 group-[.toaster]:shadow-lg",
+          toast: "group toast",
           description: "group-[.toast]:text-white/80",
-          actionButton:
-            "group-[.toast]:bg-cyan-500 group-[.toast]:text-black",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          actionButton: "group-[.toast]:bg-cyan-500 group-[.toast]:text-black",
+          cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
         },
+        unstyled: false
       }}
       {...props}
     />
