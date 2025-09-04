@@ -21,7 +21,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       visibleToasts={3}
       offset={0}
       toastOptions={{
-        className: 'enhanced-toast-apple-ios',
         style: {
           background: 'rgba(0, 12, 24, 0.95)',
           color: 'white',
@@ -42,14 +41,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
           justifyContent: 'center',
           WebkitUserSelect: 'none',
           userSelect: 'none',
-          // Posizionamento fisso senza animazioni
+          // Posizionamento fisso centrato senza transizioni
           position: 'fixed' as const,
           top: 'calc(env(safe-area-inset-top, 47px) + 20px)',
           left: '50%',
           transform: 'translateX(-50%)',
           margin: '0',
           marginLeft: '0',
-          marginRight: '0'
+          marginRight: '0',
+          // Disabilita transizioni che causano il salto
+          transition: 'none',
+          animation: 'none'
         },
         classNames: {
           toast: "group toast",
