@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Android Push Notifications Hook
+// iOS Push Notifications Hook
 
 import { useState, useEffect } from 'react';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -7,7 +7,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface AndroidPushState {
+interface IOSPushState {
   isSupported: boolean;
   isRegistered: boolean;
   token: string | null;
@@ -16,8 +16,8 @@ interface AndroidPushState {
   error: string | null;
 }
 
-export const useAndroidPushNotifications = () => {
-  const [state, setState] = useState<AndroidPushState>({
+export const useIOSPushNotifications = () => {
+  const [state, setState] = useState<IOSPushState>({
     isSupported: false,
     isRegistered: false,
     token: null,
@@ -26,11 +26,11 @@ export const useAndroidPushNotifications = () => {
     error: null
   });
 
-  const isAndroid = Capacitor.getPlatform() === 'android';
+  const isIOS = Capacitor.getPlatform() === 'ios';
 
   useEffect(() => {
-    const initializeAndroidPush = async () => {
-      if (!isAndroid) {
+    const initializeIOSPush = async () => {
+      if (!isIOS) {
         setState(prev => ({ ...prev, isSupported: false }));
         return;
       }
@@ -47,7 +47,7 @@ export const useAndroidPushNotifications = () => {
 
         // Setup listeners
         await PushNotifications.addListener('registration', (token) => {
-          console.log('🔔 Android Push token received:', token.value);
+          console.log('🍎 iOS Push token received:', token.value);
           setState(prev => ({ 
             ...prev, 
             token: token.value, 
@@ -58,22 +58,22 @@ export const useAndroidPushNotifications = () => {
         });
 
         await PushNotifications.addListener('registrationError', (error) => {
-          console.error('❌ Android Push registration error:', error);
+          console.error('❌ iOS Push registration error:', error);
           setState(prev => ({ 
             ...prev, 
             error: error.error, 
             isLoading: false 
           }));
-          toast.error('Errore registrazione notifiche Android');
+          toast.error('Errore registrazione notifiche iOS');
         });
 
         await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('📱 Push notification received:', notification);
+          console.log('📱 iOS Push notification received:', notification);
           toast.success(notification.body || 'Nuova notifica M1SSION');
         });
 
         await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('👆 Push notification action performed:', notification);
+          console.log('👆 iOS Push notification action performed:', notification);
           // Handle notification tap
         });
 
@@ -83,7 +83,7 @@ export const useAndroidPushNotifications = () => {
         }
 
       } catch (error: any) {
-        console.error('❌ Android push initialization error:', error);
+        console.error('❌ iOS push initialization error:', error);
         setState(prev => ({ 
           ...prev, 
           error: error.message, 
@@ -92,12 +92,12 @@ export const useAndroidPushNotifications = () => {
       }
     };
 
-    initializeAndroidPush();
-  }, [isAndroid]);
+    initializeIOSPush();
+  }, [isIOS]);
 
   const requestPermissionAndRegister = async () => {
-    if (!isAndroid) {
-      toast.error('Notifiche push disponibili solo su Android');
+    if (!isIOS) {
+      toast.error('Notifiche push disponibili solo su iOS');
       return false;
     }
 
@@ -114,7 +114,7 @@ export const useAndroidPushNotifications = () => {
       if (permResult.receive === 'granted') {
         // Register for push notifications
         await PushNotifications.register();
-        toast.success('✅ Notifiche push Android attivate!');
+        toast.success('✅ Notifiche push iOS attivate!');
         return true;
       } else {
         toast.error('❌ Permessi notifiche negati');
@@ -122,13 +122,13 @@ export const useAndroidPushNotifications = () => {
         return false;
       }
     } catch (error: any) {
-      console.error('❌ Permission request error:', error);
+      console.error('❌ iOS Permission request error:', error);
       setState(prev => ({ 
         ...prev, 
         error: error.message, 
         isLoading: false 
       }));
-      toast.error('Errore richiesta permessi');
+      toast.error('Errore richiesta permessi iOS');
       return false;
     }
   };
@@ -143,8 +143,8 @@ export const useAndroidPushNotifications = () => {
         .upsert({
           user_id: user.id,
           token: token,
-          platform: 'android',
-          endpoint_type: 'fcm',
+          platform: 'ios',
+          endpoint_type: 'apns',
           device_info: {
             platform: Capacitor.getPlatform(),
             userAgent: navigator.userAgent
@@ -155,18 +155,18 @@ export const useAndroidPushNotifications = () => {
         });
 
       if (error) {
-        console.error('❌ Error saving push token:', error);
+        console.error('❌ Error saving iOS push token:', error);
       } else {
-        console.log('✅ Push token saved to Supabase');
+        console.log('✅ iOS Push token saved to Supabase');
       }
     } catch (error) {
-      console.error('❌ Error in saveTokenToSupabase:', error);
+      console.error('❌ Error in saveTokenToSupabase (iOS):', error);
     }
   };
 
   return {
     ...state,
-    isAndroid,
+    isIOS,
     requestPermissionAndRegister
   };
 };
