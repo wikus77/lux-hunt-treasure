@@ -30,10 +30,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           boxShadow: '0 12px 40px rgba(0, 209, 255, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.2)',
           fontFamily: 'Orbitron, -apple-system, BlinkMacSystemFont, sans-serif',
           fontSize: '15px',
-          padding: '16px 24px',
-          minHeight: '56px',
-          width: 'auto',
-          maxWidth: '380px',
+          padding: '12px 32px',
+          minHeight: '50px',
+          width: 'min(92vw, 420px)',  // Più largo e rettangolare
+          maxWidth: '420px',
           fontWeight: '500',
           letterSpacing: '0.025em',
           display: 'flex',
@@ -41,17 +41,15 @@ const Toaster = ({ ...props }: ToasterProps) => {
           justifyContent: 'center',
           WebkitUserSelect: 'none',
           userSelect: 'none',
-          // Posizionamento fisso centrato senza transizioni
+          // Posizionamento fisso centrato
           position: 'fixed' as const,
           top: 'calc(env(safe-area-inset-top, 47px) + 20px)',
           left: '50%',
           transform: 'translateX(-50%)',
           margin: '0',
-          marginLeft: '0',
-          marginRight: '0',
-          // Disabilita transizioni che causano il salto
-          transition: 'none',
-          animation: 'none'
+          // Riattivo l'animazione di discesa dall'alto
+          animation: 'toast-slide-down 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+          transition: 'all 0.3s ease'
         },
         classNames: {
           toast: "group toast",
