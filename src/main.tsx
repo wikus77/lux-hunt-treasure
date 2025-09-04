@@ -152,11 +152,9 @@ const renderApp = () => {
     
     // Enhanced app rendering with better error boundaries
     root.render(
-      <React.StrictMode>
-        <QueryClientProvider client={queryClient}>
-          <App />
-        </QueryClientProvider>
-      </React.StrictMode>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
     );
     
     console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
