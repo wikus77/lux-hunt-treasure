@@ -327,10 +327,8 @@ export const NotificationsPage: React.FC = () => {
 
   return (
     <div 
-      className="min-h-screen bg-[#070818]" 
+      className="min-h-screen bg-[#070818] page-content" 
       style={{ 
-        paddingTop: '140px', 
-        paddingBottom: '120px',
         width: '100vw',
         maxWidth: '100vw',
         overflowX: 'hidden',
