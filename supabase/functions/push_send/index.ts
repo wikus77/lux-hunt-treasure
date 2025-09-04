@@ -156,7 +156,28 @@ serve(async (req) => {
 });
 
 /**
- * Generate VAPID JWT token for push authentication with correct audience per service
+ * Derive x,y coordinates from VAPID public key (65 bytes uncompressed)
+ */
+function deriveXYFromPublic(publicKeyBase64url: string): { x: string; y: string } {
+  // Decode the 65-byte uncompressed public key
+  const publicKeyBytes = base64UrlDecode(publicKeyBase64url);
+  
+  if (publicKeyBytes.length !== 65 || publicKeyBytes[0] !== 0x04) {
+    throw new Error('Invalid uncompressed public key format');
+  }
+  
+  // Extract x (bytes 1-32) and y (bytes 33-64)
+  const x = publicKeyBytes.slice(1, 33);
+  const y = publicKeyBytes.slice(33, 65);
+  
+  return {
+    x: base64UrlEncode(x),
+    y: base64UrlEncode(y)
+  };
+}
+
+/**
+ * Generate VAPID JWT token using JWK format instead of PKCS#8
  */
 async function generateVAPIDToken(endpoint: string): Promise<string> {
   const endpointType = classifyEndpoint(endpoint);
@@ -195,11 +216,22 @@ async function generateVAPIDToken(endpoint: string): Promise<string> {
   const signingInput = `${headerB64}.${payloadB64}`;
   
   try {
-    // Import VAPID private key for ECDSA signing
-    const privateKeyBuffer = base64UrlDecode(VAPID_PRIVATE_KEY);
+    // Derive x,y from public key
+    const { x, y } = deriveXYFromPublic(VAPID_PUBLIC_KEY);
+    
+    // Create JWK for private key import
+    const jwk: JsonWebKey = {
+      kty: 'EC',
+      crv: 'P-256',
+      d: VAPID_PRIVATE_KEY, // 32 bytes base64url private key
+      x: x,
+      y: y
+    };
+
+    // Import private key as JWK
     const privateKey = await crypto.subtle.importKey(
-      'pkcs8',
-      privateKeyBuffer,
+      'jwk',
+      jwk,
       {
         name: 'ECDSA',
         namedCurve: 'P-256',
@@ -273,32 +305,14 @@ function classifyEndpoint(endpoint: string): string {
 }
 
 /**
- * Build service-specific headers for push notifications
+ * Build uniform VAPID headers for all push services
  */
 function buildPushHeaders(endpointType: string, vapidToken: string, ttl: number): Record<string, string> {
   const headers: Record<string, string> = {
     'TTL': ttl.toString(),
+    // Use uniform Authorization header format accepted by both FCM and APNs Web Push
+    'Authorization': `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`
   };
-
-  switch (endpointType) {
-    case 'apns':
-      // APNs (Safari PWA) headers
-      headers['Authorization'] = `WebPush ${vapidToken}`;
-      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
-      headers['Content-Length'] = '0';
-      break;
-      
-    case 'fcm':
-      // FCM (Chrome, Firefox) headers  
-      headers['Authorization'] = `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`;
-      break;
-      
-    default:
-      // Other services use WebPush format like APNs
-      headers['Authorization'] = `WebPush ${vapidToken}`;
-      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
-      headers['Content-Length'] = '0';
-  }
 
   return headers;
 }
