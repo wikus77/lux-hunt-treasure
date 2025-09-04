@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     const body: PushRequest = await req.json();
-    const { endpoint, ttl = 2419200 } = body; // Default 28 giorni TTL
+    const { endpoint, ttl = 86400 } = body; // Default 24 ore TTL
 
     if (!endpoint) {
       return Response.json(
@@ -95,8 +95,14 @@ serve(async (req) => {
       // Ignore response body errors
     }
 
+    const endpointType = classifyEndpoint(endpoint);
+    const isStale = response.status === 404 || response.status === 410;
+
     if (!response.ok) {
       console.error(`❌ Push failed (${response.status}):`, responseBody);
+      
+      // Log synthetic details
+      console.log(`📊 Push result: endpoint_type=${endpointType}, status=${response.status}, stale=${isStale}`);
       
       // Log detailed error for debugging
       if (endpoint.includes('web.push.apple.com')) {
@@ -108,10 +114,27 @@ serve(async (req) => {
         });
       }
       
+      // Return stale info for 404/410 instead of throwing
+      if (isStale) {
+        return Response.json(
+          { 
+            ok: true,
+            sent: 0,
+            failed: 1,
+            stale: true,
+            status: response.status,
+            endpoint_type: endpointType,
+            results: [{ stale: true, status: response.status, endpoint_type: endpointType }]
+          }, 
+          { headers: corsHeaders }
+        );
+      }
+      
       throw new Error(`Push failed (${response.status}): ${responseBody}`);
     }
 
-    console.log(`✅ Push sent successfully to ${classifyEndpoint(endpoint)} (${response.status})`);
+    console.log(`✅ Push sent successfully to ${endpointType} (${response.status})`);
+    console.log(`📊 Push result: endpoint_type=${endpointType}, status=${response.status}, stale=false`);
 
     return Response.json(
       { 
@@ -119,7 +142,8 @@ serve(async (req) => {
         sent: 1,
         failed: 0,
         status: response.status,
-        endpoint_type: classifyEndpoint(endpoint)
+        endpoint_type: endpointType,
+        stale: false
       }, 
       { headers: corsHeaders }
     );
