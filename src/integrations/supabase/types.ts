@@ -2104,6 +2104,8 @@ export type Database = {
           created_at: string | null
           device_info: Json | null
           endpoint: string | null
+          endpoint_type: string | null
+          last_used_at: string | null
           p256dh: string | null
           platform: string | null
           token: string
@@ -2115,6 +2117,8 @@ export type Database = {
           created_at?: string | null
           device_info?: Json | null
           endpoint?: string | null
+          endpoint_type?: string | null
+          last_used_at?: string | null
           p256dh?: string | null
           platform?: string | null
           token: string
@@ -2126,6 +2130,8 @@ export type Database = {
           created_at?: string | null
           device_info?: Json | null
           endpoint?: string | null
+          endpoint_type?: string | null
+          last_used_at?: string | null
           p256dh?: string | null
           platform?: string | null
           token?: string
