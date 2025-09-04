@@ -2053,6 +2053,7 @@ export type Database = {
           auth: string
           client: string | null
           created_at: string
+          device_info: Json | null
           endpoint: string
           endpoint_type: string | null
           keys: Json | null
@@ -2068,6 +2069,7 @@ export type Database = {
           auth: string
           client?: string | null
           created_at?: string
+          device_info?: Json | null
           endpoint: string
           endpoint_type?: string | null
           keys?: Json | null
@@ -2083,6 +2085,7 @@ export type Database = {
           auth?: string
           client?: string | null
           created_at?: string
+          device_info?: Json | null
           endpoint?: string
           endpoint_type?: string | null
           keys?: Json | null
