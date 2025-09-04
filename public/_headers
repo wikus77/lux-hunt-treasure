@@ -1,12 +1,10 @@
-/firebase-init.js
-  Cache-Control: no-store, must-revalidate
-  Access-Control-Allow-Origin: *
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate
+  Clear-Site-Data: "cache", "cookies", "storage"
 
-/firebase-messaging-sw.js
-  Cache-Control: no-store, must-revalidate
-  Service-Worker-Allowed: /
-  Access-Control-Allow-Origin: *
+/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
 
-/fcm-diag.html
-  Cache-Control: no-store, must-revalidate
-  Access-Control-Allow-Origin: *
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+  Vary: Accept-Encoding
