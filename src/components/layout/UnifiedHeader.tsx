@@ -124,7 +124,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isHomePage = location === '/home';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
-  const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];
+  const bottomNavPages = ['/map', '/buzz', '/games', '/notifications', '/leaderboard'];
   const isBottomNavPage = bottomNavPages.includes(location);
 
   return (

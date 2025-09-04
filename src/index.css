@@ -18,16 +18,13 @@
 }
 
 :root {
-  /* M1SSION PWA Safe Area & Layout Variables */
-  --m1-header-bg: #0B1420;
-  --m1-header-bg-gradient: linear-gradient(180deg, #0B1420 0%, #131521 50%, #0B1420 100%);
+  --m1-header-bg: #131521;
+  --m1-header-bg-gradient: linear-gradient(180deg, rgba(19, 21, 33, 0.85) 0%, rgba(19, 21, 33, 0.85) 100%);
   --header-height: 72px;
   --bottom-nav-height: 54px;
-  --page-top-offset: 12px;
 }
 
 @layer base {
-  /* M1SSION PWA iOS Safe Area Support */
   html, body {
     @apply bg-black text-white;
     overflow-x: hidden !important;
@@ -36,23 +33,17 @@
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* PWA iOS optimizations */
-    overscroll-behavior-y: contain;
-    touch-action: manipulation;
   }
 
   .app-shell {
     background: var(--m1-header-bg);
   }
 
-  /* iOS Safe Area Background Filler */
   .ios-safe-top {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: env(safe-area-inset-top, 0px);
-    background: var(--m1-header-bg-gradient);
+    inset: 0 0 auto 0;
+    height: env(safe-area-inset-top);
+    background: var(--m1-header-bg);
     z-index: 1000;
     pointer-events: none;
   }
@@ -87,50 +78,33 @@
 }
 
 @layer components {
-  /* M1SSION PWA Toast Container */
+  /* Toast container positioning for PWA */
   .m1-toast-container {
-    position: fixed !important;
-    top: calc(env(safe-area-inset-top, 0px) + var(--header-height) + 10px) !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    width: min(92vw, 480px) !important;
-    z-index: 9999 !important;
-    text-align: center !important;
-    pointer-events: none !important;
-  }
-
-  .m1-toast-container > * {
-    pointer-events: auto !important;
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + var(--header-height) + 16px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92vw, 480px);
+    z-index: 9999;
+    text-align: center;
   }
 
   .m1-toast {
-    display: inline-block !important;
-    margin: 0 auto !important;
-    position: relative !important;
-    left: 0 !important;
-    transform: none !important;
+    display: inline-block;
   }
 
-  /* PWA Page Content Positioning */
-  .page-content {
-    padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0px) + var(--page-top-offset));
-    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px) + 20px);
-    padding-left: max(16px, env(safe-area-inset-left, 16px));
-    padding-right: max(16px, env(safe-area-inset-right, 16px));
-    min-height: calc(100vh - var(--header-height) - var(--bottom-nav-height));
-  }
-
-  .page-hero, .page-header, .section-hero {
-    margin-top: var(--page-top-offset);
-  }
-
+  /* Page hero spacing adjustments */
   .page .page-hero {
     margin-top: 0;
     padding-top: clamp(12px, 2.2vh, 20px);
   }
 
   .page {
-    padding-top: calc(env(safe-area-inset-top, 0px) + var(--header-height) + 8px);
+    padding-top: calc(env(safe-area-inset-top) + var(--header-height) + 8px);
+  }
+
+  .page-content {
+    padding-top: calc(var(--header-height) + env(safe-area-inset-top) + 16px);
   }
 
   .glass-card {
@@ -444,61 +418,28 @@
   @apply transition-all duration-300 ease-in-out;
 }
 
-/* PWA Pull-to-Refresh & Haptic Feedback */
-.pwa-pull-to-refresh {
-  position: fixed;
-  top: calc(env(safe-area-inset-top, 0px) + var(--header-height));
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 209, 255, 0.1);
-  border: 1px solid rgba(0, 209, 255, 0.3);
-  border-radius: 20px;
-  padding: 8px 16px;
-  color: #00D1FF;
-  font-size: 12px;
-  font-weight: 500;
+/* ✅ Enhanced Bottom Navigation for PWA iOS */
+.bottom-nav {
+  --bar-h: var(--bottom-nav-height);
+  height: calc(var(--bar-h) + env(safe-area-inset-bottom));
+  padding-bottom: max(env(safe-area-inset-bottom), 6px);
   backdrop-filter: blur(10px);
-  z-index: 9998;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.pwa-pull-to-refresh.visible {
-  opacity: 1;
-}
-
-/* Bottom Navigation PWA Optimizations */
-.bottom-nav-pwa {
-  height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
-  padding-bottom: max(env(safe-area-inset-bottom, 0px), 6px);
   background: var(--m1-header-bg-gradient);
-  backdrop-filter: blur(12px);
 }
 
-.bottom-nav-item {
+.bottom-nav .item {
   min-height: 44px;
-  min-width: 44px;
-  touch-action: manipulation;
+  gap: 4px;
 }
 
-.bottom-nav-icon {
+.bottom-nav .icon {
   width: 22px;
   height: 22px;
 }
 
-.bottom-nav-label {
+.bottom-nav .label {
   font-size: 11px;
   line-height: 14px;
-}
-
-@keyframes haptic-feedback {
-  0% { transform: scale(1); }
-  50% { transform: scale(0.96); }
-  100% { transform: scale(1); }
-}
-
-.animate-haptic { 
-  animation: haptic-feedback 120ms ease; 
 }
 
 .bottom-navigation-fix {

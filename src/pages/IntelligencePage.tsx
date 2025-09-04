@@ -117,8 +117,10 @@ const IntelligencePage: React.FC = () => {
   return (
     <SafeAreaWrapper className="min-h-screen bg-background">
       <div 
-        className="min-h-screen bg-[#070818] page-content" 
+        className="min-h-screen bg-[#070818]" 
         style={{ 
+          paddingTop: '140px', 
+          paddingBottom: '120px',
           width: '100vw',
           maxWidth: '100vw',
           overflowX: 'hidden',
