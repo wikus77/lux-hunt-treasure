@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import webpush from "https://deno.land/x/webpush@v1.5.2/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +23,13 @@ interface PushRequest {
 const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!;
 const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!;
 const VAPID_SUB = Deno.env.get('VAPID_SUB') || 'mailto:admin@m1ssion.eu';
+
+// Initialize webpush with VAPID details
+webpush.setVapidDetails(
+  VAPID_SUB,
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -66,6 +74,8 @@ serve(async (req) => {
       );
     }
 
+    console.log(`📤 Sending to ${classifyEndpoint(endpoint)}...`);
+
     // Prepare notification payload
     const payload = JSON.stringify({
       title,
@@ -76,67 +86,34 @@ serve(async (req) => {
       }
     });
 
-    // Generate VAPID JWT
-    const vapidToken = await generateVAPIDToken(endpoint);
-    
-    // Prepare headers for push request
-    const headers: Record<string, string> = {
-      'Authorization': `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`,
-      'Content-Type': 'application/octet-stream',
-      'TTL': ttl.toString(),
-    };
-
-    // Add endpoint-specific headers
-    if (endpoint.includes('web.push.apple.com')) {
-      headers['apns-topic'] = 'app.lovable.2716f91b957c47ba91e06f572f3ce00d';
-      headers['apns-push-type'] = 'alert';
-      headers['apns-priority'] = '10';
-    }
-
-    console.log(`📤 Sending to ${classifyEndpoint(endpoint)}...`);
-
-    // Send push notification
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: headers,
-      body: new TextEncoder().encode(payload),
-    });
-
-    let responseBody = '';
+    // Use webpush library for proper VAPID handling
     try {
-      responseBody = await response.text();
-    } catch (e) {
-      // Ignore response body errors
-    }
+      const result = await webpush.sendNotification(
+        { endpoint },
+        payload,
+        {
+          TTL: ttl,
+          // No custom headers - let webpush handle VAPID
+        }
+      );
 
-    if (!response.ok) {
-      console.error(`❌ Push failed (${response.status}):`, responseBody);
+      console.log(`✅ Push sent successfully to ${classifyEndpoint(endpoint)}`);
+
+      return Response.json(
+        { 
+          ok: true,
+          sent: 1,
+          failed: 0,
+          endpoint_type: classifyEndpoint(endpoint)
+        }, 
+        { headers: corsHeaders }
+      );
+
+    } catch (error) {
+      console.error(`❌ Push failed to ${classifyEndpoint(endpoint)}:`, error);
       
-      // Log detailed error for APNs debugging
-      if (endpoint.includes('web.push.apple.com')) {
-        console.error('🍎 APNs Error Details:', {
-          status: response.status,
-          headers: Object.fromEntries(response.headers.entries()),
-          vapidClaims: decodeVAPIDToken(vapidToken),
-          endpoint: endpoint.substring(0, 50) + '...'
-        });
-      }
-      
-      throw new Error(`Push failed (${response.status}): ${responseBody}`);
+      throw error;
     }
-
-    console.log(`✅ Push sent successfully to ${classifyEndpoint(endpoint)} (${response.status})`);
-
-    return Response.json(
-      { 
-        ok: true,
-        sent: 1,
-        failed: 0,
-        status: response.status,
-        endpoint_type: classifyEndpoint(endpoint)
-      }, 
-      { headers: corsHeaders }
-    );
 
   } catch (error) {
     console.error('❌ Push send error:', error);
@@ -152,49 +129,7 @@ serve(async (req) => {
   }
 });
 
-/**
- * Generate VAPID JWT token for push authentication
- */
-async function generateVAPIDToken(endpoint: string): Promise<string> {
-  const url = new URL(endpoint);
-  const audience = `${url.protocol}//${url.host}`;
-  
-  const header = {
-    typ: 'JWT',
-    alg: 'ES256'
-  };
-
-  const payload = {
-    aud: audience,
-    exp: Math.floor(Date.now() / 1000) + (12 * 60 * 60), // 12 hours
-    sub: VAPID_SUB
-  };
-
-  // For production, this should use proper ECDSA signing with the private key
-  // This is a simplified version - in a real implementation, use a proper JWT library
-  const headerB64 = btoa(JSON.stringify(header));
-  const payloadB64 = btoa(JSON.stringify(payload));
-  
-  // Placeholder signature - in production, sign with VAPID private key
-  const signature = 'placeholder_signature';
-  
-  return `${headerB64}.${payloadB64}.${signature}`;
-}
-
-/**
- * Decode VAPID token for debugging (without verification)
- */
-function decodeVAPIDToken(token: string): any {
-  try {
-    const [header, payload] = token.split('.');
-    return {
-      header: JSON.parse(atob(header)),
-      payload: JSON.parse(atob(payload))
-    };
-  } catch (e) {
-    return { error: 'Invalid token format' };
-  }
-}
+// VAPID JWT generation now handled by webpush library
 
 /**
  * Classify endpoint type for logging
