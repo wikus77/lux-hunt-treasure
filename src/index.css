@@ -78,21 +78,8 @@
 }
 
 @layer components {
-  /* Toast container positioning for PWA */
-  .m1-toast-container {
-    position: fixed;
-    top: calc(env(safe-area-inset-top) + var(--header-height) + 16px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(92vw, 480px);
-    z-index: 9999;
-    text-align: center;
-  }
-
-  .m1-toast {
-    display: inline-block;
-  }
-
+  /* Toast container positioning RIMOSSO - gestito direttamente in sonner.tsx */
+  
   /* Page hero spacing adjustments */
   .page .page-hero {
     margin-top: 0;
