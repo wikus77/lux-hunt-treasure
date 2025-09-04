@@ -99,7 +99,7 @@ const BottomNavigationComponent = () => {
         right: 0,
         bottom: "0px",
         zIndex: 10000,
-        paddingBottom: isPWA ? "calc(env(safe-area-inset-bottom, 34px) + 12px)" : "12px",
+        paddingBottom: isPWA ? "max(env(safe-area-inset-bottom), 6px)" : "6px",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
         backgroundColor: "rgba(0,0,0,0.95)",
@@ -119,7 +119,7 @@ const BottomNavigationComponent = () => {
         style={{
           position: "relative",
           zIndex: "inherit",
-          height: "90px", // Aumento del 10% (da 82px a 90px)
+          height: "var(--bottom-nav-height)", // Più bassa ma accessibile
           display: "flex",
           alignItems: "center",
           background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
@@ -137,7 +137,7 @@ const BottomNavigationComponent = () => {
               <motion.button
                 key={link.path}
                 onClick={(e) => handleNavigationPWA(link, e)}
-                className={`relative flex flex-col items-center justify-center w-16 h-16 transition-colors mobile-touch-target cursor-pointer ${
+                className={`relative flex flex-col items-center justify-center w-14 h-12 transition-colors mobile-touch-target cursor-pointer ${
                   isActive
                     ? "text-[#00D1FF]"
                     : "text-gray-400 hover:text-gray-300"

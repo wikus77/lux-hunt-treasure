@@ -1,4 +1,3 @@
-
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™ – M1SSION™
 import React from 'react';
 import { Router } from 'wouter';
@@ -30,46 +29,49 @@ function App() {
 
   
   return (
-    <ErrorBoundary fallback={
-      <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
-        <div className="glass-card p-6 max-w-md mx-auto text-center">
-          <h2 className="text-xl font-bold mb-4">ERRORE CRITICO DI SISTEMA</h2>
-          <p className="mb-6">L'applicazione ha riscontrato un errore fatale. Ricarica la pagina.</p>
-          <button 
-            onClick={() => {
-              // Clear all storage and reload
-              localStorage.clear();
-              sessionStorage.clear();
-              window.location.reload();
-            }}
-            className="px-4 py-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-md"
-          >
-            🔄 RIAVVIA EMERGENZA
-          </button>
+    <div className="app-shell">
+      <div className="ios-safe-top"></div>
+      <ErrorBoundary fallback={
+        <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">
+          <div className="glass-card p-6 max-w-md mx-auto text-center">
+            <h2 className="text-xl font-bold mb-4">ERRORE CRITICO DI SISTEMA</h2>
+            <p className="mb-6">L'applicazione ha riscontrato un errore fatale. Ricarica la pagina.</p>
+            <button 
+              onClick={() => {
+                // Clear all storage and reload
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+              }}
+              className="px-4 py-2 bg-gradient-to-r from-m1ssion-blue to-m1ssion-pink rounded-md"
+            >
+              🔄 RIAVVIA EMERGENZA
+            </button>
+          </div>
         </div>
-      </div>
-    }>
-    <ProductionSafety>
-      <HelmetProvider>
-        <SkipToContent />
-        <OfflineIndicator />
-        <Router>
-          <SoundProvider>
-            <AuthProvider>
-            {/* OneSignal rimosso - usando solo FCM */}
-            <BuzzPaymentMonitor />
-            <LegalOnboarding />
-            <WouterRoutes />
-            <InstallPrompt />
-            <IOSPermissionManager />
-            <XpSystemManager />
-            </AuthProvider>
-            
-          </SoundProvider>
-        </Router>
-      </HelmetProvider>
-    </ProductionSafety>
-    </ErrorBoundary>
+      }>
+        <ProductionSafety>
+          <HelmetProvider>
+            <SkipToContent />
+            <OfflineIndicator />
+            <Router>
+              <SoundProvider>
+                <AuthProvider>
+                {/* OneSignal rimosso - usando solo FCM */}
+                <BuzzPaymentMonitor />
+                <LegalOnboarding />
+                <WouterRoutes />
+                <InstallPrompt />
+                <IOSPermissionManager />
+                <XpSystemManager />
+                <Toaster />
+                </AuthProvider>
+              </SoundProvider>
+            </Router>
+          </HelmetProvider>
+        </ProductionSafety>
+      </ErrorBoundary>
+    </div>
   );
 }
 
