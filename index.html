@@ -79,20 +79,24 @@
     <script type="text/plain" charset="UTF-8" src="https://cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
     <script type="text/plain" charset="UTF-8" data-cookiescriptreport="report" src="https://report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
     
-    <!-- Firebase FCM Web Push -->
-    <script src="/firebase-init.js"></script>
-    
-    <!-- OneSignal Push Notifications SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <!-- Service Worker Cleanup for OneSignal conflicts -->
+    <!-- M1SSION™ Cleanup only -->
     <script src="/sw-cleanup.js" defer></script>
     
-    <!-- PWA Service Worker Registration -->
-    <script src="/registerSW.js" defer></script>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration (single instance) -->
+    <script>
+      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+      if ('serviceWorker' in navigator && !window.__swRegistered) {
+        window.__swRegistered = true;
+        navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+          .then(reg => console.log('[SW] ✅ Registered:', reg.scope))
+          .catch(err => console.error('[SW] ❌ Registration failed:', err));
+      }
+    </script>
   </body>
 </html>
