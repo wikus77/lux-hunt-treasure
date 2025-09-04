@@ -70,16 +70,10 @@ serve(async (req) => {
 
     // Generate VAPID JWT token
     const vapidToken = await generateVAPIDToken(endpoint);
+    const endpointType = classifyEndpoint(endpoint);
     
-    // Headers per invio senza payload (solo Authorization + TTL)
-    const headers: Record<string, string> = {
-      'Authorization': `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`,
-      'TTL': ttl.toString(),
-    };
-
-    // NO APNs headers - rimossi tutti per web.push.apple.com
-    // NO Content-Type - non serve senza body
-    // NO Content-Length - fetch lo gestisce automaticamente
+    // Build headers based on push service
+    const headers: Record<string, string> = buildPushHeaders(endpointType, vapidToken, ttl);
 
     // Send push notification using standard Web Push protocol (NO PAYLOAD)
     const response = await fetch(endpoint, {
@@ -95,7 +89,6 @@ serve(async (req) => {
       // Ignore response body errors
     }
 
-    const endpointType = classifyEndpoint(endpoint);
     const isStale = response.status === 404 || response.status === 410;
 
     if (!response.ok) {
@@ -163,11 +156,25 @@ serve(async (req) => {
 });
 
 /**
- * Generate VAPID JWT token for push authentication using Deno's crypto API
+ * Generate VAPID JWT token for push authentication with correct audience per service
  */
 async function generateVAPIDToken(endpoint: string): Promise<string> {
-  const url = new URL(endpoint);
-  const audience = `${url.protocol}//${url.host}`;
+  const endpointType = classifyEndpoint(endpoint);
+  let audience: string;
+  
+  // Set correct audience based on push service
+  switch (endpointType) {
+    case 'apns':
+      audience = 'https://web.push.apple.com';
+      break;
+    case 'fcm':
+      audience = 'https://fcm.googleapis.com';
+      break;
+    default:
+      // For other services, extract from endpoint
+      const url = new URL(endpoint);
+      audience = `${url.protocol}//${url.host}`;
+  }
   
   const header = {
     typ: 'JWT',
@@ -176,7 +183,7 @@ async function generateVAPIDToken(endpoint: string): Promise<string> {
 
   const payload = {
     aud: audience,
-    exp: Math.floor(Date.now() / 1000) + (12 * 60 * 60), // 12 hours
+    exp: Math.floor(Date.now() / 1000) + (12 * 60 * 60), // 12 hours max
     sub: VAPID_SUB
   };
 
@@ -217,8 +224,7 @@ async function generateVAPIDToken(endpoint: string): Promise<string> {
     return `${signingInput}.${signatureB64}`;
   } catch (error) {
     console.error('❌ VAPID JWT signing failed:', error);
-    // Fallback to unsigned token (for testing only)
-    return `${signingInput}.PLACEHOLDER_SIGNATURE`;
+    throw new Error(`VAPID JWT generation failed: ${error.message}`);
   }
 }
 
@@ -257,13 +263,44 @@ function decodeVAPIDToken(token: string): any {
 }
 
 /**
- * Classify endpoint type for logging
+ * Classify endpoint type for push service detection
  */
 function classifyEndpoint(endpoint: string): string {
   if (endpoint.includes('web.push.apple.com')) return 'apns';
-  if (endpoint.includes('fcm.googleapis.com')) return 'fcm';
+  if (endpoint.includes('fcm.googleapis.com') || endpoint.includes('googleapis.com')) return 'fcm';
   if (endpoint.includes('wns.notify.windows.com')) return 'wns';
   return 'other';
+}
+
+/**
+ * Build service-specific headers for push notifications
+ */
+function buildPushHeaders(endpointType: string, vapidToken: string, ttl: number): Record<string, string> {
+  const headers: Record<string, string> = {
+    'TTL': ttl.toString(),
+  };
+
+  switch (endpointType) {
+    case 'apns':
+      // APNs (Safari PWA) headers
+      headers['Authorization'] = `WebPush ${vapidToken}`;
+      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
+      headers['Content-Length'] = '0';
+      break;
+      
+    case 'fcm':
+      // FCM (Chrome, Firefox) headers  
+      headers['Authorization'] = `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`;
+      break;
+      
+    default:
+      // Other services use WebPush format like APNs
+      headers['Authorization'] = `WebPush ${vapidToken}`;
+      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
+      headers['Content-Length'] = '0';
+  }
+
+  return headers;
 }
 
 /*

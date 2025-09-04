@@ -34,7 +34,7 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     }
   }
 
-  // Handle permission request
+  // Handle permission - only request if default, proceed only if granted
   if (Notification.permission === 'default') {
     console.log('📢 Requesting notification permission...');
     const permission = await Notification.requestPermission();
@@ -54,10 +54,10 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     const registration = await navigator.serviceWorker.ready;
     console.log('✅ Service worker ready');
 
-    // Get VAPID public key from environment
-    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    // Get VAPID public key from environment (using hardcoded for now)
+    const vapidKey = 'BCoH5JZdPY3yMzF-Y9Hj1LMZi-kOhJqjuaGJAgtMRDDkmJAf1ELa4xALHaJ3L9vYa8d1rJZRJ1BYjBj1x_cOH1A';
     if (!vapidKey?.trim()) {
-      console.error('❌ VITE_VAPID_PUBLIC_KEY missing in environment');
+      console.error('❌ VAPID_PUBLIC_KEY missing');
       return null;
     }
 

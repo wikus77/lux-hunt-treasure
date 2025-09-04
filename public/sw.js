@@ -8,8 +8,14 @@
 // Import push notification handler
 importScripts('/sw-push.js');
 
-// Essential PWA lifecycle
-self.skipWaiting?.(); 
+// Handle skip waiting message from main thread
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting?.();
+  }
+});
+
+// Auto-claim only on activate (not immediate)
 self.addEventListener?.('activate', () => self.clients?.claim?.());
 
 console.log('🚀 M1SSION™ Unified Service Worker loaded');

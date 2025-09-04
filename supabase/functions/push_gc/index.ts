@@ -21,9 +21,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Health check endpoint
+  // Health check endpoint (no authorization required)
   if (req.method === 'GET' && req.url.endsWith('/health')) {
-    return Response.json({ ok: true, status: 'healthy' }, { headers: corsHeaders });
+    return Response.json({ ok: true }, { headers: corsHeaders });
   }
 
   if (req.method !== 'POST') {
