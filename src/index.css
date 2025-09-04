@@ -78,7 +78,17 @@
 }
 
 @layer components {
-  /* Toast container positioning RIMOSSO - gestito direttamente in sonner.tsx */
+  /* Toast slide animation */
+  @keyframes toast-slide-down {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
+  }
   
   /* Page hero spacing adjustments */
   .page .page-hero {
