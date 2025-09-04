@@ -12,12 +12,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
-      className="toaster group m1-toast-container"
+      className="toaster group"
       position="top-center"
-      offset={0}
+      offset={20}
+      style={{
+        top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+      }}
       toastOptions={{
-        className: "m1-toast",
         style: {
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          width: 'min(92vw, 480px)',
           left: '50%',
           transform: 'translateX(-50%)',
           position: 'relative'
