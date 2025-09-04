@@ -14,6 +14,7 @@ import ProductionSafety from "./components/debug/ProductionSafety";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 // OneSignal rimosso - usando solo FCM
 import { IOSPermissionManager } from "./components/IOSPermissionManager";
+import { AndroidPushSetup } from "./components/android/AndroidPushSetup";
 import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
@@ -63,6 +64,7 @@ function App() {
                 <WouterRoutes />
                 <InstallPrompt />
                 <IOSPermissionManager />
+                <AndroidPushSetup className="hidden" />
                 <XpSystemManager />
                 <Toaster />
                 </AuthProvider>

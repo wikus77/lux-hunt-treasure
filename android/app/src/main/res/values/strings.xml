@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">M1SSION</string>
+    <string name="title_activity_main">M1SSION</string>
+    <string name="package_name">app.lovable.2716f91b957c47ba91e06f572f3ce00d</string>
+    <string name="custom_url_scheme">app.lovable.2716f91b957c47ba91e06f572f3ce00d</string>
+    
+    <!-- Push Notifications -->
+    <string name="push_notification_channel_id">m1ssion_push</string>
+    <string name="push_notification_channel_name">M1SSION Notifications</string>
+    <string name="push_notification_channel_description">Receive important updates from M1SSION</string>
+</resources>
