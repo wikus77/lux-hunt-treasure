@@ -57,7 +57,7 @@ serve(async (req) => {
     }
 
     const body: PushRequest = await req.json();
-    const { endpoint, title = 'M1SSION™', body: message = 'Ping ✅', data = {}, ttl = 60 } = body;
+    const { endpoint, ttl = 2419200 } = body; // Default 28 giorni TTL
 
     if (!endpoint) {
       return Response.json(
@@ -66,40 +66,26 @@ serve(async (req) => {
       );
     }
 
-    console.log(`📤 Sending to ${classifyEndpoint(endpoint)}...`);
-
-    // Prepare notification payload
-    const payload = JSON.stringify({
-      title,
-      body: message,
-      data: {
-        ...data,
-        timestamp: Date.now()
-      }
-    });
+    console.log(`📤 Sending no-payload VAPID to ${classifyEndpoint(endpoint)}...`);
 
     // Generate VAPID JWT token
     const vapidToken = await generateVAPIDToken(endpoint);
     
-    // Prepare headers for Web Push request
+    // Headers per invio senza payload (solo Authorization + TTL)
     const headers: Record<string, string> = {
       'Authorization': `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`,
-      'Content-Type': 'application/octet-stream',
       'TTL': ttl.toString(),
     };
 
-    // Add endpoint-specific headers for APNs
-    if (endpoint.includes('web.push.apple.com')) {
-      headers['apns-topic'] = 'app.lovable.2716f91b957c47ba91e06f572f3ce00d';
-      headers['apns-push-type'] = 'alert';
-      headers['apns-priority'] = '10';
-    }
+    // NO APNs headers - rimossi tutti per web.push.apple.com
+    // NO Content-Type - non serve senza body
+    // NO Content-Length - fetch lo gestisce automaticamente
 
-    // Send push notification using standard Web Push protocol
+    // Send push notification using standard Web Push protocol (NO PAYLOAD)
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: headers,
-      body: new TextEncoder().encode(payload),
+      // NO body - invio "tick" push senza payload
     });
 
     let responseBody = '';
