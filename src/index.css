@@ -78,16 +78,33 @@
 }
 
 @layer components {
-  /* Toast slide animation */
+  /* Toast slide animation - scende dall'alto centrato */
   @keyframes toast-slide-down {
-    from {
+    0% {
       opacity: 0;
-      transform: translateX(-50%) translateY(-20px) scale(0.95);
+      transform: translateX(-50%) translateY(-30px) scale(0.9);
     }
-    to {
+    100% {
       opacity: 1;
       transform: translateX(-50%) translateY(0) scale(1);
     }
+  }
+  
+  /* Override per sonner toast container */
+  .toaster {
+    position: fixed !important;
+    top: calc(env(safe-area-inset-top, 47px) + 20px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  /* Toast styling override */
+  .toaster [data-sonner-toast] {
+    animation: toast-slide-down 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    width: 450px !important;
+    max-width: 90vw !important;
+    min-height: 48px !important;
+    margin: 0 auto !important;
   }
   
   /* Page hero spacing adjustments */
