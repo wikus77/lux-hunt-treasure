@@ -1,9 +1,9 @@
 project_id = "vkjrqirvdvjbemsfzxof"
 
-[functions.register-push-subscription]
+[functions.push_register]
 verify_jwt = true
 
-[functions.send-web-push]
+[functions.push_send]
 verify_jwt = false
 
 [functions.send-firebase-push]
