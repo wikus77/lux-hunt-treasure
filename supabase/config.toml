@@ -53,3 +53,11 @@ verify_jwt = false
 [functions.push_send]
 # Public function for sending push notifications
 verify_jwt = false
+
+[functions.register-push-token]
+# Requires authentication for token registration
+verify_jwt = true
+
+[functions.send-test-push]
+# Admin-only function for testing push notifications
+verify_jwt = false
