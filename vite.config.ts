@@ -33,58 +33,12 @@ export default defineConfig(({ mode }) => ({
       brotliSize: true,
     }),
     VitePWA({
-      // Use generateSW mode with manual registration
+      // Completely disable VitePWA/Workbox generation
+      disable: true,
+      // Use only manual SW registration
       injectRegister: false,
-      registerType: 'autoUpdate',
-      workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB - increased for large bundle
-        // Removed importScripts - unified SW handles all push functionality
-        skipWaiting: true,
-        clientsClaim: true,
-        navigateFallbackDenylist: [/^\/ios-check\.html$/, /^\/push-diag\.html$/],
-        globIgnores: [
-          '**/lovable-uploads/**',
-          '**/*.{png,jpg,jpeg}', // Exclude all images from precaching
-          '**/assets/index.*.js' // Exclude large main bundle from precaching
-        ],
-        globPatterns: [
-          '**/*.{css,html,ico,svg}', // Cache essential files but not large JS bundles
-          '**/assets/!(index).*.js' // Cache vendor chunks but not main bundle
-        ],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/vkjrqirvdvjbemsfzxof\.supabase\.co/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-api-cache',
-              networkTimeoutSeconds: 10,
-            },
-          },
-          {
-            urlPattern: /\/lovable-uploads\/.*\.(?:png|jpg|jpeg|gif|webp)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'large-images-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
-              },
-            },
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'images-cache',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-              },
-            },
-          },
-        ],
-      },
-      includeAssets: ['favicon.ico', 'sw-push.js', 'push-health.txt', 'ios-check.html', 'push-diag.html'],
+      registerType: 'prompt',
+      includeAssets: ['favicon.ico', 'sw.js', 'sw-push.js', 'push-health.txt'],
       manifest: {
         name: 'M1SSION™',
         short_name: 'M1SSION',
