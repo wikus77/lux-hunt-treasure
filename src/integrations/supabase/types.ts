@@ -2097,21 +2097,33 @@ export type Database = {
       }
       push_tokens: {
         Row: {
+          auth: string | null
           created_at: string | null
+          device_info: Json | null
+          endpoint: string | null
+          p256dh: string | null
           platform: string | null
           token: string
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          auth?: string | null
           created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string | null
+          p256dh?: string | null
           platform?: string | null
           token: string
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          auth?: string | null
           created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string | null
+          p256dh?: string | null
           platform?: string | null
           token?: string
           updated_at?: string | null
