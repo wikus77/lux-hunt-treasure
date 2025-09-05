@@ -52,11 +52,14 @@ serve(async (req) => {
       );
     }
 
-    // Validate token length (FCM tokens are typically 150+ characters)
+    // Validate token length (relaxed validation - accept any reasonable token)
     if (requestBody.token.length < 10) {
-      console.error('❌ Token too short');
+      console.error('❌ Token too short:', requestBody.token.length);
       return new Response(
-        JSON.stringify({ error: 'Invalid token length' }),
+        JSON.stringify({ 
+          error: 'Token too short', 
+          details: `Token length: ${requestBody.token.length}, minimum: 10`
+        }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -64,11 +67,23 @@ serve(async (req) => {
       );
     }
 
+    // Normalize platform to match constraint
+    const normalizedPlatform = ['ios', 'android', 'desktop'].includes(requestBody.platform) 
+      ? requestBody.platform 
+      : 'desktop';
+
+    console.log('📝 Calling database function with params:', {
+      p_user_id: requestBody.user_id,
+      p_token_prefix: requestBody.token.substring(0, 30) + '...',
+      p_platform: normalizedPlatform,
+      p_device_info_keys: Object.keys(requestBody.device_info || {})
+    });
+
     // Use the database function for upsert
     const { data, error } = await supabaseClient.rpc('upsert_fcm_subscription', {
       p_user_id: requestBody.user_id,
       p_token: requestBody.token,
-      p_platform: requestBody.platform || 'unknown',
+      p_platform: normalizedPlatform,
       p_device_info: requestBody.device_info || {}
     });
 

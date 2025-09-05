@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
+import PushDebugPanel from '@/components/PushDebugPanel';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -207,6 +208,11 @@ const NotificationsSettings: React.FC = () => {
           {/* Push Notifications using UnifiedPushToggle */}
           <div className="border-t border-white/10 pt-4">
             <UnifiedPushToggle className="w-full" />
+          </div>
+
+          {/* Debug Panel for Push Notifications */}
+          <div className="border-t border-white/10 pt-4">
+            <PushDebugPanel />
           </div>
         </CardContent>
       </Card>

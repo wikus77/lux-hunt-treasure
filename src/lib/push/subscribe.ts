@@ -60,6 +60,13 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     // Get VAPID public key - use the correct one that works with the backend
     console.log('🔧 [ensureWebPushSubscription] Setting up VAPID key...');
     const vapidKey = 'BLT_uexaFBpPEX-VqzPy9U-7zMW-vVUGOajLUbL6Ny9eXOhO6Y1nMOaWgJCEKCZzG8X2z6WzXPFOA5MxzJ7Q-o8';
+    console.log('🔑 [DEBUG] VAPID Key being used:', {
+      firstChars: vapidKey?.substring(0, 10),
+      lastChars: vapidKey?.substring(-10),
+      length: vapidKey?.length,
+      startsWithB: vapidKey?.startsWith('B')
+    });
+    
     if (!vapidKey?.trim()) {
       console.error('❌ VAPID_PUBLIC_KEY missing');
       return null;
@@ -140,8 +147,15 @@ async function saveSubscriptionToDatabase(subscription: PushSubscription): Promi
       endpointType: classifyEndpoint(subscription.endpoint)
     };
 
-    // Call registration function
-    const { error } = await supabase.functions.invoke('upsert_fcm_subscription', {
+    // Call registration function with detailed logging
+    console.log('📡 [Database] Calling upsert_fcm_subscription with payload:', {
+      user_id: session.user.id,
+      token_prefix: subscription.endpoint.substring(0, 50) + '...',
+      platform: 'desktop',
+      device_info: deviceInfo
+    });
+
+    const result = await supabase.functions.invoke('upsert_fcm_subscription', {
       body: {
         user_id: session.user.id,
         token: subscription.endpoint,
@@ -150,12 +164,18 @@ async function saveSubscriptionToDatabase(subscription: PushSubscription): Promi
       }
     });
 
-    if (error) {
-      console.error('❌ Failed to save subscription to database:', error);
-      throw error;
+    console.log('📡 [Database] Full response from upsert_fcm_subscription:', result);
+
+    if (result.error) {
+      console.error('❌ Failed to save subscription to database:', {
+        error: result.error,
+        message: result.error.message,
+        details: result.error.details
+      });
+      throw new Error(`Database save failed: ${result.error.message}`);
     }
 
-    console.log('✅ Subscription saved to database successfully');
+    console.log('✅ Subscription saved to database successfully:', result.data);
   } catch (error) {
     console.error('❌ Database save error:', error);
     throw error;
