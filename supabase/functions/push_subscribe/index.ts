@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Supabase Edge Function - Push Subscribe */
+/* Supabase Edge Function - Push Subscribe - PATTERN VALIDATION REMOVED */
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -87,12 +87,12 @@ serve(async (req) => {
     console.log("[PUSH-SUBSCRIBE] Keys received - p256dh length:", keys.p256dh?.length, "auth length:", keys.auth?.length);
     console.log("[PUSH-SUBSCRIBE] Platform:", platform, "UA:", ua?.substring(0, 50));
 
-    // CRITICO: Se user_id non è fornito, usa l'user_id di default (wikus)
+    // Use user_id if provided, otherwise use default
     const finalUserId = user_id || '495246c1-9154-4f01-a428-7f37fe230180';
     
     console.log("[PUSH-SUBSCRIBE] Using user_id:", finalUserId);
 
-    // Upsert subscription by endpoint
+    // Upsert subscription by endpoint - NO PATTERN VALIDATION
     const { data, error } = await supabase
       .from("push_subscriptions")
       .upsert({
@@ -101,7 +101,7 @@ serve(async (req) => {
         auth: keys.auth,
         ua: ua ?? null,
         platform: platform ?? null,
-        user_id: finalUserId,  // SEMPRE un user_id valido
+        user_id: finalUserId,
         updated_at: new Date().toISOString()
       }, { 
         onConflict: "endpoint" 
