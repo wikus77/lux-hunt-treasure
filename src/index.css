@@ -4,6 +4,7 @@
 /* Complete visual identity with custom glassmorphism effects and M1SSION branding */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap');
+@import './styles/theme.css';
 @import './styles/mobile-optimizations.css';
 @import './styles/ios-safe-area-fixes.css';
 
@@ -28,15 +29,27 @@
   html, body {
     @apply bg-black text-white;
     overflow-x: hidden !important;
-    background: var(--m1-header-bg);
-    background-image: radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%);
+    background: var(--m1-header-bg, #131521) !important;
+    background-image: radial-gradient(circle at 50% 10%, rgba(19, 21, 36, 0.5) 0%, rgba(0, 0, 0, 0.8) 80%) !important;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Emergency fallback for iOS PWA - prevents blue/yellow screen */
+  html.ios-pwa-fallback {
+    background: #131521 !important;
+    background-image: none !important;
+  }
+  
+  html.ios-pwa-fallback * {
+    color: white !important;
+  }
+
   .app-shell {
-    background: var(--m1-header-bg);
+    background: var(--m1-header-bg, #131521) !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
   }
 
   .ios-safe-top {

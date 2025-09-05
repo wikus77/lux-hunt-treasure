@@ -24,7 +24,43 @@ import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
-  // Production-ready logging removed
+  // Debug iOS rendering issue - essential for troubleshooting black screen
+  useEffect(() => {
+    console.log('🍎 [iOS DEBUG] App rendering started');
+    console.log('🍎 [iOS DEBUG] Environment:', {
+      userAgent: navigator.userAgent,
+      isStandalone: window.matchMedia('(display-mode: standalone)').matches,
+      protocol: window.location.protocol,
+      viewport: { width: window.innerWidth, height: window.innerHeight },
+      pathname: window.location.pathname,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Check if required CSS variables are available
+    const testDiv = document.createElement('div');
+    document.body.appendChild(testDiv);
+    testDiv.style.cssText = 'background: hsl(var(--background)); color: hsl(var(--foreground));';
+    const computedStyle = window.getComputedStyle(testDiv);
+    console.log('🍎 [iOS DEBUG] CSS Variables:', {
+      background: computedStyle.backgroundColor,
+      color: computedStyle.color,
+      hasBackground: computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)',
+      hasColor: computedStyle.color !== 'rgba(0, 0, 0, 0)'
+    });
+    document.body.removeChild(testDiv);
+    
+    // Apply iOS emergency fallback if CSS variables are broken
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isIOS && isStandalone && (
+      computedStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || 
+      computedStyle.color === 'rgba(0, 0, 0, 0)'
+    )) {
+      console.log('🍎 [iOS DEBUG] Applying emergency fallback for broken CSS variables');
+      document.documentElement.classList.add('ios-pwa-fallback');
+    }
+  }, []);
   
   // Initialize PWA stabilizer (prevents reload loops and manages push)
   usePWAStabilizer();
