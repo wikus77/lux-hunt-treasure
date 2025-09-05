@@ -1,22 +1,22 @@
-// property of team joseph & aldo, M1SSION devtools, generative ai code-signed via Lovable by Joseph G. for user J.A.
-// Notifications Settings Page - FCM Push Configuration UI
-
+// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Bell, BellOff, Smartphone, Monitor, Shield, ExternalLink } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import {
-  enablePushNotifications,
-  getNotificationStatus,
-  hasActiveFCMSubscription,
+import { 
+  enablePushNotifications, 
+  getNotificationStatus, 
+  getUserFCMTokens, 
+  deleteTokenFromDB,
+  testNotification,
   needsInstallGuide,
   isIOS,
-  isStandalone
+  isStandalone 
 } from '@/features/notifications/enablePush';
+import { Bell, BellOff, Smartphone, TestTube, AlertCircle, Info, Bug } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface FCMSubscription {
   id: string;
@@ -27,339 +27,415 @@ interface FCMSubscription {
   is_active: boolean;
 }
 
+type NotificationState = 'OFF' | 'REQUESTING' | 'ENABLING' | 'ON' | 'DISABLING' | 'ERROR';
+
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [testLoading, setTestLoading] = useState(false);
+  const { toast } = useToast();
+  
+  // State machine for notification toggle
+  const [notificationState, setNotificationState] = useState<NotificationState>('OFF');
   const [subscriptions, setSubscriptions] = useState<FCMSubscription[]>([]);
   const [notificationStatus, setNotificationStatus] = useState(getNotificationStatus());
+  const [lastError, setLastError] = useState<string>('');
+  const [debugMode, setDebugMode] = useState(false);
+
+  // Update status periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNotificationStatus(getNotificationStatus());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Load user's FCM subscriptions
   const loadSubscriptions = async () => {
     if (!user?.id) return;
-
+    
     try {
-      const { data, error } = await supabase
-        .from('fcm_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSubscriptions(data || []);
-    } catch (error) {
+      const userTokens = await getUserFCMTokens(user.id);
+      setSubscriptions(userTokens);
+      
+      // Set initial state based on active subscriptions
+      if (userTokens.length > 0 && notificationStatus.permission === 'granted') {
+        setNotificationState('ON');
+      } else {
+        setNotificationState('OFF');
+      }
+    } catch (error: any) {
       console.error('Error loading subscriptions:', error);
     }
   };
 
   useEffect(() => {
     loadSubscriptions();
-    
-    // Update status on mount
-    setNotificationStatus(getNotificationStatus());
-  }, [user?.id]);
+  }, [user, notificationStatus.permission]);
 
-  // Enable push notifications
-  const handleEnablePush = async () => {
-    if (!user?.id) {
-      toast.error('Accesso richiesto per abilitare le notifiche');
-      return;
-    }
+  // State machine handlers
+  const handleToggleNotifications = async () => {
+    if (!user) return;
 
-    setLoading(true);
-
-    try {
-      const result = await enablePushNotifications(user.id);
-      
-      if (result.success) {
-        toast.success('🔥 Notifiche push abilitate con successo!');
-        setNotificationStatus(getNotificationStatus());
-        await loadSubscriptions();
-      } else if (result.requiresInstall) {
-        toast.error('📱 Su iOS, aggiungi prima M1SSION alla Home Screen');
-      } else {
-        toast.error(`❌ Errore: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Enable push error:', error);
-      toast.error('❌ Errore durante l\'abilitazione delle notifiche');
-    } finally {
-      setLoading(false);
+    if (notificationState === 'OFF') {
+      // OFF → REQUESTING/ENABLING → ON
+      await enableNotifications();
+    } else if (notificationState === 'ON') {
+      // ON → DISABLING → OFF
+      await disableNotifications();
     }
   };
 
-  // Send test notification
-  const handleTestNotification = async () => {
-    if (!user?.id || subscriptions.length === 0) {
-      toast.error('Nessuna sottoscrizione attiva trovata');
-      return;
-    }
-
-    setTestLoading(true);
+  const enableNotifications = async () => {
+    if (!user) return;
+    
+    setNotificationState('REQUESTING');
+    setLastError('');
 
     try {
-      const activeToken = subscriptions.find(sub => sub.is_active)?.token;
-      
-      if (!activeToken) {
-        toast.error('Nessun token attivo trovato');
+      // Show iOS install guide if needed
+      if (needsInstallGuide()) {
+        setLastError('Please add this app to your Home Screen and reopen to enable notifications');
+        setNotificationState('ERROR');
+        toast({
+          title: "📱 iOS Installation Required",
+          description: "Please add this app to your Home Screen and reopen to enable notifications",
+          variant: "destructive"
+        });
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('fcm-test', {
-        body: {
-          token: activeToken,
-          title: 'M1SSION™ Test',
-          body: '🎯 Notifica di test inviata con successo!',
-          data: {
-            screen: '/home',
-            action: 'test'
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      if (data?.success) {
-        toast.success('✅ Notifica di test inviata con successo!');
+      setNotificationState('ENABLING');
+      
+      const result = await enablePushNotifications(user.id);
+      
+      if (result.success) {
+        setNotificationState('ON');
+        toast({
+          title: "✅ Notifications Enabled",
+          description: "Push notifications are now active!",
+        });
+        await loadSubscriptions();
       } else {
-        toast.error(`❌ Test fallito: ${data?.error || 'Errore sconosciuto'}`);
+        setNotificationState('ERROR');
+        const errorMsg = result.error || 'Failed to enable notifications';
+        setLastError(errorMsg);
+        
+        toast({
+          title: "❌ Enable Failed",
+          description: errorMsg,
+          variant: "destructive"
+        });
+        
+        console.error('Enable failed:', result);
       }
-    } catch (error) {
-      console.error('Test notification error:', error);
-      toast.error('❌ Errore durante l\'invio della notifica di test');
-    } finally {
-      setTestLoading(false);
+    } catch (error: any) {
+      setNotificationState('ERROR');
+      const errorMsg = error.message || error?.cause || JSON.stringify(error);
+      setLastError(errorMsg);
+      
+      toast({
+        title: "❌ Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      
+      console.error('Enable notifications error:', error);
     }
   };
 
-  // Remove subscription
-  const handleRemoveSubscription = async (subscriptionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('fcm_subscriptions')
-        .delete()
-        .eq('id', subscriptionId);
-
-      if (error) throw error;
-
-      toast.success('Sottoscrizione rimossa');
-      await loadSubscriptions();
-      setNotificationStatus(getNotificationStatus());
-    } catch (error) {
-      console.error('Remove subscription error:', error);
-      toast.error('Errore durante la rimozione');
-    }
-  };
-
-  const getStatusBadge = () => {
-    if (!notificationStatus.supported) {
-      return <Badge variant="destructive">Non Supportato</Badge>;
-    }
+  const disableNotifications = async () => {
+    if (!user) return;
     
-    switch (notificationStatus.permission) {
-      case 'granted':
-        return <Badge variant="default" className="bg-green-500">Abilitate</Badge>;
-      case 'denied':
-        return <Badge variant="destructive">Rifiutate</Badge>;
-      default:
-        return <Badge variant="secondary">Non Richieste</Badge>;
+    setNotificationState('DISABLING');
+    setLastError('');
+
+    try {
+      // Delete all user tokens from database
+      await deleteTokenFromDB({ userId: user.id });
+      
+      setNotificationState('OFF');
+      toast({
+        title: "🔕 Notifications Disabled",
+        description: "Push notifications have been turned off",
+      });
+      
+      await loadSubscriptions();
+    } catch (error: any) {
+      setNotificationState('ERROR');
+      const errorMsg = error.message || error?.cause || JSON.stringify(error);
+      setLastError(errorMsg);
+      
+      toast({
+        title: "❌ Disable Failed",
+        description: errorMsg,
+        variant: "destructive"
+      });
+      
+      console.error('Disable notifications error:', error);
     }
   };
 
-  const getPlatformIcon = (platform: string) => {
-    switch (platform) {
-      case 'ios': return <Smartphone className="h-4 w-4" />;
-      case 'android': return <Smartphone className="h-4 w-4" />;
-      case 'desktop': return <Monitor className="h-4 w-4" />;
-      default: return <Shield className="h-4 w-4" />;
+  const handleTestNotification = async () => {
+    if (subscriptions.length === 0) return;
+    
+    try {
+      const currentToken = subscriptions[0].token;
+      const result = await testNotification(currentToken);
+      
+      if (result.success) {
+        toast({
+          title: "🧪 Test Sent",
+          description: "Check for the test notification!",
+        });
+      } else {
+        toast({
+          title: "❌ Test Failed",
+          description: result.error || "Test notification failed",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "❌ Error",
+        description: error.message,
+        variant: "destructive"
+      });
     }
+  };
+
+  const debugPayload = () => {
+    if (!user) return;
+    
+    const payload = {
+      user_id: user.id,
+      token: subscriptions[0]?.token || 'NO_TOKEN',
+      platform: notificationStatus.platform,
+      device_info: {
+        userAgent: navigator.userAgent,
+        platform: notificationStatus.platform,
+        timestamp: new Date().toISOString(),
+        isStandalone: isStandalone(),
+        url: window.location.href
+      },
+      is_active: true
+    };
+    
+    console.log('🐛 [M1SSION FCM] Debug payload:', payload);
+    toast({
+      title: "🐛 Debug",
+      description: "Payload logged to console",
+    });
+  };
+
+  const getPermissionColor = (permission: NotificationPermission) => {
+    switch (permission) {
+      case 'granted': return 'default';
+      case 'denied': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
+  const getPermissionIcon = (permission: NotificationPermission) => {
+    switch (permission) {
+      case 'granted': return <Bell className="w-4 h-4" />;
+      case 'denied': return <BellOff className="w-4 h-4" />;
+      default: return <AlertCircle className="w-4 h-4" />;
+    }
+  };
+
+  const getStateIcon = (state: NotificationState) => {
+    switch (state) {
+      case 'ON': return <Bell className="w-4 h-4 text-green-500" />;
+      case 'OFF': return <BellOff className="w-4 h-4 text-gray-500" />;
+      case 'ERROR': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      default: return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+    }
+  };
+
+  const isToggleDisabled = () => {
+    return (
+      !user ||
+      !notificationStatus.supported ||
+      notificationStatus.permission === 'denied' ||
+      ['REQUESTING', 'ENABLING', 'DISABLING'].includes(notificationState)
+    );
+  };
+
+  const isToggleOn = () => {
+    return notificationState === 'ON';
   };
 
   if (!user) {
     return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="text-center p-8">
-            <BellOff className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-semibold mb-2">Accesso Richiesto</h3>
-            <p className="text-muted-foreground">
-              Effettua l'accesso per gestire le notifiche push
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="text-center py-8">
+          <p className="text-muted-foreground">Please log in to manage notifications</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Notifiche Push</h1>
-        <p className="text-muted-foreground">
-          Gestisci le notifiche push di M1SSION™ per rimanere sempre aggiornato
-        </p>
-      </div>
-
-      {/* iOS Install Guide */}
-      {needsInstallGuide() && (
-        <Card className="border-orange-200 bg-orange-50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-700">
-              <Smartphone className="h-5 w-5" />
-              Requisito iOS
-            </CardTitle>
-            <CardDescription className="text-orange-600">
-              Per abilitare le notifiche su iOS, devi prima installare M1SSION come PWA
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="text-sm text-orange-700">
-              <p className="font-medium mb-2">Come installare:</p>
-              <ol className="list-decimal list-inside space-y-1 ml-2">
-                <li>Apri M1SSION in Safari</li>
-                <li>Tocca il pulsante "Condividi" nella barra inferiore</li>
-                <li>Scorri e seleziona "Aggiungi alla schermata Home"</li>
-                <li>Tocca "Aggiungi" per confermare</li>
-                <li>Apri M1SSION dall'icona nella Home Screen</li>
-              </ol>
-            </div>
-            <Badge variant="outline" className="text-orange-700 border-orange-300">
-              iOS 16.4+ Richiesto
-            </Badge>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Status Card */}
+    <div className="space-y-6">
+      {/* Toggle Switch */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Stato Notifiche
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {getStateIcon(notificationState)}
+              Push Notifications
+            </div>
+            <Switch
+              checked={isToggleOn()}
+              onCheckedChange={handleToggleNotifications}
+              disabled={isToggleDisabled()}
+            />
           </CardTitle>
-          <CardDescription>
-            Stato attuale delle notifiche push nel tuo browser
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="font-medium">Permesso Notifiche</p>
-              <p className="text-sm text-muted-foreground">
-                {notificationStatus.supported 
-                  ? 'Browser supporta le notifiche push'
-                  : 'Browser non supporta le notifiche push'
-                }
-              </p>
-            </div>
-            {getStatusBadge()}
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <p className="font-medium">Sottoscrizioni Attive</p>
-              <p className="text-sm text-muted-foreground">
-                Dispositivi che ricevono notifiche
-              </p>
-            </div>
-            <Badge variant="outline">
-              {subscriptions.filter(sub => sub.is_active).length}
+            <span>State:</span>
+            <Badge variant={notificationState === 'ON' ? 'default' : notificationState === 'ERROR' ? 'destructive' : 'secondary'}>
+              {notificationState}
             </Badge>
           </div>
-
-          {isIOS() && (
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="font-medium">Modalità Standalone</p>
-                <p className="text-sm text-muted-foreground">
-                  Richiesto per notifiche iOS
-                </p>
+          
+          <div className="flex items-center justify-between">
+            <span>Permission:</span>
+            <Badge variant={getPermissionColor(notificationStatus.permission)}>
+              {notificationStatus.permission}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span>Platform:</span>
+            <Badge variant="outline">
+              {notificationStatus.platform}
+            </Badge>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <span>Active Tokens:</span>
+            <Badge variant="outline">
+              {subscriptions.length}
+            </Badge>
+          </div>
+          
+          {lastError && (
+            <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
+                <AlertCircle className="w-4 h-4" />
+                <span className="font-medium">Error</span>
               </div>
-              <Badge variant={isStandalone() ? "default" : "secondary"}>
-                {isStandalone() ? 'Attiva' : 'Non Attiva'}
-              </Badge>
+              <p className="text-sm mt-1 text-red-600 dark:text-red-400">
+                {lastError}
+              </p>
+            </div>
+          )}
+          
+          {needsInstallGuide() && (
+            <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-lg">
+              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                <Smartphone className="w-4 h-4" />
+                <span className="font-medium">iOS Installation Required</span>
+              </div>
+              <p className="text-sm mt-1 text-amber-600 dark:text-amber-400">
+                Add this app to your Home Screen and reopen to enable notifications
+              </p>
+            </div>
+          )}
+          
+          {notificationStatus.permission === 'denied' && (
+            <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
+                <BellOff className="w-4 h-4" />
+                <span className="font-medium">Notifications Blocked</span>
+              </div>
+              <p className="text-sm mt-1 text-red-600 dark:text-red-400">
+                Please enable notifications in your browser settings
+              </p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Actions Card */}
+      {/* Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Azioni</CardTitle>
-          <CardDescription>
-            Gestisci le tue notifiche push
-          </CardDescription>
+          <CardTitle>Actions</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-3">
-            <Button
-              onClick={handleEnablePush}
-              disabled={loading || notificationStatus.permission === 'granted'}
-              className="flex items-center gap-2"
-            >
-              <Bell className="h-4 w-4" />
-              {loading ? 'Abilitazione...' : 'Abilita Notifiche'}
-            </Button>
-
-            <Button
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            <Button 
               variant="outline"
               onClick={handleTestNotification}
-              disabled={testLoading || subscriptions.filter(sub => sub.is_active).length === 0}
+              disabled={subscriptions.length === 0}
               className="flex items-center gap-2"
             >
-              <ExternalLink className="h-4 w-4" />
-              {testLoading ? 'Invio...' : 'Test Notifica'}
+              <TestTube className="w-4 h-4" />
+              Test Notification
             </Button>
+            
+            <Button 
+              variant="outline"
+              onClick={() => setDebugMode(!debugMode)}
+              className="flex items-center gap-2"
+            >
+              <Bug className="w-4 h-4" />
+              Debug Mode
+            </Button>
+            
+            {debugMode && (
+              <Button 
+                variant="outline"
+                onClick={debugPayload}
+                className="flex items-center gap-2"
+              >
+                <Info className="w-4 h-4" />
+                Debug Payload
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Subscriptions List */}
+      {/* Active Subscriptions */}
       {subscriptions.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Dispositivi Registrati</CardTitle>
-            <CardDescription>
-              Tutti i dispositivi che possono ricevere notifiche
-            </CardDescription>
+            <CardTitle>Active Subscriptions ({subscriptions.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {subscriptions.map((subscription) => (
-                <div
-                  key={subscription.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
-                >
-                  <div className="flex items-center gap-3">
-                    {getPlatformIcon(subscription.platform)}
-                    <div className="space-y-1">
-                      <p className="font-medium capitalize">
-                        {subscription.platform} • {subscription.token.substring(0, 20)}...
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Registrato: {new Date(subscription.created_at).toLocaleDateString('it-IT')}
-                      </p>
-                    </div>
+              {subscriptions.map((sub) => (
+                <div key={sub.id} className="p-3 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <Badge variant="outline">{sub.platform}</Badge>
+                    <Badge variant={sub.is_active ? 'default' : 'secondary'}>
+                      {sub.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={subscription.is_active ? "default" : "secondary"}
-                      className={subscription.is_active ? "bg-green-500" : ""}
-                    >
-                      {subscription.is_active ? 'Attivo' : 'Inattivo'}
-                    </Badge>
+                  <div className="text-sm space-y-1">
+                    <div>
+                      <span className="font-medium">Token:</span> 
+                      <code className="ml-2 text-xs bg-muted px-2 py-1 rounded">
+                        {sub.token.substring(0, 20)}...
+                      </code>
+                    </div>
                     
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveSubscription(subscription.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      Rimuovi
-                    </Button>
+                    <div>
+                      <span className="font-medium">Created:</span> 
+                      <span className="ml-2">{new Date(sub.created_at).toLocaleString()}</span>
+                    </div>
+                    
+                    {sub.device_info?.userAgent && (
+                      <div>
+                        <span className="font-medium">Device:</span> 
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          {sub.device_info.userAgent.substring(0, 60)}...
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
