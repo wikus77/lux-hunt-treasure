@@ -9,9 +9,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, Volume2, VolumeX, Smartphone } from 'lucide-react';
+import { Bell, Volume2, VolumeX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useFcm } from '@/hooks/useFcm';
+import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -24,8 +24,7 @@ const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [pushTokenExists, setPushTokenExists] = useState(false);
-  const { status, error, token, generate, isSupported, permission } = useFcm(user?.id);
+  // Removed useFcm hook - now using UnifiedPushToggle component
   
   const [settings, setSettings] = useState<NotificationSettings>({
     notifications_enabled: true,
@@ -45,63 +44,7 @@ const NotificationsSettings: React.FC = () => {
 
   useEffect(() => {
     loadNotificationSettings();
-    checkPushSubscriptionStatus(); // CHANGED: Use getSubscription() instead of DB
-  }, [user, permission]); // Re-check when permission changes
-
-  // Check Push Subscription Status using getSubscription() - SINGLE SOURCE OF TRUTH
-  const checkPushSubscriptionStatus = async () => {
-    if (!user) {
-      console.log('🔍 No user - skipping push check');
-      return;
-    }
-    
-    try {
-      console.log('🔍 Checking push subscription status using getSubscription()...');
-      
-      // Feature detection (not UA detection)
-      const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-      
-      if (!isSupported) {
-        console.log('❌ Push not supported on this browser');
-        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-        setPushTokenExists(false);
-        return;
-      }
-
-      // Get actual subscription status from browser - SINGLE SOURCE OF TRUTH
-      const registration = await navigator.serviceWorker.getRegistration();
-      if (!registration) {
-        console.log('❌ No service worker registration');
-        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-        setPushTokenExists(false);
-        return;
-      }
-
-      const subscription = await registration.pushManager.getSubscription();
-      const isSubscribed = !!subscription;
-      
-      console.log('📱 Push subscription status:', {
-        isSubscribed,
-        endpoint: subscription?.endpoint?.substring(0, 50) + '...' || 'none',
-        permission: Notification.permission
-      });
-      
-      // Update UI state based on ACTUAL subscription status
-      setSettings(prev => ({ ...prev, push_notifications_enabled: isSubscribed }));
-      setPushTokenExists(isSubscribed);
-      
-      if (isSubscribed) {
-        console.log('✅ Active push subscription found');
-      } else {
-        console.log('❌ No active push subscription');
-      }
-      
-    } catch (error) {
-      console.error('❌ Error checking push subscription:', error);
-      setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-      setPushTokenExists(false);
-    }
-  };
+  }, [user]); // Simplified dependency
 
   const loadNotificationSettings = async () => {
     if (!user) return;
@@ -177,925 +120,149 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ preferred_rewards: newPreferences });
   };
 
-  // Enhanced push notifications toggle with iOS support
-  const handlePushNotificationsToggle = async (enabled: boolean) => {
-    if (enabled) {
-      try {
-        // Import and use the new push subscription function
-        const { ensurePushSubscription } = await import('@/push/ensurePushSubscription');
-        const result = await ensurePushSubscription();
-        
-        toast({
-          title: "✅ Notifiche Attivate",
-          description: `${result.endpoint_type.toUpperCase()} subscription created`,
-          variant: "default"
-        });
-        
-        await saveSettings({ push_notifications_enabled: true });
-        // Recheck status using getSubscription()
-        setTimeout(() => checkPushSubscriptionStatus(), 1000);
-        return;
-      } catch (error: any) {
-        toast({
-          title: "❌ Errore Attivazione",
-          description: error.message || "Impossibile attivare le notifiche push.",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setLoading(true);
-      
-      try {
-        // Feature detection (NO UA sniffing) - check endpoint type after subscription
-        console.log('📱 Creating push subscription with unified VAPID key...');
-        
-        // Request permission first
-        if (Notification.permission === 'default') {
-          const permission = await Notification.requestPermission();
-          if (permission !== 'granted') {
-            throw new Error('Notification permission denied');
-          }
-        }
-        
-        // Register service worker and get subscription
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Convert VAPID key - UNIFIED FOR ALL PLATFORMS with validation
-        const urlBase64ToUint8Array = (base64String: string) => {
-          try {
-            const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding)
-              .replace(/-/g, '+')
-              .replace(/_/g, '/');
-            const rawData = atob(base64);
-            const outputArray = new Uint8Array(rawData.length);
-            for (let i = 0; i < rawData.length; ++i) {
-              outputArray[i] = rawData.charCodeAt(i);
-            }
-            
-            // Validate P-256 key length (65 bytes for uncompressed public key)
-            if (outputArray.length !== 65) {
-              throw new Error(`Invalid VAPID key length: ${outputArray.length} bytes (expected 65)`);
-            }
-            
-            // Validate P-256 key format (should start with 0x04 for uncompressed)
-            if (outputArray[0] !== 0x04) {
-              throw new Error(`Invalid VAPID key format: first byte is 0x${outputArray[0].toString(16)} (expected 0x04)`);
-            }
-            
-            console.log('✅ VAPID key validation passed:', outputArray.length, 'bytes');
-            return outputArray;
-          } catch (error) {
-            console.error('❌ VAPID key conversion failed:', error);
-            throw new Error(`VAPID key validation failed: ${error.message}`);
-          }
-        };
-        
-        // Use UNIFIED VAPID key from env with P-256 validation
-        const UNIFIED_VAPID_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
-        
-        // VALIDATE VAPID key format and length
-        console.log('🔑 VAPID key validation:', {
-          chars: UNIFIED_VAPID_KEY?.length,
-          startsWith04: (() => {
-            try {
-              const raw = atob(UNIFIED_VAPID_KEY.replace(/-/g, '+').replace(/_/g, '/'));
-              return raw.length === 65 && raw.charCodeAt(0) === 4;
-            } catch(e) {
-              return false;
-            }
-          })()
-        });
-        
-        const applicationServerKey = urlBase64ToUint8Array(UNIFIED_VAPID_KEY);
-        
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey
-        });
-        
-        // Detect platform by endpoint (not UA)
-        const isAppleEndpoint = subscription.endpoint.includes('web.push.apple.com');
-        const isFCMEndpoint = subscription.endpoint.includes('fcm.googleapis.com');
-        
-        console.log('📱 Subscription created:', {
-          isApple: isAppleEndpoint,
-          isFCM: isFCMEndpoint,
-          endpoint: subscription.endpoint.substring(0, 50) + '...'
-        });
-        
-        // Save to Supabase push_subscriptions table with UNIFIED payload format
-        console.log('💾 Saving subscription with user_id:', user?.id);
-        const subscriptionJSON = subscription.toJSON();
-        const { error } = await supabase.functions.invoke('push_subscribe', {
-          body: {
-            subscription: subscriptionJSON, // Complete subscription with endpoint and keys
-            user_id: user?.id || null,
-            client: 'app',
-            ua: navigator.userAgent
-          }
-        });
-          
-        if (error) throw error;
-        
-        // Update profile for preferences (NOT for UI state)
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ push_notifications_enabled: true })
-          .eq('id', user?.id);
-          
-        if (profileError) {
-          console.error('❌ Failed to save push_notifications_enabled to profile:', profileError);
-          // Don't throw - profile update is for preferences only
-        }
-        
-        console.log('✅ Push subscription saved successfully');
-        // UI state will be updated by checkPushSubscriptionStatus()
-        
-        const platformName = isAppleEndpoint ? 'Apple Push Service' : 'Firebase Cloud Messaging';
-        toast({
-          title: "✅ Notifiche Push Attivate!",
-          description: `🔥 ${platformName} configurato. Subscriptions salvata.`
-        });
-        
-        // Recheck status using getSubscription()
-        setTimeout(() => checkPushSubscriptionStatus(), 1000);
-        
-      } catch (error: any) {
-        console.error('❌ Push notification setup failed:', error);
-        setSettings(prev => ({ ...prev, push_notifications_enabled: false }));
-        
-        toast({
-          title: "❌ Errore Attivazione",
-          description: error.message || "Non è stato possibile attivare le notifiche push.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      setLoading(true);
-      
-      try {
-        // Use the new unsubscribe function  
-        const { unsubscribePush } = await import('@/push/ensurePushSubscription');
-        await unsubscribePush();
-        
-        await saveSettings({ push_notifications_enabled: false });
-        
-        toast({
-          title: "🔕 Notifiche Push Disattivate",
-          description: "Subscription rimossa e cancellata dal database."
-        });
-      } catch (error) {
-        console.error('❌ Exception removing push subscriptions:', error);
-        toast({
-          title: "❌ Errore Disattivazione", 
-          description: "Si è verificato un errore durante la disattivazione.",
-          variant: "destructive"
-        });
-      } finally {
-        setLoading(false);
-        // Recheck actual subscription status
-        setTimeout(() => checkPushSubscriptionStatus(), 500);
-      }
-    }
-  };
-
-  // Gate L0 Verification & Enhanced Test Push with detailed logging
-  const [testResults, setTestResults] = useState<{
-    request?: any;
-    response?: any;
-    hints?: string[];
-    passRate?: number;
-  }>({});
-
-  const handleSendTestPush = async () => {
-    if (!user) {
-      toast({
-        title: "❌ Errore",
-        description: "Devi essere loggato per inviare test push",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check permission state first
-    if (Notification.permission === 'denied') {
-      toast({
-        title: "🔒 Permessi Bloccati",
-        description: "Le notifiche sono bloccate. Vai alle impostazioni del browser per abilitarle.",
-        variant: "destructive",
-        action: (
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => window.open('https://support.google.com/chrome/answer/3220216?hl=it', '_blank')}
-          >
-            Guida
-          </Button>
-        )
-      });
-      return;
-    }
-
-    // Get current subscription for payload
-    let subscription = null;
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          subscription = await registration.pushManager.getSubscription();
-        }
-      } catch (e) {
-        console.warn('Could not get subscription:', e);
-      }
-    }
-
-    setLoading(true);
-    
-    const requestPayload = {
-      user_id: user.id,
-      title: 'M1SSION™ Test',
-      body: 'E2E test from settings - canary endpoint working!',
-      data: { src: 'settings', timestamp: Date.now() }
-    };
-
-    try {
-      // L0 GATE: Log complete payload being sent to edge function
-      console.log('🚀 [L0-GATE] Sending test push via CANARY endpoint: push_send_canary');
-      console.log('📤 [L0-GATE] Request payload (REDACTED):', {
-        user_id: requestPayload.user_id,
-        title: requestPayload.title,
-        body: requestPayload.body,
-        subscription_endpoint: subscription?.endpoint ? 
-          subscription.endpoint.substring(0, 50) + '...' : 'No subscription',
-        subscription_keys: subscription?.toJSON() ? {
-          p256dh: subscription.toJSON().keys?.p256dh?.substring(0, 16) + '...',
-          auth: subscription.toJSON().keys?.auth?.substring(0, 8) + '...'
-        } : 'No keys',
-        endpoint_type: subscription?.endpoint ? 
-          (subscription.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 
-           subscription.endpoint.includes('web.push.apple.com') ? 'apns' : 'unknown') : 'none'
-      });
-      
-      const { data, error } = await supabase.functions.invoke('push_send_canary', {
-        body: requestPayload
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // L0 GATE: Log raw response from edge function
-      console.log('✅ [L0-GATE] Raw Edge Response:', JSON.stringify(data, null, 2));
-
-      // L1 Fix: Parse response correctly (no more [object Object])
-      const sent = typeof data.sent === 'number' ? data.sent : (data.sent?.length || 0);
-      const failed = typeof data.failed === 'number' ? data.failed : (data.failed?.length || 0);
-      const removed = typeof data.removed === 'number' ? data.removed : (data.to_delete?.length || 0);
-      
-      // L1 Fix: Calculate pass rate and generate hints
-      const total = sent + failed;
-      const passRate = total > 0 ? (sent / total) : 0;
-      const hints = [];
-      
-      if (failed > 0 && data.results) {
-        const errorCounts: { [key: string]: number } = {};
-        data.results.forEach((result: any) => {
-          if (!result.success && result.error) {
-            const errorKey = `${result.status || 'unknown'}-${result.error.split(':')[0] || 'error'}`;
-            errorCounts[errorKey] = (errorCounts[errorKey] || 0) + 1;
-          }
-        });
-        
-        Object.entries(errorCounts).forEach(([error, count]) => {
-          hints.push(`${error}: ${count} occorrenze`);
-        });
-      }
-
-      // Update test results state for UI display
-      setTestResults({
-        request: requestPayload,
-        response: data,
-        hints,
-        passRate
-      });
-      
-      toast({
-        title: passRate >= 0.99 ? "🟢 Test Push Inviato!" : "🟡 Test Push Completato",
-        description: `Inviati: ${sent} • Falliti: ${failed} • Pass Rate: ${(passRate * 100).toFixed(1)}%`
-      });
-
-    } catch (error: any) {
-      console.error('❌ [L0-GATE] Test push failed:', error);
-      
-      setTestResults({
-        request: requestPayload,
-        response: { error: error.message },
-        hints: [`Error: ${error.message}`],
-        passRate: 0
-      });
-      
-      toast({
-        title: "❌ Errore Test Push",
-        description: error.message || "Impossibile inviare il test push",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Send Canary APNs Direct Test
-  const handleSendCanaryAPNs = async () => {
-    if (!user) {
-      toast({
-        title: "❌ Errore",
-        description: "Devi essere loggato per inviare test APNs",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Get current subscription for payload
-    let subscription = null;
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      try {
-        const registration = await navigator.serviceWorker.getRegistration();
-        if (registration) {
-          subscription = await registration.pushManager.getSubscription();
-        }
-      } catch (e) {
-        console.warn('Could not get subscription:', e);
-      }
-    }
-
-    if (!subscription) {
-      toast({
-        title: "❌ Nessuna Subscription",
-        description: "Nessuna subscription push attiva trovata",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setLoading(true);
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('send-apns-direct', {
-        body: { endpoint: subscription.endpoint }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "✅ APNs Direct Test",
-        description: `Status: ${data.status_code} ${data.apns_id ? `• ID: ${data.apns_id}` : ''}`,
-        variant: "default"
-      });
-
-    } catch (error: any) {
-      console.error('❌ APNs direct test failed:', error);
-      toast({
-        title: "❌ APNs Test Failed",
-        description: error.message || "Impossibile inviare il test APNs",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // L3 Test Runner (DEV only) - Execute 20 consecutive sends
-  const [runnerResults, setRunnerResults] = useState<{
-    passRate?: number;
-    avgLatency?: number;
-    stdDev?: number;
-    errorDistribution?: { [key: string]: number };
-    harBlob?: Blob;
-  }>({});
-  const [isRunningBatch, setIsRunningBatch] = useState(false);
-
-  const handleBatchTest = async () => {
-    if (!user) return;
-    
-    setIsRunningBatch(true);
-    const results: any[] = [];
-    const latencies: number[] = [];
-    const errorCounts: { [key: string]: number } = {};
-    
-    try {
-      console.log('🧪 [L3-BATCH] Starting 20 consecutive test sends...');
-      
-      for (let i = 0; i < 20; i++) {
-        const startTime = Date.now();
-        
-        try {
-          const { data, error } = await supabase.functions.invoke('push_send_canary', {
-            body: {
-              user_id: user.id,
-              title: `M1SSION™ Batch Test ${i + 1}/20`,
-              body: `Batch test execution ${Date.now()}`,
-              data: { src: 'batch-test', batch: i + 1, timestamp: Date.now() }
-            }
-          });
-          
-          const latency = Date.now() - startTime;
-          latencies.push(latency);
-          
-          if (error) {
-            errorCounts['edge-error'] = (errorCounts['edge-error'] || 0) + 1;
-            results.push({ success: false, error: error.message, latency });
-          } else {
-            const sent = typeof data.sent === 'number' ? data.sent : (data.sent?.length || 0);
-            const failed = typeof data.failed === 'number' ? data.failed : (data.failed?.length || 0);
-            
-            results.push({ success: sent > 0, sent, failed, latency });
-            
-            if (failed > 0 && data.results) {
-              data.results.forEach((res: any) => {
-                if (!res.success) {
-                  const errorKey = `${res.status || 'unknown'}-${res.error?.split(':')[0] || 'error'}`;
-                  errorCounts[errorKey] = (errorCounts[errorKey] || 0) + 1;
-                }
-              });
-            }
-          }
-        } catch (err: any) {
-          const latency = Date.now() - startTime;
-          latencies.push(latency);
-          errorCounts['network-error'] = (errorCounts['network-error'] || 0) + 1;
-          results.push({ success: false, error: err.message, latency });
-        }
-        
-        // Small delay between requests
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-      
-      // Calculate statistics
-      const successful = results.filter(r => r.success).length;
-      const passRate = successful / 20;
-      const avgLatency = latencies.reduce((a, b) => a + b, 0) / latencies.length;
-      const variance = latencies.reduce((a, b) => a + Math.pow(b - avgLatency, 2), 0) / latencies.length;
-      const stdDev = Math.sqrt(variance);
-      
-      // Create HAR-like data blob for download
-      const harData = {
-        log: {
-          version: "1.2",
-          creator: { name: "M1SSION™ Batch Test", version: "1.0" },
-          entries: results.map((result, i) => ({
-            startedDateTime: new Date().toISOString(),
-            time: result.latency,
-            request: {
-              method: "POST",
-              url: "push_send_canary",
-              httpVersion: "HTTP/1.1",
-              headers: [],
-              postData: { mimeType: "application/json", text: `Test ${i + 1}` }
-            },
-            response: {
-              status: result.success ? 200 : 500,
-              statusText: result.success ? "OK" : "Error",
-              httpVersion: "HTTP/1.1",
-              headers: [],
-              content: { size: 0, mimeType: "application/json", text: JSON.stringify(result) }
-            }
-          }))
-        }
-      };
-      
-      const harBlob = new Blob([JSON.stringify(harData, null, 2)], { type: 'application/json' });
-      
-      setRunnerResults({
-        passRate,
-        avgLatency,
-        stdDev,
-        errorDistribution: errorCounts,
-        harBlob
-      });
-      
-      console.log('🧪 [L3-BATCH] Results:', { passRate, avgLatency, stdDev, errorCounts });
-      
-      toast({
-        title: passRate >= 0.99 ? "🟢 Batch Test Passed!" : "🟡 Batch Test Completed",
-        description: `Pass Rate: ${(passRate * 100).toFixed(1)}% • Avg Latency: ${avgLatency.toFixed(0)}ms`
-      });
-      
-    } catch (error: any) {
-      console.error('🧪 [L3-BATCH] Batch test failed:', error);
-      toast({
-        title: "❌ Batch Test Failed",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setIsRunningBatch(false);
-    }
-  };
-
-  const downloadHAR = () => {
-    if (runnerResults.harBlob) {
-      const url = URL.createObjectURL(runnerResults.harBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `m1ssion-push-batch-test-${Date.now()}.har`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
-  };
+  // Push notifications now handled by UnifiedPushToggle component
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      transition={{ duration: 0.5 }}
+      className="max-w-4xl mx-auto p-6 space-y-6"
     >
-      {/* Main Notifications Toggle */}
-      <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-white mb-2">Impostazioni Notifiche</h1>
+        <p className="text-white/70">Gestisci le tue preferenze di notifica e comunicazione</p>
+      </div>
+
+      {/* Email Notifications */}
+      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
         <CardHeader>
-          <CardTitle className="text-white font-orbitron flex items-center">
+          <CardTitle className="text-white flex items-center">
             <Bell className="w-5 h-5 mr-2" />
-            Notifiche Generali
+            Notifiche Email
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-white font-medium">Notifiche Generali</Label>
+              <p className="text-white/70 text-sm">
+                Ricevi aggiornamenti importanti via email
+              </p>
+            </div>
+            <Switch
+              checked={settings.notifications_enabled}
+              onCheckedChange={handleNotificationsToggle}
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-white font-medium">Suggerimenti Settimanali</Label>
+            <Select
+              value={settings.weekly_hints}
+              onValueChange={handleWeeklyHintsChange}
+              disabled={loading}
+            >
+              <SelectTrigger className="bg-gray-800 border-gray-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="all" className="text-white">Tutti i suggerimenti</SelectItem>
+                <SelectItem value="only-premium" className="text-white">Solo suggerimenti premium</SelectItem>
+                <SelectItem value="none" className="text-white">Nessun suggerimento</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-white font-medium">Categorie di Interesse</Label>
+            <p className="text-white/70 text-sm">
+              Seleziona le categorie di ricompense che ti interessano di più
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {rewardOptions.map((reward) => (
+                <div key={reward.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={reward.id}
+                    checked={settings.preferred_rewards.includes(reward.id)}
+                    onCheckedChange={(checked) => 
+                      handleRewardPreferenceChange(reward.id, checked as boolean)
+                    }
+                    disabled={loading}
+                    className="border-gray-500"
+                  />
+                  <Label 
+                    htmlFor={reward.id} 
+                    className="text-white text-sm flex items-center cursor-pointer"
+                  >
+                    <span className="mr-2">{reward.icon}</span>
+                    {reward.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Push Notifications using UnifiedPushToggle */}
+          <div className="border-t border-white/10 pt-4">
+            <UnifiedPushToggle className="w-full" />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sound Preferences */}
+      <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center">
+            <Volume2 className="w-5 h-5 mr-2" />
+            Preferenze Audio
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="text-white font-medium">Attiva Notifiche</Label>
+              <Label className="text-white font-medium">Suoni di Notifica</Label>
               <p className="text-white/70 text-sm">
-                Ricevi notifiche per nuovi indizi, premi e aggiornamenti dell'app.
+                Riproduci suoni per le notifiche importanti
               </p>
             </div>
-            
-            {/* Apple Style Toggle Switch */}
-            <div className="relative">
-              <input
-                type="checkbox"
-                checked={settings.notifications_enabled}
-                onChange={(e) => handleNotificationsToggle(e.target.checked)}
-                disabled={loading}
-                className="sr-only"
-                id="notifications-toggle"
-              />
-              <label
-                htmlFor="notifications-toggle"
-                className={`
-                  relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF] focus:ring-offset-2 focus:ring-offset-black
-                  ${settings.notifications_enabled 
-                    ? 'bg-[#00D1FF]' 
-                    : 'bg-gray-600'
-                  }
-                  ${loading ? 'opacity-50 cursor-not-allowed' : ''}
-                `}
-              >
-                <span
-                  className={`
-                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-lg
-                    ${settings.notifications_enabled 
-                      ? 'translate-x-6' 
-                      : 'translate-x-1'
-                    }
-                  `}
-                />
-              </label>
-              
-              {/* Loading indicator */}
-              {loading && (
-                <div className="absolute -right-8 top-1">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D1FF]"></div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Push Notifications Toggle - Apple Style */}
-          <div className="border-t border-white/10 pt-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <Label className="text-white font-medium flex items-center">
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  Notifiche Push
-                </Label>
-                <p className="text-white/70 text-sm">
-                  Ricevi notifiche push OS-native (iOS/Android) su questo dispositivo.
-                </p>
-                {!isSupported && (
-                  <p className="text-red-400 text-xs">
-                    ⚠️ Notifiche push non supportate su questo dispositivo
-                  </p>
-                )}
-                {permission === 'denied' && (
-                  <p className="text-red-400 text-xs">
-                    🚫 Permesso notifiche bloccato - modifica impostazioni browser
-                  </p>
-                )}
-              </div>
-              {/* Apple Style Toggle Switch */}
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={settings.push_notifications_enabled}
-                  onChange={(e) => handlePushNotificationsToggle(e.target.checked)}
-                  disabled={loading || status === 'loading' || !isSupported}
-                  className="sr-only"
-                  id="push-notifications-toggle"
-                />
-                <label
-                  htmlFor="push-notifications-toggle"
-                  className={`
-                    relative inline-flex h-6 w-11 items-center rounded-full cursor-pointer transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#00D1FF] focus:ring-offset-2 focus:ring-offset-black
-                    ${settings.push_notifications_enabled
-                      ? 'bg-[#00D1FF]' 
-                      : 'bg-gray-600'
-                    }
-                    ${(loading || status === 'loading' || !isSupported) 
-                      ? 'opacity-50 cursor-not-allowed' 
-                      : ''
-                    }
-                  `}
-                >
-                  <span
-                    className={`
-                      inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 shadow-lg
-                      ${settings.push_notifications_enabled
-                        ? 'translate-x-6' 
-                        : 'translate-x-1'
-                      }
-                    `}
-                  />
-                </label>
-                
-                {/* Loading indicator */}
-                {(loading || status === 'loading') && (
-                  <div className="absolute -right-8 top-1">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#00D1FF]"></div>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Test Push Button (Development) */}
-            {import.meta.env.DEV && settings.push_notifications_enabled && (
-              <div className="border-t border-white/10 pt-4 space-y-3">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    onClick={handleSendTestPush}
-                    disabled={loading || Notification.permission === 'denied' || !pushTokenExists}
-                    variant="outline"
-                    size="sm"
-                  >
-                    🚀 Test Canary
-                  </Button>
-                  <Button
-                    onClick={handleSendCanaryAPNs}
-                    disabled={loading || Notification.permission === 'denied' || !pushTokenExists}
-                    variant="outline"
-                    size="sm"
-                  >
-                    📡 Canary APNs (edge)
-                  </Button>
-                </div>
-                
-                {/* L1 Fix: Three panels for request/response/hints */}
-                {testResults.request && (
-                  <div className="space-y-2 text-xs">
-                    <details className="bg-white/5 rounded p-2">
-                      <summary className="font-medium cursor-pointer">📤 Request Preview</summary>
-                      <pre className="mt-2 overflow-auto text-[10px]">
-                        {JSON.stringify(testResults.request, null, 2)}
-                      </pre>
-                    </details>
-                    
-                    <details className="bg-white/5 rounded p-2">
-                      <summary className="font-medium cursor-pointer">📥 Response Preview</summary>
-                      <pre className="mt-2 overflow-auto text-[10px]">
-                        {JSON.stringify(testResults.response, null, 2).substring(0, 2000)}
-                        {JSON.stringify(testResults.response, null, 2).length > 2000 && (
-                          <span className="text-yellow-400">... (Mostra tutto: {JSON.stringify(testResults.response, null, 2).length} chars)</span>
-                        )}
-                      </pre>
-                    </details>
-                    
-                    {testResults.hints && testResults.hints.length > 0 && (
-                      <div className="bg-orange-500/10 border border-orange-500/20 rounded p-2">
-                        <div className="font-medium text-orange-400">💡 Hints</div>
-                        <ul className="mt-1 space-y-1">
-                          {testResults.hints.map((hint, i) => (
-                            <li key={i} className="text-orange-300">• {hint}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    {typeof testResults.passRate === 'number' && (
-                      <div className={`rounded p-2 border ${testResults.passRate >= 0.99 
-                        ? 'bg-green-500/10 border-green-500/20 text-green-400' 
-                        : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                        <span className={testResults.passRate >= 0.99 ? '🟢' : '🔴'}>
-                          {' '}Pass Rate: {(testResults.passRate * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* DEV-Only Canary Test Push Button */}
-      {import.meta.env.DEV && settings.push_notifications_enabled && (
-        <Card className="bg-orange-950/40 border-orange-500/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-orange-400 font-orbitron flex items-center">
-              🧪 DEV: Canary Push Test
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Button
-              onClick={handleSendTestPush}
+            <Switch
+              defaultChecked={true}
               disabled={loading}
-              className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-              variant="default"
-            >
-              {loading ? 'Inviando...' : '🚀 Invia Test Push (Canary)'}
-            </Button>
-            <p className="text-orange-300/70 text-xs mt-2">
-              Test endpoint: /functions/v1/push_send_canary - Solo in development
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* L3: Test Runner (DEV only) */}
-      {import.meta.env.DEV && settings.push_notifications_enabled && (
-        <Card className="bg-purple-950/40 border-purple-500/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-purple-400 font-orbitron flex items-center">
-              🔬 L3: Batch Test Runner (20x consecutive)
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={handleBatchTest}
-              disabled={isRunningBatch || loading || Notification.permission === 'denied' || !pushTokenExists}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-              variant="default"
-            >
-              {isRunningBatch ? '🔄 Running Batch Test...' : '🔬 Esegui 20 invii consecutivi'}
-            </Button>
-            
-            {/* L3 Results Display */}
-            {typeof runnerResults.passRate === 'number' && (
-              <div className="space-y-2 text-xs">
-                <div className={`rounded p-3 border ${runnerResults.passRate >= 0.99 
-                  ? 'bg-green-500/10 border-green-500/20 text-green-400' 
-                  : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                  <div className="font-medium">
-                    {runnerResults.passRate >= 0.99 ? '🟢' : '🔴'} PASS RATE: {(runnerResults.passRate * 100).toFixed(1)}%
-                  </div>
-                  <div className="text-[10px] mt-1 space-y-1">
-                    <div>⏱️ Avg Latency: {runnerResults.avgLatency?.toFixed(0)}ms</div>
-                    <div>📊 Std Dev: ±{runnerResults.stdDev?.toFixed(0)}ms</div>
-                  </div>
-                </div>
-                
-                {runnerResults.errorDistribution && Object.keys(runnerResults.errorDistribution).length > 0 && (
-                  <div className="bg-orange-500/10 border border-orange-500/20 rounded p-2">
-                    <div className="font-medium text-orange-400">📈 Error Distribution</div>
-                    <ul className="mt-1 space-y-1 text-[10px]">
-                      {Object.entries(runnerResults.errorDistribution).map(([error, count]) => (
-                        <li key={error} className="text-orange-300">• {error}: {count}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                
-                {runnerResults.harBlob && (
-                  <Button
-                    onClick={downloadHAR}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-[10px] h-7"
-                  >
-                    📥 Download HAR (Network Export)
-                  </Button>
-                )}
-              </div>
-            )}
-            
-            <p className="text-purple-300/70 text-xs">
-              Military-grade testing: 20 consecutive sends to measure reliability
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Weekly Hints Preferences */}
-      <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white font-orbitron">Indizi Settimanali</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <Label className="text-white font-medium">Frequenza Indizi</Label>
-            <Select
-              value={settings.weekly_hints}
-              onValueChange={handleWeeklyHintsChange}
-              disabled={loading || !settings.notifications_enabled}
-            >
-              <SelectTrigger className="bg-black/20 border-white/20 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-black/90 border-white/20">
-                <SelectItem value="all" className="text-white">
-                  Tutti gli indizi
-                </SelectItem>
-                <SelectItem value="only-premium" className="text-white">
-                  Solo indizi premium
-                </SelectItem>
-                <SelectItem value="none" className="text-white">
-                  Nessun indizio
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-white/70 text-sm">
-              Scegli quale tipo di indizi ricevere via notifica ogni settimana.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Reward Preferences */}
-      <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white font-orbitron">Premi Preferiti</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-white/70 text-sm">
-            Seleziona le categorie di premi che ti interessano di più per ricevere notifiche mirate.
-          </p>
-          
-          <div className="grid grid-cols-1 gap-3">
-            {rewardOptions.map((reward) => (
-              <div
-                key={reward.id}
-                className="flex items-center space-x-3 p-3 bg-black/20 rounded-lg border border-white/10"
-              >
-                <Checkbox
-                  id={reward.id}
-                  checked={settings.preferred_rewards.includes(reward.id)}
-                  onCheckedChange={(checked) => 
-                    handleRewardPreferenceChange(reward.id, checked as boolean)
-                  }
-                  disabled={loading || !settings.notifications_enabled}
-                  className="border-white/30 data-[state=checked]:bg-[#00D1FF] data-[state=checked]:border-[#00D1FF]"
-                />
-                <Label
-                  htmlFor={reward.id}
-                  className="text-white font-medium flex items-center space-x-2 cursor-pointer flex-1"
-                >
-                  <span className="text-lg">{reward.icon}</span>
-                  <span>{reward.label}</span>
-                </Label>
-              </div>
-            ))}
+            />
           </div>
 
-          <div className="pt-4">
-            <Button
-              onClick={() => saveSettings({})}
-              disabled={loading || !settings.notifications_enabled}
-              className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
-            >
-              {loading ? 'Salvataggio...' : 'Salva Preferenze'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Notification Status */}
-      {!settings.notifications_enabled && (
-        <Card className="bg-yellow-900/20 border-yellow-500/20 backdrop-blur-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-3">
-              <VolumeX className="w-5 h-5 text-yellow-400" />
-              <div>
-                <p className="text-yellow-400 font-medium">Notifiche Disabilitate</p>
-                <p className="text-yellow-300/70 text-sm">
-                  Attiva le notifiche per ricevere aggiornamenti sui premi e nuovi indizi.
-                </p>
-              </div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <Label className="text-white font-medium">Feedback Aptico</Label>
+              <p className="text-white/70 text-sm">
+                Vibrazioni per dispositivi mobile
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+            <Switch
+              defaultChecked={true}
+              disabled={loading}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Privacy Note */}
+      <Card className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-blue-700/50">
+        <CardContent className="pt-6">
+          <div className="flex items-start space-x-3">
+            <Bell className="w-5 h-5 text-blue-400 mt-0.5" />
+            <div className="space-y-2">
+              <h3 className="text-white font-medium">Privacy e Controllo</h3>
+              <p className="text-white/70 text-sm">
+                Tutte le notifiche possono essere disabilitate in qualsiasi momento. 
+                I tuoi dati di preferenza sono crittografati e non vengono condivisi con terze parti.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };
