@@ -91,6 +91,39 @@ export const useUnifiedPush = () => {
     autoSubscribe();
   }, [user, state.isSupported, state.permission, state.isSubscribed]);
 
+  // Request permission function
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (!state.isSupported) {
+      console.warn('❌ Push notifications not supported');
+      toast.error('Push notifications non supportate');
+      return false;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+      setState(prev => ({ ...prev, permission }));
+      
+      if (permission === 'granted') {
+        toast.success('✅ Permessi concessi!');
+      } else {
+        toast.error('❌ Permessi negati');
+      }
+      
+      return permission === 'granted';
+    } catch (error) {
+      console.error('❌ Permission request failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Permission request failed';
+      
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+      }));
+      
+      toast.error(`Errore: ${errorMessage}`);
+      return false;
+    }
+  }, [state.isSupported]);
+
   // Manual subscription function
   const subscribe = useCallback(async (): Promise<boolean> => {
     console.log('🔔 [useUnifiedPush] Manual subscription started...');
@@ -99,6 +132,15 @@ export const useUnifiedPush = () => {
       console.warn('❌ Push notifications not supported');
       toast.error('Push notifications non supportate');
       return false;
+    }
+
+    // Check permission first
+    if (Notification.permission !== 'granted') {
+      console.warn('❌ Permission not granted, requesting first');
+      const granted = await requestPermission();
+      if (!granted) {
+        return false;
+      }
     }
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -141,45 +183,7 @@ export const useUnifiedPush = () => {
       toast.error(`Errore: ${errorMessage}`);
       return false;
     }
-  }, [state.isSupported]);
-
-  // Request permission function
-  const requestPermission = useCallback(async (): Promise<boolean> => {
-    if (!state.isSupported) {
-      console.warn('❌ Push notifications not supported');
-      toast.error('Push notifications non supportate');
-      return false;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      setState(prev => ({ ...prev, permission }));
-      
-      // Auto-subscribe if permission granted and user is authenticated
-      if (permission === 'granted' && user) {
-        return await subscribe();
-      }
-      
-      if (permission === 'granted') {
-        toast.success('✅ Permessi concessi!');
-      } else {
-        toast.error('❌ Permessi negati');
-      }
-      
-      return permission === 'granted';
-    } catch (error) {
-      console.error('❌ Permission request failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Permission request failed';
-      
-      setState(prev => ({
-        ...prev,
-        error: errorMessage,
-      }));
-      
-      toast.error(`Errore: ${errorMessage}`);
-      return false;
-    }
-  }, [state.isSupported, user, subscribe]);
+  }, [state.isSupported, requestPermission]);
 
   // Unsubscribe function
   const unsubscribe = useCallback(async (): Promise<boolean> => {

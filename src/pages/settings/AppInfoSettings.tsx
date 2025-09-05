@@ -95,10 +95,6 @@ const AppInfoSettings = () => {
                   <span className="text-muted-foreground">Sviluppatore</span>
                   <span className="font-medium text-foreground">{appInfo.developer}</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">CEO</span>
-                  <span className="font-medium text-foreground">{appInfo.ceo}</span>
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -135,16 +131,6 @@ const AppInfoSettings = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
-              >
-                <div className="flex items-center space-x-2">
-                  <Code className="h-4 w-4 text-primary" />
-                  <span>Codice Sorgente</span>
-                </div>
-                <ExternalLink className="h-4 w-4" />
-              </Button>
               
               <Button
                 variant="outline"
