@@ -54,8 +54,8 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     const registration = await navigator.serviceWorker.ready;
     console.log('✅ Service worker ready');
 
-    // Get VAPID public key from environment (using hardcoded for now)
-    const vapidKey = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+    // Get VAPID public key - use the correct one that works with the backend
+    const vapidKey = 'BLT_uexaFBpPEX-VqzPy9U-7zMW-vVUGOajLUbL6Ny9eXOhO6Y1nMOaWgJCEKCZzG8X2z6WzXPFOA5MxzJ7Q-o8';
     if (!vapidKey?.trim()) {
       console.error('❌ VAPID_PUBLIC_KEY missing');
       return null;

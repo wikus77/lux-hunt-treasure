@@ -153,21 +153,18 @@ const SecuritySettings: React.FC = () => {
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/settings')}
-          className="text-white/70 hover:text-white hover:bg-white/5 p-2"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Indietro
-        </Button>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
           className="space-y-6"
         >
+          {/* Header */}
+          <div className="text-center space-y-2 mb-6">
+            <h1 className="text-2xl font-bold text-white font-orbitron">Sicurezza</h1>
+            <p className="text-white/70">Gestisci la sicurezza del tuo account</p>
+          </div>
           {/* Password Change */}
           <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
             <CardHeader>

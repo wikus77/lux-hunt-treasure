@@ -223,30 +223,22 @@ const AgentProfileSettings: React.FC = () => {
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/settings')}
-          className="text-white/70 hover:text-white hover:bg-white/5 p-2"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Indietro
-        </Button>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="max-w-4xl mx-auto space-y-6"
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6"
         >
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Profilo Agente</h1>
+          {/* Header */}
+          <div className="text-center space-y-2 mb-6">
+            <h1 className="text-2xl font-bold text-white font-orbitron">Profilo Agente</h1>
             <p className="text-white/70">Gestisci le informazioni del tuo profilo agente</p>
           </div>
 
-          <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
+          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
+              <CardTitle className="text-white font-orbitron flex items-center">
                 <User className="w-5 h-5 mr-2" />
                 Profilo Agente
               </CardTitle>
@@ -314,7 +306,7 @@ const AgentProfileSettings: React.FC = () => {
                   type="email"
                   value={user?.email || ''}
                   readOnly
-                  className="bg-gray-800/50 border-gray-600 text-white/70 cursor-not-allowed"
+                  className="bg-black/20 border-white/20 text-white/70 cursor-not-allowed"
                 />
               </div>
 
@@ -329,13 +321,13 @@ const AgentProfileSettings: React.FC = () => {
                     type="text"
                     value={user?.id || ''}
                     readOnly
-                    className="bg-gray-800/50 border-gray-600 text-white/70 cursor-not-allowed flex-1"
+                    className="bg-black/20 border-white/20 text-white/70 cursor-not-allowed flex-1"
                   />
                   <Button
                     onClick={copyUserId}
                     variant="outline"
                     size="icon"
-                    className="border-gray-600 text-white hover:bg-gray-700"
+                    className="border-white/20 text-white hover:bg-white/10"
                   >
                     <Copy className="w-4 h-4" />
                   </Button>
@@ -354,7 +346,7 @@ const AgentProfileSettings: React.FC = () => {
               <Button
                 onClick={handleSaveProfile}
                 disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
               >
                 {loading ? 'Salvataggio...' : 'Salva Modifiche'}
               </Button>
