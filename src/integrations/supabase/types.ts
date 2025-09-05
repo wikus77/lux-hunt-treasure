@@ -4316,6 +4316,15 @@ export type Database = {
         Args: { new_tier: string; target_user_id: string }
         Returns: undefined
       }
+      upsert_fcm_subscription: {
+        Args: {
+          p_device_info?: Json
+          p_platform: string
+          p_token: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       validate_buzz_user_id: {
         Args: { p_user_id: string }
         Returns: boolean
