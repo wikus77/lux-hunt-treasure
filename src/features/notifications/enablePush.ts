@@ -89,8 +89,7 @@ export const getFCMToken = async (): Promise<string | null> => {
     const registration = await registerServiceWorker();
     
     // Get token with VAPID key and service worker registration
-    const vapidKey = import.meta.env.VITE_FCM_VAPID_PUBLIC_KEY || 
-                    "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
+    const vapidKey = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
     
     const token = await getToken(messaging, {
       vapidKey,
@@ -121,6 +120,8 @@ export const saveFCMToken = async (token: string, userId: string): Promise<void>
   };
 
   try {
+    console.log('🔄 Saving FCM token to Supabase...', { userId, tokenPrefix: token.substring(0, 20), platform });
+    
     // Upsert token (insert or update if exists)
     const { error } = await supabase
       .from('fcm_subscriptions')
@@ -135,6 +136,7 @@ export const saveFCMToken = async (token: string, userId: string): Promise<void>
       });
 
     if (error) {
+      console.error('❌ Database error details:', error);
       throw error;
     }
 
