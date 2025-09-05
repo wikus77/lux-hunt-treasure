@@ -247,7 +247,7 @@ export async function enablePushNotifications(userId: string): Promise<PushEnabl
     }
 
     // 3. Request permission if not already granted
-    let permission = currentPermission;
+    let permission: NotificationPermission = currentPermission;
     if (permission === 'default') {
       console.log('🔔 [M1SSION FCM] Requesting notification permission...');
       permission = await Notification.requestPermission();
