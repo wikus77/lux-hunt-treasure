@@ -1,341 +1,172 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Push Notification Test Page - Production Only
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * M1SSION™ Push Notifications Test Page
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import React from 'react';
+import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
+import { PushNotificationToggle } from '@/components/PushNotificationToggle';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Bell, TestTube, Zap, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { isPushDisabled, disablePush, enablePush } from '@/utils/pushKillSwitch';
 
-interface PushTestState {
-  supported: boolean;
-  permission: NotificationPermission | null;
-  subscription: PushSubscription | null;
-  isIOS: boolean;
-  isPWA: boolean;
-  swRegistration: ServiceWorkerRegistration | null;
-}
-
-const VAPID_PUBLIC = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
-
-export default function PushTestPage() {
-  const [state, setState] = useState<PushTestState>({
-    supported: false,
-    permission: null,
-    subscription: null,
-    isIOS: false,
-    isPWA: false,
-    swRegistration: null
-  });
-  
-  const [loading, setLoading] = useState(false);
-  const [testPayload, setTestPayload] = useState({
-    title: 'M1SSION™ Test',
-    body: '🚀 Push notification test successful!',
-    url: '/'
-  });
-
-  // Feature detection
-  useEffect(() => {
-    const detect = async () => {
-      const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isIOS = /iphone|ipad|ipod/.test(userAgent);
-      const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                     (navigator as any).standalone === true;
-      
-      let swReg: ServiceWorkerRegistration | null = null;
-      let currentSub: PushSubscription | null = null;
-      
-      if (isSupported && !isPushDisabled()) {
-        try {
-          swReg = await navigator.serviceWorker.ready;
-          currentSub = await swReg.pushManager.getSubscription();
-        } catch (error) {
-          console.warn('[PUSH-TEST] SW ready failed:', error);
-        }
-      }
-
-      setState({
-        supported: isSupported,
-        permission: Notification.permission,
-        subscription: currentSub,
-        isIOS,
-        isPWA,
-        swRegistration: swReg
-      });
-    };
-
-    detect();
-  }, []);
-
-  // Convert VAPID key from base64url to Uint8Array
-  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
-  // Enable notifications
-  const enableNotifications = async () => {
-    if (isPushDisabled()) {
-      toast.error('Push disabled by kill switch');
-      return;
-    }
-
-    setLoading(true);
+const PushTestPage: React.FC = () => {
+  const handleTestPush = async () => {
     try {
-      // Request permission
-      const permission = await Notification.requestPermission();
+      toast.loading('Invio notifica di test...');
       
-      if (permission !== 'granted') {
-        toast.error('Permission denied');
-        return;
-      }
-
-      // Wait for service worker with timeout
-      if (!state.swRegistration) {
-        const swPromise = navigator.serviceWorker.ready;
-        const timeoutPromise = new Promise<never>((_, reject) => 
-          setTimeout(() => reject(new Error('SW timeout')), 8000)
-        );
-        
-        const registration = await Promise.race([swPromise, timeoutPromise]);
-        setState(prev => ({ ...prev, swRegistration: registration }));
-      }
-
-      // Subscribe to push
-      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC);
-      const subscription = await state.swRegistration!.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey
-      });
-
-      // Save to Supabase with UNIFIED payload format
-      const subscriptionJson = subscription.toJSON();
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.functions.invoke('push_subscribe', {
+      const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
-          subscription: subscriptionJson, // Complete subscription with endpoint and keys
-          user_id: user?.id || null,
-          client: 'test_page',
-          ua: navigator.userAgent,
-          platform: state.isIOS ? 'iOS' : 'desktop'
+          title: '🎯 Test M1SSION™',
+          body: 'Sistema di notifiche push funzionante!',
+          data: {
+            type: 'test',
+            timestamp: Date.now()
+          }
         }
       });
 
-      if (error) {
-        console.error('Save subscription error:', error);
-        toast.error('Failed to save subscription');
-      } else {
-        setState(prev => ({ 
-          ...prev, 
-          subscription, 
-          permission: 'granted' 
-        }));
-        toast.success('Notifications enabled successfully!');
-      }
-
+      if (error) throw error;
+      
+      toast.success('✅ Notifica di test inviata!');
     } catch (error) {
-      console.error('Enable notifications error:', error);
-      toast.error(`Failed to enable: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
+      console.error('Test push failed:', error);
+      toast.error('❌ Test fallito');
     }
   };
 
-  // Send test notification
-  const sendTestNotification = async () => {
-    if (!state.subscription) {
-      toast.error('No subscription available');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const subscriptionJson = state.subscription.toJSON();
-      const { data, error } = await supabase.functions.invoke('push_send', {
-        body: {
-          endpoint: subscriptionJson.endpoint,
-          payload: testPayload
-        }
-      });
-
-      if (error) {
-        console.error('Send test error:', error);
-        toast.error('Failed to send test notification');
-      } else {
-        console.log('Send test success:', data);
-        toast.success('Test notification sent! Check your device.');
-      }
-
-    } catch (error) {
-      console.error('Send test error:', error);
-      toast.error('Failed to send test notification');
-    } finally {
-      setLoading(false);
-    }
+  const getBrowserInfo = () => {
+    const ua = navigator.userAgent;
+    if (ua.includes('Chrome')) return 'Chrome';
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Safari')) return 'Safari';
+    if (ua.includes('Edge')) return 'Edge';
+    return 'Unknown';
   };
 
-  // Only show in production
-  if (!window.location.hostname.includes('m1ssion.eu') && !window.location.hostname.includes('m1ssion-pwa.pages.dev')) {
-    return (
-      <div className="container mx-auto p-4">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-muted-foreground">Push test page only available in production</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const getPlatformInfo = () => {
+    const platform = navigator.platform;
+    const ua = navigator.userAgent.toLowerCase();
+    
+    if (/ipad|iphone|ipod/.test(ua)) return 'iOS';
+    if (/android/.test(ua)) return 'Android';
+    if (platform.includes('Win')) return 'Windows';
+    if (platform.includes('Mac')) return 'macOS';
+    if (platform.includes('Linux')) return 'Linux';
+    return platform;
+  };
+
+  const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
 
   return (
-    <div className="container mx-auto p-4 space-y-6">
+    <div className="container mx-auto py-8 space-y-6">
+      <div className="text-center space-y-2">
+        <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
+          <Bell className="w-8 h-8" />
+          Push Notifications Test
+        </h1>
+        <p className="text-muted-foreground">
+          Sistema unificato di notifiche push M1SSION™
+        </p>
+      </div>
+
+      {/* Environment Info */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            🔔 Push Notification Test
-            {isPushDisabled() && <Badge variant="destructive">DISABLED</Badge>}
+            <Shield className="w-5 h-5" />
+            Informazioni Ambiente
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Status Display */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium">Browser Support</label>
-              <Badge variant={state.supported ? "default" : "destructive"}>
-                {state.supported ? "✅ Supported" : "❌ Not Supported"}
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Browser</div>
+              <Badge variant="outline">{getBrowserInfo()}</Badge>
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Piattaforma</div>
+              <Badge variant="outline">{getPlatformInfo()}</Badge>
+            </div>
+            <div className="space-y-1">
+              <div className="text-sm font-medium">PWA</div>
+              <Badge variant={isPWA ? "default" : "secondary"}>
+                {isPWA ? 'Sì' : 'No'}
               </Badge>
             </div>
-            
-            <div>
-              <label className="text-sm font-medium">Platform</label>
-              <Badge variant="outline">
-                {state.isIOS ? (state.isPWA ? "📱 iOS PWA" : "📱 iOS Web") : "🖥️ Desktop"}
-              </Badge>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Permission</label>
-              <Badge variant={
-                state.permission === 'granted' ? "default" : 
-                state.permission === 'denied' ? "destructive" : "secondary"
-              }>
-                {state.permission || "default"}
-              </Badge>
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Subscription</label>
-              <Badge variant={state.subscription ? "default" : "secondary"}>
-                {state.subscription ? "✅ Active" : "❌ None"}
+            <div className="space-y-1">
+              <div className="text-sm font-medium">Supporto</div>
+              <Badge variant={isSupported ? "default" : "destructive"}>
+                {isSupported ? 'Supportato' : 'Non supportato'}
               </Badge>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Kill Switch Controls */}
-          <div className="p-4 border rounded-lg">
-            <h3 className="font-medium mb-2">Kill Switch Controls</h3>
-            <div className="flex gap-2">
-              <Button 
-                size="sm" 
-                variant="destructive" 
-                onClick={disablePush}
-              >
-                Disable Push
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={enablePush}
-              >
-                Enable Push
-              </Button>
-            </div>
-          </div>
+      {/* Unified Push System */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Zap className="w-5 h-5" />
+            Sistema Unificato
+          </h2>
+          <UnifiedPushToggle />
+        </div>
 
-          {/* Enable Button */}
-          {state.supported && !state.subscription && !isPushDisabled() && (
-            <Button 
-              onClick={enableNotifications}
-              disabled={loading}
-              className="w-full"
-            >
-              {loading ? "Enabling..." : "🔔 Enable Notifications"}
-            </Button>
-          )}
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Sistema Legacy
+          </h2>
+          <PushNotificationToggle />
+        </div>
+      </div>
 
-          {/* Subscription JSON */}
-          {state.subscription && (
-            <div>
-              <label className="text-sm font-medium mb-2 block">Subscription JSON</label>
-              <Textarea
-                value={JSON.stringify(state.subscription.toJSON(), null, 2)}
-                readOnly
-                className="font-mono text-xs"
-                rows={8}
-              />
-            </div>
-          )}
+      {/* Test Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TestTube className="w-5 h-5" />
+            Test Notifiche
+          </CardTitle>
+          <CardDescription>
+            Invia una notifica di test per verificare il funzionamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button onClick={handleTestPush} className="w-full">
+            🚀 Invia Notifica di Test
+          </Button>
+        </CardContent>
+      </Card>
 
-          {/* Test Payload */}
-          {state.subscription && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Test Payload</label>
-              <Input
-                placeholder="Title"
-                value={testPayload.title}
-                onChange={(e) => setTestPayload(prev => ({ ...prev, title: e.target.value }))}
-              />
-              <Input
-                placeholder="Body"
-                value={testPayload.body}
-                onChange={(e) => setTestPayload(prev => ({ ...prev, body: e.target.value }))}
-              />
-              <Input
-                placeholder="URL"
-                value={testPayload.url}
-                onChange={(e) => setTestPayload(prev => ({ ...prev, url: e.target.value }))}
-              />
-              <Button 
-                onClick={sendTestNotification}
-                disabled={loading}
-                className="w-full"
-              >
-                {loading ? "Sending..." : "🚀 Send Test"}
-              </Button>
-            </div>
-          )}
-
-          {/* Debug Info */}
-          <details className="text-xs">
-            <summary className="cursor-pointer font-medium">Debug Info</summary>
-            <pre className="mt-2 p-2 bg-muted rounded text-xs overflow-auto">
-              {JSON.stringify({
-                userAgent: navigator.userAgent,
-                standalone: (navigator as any).standalone,
-                displayMode: window.matchMedia('(display-mode: standalone)').matches,
-                pushDisabled: isPushDisabled(),
-                vapidKey: VAPID_PUBLIC.substring(0, 20) + '...'
-              }, null, 2)}
-            </pre>
-          </details>
+      {/* Technical Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dettagli Tecnici</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <div><strong>User Agent:</strong> {navigator.userAgent}</div>
+          <div><strong>Language:</strong> {navigator.language}</div>
+          <div><strong>Platform:</strong> {navigator.platform}</div>
+          <div><strong>Service Worker:</strong> {'serviceWorker' in navigator ? 'Supportato' : 'Non supportato'}</div>
+          <div><strong>Push Manager:</strong> {'PushManager' in window ? 'Supportato' : 'Non supportato'}</div>
+          <div><strong>Notifications:</strong> {'Notification' in window ? Notification.permission : 'Non supportato'}</div>
         </CardContent>
       </Card>
     </div>
   );
-}
+};
+
+export default PushTestPage;
+
+/*
+ * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */

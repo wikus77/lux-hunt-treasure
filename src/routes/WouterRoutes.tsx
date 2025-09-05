@@ -236,6 +236,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/push-test">
             <PushTestPage />
           </Route>
+
+          {/* 🚀 UNIFIED PUSH TEST ROUTE */}
+          <Route path="/unified-push-test">
+            <GlobalLayout>
+              <PushTestPage />
+            </GlobalLayout>
+          </Route>
           
           <Route path="/push-health">
             <GlobalLayout>
