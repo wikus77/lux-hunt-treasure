@@ -131,7 +131,7 @@ export const saveFCMToken = async (token: string, userId: string): Promise<void>
         device_info: deviceInfo,
         is_active: true
       }, {
-        onConflict: 'token'
+        onConflict: 'user_id,token'
       });
 
     if (error) {
