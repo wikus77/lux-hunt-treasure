@@ -6,7 +6,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SignJWT, importJWK } from 'https://esm.sh/jose@5.8.0';
+import { SignJWT, importJWK } from 'npm:jose@5.8.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
