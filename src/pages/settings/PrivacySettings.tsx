@@ -122,15 +122,11 @@ const PrivacySettings: React.FC = () => {
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
         }}
       >
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/settings')}
-          className="mb-4 text-white/70 hover:text-white"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Indietro
-        </Button>
+        {/* Header */}
+        <div className="text-center space-y-2 mb-6">
+          <h1 className="text-2xl font-bold text-white font-orbitron">Privacy</h1>
+          <p className="text-white/70">Gestisci le tue preferenze sulla privacy</p>
+        </div>
 
         {/* Data Collection */}
         <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
