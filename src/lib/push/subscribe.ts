@@ -55,7 +55,7 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     console.log('✅ Service worker ready');
 
     // Get VAPID public key from environment (using hardcoded for now)
-    const vapidKey = 'BCoH5JZdPY3yMzF-Y9Hj1LMZi-kOhJqjuaGJAgtMRDDkmJAf1ELa4xALHaJ3L9vYa8d1rJZRJ1BYjBj1x_cOH1A';
+    const vapidKey = 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
     if (!vapidKey?.trim()) {
       console.error('❌ VAPID_PUBLIC_KEY missing');
       return null;
@@ -125,15 +125,11 @@ async function saveSubscriptionToDatabase(subscription: PushSubscription): Promi
     };
 
     // Call registration function
-    const { error } = await supabase.functions.invoke('push_register', {
+    const { error } = await supabase.functions.invoke('upsert_fcm_subscription', {
       body: {
-        subscription: {
-          endpoint: subscription.endpoint,
-          keys: {
-            p256dh: arrayBufferToBase64(subscription.getKey('p256dh')),
-            auth: arrayBufferToBase64(subscription.getKey('auth'))
-          }
-        },
+        user_id: session.user.id,
+        token: subscription.endpoint,
+        platform: 'desktop',
         device_info: deviceInfo
       }
     });

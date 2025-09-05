@@ -236,21 +236,30 @@ const AgentProfileSettings: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-4xl mx-auto space-y-6"
         >
-          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Profilo Agente</h1>
+            <p className="text-white/70">Gestisci le informazioni del tuo profilo agente</p>
+          </div>
+
+          <Card className="bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700">
             <CardHeader>
-              <CardTitle className="text-[#00D1FF] font-orbitron">Profilo Agente</CardTitle>
+              <CardTitle className="text-white flex items-center">
+                <User className="w-5 h-5 mr-2" />
+                Profilo Agente
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Avatar Section */}
               <div className="flex flex-col items-center space-y-4">
-                <Avatar className="w-24 h-24 border-2 border-[#00D1FF]/30">
+                <Avatar className="w-24 h-24 border-2 border-gray-600">
                   <AvatarImage 
                     src={profileImage || user?.user_metadata?.avatar_url} 
                     alt="Avatar agente" 
                   />
-                  <AvatarFallback className="bg-[#00D1FF]/20 text-[#00D1FF] text-xl font-bold">
+                  <AvatarFallback className="bg-gray-700 text-white text-xl font-bold">
                     {agentName?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || 'A'}
                   </AvatarFallback>
                 </Avatar>
@@ -259,7 +268,7 @@ const AgentProfileSettings: React.FC = () => {
                   <label htmlFor="avatar-upload" className="cursor-pointer">
                     <Button
                       variant="outline"
-                      className="border-[#00D1FF]/30 text-[#00D1FF] hover:bg-[#00D1FF]/10"
+                      className="border-gray-600 text-white hover:bg-gray-700"
                       asChild
                     >
                       <span>
@@ -290,7 +299,7 @@ const AgentProfileSettings: React.FC = () => {
                   type="text"
                   value={agentName}
                   onChange={(e) => setAgentName(e.target.value)}
-                  className="bg-black/20 border-white/20 text-white"
+                  className="bg-gray-800 border-gray-600 text-white"
                   placeholder="Inserisci il tuo nome agente"
                 />
               </div>
@@ -305,7 +314,7 @@ const AgentProfileSettings: React.FC = () => {
                   type="email"
                   value={user?.email || ''}
                   readOnly
-                  className="bg-black/10 border-white/10 text-white/70 cursor-not-allowed"
+                  className="bg-gray-800/50 border-gray-600 text-white/70 cursor-not-allowed"
                 />
               </div>
 
@@ -320,13 +329,13 @@ const AgentProfileSettings: React.FC = () => {
                     type="text"
                     value={user?.id || ''}
                     readOnly
-                    className="bg-black/10 border-white/10 text-white/70 cursor-not-allowed flex-1"
+                    className="bg-gray-800/50 border-gray-600 text-white/70 cursor-not-allowed flex-1"
                   />
                   <Button
                     onClick={copyUserId}
                     variant="outline"
                     size="icon"
-                    className="border-[#00D1FF]/30 text-[#00D1FF] hover:bg-[#00D1FF]/10"
+                    className="border-gray-600 text-white hover:bg-gray-700"
                   >
                     <Copy className="w-4 h-4" />
                   </Button>
@@ -345,7 +354,7 @@ const AgentProfileSettings: React.FC = () => {
               <Button
                 onClick={handleSaveProfile}
                 disabled={loading}
-                className="w-full bg-[#00D1FF] hover:bg-[#00B8E6] text-black font-semibold"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
               >
                 {loading ? 'Salvataggio...' : 'Salva Modifiche'}
               </Button>
