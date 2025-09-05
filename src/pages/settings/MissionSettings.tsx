@@ -1,302 +1,133 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/use-auth';
-import { useToast } from '@/hooks/use-toast';
-import { useWouterNavigation } from '@/hooks/useWouterNavigation';
-import { useProfileImage } from '@/hooks/useProfileImage';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Target, Trophy, Crown, RotateCcw, ArrowLeft, History, CheckCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { 
+  Target, 
+  Clock, 
+  MapPin, 
+  TrendingUp, 
+  Award,
+  ArrowLeft,
+  Calendar,
+  Users,
+  Zap
+} from 'lucide-react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { useLocation } from 'wouter';
 
-interface Mission {
-  id: string;
-  title: string;
-  status: string;
-  publication_date: string;
-}
-
-interface UserClue {
-  clue_id: string;
-  title_it: string;
-  created_at: string;
-  clue_type: string;
-}
-
-const MissionSettings: React.FC = () => {
-  const { user } = useAuth();
-  const userRole = 'developer'; // Temporary for demo
-  const { toast } = useToast();
-  const { navigate } = useWouterNavigation();
-  const { profileImage } = useProfileImage();
-  const [loading, setLoading] = useState(false);
-  const [currentMission, setCurrentMission] = useState<Mission | null>(null);
-  const [completedClues, setCompletedClues] = useState<UserClue[]>([]);
-
-  useEffect(() => {
-    loadMissionData();
-  }, [user]);
-
-  const loadMissionData = async () => {
-    if (!user) return;
-
-    try {
-      // Load current mission
-      const { data: missions } = await supabase
-        .from('missions')
-        .select('*')
-        .eq('status', 'active')
-        .order('publication_date', { ascending: false })
-        .limit(1);
-
-      if (missions && missions.length > 0) {
-        setCurrentMission(missions[0]);
-      }
-
-      // Load completed clues
-      const { data: clues } = await supabase
-        .from('user_clues')
-        .select('clue_id, title_it, created_at, clue_type')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      setCompletedClues(clues || []);
-    } catch (error) {
-      console.error('Error loading mission data:', error);
-    }
-  };
-
-  const handleResetProgress = async () => {
-    if (!user || userRole !== 'developer') return;
-
-    setLoading(true);
-    try {
-      // Reset user progress tables
-      await Promise.all([
-        supabase.from('user_clues').delete().eq('user_id', user.id),
-        supabase.from('user_map_areas').delete().eq('user_id', user.id),
-        supabase.from('user_buzz_counter').delete().eq('user_id', user.id),
-        supabase.from('user_buzz_map').delete().eq('user_id', user.id),
-        supabase.from('user_buzz_map_counter').delete().eq('user_id', user.id)
-      ]);
-
-      // Reload data
-      await loadMissionData();
-
-      toast({
-        title: "✅ Progressi azzerati",
-        description: "Tutti i progressi dell'utente sono stati azzerati con successo."
-      });
-    } catch (error) {
-      console.error('Reset progress error:', error);
-      toast({
-        title: "❌ Errore reset",
-        description: "Impossibile azzerare i progressi. Riprova.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getMissionStatusBadge = (status: string) => {
-    const statusConfig = {
-      'active': { label: 'Attiva', color: 'bg-green-600' },
-      'completed': { label: 'Completata', color: 'bg-blue-600' },
-      'draft': { label: 'Bozza', color: 'bg-gray-600' }
-    };
-    
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
-    
-    return (
-      <Badge className={`${config.color} text-white`}>
-        {config.label}
-      </Badge>
-    );
-  };
+const MissionSettings = () => {
+  const [, setLocation] = useLocation();
 
   return (
-    <div className="min-h-screen">
-      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+      <UnifiedHeader />
       
-      <div 
-        className="px-4 space-y-6"
-        style={{ 
-          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
-        {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/settings')}
-          className="text-white/70 hover:text-white hover:bg-white/5 p-2"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          Indietro
-        </Button>
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header */}
+          <div className="flex items-center space-x-4 mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setLocation('/settings')}
+              className="p-2 hover:bg-background/50"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                Missioni
+              </h1>
+              <p className="text-muted-foreground">Configurazioni e progressi</p>
+            </div>
+          </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="space-y-6"
-        >
           {/* Current Mission */}
-          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+          <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
             <CardHeader>
-              <CardTitle className="text-white font-orbitron flex items-center">
-                <Target className="w-5 h-5 mr-2" />
-                Missione Attuale
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
+                    <Target className="h-6 w-6 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">Missione Corrente</CardTitle>
+                    <p className="text-sm text-muted-foreground/80">Gennaio 2025</p>
+                  </div>
+                </div>
+                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                  Attiva
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentMission ? (
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-white font-semibold">{currentMission.title}</h3>
-                    {getMissionStatusBadge(currentMission.status)}
-                  </div>
-                  <p className="text-white/70 text-sm">
-                    Pubblicata il: {format(new Date(currentMission.publication_date), 'dd/MM/yyyy')}
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 pt-2">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-[#00D1FF]">{completedClues.length}</div>
-                      <div className="text-white/70 text-sm">Indizi Completati</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-[#F059FF]">
-                        {completedClues.filter(c => c.clue_type === 'premium').length}
-                      </div>
-                      <div className="text-white/70 text-sm">Indizi Premium</div>
-                    </div>
-                  </div>
+              <div className="glass-card p-4 bg-background/20 border-0">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-muted-foreground/80">Progresso Generale</span>
+                  <span className="font-bold text-primary">45%</span>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-white/70">Nessuna missione attiva al momento</p>
+                <div className="w-full bg-muted/30 rounded-full h-3">
+                  <div className="bg-gradient-to-r from-primary to-primary/70 h-3 rounded-full transition-all duration-500" style={{ width: '45%' }} />
                 </div>
-              )}
+              </div>
             </CardContent>
           </Card>
 
-          {/* Developer Reset */}
-          {userRole === 'developer' && (
-            <Card className="bg-black/40 border-red-500/20 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="text-white font-orbitron flex items-center">
-                  <RotateCcw className="w-5 h-5 mr-2" />
-                  Reset Progressi (Sviluppatore)
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-white/70 text-sm">
-                  ⚠️ Questa funzione azzera tutti i progressi dell'utente inclusi indizi, mappe e contatori.
-                </p>
-
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="destructive"
-                      className="w-full bg-red-600 hover:bg-red-700"
-                      disabled={loading}
-                    >
-                      Azzera Tutti i Progressi
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-black/90 border-red-500/20">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-white">Conferma Reset Progressi</AlertDialogTitle>
-                      <AlertDialogDescription className="text-white/70">
-                        Questa azione è irreversibile. Tutti i progressi dell'utente verranno eliminati permanentemente.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-white/10 text-white border-white/20">
-                        Annulla
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        onClick={handleResetProgress}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        Conferma Reset
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+          {/* Mission Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+              <CardContent className="p-6 text-center">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-blue-400/10 w-fit mx-auto mb-3">
+                  <TrendingUp className="h-8 w-8 text-blue-400" />
+                </div>
+                <p className="text-3xl font-bold text-foreground mb-1">7</p>
+                <p className="text-sm text-muted-foreground/80">Completate</p>
               </CardContent>
             </Card>
-          )}
+            
+            <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+              <CardContent className="p-6 text-center">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-yellow-500/20 to-yellow-400/10 w-fit mx-auto mb-3">
+                  <Award className="h-8 w-8 text-yellow-400" />
+                </div>
+                <p className="text-3xl font-bold text-foreground mb-1">3</p>
+                <p className="text-sm text-muted-foreground/80">Premi</p>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Completed Clues History */}
-          <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
+          {/* Quick Actions */}
+          <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
             <CardHeader>
-              <CardTitle className="text-white font-orbitron flex items-center">
-                <History className="w-5 h-5 mr-2" />
-                Cronologia Indizi
+              <CardTitle className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent flex items-center">
+                <Zap className="h-5 w-5 mr-2 text-orange-400" />
+                Azioni Rapide
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {completedClues.length > 0 ? (
-                <div className="space-y-3">
-                  {completedClues.map((clue, index) => (
-                    <div
-                      key={clue.clue_id}
-                      className="flex items-center justify-between p-3 bg-black/20 rounded-lg border border-white/10"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-4 h-4 text-green-400" />
-                        <div>
-                          <p className="text-white font-medium">{clue.title_it}</p>
-                          <p className="text-white/50 text-xs">{format(new Date(clue.created_at), 'dd/MM/yyyy')}</p>
-                        </div>
-                      </div>
-                      {clue.clue_type === 'premium' && (
-                        <Badge className="bg-purple-600 text-white text-xs">
-                          Premium
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-white/70">Nessun indizio completato ancora</p>
-                </div>
-              )}
+            <CardContent className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start bg-background/50 border-primary/30 hover:bg-primary/10"
+              >
+                <MapPin className="h-4 w-4 mr-2" />
+                Visualizza Mappa Missione
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                className="w-full justify-start bg-background/50 border-primary/30 hover:bg-primary/10"
+              >
+                <Clock className="h-4 w-4 mr-2" />
+                Cronometro Missione
+              </Button>
             </CardContent>
           </Card>
-        </motion.div>
-      </div>
+        </div>
+      </main>
 
-      {/* Bottom Navigation */}
-      <div 
-        id="settings-bottom-nav-container"
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          width: '100vw',
-          zIndex: 10000,
-          isolation: 'isolate',
-          transform: 'translateZ(0)',
-          willChange: 'transform',
-          display: 'block',
-          visibility: 'visible',
-          opacity: 1
-        } as React.CSSProperties}
-      >
-        <BottomNavigation />
-      </div>
+      <BottomNavigation />
     </div>
   );
 };

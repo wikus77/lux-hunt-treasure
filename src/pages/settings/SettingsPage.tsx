@@ -1,200 +1,247 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState, useEffect } from 'react';
-import { useParams, useLocation } from 'wouter';
-import { motion } from 'framer-motion';
-import { useAuth } from '@/hooks/use-auth';
-import { useProfileImage } from '@/hooks/useProfileImage';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { 
+  User, Shield, Target, Bell, Lock, 
+  FileText, Info, MapPin, Stethoscope, HelpCircle,
+  ChevronRight
+} from 'lucide-react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import { User, Shield, Target, Bell, CreditCard, FileText, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import AgentProfileSettings from './AgentProfileSettings';
-import SecuritySettings from './SecuritySettings';
-import MissionSettings from './MissionSettings';
-import NotificationsSettings from './NotificationsSettings';
-import PaymentSettings from './PaymentSettings';
-import LegalSettings from './LegalSettings';
-import PrivacySettings from '@/components/settings/PrivacySettings';
-import AppInfoSettings from './AppInfoSettings';
-import { useGeolocation } from '@/hooks/useGeolocation';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/use-auth';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
-type SettingsSection = 'profile' | 'security' | 'mission' | 'notifications' | 'privacy' | 'legal' | 'info';
+type SettingsSection = 
+  | 'agent-profile' 
+  | 'security'
+  | 'mission'
+  | 'notifications'
+  | 'privacy'
+  | 'legal'
+  | 'app-info'
+  | 'privacy-permissions'
+  | 'diagnostics'
+  | 'support';
 
-const SettingsPage: React.FC = () => {
+const SettingsPage = () => {
+  const [, setLocation] = useLocation();
   const { user } = useAuth();
-  const { profileImage } = useProfileImage();
-  const [location, navigate] = useLocation();
-  const [activeSection, setActiveSection] = useState<SettingsSection>('profile');
+  const [geolocationEnabled, setGeolocationEnabled] = useState(false);
+  const [sessionStatus, setSessionStatus] = useState<string>('Verifica...');
   const geo = useGeolocation();
+  
+  const supabaseProjectId = "vkjrqirvdvjbemsfzxof";
 
-  // Handle URL-based section routing
   useEffect(() => {
-    const path = location;
-    if (path.includes('/settings/')) {
-      const section = path.split('/settings/')[1] as SettingsSection;
-      const validSections: SettingsSection[] = ['profile', 'security', 'mission', 'notifications', 'privacy', 'legal', 'info'];
-      if (validSections.includes(section)) {
-        setActiveSection(section);
-      }
-    }
-  }, [location]);
+    checkGeolocation();
+    checkSession();
+  }, []);
 
-  // Handle section change with URL update
-  const handleSectionChange = (section: SettingsSection) => {
-    setActiveSection(section);
-    navigate(`/settings/${section}`);
+  const checkGeolocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        () => setGeolocationEnabled(true),
+        () => setGeolocationEnabled(false)
+      );
+    }
   };
 
-  const settingsSections = [
-    { 
-      id: 'profile' as SettingsSection, 
-      label: 'Profilo Agente', 
+  const checkSession = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSessionStatus(session ? 'Attiva' : 'Non attiva');
+    } catch (error) {
+      setSessionStatus('Errore');
+    }
+  };
+
+  const handleSectionChange = (sectionId: string) => {
+    setLocation(`/settings/${sectionId}`);
+  };
+
+  const sections = [
+    {
+      id: 'agent-profile',
+      label: 'Profilo Agente',
+      description: 'Avatar, nome e informazioni agente',
       icon: User,
-      description: 'Avatar, nome e informazioni agente'
     },
-    { 
-      id: 'security' as SettingsSection, 
-      label: 'Sicurezza', 
+    {
+      id: 'security',
+      label: 'Sicurezza',
+      description: 'Password e codici di emergenza',
       icon: Shield,
-      description: 'Password e codici di emergenza'
     },
-    { 
-      id: 'mission' as SettingsSection, 
-      label: 'Missione', 
+    {
+      id: 'mission',
+      label: 'Missione',
+      description: 'Stato missioni e progressi',
       icon: Target,
-      description: 'Stato missioni e progressi'
     },
-    { 
-      id: 'notifications' as SettingsSection, 
-      label: 'Notifiche', 
+    {
+      id: 'notifications',
+      label: 'Notifiche',
+      description: 'Preferenze e alert',
       icon: Bell,
-      description: 'Preferenze e alert'
     },
-    { 
-      id: 'privacy' as SettingsSection, 
-      label: 'Privacy', 
-      icon: Shield,
-      description: 'Gestione consensi e cookie'
+    {
+      id: 'privacy',
+      label: 'Privacy',
+      description: 'Gestione consensi e cookie',
+      icon: Lock,
     },
-    { 
-      id: 'legal' as SettingsSection, 
-      label: 'Legale', 
+    {
+      id: 'legal',
+      label: 'Legale',
+      description: 'Termini, privacy e account',
       icon: FileText,
-      description: 'Termini, privacy e account'
     },
-    { 
-      id: 'info' as SettingsSection, 
-      label: 'Info App', 
+    {
+      id: 'app-info',
+      label: 'Info App',
+      description: 'Versione, supporto e credits',
       icon: Info,
-      description: 'Versione, supporto e credits'
     },
   ];
 
-return (
-    <div className="min-h-screen">
-      <UnifiedHeader profileImage={profileImage || user?.user_metadata?.avatar_url} />
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+      <UnifiedHeader />
       
-      <div 
-        className="px-4 space-y-6"
-        style={{ 
-          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-        }}
-      >
-        {/* Settings Navigation - Solo navigazione principale */}
-        <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-white font-orbitron">Impostazioni</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {settingsSections.map((section) => {
-              const IconComponent = section.icon;
-              
-              return (
-                <Button
-                  key={section.id}
-                  variant="ghost"
-                  onClick={() => navigate(`/settings/${section.id}`)}
-                  className="w-full justify-start p-4 h-auto text-white/70 hover:text-white hover:bg-white/5"
-                >
-                  <div className="flex items-center space-x-3">
-                    <IconComponent className="w-5 h-5" />
-                    <div className="text-left">
-                      <div className="font-medium">{section.label}</div>
-                      <div className="text-xs text-white/50">{section.description}</div>
-                    </div>
-                  </div>
-                </Button>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Privacy & Permessi */}
-        <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm mt-6">
-          <CardHeader>
-            <CardTitle className="text-white font-orbitron">Privacy & Permessi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between py-2">
-              <div>
-                <div className="font-medium text-white">Geolocalizzazione</div>
-                <div className="text-xs text-white/60">
-                  {geo.enabled ? (geo.status==='granted' ? 'Attiva (granted)' : 'Attiva (in attesa permesso)') : 'Disattivata'}
-                </div>
-              </div>
-              <button
-                onClick={geo.enabled ? geo.disable : geo.enable}
-                className={`px-4 py-2 rounded-full ${geo.enabled ? 'bg-emerald-500' : 'bg-zinc-700'}`}>
-                {geo.enabled ? 'Disattiva' : 'Attiva'}
-              </button>
+      <main className="pt-16 pb-20 px-4">
+        <div className="max-w-lg mx-auto space-y-6">
+          {/* Header Section */}
+          <div className="text-center space-y-2 mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 mb-4">
+              <User className="h-8 w-8 text-primary" />
             </div>
-            {geo.enabled && geo.status==='denied' && (
-              <p className="text-xs mt-2 text-white/70">Permessi negati. Apri le impostazioni del browser/sistema e consenti l’accesso alla posizione.</p>
-            )}
-          </CardContent>
-        </Card>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Impostazioni
+            </h1>
+            <p className="text-muted-foreground text-lg">Configura la tua esperienza M1SSION</p>
+          </div>
 
-        {/* Diagnostica */}
-        <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm mt-6">
-          <CardHeader>
-            <CardTitle className="text-white font-orbitron">Diagnostica</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="text-xs whitespace-pre-wrap text-white/80">{JSON.stringify({
-  SUPABASE_URL: true,
-  SUPABASE_ANON_KEY: true,
-  PROJECT_ID: "vkjrqirvdvjbemsfzxof"
-}, null, 2)}</pre>
-            <Button className="mt-2" variant="secondary" onClick={async()=>{ const {data:{session}}=await supabase.auth.getSession(); alert(session?`Logged: ${session.user.id}`:'Non loggato'); }}>
-              Verifica sessione
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+          {/* Settings Cards */}
+          <div className="space-y-3">
+            {sections.map((section) => (
+              <Card 
+                key={section.id} 
+                className="glass-card cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg border-0 bg-card/50 backdrop-blur-md"
+                onClick={() => handleSectionChange(section.id)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
+                        <section.icon className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-foreground text-lg">{section.label}</h3>
+                        <p className="text-sm text-muted-foreground/80">{section.description}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-      {/* Bottom Navigation - Uniform positioning like Home */}
-      <div 
-        id="mission-bottom-nav-container"
-        style={{ 
-          position: 'fixed', 
-          bottom: 0, 
-          left: 0, 
-          right: 0, 
-          width: '100vw',
-          zIndex: 10000,
-          isolation: 'isolate',
-          transform: 'translateZ(0)',
-          willChange: 'transform',
-          display: 'block',
-          visibility: 'visible',
-          opacity: 1
-        } as React.CSSProperties}
-      >
-        <BottomNavigation />
-      </div>
+          {/* Privacy & Permissions Section */}
+          <div className="space-y-4 mt-8">
+            <Card className="glass-card border-0 bg-card/40 backdrop-blur-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  Privacy & Permessi
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="glass-card p-4 border-0 bg-background/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-blue-500/20">
+                        <MapPin className="h-5 w-5 text-blue-400" />
+                      </div>
+                      <span className="font-medium text-foreground">Geolocalizzazione</span>
+                    </div>
+                    <Badge 
+                      variant={geolocationEnabled ? "default" : "secondary"}
+                      className={geolocationEnabled ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}
+                    >
+                      {geolocationEnabled ? "Attiva" : "Disattiva"}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground/80 mb-3">
+                    Permetti l'accesso alla posizione per le funzionalità di missione
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={checkGeolocation}
+                    className="w-full bg-background/50 border-primary/30 hover:bg-primary/10"
+                  >
+                    Verifica Permessi
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Diagnostics Section */}
+          <div className="space-y-4">
+            <Card className="glass-card border-0 bg-card/40 backdrop-blur-md">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                  Diagnostica
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="glass-card p-4 border-0 bg-background/20 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-green-500/20">
+                        <Stethoscope className="h-5 w-5 text-green-400" />
+                      </div>
+                      <span className="font-medium text-foreground">Info Supabase</span>
+                    </div>
+                    <Badge variant="outline" className="border-green-500/30 text-green-400">
+                      ID: {supabaseProjectId.slice(0, 8)}...
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground/80">Stato Sessione:</span>
+                      <Badge 
+                        variant={sessionStatus === 'Attiva' ? "default" : "destructive"}
+                        className={sessionStatus === 'Attiva' ? "bg-green-500/20 text-green-400 border-green-500/30" : ""}
+                      >
+                        {sessionStatus}
+                      </Badge>
+                    </div>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={checkSession}
+                      className="w-full bg-background/50 border-green-500/30 hover:bg-green-500/10"
+                    >
+                      Verifica Sessione
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+
+      <BottomNavigation />
     </div>
   );
 };
