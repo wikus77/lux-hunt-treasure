@@ -36,6 +36,7 @@ import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 import PushTest from "@/pages/debug/PushTest";
+import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
@@ -250,6 +251,11 @@ const WouterRoutes: React.FC = () => {
           {/* 🔧 DEBUG PUSH TEST ROUTE */}
           <Route path="/debug/pushtest">
             <PushTest />
+          </Route>
+
+          {/* 🩺 PUSH DIAGNOSTIC ROUTE - BREAK-GLASS MODE */}
+          <Route path="/debug/push">
+            <GlobalLayout><PushDiagnostic /></GlobalLayout>
           </Route>
           
           {/* 🔧 PUSH DEBUG CONSOLE */}
