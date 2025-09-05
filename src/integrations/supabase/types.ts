@@ -916,6 +916,39 @@ export type Database = {
         }
         Relationships: []
       }
+      fcm_subscriptions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          id: string
+          is_active: boolean | null
+          platform: string | null
+          token: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          is_active?: boolean | null
+          platform?: string | null
+          token: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          id?: string
+          is_active?: boolean | null
+          platform?: string | null
+          token?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       fcm_tokens: {
         Row: {
           created_at: string | null
