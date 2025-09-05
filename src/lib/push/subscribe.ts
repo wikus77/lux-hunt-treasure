@@ -50,11 +50,15 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
   }
 
   try {
+    console.log('🔧 [ensureWebPushSubscription] Starting...');
+    
     // Ensure service worker is ready
+    console.log('🔧 [ensureWebPushSubscription] Checking service worker...');
     const registration = await navigator.serviceWorker.ready;
     console.log('✅ Service worker ready');
 
     // Get VAPID public key - use the correct one that works with the backend
+    console.log('🔧 [ensureWebPushSubscription] Setting up VAPID key...');
     const vapidKey = 'BLT_uexaFBpPEX-VqzPy9U-7zMW-vVUGOajLUbL6Ny9eXOhO6Y1nMOaWgJCEKCZzG8X2z6WzXPFOA5MxzJ7Q-o8';
     if (!vapidKey?.trim()) {
       console.error('❌ VAPID_PUBLIC_KEY missing');
@@ -62,10 +66,12 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
     }
 
     // Convert VAPID key to Uint8Array
+    console.log('🔧 [ensureWebPushSubscription] Converting VAPID key...');
     const applicationServerKey = urlBase64ToUint8Array(vapidKey.trim());
     console.log('🔑 VAPID key converted successfully');
 
     // Check for existing subscription
+    console.log('🔧 [ensureWebPushSubscription] Checking existing subscription...');
     let subscription = await registration.pushManager.getSubscription();
     
     if (!subscription) {
@@ -78,25 +84,35 @@ export async function ensureWebPushSubscription(): Promise<PushSubscription | nu
       });
       
       console.log('✅ Push subscription created');
+      console.log('📝 Subscription endpoint:', subscription.endpoint);
     } else {
       console.log('✅ Using existing push subscription');
+      console.log('📝 Existing endpoint:', subscription.endpoint);
     }
 
     // Register with our backend (only if authenticated)
+    console.log('🔧 [ensureWebPushSubscription] Checking authentication...');
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
+      console.log('✅ User authenticated, saving to database...');
       await saveSubscriptionToDatabase(subscription);
       
       // Mark as bound for this session
       sessionStorage.setItem(PUSH_BOUND_KEY, '1');
       console.log('✅ Push subscription bound for session');
     } else {
-      console.log('⚠️ User not authenticated - subscription not saved to backend');
+      console.log('⚠️ User not authenticated, subscription not saved to database');
     }
 
+    console.log('✅ [ensureWebPushSubscription] Process completed successfully');
     return subscription;
+
   } catch (error) {
-    console.error('❌ Web Push subscription failed:', error);
+    console.error('❌ [ensureWebPushSubscription] Failed:', error);
+    if (error instanceof Error) {
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+    }
     return null;
   }
 }

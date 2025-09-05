@@ -161,14 +161,29 @@ export class UnifiedPushManager {
       // Desktop: Use Web Push API directly (no FCM to avoid projectId error)
       console.log('🖥️ [Desktop] Using Web Push API...');
 
-      const webPushSubscription = await ensureWebPushSubscription();
+      // Add detailed logging for debugging
+      console.log('🔧 [Desktop] Checking service worker readiness...');
+      if (!('serviceWorker' in navigator)) {
+        throw new Error('Service worker not supported');
+      }
       
-      return {
-        type: 'web_push',
+      console.log('🔧 [Desktop] Getting service worker registration...');
+      const registration = await navigator.serviceWorker.ready;
+      console.log('✅ [Desktop] Service worker ready:', registration);
+
+      console.log('🔧 [Desktop] Calling ensureWebPushSubscription...');
+      const webPushSubscription = await ensureWebPushSubscription();
+      console.log('📝 [Desktop] Web Push subscription result:', webPushSubscription);
+      
+      const result = {
+        type: 'web_push' as const,
         subscription: webPushSubscription,
-        platform: 'desktop',
+        platform: 'desktop' as const,
         success: webPushSubscription !== null
       };
+      
+      console.log('✅ [Desktop] Final result:', result);
+      return result;
 
     } catch (error) {
       console.error('❌ [Desktop] Subscription failed:', error);
