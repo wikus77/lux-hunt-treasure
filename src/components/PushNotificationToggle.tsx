@@ -23,18 +23,27 @@ export const PushNotificationToggle = () => {
   const isIOSPWA = isIOS && isPWA;
 
   const handleToggle = async () => {
-    if (!isSubscribed) {
-      // Request permission first if needed
-      if (permission !== 'granted') {
-        const granted = await requestPermission();
-        if (!granted) return;
-      }
+    try {
+      console.debug('[M1SSION FCM] Toggle called:', { isSubscribed, permission });
       
-      // Subscribe to notifications
-      await subscribe();
-    } else {
-      // Unsubscribe
-      await unsubscribe();
+      if (!isSubscribed) {
+        // Request permission first if needed
+        if (permission !== 'granted') {
+          const granted = await requestPermission();
+          if (!granted) return;
+        }
+        
+        // Subscribe to notifications using new FCM system
+        const result = await subscribe();
+        console.debug('[M1SSION FCM] Subscribe result:', result);
+      } else {
+        // Unsubscribe
+        const result = await unsubscribe();
+        console.debug('[M1SSION FCM] Unsubscribe result:', result);
+      }
+    } catch (error: any) {
+      console.error('[M1SSION FCM] Toggle error:', error);
+      // Error handling is done in the hook
     }
   };
 

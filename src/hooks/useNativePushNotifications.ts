@@ -65,7 +65,14 @@ export const useNativePushNotifications = () => {
         platform: 'web'
       });
     }
-  }, [platform, androidPush, iosPush]);
+  }, [
+    platform,
+    // FIXED: Only depend on primitive values to prevent infinite loops
+    androidPush.isSupported, androidPush.isRegistered, androidPush.token, 
+    androidPush.permission, androidPush.isLoading, androidPush.error,
+    iosPush.isSupported, iosPush.isRegistered, iosPush.token,
+    iosPush.permission, iosPush.isLoading, iosPush.error
+  ]);
 
   const requestPermissionAndRegister = async () => {
     if (platform === 'android') {

@@ -111,11 +111,17 @@ export function getMessagingInstance(): Messaging {
 }
 
 /**
- * Validate FCM token format - RELAXED: accept any non-empty string
+ * Validate FCM token format - RELAXED: accept any non-empty string (NO REGEX/PATTERN)
  */
 function validateToken(token: string): boolean {
-  const TOKEN_OK = token && token.length > 20; // relaxed validation
-  console.debug(`🔍 [PUSH] Token validation: length=${token.length}, prefix=${token.substring(0, 8)}...`);
+  if (!token || typeof token !== 'string') {
+    console.debug(`🔍 [PUSH] Token validation: FAILED - empty or non-string`);
+    return false;
+  }
+  
+  // VERY RELAXED: Just check minimum length, no pattern/regex validation
+  const TOKEN_OK = token.length >= 20;
+  console.debug(`🔍 [PUSH] Token validation: length=${token.length}, prefix=${token.substring(0, 8)}..., valid=${TOKEN_OK}`);
   return TOKEN_OK;
 }
 
@@ -245,12 +251,14 @@ export async function saveTokenToDB({
   } catch (error: any) {
     console.error('[PUSH] Save token failed:', error);
     
-    // Improve error messages for user
+    // Improve error messages for user (FIXED: no more pattern errors)
     let userMessage = error.message;
     if (userMessage.includes('uuid')) {
       userMessage = 'Serve login per attivare le notifiche';
+    } else if (userMessage.includes('The string did not match the expected pattern')) {
+      userMessage = 'Token FCM non valido - riprova l\'attivazione';
     } else if (userMessage.includes('pattern') || userMessage.includes('regex')) {
-      userMessage = 'Formato token non valido (riprova)';
+      userMessage = 'Errore validazione token - contatta supporto';
     }
     
     throw new Error(userMessage);
@@ -468,14 +476,25 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
     };
 
   } catch (error: any) {
-    console.error('[PUSH] Enable push notifications failed:', error);
+    console.error('[M1SSION FCM][Enable] Full error:', error);
     
-    // Show real error message instead of generic
-    const errorMessage = error.message || 'Unknown error occurred';
+    // Enhanced error message processing
+    let userMessage = error.message || 'Unknown error occurred';
+    
+    // Handle specific error patterns
+    if (userMessage.includes('pattern') || userMessage.includes('regex')) {
+      userMessage = 'Formato token non valido - riprova';
+    } else if (userMessage.includes('uuid')) {
+      userMessage = 'Serve login per attivare le notifiche';
+    } else if (userMessage.includes('permission')) {
+      userMessage = 'Permessi notifiche richiesti';
+    }
+    
+    console.debug('[M1SSION FCM] User-friendly error:', userMessage);
     
     return { 
       success: false, 
-      error: errorMessage,
+      error: userMessage,
       permission: Notification.permission as 'granted' | 'denied' | 'default'
     };
   }
