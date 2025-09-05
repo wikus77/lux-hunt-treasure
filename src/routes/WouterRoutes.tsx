@@ -16,8 +16,8 @@ import LandingPage from "@/pages/LandingPage";
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
-import IntelligencePage from "@/pages/IntelligencePage";
-import HallOfWinnersPage from "@/pages/HallOfWinnersPage";
+import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
+import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
 import SettingsPage from "@/pages/settings/SettingsPage";
@@ -128,13 +128,13 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/intelligence">
             <ProtectedRoute>
-              <GlobalLayout><IntelligencePage /></GlobalLayout>
+              <GlobalLayout><IntelligenceStyledPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
           <Route path="/leaderboard">
             <ProtectedRoute>
-              <GlobalLayout><HallOfWinnersPage /></GlobalLayout>
+              <GlobalLayout><HallOfWinnersStyledPage /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
