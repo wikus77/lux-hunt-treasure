@@ -8,6 +8,7 @@ import { useUnifiedPush } from '@/hooks/useUnifiedPush';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { looksLikeWebPushEndpoint, toDisplayableWebPush } from '@/lib/push/webpush';
+import { detectPlatform } from '@/lib/push/types';
 
 const PushDebugPanel: React.FC = () => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ const PushDebugPanel: React.FC = () => {
   } = useUnifiedPush();
   
   const [testLoading, setTestLoading] = useState(false);
+  const platform = detectPlatform();
 
   const handleTestPush = async () => {
     if (!isSubscribed) {
@@ -117,6 +119,27 @@ const PushDebugPanel: React.FC = () => {
             </div>
             
             <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">SW Ready:</span>
+              <Badge variant={getStatusColor(isSupported)}>
+                {isSupported ? 'Yes' : 'No'}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">PWA:</span>
+              <Badge variant={platform.isPWA ? 'default' : 'secondary'}>
+                {platform.isPWA ? 'Yes' : 'No'}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">Platform:</span>
+              <Badge variant="outline">
+                {platform.platform.toUpperCase()}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
               <span className="text-white/70 text-sm">Subscribed:</span>
               <Badge variant={getStatusColor(isSubscribed)}>
                 {isSubscribed ? 'Active' : 'Inactive'}
@@ -128,42 +151,48 @@ const PushDebugPanel: React.FC = () => {
             {isSubscribed && (
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Type:</span>
-                  <Badge variant={subscriptionType === 'fcm' ? 'default' : 'secondary'}>
+                  <span className="text-sm text-white/70">Type:</span>
+                  <Badge variant={subscriptionType === 'webpush' ? 'default' : 'secondary'}>
                     {subscriptionType?.toUpperCase() || 'N/A'}
                   </Badge>
                 </div>
                 
                 {subscriptionType === 'fcm' && token && (
-                  <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">FCM Token:</span>
-                    <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                      {token.slice(0, 20)}...
-                    </span>
+                  <div className="space-y-1">
+                    <span className="text-sm text-white/70">FCM Token:</span>
+                    <div className="text-xs font-mono bg-gray-800/50 px-2 py-1 rounded cursor-pointer"
+                         onClick={() => copyToClipboard(token)}>
+                      {token.slice(0, 60)}...
+                    </div>
                   </div>
                 )}
                 
                 {subscriptionType === 'webpush' && webPushSubscription && (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Endpoint:</span>
-                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                        {toDisplayableWebPush(webPushSubscription).endpointPrefix}
-                      </span>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm text-white/70 block">Endpoint:</span>
+                      <div className="text-xs font-mono bg-gray-800/50 px-2 py-1 rounded cursor-pointer break-all"
+                           onClick={() => copyToClipboard(webPushSubscription.endpoint)}>
+                        {webPushSubscription.endpoint.substring(0, 60)}...
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">p256dh:</span>
-                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                        {toDisplayableWebPush(webPushSubscription).p256dhShort}
-                      </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-sm text-white/70 block">p256dh:</span>
+                        <div className="text-xs font-mono bg-gray-800/50 px-1 py-1 rounded cursor-pointer break-all"
+                             onClick={() => copyToClipboard(webPushSubscription.keys.p256dh)}>
+                          {webPushSubscription.keys.p256dh.substring(0, 16)}...
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-sm text-white/70 block">auth:</span>
+                        <div className="text-xs font-mono bg-gray-800/50 px-1 py-1 rounded cursor-pointer break-all"
+                             onClick={() => copyToClipboard(webPushSubscription.keys.auth)}>
+                          {webPushSubscription.keys.auth.substring(0, 16)}...
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">auth:</span>
-                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
-                        {toDisplayableWebPush(webPushSubscription).authShort}
-                      </span>
-                    </div>
-                  </>
+                  </div>
                 )}
               </div>
             )}
@@ -202,11 +231,11 @@ const PushDebugPanel: React.FC = () => {
           <Button
             onClick={handleTestPush}
             disabled={testLoading || !isSubscribed}
-            variant="outline"
+            variant={subscriptionType === 'webpush' ? 'default' : 'outline'}
             size="sm"
           >
             <Send className="w-4 h-4 mr-2" />
-            {testLoading ? 'Sending...' : `Test Push ${subscriptionType ? `(${subscriptionType.toUpperCase()})` : ''}`}
+            {testLoading ? 'Sending...' : `Test Push (${subscriptionType?.toUpperCase() || 'None'})`}
           </Button>
 
           <Button

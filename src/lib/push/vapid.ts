@@ -16,15 +16,11 @@ export function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 /**
- * Get the VAPID public key from environment
+ * Get the VAPID public key - hardcoded for M1SSION™
  * Same key must be used on both client and server
  */
 export function getVAPIDPublicKey(): string {
-  const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-  if (!vapidKey) {
-    throw new Error('VITE_VAPID_PUBLIC_KEY not configured');
-  }
-  return vapidKey;
+  return 'BLT_uexaFBpPEX-VqzPy9U-7zMW-vVUGOajLUbL6Ny9eXOhO6Y1nMOaWgJCEKCZzG8X2z6WzXPFOA5MxzJ7Q-o8';
 }
 
 /**

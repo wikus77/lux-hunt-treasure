@@ -7,9 +7,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
 import { supabase } from '@/integrations/supabase/client';
-// import { subscribeToWebPush } from '@/lib/push/subscribe';
-import { getVAPIDPublicKey } from '@/lib/push/vapid';
+import { getVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/push/vapid';
 import { subscribeWebPushAndSave, looksLikeWebPushEndpoint, WebPushSubscriptionPayload } from '@/lib/push/webpush';
+import { UnifiedSubscription, detectPlatform } from '@/lib/push/types';
 import { toast } from 'sonner';
 
 interface UnifiedPushState {
@@ -108,7 +108,9 @@ export const useUnifiedPush = () => {
 
     try {
       const vapidKey = getVAPIDPublicKey();
+      const platform = detectPlatform();
       console.log('🔑 [UNIFIED-PUSH] VAPID key loaded:', vapidKey.slice(0, 20) + '...');
+      console.log('📱 [UNIFIED-PUSH] Platform detected:', platform);
 
       // Check permission first
       if (Notification.permission !== 'granted') {
@@ -119,61 +121,139 @@ export const useUnifiedPush = () => {
         }
       }
 
-      // 1) SW pronto
+      // Get service worker ready
       const swReg = await navigator.serviceWorker.ready;
       console.log('🛠️ [UNIFIED-PUSH] Service Worker ready');
 
-      // 2) Prova FCM se disponibile
-      let canUseFCM = false;
-      try {
-        // Check if Firebase messaging is available
-        if (window.firebase || (window as any).firebaseConfig) {
-          canUseFCM = true;
-          console.log('🔥 [UNIFIED-PUSH] Firebase available, attempting FCM...');
-        }
-      } catch (e) {
-        console.log('🔥 [UNIFIED-PUSH] Firebase not available, using Web Push');
-      }
+      let unifiedSub: UnifiedSubscription;
 
-      if (canUseFCM) {
+      // iOS PWA or Safari always uses Web Push
+      if (platform.isIOS || (platform.platform === 'web' && platform.isPWA) || platform.isSafari) {
+        console.log('🍎 [UNIFIED-PUSH] Using Web Push for iOS/Safari/PWA');
+        
         try {
-          // For now, skip FCM and go straight to Web Push
-          // This section can be implemented later with proper Firebase integration
-          console.log('🔥 [UNIFIED-PUSH] FCM path detected but using Web Push for now');
+          const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+          const subscription = await swReg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey
+          });
+
+          const keys = subscription.toJSON().keys;
+          if (!keys?.p256dh || !keys?.auth) {
+            throw new Error('Invalid subscription keys');
+          }
+
+          unifiedSub = {
+            kind: 'WEBPUSH',
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: keys.p256dh,
+              auth: keys.auth
+            },
+            platform: platform.platform
+          };
+
+          // Save to database
+          await supabase.functions.invoke('webpush-upsert', {
+            body: {
+              user_id: user.id,
+              subscription: unifiedSub
+            }
+          });
+
+        } catch (error) {
+          if (error instanceof TypeError && error.message.includes('applicationServerKey')) {
+            throw new Error('VAPID key invalida: verifica conversione base64url→Uint8Array');
+          }
+          throw error;
+        }
+      } else {
+        // Desktop/Android can try FCM first, fallback to Web Push
+        let fcmSucceeded = false;
+        
+        try {
+          // Try FCM if available
+          const { getMessaging, getToken, isSupported } = await import('firebase/messaging');
+          const fcmSupported = await isSupported();
           
-        } catch (e) {
-          console.warn('⚠️ [UNIFIED-PUSH] FCM failed; trying Web Push fallback', e);
+          if (fcmSupported && window.firebase) {
+            console.log('🔥 [UNIFIED-PUSH] Attempting FCM...');
+            const messaging = getMessaging();
+            const token = await getToken(messaging, { 
+              vapidKey: vapidKey,
+              serviceWorkerRegistration: swReg 
+            });
+
+            if (token && !looksLikeWebPushEndpoint(token)) {
+              unifiedSub = {
+                kind: 'FCM',
+                token,
+                platform: platform.platform as 'android' | 'web'
+              };
+
+              // Save FCM token
+              const { error } = await supabase.rpc('upsert_fcm_subscription', {
+                p_user_id: user.id,
+                p_token: token,
+                p_platform: platform.platform,
+                p_device_info: { type: 'fcm', platform: platform.platform }
+              });
+
+              if (error) throw error;
+              fcmSucceeded = true;
+              console.log('✅ [UNIFIED-PUSH] FCM subscription successful');
+            }
+          }
+        } catch (fcmError) {
+          console.warn('⚠️ [UNIFIED-PUSH] FCM failed, falling back to Web Push:', fcmError);
+        }
+
+        // Fallback to Web Push if FCM failed
+        if (!fcmSucceeded) {
+          console.log('🌐 [UNIFIED-PUSH] Using Web Push fallback');
+          const webPushResult = await subscribeWebPushAndSave({
+            userId: user.id,
+            swReg,
+            vapidPublicKey: vapidKey,
+            platform: platform.platform
+          });
+
+          unifiedSub = {
+            kind: 'WEBPUSH',
+            endpoint: webPushResult.subscription.endpoint,
+            keys: webPushResult.subscription.keys,
+            platform: platform.platform
+          };
         }
       }
-
-      // 3) Fallback to Web Push
-      console.log('🌐 [UNIFIED-PUSH] Using Web Push protocol');
-      const webPushResult = await subscribeWebPushAndSave({
-        userId: user.id,
-        swReg,
-        vapidPublicKey: vapidKey,
-        platform: 'desktop'
-      });
 
       setState(prev => ({
         ...prev,
         isSubscribed: true,
-        webPushSubscription: webPushResult.subscription,
-        subscriptionType: 'webpush',
+        webPushSubscription: unifiedSub.kind === 'WEBPUSH' ? unifiedSub : null,
+        token: unifiedSub.kind === 'FCM' ? unifiedSub.token : null,
+        subscriptionType: unifiedSub.kind.toLowerCase() as 'fcm' | 'webpush',
         isLoading: false
       }));
 
-      console.log('✅ [UNIFIED-PUSH] Web Push subscription successful');
-      toast.success('🔔 Notifiche Web Push attivate!');
+      console.log('✅ [UNIFIED-PUSH] Subscription successful:', unifiedSub.kind);
+      toast.success(`🔔 Notifiche ${unifiedSub.kind} attivate!`);
 
     } catch (error) {
       console.error('❌ [UNIFIED-PUSH] Subscription failed:', error);
+      
+      let errorMessage = 'Subscription failed';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       setState(prev => ({ 
         ...prev, 
-        error: error instanceof Error ? error.message : 'Subscription failed',
+        error: errorMessage,
         isLoading: false 
       }));
-      toast.error(`Errore: ${error instanceof Error ? error.message : 'Subscription failed'}`);
+      
+      toast.error(`Errore: ${errorMessage}`);
       throw error;
     }
   };
