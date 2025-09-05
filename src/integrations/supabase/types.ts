@@ -3799,6 +3799,39 @@ export type Database = {
         }
         Relationships: []
       }
+      webpush_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          platform: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          p256dh: string
+          platform?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          p256dh?: string
+          platform?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
@@ -4324,6 +4357,25 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
+      }
+      upsert_webpush_subscription: {
+        Args: {
+          p_auth: string
+          p_endpoint: string
+          p_p256dh: string
+          p_platform?: string
+          p_user_id: string
+        }
+        Returns: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          is_active: boolean
+          p256dh: string
+          platform: string | null
+          user_id: string
+        }
       }
       validate_buzz_user_id: {
         Args: { p_user_id: string }
