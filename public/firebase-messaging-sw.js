@@ -49,7 +49,7 @@ messaging.onBackgroundMessage((payload) => {
   return self.registration.showNotification(title, notificationOptions);
 });
 
-// Handle notification clicks
+// Handle notification clicks (unified for both FCM and Web Push)
 self.addEventListener('notificationclick', (event) => {
   console.log('[M1SSION SW] Notification clicked:', event.notification.data);
   
@@ -57,7 +57,8 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
   // Determine target URL
-  const targetUrl = event.notification.data?.screen || '/';
+  const targetUrl = (event.notification.data && event.notification.data.url) || 
+                   (event.notification.data && event.notification.data.screen) || '/';
   const fullUrl = new URL(targetUrl, self.location.origin).href;
   
   console.log('[M1SSION SW] Opening URL:', fullUrl);
@@ -66,12 +67,10 @@ self.addEventListener('notificationclick', (event) => {
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // Check if there's already a window open
-      for (const client of clientList) {
-        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-          console.log('[M1SSION SW] Focusing existing window and navigating');
-          client.focus();
-          return client.navigate(fullUrl);
-        }
+      const client = clientList.find(c => c.url.includes(self.registration.scope));
+      if (client) {
+        console.log('[M1SSION SW] Focusing existing window');
+        return client.focus();
       }
       
       // No existing window, open a new one
@@ -94,28 +93,35 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(clients.claim());
 });
 
-// Handle push events (fallback)
+// Handle Web Push events (standard push API)
 self.addEventListener('push', (event) => {
-  console.log('[M1SSION SW] Push event received:', event.data?.text());
+  console.log('[M1SSION SW] Web Push event received:', event.data?.text());
   
-  if (event.data) {
-    try {
-      const payload = event.data.json();
-      const title = payload.title || 'M1SSION™';
-      const options = {
-        body: payload.body || 'New notification',
-        icon: '/favicon.ico',
-        badge: '/favicon.ico',
-        data: payload.data || {}
-      };
-      
-      event.waitUntil(
-        self.registration.showNotification(title, options)
-      );
-    } catch (error) {
-      console.error('[M1SSION SW] Error parsing push data:', error);
+  const data = (() => { 
+    try { 
+      return event.data?.json() || {};
+    } catch { 
+      return {};
     }
-  }
+  })();
+  
+  const title = data.title || 'M1SSION™';
+  const body = data.body || 'New notification';
+  
+  const notificationOptions = {
+    body,
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
+    data: data.data || {},
+    tag: 'mission-webpush',
+    requireInteraction: true
+  };
+  
+  console.log('[M1SSION SW] Showing Web Push notification:', { title, ...notificationOptions });
+  
+  event.waitUntil(
+    self.registration.showNotification(title, notificationOptions)
+  );
 });
 
 console.log('[M1SSION SW] Service Worker script loaded successfully');
