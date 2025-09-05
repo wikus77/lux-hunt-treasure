@@ -124,5 +124,5 @@ export const getMessagingInstance = () => {
   return initializeMessaging();
 };
 
-// Export messaging for backward compatibility
-export { messagingInstance as messaging };
+// Export messaging for backward compatibility  
+export const messaging = initializeMessaging();
