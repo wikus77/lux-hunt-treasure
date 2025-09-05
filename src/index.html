@@ -69,5 +69,28 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration (una sola volta, senza loop) -->
+    <script>
+      if ('serviceWorker' in navigator && !window.__swRegistered) {
+        window.__swRegistered = true;
+        navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+          .then((reg) => {
+            // Se c'è subito un waiting, promuovilo
+            if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+
+            // Reload una sola volta quando cambia il controller
+            let refreshed = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+              if (refreshed) return;
+              refreshed = true;
+              location.reload();
+            });
+          })
+          .catch((error) => {
+            console.warn('[SW] Registration failed:', error);
+          });
+      }
+    </script>
   </body>
 </html>
