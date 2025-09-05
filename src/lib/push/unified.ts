@@ -158,21 +158,9 @@ export class UnifiedPushManager {
     console.log('💻 [Desktop] Starting subscription...');
 
     try {
-      // Try FCM first for better reliability
-      const fcmToken = await initFcmAndGetToken();
-      
-      if (fcmToken) {
-        console.log('✅ [Desktop] FCM subscription successful');
-        return {
-          type: 'fcm',
-          subscription: fcmToken,
-          platform: 'desktop',
-          success: true
-        };
-      }
+      // Desktop: Use Web Push API directly (no FCM to avoid projectId error)
+      console.log('🖥️ [Desktop] Using Web Push API...');
 
-      // Fallback to Web Push API
-      console.log('⚡ [Desktop] Falling back to Web Push API...');
       const webPushSubscription = await ensureWebPushSubscription();
       
       return {
