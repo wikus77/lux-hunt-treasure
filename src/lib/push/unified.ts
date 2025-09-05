@@ -217,32 +217,38 @@ export class UnifiedPushManager {
         console.log('✅ [Database] FCM subscription saved');
 
       } else if (subscription.type === 'web_push' && subscription.subscription) {
-        // Save Web Push subscription
+        // Save Web Push subscription using the unified function
         const webSub = subscription.subscription as PushSubscription;
         
-        const { error } = await supabase.functions.invoke('push_register', {
+        console.log('🔗 [Database] Saving Web Push via upsert_fcm_subscription...');
+        
+        const result = await supabase.functions.invoke('upsert_fcm_subscription', {
           body: {
-            subscription: {
-              endpoint: webSub.endpoint,
-              keys: {
-                p256dh: this.arrayBufferToBase64(webSub.getKey('p256dh')),
-                auth: this.arrayBufferToBase64(webSub.getKey('auth'))
-              }
-            },
+            user_id: session.user.id,
+            token: webSub.endpoint,
+            platform: subscription.platform,
             device_info: {
               ua: navigator.userAgent,
               lang: navigator.language,
               platform: navigator.platform,
-              timestamp: new Date().toISOString()
+              endpoint_type: this.classifyEndpoint(webSub.endpoint),
+              isPWA: (window.matchMedia?.('(display-mode: standalone)').matches) || 
+                     (navigator as any).standalone === true,
+              timestamp: new Date().toISOString(),
+              subscription_keys: {
+                p256dh: this.arrayBufferToBase64(webSub.getKey('p256dh')),
+                auth: this.arrayBufferToBase64(webSub.getKey('auth'))
+              }
             }
           }
         });
 
-        if (error) {
-          throw new Error(`Web Push save failed: ${error.message}`);
+        if (result.error) {
+          console.error('❌ [Database] Web Push save failed:', result.error);
+          throw new Error(`Web Push save failed: ${result.error.message}`);
         }
 
-        console.log('✅ [Database] Web Push subscription saved');
+        console.log('✅ [Database] Web Push subscription saved successfully:', result.data);
       }
 
     } catch (error) {
@@ -269,6 +275,22 @@ export class UnifiedPushManager {
     
     // Desktop/Web
     return 'desktop';
+  }
+
+  /**
+   * Classify endpoint type for debugging
+   */
+  private classifyEndpoint(endpoint: string): string {
+    if (endpoint.includes('fcm.googleapis.com')) {
+      return 'fcm'; // Desktop Chrome, Android
+    }
+    if (endpoint.includes('web.push.apple.com')) {
+      return 'apns'; // iOS Safari PWA
+    }
+    if (endpoint.includes('wns.notify.windows.com')) {
+      return 'wns'; // Windows Edge
+    }
+    return 'unknown';
   }
 
   /**
