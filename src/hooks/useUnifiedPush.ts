@@ -93,6 +93,8 @@ export const useUnifiedPush = () => {
 
   // Manual subscription function
   const subscribe = useCallback(async (): Promise<boolean> => {
+    console.log('🔔 [useUnifiedPush] Manual subscription started...');
+    
     if (!state.isSupported) {
       console.warn('❌ Push notifications not supported');
       toast.error('Push notifications non supportate');
@@ -102,8 +104,11 @@ export const useUnifiedPush = () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
+      console.log('🔔 [useUnifiedPush] Calling unifiedPushManager.subscribe()...');
       const subscription = await unifiedPushManager.subscribe();
       const permission = Notification.permission;
+      
+      console.log('🔔 [useUnifiedPush] Subscription result:', subscription);
       
       setState(prev => ({
         ...prev,
@@ -115,8 +120,10 @@ export const useUnifiedPush = () => {
       }));
 
       if (subscription.success) {
+        console.log('✅ [useUnifiedPush] Manual subscription successful');
         toast.success('🔔 Notifiche push attivate!');
       } else {
+        console.error('❌ [useUnifiedPush] Manual subscription failed:', subscription.error);
         toast.error(`Errore: ${subscription.error || 'Subscription failed'}`);
       }
 

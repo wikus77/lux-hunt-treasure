@@ -28,6 +28,8 @@ import NotificationsSettings from "@/pages/settings/NotificationsSettings";
 import PrivacySettings from "@/pages/settings/PrivacySettings";
 import LegalSettings from "@/pages/settings/LegalSettings";
 import AppInfoSettings from "@/pages/settings/AppInfoSettings";
+import DiagnosticsSettings from "@/pages/settings/DiagnosticsSettings";
+import PrivacyPermissionsSettings from "@/pages/settings/PrivacyPermissionsSettings";
 import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
@@ -152,6 +154,12 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/settings/agent-profile">
+            <ProtectedRoute>
+              <GlobalLayout><AgentProfileSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           <Route path="/settings/profile">
             <ProtectedRoute>
               <GlobalLayout><AgentProfileSettings /></GlobalLayout>
@@ -188,9 +196,27 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/settings/app-info">
+            <ProtectedRoute>
+              <GlobalLayout><AppInfoSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           <Route path="/settings/info">
             <ProtectedRoute>
               <GlobalLayout><AppInfoSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/diagnostics">
+            <ProtectedRoute>
+              <GlobalLayout><DiagnosticsSettings /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/settings/privacy-permissions">
+            <ProtectedRoute>
+              <GlobalLayout><PrivacyPermissionsSettings /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
