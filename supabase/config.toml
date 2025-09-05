@@ -1,23 +1,5 @@
 project_id = "vkjrqirvdvjbemsfzxof"
 
-[functions.push_register]
-verify_jwt = true
-
-[functions.push_send]
-verify_jwt = false
-
-[functions.push_gc]
-verify_jwt = false
-
-[functions.send-firebase-push]
-verify_jwt = false
-
-[functions.fcm-config]
-verify_jwt = false
-
-[functions.fcmTestSend]
-verify_jwt = false
-
 [api]
 enabled = true
 port = 54321
@@ -27,50 +9,56 @@ max_rows = 1000
 
 [db]
 port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.pooler]
+enabled = false
+port = 54329
+pool_mode = "transaction"
+default_pool_size = 20
+max_client_conn = 100
+
+[realtime]
+enabled = true
+port = 54323
+ip_version = "ipv4"
 
 [studio]
 enabled = true
-port = 54323
+port = 54324
+api_url = "http://127.0.0.1:54321"
+openai_api_key = "env(OPENAI_API_KEY)"
 
-[functions.create_qr_code]
-# Keep JWT verification enabled (authenticated admin only)
+[inbucket]
+enabled = true
+port = 54325
+smtp_port = 54326
+pop3_port = 54327
+
+[storage]
+enabled = true
+port = 54328
+file_size_limit = "50MiB"
+image_transformation = { enabled = true }
+
+[functions]
 verify_jwt = true
-
-[functions.validate-qr]
-# Public validation (no JWT required)
-verify_jwt = false
-
-[functions.redeem_qr]
-# Requires user JWT; function also validates Authorization header internally
-verify_jwt = true
-
-[functions.nearby_qr_notify]
-# Publicly callable, function uses service role internally
-verify_jwt = false
-
-[functions.send-push-notification]
-# Public function for push notifications
-verify_jwt = false
-
-[functions.store-fcm-token]
-verify_jwt = true
-
-[functions.push_subscribe]
-# Public function for push subscription
-verify_jwt = false
-
-[functions.register-push-token]
-# Requires authentication for token registration
-verify_jwt = true
-
-[functions.send-test-push]
-# Admin-only function for testing push notifications
-verify_jwt = false
 
 [functions.fcm-test]
-# Public function for FCM testing
 verify_jwt = false
 
 [functions.fcm-send]
-# Public function for FCM sending
 verify_jwt = false
+
+[auth]
+enabled = true
+port = 54329
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["https://127.0.0.1:3000"]
+jwt_expiry = 3600
+enable_signup = true
+enable_email_confirmations = false
+enable_email_autoconfirm = true
+enable_phone_confirmations = false
+enable_phone_autoconfirm = true

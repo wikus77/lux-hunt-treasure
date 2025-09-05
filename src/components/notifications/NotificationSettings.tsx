@@ -150,7 +150,7 @@ export default function NotificationSettings() {
 
   const getPermissionColor = (permission: NotificationPermission) => {
     switch (permission) {
-      case 'granted': return 'success';
+      case 'granted': return 'default';
       case 'denied': return 'destructive';
       default: return 'secondary';
     }
@@ -194,7 +194,7 @@ export default function NotificationSettings() {
           
           <div className="flex items-center justify-between">
             <span>Browser Support:</span>
-            <Badge variant={status.supported ? 'success' : 'destructive'}>
+            <Badge variant={status.supported ? 'default' : 'destructive'}>
               {status.supported ? 'Supported' : 'Not Supported'}
             </Badge>
           </div>
@@ -285,7 +285,7 @@ export default function NotificationSettings() {
                 <div key={token.id} className="p-3 border rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <Badge variant="outline">{token.platform}</Badge>
-                    <Badge variant={token.is_active ? 'success' : 'secondary'}>
+                    <Badge variant={token.is_active ? 'default' : 'secondary'}>
                       {token.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
