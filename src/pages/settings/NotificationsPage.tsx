@@ -105,7 +105,7 @@ const NotificationsPage: React.FC = () => {
 
       setNotificationState('ENABLING');
       
-      const result = await enablePushNotifications(user.id);
+      const result = await enablePushNotifications();
       
       if (result.success) {
         setNotificationState('ON');
