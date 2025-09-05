@@ -31,8 +31,18 @@ export const useUnifiedPush = () => {
 
   // Initialize push support detection
   useEffect(() => {
+    console.log('🔧 [useUnifiedPush] Initializing...');
+    
     const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     const permission = 'Notification' in window ? Notification.permission : null;
+    
+    console.log('🔧 [useUnifiedPush] Support check:', {
+      serviceWorker: 'serviceWorker' in navigator,
+      pushManager: 'PushManager' in window,
+      notification: 'Notification' in window,
+      isSupported,
+      permission
+    });
     
     setState(prev => ({
       ...prev,
@@ -43,11 +53,14 @@ export const useUnifiedPush = () => {
     // Check existing subscription
     const existingSubscription = unifiedPushManager.getCurrentSubscription();
     if (existingSubscription) {
+      console.log('🔧 [useUnifiedPush] Found existing subscription:', existingSubscription);
       setState(prev => ({
         ...prev,
         subscription: existingSubscription,
         isSubscribed: existingSubscription.success,
       }));
+    } else {
+      console.log('🔧 [useUnifiedPush] No existing subscription found');
     }
   }, []);
 
@@ -127,16 +140,30 @@ export const useUnifiedPush = () => {
   // Manual subscription function
   const subscribe = useCallback(async (): Promise<boolean> => {
     console.log('🔔 [useUnifiedPush] Manual subscription started...');
+    console.log('🔧 [useUnifiedPush] Current state:', {
+      isSupported: state.isSupported,
+      permission: Notification.permission,
+      user: !!user,
+      isSubscribed: state.isSubscribed
+    });
     
     if (!state.isSupported) {
-      console.warn('❌ Push notifications not supported');
-      toast.error('Push notifications non supportate');
+      const errorMsg = 'Browser non supporta push notifications';
+      console.warn('❌', errorMsg);
+      toast.error(errorMsg);
+      return false;
+    }
+
+    if (!user) {
+      const errorMsg = 'Utente non autenticato';
+      console.warn('❌', errorMsg);
+      toast.error(errorMsg);
       return false;
     }
 
     // Check permission first
     if (Notification.permission !== 'granted') {
-      console.warn('❌ Permission not granted, requesting first');
+      console.log('🔧 [useUnifiedPush] Permission not granted, requesting...');
       const granted = await requestPermission();
       if (!granted) {
         return false;
@@ -150,7 +177,18 @@ export const useUnifiedPush = () => {
       const subscription = await unifiedPushManager.subscribe();
       const permission = Notification.permission;
       
-      console.log('🔔 [useUnifiedPush] Subscription result:', subscription);
+      console.log('🔔 [useUnifiedPush] Subscription result:', {
+        success: subscription.success,
+        type: subscription.type,
+        platform: subscription.platform,
+        error: subscription.error,
+        hasSubscription: !!subscription.subscription,
+        subscriptionEndpoint: subscription.subscription && typeof subscription.subscription === 'object' 
+          ? subscription.subscription.endpoint?.substring(0, 50) + '...' 
+          : typeof subscription.subscription === 'string' 
+            ? subscription.subscription.substring(0, 30) + '...'
+            : 'null'
+      });
       
       setState(prev => ({
         ...prev,
@@ -165,14 +203,24 @@ export const useUnifiedPush = () => {
         console.log('✅ [useUnifiedPush] Manual subscription successful');
         toast.success('🔔 Notifiche push attivate!');
       } else {
-        console.error('❌ [useUnifiedPush] Manual subscription failed:', subscription.error);
-        toast.error(`Errore: ${subscription.error || 'Subscription failed'}`);
+        const specificError = subscription.error || 'Subscription failed';
+        console.error('❌ [useUnifiedPush] Manual subscription failed:', specificError);
+        toast.error(`Errore specifico: ${specificError}`);
       }
 
       return subscription.success;
     } catch (error) {
-      console.error('❌ Manual subscription failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Push subscription failed';
+      console.error('❌ [useUnifiedPush] Manual subscription exception:', error);
+      let errorMessage = 'Errore sconosciuto';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        console.error('❌ Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+      }
       
       setState(prev => ({
         ...prev,
@@ -180,10 +228,10 @@ export const useUnifiedPush = () => {
         isLoading: false,
       }));
       
-      toast.error(`Errore: ${errorMessage}`);
+      toast.error(`Errore catch: ${errorMessage}`);
       return false;
     }
-  }, [state.isSupported, requestPermission]);
+  }, [state.isSupported, requestPermission, user]);
 
   // Unsubscribe function
   const unsubscribe = useCallback(async (): Promise<boolean> => {
