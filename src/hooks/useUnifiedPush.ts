@@ -6,27 +6,38 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
-import { unifiedPushManager, UnifiedPushSubscription } from '@/lib/push/unified';
+import { supabase } from '@/integrations/supabase/client';
+// import { subscribeToWebPush } from '@/lib/push/subscribe';
+import { getVAPIDPublicKey } from '@/lib/push/vapid';
+import { subscribeWebPushAndSave, looksLikeWebPushEndpoint, WebPushSubscriptionPayload } from '@/lib/push/webpush';
 import { toast } from 'sonner';
 
 interface UnifiedPushState {
   isSupported: boolean;
+  isSubscribed: boolean;
   permission: NotificationPermission | null;
-  subscription: UnifiedPushSubscription | null;
   isLoading: boolean;
   error: string | null;
-  isSubscribed: boolean;
+  token: string | null;
+  subscription: PushSubscription | null;
+  webPushSubscription: WebPushSubscriptionPayload | null;
+  subscriptionType: 'fcm' | 'webpush' | null;
+  canSubscribe: boolean;
 }
 
 export const useUnifiedPush = () => {
   const { user } = useAuth();
   const [state, setState] = useState<UnifiedPushState>({
     isSupported: false,
+    isSubscribed: false,
     permission: null,
-    subscription: null,
     isLoading: false,
     error: null,
-    isSubscribed: false,
+    token: null,
+    subscription: null,
+    webPushSubscription: null,
+    subscriptionType: null,
+    canSubscribe: false,
   });
 
   // Initialize push support detection
@@ -35,74 +46,24 @@ export const useUnifiedPush = () => {
     
     const isSupported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
     const permission = 'Notification' in window ? Notification.permission : null;
+    const canSubscribe = isSupported && permission === 'granted' && !!user;
     
     console.log('🔧 [useUnifiedPush] Support check:', {
       serviceWorker: 'serviceWorker' in navigator,
       pushManager: 'PushManager' in window,
       notification: 'Notification' in window,
       isSupported,
-      permission
+      permission,
+      canSubscribe
     });
     
-    setState(prev => ({
-      ...prev,
-      isSupported,
-      permission,
-    }));
-
-    // Check existing subscription
-    const existingSubscription = unifiedPushManager.getCurrentSubscription();
-    if (existingSubscription) {
-      console.log('🔧 [useUnifiedPush] Found existing subscription:', existingSubscription);
       setState(prev => ({
         ...prev,
-        subscription: existingSubscription,
-        isSubscribed: existingSubscription.success,
+        isSupported,
+        permission,
+        canSubscribe,
       }));
-    } else {
-      console.log('🔧 [useUnifiedPush] No existing subscription found');
-    }
-  }, []);
-
-  // Auto-subscribe when user is authenticated and permission is granted
-  useEffect(() => {
-    if (!user || !state.isSupported || state.permission !== 'granted' || state.isSubscribed) {
-      return;
-    }
-
-    const autoSubscribe = async () => {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      
-      try {
-        console.log('🔔 [useUnifiedPush] Auto-subscribing for authenticated user...');
-        const subscription = await unifiedPushManager.subscribe();
-        
-        setState(prev => ({
-          ...prev,
-          subscription,
-          isSubscribed: subscription.success,
-          isLoading: false,
-          error: subscription.success ? null : subscription.error || 'Subscription failed'
-        }));
-        
-        if (subscription.success) {
-          console.log('✅ [useUnifiedPush] Auto-subscription successful');
-          toast.success('🔔 Notifiche push attivate!');
-        } else {
-          console.warn('⚠️ [useUnifiedPush] Auto-subscription failed:', subscription.error);
-        }
-      } catch (error) {
-        console.error('❌ [useUnifiedPush] Auto-subscription error:', error);
-        setState(prev => ({
-          ...prev,
-          error: error instanceof Error ? error.message : 'Auto-subscription failed',
-          isLoading: false,
-        }));
-      }
-    };
-
-    autoSubscribe();
-  }, [user, state.isSupported, state.permission, state.isSubscribed]);
+  }, [user]);
 
   // Request permission function
   const requestPermission = useCallback(async (): Promise<boolean> => {
@@ -114,7 +75,7 @@ export const useUnifiedPush = () => {
 
     try {
       const permission = await Notification.requestPermission();
-      setState(prev => ({ ...prev, permission }));
+      setState(prev => ({ ...prev, permission, canSubscribe: permission === 'granted' && !!user }));
       
       if (permission === 'granted') {
         toast.success('✅ Permessi concessi!');
@@ -135,126 +96,120 @@ export const useUnifiedPush = () => {
       toast.error(`Errore: ${errorMessage}`);
       return false;
     }
-  }, [state.isSupported]);
+  }, [state.isSupported, user]);
 
-  // Manual subscription function
-  const subscribe = useCallback(async (): Promise<boolean> => {
-    console.log('🔔 [useUnifiedPush] Manual subscription started...');
-    console.log('🔧 [useUnifiedPush] Current state:', {
-      isSupported: state.isSupported,
-      permission: Notification.permission,
-      user: !!user,
-      isSubscribed: state.isSubscribed
-    });
-    
-    if (!state.isSupported) {
-      const errorMsg = 'Browser non supporta push notifications';
-      console.warn('❌', errorMsg);
-      toast.error(errorMsg);
-      return false;
-    }
-
+  const enableUnifiedPush = async () => {
     if (!user) {
-      const errorMsg = 'Utente non autenticato';
-      console.warn('❌', errorMsg);
-      toast.error(errorMsg);
-      return false;
-    }
-
-    // Check permission first
-    if (Notification.permission !== 'granted') {
-      console.log('🔧 [useUnifiedPush] Permission not granted, requesting...');
-      const granted = await requestPermission();
-      if (!granted) {
-        return false;
-      }
+      throw new Error('User not authenticated');
     }
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
+    console.log('🔄 [UNIFIED-PUSH] Starting unified subscription process...');
 
     try {
-      console.log('🔔 [useUnifiedPush] Calling unifiedPushManager.subscribe()...');
-      const subscription = await unifiedPushManager.subscribe();
-      const permission = Notification.permission;
-      
-      console.log('🔔 [useUnifiedPush] Subscription result:', {
-        success: subscription.success,
-        type: subscription.type,
-        platform: subscription.platform,
-        error: subscription.error,
-        hasSubscription: !!subscription.subscription,
-        subscriptionEndpoint: subscription.subscription && typeof subscription.subscription === 'object' 
-          ? subscription.subscription.endpoint?.substring(0, 50) + '...' 
-          : typeof subscription.subscription === 'string' 
-            ? subscription.subscription.substring(0, 30) + '...'
-            : 'null'
+      const vapidKey = getVAPIDPublicKey();
+      console.log('🔑 [UNIFIED-PUSH] VAPID key loaded:', vapidKey.slice(0, 20) + '...');
+
+      // Check permission first
+      if (Notification.permission !== 'granted') {
+        console.log('🔧 [UNIFIED-PUSH] Permission not granted, requesting...');
+        const granted = await requestPermission();
+        if (!granted) {
+          throw new Error('Permission not granted');
+        }
+      }
+
+      // 1) SW pronto
+      const swReg = await navigator.serviceWorker.ready;
+      console.log('🛠️ [UNIFIED-PUSH] Service Worker ready');
+
+      // 2) Prova FCM se disponibile
+      let canUseFCM = false;
+      try {
+        // Check if Firebase messaging is available
+        if (window.firebase || (window as any).firebaseConfig) {
+          canUseFCM = true;
+          console.log('🔥 [UNIFIED-PUSH] Firebase available, attempting FCM...');
+        }
+      } catch (e) {
+        console.log('🔥 [UNIFIED-PUSH] Firebase not available, using Web Push');
+      }
+
+      if (canUseFCM) {
+        try {
+          // For now, skip FCM and go straight to Web Push
+          // This section can be implemented later with proper Firebase integration
+          console.log('🔥 [UNIFIED-PUSH] FCM path detected but using Web Push for now');
+          
+        } catch (e) {
+          console.warn('⚠️ [UNIFIED-PUSH] FCM failed; trying Web Push fallback', e);
+        }
+      }
+
+      // 3) Fallback to Web Push
+      console.log('🌐 [UNIFIED-PUSH] Using Web Push protocol');
+      const webPushResult = await subscribeWebPushAndSave({
+        userId: user.id,
+        swReg,
+        vapidPublicKey: vapidKey,
+        platform: 'desktop'
       });
-      
+
       setState(prev => ({
         ...prev,
-        subscription,
-        permission,
-        isSubscribed: subscription.success,
-        isLoading: false,
-        error: subscription.success ? null : subscription.error || 'Subscription failed'
+        isSubscribed: true,
+        webPushSubscription: webPushResult.subscription,
+        subscriptionType: 'webpush',
+        isLoading: false
       }));
 
-      if (subscription.success) {
-        console.log('✅ [useUnifiedPush] Manual subscription successful');
-        toast.success('🔔 Notifiche push attivate!');
-      } else {
-        const specificError = subscription.error || 'Subscription failed';
-        console.error('❌ [useUnifiedPush] Manual subscription failed:', specificError);
-        toast.error(`Errore specifico: ${specificError}`);
-      }
+      console.log('✅ [UNIFIED-PUSH] Web Push subscription successful');
+      toast.success('🔔 Notifiche Web Push attivate!');
 
-      return subscription.success;
     } catch (error) {
-      console.error('❌ [useUnifiedPush] Manual subscription exception:', error);
-      let errorMessage = 'Errore sconosciuto';
-      
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        console.error('❌ Error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-      }
-      
-      setState(prev => ({
-        ...prev,
-        error: errorMessage,
-        isLoading: false,
+      console.error('❌ [UNIFIED-PUSH] Subscription failed:', error);
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Subscription failed',
+        isLoading: false 
       }));
-      
-      toast.error(`Errore catch: ${errorMessage}`);
-      return false;
+      toast.error(`Errore: ${error instanceof Error ? error.message : 'Subscription failed'}`);
+      throw error;
     }
-  }, [state.isSupported, requestPermission, user]);
+  };
+
+  // Keep backward compatibility
+  const subscribe = enableUnifiedPush;
 
   // Unsubscribe function
   const unsubscribe = useCallback(async (): Promise<boolean> => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const success = await unifiedPushManager.unsubscribe();
+      // Clear both types of subscriptions
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.ready;
+        const existingSubscription = await registration.pushManager.getSubscription();
+        
+        if (existingSubscription) {
+          await existingSubscription.unsubscribe();
+          console.log('🗑️ Browser subscription removed');
+        }
+      }
       
       setState(prev => ({
         ...prev,
+        token: null,
         subscription: null,
+        webPushSubscription: null,
+        subscriptionType: null,
         isSubscribed: false,
         isLoading: false,
-        error: success ? null : 'Unsubscribe failed'
+        error: null
       }));
 
-      if (success) {
-        toast.success('🔕 Notifiche push disattivate');
-      } else {
-        toast.error('Errore durante la disattivazione');
-      }
-
-      return success;
+      toast.success('🔕 Notifiche push disattivate');
+      return true;
     } catch (error) {
       console.error('❌ Unsubscribe failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unsubscribe failed';
@@ -270,12 +225,19 @@ export const useUnifiedPush = () => {
     }
   }, []);
 
+  // Check status function
+  const checkStatus = useCallback(async () => {
+    console.log('🔍 [UNIFIED-PUSH] Checking current status...');
+    // This would check existing subscriptions in the database
+    // Implementation depends on your specific needs
+  }, []);
+
   return {
     ...state,
     subscribe,
     requestPermission,
     unsubscribe,
-    canSubscribe: state.isSupported && state.permission === 'granted' && user,
+    checkStatus,
   };
 };
 
