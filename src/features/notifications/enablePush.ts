@@ -1,9 +1,9 @@
 // property of team joseph & aldo, M1SSION devtools, generative ai code-signed via Lovable by Joseph G. for user J.A.
 // FCM Push Notifications Enable - Request permission and manage tokens
 
-import { getMessaging, getToken } from 'firebase/messaging';
+import { getToken } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
-import { messaging } from '@/lib/firebase';
+import { getMessagingInstance } from '@/lib/firebase';
 
 export interface PushEnableResult {
   success: boolean;
@@ -79,6 +79,7 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
 
 // Get FCM token with VAPID key
 export const getFCMToken = async (): Promise<string | null> => {
+  const messaging = await getMessagingInstance();
   if (!messaging) {
     throw new Error('Firebase messaging not initialized');
   }
