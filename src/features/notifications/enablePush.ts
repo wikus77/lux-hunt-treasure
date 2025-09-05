@@ -45,8 +45,28 @@ export const isIOS = (): boolean => {
 export const detectPlatform = (): 'ios' | 'android' | 'desktop' | 'unknown' => {
   if (typeof window === 'undefined') return 'unknown';
   
-  const userAgent = navigator.userAgent.toLowerCase();
+  // Try to get Capacitor platform first
+  try {
+    // Import Capacitor synchronously if available
+    const capacitor = (window as any).Capacitor;
+    if (capacitor) {
+      const platform = capacitor.getPlatform();
+      
+      if (platform === 'ios') return 'ios';
+      if (platform === 'android') return 'android';
+      if (platform === 'web') {
+        // On web, check if iOS from user agent
+        const userAgent = navigator.userAgent.toLowerCase();
+        if (/ipad|iphone|ipod/.test(userAgent)) return 'ios';
+        return 'desktop';
+      }
+    }
+  } catch (error) {
+    // Capacitor not available, fallback to user agent
+    console.log('[M1SSION FCM] Capacitor not available, using user agent detection');
+  }
   
+  const userAgent = navigator.userAgent.toLowerCase();
   if (/ipad|iphone|ipod/.test(userAgent)) return 'ios';
   if (/android/.test(userAgent)) return 'android';
   if (/windows|macintosh|linux/.test(userAgent)) return 'desktop';
@@ -122,7 +142,7 @@ export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }):
   }
   
   try {
-    // Register service worker
+    // Register service worker on /firebase-messaging-sw.js
     console.log('🔄 [M1SSION FCM] Registering service worker...');
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
       scope: '/',
@@ -136,15 +156,15 @@ export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }):
     // Get messaging instance
     const messaging = getMessagingInstance();
     
-    // Generate token
+    // Generate token with VAPID key and service worker registration
     console.log('🔄 [M1SSION FCM] Generating FCM token...');
     const token = await getToken(messaging, {
-      vapidKey,
+      vapidKey: VAPID_PUBLIC_KEY,
       serviceWorkerRegistration: registration
     });
     
-    if (!token) {
-      throw new Error('No FCM token generated');
+    if (!token || token === '') {
+      throw new Error('No FCM token generated - may need app installation on iOS');
     }
     
     console.log(`✅ [M1SSION FCM] Token generated: length=${token.length}, prefix=${token.substring(0, 20)}...`);
@@ -214,7 +234,18 @@ export async function saveTokenToDB({
     
     if (error) {
       console.error('❌ [M1SSION FCM] Database error:', error);
-      throw new Error(`Database save failed: ${error.message}`);
+      
+      // Handle specific PostgREST errors
+      let errorMessage = error.message;
+      if (errorMessage.includes('uuid')) {
+        errorMessage = 'ID utente non valido';
+      } else if (errorMessage.includes('check')) {
+        errorMessage = 'Token vuoto o formato non valido';
+      } else if (errorMessage.includes('platform')) {
+        errorMessage = 'Platform non valida (deve essere ios/android/desktop/unknown)';
+      }
+      
+      throw new Error(errorMessage);
     }
     
     console.log('✅ [M1SSION FCM] Token saved successfully');
@@ -319,18 +350,27 @@ export function setupForegroundMessageListener(): void {
 /**
  * Main function to enable push notifications with clear permission handling
  */
-export async function enablePushNotifications(userId: string): Promise<PushEnableResult> {
+export async function enablePushNotifications(): Promise<PushEnableResult> {
   try {
-    console.log('🚀 [M1SSION FCM] Starting push notification setup for user:', userId);
+    console.log('🚀 [M1SSION FCM] Starting push notification setup...');
 
-    // 1. Check if push is supported
+    // 1. Get authenticated user
+    const { data } = await supabase.auth.getUser();
+    const userId = data?.user?.id;
+    if (!userId) {
+      console.error('❌ [M1SSION FCM] User not authenticated');
+      return { success: false, error: 'Non sei autenticato' };
+    }
+    console.log('✅ [M1SSION FCM] User authenticated:', userId);
+
+    // 2. Check if push is supported
     if (!isPushSupported()) {
       const error = 'Push notifications not supported in this browser';
       console.error('❌ [M1SSION FCM]', error);
       return { success: false, error };
     }
 
-    // 2. Check current permission status
+    // 3. Check current permission status
     const currentPermission = Notification.permission;
     console.log('🔔 [M1SSION FCM] Current permission:', currentPermission);
 
@@ -340,7 +380,7 @@ export async function enablePushNotifications(userId: string): Promise<PushEnabl
       return { success: false, error, permission: currentPermission };
     }
 
-    // 3. Request permission if not already granted
+    // 4. Request permission if not already granted
     let permission: NotificationPermission = currentPermission;
     if (permission === 'default') {
       console.log('🔔 [M1SSION FCM] Requesting notification permission...');
@@ -354,21 +394,30 @@ export async function enablePushNotifications(userId: string): Promise<PushEnabl
       return { success: false, error, permission };
     }
 
-    // 4. Check if iOS user needs installation guide
+    // 5. Check if iOS user needs installation guide
     if (needsInstallGuide()) {
       console.log('📱 [M1SSION FCM] iOS user needs installation guide');
       return { 
         success: false, 
         requiresInstall: true,
-        error: 'Please add this app to your Home Screen to enable notifications',
+        error: 'Su iOS installa l\'app nella Home (Aggiungi a Home) e riapri da Home per generare il token.',
         permission
       };
     }
 
-    // 5. Generate FCM token
+    // 6. Generate FCM token
     const token = await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
+    
+    if (!token || token === '') {
+      console.error('❌ [M1SSION FCM] No token generated');
+      return { 
+        success: false, 
+        error: 'Su iOS installa l\'app nella Home (Aggiungi a Home) e riapri da Home per generare il token.',
+        permission
+      };
+    }
 
-    // 6. Save token to database
+    // 7. Get platform and device info
     const platform = detectPlatform();
     const deviceInfo = {
       userAgent: navigator.userAgent,
@@ -378,9 +427,13 @@ export async function enablePushNotifications(userId: string): Promise<PushEnabl
       url: window.location.href
     };
     
+    // 8. Log before save
+    console.log('[M1SSION FCM] saving', { userId, token: token.substring(0, 20) + '...', platform });
+    
+    // 9. Save token to database
     await saveTokenToDB({ userId, token, platform, deviceInfo });
 
-    // 7. Setup foreground message listener
+    // 10. Setup foreground message listener
     setupForegroundMessageListener();
 
     console.log('🎉 [M1SSION FCM] Push notifications enabled successfully!');
@@ -391,8 +444,16 @@ export async function enablePushNotifications(userId: string): Promise<PushEnabl
     };
 
   } catch (error: any) {
-    const errorMessage = error.message || 'Unknown error occurred';
     console.error('💥 [M1SSION FCM] Enable push notifications failed:', error);
+    
+    // Handle PostgREST errors
+    let errorMessage = error.message || 'Unknown error occurred';
+    if (errorMessage.includes('uuid')) {
+      errorMessage = 'ID utente non valido';
+    } else if (errorMessage.includes('check')) {
+      errorMessage = 'Token o dati non validi';
+    }
+    
     return { 
       success: false, 
       error: errorMessage,

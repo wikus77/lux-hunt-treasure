@@ -59,7 +59,7 @@ export default function NotificationSettings() {
     
     setLoading(true);
     try {
-      const result = await enablePushNotifications(user.id);
+      const result = await enablePushNotifications();
       
       if (result.success) {
         toast({
