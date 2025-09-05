@@ -1,178 +1,93 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, RefreshCw, Send, Bug } from 'lucide-react';
+import { Copy, RefreshCw, Send, Bug, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { useUnifiedPush } from '@/hooks/useUnifiedPush';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface DebugInfo {
-  permission: NotificationPermission | null;
-  serviceWorkerReady: boolean;
-  tokenPrefix: string;
-  platform: string;
-  vapidKey: string;
-  userAgent: string;
-  isPWA: boolean;
-  endpoint: string;
-}
+import { looksLikeWebPushEndpoint, toDisplayableWebPush } from '@/lib/push/webpush';
 
 const PushDebugPanel: React.FC = () => {
   const { user } = useAuth();
-  const [debugInfo, setDebugInfo] = useState<DebugInfo>({
-    permission: null,
-    serviceWorkerReady: false,
-    tokenPrefix: 'N/A',
-    platform: 'unknown',
-    vapidKey: '',
-    userAgent: '',
-    isPWA: false,
-    endpoint: ''
-  });
-  const [loading, setLoading] = useState(false);
+  const {
+    isSupported,
+    isSubscribed,
+    permission,
+    isLoading,
+    error,
+    token,
+    subscription,
+    webPushSubscription,
+    subscriptionType,
+    canSubscribe,
+    subscribe,
+    unsubscribe,
+    checkStatus
+  } = useUnifiedPush();
+  
+  const [testLoading, setTestLoading] = useState(false);
 
-  useEffect(() => {
-    refreshDebugInfo();
-  }, []);
-
-  const refreshDebugInfo = async () => {
-    console.log('🔧 [PushDebugPanel] Refreshing debug info...');
-    
-    const info: DebugInfo = {
-      permission: 'Notification' in window ? Notification.permission : null,
-      serviceWorkerReady: false,
-      tokenPrefix: 'N/A',
-      platform: detectPlatform(),
-      vapidKey: 'BLT_uexaFBpPEX-VqzPy9U-7zMW-vVUGOajLUbL6Ny9eXOhO6Y1nMOaWgJCEKCZzG8X2z6WzXPFOA5MxzJ7Q-o8',
-      userAgent: navigator.userAgent,
-      isPWA: (window.matchMedia?.('(display-mode: standalone)').matches) || 
-             (navigator as any).standalone === true,
-      endpoint: ''
-    };
-
-    // Check service worker
-    if ('serviceWorker' in navigator) {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        info.serviceWorkerReady = !!registration;
-        
-        // Get existing subscription
-        const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-          info.tokenPrefix = subscription.endpoint.substring(0, 30) + '...';
-          info.endpoint = subscription.endpoint;
-        }
-      } catch (error) {
-        console.error('SW check failed:', error);
-      }
-    }
-
-    setDebugInfo(info);
-    console.log('🔧 [PushDebugPanel] Debug info updated:', info);
-  };
-
-  const detectPlatform = (): string => {
-    const ua = navigator.userAgent.toLowerCase();
-    if (/ipad|iphone|ipod/.test(ua)) return 'ios';
-    if (/android/.test(ua)) return 'android';
-    return 'desktop';
-  };
-
-  const regenerateToken = async () => {
-    if (!user) {
-      toast.error('Utente non autenticato');
+  const handleTestPush = async () => {
+    if (!isSubscribed) {
+      toast.error("Nessuna subscription attiva");
       return;
     }
 
-    setLoading(true);
+    setTestLoading(true);
     try {
-      // Force new subscription
-      if ('serviceWorker' in navigator) {
-        const registration = await navigator.serviceWorker.ready;
-        const existingSubscription = await registration.pushManager.getSubscription();
-        
-        if (existingSubscription) {
-          await existingSubscription.unsubscribe();
-          console.log('🗑️ Old subscription removed');
-        }
+      let result;
 
-        // Create new subscription
-        const vapidKey = debugInfo.vapidKey;
-        const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-        
-        const newSubscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: applicationServerKey,
-        });
-
-        console.log('✅ New subscription created:', newSubscription.endpoint);
-        
-        // Save to database
-        const result = await supabase.functions.invoke('upsert_fcm_subscription', {
+      if (subscriptionType === 'fcm' && token && !looksLikeWebPushEndpoint(token)) {
+        // FCM path
+        console.log('🔥 [DEBUG] Testing FCM push...');
+        result = await supabase.functions.invoke('fcm-test', {
           body: {
-            user_id: user.id,
-            token: newSubscription.endpoint,
-            platform: debugInfo.platform,
-            device_info: {
-              ua: navigator.userAgent,
-              regenerated: true,
-              timestamp: new Date().toISOString()
-            }
+            token: token,
+            title: 'M1SSION™ Test FCM',
+            body: `FCM test alle ${new Date().toLocaleTimeString()}`
           }
         });
-
-        if (result.error) {
-          throw new Error(result.error.message);
-        }
-
-        toast.success('Token rigenerato con successo');
-        await refreshDebugInfo();
+      } else if (subscriptionType === 'webpush' && webPushSubscription) {
+        // Web Push path
+        console.log('🌐 [DEBUG] Testing Web Push...');
+        result = await supabase.functions.invoke('webpush-send', {
+          body: {
+            subscription: webPushSubscription,
+            title: 'M1SSION™ Test WebPush',
+            body: `WebPush test alle ${new Date().toLocaleTimeString()}`,
+            data: { test: true, timestamp: Date.now() }
+          }
+        });
+      } else {
+        throw new Error('Nessuna subscription valida trovata');
       }
+
+      if (result?.error) throw result.error;
+
+      toast.success(`✅ Test Push Inviato (${subscriptionType?.toUpperCase()}) - Controlla le notifiche`);
     } catch (error) {
-      console.error('Token regeneration failed:', error);
-      toast.error(`Errore: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Test push failed:', error);
+      toast.error(`Errore Test Push: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
     } finally {
-      setLoading(false);
+      setTestLoading(false);
     }
   };
 
-  const sendTestNotification = async () => {
-    if (!user) {
-      toast.error('Utente non autenticato');
-      return;
-    }
-
-    setLoading(true);
+  const copyToClipboard = async (text: string) => {
     try {
-      const result = await supabase.functions.invoke('fcm-test', {
-        body: { userId: user.id }
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
-
-      toast.success('Notifica test inviata');
+      await navigator.clipboard.writeText(text);
+      toast.success("Testo copiato negli appunti");
     } catch (error) {
-      console.error('Test notification failed:', error);
-      toast.error(`Errore: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-      setLoading(false);
+      console.error('Copy failed:', error);
+      toast.error("Errore durante la copia");
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success('Copiato negli appunti');
-  };
-
-  // Helper function
-  const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
-    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+  const getStatusColor = (status: boolean | null) => {
+    if (status === null) return 'secondary';
+    return status ? 'default' : 'destructive';
   };
 
   return (
@@ -180,113 +95,163 @@ const PushDebugPanel: React.FC = () => {
       <CardHeader>
         <CardTitle className="text-white flex items-center">
           <Bug className="w-5 h-5 mr-2" />
-          Debug Push Notifications
+          Push Debug Panel - Unified System
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Status Overview */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">Browser Support:</span>
+              <Badge variant={getStatusColor(isSupported)}>
+                {isSupported ? 'Supported' : 'Not Supported'}
+              </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
               <span className="text-white/70 text-sm">Permission:</span>
-              <Badge variant={debugInfo.permission === 'granted' ? 'default' : 'destructive'}>
-                {debugInfo.permission || 'N/A'}
+              <Badge variant={permission === 'granted' ? 'default' : permission === 'denied' ? 'destructive' : 'secondary'}>
+                {permission || 'Unknown'}
               </Badge>
             </div>
             
-            <div className="flex items-center justify-between">
-              <span className="text-white/70 text-sm">SW Ready:</span>
-              <Badge variant={debugInfo.serviceWorkerReady ? 'default' : 'destructive'}>
-                {debugInfo.serviceWorkerReady ? 'Yes' : 'No'}
-              </Badge>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-white/70 text-sm">Platform:</span>
-              <Badge variant="outline">{debugInfo.platform}</Badge>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <span className="text-white/70 text-sm">PWA:</span>
-              <Badge variant={debugInfo.isPWA ? 'default' : 'secondary'}>
-                {debugInfo.isPWA ? 'Yes' : 'No'}
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">Subscribed:</span>
+              <Badge variant={getStatusColor(isSubscribed)}>
+                {isSubscribed ? 'Active' : 'Inactive'}
               </Badge>
             </div>
           </div>
-          
-          <div className="space-y-2">
-            <div className="space-y-1">
-              <span className="text-white/70 text-sm">Token Prefix:</span>
-              <div className="flex items-center space-x-2">
-                <code className="bg-gray-800 px-2 py-1 rounded text-xs text-green-400 flex-1">
-                  {debugInfo.tokenPrefix}
-                </code>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copyToClipboard(debugInfo.endpoint)}
-                  disabled={!debugInfo.endpoint}
-                >
-                  <Copy className="w-3 h-3" />
-                </Button>
+
+          <div className="space-y-3">
+            {isSubscribed && (
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Type:</span>
+                  <Badge variant={subscriptionType === 'fcm' ? 'default' : 'secondary'}>
+                    {subscriptionType?.toUpperCase() || 'N/A'}
+                  </Badge>
+                </div>
+                
+                {subscriptionType === 'fcm' && token && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-muted-foreground">FCM Token:</span>
+                    <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                      {token.slice(0, 20)}...
+                    </span>
+                  </div>
+                )}
+                
+                {subscriptionType === 'webpush' && webPushSubscription && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Endpoint:</span>
+                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                        {toDisplayableWebPush(webPushSubscription).endpointPrefix}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">p256dh:</span>
+                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                        {toDisplayableWebPush(webPushSubscription).p256dhShort}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">auth:</span>
+                      <span className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                        {toDisplayableWebPush(webPushSubscription).authShort}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-            
-            <div className="space-y-1">
-              <span className="text-white/70 text-sm">VAPID Key:</span>
-              <div className="flex items-center space-x-2">
-                <code className="bg-gray-800 px-2 py-1 rounded text-xs text-blue-400 flex-1">
-                  {debugInfo.vapidKey.substring(0, 20)}...
-                </code>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copyToClipboard(debugInfo.vapidKey)}
-                >
-                  <Copy className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        <div className="flex space-x-2">
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-900/20 border border-red-500/50 rounded-lg p-3">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
           <Button
-            onClick={refreshDebugInfo}
+            onClick={subscribe}
+            disabled={isLoading || !canSubscribe || isSubscribed}
+            variant="default"
+            size="sm"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            {isLoading ? 'Subscribing...' : 'Subscribe'}
+          </Button>
+
+          <Button
+            onClick={unsubscribe}
+            disabled={isLoading || !isSubscribed}
             variant="outline"
             size="sm"
-            disabled={loading}
           >
             <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
+            Unsubscribe
           </Button>
-          
+
           <Button
-            onClick={regenerateToken}
+            onClick={handleTestPush}
+            disabled={testLoading || !isSubscribed}
             variant="outline"
             size="sm"
-            disabled={loading || !user}
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Regenera Token
-          </Button>
-          
-          <Button
-            onClick={sendTestNotification}
-            variant="outline"
-            size="sm"
-            disabled={loading || !user}
           >
             <Send className="w-4 h-4 mr-2" />
-            Test Push
+            {testLoading ? 'Sending...' : `Test Push ${subscriptionType ? `(${subscriptionType.toUpperCase()})` : ''}`}
+          </Button>
+
+          <Button
+            onClick={checkStatus}
+            disabled={isLoading}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Refresh Status
           </Button>
         </div>
 
-        <div className="border-t border-white/10 pt-3">
+        {/* Technical Details */}
+        <div className="border-t border-white/10 pt-4">
           <details className="text-white/70">
-            <summary className="cursor-pointer text-sm font-medium">User Agent</summary>
-            <code className="text-xs bg-gray-800 p-2 rounded mt-2 block break-all">
-              {debugInfo.userAgent}
-            </code>
+            <summary className="cursor-pointer text-sm font-medium mb-2">
+              Technical Information
+            </summary>
+            <div className="space-y-2 text-xs">
+              <div className="bg-gray-800/50 p-2 rounded">
+                <strong>Platform:</strong> {navigator.platform}
+              </div>
+              <div className="bg-gray-800/50 p-2 rounded">
+                <strong>User Agent:</strong>
+                <div className="mt-1 break-all">{navigator.userAgent}</div>
+              </div>
+              {subscription && (
+                <div className="bg-gray-800/50 p-2 rounded">
+                  <strong>Subscription Endpoint:</strong>
+                  <div className="mt-1 break-all font-mono">
+                    {subscription.endpoint}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mt-2"
+                    onClick={() => copyToClipboard(subscription.endpoint)}
+                  >
+                    <Copy className="w-3 h-3 mr-1" />
+                    Copy Endpoint
+                  </Button>
+                </div>
+              )}
+            </div>
           </details>
         </div>
       </CardContent>

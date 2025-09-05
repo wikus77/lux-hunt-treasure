@@ -22,6 +22,8 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
     isSupported,
     permission,
     subscription,
+    webPushSubscription,
+    subscriptionType,
     isLoading,
     error,
     isSubscribed,
@@ -32,27 +34,15 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
   } = useUnifiedPush();
 
   const getPlatformIcon = () => {
-    if (subscription?.platform === 'ios') {
-      return <Smartphone className="w-4 h-4" />;
-    }
-    if (subscription?.platform === 'android') {
-      return <Smartphone className="w-4 h-4" />;
-    }
     return <Monitor className="w-4 h-4" />;
   };
 
   const getPlatformLabel = () => {
-    if (subscription?.platform === 'ios') return 'iOS';
-    if (subscription?.platform === 'android') return 'Android';
-    if (subscription?.platform === 'desktop') return 'Desktop';
-    return 'Web';
+    return 'Desktop';
   };
 
   const getSubscriptionTypeLabel = () => {
-    if (subscription?.type === 'fcm') return 'FCM';
-    if (subscription?.type === 'web_push') return 'Web Push';
-    if (subscription?.type === 'native') return 'Native';
-    return 'Unknown';
+    return subscriptionType?.toUpperCase() || 'Unknown';
   };
 
   const getStatusColor = () => {
@@ -123,7 +113,7 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
         </div>
 
         {/* Subscription Details */}
-        {subscription && isSubscribed && (
+        {isSubscribed && (
           <div className="p-3 bg-muted/50 rounded-lg space-y-2">
             <div className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-success" />
@@ -132,8 +122,8 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
             <div className="text-xs text-muted-foreground space-y-1">
               <div>Tipo: {getSubscriptionTypeLabel()}</div>
               <div>Piattaforma: {getPlatformLabel()}</div>
-              {subscription.subscription && typeof subscription.subscription === 'string' && (
-                <div>Token: {subscription.subscription.substring(0, 20)}...</div>
+              {subscription && (
+                <div>Endpoint: {subscription.endpoint.substring(0, 30)}...</div>
               )}
             </div>
           </div>
