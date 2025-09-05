@@ -12,28 +12,33 @@ interface TestPushRequest {
   data?: Record<string, string>;
 }
 
-// Generate OAuth2 access token for FCM
+// Generate OAuth2 access token for FCM - FIX DER 0x2d error
 async function generateAccessToken(): Promise<string> {
   try {
+    console.log('🔑 [FCM-TEST] Starting access token generation...');
+    
     const serviceAccountJson = Deno.env.get('FCM_SERVICE_ACCOUNT_JSON') || 
                               Deno.env.get('FCM_SERVICE_ACCOUNT_JSON_B64');
     
     if (!serviceAccountJson) {
+      console.error('❌ [FCM-TEST] FCM service account not configured');
       throw new Error('FCM service account not configured');
     }
     
-    // Decode base64 if needed
+    // Decode base64 if needed and validate
     const serviceAccount = serviceAccountJson.startsWith('{') 
       ? JSON.parse(serviceAccountJson)
       : JSON.parse(atob(serviceAccountJson));
     
-    const projectId = Deno.env.get('FCM_PROJECT_ID') || serviceAccount.project_id;
-    
-    if (!projectId) {
-      throw new Error('FCM_PROJECT_ID not configured');
+    // CRITICAL: Validate private_key has proper newlines (not literal \\n)
+    if (!serviceAccount.private_key || !serviceAccount.private_key.startsWith('-----BEGIN PRIVATE KEY-----\n')) {
+      console.error('❌ [FCM-TEST] FCM service account invalid (newline issue)');
+      console.error('Private key preview:', serviceAccount.private_key?.substring(0, 50) + '...');
+      throw new Error('FCM service account invalid (newline issue)');
     }
-
-    console.log(`🔑 Generating test access token for project: ${projectId}`);
+    
+    const projectId = serviceAccount.project_id || 'm1ssion-app';
+    console.log(`🔑 [FCM-TEST] Generating access token for project: ${projectId}`);
     
     // Create JWT for Google OAuth2
     const now = Math.floor(Date.now() / 1000);
@@ -47,10 +52,18 @@ async function generateAccessToken(): Promise<string> {
     
     const header = { alg: 'RS256', typ: 'JWT' };
     
-    // Import private key
+    // Convert PEM to proper format and import key (AVOID DER 0x2d error)
+    const pemKey = serviceAccount.private_key
+      .replace(/\\n/g, '\n')  // Fix escaped newlines
+      .replace(/-----BEGIN PRIVATE KEY-----/, '')
+      .replace(/-----END PRIVATE KEY-----/, '')
+      .replace(/\s/g, '');
+    
+    const keyData = Uint8Array.from(atob(pemKey), c => c.charCodeAt(0));
+    
     const key = await crypto.subtle.importKey(
       'pkcs8',
-      new TextEncoder().encode(serviceAccount.private_key),
+      keyData,
       { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
       false,
       ['sign']
@@ -81,15 +94,16 @@ async function generateAccessToken(): Promise<string> {
     
     if (!tokenResponse.ok) {
       const error = await tokenResponse.text();
+      console.error('❌ [FCM-TEST] Token exchange failed:', error);
       throw new Error(`Token generation failed: ${error}`);
     }
     
     const tokenData = await tokenResponse.json();
-    console.log('✅ Test access token generated successfully');
+    console.log('✅ [FCM-TEST] Access token generated successfully');
     
     return tokenData.access_token;
   } catch (error) {
-    console.error('❌ Test access token generation failed:', error);
+    console.error('❌ [FCM-TEST] Access token generation failed:', error);
     throw error;
   }
 }
@@ -145,7 +159,7 @@ async function sendFCMMessage(
       }
     };
     
-    const response = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+    const response = await fetch(`https://fcm.googleapis.com/v1/projects/m1ssion-app/messages:send`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -157,21 +171,20 @@ async function sendFCMMessage(
     const responseData = await response.json();
     
     if (!response.ok) {
-      console.error('❌ FCM test error:', responseData);
+      console.error('❌ [FCM-TEST] Send error:', responseData);
       
-      // Check for invalid token
-      const isInvalidToken = responseData.error?.details?.some(
-        (detail: any) => detail.errorCode === 'UNREGISTERED' || detail.errorCode === 'INVALID_ARGUMENT'
-      );
-      
-      if (isInvalidToken) {
-        console.log('🔄 Token appears to be invalid or unregistered');
+      // Check for UNREGISTERED token
+      const errorCode = responseData.error?.details?.[0]?.errorCode || responseData.error?.status;
+      if (errorCode === 'UNREGISTERED' || errorCode === 'NOT_FOUND') {
+        console.log('🔄 [FCM-TEST] Token UNREGISTERED - should be deleted from DB');
+        // Don't return error object here, just false
+        return false;
       }
       
       return false;
     }
     
-    console.log(`✅ Test notification sent successfully: ${responseData.name}`);
+    console.log(`✅ [FCM-TEST] Notification sent successfully: ${responseData.name}`);
     return true;
     
   } catch (error) {
@@ -187,14 +200,34 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🧪 FCM Test function called');
+    console.log('🧪 [FCM-TEST] Function called');
+    
+    // Require authorization (ANON key)
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      console.error('❌ [FCM-TEST] Missing authorization header');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Authorization required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Parse request
     const { token, title, body, data }: TestPushRequest = await req.json();
     
     if (!token) {
+      console.error('❌ [FCM-TEST] Missing token');
       return new Response(
-        JSON.stringify({ error: 'token is required' }),
+        JSON.stringify({ success: false, error: 'token is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Handle test token explicitly
+    if (token === 'test') {
+      console.error('❌ [FCM-TEST] Test token provided');
+      return new Response(
+        JSON.stringify({ success: false, error: 'Need a real FCM token' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -205,10 +238,10 @@ serve(async (req) => {
     const testData = { 
       ...data,
       screen: data?.screen || '/notifications',
-      test: 'true'
+      source: 'edge'
     };
     
-    console.log('📋 Test parameters:', { 
+    console.log('📋 [FCM-TEST] Parameters:', { 
       tokenPrefix: token.substring(0, 12),
       title: testTitle,
       body: testBody,
@@ -228,7 +261,12 @@ serve(async (req) => {
       body: testBody
     };
     
-    console.log('📊 Test result:', response);
+    // DON'T say "successful!" when success=false
+    if (!success) {
+      response.message = 'Test notification failed. Token may be invalid.';
+    }
+    
+    console.log('📊 [FCM-TEST] Result:', response);
     
     return new Response(
       JSON.stringify(response),
@@ -239,7 +277,7 @@ serve(async (req) => {
     );
     
   } catch (error) {
-    console.error('💥 FCM Test function error:', error);
+    console.error('💥 [FCM-TEST] Function error:', error);
     
     return new Response(
       JSON.stringify({ 
