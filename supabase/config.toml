@@ -66,3 +66,11 @@ verify_jwt = true
 [functions.send-test-push]
 # Admin-only function for testing push notifications
 verify_jwt = false
+
+[functions.fcm-test]
+# Public function for FCM testing
+verify_jwt = false
+
+[functions.fcm-send]
+# Public function for FCM sending
+verify_jwt = false
