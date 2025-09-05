@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-import { initializeApp } from 'firebase/app';
-import { getMessaging, getToken, deleteToken, onMessage, MessagePayload } from 'firebase/messaging';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getMessaging, getToken, deleteToken, onMessage, MessagePayload, Messaging } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
 
 // Firebase configuration for M1SSION app
@@ -15,6 +15,10 @@ const firebaseConfig = {
 
 // VAPID Public Key - NON CAMBIARE (invaliderebbe tutti i token esistenti)
 const VAPID_PUBLIC_KEY = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
+
+// Global Firebase app instance
+let globalApp: FirebaseApp | null = null;
+let globalMessaging: Messaging | null = null;
 
 export interface PushEnableResult {
   success: boolean;
@@ -64,69 +68,202 @@ export const needsInstallGuide = (): boolean => {
 };
 
 /**
- * Registers the Firebase messaging service worker with no-cache headers
+ * Initialize Firebase app once and return messaging instance
  */
-async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!('serviceWorker' in navigator)) {
-    console.warn('🚫 [M1SSION FCM] Service workers not supported');
-    return null;
+export function getMessagingInstance(): Messaging {
+  console.log('🚀 [M1SSION FCM] Getting messaging instance...');
+  
+  if (!globalApp) {
+    const existingApps = getApps();
+    if (existingApps.length > 0) {
+      globalApp = existingApps[0];
+      console.log('✅ [M1SSION FCM] Using existing Firebase app');
+    } else {
+      globalApp = initializeApp(firebaseConfig);
+      console.log('✅ [M1SSION FCM] Initialized new Firebase app');
+    }
   }
+  
+  if (!globalMessaging) {
+    globalMessaging = getMessaging(globalApp);
+    console.log('✅ [M1SSION FCM] Messaging instance created');
+  }
+  
+  return globalMessaging;
+}
 
+/**
+ * Validate FCM token format
+ */
+function validateToken(token: string): boolean {
+  const TOKEN_OK = /^[A-Za-z0-9_\-:]+$/.test(token) && token.length > 100;
+  console.log(`🔍 [M1SSION FCM] Token validation: length=${token.length}, format=${TOKEN_OK}`);
+  return TOKEN_OK;
+}
+
+/**
+ * Validate UUID format
+ */
+function validateUUID(uuid: string): boolean {
+  const isValid = /^[0-9a-f-]{36}$/i.test(uuid);
+  console.log(`🔍 [M1SSION FCM] UUID validation: ${uuid} = ${isValid}`);
+  return isValid;
+}
+
+/**
+ * Register service worker and get FCM token
+ */
+export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }): Promise<string> {
+  console.log('🔄 [M1SSION FCM] Starting SW registration and token generation...');
+  
+  // Check service worker support
+  if (!('serviceWorker' in navigator)) {
+    throw new Error('Service workers not supported');
+  }
+  
   try {
-    console.log('🔄 [M1SSION FCM] Registering service worker at root...');
-    
-    // Register at root with no cache to ensure updates
+    // Register service worker
+    console.log('🔄 [M1SSION FCM] Registering service worker...');
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
       scope: '/',
       updateViaCache: 'none'
     });
     
-    console.log('✅ [M1SSION FCM] Service worker registered:', registration.scope);
-    
-    // Wait for the service worker to be ready
+    // Wait for service worker to be ready
     await navigator.serviceWorker.ready;
-    console.log('✅ [M1SSION FCM] Service worker ready');
+    console.log(`✅ [M1SSION FCM] Service worker ready: ${registration.scope}`);
     
-    return registration;
-  } catch (error) {
-    console.error('❌ [M1SSION FCM] Service worker registration failed:', error);
-    return null;
+    // Get messaging instance
+    const messaging = getMessagingInstance();
+    
+    // Generate token
+    console.log('🔄 [M1SSION FCM] Generating FCM token...');
+    const token = await getToken(messaging, {
+      vapidKey,
+      serviceWorkerRegistration: registration
+    });
+    
+    if (!token) {
+      throw new Error('No FCM token generated');
+    }
+    
+    console.log(`✅ [M1SSION FCM] Token generated: length=${token.length}, prefix=${token.substring(0, 20)}...`);
+    
+    // Validate token format
+    if (!validateToken(token)) {
+      throw new Error('Invalid FCM token format');
+    }
+    
+    return token;
+    
+  } catch (error: any) {
+    console.error('❌ [M1SSION FCM] SW registration/token generation failed:', error);
+    throw error;
   }
 }
 
 /**
- * Generates and returns an FCM token
+ * Save token to Supabase database
  */
-async function getFCMToken(): Promise<string | null> {
+export async function saveTokenToDB({ 
+  userId, 
+  token, 
+  platform, 
+  deviceInfo 
+}: {
+  userId: string;
+  token: string;
+  platform: 'ios' | 'android' | 'desktop' | 'unknown';
+  deviceInfo: any;
+}): Promise<void> {
+  console.log('🔄 [M1SSION FCM] Saving token to database...');
+  
+  // Validate UUID
+  if (!validateUUID(userId)) {
+    throw new Error(`Invalid userId UUID format: ${userId}`);
+  }
+  
+  // Validate token
+  if (!validateToken(token)) {
+    throw new Error('Invalid FCM token format');
+  }
+  
+  const payload = {
+    user_id: userId,
+    token,
+    platform,
+    device_info: deviceInfo,
+    is_active: true
+  };
+  
+  console.log('📤 [M1SSION FCM] Payload:', {
+    user_id: userId,
+    token_length: token.length,
+    token_prefix: token.substring(0, 20) + '...',
+    platform,
+    device_info_keys: Object.keys(deviceInfo),
+    is_active: true
+  });
+  
   try {
-    console.log('🔄 [M1SSION FCM] Generating FCM token...');
+    const { error } = await supabase
+      .from('fcm_subscriptions')
+      .upsert(payload, {
+        onConflict: 'token'
+      });
     
-    // Initialize Firebase app
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
-    
-    // Register service worker
-    const registration = await registerServiceWorker();
-    
-    // Get token with VAPID key and service worker registration
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_PUBLIC_KEY,
-      serviceWorkerRegistration: registration || undefined
-    });
-    
-    if (!token) {
-      console.warn('⚠️ [M1SSION FCM] No registration token available');
-      return null;
+    if (error) {
+      console.error('❌ [M1SSION FCM] Database error:', error);
+      throw new Error(`Database save failed: ${error.message}`);
     }
     
-    console.log('✅ [M1SSION FCM] Token generated:', token.substring(0, 20) + '...');
-    return token;
+    console.log('✅ [M1SSION FCM] Token saved successfully');
     
   } catch (error: any) {
-    console.error('❌ [M1SSION FCM] Token generation failed:', error);
-    return null;
+    console.error('❌ [M1SSION FCM] Save token failed:', error);
+    throw error;
   }
 }
+
+/**
+ * Delete token from database
+ */
+export async function deleteTokenFromDB({ userId, token }: { userId: string; token?: string }): Promise<void> {
+  console.log('🔄 [M1SSION FCM] Deleting token from database...');
+  
+  // Validate UUID
+  if (!validateUUID(userId)) {
+    throw new Error(`Invalid userId UUID format: ${userId}`);
+  }
+  
+  try {
+    let query = supabase
+      .from('fcm_subscriptions')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (token) {
+      query = query.eq('token', token);
+      console.log(`🗑️ [M1SSION FCM] Deleting specific token for user ${userId}`);
+    } else {
+      console.log(`🗑️ [M1SSION FCM] Deleting all tokens for user ${userId}`);
+    }
+    
+    const { error } = await query;
+    
+    if (error) {
+      console.error('❌ [M1SSION FCM] Database delete error:', error);
+      throw new Error(`Database delete failed: ${error.message}`);
+    }
+    
+    console.log('✅ [M1SSION FCM] Token(s) deleted successfully');
+    
+  } catch (error: any) {
+    console.error('❌ [M1SSION FCM] Delete token failed:', error);
+    throw error;
+  }
+}
+
 
 /**
  * Regenerates FCM token (deletes old one first)
@@ -135,15 +272,14 @@ export async function regenerateFCMToken(): Promise<string | null> {
   try {
     console.log('🔄 [M1SSION FCM] Regenerating token...');
     
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
+    const messaging = getMessagingInstance();
     
     // Delete existing token
     await deleteToken(messaging);
     console.log('🗑️ [M1SSION FCM] Old token deleted');
     
     // Generate new token
-    return await getFCMToken();
+    return await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
     
   } catch (error) {
     console.error('❌ [M1SSION FCM] Token regeneration failed:', error);
@@ -156,8 +292,7 @@ export async function regenerateFCMToken(): Promise<string | null> {
  */
 export function setupForegroundMessageListener(): void {
   try {
-    const app = initializeApp(firebaseConfig);
-    const messaging = getMessaging(app);
+    const messaging = getMessagingInstance();
     
     onMessage(messaging, (payload: MessagePayload) => {
       console.log('📨 [M1SSION FCM] Foreground message received:', payload);
@@ -180,47 +315,6 @@ export function setupForegroundMessageListener(): void {
   }
 }
 
-async function saveFCMToken(token: string, userId: string): Promise<void> {
-  const platform = detectPlatform();
-  const deviceInfo = {
-    userAgent: navigator.userAgent,
-    platform,
-    timestamp: new Date().toISOString(),
-    isStandalone: isStandalone(),
-    url: window.location.href
-  };
-
-  try {
-    console.log('🔄 [M1SSION FCM] Saving token to Supabase...', { 
-      userId, 
-      tokenPrefix: token.substring(0, 20) + '...', 
-      platform 
-    });
-    
-    // Upsert via REST API for better error handling
-    const { error } = await supabase
-      .from('fcm_subscriptions')
-      .upsert({
-        user_id: userId,
-        token,
-        platform,
-        device_info: deviceInfo,
-        is_active: true
-      }, {
-        onConflict: 'user_id,token'
-      });
-
-    if (error) {
-      console.error('❌ [M1SSION FCM] Database error:', error);
-      throw error;
-    }
-
-    console.log('✅ [M1SSION FCM] Token saved successfully');
-  } catch (error: any) {
-    console.error('❌ [M1SSION FCM] Failed to save token:', error);
-    throw new Error(`Database save failed: ${error.message}`);
-  }
-}
 
 /**
  * Main function to enable push notifications with clear permission handling
@@ -272,15 +366,19 @@ export async function enablePushNotifications(userId: string): Promise<PushEnabl
     }
 
     // 5. Generate FCM token
-    const token = await getFCMToken();
-    if (!token) {
-      const error = 'Failed to generate FCM token';
-      console.error('❌ [M1SSION FCM]', error);
-      return { success: false, error, permission };
-    }
+    const token = await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
 
     // 6. Save token to database
-    await saveFCMToken(token, userId);
+    const platform = detectPlatform();
+    const deviceInfo = {
+      userAgent: navigator.userAgent,
+      platform,
+      timestamp: new Date().toISOString(),
+      isStandalone: isStandalone(),
+      url: window.location.href
+    };
+    
+    await saveTokenToDB({ userId, token, platform, deviceInfo });
 
     // 7. Setup foreground message listener
     setupForegroundMessageListener();
