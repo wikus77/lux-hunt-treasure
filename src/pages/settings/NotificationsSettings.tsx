@@ -228,7 +228,7 @@ const NotificationsSettings: React.FC = () => {
               </p>
             </div>
             <Switch
-              defaultChecked={true}
+              checked={true}
               disabled={loading}
             />
           </div>
@@ -241,7 +241,7 @@ const NotificationsSettings: React.FC = () => {
               </p>
             </div>
             <Switch
-              defaultChecked={true}
+              checked={true}
               disabled={loading}
             />
           </div>
