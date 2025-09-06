@@ -7,7 +7,7 @@ function corsHeaders(origin: string | null) {
   const allow = ALLOW_ORIGIN.some(allowed => origin?.includes(allowed.replace('https://', ''))) ? origin! : ALLOW_ORIGIN[0];
   return {
     "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-client-id",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 }
@@ -30,20 +30,54 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, endpoint, p256dh, auth, platform } = await req.json();
+    const { user_id, endpoint, p256dh, auth, platform, userAgent, vapidKey } = await req.json();
     
     console.log('💾 [WEBPUSH-UPSERT] Saving Web Push subscription for user:', user_id);
     console.log('💾 [WEBPUSH-UPSERT] Endpoint:', endpoint?.substring(0, 50) + '...');
+    console.log('💾 [WEBPUSH-UPSERT] Platform:', platform);
+    console.log('💾 [WEBPUSH-UPSERT] VAPID Key:', vapidKey?.substring(0, 12) + '...');
     
+    // Validate required fields
     if (!user_id || !endpoint || !p256dh || !auth) {
-      console.error('❌ [WEBPUSH-UPSERT] Missing required fields');
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+      const missing = [];
+      if (!user_id) missing.push('user_id');
+      if (!endpoint) missing.push('endpoint');
+      if (!p256dh) missing.push('p256dh');
+      if (!auth) missing.push('auth');
+      
+      console.error('❌ [WEBPUSH-UPSERT] Missing required fields:', missing);
+      return new Response(JSON.stringify({ 
+        error: "Missing required fields", 
+        missing_fields: missing,
+        received: { user_id: !!user_id, endpoint: !!endpoint, p256dh: !!p256dh, auth: !!auth }
+      }), {
         headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
         status: 400,
       });
     }
 
+    // Validate endpoint format
+    if (!endpoint.startsWith('https://')) {
+      console.error('❌ [WEBPUSH-UPSERT] Invalid endpoint format:', endpoint);
+      return new Response(JSON.stringify({ error: "Endpoint must be HTTPS URL" }), {
+        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
+        status: 400,
+      });
+    }
+
+    // Normalize platform
+    const normalizedPlatform = (() => {
+      const p = (platform || 'web').toLowerCase();
+      if (['ios', 'android', 'desktop', 'web'].includes(p)) return p;
+      if (p.includes('iphone') || p.includes('ipad')) return 'ios';
+      if (p.includes('android')) return 'android';
+      if (p.includes('mac') || p.includes('windows') || p.includes('linux')) return 'desktop';
+      return 'web';
+    })();
+
     // Save in fcm_subscriptions table: token = endpoint, device_info contains keys
+    console.log('💾 [WEBPUSH-UPSERT] Saving to database with normalized platform:', normalizedPlatform);
+    
     const resp = await fetch(`${url}/rest/v1/fcm_subscriptions`, {
       method: "POST",
       headers: {
@@ -55,9 +89,15 @@ serve(async (req) => {
       body: JSON.stringify({
         user_id,
         token: endpoint,
-        platform: platform ?? "web",
+        platform: normalizedPlatform,
         is_active: true,
-        device_info: { kind: "WEBPUSH", keys: { p256dh, auth } },
+        device_info: { 
+          kind: "WEBPUSH", 
+          keys: { p256dh, auth },
+          userAgent: userAgent || null,
+          vapidKey: vapidKey || null,
+          created_at: new Date().toISOString()
+        },
       }),
     });
 

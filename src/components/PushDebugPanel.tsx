@@ -54,15 +54,18 @@ const PushDebugPanel: React.FC = () => {
           }
         });
       } else if (subscriptionType === 'webpush' && webPushSubscription) {
-        // Web Push path
+        // Web Push path - use clean payload without extra headers
         console.log('🌐 [DEBUG] Testing Web Push...');
+        const testPayload = {
+          subscription: webPushSubscription,
+          title: 'M1SSION™ Test WebPush',
+          body: `WebPush test alle ${new Date().toLocaleTimeString()}`,
+          data: { test: true, timestamp: Date.now() }
+        };
+        
+        console.log('📤 [DEBUG] Sending payload:', testPayload);
         result = await supabase.functions.invoke('webpush-send', {
-          body: {
-            subscription: webPushSubscription,
-            title: 'M1SSION™ Test WebPush',
-            body: `WebPush test alle ${new Date().toLocaleTimeString()}`,
-            data: { test: true, timestamp: Date.now() }
-          }
+          body: testPayload
         });
       } else {
         throw new Error('Nessuna subscription valida trovata');
