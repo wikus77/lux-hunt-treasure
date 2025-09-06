@@ -97,11 +97,21 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('push', (event) => {
   console.log('[M1SSION SW] Web Push event received:', event.data?.text());
   
+  // Parse JSON data with fallback handling
   const data = (() => { 
     try { 
-      return event.data?.json() || {};
-    } catch { 
-      return {};
+      if (!event.data) return {};
+      const text = event.data.text();
+      if (!text || text.trim() === '') return {};
+      return JSON.parse(text);
+    } catch (parseError) { 
+      console.warn('[M1SSION SW] Failed to parse push data as JSON:', parseError);
+      // Return fallback data if JSON is invalid
+      return {
+        title: 'M1SSION™',
+        body: 'New notification received',
+        data: { fallback: true }
+      };
     }
   })();
   
@@ -114,7 +124,18 @@ self.addEventListener('push', (event) => {
     badge: '/favicon.ico',
     data: data.data || {},
     tag: 'mission-webpush',
-    requireInteraction: true
+    requireInteraction: true,
+    // Add action buttons for better UX
+    actions: [
+      {
+        action: 'open',
+        title: 'Open App'
+      },
+      {
+        action: 'dismiss',
+        title: 'Dismiss'
+      }
+    ]
   };
   
   console.log('[M1SSION SW] Showing Web Push notification:', { title, ...notificationOptions });

@@ -170,17 +170,36 @@ async function saveSubscriptionToDatabase(subscription: PushSubscription): Promi
     auth: subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))) : ''
   } : { p256dh: '', auth: '' };
 
-  const payload: SubscriptionPayload = {
+  // Get user ID
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('User not authenticated');
+  }
+
+  // Detect platform
+  const platform = (() => {
+    const ua = navigator.userAgent.toLowerCase();
+    if (ua.includes('iphone') || ua.includes('ipad')) return 'ios';
+    if (ua.includes('android')) return 'android';
+    if (ua.includes('mobile')) return 'web';
+    return 'desktop';
+  })();
+
+  const payload = {
+    user_id: user.id,
     endpoint: subscription.endpoint,
-    keys,
+    p256dh: keys.p256dh,
+    auth: keys.auth,
+    platform,
     userAgent: navigator.userAgent,
     vapidKey: VAPID_PUBLIC_KEY
   };
 
   console.log('💾 Saving subscription to database:', {
     endpoint: payload.endpoint.substring(0, 80) + '...',
-    hasP256dh: !!payload.keys.p256dh,
-    hasAuth: !!payload.keys.auth,
+    hasP256dh: !!payload.p256dh,
+    hasAuth: !!payload.auth,
+    platform: payload.platform,
     vapidKey: VAPID_PUBLIC_KEY.substring(0, 12) + '...' + VAPID_PUBLIC_KEY.slice(-8)
   });
 
