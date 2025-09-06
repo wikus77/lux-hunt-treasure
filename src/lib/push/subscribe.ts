@@ -203,14 +203,20 @@ async function saveSubscriptionToDatabase(subscription: PushSubscription): Promi
     vapidKey: VAPID_PUBLIC_KEY.substring(0, 12) + '...' + VAPID_PUBLIC_KEY.slice(-8)
   });
 
-  const { data, error } = await supabase.functions.invoke('webpush-upsert', {
-    body: payload
+  const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-upsert', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+    mode: 'cors',
+    cache: 'no-store',
   });
 
-  if (error) {
-    throw new Error(`Database save failed: ${error.message}`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+    throw new Error(`HTTP ${response.status}: ${errorData.error || 'Database save failed'}`);
   }
 
+  const data = await response.json();
   console.log('✅ Subscription saved successfully:', data);
 }
 
