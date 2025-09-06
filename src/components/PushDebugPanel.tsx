@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { looksLikeWebPushEndpoint, toDisplayableWebPush } from '@/lib/push/webpush';
 import { detectPlatform } from '@/lib/push/types';
+import { VAPID_PUBLIC_KEY, getVAPIDKeyInfo } from '@/lib/push/vapid';
+import { getPushSubscriptionInfo } from '@/lib/push/subscribe';
 
 const PushDebugPanel: React.FC = () => {
   const { user } = useAuth();
@@ -144,6 +146,14 @@ const PushDebugPanel: React.FC = () => {
               <Badge variant={getStatusColor(isSubscribed)}>
                 {isSubscribed ? 'Active' : 'Inactive'}
               </Badge>
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <span className="text-white/70 text-sm">VAPID Key:</span>
+              <div className="text-xs font-mono bg-gray-800/50 px-2 py-1 rounded cursor-pointer"
+                   onClick={() => copyToClipboard(VAPID_PUBLIC_KEY)}>
+                {VAPID_PUBLIC_KEY.substring(0, 12)}...{VAPID_PUBLIC_KEY.slice(-8)}
+              </div>
             </div>
           </div>
 
