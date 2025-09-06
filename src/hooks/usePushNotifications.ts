@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getAppServerKey, VAPID_PUBLIC_KEY } from '@/lib/vapid';
+import { getApplicationServerKey, VAPID_PUBLIC_KEY } from '@/lib/push/vapid';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -145,7 +145,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     try {
       // Pre-validate VAPID key before any subscription attempt
       console.log('🔑 Pre-subscription VAPID validation...');
-      const applicationServerKey = getAppServerKey(); // Throws if invalid
+      const applicationServerKey = getApplicationServerKey(); // Throws if invalid
       console.log('✅ VAPID pre-validation passed');
 
       // P0 FIX: Ensure unified SW registration

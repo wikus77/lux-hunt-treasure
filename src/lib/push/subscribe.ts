@@ -1,241 +1,276 @@
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Unified Push Subscription - FCM & APNs Support
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
- */
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
+// M1SSION™ Web Push Subscription with Auto-Repair
 
-import { urlBase64ToUint8Array } from './base64url';
+import { VAPID_PUBLIC_KEY, getApplicationServerKey } from './vapid';
 import { supabase } from '@/integrations/supabase/client';
 
-const PUSH_BOUND_KEY = 'm1_push_bound';
+interface SubscriptionPayload {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+  userAgent: string;
+  vapidKey: string;
+}
+
+let isSubscribing = false; // Prevent concurrent subscriptions
 
 /**
- * Unified Web Push subscription with VAPID
- * Handles permission, service worker, and subscription registration
- * Prevents multiple subscriptions per session
+ * Enhanced Web Push subscription with auto-repair for VAPID key conflicts
+ * Handles existing subscriptions with different keys and auto-recreates them
  */
 export async function ensureWebPushSubscription(): Promise<PushSubscription | null> {
-  // Check browser support
-  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
-    console.warn('❌ Web Push not supported in this browser');
-    return null;
-  }
-
-  // Prevent multiple subscriptions per session
-  if (sessionStorage.getItem(PUSH_BOUND_KEY)) {
-    console.log('✓ Push subscription already established this session');
-    
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      return await registration.pushManager.getSubscription();
-    } catch (error) {
-      console.error('❌ Failed to get existing subscription:', error);
-      return null;
-    }
-  }
-
-  // Handle permission - only request if default, proceed only if granted
-  if (Notification.permission === 'default') {
-    console.log('📢 Requesting notification permission...');
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.warn('❌ Notification permission denied');
-      return null;
-    }
-  }
-
-  if (Notification.permission !== 'granted') {
-    console.warn('❌ Notification permission not granted');
+  if (isSubscribing) {
+    console.log('⏳ Subscribe already in progress, skipping...');
     return null;
   }
 
   try {
-    console.log('🔧 [ensureWebPushSubscription] Starting...');
+    isSubscribing = true;
     
-    // Ensure service worker is ready
-    console.log('🔧 [ensureWebPushSubscription] Checking service worker...');
+    console.log('🚀 Starting Web Push subscription process...');
+    
+    // 1. Check browser support
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      throw new Error('Web Push not supported in this browser');
+    }
+
+    // 2. Request notification permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      throw new Error(`Notification permission ${permission}`);
+    }
+
+    // 3. Get service worker registration
     const registration = await navigator.serviceWorker.ready;
-    console.log('✅ Service worker ready');
+    console.log('✅ Service Worker ready:', registration.scope);
 
-    // Get VAPID public key - use the correct one that works with the backend
-    console.log('🔧 [ensureWebPushSubscription] Setting up VAPID key...');
-    const vapidKey = 'BLT_uexaFBpPEX-VqzPy9U-7zMW-vVUGOajLUbL6Ny9eXOhO6Y1nMOaWgJCEKCZzG8X2z6WzXPFOA5MxzJ7Q-o8';
-    console.log('🔑 [DEBUG] VAPID Key being used:', {
-      firstChars: vapidKey?.substring(0, 10),
-      lastChars: vapidKey?.substring(-10),
-      length: vapidKey?.length,
-      startsWithB: vapidKey?.startsWith('B')
-    });
+    // 4. Check for existing subscription and validate VAPID key
+    let existingSubscription = await registration.pushManager.getSubscription();
+    const applicationServerKey = getApplicationServerKey();
     
-    if (!vapidKey?.trim()) {
-      console.error('❌ VAPID_PUBLIC_KEY missing');
-      return null;
-    }
-
-    // Convert VAPID key to Uint8Array
-    console.log('🔧 [ensureWebPushSubscription] Converting VAPID key...');
-    const applicationServerKey = urlBase64ToUint8Array(vapidKey.trim());
-    console.log('🔑 VAPID key converted successfully');
-
-    // Check for existing subscription
-    console.log('🔧 [ensureWebPushSubscription] Checking existing subscription...');
-    let subscription = await registration.pushManager.getSubscription();
-    
-    if (!subscription) {
-      console.log('📝 Creating new push subscription...');
-      
-      // Create new subscription
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: applicationServerKey,
+    if (existingSubscription) {
+      console.log('🔍 Found existing subscription:', {
+        endpoint: existingSubscription.endpoint.substring(0, 80) + '...',
+        hasKeys: !!(existingSubscription as any).keys
       });
-      
-      console.log('✅ Push subscription created');
-      console.log('📝 Subscription endpoint:', subscription.endpoint);
-    } else {
-      console.log('✅ Using existing push subscription');
-      console.log('📝 Existing endpoint:', subscription.endpoint);
+
+      // Check if existing subscription uses different VAPID key
+      try {
+        // Try to extract applicationServerKey from existing subscription
+        const existingOptions = (existingSubscription as any).options;
+        if (existingOptions?.applicationServerKey) {
+          const existingKey = new Uint8Array(existingOptions.applicationServerKey);
+          const currentKey = applicationServerKey;
+          
+          // Compare keys
+          const keysMatch = existingKey.length === currentKey.length && 
+            existingKey.every((byte, index) => byte === currentKey[index]);
+          
+          if (!keysMatch) {
+            console.log('🔄 VAPID key mismatch detected, unsubscribing old subscription...');
+            await existingSubscription.unsubscribe();
+            existingSubscription = null;
+          } else {
+            console.log('✅ Existing subscription uses correct VAPID key');
+            return existingSubscription;
+          }
+        }
+      } catch (keyCheckError) {
+        console.log('⚠️ Could not verify existing key, will attempt resubscribe:', keyCheckError);
+      }
     }
 
-    // Register with our backend (only if authenticated)
-    console.log('🔧 [ensureWebPushSubscription] Checking authentication...');
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      console.log('✅ User authenticated, saving to database...');
-      await saveSubscriptionToDatabase(subscription);
-      
-      // Mark as bound for this session
-      sessionStorage.setItem(PUSH_BOUND_KEY, '1');
-      console.log('✅ Push subscription bound for session');
-    } else {
-      console.log('⚠️ User not authenticated, subscription not saved to database');
+    // 5. Subscribe with current VAPID key (with retry logic)
+    let subscription: PushSubscription;
+    let retryCount = 0;
+    const maxRetries = 2;
+
+    while (retryCount < maxRetries) {
+      try {
+        console.log(`🔄 Attempting subscription (attempt ${retryCount + 1}/${maxRetries})...`);
+        console.log('🔑 Using VAPID key:', VAPID_PUBLIC_KEY.substring(0, 12) + '...' + VAPID_PUBLIC_KEY.slice(-8));
+        
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey
+        });
+        
+        console.log('✅ Successfully subscribed to Web Push!');
+        break;
+        
+      } catch (subscribeError: any) {
+        console.error(`❌ Subscribe attempt ${retryCount + 1} failed:`, subscribeError);
+        
+        // Handle specific VAPID key errors
+        if (subscribeError.message?.includes('applicationServerKey') || 
+            subscribeError.message?.includes('different applicationServerKey') ||
+            subscribeError.name === 'InvalidStateError') {
+          
+          console.log('🔄 VAPID key conflict detected, attempting cleanup...');
+          
+          // Try to unsubscribe any remaining subscription
+          try {
+            const conflictSubscription = await registration.pushManager.getSubscription();
+            if (conflictSubscription) {
+              console.log('🗑️ Unsubscribing conflicting subscription...');
+              await conflictSubscription.unsubscribe();
+            }
+          } catch (cleanupError) {
+            console.log('⚠️ Cleanup error (continuing):', cleanupError);
+          }
+          
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log('⏳ Waiting before retry...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            continue;
+          }
+        }
+        
+        throw subscribeError;
+      }
     }
 
-    console.log('✅ [ensureWebPushSubscription] Process completed successfully');
+    if (!subscription!) {
+      throw new Error('Failed to create subscription after all retries');
+    }
+
+    // 6. Save subscription to database (if user is authenticated)
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await saveSubscriptionToDatabase(subscription);
+        console.log('✅ Subscription saved to database');
+      } else {
+        console.log('ℹ️ User not authenticated, subscription not saved to database');
+      }
+    } catch (dbError) {
+      console.error('⚠️ Failed to save subscription to database:', dbError);
+      // Don't fail the whole process if DB save fails
+    }
+
     return subscription;
 
   } catch (error) {
-    console.error('❌ [ensureWebPushSubscription] Failed:', error);
-    if (error instanceof Error) {
-      console.error('❌ Error message:', error.message);
-      console.error('❌ Error stack:', error.stack);
-    }
-    return null;
+    console.error('❌ Web Push subscription failed:', error);
+    throw error;
+  } finally {
+    isSubscribing = false;
   }
 }
 
 /**
- * Save complete PushSubscription to database
+ * Save subscription to database via Supabase Edge Function
  */
 async function saveSubscriptionToDatabase(subscription: PushSubscription): Promise<void> {
-  try {
-    console.log('💾 Saving subscription to database...');
+  const keys = subscription.getKey ? {
+    p256dh: subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))) : '',
+    auth: subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))) : ''
+  } : { p256dh: '', auth: '' };
 
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.warn('❌ User not authenticated, cannot save subscription');
-      return;
-    }
+  const payload: SubscriptionPayload = {
+    endpoint: subscription.endpoint,
+    keys,
+    userAgent: navigator.userAgent,
+    vapidKey: VAPID_PUBLIC_KEY
+  };
 
-    // Prepare device info
-    const deviceInfo = {
-      ua: navigator.userAgent,
-      lang: navigator.language,
-      platform: navigator.platform,
-      isPWA: (window.matchMedia?.('(display-mode: standalone)').matches) || 
-             (navigator as any).standalone === true,
-      endpointType: classifyEndpoint(subscription.endpoint)
-    };
+  console.log('💾 Saving subscription to database:', {
+    endpoint: payload.endpoint.substring(0, 80) + '...',
+    hasP256dh: !!payload.keys.p256dh,
+    hasAuth: !!payload.keys.auth,
+    vapidKey: VAPID_PUBLIC_KEY.substring(0, 12) + '...' + VAPID_PUBLIC_KEY.slice(-8)
+  });
 
-    // Call registration function with detailed logging
-    console.log('📡 [Database] Calling upsert_fcm_subscription with payload:', {
-      user_id: session.user.id,
-      token_prefix: subscription.endpoint.substring(0, 50) + '...',
-      platform: 'desktop',
-      device_info: deviceInfo
-    });
+  const { data, error } = await supabase.functions.invoke('webpush-upsert', {
+    body: payload
+  });
 
-    const result = await supabase.functions.invoke('upsert_fcm_subscription', {
-      body: {
-        user_id: session.user.id,
-        token: subscription.endpoint,
-        platform: 'desktop',
-        device_info: deviceInfo
-      }
-    });
-
-    console.log('📡 [Database] Full response from upsert_fcm_subscription:', result);
-
-    if (result.error) {
-      console.error('❌ Failed to save subscription to database:', {
-        error: result.error,
-        message: result.error.message,
-        details: result.error.details
-      });
-      throw new Error(`Database save failed: ${result.error.message}`);
-    }
-
-    console.log('✅ Subscription saved to database successfully:', result.data);
-  } catch (error) {
-    console.error('❌ Database save error:', error);
-    throw error;
+  if (error) {
+    throw new Error(`Database save failed: ${error.message}`);
   }
+
+  console.log('✅ Subscription saved successfully:', data);
 }
 
 /**
- * Classify endpoint type for logging and debugging
- */
-function classifyEndpoint(endpoint: string): string {
-  if (endpoint.includes('fcm.googleapis.com')) {
-    return 'fcm'; // Desktop Chrome, Android
-  }
-  if (endpoint.includes('web.push.apple.com')) {
-    return 'apns'; // iOS Safari PWA
-  }
-  if (endpoint.includes('wns.notify.windows.com')) {
-    return 'wns'; // Windows Edge
-  }
-  return 'unknown';
-}
-
-/**
- * Convert ArrayBuffer to base64 string
- */
-function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
-  if (!buffer) return '';
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
-
-/**
- * Unsubscribe from push notifications
+ * Unsubscribe from Web Push notifications
  */
 export async function unsubscribeFromPush(): Promise<boolean> {
   try {
-    const registration = await navigator.serviceWorker.getRegistration();
-    if (!registration) return false;
-
-    const subscription = await registration.pushManager.getSubscription();
-    if (!subscription) return false;
-
-    // Unsubscribe from browser
-    await subscription.unsubscribe();
-    console.log('✅ Unsubscribed from push notifications');
-
-    // TODO: Remove from database via edge function
+    console.log('🗑️ Starting Web Push unsubscribe...');
     
-    return true;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return false;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    
+    if (subscription) {
+      const success = await subscription.unsubscribe();
+      console.log(success ? '✅ Successfully unsubscribed' : '⚠️ Unsubscribe returned false');
+      
+      // TODO: Remove subscription from database
+      // await removeSubscriptionFromDatabase(subscription.endpoint);
+      
+      return success;
+    } else {
+      console.log('ℹ️ No subscription found to unsubscribe');
+      return true;
+    }
   } catch (error) {
-    console.error('❌ Unsubscribe error:', error);
+    console.error('❌ Unsubscribe failed:', error);
     return false;
   }
 }
 
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+/**
+ * Get current push subscription status and details
  */
+export async function getPushSubscriptionInfo() {
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      return { 
+        supported: false, 
+        subscribed: false, 
+        error: 'Web Push not supported' 
+      };
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    
+    if (subscription) {
+      const keys = subscription.getKey ? {
+        p256dh: subscription.getKey('p256dh') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('p256dh')!))).substring(0, 16) + '...' : 'missing',
+        auth: subscription.getKey('auth') ? btoa(String.fromCharCode(...new Uint8Array(subscription.getKey('auth')!))).substring(0, 16) + '...' : 'missing'
+      } : { p256dh: 'unavailable', auth: 'unavailable' };
+
+      return {
+        supported: true,
+        subscribed: true,
+        subscription: {
+          endpoint: subscription.endpoint.substring(0, 80) + '...',
+          keys,
+          type: 'WEBPUSH'
+        }
+      };
+    } else {
+      return {
+        supported: true,
+        subscribed: false
+      };
+    }
+  } catch (error) {
+    return {
+      supported: false,
+      subscribed: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ

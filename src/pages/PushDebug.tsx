@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Smartphone, Monitor, AlertCircle, CheckCircle, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { getVAPIDKeyInfo } from '@/lib/vapid';
+import { getVAPIDKeyInfo } from '@/lib/push/vapid';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ServiceWorkerInfo {
