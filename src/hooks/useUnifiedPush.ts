@@ -154,12 +154,21 @@ export const useUnifiedPush = () => {
           };
 
           // Save to database
-          await supabase.functions.invoke('webpush-upsert', {
-            body: {
+          const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-upsert', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
               user_id: user.id,
               subscription: unifiedSub
-            }
+            }),
+            mode: 'cors',
+            cache: 'no-store',
           });
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+            throw new Error(`HTTP ${response.status}: ${errorData.error || 'Database save failed'}`);
+          }
 
         } catch (error) {
           if (error instanceof TypeError && error.message.includes('applicationServerKey')) {

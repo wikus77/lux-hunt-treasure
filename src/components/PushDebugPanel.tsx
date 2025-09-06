@@ -64,9 +64,20 @@ const PushDebugPanel: React.FC = () => {
         };
         
         console.log('📤 [DEBUG] Sending payload:', testPayload);
-        result = await supabase.functions.invoke('webpush-send', {
-          body: testPayload
+        const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-send', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(testPayload),
+          mode: 'cors',
+          cache: 'no-store',
         });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Network error' }));
+          throw new Error(`HTTP ${response.status}: ${errorData.error || 'Unknown error'}`);
+        }
+        
+        result = { data: await response.json() };
       } else {
         throw new Error('Nessuna subscription valida trovata');
       }
