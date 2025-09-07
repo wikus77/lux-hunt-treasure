@@ -25,6 +25,7 @@ import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebase
 import { FCMTokenGenerator } from '@/components/debug/FCMTokenGenerator';
 import { FCMCompleteTestSuite } from '@/components/debug/FCMCompleteTestSuite';
 import { FCMTestPanel } from '@/components/fcm/FCMTestPanel';
+import { PushConsole } from '@/components/admin/PushConsole';
 
 
 const PanelAccessPage = () => {
@@ -33,7 +34,7 @@ const PanelAccessPage = () => {
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   
   
-  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'push-test-form' | 'fcm-test'>('home');
+  const [currentView, setCurrentView] = useState<'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'push-test-form' | 'fcm-test' | 'push-console'>('home');
 
   // 🔐 BLINDATURA: Se non whitelisted, blocca completamente il rendering
   if (!isWhitelisted) {
@@ -235,6 +236,33 @@ const PanelAccessPage = () => {
         {/* Complete FCM Test Suite */}
         <FCMCompleteTestSuite />
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'push-console' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-[#4361ee] hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+            </div>
+            <PushConsole />
           </div>
         </div>
       </div>
@@ -540,6 +568,26 @@ const PanelAccessPage = () => {
                       <div>
                         <h3 className="font-semibold text-white">🔥 Firebase Push Test Quick</h3>
                         <p className="text-gray-400 text-sm">Test veloce Firebase FCM predefinito</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 📤 PUSH CONSOLE - Admin Only */}
+                {user?.email === 'wikus77@hotmail.it' && (
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setCurrentView('push-console')}
+                    className="glass-card p-4 border border-purple-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Send className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">📤 Push Console</h3>
+                        <p className="text-gray-400 text-sm">Invio manuale WebPush a utenti selezionati</p>
                       </div>
                     </div>
                   </motion.div>
