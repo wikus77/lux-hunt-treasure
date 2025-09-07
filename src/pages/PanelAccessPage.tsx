@@ -25,8 +25,7 @@ import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebase
 import { FCMTokenGenerator } from '@/components/debug/FCMTokenGenerator';
 import { FCMCompleteTestSuite } from '@/components/debug/FCMCompleteTestSuite';
 import { FCMTestPanel } from '@/components/fcm/FCMTestPanel';
-import { PushConsole } from '@/components/admin/PushConsole';
-import PushConsole from '@/pages/PushConsole';
+import AdminPushConsole from '@/pages/PushConsole';
 
 
 const PanelAccessPage = () => {
@@ -263,7 +262,7 @@ const PanelAccessPage = () => {
                 ← Torna al Panel
               </button>
             </div>
-            <PushConsole />
+            <AdminPushConsole />
           </div>
         </div>
       </div>
@@ -319,7 +318,7 @@ const PanelAccessPage = () => {
                 ← Torna al Panel
               </button>
             </div>
-            <PushConsole />
+            <AdminPushConsole />
           </div>
         </div>
       </div>
