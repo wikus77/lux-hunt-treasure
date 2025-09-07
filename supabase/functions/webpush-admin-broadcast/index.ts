@@ -15,7 +15,7 @@ const cors = (req: Request, init: ResponseInit = {}, body?: BodyInit) => {
   h.set("access-control-allow-origin", allow.includes(origin) ? origin : allow[0]);
   h.set("vary", "origin");
   h.set("access-control-allow-methods", "POST, OPTIONS");
-  h.set("access-control-allow-headers", "authorization, content-type, x-client-info");
+  h.set("access-control-allow-headers", "authorization, apikey, content-type, x-client-info");
   return new Response(body, { ...init, headers: h });
 };
 
@@ -30,8 +30,8 @@ Deno.serve(async (req) => {
     if (!token) return cors(req, { status: 401 }, JSON.stringify({ error: "Missing bearer" }));
 
     // verify minimal JWT and pull `sub`
-    const payload = JSON.parse(atob(token.split(".")[1] || "e30="));
-    const uid = payload?.sub as string | undefined;
+    const jwtPayload = JSON.parse(atob(token.split(".")[1] || "e30="));
+    const uid = jwtPayload?.sub as string | undefined;
     const admins = (Deno.env.get("ADMIN_USER_IDS") ?? "").split(",").map(s => s.trim()).filter(Boolean);
     if (!uid || !admins.includes(uid)) return cors(req, { status: 403 }, JSON.stringify({ error: "Forbidden" }));
 
