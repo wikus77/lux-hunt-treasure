@@ -33,8 +33,8 @@ export function PushConsole() {
         const userId = sessionData.session.user.id;
         setCurrentUserId(userId);
 
-        // Check if user is in admin allowlist
-        const adminIds = import.meta.env.VITE_ADMIN_USER_IDS || process.env.ADMIN_USER_IDS || "";
+        // Check if user is in admin allowlist (using single UUID)
+        const adminIds = "495246c1-9154-4f01-a428-7f37fe230180";
         const adminList = adminIds.split(",").map((id: string) => id.trim()).filter(Boolean);
         
         if (!adminList.includes(userId)) {
@@ -102,7 +102,11 @@ export function PushConsole() {
       if (response.ok && json.success !== false) {
         toast.success(`✅ Push sent: ${json.success}/${json.total} successful`);
       } else {
-        toast.error(`❌ Error: ${json.error || 'Unknown error'}`);
+        if (response.status === 403) {
+          toast.error("❌ Accesso non autorizzato: aggiungi l'UUID all'elenco ADMIN_USER_IDS");
+        } else {
+          toast.error(`❌ Error: ${json.error || 'Unknown error'}`);
+        }
       }
 
     } catch (error: any) {
@@ -139,7 +143,7 @@ export function PushConsole() {
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          Access forbidden. Only administrators can use the Push Console.
+          Accesso non autorizzato: aggiungi l'UUID all'elenco ADMIN_USER_IDS.
           {currentUserId && (
             <div className="mt-2 text-xs opacity-70">
               Current user ID: {currentUserId}
