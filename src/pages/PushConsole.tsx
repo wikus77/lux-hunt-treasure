@@ -87,8 +87,10 @@ export function PushConsole() {
       const projectRef = "vkjrqirvdvjbemsfzxof"; // Your project ref
       const response = await fetch(`https://${projectRef}.functions.supabase.co/webpush-admin-broadcast`, {
         method: "POST",
+        mode: "cors",
         headers: {
           "content-type": "application/json",
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
           "authorization": `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
