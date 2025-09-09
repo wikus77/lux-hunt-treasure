@@ -15,26 +15,27 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       richColors={false}
       closeButton={false}
-      duration={2800}
+      duration={3000}
       expand={false}
-      visibleToasts={1}
+      visibleToasts={3}
       offset={0}
       dir="ltr"
+      pauseWhenPageIsHidden={true}
       style={{
-        // Force perfect horizontal centering for iOS PWA
+        // Perfect horizontal centering for iOS PWA - fixed positioning
         position: 'fixed',
         left: '50%',
         transform: 'translate3d(-50%, 0, 0)',
-        top: 'max(12px, calc(env(safe-area-inset-top, 0px) + 8px))',
+        top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
         width: '100%',
-        maxWidth: '480px',
+        maxWidth: 'min(92vw, 640px)',
         paddingInline: 'calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-right, 0px))',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '8px',
+        gap: '10px',
         pointerEvents: 'none',
-        zIndex: 2140,
+        zIndex: 9999,
       } as React.CSSProperties}
       toastOptions={{
         style: {
@@ -46,10 +47,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           boxShadow: '0 12px 40px rgba(0, 209, 255, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.2)',
           fontFamily: 'Orbitron, -apple-system, BlinkMacSystemFont, sans-serif',
           fontSize: '15px',
-          padding: '14px 40px',  // Più largo orizzontalmente, meno alto
-          minHeight: '48px',     // Ridotto per renderlo più rettangolare
-          width: '450px',        // Larghezza fissa più ampia
-          maxWidth: 'min(92vw, 420px)', // Responsive but maintains appearance
+          padding: '14px 40px',
+          minHeight: '48px',
+          width: 'auto',
+          maxWidth: 'min(92vw, 420px)',
           fontWeight: '500',
           letterSpacing: '0.025em',
           display: 'flex',
@@ -58,7 +59,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           WebkitUserSelect: 'none',
           userSelect: 'none',
           textAlign: 'center' as const,
-          pointerEvents: 'auto', // Enable clicks on individual toasts
+          pointerEvents: 'auto',
+          willChange: 'transform, opacity',
+          margin: '0 auto',
         },
         classNames: {
           toast: "group toast",
