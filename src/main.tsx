@@ -8,7 +8,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
-import './styles/toast-animations.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { diagnostics } from './utils/diagnostics';
