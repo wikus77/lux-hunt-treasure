@@ -7,7 +7,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
-  // Perfect horizontal centering for iOS PWA - maintains exact same toast appearance
+  // Perfect horizontal centering for iOS PWA with slide animations and swipe dismiss
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
@@ -15,16 +15,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       richColors={false}
       closeButton={false}
-      duration={4000}
+      duration={2800}
       expand={false}
-      visibleToasts={3}
+      visibleToasts={1}
       offset={0}
+      dir="ltr"
       style={{
         // Force perfect horizontal centering for iOS PWA
         position: 'fixed',
         left: '50%',
         transform: 'translate3d(-50%, 0, 0)',
-        top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+        top: 'max(12px, calc(env(safe-area-inset-top, 0px) + 8px))',
         width: '100%',
         maxWidth: '480px',
         paddingInline: 'calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-right, 0px))',
@@ -33,7 +34,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
         alignItems: 'center',
         gap: '8px',
         pointerEvents: 'none',
-        zIndex: 999999,
+        zIndex: 2140,
       } as React.CSSProperties}
       toastOptions={{
         style: {
