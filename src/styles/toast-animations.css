@@ -1,0 +1,94 @@
+/* © 2025 M1SSION™ - Toast Animations for PWA iOS */
+
+/* Toast container positioning and animations */
+.toaster[data-sonner-toaster] {
+  position: fixed !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+  z-index: 9999 !important;
+  max-width: min(92vw, 640px) !important;
+  width: auto !important;
+  pointer-events: none !important;
+}
+
+/* Individual toast styling and animations */
+[data-sonner-toast] {
+  position: relative !important;
+  pointer-events: auto !important;
+  transform: translateY(-24px) !important;
+  opacity: 0 !important;
+  will-change: transform, opacity !important;
+  animation: toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+  transition: transform 200ms ease-out, opacity 200ms ease-out !important;
+}
+
+/* Exit animation for toasts */
+[data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+/* Swipe gesture support */
+[data-sonner-toast][data-swiping="true"] {
+  transition: transform 100ms ease-out, opacity 100ms ease-out !important;
+}
+
+/* Keyframes for slide animations */
+@keyframes toast-slide-down {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-up {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+}
+
+/* Stacking support - ensure multiple toasts stack vertically centered */
+[data-sonner-toast]:not(:first-child) {
+  margin-top: 8px !important;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast] {
+    animation: toast-fade-in 120ms ease-out forwards !important;
+  }
+  
+  [data-sonner-toast][data-removed="true"] {
+    animation: toast-fade-out 120ms ease-out forwards !important;
+  }
+  
+  @keyframes toast-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes toast-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+}
+
+/* Debug support (only when VITE_UI_DEBUG=1) */
+[data-toast-debug="true"] [data-sonner-toast]::after {
+  content: attr(data-toast-id);
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 10px;
+  color: rgba(0, 209, 255, 0.7);
+  pointer-events: none;
+}
