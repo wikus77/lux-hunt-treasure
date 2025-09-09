@@ -89,6 +89,9 @@ export default defineConfig(({ mode }) => ({
     global: 'globalThis',
     'process.env.NODE_ENV': '"production"',
     __PWA_VERSION__: JSON.stringify(new Date().toISOString()),
+    'import.meta.env.VITE_BUILD_ID': JSON.stringify(
+      process.env.VITE_BUILD_ID || `build-${Date.now().toString(36)}`
+    ),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],

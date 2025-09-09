@@ -175,10 +175,19 @@ const renderApp = () => {
     console.log("✅ Creating React root with enhanced configuration");
     const root = ReactDOM.createRoot(rootElement);
     
-    // Enhanced app rendering with better error boundaries
+    // Enhanced app rendering with better error boundaries and PWA loading guard
     root.render(
       <QueryClientProvider client={queryClient}>
-        <App />
+        <React.Suspense fallback={
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground font-orbitron">Caricamento M1SSION™...</p>
+            </div>
+          </div>
+        }>
+          <App />
+        </React.Suspense>
       </QueryClientProvider>
     );
     
@@ -286,11 +295,11 @@ if (document.readyState === 'loading') {
 if (typeof window !== 'undefined') {
   // Small delay to let DOM and other inits complete
   setTimeout(() => {
-    import('./pwa/swUpdater').then(({ initSWUpdater }) => {
-      initSWUpdater({
+    import('./utils/swUpdateManager').then(({ initSWUpdateManager }) => {
+      initSWUpdateManager({
         debug: import.meta.env.DEV,
-        onUpdate: (registration) => {
-          console.info('[MAIN] SW update detected:', registration.scope);
+        onUpdate: (hasUpdate) => {
+          console.info('[MAIN] SW update status:', hasUpdate);
         }
       }).catch(err => {
         console.warn('[MAIN] SW updater init failed (non-critical):', err);
