@@ -73,7 +73,8 @@ self.addEventListener('activate', (event) => {
 // Update controllato dal main thread
 self.addEventListener('message', (event) => {
   console.log('📨 SW Message received:', event.data);
-  if (event.data && event.data.type === 'SKIP_WAITING' && self.skipWaiting) {
+  if (event.data && (event.data.type === 'SKIP_WAITING' || event.data.type === 'SW_SKIP_WAITING') && self.skipWaiting) {
+    console.log('🔄 SW: Skipping waiting and activating');
     self.skipWaiting();
   }
 });
