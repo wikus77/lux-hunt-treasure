@@ -40,14 +40,43 @@ export const ProductionSecurityWrapper: React.FC<ProductionSecurityWrapperProps>
   }, []);
 
   useEffect(() => {
-    // Content Security Policy enforcement
+    // Enhanced Content Security Policy with proper Google Maps support
     const meta = document.createElement('meta');
     meta.httpEquiv = 'Content-Security-Policy';
-    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.supabase.co;";
+    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.stripe.com https://*.supabase.co https://maps.googleapis.com https://sentry.io https://*.ingest.sentry.io; frame-src https://js.stripe.com;";
     document.head.appendChild(meta);
 
+    // Add additional security headers via meta tags (fallback for missing server headers)
+    const addSecurityHeader = (httpEquiv: string, content: string) => {
+      const existingMeta = document.querySelector(`meta[http-equiv="${httpEquiv}"]`);
+      if (!existingMeta) {
+        const meta = document.createElement('meta');
+        meta.httpEquiv = httpEquiv;
+        meta.content = content;
+        document.head.appendChild(meta);
+        return meta;
+      }
+      return null;
+    };
+
+    const securityMetas = [
+      addSecurityHeader('X-Content-Type-Options', 'nosniff'),
+      addSecurityHeader('X-Frame-Options', 'DENY'),
+      addSecurityHeader('Referrer-Policy', 'no-referrer'),
+    ].filter(Boolean);
+
+    // TODO: Move CSP to server-side headers for better security
+    if (import.meta.env.DEV) {
+      console.log('🔒 Client-side security headers applied (transitional)');
+    }
+
     return () => {
-      document.head.removeChild(meta);
+      try {
+        document.head.removeChild(meta);
+        securityMetas.forEach(meta => meta && document.head.removeChild(meta));
+      } catch (e) {
+        // Meta tags may have been removed already
+      }
     };
   }, []);
 

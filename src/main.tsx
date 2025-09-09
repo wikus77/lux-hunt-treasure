@@ -82,20 +82,30 @@ setupProductionConsole();
 setupProductionLogging();
 enableProductionOptimizations();
 
+// Initialize performance and accessibility enhancements
+if (typeof window !== 'undefined') {
+  import('./utils/performanceOptimizer').then(({ initPerformanceOptimizations }) => {
+    initPerformanceOptimizations();
+  });
+  
+  import('./utils/accessibilityEnhancer').then(({ initAccessibilityEnhancements }) => {
+    initAccessibilityEnhancements();
+  });
+}
+
 // Performance monitoring in development
 if (typeof window !== 'undefined' && import.meta.env?.DEV) {
   setTimeout(() => monitorPerformance(), 2000);
 }
 
-// Mobile-compatible Sentry initialization
-// Uses Supabase secret for DSN to work in Capacitor environments
+// Secure Sentry initialization with environment variables
 const initializeSentry = () => {
   // Only initialize if not in development and DSN is available
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    // Use Supabase secret SENTRY_DSN for production
-    const SENTRY_DSN = 'https://d8a8e8d8e8d8e8d8e8d8e8d8e8d8e8d8@o1234567.ingest.sentry.io/1234567';
+    // Use environment variable for DSN - no hardcoded values
+    const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
     
-    if (SENTRY_DSN && !SENTRY_DSN.includes('your-sentry-dsn-here')) {
+    if (SENTRY_DSN && !SENTRY_DSN.includes('placeholder')) {
       Sentry.init({
         dsn: SENTRY_DSN,
         integrations: [
@@ -105,6 +115,8 @@ const initializeSentry = () => {
         enabled: true,
         environment: window.location.protocol === 'capacitor:' ? 'mobile' : 'web'
       });
+    } else if (import.meta.env.PROD) {
+      console.warn('⚠️ Sentry DSN not configured in production');
     }
   }
 };
