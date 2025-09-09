@@ -97,6 +97,13 @@ if (typeof window !== 'undefined') {
   import('./utils/accessibilityEnhancer').then(({ initAccessibilityEnhancements }) => {
     initAccessibilityEnhancements();
   });
+
+  // Initialize production monitoring
+  if (import.meta.env.PROD) {
+    import('./utils/productionMonitoring').then(({ monitoring }) => {
+      monitoring.trackFeature('app_initialization');
+    });
+  }
 }
 
 // Performance monitoring in development
