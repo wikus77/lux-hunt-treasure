@@ -291,23 +291,18 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// Initialize one-shot SW updater (iOS PWA optimized) - CONTROLLED TIMING
+// Initialize silent auto-update (no UI banners, just one refresh per BUILD_ID)
 if (typeof window !== 'undefined') {
-  // Longer delay to ensure app is stable before SW operations
+  // Delay to ensure app is fully rendered before SW operations
   setTimeout(() => {
-    import('./utils/swUpdateManager').then(({ initSWUpdateManager }) => {
-      initSWUpdateManager({
-        debug: import.meta.env.VITE_SW_UPDATE_DEBUG === '1' || import.meta.env.DEV,
-        onUpdate: (hasUpdate) => {
-          if (import.meta.env.VITE_SW_UPDATE_DEBUG === '1') {
-            console.info('[MAIN] SW update status:', hasUpdate);
-          }
-        }
+    import('./utils/silentAutoUpdate').then(({ initSilentAutoUpdate }) => {
+      initSilentAutoUpdate({
+        debug: import.meta.env.VITE_SW_UPDATE_DEBUG === '1' || import.meta.env.DEV
       }).catch(err => {
-        console.warn('[MAIN] SW updater init failed (non-critical):', err);
+        console.warn('[MAIN] Silent auto-update init failed (non-critical):', err);
       });
     });
-  }, 2000); // Increased delay for stability
+  }, 2500); // Longer delay for complete stability
 }
 
 // Enhanced global error handling
