@@ -44,12 +44,10 @@ export const optimizeServiceWorker = async () => {
         await registration.unregister();
       }
       
-      // Register our optimized service worker
-      const registration = await navigator.serviceWorker.register('/service-worker.js', {
-        scope: '/'
-      });
+      // SW registration now handled by dedicated swUpdater.ts
+      // Removed to prevent conflicts with main SW registration
       
-      return registration;
+      return null; // SW registration handled by swUpdater.ts
     } catch (error) {
       console.error('Service Worker optimization failed:', error);
     }

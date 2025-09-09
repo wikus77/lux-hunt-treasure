@@ -28,17 +28,8 @@ export const optimizeImageLoading = () => {
   });
 };
 
-// Service Worker registration for enhanced caching
-export const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('SW registered: ', registration);
-    } catch (error) {
-      console.log('SW registration failed: ', error);
-    }
-  }
-};
+// Service Worker registration now handled by dedicated swUpdater.ts
+// Removed to prevent multiple registrations and iOS PWA loops
 
 // Prefetch critical routes
 export const prefetchCriticalRoutes = () => {
@@ -79,7 +70,7 @@ export const optimizeMemoryUsage = () => {
 export const initPerformanceOptimizations = () => {
   removeProductionLogs();
   optimizeImageLoading();
-  registerServiceWorker();
+  // registerServiceWorker() - now handled by swUpdater.ts
   prefetchCriticalRoutes();
   optimizeMemoryUsage();
 };

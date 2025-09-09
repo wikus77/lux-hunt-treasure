@@ -282,7 +282,22 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// SW registration is now handled by swControl utils only - no duplicate registration
+// Initialize one-shot SW updater (iOS PWA optimized)
+if (typeof window !== 'undefined') {
+  // Small delay to let DOM and other inits complete
+  setTimeout(() => {
+    import('./pwa/swUpdater').then(({ initSWUpdater }) => {
+      initSWUpdater({
+        debug: import.meta.env.DEV,
+        onUpdate: (registration) => {
+          console.info('[MAIN] SW update detected:', registration.scope);
+        }
+      }).catch(err => {
+        console.warn('[MAIN] SW updater init failed (non-critical):', err);
+      });
+    });
+  }, 1500);
+}
 
 // Enhanced global error handling
 window.addEventListener('error', (event) => {
