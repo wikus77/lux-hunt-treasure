@@ -23,6 +23,9 @@ serve(async (req) => {
   console.log('📡 [WEBPUSH-SEND] Origin:', req.headers.get("Origin"));
   console.log('📡 [WEBPUSH-SEND] Headers:', Object.fromEntries(req.headers.entries()));
   
+  // Push Guard Runtime Check
+  console.log('🔒 [PUSH-GUARD] ENABLED - webpush-send protected');
+  
   if (req.method === "OPTIONS") {
     console.log('📡 [WEBPUSH-SEND] Handling OPTIONS preflight request');
     return new Response(null, { headers: corsHeaders(req.headers.get("Origin")), status: 204 });

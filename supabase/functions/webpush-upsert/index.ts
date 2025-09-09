@@ -37,6 +37,24 @@ serve(async (req) => {
     hasVapidSubject
   });
   
+  // Push Guard Runtime Check
+  console.log('🔒 [PUSH-GUARD] ENABLED - webpush-upsert protected');
+  if (!hasVapidPub || !hasVapidPriv || !hasVapidSubject) {
+    const missing = [];
+    if (!hasVapidPub) missing.push('VAPID_PUBLIC_KEY');
+    if (!hasVapidPriv) missing.push('VAPID_PRIVATE_KEY');
+    if (!hasVapidSubject) missing.push('VAPID_SUBJECT');
+    
+    console.error('🔒 [PUSH-GUARD] Missing required secrets:', missing);
+    return new Response(JSON.stringify({ 
+      error: `PUSH_GUARD_MISSING_SECRET: ${missing.join(', ')}`,
+      guard_status: 'ENABLED'
+    }), {
+      headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
+      status: 500,
+    });
+  }
+  
   if (!url || !key) {
     console.error('❌ [WEBPUSH-UPSERT] Missing Supabase env');
     return new Response(JSON.stringify({ error: "Missing Supabase env" }), {
