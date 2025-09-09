@@ -19,7 +19,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
       expand={false}
       visibleToasts={3}
       offset={0}
-      // swipeDirections={["up"]} // Removed due to type issues - swipe handled via CSS
       style={{
         // Force perfect horizontal centering for iOS PWA
         position: 'fixed',
@@ -46,10 +45,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           boxShadow: '0 12px 40px rgba(0, 209, 255, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.2)',
           fontFamily: 'Orbitron, -apple-system, BlinkMacSystemFont, sans-serif',
           fontSize: '15px',
-          padding: '14px 40px',  // Più largo orizzontalmente, meno alto
-          minHeight: '48px',     // Ridotto per renderlo più rettangolare
-          width: '450px',        // Larghezza fissa più ampia
-          maxWidth: 'min(92vw, 420px)', // Responsive but maintains appearance
+          padding: '14px 40px',
+          minHeight: '48px',
+          width: '450px',
+          maxWidth: 'min(92vw, 420px)',
           fontWeight: '500',
           letterSpacing: '0.025em',
           display: 'flex',
@@ -58,10 +57,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
           WebkitUserSelect: 'none',
           userSelect: 'none',
           textAlign: 'center' as const,
-          pointerEvents: 'auto', // Enable clicks on individual toasts
+          pointerEvents: 'auto',
+          // Custom slide-down animation
+          transform: 'translateY(-24px)',
+          opacity: 0,
+          animation: 'toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
         },
         classNames: {
-          toast: "group toast",
+          toast: "group toast custom-toast-animation",
           description: "group-[.toast]:text-white/80",
           actionButton: "group-[.toast]:bg-cyan-500 group-[.toast]:text-black",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
