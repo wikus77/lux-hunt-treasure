@@ -170,8 +170,8 @@ class SWUpdateManager {
     this.log('Executing one-shot update');
     
     try {
-      // Send skip waiting message
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      // Send skip waiting message - corrected message type
+      waitingWorker.postMessage({ type: 'SW_SKIP_WAITING' });
       
       // Wait for controller change with timeout
       const controllerChangePromise = new Promise<void>((resolve) => {

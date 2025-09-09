@@ -39,30 +39,16 @@ function App() {
       timestamp: new Date().toISOString()
     });
     
-    // Check if required CSS variables are available
-    const testDiv = document.createElement('div');
-    document.body.appendChild(testDiv);
-    testDiv.style.cssText = 'background: hsl(var(--background)); color: hsl(var(--foreground));';
-    const computedStyle = window.getComputedStyle(testDiv);
+    // CSS Variables check (without creating DOM elements to avoid flicker)
+    const styles = getComputedStyle(document.documentElement);
     console.log('🍎 [iOS DEBUG] CSS Variables:', {
-      background: computedStyle.backgroundColor,
-      color: computedStyle.color,
-      hasBackground: computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)',
-      hasColor: computedStyle.color !== 'rgba(0, 0, 0, 0)'
+      background: styles.getPropertyValue('--background').trim(),
+      color: styles.getPropertyValue('--foreground').trim(),
+      hasBackground: !!styles.getPropertyValue('--background').trim(),
+      hasColor: !!styles.getPropertyValue('--foreground').trim(),
     });
-    document.body.removeChild(testDiv);
     
-    // Apply iOS emergency fallback if CSS variables are broken
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    
-    if (isIOS && isStandalone && (
-      computedStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || 
-      computedStyle.color === 'rgba(0, 0, 0, 0)'
-    )) {
-      console.log('🍎 [iOS DEBUG] Applying emergency fallback for broken CSS variables');
-      document.documentElement.classList.add('ios-pwa-fallback');
-    }
+    // Remove any reload triggers that could cause loops
   }, []);
   
   // Initialize PWA stabilizer (prevents reload loops and manages push)
