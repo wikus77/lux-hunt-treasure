@@ -7,7 +7,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
-  // Perfect horizontal centering for iOS PWA with slide animations and swipe dismiss
+  // Perfect horizontal centering for iOS PWA - maintains exact same toast appearance
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
@@ -15,27 +15,25 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       richColors={false}
       closeButton={false}
-      duration={3000}
+      duration={4000}
       expand={false}
       visibleToasts={3}
       offset={0}
-      dir="ltr"
-      pauseWhenPageIsHidden={true}
       style={{
-        // Perfect horizontal centering for iOS PWA - fixed positioning
+        // Force perfect horizontal centering for iOS PWA
         position: 'fixed',
         left: '50%',
         transform: 'translate3d(-50%, 0, 0)',
-        top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
+        top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
         width: '100%',
-        maxWidth: 'min(92vw, 640px)',
+        maxWidth: '480px',
         paddingInline: 'calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-right, 0px))',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '10px',
+        gap: '8px',
         pointerEvents: 'none',
-        zIndex: 9999,
+        zIndex: 999999,
       } as React.CSSProperties}
       toastOptions={{
         style: {
@@ -47,10 +45,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           boxShadow: '0 12px 40px rgba(0, 209, 255, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(0, 209, 255, 0.2)',
           fontFamily: 'Orbitron, -apple-system, BlinkMacSystemFont, sans-serif',
           fontSize: '15px',
-          padding: '14px 40px',
-          minHeight: '48px',
-          width: 'auto',
-          maxWidth: 'min(92vw, 420px)',
+          padding: '14px 40px',  // Più largo orizzontalmente, meno alto
+          minHeight: '48px',     // Ridotto per renderlo più rettangolare
+          width: '450px',        // Larghezza fissa più ampia
+          maxWidth: 'min(92vw, 420px)', // Responsive but maintains appearance
           fontWeight: '500',
           letterSpacing: '0.025em',
           display: 'flex',
@@ -59,9 +57,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           WebkitUserSelect: 'none',
           userSelect: 'none',
           textAlign: 'center' as const,
-          pointerEvents: 'auto',
-          willChange: 'transform, opacity',
-          margin: '0 auto',
+          pointerEvents: 'auto', // Enable clicks on individual toasts
         },
         classNames: {
           toast: "group toast",
