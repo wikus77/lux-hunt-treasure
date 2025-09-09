@@ -29,9 +29,8 @@ function App() {
     const registerServiceWorker = async () => {
       if ('serviceWorker' in navigator) {
         try {
-          console.log('🔧 Registering service worker...');
-          const registration = await navigator.serviceWorker.register('/sw.js');
-          console.log('✅ Service worker registered successfully:', registration);
+          // SW registration is now handled by dedicated utils, skip duplicate registration
+          console.log('✅ Service worker registration delegated to SW utils');
           
           // Wait for service worker to be ready
           await navigator.serviceWorker.ready;

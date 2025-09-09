@@ -13,7 +13,9 @@ function corsHeaders(origin: string | null) {
 }
 
 serve(async (req) => {
+  const origin = req.headers.get("Origin");
   console.log('💾 [WEBPUSH-UPSERT] Request received:', req.method);
+  console.log('💾 [WEBPUSH-UPSERT] Origin:', origin);
   
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders(req.headers.get("Origin")), status: 204 });
@@ -21,6 +23,20 @@ serve(async (req) => {
 
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  
+  // Check VAPID secrets availability
+  const hasVapidPub = !!Deno.env.get("VAPID_PUBLIC_KEY");
+  const hasVapidPriv = !!Deno.env.get("VAPID_PRIVATE_KEY");
+  const hasVapidSubject = !!Deno.env.get("VAPID_SUBJECT");
+  
+  console.log('🔑 [WEBPUSH-UPSERT] Environment check:', {
+    hasSupabaseUrl: !!url,
+    hasServiceKey: !!key,
+    hasVapidPub,
+    hasVapidPriv, 
+    hasVapidSubject
+  });
+  
   if (!url || !key) {
     console.error('❌ [WEBPUSH-UPSERT] Missing Supabase env');
     return new Response(JSON.stringify({ error: "Missing Supabase env" }), {
@@ -33,9 +49,10 @@ serve(async (req) => {
     const { user_id, endpoint, p256dh, auth, platform, userAgent, vapidKey } = await req.json();
     
     console.log('💾 [WEBPUSH-UPSERT] Saving Web Push subscription for user:', user_id);
-    console.log('💾 [WEBPUSH-UPSERT] Endpoint:', endpoint?.substring(0, 50) + '...');
+    console.log('💾 [WEBPUSH-UPSERT] Endpoint host:', endpoint ? new URL(endpoint).hostname : 'undefined');
     console.log('💾 [WEBPUSH-UPSERT] Platform:', platform);
-    console.log('💾 [WEBPUSH-UPSERT] VAPID Key:', vapidKey?.substring(0, 12) + '...');
+    console.log('💾 [WEBPUSH-UPSERT] Is APNs:', endpoint?.includes('web.push.apple.com'));
+    console.log('💾 [WEBPUSH-UPSERT] VAPID Key length:', vapidKey?.length || 0);
     
     // Validate required fields
     if (!user_id || !endpoint || !p256dh || !auth) {
@@ -111,7 +128,13 @@ serve(async (req) => {
     }
 
     console.log('✅ [WEBPUSH-UPSERT] Web Push subscription saved successfully');
-    return new Response(JSON.stringify({ success: true }), {
+    console.log('✅ [WEBPUSH-UPSERT] Saved to DB - user:', user_id, 'platform:', normalizedPlatform, 'is_active: true');
+    
+    return new Response(JSON.stringify({ 
+      success: true,
+      platform: normalizedPlatform,
+      endpoint_host: endpoint ? new URL(endpoint).hostname : null
+    }), {
       headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
       status: 200,
     });

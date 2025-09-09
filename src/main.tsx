@@ -284,15 +284,8 @@ const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null
         return existingReg;
       }
       
-      // Register new SW
-      console.log('[M1SSION SW] Registering new service worker...');
-      const registration = await navigator.serviceWorker.register('/sw.js', { 
-        scope: '/',
-        updateViaCache: 'none' // Ensure fresh SW content
-      });
-      
-      console.log('[M1SSION SW] Registration successful:', registration.scope);
-      console.log('[M1SSION SW] Script URL:', registration.active?.scriptURL || 'pending');
+      // SW registration is now handled by dedicated utils
+      console.log('[M1SSION SW] Using dedicated SW registration utils');
       
       // Wait for SW to be ready with timeout
       const readyPromise = navigator.serviceWorker.ready;

@@ -65,7 +65,8 @@ serve(async (req) => {
       hasPrivate: !!priv,
       publicLength: pub?.length,
       privateLength: priv?.length,
-      contact: contact
+      contact: contact,
+      endpointHost: s?.endpoint ? new URL(s.endpoint).hostname : 'unknown'
     });
     
     if (!pub || !priv) {
@@ -88,13 +89,18 @@ serve(async (req) => {
     });
 
     console.log('📦 [WEBPUSH-SEND] Final payload:', payload);
-    console.log('🚀 [WEBPUSH-SEND] Sending notification to:', s.endpoint.substring(0, 100) + '...');
+    const endpointHost = new URL(s.endpoint).hostname;
+    const isApns = endpointHost === 'web.push.apple.com';
+    
+    console.log('🚀 [WEBPUSH-SEND] Sending to:', endpointHost, isApns ? '(APNs/Safari)' : '(Other)');
     
     const res = await webpush.sendNotification(s as any, payload);
     
-    console.log('✅ [WEBPUSH-SEND] Notification sent successfully!');
+    console.log('✅ [WEBPUSH-SEND] Notification sent successfully to:', endpointHost);
     console.log('✅ [WEBPUSH-SEND] Response status:', res.statusCode);
-    console.log('✅ [WEBPUSH-SEND] Response headers:', res.headers);
+    if (res.statusCode >= 400) {
+      console.log('⚠️ [WEBPUSH-SEND] Response headers:', res.headers);
+    }
     
     return new Response(JSON.stringify({ success: true, status: res.statusCode }), {
       headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },

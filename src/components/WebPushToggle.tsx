@@ -3,35 +3,50 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Bell, BellOff } from 'lucide-react';
-import { enableWebPushIOS } from '@/utils/push-ios';
+import { Bell, BellOff, AlertCircle } from 'lucide-react';
+import { subscribeWebPush, isWebPushSupported, getCurrentSubscription } from '@/utils/safeWebPushSubscribe';
+import { clearSWReloadFlag } from '@/utils/swControl';
 import { supabase } from '@/integrations/supabase/client';
 
-// VAPID Public Key - UNIFIED FROM ENV
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
+// VAPID Public Key - M1SSION™ UNIFIED 
+const VAPID_PUBLIC_KEY = "BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A";
 
 const WebPushToggle: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
+  const [isControlled, setIsControlled] = useState(false);
+  const [supportReason, setSupportReason] = useState<string>('');
 
   useEffect(() => {
-    // Check if Web Push is supported and on iOS PWA
-    const userAgent = navigator.userAgent.toLowerCase();
-    const isIOS = /iphone|ipad|ipod/.test(userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        (window.navigator as any).standalone === true;
-    const hasSupport = 'serviceWorker' in navigator && 'PushManager' in window;
+    const checkSupport = async () => {
+      console.log('[WEBPUSH-TOGGLE] Checking support...');
+      
+      // Clear reload flag from previous operations
+      clearSWReloadFlag();
+      
+      const support = isWebPushSupported();
+      setIsSupported(support.supported);
+      setSupportReason(support.reason || '');
+      
+      if (support.supported) {
+        // Check current subscription status
+        try {
+          const status = await getCurrentSubscription();
+          setIsEnabled(status.isSubscribed);
+          setIsControlled(status.isControlled);
+          
+          console.log('[WEBPUSH-TOGGLE] Status:', {
+            isSubscribed: status.isSubscribed,
+            isControlled: status.isControlled
+          });
+        } catch (error) {
+          console.error('[WEBPUSH-TOGGLE] Error checking status:', error);
+        }
+      }
+    };
     
-    setIsSupported(hasSupport && isIOS && isStandalone);
-
-    // Check current subscription status
-    if (hasSupport && isIOS && isStandalone) {
-      navigator.serviceWorker.ready.then(async (registration) => {
-        const subscription = await registration.pushManager.getSubscription();
-        setIsEnabled(!!subscription);
-      });
-    }
+    checkSupport();
   }, []);
 
   const handleToggle = async () => {
@@ -40,68 +55,114 @@ const WebPushToggle: React.FC = () => {
     setIsLoading(true);
     try {
       if (!isEnabled) {
-        // Enable push notifications
-        const subscription = await enableWebPushIOS(VAPID_PUBLIC_KEY);
+        console.log('[WEBPUSH-TOGGLE] Starting safe subscription...');
         
-        if (subscription) {
-          // Save subscription to Supabase with UNIFIED payload format
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          const { error } = await supabase.functions.invoke('push_subscribe', {
-            body: {
-              subscription: subscription, // Complete subscription with endpoint and keys
-              user_id: user?.id || null,
-              client: 'ios_pwa',
-              ua: navigator.userAgent,
-              platform: 'ios_pwa'
-            }
-          });
-
-          if (error) {
-            console.error('Failed to save subscription:', error);
-            throw new Error('Failed to save subscription');
-          }
-
-          setIsEnabled(true);
-          console.log('[WEB-PUSH] Push notifications enabled successfully');
-        } else {
-          throw new Error('Failed to get push subscription');
+        // Use the new safe subscription method
+        const subscription = await subscribeWebPush(VAPID_PUBLIC_KEY);
+        
+        if (!subscription) {
+          // Page was reloaded for SW control, component will re-initialize
+          console.log('[WEBPUSH-TOGGLE] Page reloaded for SW control');
+          return;
         }
+        
+        // Save subscription to Supabase
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          throw new Error('User not authenticated');
+        }
+        
+        console.log('[WEBPUSH-TOGGLE] Saving subscription to Supabase...');
+        const { error } = await supabase.functions.invoke('webpush-upsert', {
+          body: {
+            user_id: user.id,
+            endpoint: subscription.endpoint,
+            p256dh: subscription.p256dh,
+            auth: subscription.auth,
+            platform: 'ios_pwa',
+            userAgent: navigator.userAgent,
+            vapidKey: VAPID_PUBLIC_KEY
+          }
+        });
+
+        if (error) {
+          console.error('[WEBPUSH-TOGGLE] Failed to save subscription:', error);
+          throw new Error(`Failed to save subscription: ${error.message}`);
+        }
+
+        setIsEnabled(true);
+        setIsControlled(true);
+        console.log('[WEBPUSH-TOGGLE] ✅ Push notifications enabled successfully');
+        
       } else {
         // Disable push notifications
+        console.log('[WEBPUSH-TOGGLE] Disabling push notifications...');
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
         
         if (subscription) {
           await subscription.unsubscribe();
           setIsEnabled(false);
-          console.log('[WEB-PUSH] Push notifications disabled');
+          console.log('[WEBPUSH-TOGGLE] Push notifications disabled');
         }
       }
     } catch (error) {
-      console.error('[WEB-PUSH] Error toggling push notifications:', error);
-      alert('Errore nell\'abilitare le notifiche push. Riprova.');
+      console.error('[WEBPUSH-TOGGLE] ❌ Error:', error);
+      
+      let errorMessage = 'Errore nell\'abilitare le notifiche push.';
+      if (error instanceof Error) {
+        if (error.message.includes('PWA mode')) {
+          errorMessage = 'Aggiungi l\'app alla home screen per abilitare le notifiche.';
+        } else if (error.message.includes('permission')) {
+          errorMessage = 'Permessi notifiche negati.';
+        } else if (error.message.includes('VAPID')) {
+          errorMessage = 'Errore configurazione server.';
+        }
+      }
+      
+      alert(errorMessage + ' Riprova.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Only show on iOS PWA
+  // Only show on supported devices
   if (!isSupported) {
+    // Show help message for iOS users not in PWA mode
+    if (supportReason) {
+      return (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <AlertCircle className="w-3 h-3" />
+          <span>{supportReason}</span>
+        </div>
+      );
+    }
     return null;
   }
 
+  // Show controller status for debugging
+  const showDebug = true; // Set to false in production
+  
   return (
-    <Button
-      onClick={handleToggle}
-      disabled={isLoading}
-      variant={isEnabled ? "default" : "outline"}
-      size="sm"
-      className="flex items-center gap-2"
-    >
-      {isEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-      {isLoading ? 'Attendere...' : (isEnabled ? 'Notifiche Attive' : 'Abilita Notifiche')}
-    </Button>
+    <div className="flex flex-col gap-1">
+      <Button
+        onClick={handleToggle}
+        disabled={isLoading || !isControlled}
+        variant={isEnabled ? "default" : "outline"}
+        size="sm"
+        className="flex items-center gap-2"
+      >
+        {isEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+        {isLoading ? 'Attendere...' : (isEnabled ? 'Notifiche Attive' : 'Abilita Notifiche')}
+      </Button>
+      
+      {showDebug && (
+        <div className="text-xs text-muted-foreground">
+          Controller: {isControlled ? '✅' : '❌'} | SW: {navigator.serviceWorker?.controller ? 'OK' : 'No'}
+        </div>
+      )}
+    </div>
   );
 };
 
