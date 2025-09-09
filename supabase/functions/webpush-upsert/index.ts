@@ -46,27 +46,60 @@ serve(async (req) => {
   }
 
   try {
-    const { user_id, endpoint, p256dh, auth, platform, userAgent, vapidKey } = await req.json();
+    const body = await req.json();
+    console.log('💾 [WEBPUSH-UPSERT] Raw body keys:', Object.keys(body));
     
-    console.log('💾 [WEBPUSH-UPSERT] Saving Web Push subscription for user:', user_id);
-    console.log('💾 [WEBPUSH-UPSERT] Endpoint host:', endpoint ? new URL(endpoint).hostname : 'undefined');
-    console.log('💾 [WEBPUSH-UPSERT] Platform:', platform);
+    // Support both old and new payload formats
+    let endpoint: string, p256dh: string, auth: string, platform: string, user_id: string;
+    
+    if (body.subscription && body.subscription.keys) {
+      // New format: { subscription: { endpoint, keys: { p256dh, auth } }, platform, user_id }
+      endpoint = body.subscription.endpoint;
+      p256dh = body.subscription.keys.p256dh;
+      auth = body.subscription.keys.auth;
+      platform = body.platform || 'web';
+      user_id = body.user_id;
+    } else {
+      // Old format: { endpoint, p256dh, auth, platform, user_id }
+      endpoint = body.endpoint;
+      p256dh = body.p256dh;
+      auth = body.auth;
+      platform = body.platform;
+      user_id = body.user_id;
+    }
+    
+    const diagnosticLog = {
+      route: 'webpush-upsert',
+      endpointHost: endpoint ? new URL(endpoint).hostname : null,
+      hasP256dh: !!p256dh,
+      hasAuth: !!auth,
+      platform: platform || null,
+      user_id: user_id || null,
+      ua: req.headers.get('user-agent')?.substring(0, 50) || null
+    };
+    console.log('💾 [WEBPUSH-UPSERT] Diagnostic:', diagnosticLog);
     console.log('💾 [WEBPUSH-UPSERT] Is APNs:', endpoint?.includes('web.push.apple.com'));
-    console.log('💾 [WEBPUSH-UPSERT] VAPID Key length:', vapidKey?.length || 0);
     
     // Validate required fields
-    if (!user_id || !endpoint || !p256dh || !auth) {
-      const missing = [];
-      if (!user_id) missing.push('user_id');
-      if (!endpoint) missing.push('endpoint');
-      if (!p256dh) missing.push('p256dh');
-      if (!auth) missing.push('auth');
-      
-      console.error('❌ [WEBPUSH-UPSERT] Missing required fields:', missing);
+    const missing = [];
+    if (!endpoint || typeof endpoint !== 'string' || endpoint.length === 0) missing.push('subscription.endpoint');
+    if (!p256dh || typeof p256dh !== 'string' || p256dh.length === 0) missing.push('subscription.keys.p256dh');
+    if (!auth || typeof auth !== 'string' || auth.length === 0) missing.push('subscription.keys.auth');
+    if (!platform || !['web', 'ios', 'android', 'desktop'].includes(platform)) missing.push('platform');
+    
+    if (missing.length > 0) {
+      console.error('❌ [WEBPUSH-UPSERT] Missing/invalid fields:', missing);
       return new Response(JSON.stringify({ 
-        error: "Missing required fields", 
-        missing_fields: missing,
-        received: { user_id: !!user_id, endpoint: !!endpoint, p256dh: !!p256dh, auth: !!auth }
+        error_code: "MISSING_FIELD",
+        missing,
+        hint: "Expected: {subscription:{endpoint,keys:{p256dh,auth}}, platform:'web'|'ios'|'android'|'desktop', user_id?}",
+        received: { 
+          hasEndpoint: !!endpoint, 
+          hasP256dh: !!p256dh, 
+          hasAuth: !!auth, 
+          platform: platform || null,
+          hasUserId: !!user_id 
+        }
       }), {
         headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
         status: 400,
@@ -111,8 +144,7 @@ serve(async (req) => {
         device_info: { 
           kind: "WEBPUSH", 
           keys: { p256dh, auth },
-          userAgent: userAgent || null,
-          vapidKey: vapidKey || null,
+          userAgent: req.headers.get('user-agent') || null,
           created_at: new Date().toISOString()
         },
       }),

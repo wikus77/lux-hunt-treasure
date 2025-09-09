@@ -47,11 +47,11 @@ export async function ensureSWControlled(): Promise<boolean> {
       });
 
     // 4) Prevent infinite reload loops - only reload once per session
-    const reloaded = sessionStorage.getItem('sw-reloaded') === '1';
+    const reloaded = sessionStorage.getItem('sw-reload-once') === '1';
     
     if (!reloaded && !navigator.serviceWorker.controller) {
       console.log('[SW-CONTROL] 🔄 Need to reload for SW control...');
-      sessionStorage.setItem('sw-reloaded', '1');
+      sessionStorage.setItem('sw-reload-once', '1');
       location.reload();
       return false; // Page will reload, function won't continue
     }
@@ -82,12 +82,12 @@ export async function ensureSWControlled(): Promise<boolean> {
  * Clear SW reload flag - call after successful operations
  */
 export function clearSWReloadFlag(): void {
-  sessionStorage.removeItem('sw-reloaded');
+  sessionStorage.removeItem('sw-reload-once');
 }
 
 /**
  * Check if SW has recently reloaded
  */
 export function hasSWRecentlyReloaded(): boolean {
-  return sessionStorage.getItem('sw-reloaded') === '1';
+  return sessionStorage.getItem('sw-reload-once') === '1';
 }

@@ -24,27 +24,7 @@ import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 
 function App() {
-  // Register service worker on app start
-  useEffect(() => {
-    const registerServiceWorker = async () => {
-      if ('serviceWorker' in navigator) {
-        try {
-          // SW registration is now handled by dedicated utils, skip duplicate registration
-          console.log('✅ Service worker registration delegated to SW utils');
-          
-          // Wait for service worker to be ready
-          await navigator.serviceWorker.ready;
-          console.log('✅ Service worker is ready');
-        } catch (error) {
-          console.error('❌ Service worker registration failed:', error);
-        }
-      } else {
-        console.warn('⚠️ Service worker not supported in this browser');
-      }
-    };
-
-    registerServiceWorker();
-  }, []);
+  // SW registration now handled by swControl utils - no duplicate registration
 
   // Debug iOS rendering issue - essential for troubleshooting black screen
   useEffect(() => {

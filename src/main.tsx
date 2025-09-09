@@ -257,58 +257,7 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Service Worker registration - single, safe registration
-let swRegistrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
-
-const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
-  // Ensure only one registration attempt
-  if (swRegistrationPromise) {
-    return swRegistrationPromise;
-  }
-
-  swRegistrationPromise = (async (): Promise<ServiceWorkerRegistration | null> => {
-    if (!('serviceWorker' in navigator)) {
-      console.warn('[M1SSION SW] Service Worker not supported');
-      return null;
-    }
-
-    try {
-      console.log('[M1SSION SW] Checking for existing registrations...');
-      
-      // Check for existing registration first
-      const existingReg = await navigator.serviceWorker.getRegistration('/');
-      if (existingReg?.active?.scriptURL?.includes('/sw.js')) {
-        console.log('[M1SSION SW] Using existing SW registration:', existingReg.scope);
-        console.log('[M1SSION SW] Script URL:', existingReg.active.scriptURL);
-        return existingReg;
-      }
-      
-      // SW registration is now handled by dedicated utils
-      console.log('[M1SSION SW] Using dedicated SW registration utils');
-      
-      // Wait for SW to be ready with timeout
-      const readyPromise = navigator.serviceWorker.ready;
-      const timeoutPromise = new Promise<ServiceWorkerRegistration>((_, reject) => 
-        setTimeout(() => reject(new Error('SW ready timeout')), 10000)
-      );
-      
-      const readyRegistration = await Promise.race([readyPromise, timeoutPromise]);
-      console.log('[M1SSION SW] Service worker ready');
-      
-      return readyRegistration;
-      
-    } catch (error) {
-      console.warn('[M1SSION SW] Registration failed (non-critical):', error);
-      return null;
-    }
-  })();
-
-  return swRegistrationPromise;
-};
-
-// Register SW early but non-blocking
-registerServiceWorker();
+// SW registration is now handled by swControl utils only - no duplicate registration
 
 // Enhanced global error handling
 window.addEventListener('error', (event) => {
