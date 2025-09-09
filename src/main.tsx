@@ -10,7 +10,13 @@ import App from './App';
 import './index.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
+import { diagnostics } from './utils/diagnostics';
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
+
+// Initialize diagnostics early (development only)
+if (import.meta.env.DEV) {
+  diagnostics.logSummary();
+}
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Import and apply kill switch utilities
