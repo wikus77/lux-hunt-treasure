@@ -7,7 +7,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
-  // Perfect horizontal centering for iOS PWA with slide animations and swipe dismiss
+  // TOAST FIXES: Clean configuration with working animations
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
@@ -15,25 +15,16 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="top-center"
       richColors={false}
       closeButton={false}
-      duration={3000}
+      duration={4500}
       expand={false}
       visibleToasts={3}
-      offset={0}
+      offset={12}
       style={{
-        // Force perfect horizontal centering for iOS PWA
         position: 'fixed',
         left: '50%',
         transform: 'translateX(-50%)',
         top: 'calc(env(safe-area-inset-top, 0px) + 12px)',
-        width: 'auto',
-        maxWidth: 'min(92vw, 640px)',
-        paddingInline: 'calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-right, 0px))',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '8px',
-        pointerEvents: 'none',
-        zIndex: 9999,
+        zIndex: 999999,
       } as React.CSSProperties}
       toastOptions={{
         style: {
@@ -58,13 +49,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
           userSelect: 'none',
           textAlign: 'center' as const,
           pointerEvents: 'auto',
-          // Custom slide-down animation
-          transform: 'translateY(-24px)',
-          opacity: 0,
-          animation: 'toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards',
         },
         classNames: {
-          toast: "group toast custom-toast-animation",
+          toast: "toast-slide-animation",
           description: "group-[.toast]:text-white/80",
           actionButton: "group-[.toast]:bg-cyan-500 group-[.toast]:text-black",
           cancelButton: "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
