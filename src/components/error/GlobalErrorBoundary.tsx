@@ -13,34 +13,60 @@ interface State {
   error?: Error;
   errorInfo?: ErrorInfo;
   eventId?: string;
+  retryCount: number;
+  errorCode?: string;
 }
 
 export class GlobalErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, retryCount: 0 };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, retryCount: 0 };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    this.setState({ error, errorInfo });
+    // Generate error code for tracking
+    const errorCode = `ERR-${Date.now().toString(36).toUpperCase()}`;
+    
+    this.setState(prevState => ({ 
+      error, 
+      errorInfo, 
+      errorCode,
+      retryCount: prevState.retryCount + 1 
+    }));
+
+    // Enhanced logging with error context
+    const errorContext = {
+      code: errorCode,
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      retryCount: this.state.retryCount
+    };
 
     // Log to console for debugging (only in dev)
     if (import.meta.env.DEV) {
-      console.error('🚨 GlobalErrorBoundary caught error:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-      });
+      console.error('🚨 GlobalErrorBoundary caught error:', errorContext);
     }
 
     // Report to Sentry if available
     if (typeof window !== 'undefined' && (window as any).Sentry) {
       const eventId = (window as any).Sentry.captureException(error, {
-        contexts: { react: { componentStack: errorInfo.componentStack } },
+        contexts: { 
+          react: { componentStack: errorInfo.componentStack },
+          runtime: errorContext
+        },
+        tags: {
+          section: 'error_boundary',
+          error_code: errorCode,
+          retry_count: this.state.retryCount
+        }
       });
       this.setState({ eventId });
     }
@@ -61,6 +87,10 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
+  handleRetry = () => {
+    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+  };
+
   handleReportIssue = () => {
     const subject = encodeURIComponent('M1SSION™ App - Errore Critico');
     const body = encodeURIComponent(`
@@ -68,7 +98,9 @@ Descrizione dell'errore:
 ${this.state.error?.message || 'Errore sconosciuto'}
 
 Informazioni tecniche:
+- Error Code: ${this.state.errorCode || 'N/A'}
 - Event ID: ${this.state.eventId || 'N/A'}
+- Retry Count: ${this.state.retryCount}
 - User Agent: ${navigator.userAgent}
 - URL: ${window.location.href}
 - Timestamp: ${new Date().toISOString()}
@@ -114,6 +146,16 @@ ${this.state.error?.stack || 'N/A'}
 
             {/* Action Buttons */}
             <div className="space-y-3">
+              {this.state.retryCount < 3 && (
+                <Button 
+                  onClick={this.handleRetry}
+                  className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                  size="lg"
+                >
+                  🔄 Riprova ({3 - this.state.retryCount} tentativi rimasti)
+                </Button>
+              )}
+              
               <Button 
                 onClick={this.handleReload}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
@@ -137,7 +179,7 @@ ${this.state.error?.stack || 'N/A'}
                 className="w-full text-gray-400 hover:text-white"
                 size="sm"
               >
-                📧 Segnala Problema
+                📧 Segnala Bug {this.state.errorCode && `(${this.state.errorCode})`}
               </Button>
             </div>
 
