@@ -1,7 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// PWA Loading Guard - Prevents black screen on iOS PWA first launch
+// PWA Loading Guard - Anti-black screen for iOS PWA with safe boot
 
 import { useEffect, useState } from 'react';
+import { initIOSPWASafeBoot, shouldShowUIImmediate } from '@/utils/iosPwaSafeBoot';
 
 interface PWALoadingGuardProps {
   children: React.ReactNode;
@@ -10,78 +11,57 @@ interface PWALoadingGuardProps {
 
 export const PWALoadingGuard: React.FC<PWALoadingGuardProps> = ({ 
   children, 
-  timeout = 3000 
+  timeout = 2500 
 }) => {
-  const [isReady, setIsReady] = useState(false);
-  const [isTimedOut, setIsTimedOut] = useState(false);
+  const [isReady, setIsReady] = useState(() => shouldShowUIImmediate());
+  const [bootDiagnostics, setBootDiagnostics] = useState<any>(null);
 
   useEffect(() => {
-    let timeoutId: number;
-    let isControllerReady = false;
+    // Initialize iOS PWA safe boot
+    const safeBoot = initIOSPWASafeBoot({
+      debug: import.meta.env.VITE_SW_UPDATE_DEBUG === '1' || import.meta.env.DEV,
+      maxWaitTime: 1500,
+      fallbackTimeout: timeout
+    });
 
-    const checkReadiness = () => {
-      // Check if SW controller is ready or we're not in a SW environment
-      const hasController = !!navigator.serviceWorker?.controller;
-      const noSWSupport = !('serviceWorker' in navigator);
-      
-      if (hasController || noSWSupport || isTimedOut) {
-        setIsReady(true);
-        return true;
-      }
-      
-      return false;
-    };
-
-    // Initial check
-    if (checkReadiness()) {
-      return;
-    }
-
-    // Set up timeout safety
-    timeoutId = window.setTimeout(() => {
-      console.info('[PWA-GUARD] Timeout reached, showing UI');
-      setIsTimedOut(true);
-      setIsReady(true);
-    }, timeout);
-
-    // Listen for SW controller change
-    const handleControllerChange = () => {
-      console.info('[PWA-GUARD] SW controller ready');
-      isControllerReady = true;
-      if (checkReadiness()) {
-        clearTimeout(timeoutId);
-      }
-    };
-
-    // Listen for DOMContentLoaded if not already fired
-    const handleDOMReady = () => {
-      console.info('[PWA-GUARD] DOM ready');
-      setTimeout(() => {
-        if (checkReadiness()) {
-          clearTimeout(timeoutId);
+    // Wait for safe boot to be ready
+    const initSafeBoot = async () => {
+      try {
+        const ready = await safeBoot.waitForReady();
+        setBootDiagnostics(safeBoot.getDiagnostics());
+        
+        if (!isReady) {
+          setIsReady(true);
         }
-      }, 100);
+        
+        if (import.meta.env.DEV) {
+          console.info('[PWA-GUARD] Safe boot completed:', {
+            ready,
+            diagnostics: safeBoot.getDiagnostics()
+          });
+        }
+      } catch (error) {
+        console.warn('[PWA-GUARD] Safe boot error, showing UI anyway:', error);
+        setIsReady(true);
+      }
     };
 
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
-    }
+    initSafeBoot();
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', handleDOMReady);
-    } else {
-      handleDOMReady();
-    }
+    // Additional safety timeout for extreme cases
+    const emergencyTimeout = window.setTimeout(() => {
+      if (!isReady) {
+        console.info('[PWA-GUARD] Emergency timeout, showing UI');
+        setIsReady(true);
+      }
+    }, timeout + 500);
 
     return () => {
-      clearTimeout(timeoutId);
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
-      }
-      document.removeEventListener('DOMContentLoaded', handleDOMReady);
+      clearTimeout(emergencyTimeout);
     };
-  }, [timeout, isTimedOut]);
+  }, [timeout, isReady]);
 
+  // Show loading only if not ready and not iOS PWA (to prevent black screen)
   if (!isReady) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -90,6 +70,11 @@ export const PWALoadingGuard: React.FC<PWALoadingGuardProps> = ({
           <p className="text-muted-foreground font-orbitron">
             Inizializzazione M1SSION™...
           </p>
+          {import.meta.env.DEV && bootDiagnostics && (
+            <div className="text-xs text-muted-foreground mt-4">
+              Boot: {bootDiagnostics.bootTime}ms | iOS PWA: {bootDiagnostics.isIOSPWA ? 'Yes' : 'No'}
+            </div>
+          )}
         </div>
       </div>
     );

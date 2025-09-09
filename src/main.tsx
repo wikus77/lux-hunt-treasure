@@ -175,7 +175,7 @@ const renderApp = () => {
     console.log("✅ Creating React root with enhanced configuration");
     const root = ReactDOM.createRoot(rootElement);
     
-    // Enhanced app rendering with better error boundaries and PWA loading guard
+    // Enhanced app rendering with PWA Loading Guard to prevent black screen
     root.render(
       <QueryClientProvider client={queryClient}>
         <React.Suspense fallback={
@@ -291,21 +291,23 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// Initialize one-shot SW updater (iOS PWA optimized)
+// Initialize one-shot SW updater (iOS PWA optimized) - CONTROLLED TIMING
 if (typeof window !== 'undefined') {
-  // Small delay to let DOM and other inits complete
+  // Longer delay to ensure app is stable before SW operations
   setTimeout(() => {
     import('./utils/swUpdateManager').then(({ initSWUpdateManager }) => {
       initSWUpdateManager({
-        debug: import.meta.env.DEV,
+        debug: import.meta.env.VITE_SW_UPDATE_DEBUG === '1' || import.meta.env.DEV,
         onUpdate: (hasUpdate) => {
-          console.info('[MAIN] SW update status:', hasUpdate);
+          if (import.meta.env.VITE_SW_UPDATE_DEBUG === '1') {
+            console.info('[MAIN] SW update status:', hasUpdate);
+          }
         }
       }).catch(err => {
         console.warn('[MAIN] SW updater init failed (non-critical):', err);
       });
     });
-  }, 1500);
+  }, 2000); // Increased delay for stability
 }
 
 // Enhanced global error handling
