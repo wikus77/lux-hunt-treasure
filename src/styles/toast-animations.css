@@ -1,5 +1,28 @@
 /* © 2025 M1SSION™ - Toast Animations for PWA iOS */
 
+/* KEYFRAMES FIRST - Define animations before using them */
+@keyframes toast-slide-down {
+  from {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-up {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-24px);
+    opacity: 0;
+  }
+}
+
 /* Toast container positioning - perfect centering with safe areas */
 .toaster[data-sonner-toaster] {
   position: fixed !important;
@@ -16,52 +39,43 @@
   gap: 8px !important;
 }
 
-/* Individual toast - entry animation from header */
-[data-sonner-toast] {
+/* Individual toast styling with forced animations */
+[data-sonner-toast],
+.custom-toast-animation {
   position: relative !important;
   pointer-events: auto !important;
   will-change: transform, opacity !important;
   animation: toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
   transform: translateY(-24px) !important;
   opacity: 0 !important;
+  touch-action: pan-y !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Force entry animation immediately */
+[data-sonner-toast][data-mounted="true"],
+.custom-toast-animation[data-mounted="true"] {
+  animation: toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 /* Exit animation - slide up to header */
-[data-sonner-toast][data-removed="true"] {
+[data-sonner-toast][data-removed="true"],
+[data-sonner-toast][data-removing="true"],
+.custom-toast-animation[data-removed="true"],
+.custom-toast-animation[data-removing="true"] {
   animation: toast-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
 /* Swipe gesture - progressive opacity during swipe */
-[data-sonner-toast][data-swiping="true"] {
+[data-sonner-toast][data-swiping="true"],
+.custom-toast-animation[data-swiping="true"] {
   transition: transform 100ms ease-out, opacity 100ms ease-out !important;
 }
 
-/* Entry keyframe - slides down from header */
-@keyframes toast-slide-down {
-  from {
-    transform: translateY(-24px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Exit keyframe - slides up to header */
-@keyframes toast-slide-up {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-24px);
-    opacity: 0;
-  }
-}
-
 /* Stacking - multiple toasts vertically centered */
-[data-sonner-toast]:not(:first-child) {
+[data-sonner-toast]:not(:first-child),
+.custom-toast-animation:not(:first-child) {
   margin-top: 8px !important;
 }
 
