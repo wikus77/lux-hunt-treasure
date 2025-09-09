@@ -5,7 +5,9 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, BellOff, AlertCircle } from 'lucide-react';
 import { subscribeWebPush, isWebPushSupported, getCurrentSubscription } from '@/utils/safeWebPushSubscribe';
+import { safeWebPushSubscribe } from '@/utils/safeWebPushSubscribeAdvanced';
 import { clearSWReloadFlag } from '@/utils/swControl';
+import { endpointHost, normalizePlatform } from '@/utils/pushPlatform';
 import { supabase } from '@/integrations/supabase/client';
 
 // VAPID Public Key - M1SSION™ UNIFIED 
@@ -17,6 +19,12 @@ const WebPushToggle: React.FC = () => {
   const [isSupported, setIsSupported] = useState(false);
   const [isControlled, setIsControlled] = useState(false);
   const [supportReason, setSupportReason] = useState<string>('');
+  const [diagnostics, setDiagnostics] = useState<{
+    endpointHost?: string;
+    platformResolved?: string;
+    lastUpsertStatus?: string;
+    lastUpsertError?: string;
+  }>({});
 
   useEffect(() => {
     const checkSupport = async () => {
@@ -36,9 +44,24 @@ const WebPushToggle: React.FC = () => {
           setIsEnabled(status.isSubscribed);
           setIsControlled(status.isControlled);
           
+          // Update diagnostics
+          if (status.subscription) {
+            const host = endpointHost(status.subscription.endpoint);
+            const platformResolved = normalizePlatform(status.subscription.endpoint, 'web');
+            setDiagnostics(prev => ({
+              ...prev,
+              endpointHost: host,
+              platformResolved,
+              lastUpsertStatus: localStorage.getItem('lastUpsertStatus') || undefined,
+              lastUpsertError: localStorage.getItem('lastUpsertError') || undefined
+            }));
+          }
+          
           console.log('[WEBPUSH-TOGGLE] Status:', {
             isSubscribed: status.isSubscribed,
-            isControlled: status.isControlled
+            isControlled: status.isControlled,
+            endpointHost: diagnostics.endpointHost,
+            platformResolved: diagnostics.platformResolved
           });
         } catch (error) {
           console.error('[WEBPUSH-TOGGLE] Error checking status:', error);
@@ -49,6 +72,31 @@ const WebPushToggle: React.FC = () => {
     checkSupport();
   }, []);
 
+  const refreshStatus = async () => {
+    if (!isSupported) return;
+    
+    try {
+      const status = await getCurrentSubscription();
+      setIsEnabled(status.isSubscribed);
+      setIsControlled(status.isControlled);
+      
+      // Update diagnostics
+      if (status.subscription) {
+        const host = endpointHost(status.subscription.endpoint);
+        const platformResolved = normalizePlatform(status.subscription.endpoint, 'web');
+        setDiagnostics(prev => ({
+          ...prev,
+          endpointHost: host,
+          platformResolved,
+          lastUpsertStatus: localStorage.getItem('lastUpsertStatus') || undefined,
+          lastUpsertError: localStorage.getItem('lastUpsertError') || undefined
+        }));
+      }
+    } catch (error) {
+      console.error('[WEBPUSH-TOGGLE] Error refreshing status:', error);
+    }
+  };
+
   const handleToggle = async () => {
     if (!isSupported) return;
 
@@ -57,42 +105,40 @@ const WebPushToggle: React.FC = () => {
       if (!isEnabled) {
         console.log('[WEBPUSH-TOGGLE] Starting safe subscription...');
         
-        // Use the new safe subscription method
-        const subscription = await subscribeWebPush(VAPID_PUBLIC_KEY);
-        
-        if (!subscription) {
-          // Page was reloaded for SW control, component will re-initialize
-          console.log('[WEBPUSH-TOGGLE] Page reloaded for SW control');
-          return;
-        }
-        
-        // Save subscription to Supabase
+        // Get user for authentication
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
           throw new Error('User not authenticated');
         }
         
-        console.log('[WEBPUSH-TOGGLE] Saving subscription to Supabase...');
-        
-        // Prepare payload in the expected format
-        const payload = {
-          subscription: {
-            endpoint: subscription.endpoint,
-            keys: {
-              p256dh: subscription.p256dh,
-              auth: subscription.auth
-            }
-          },
+        // Use the advanced safe subscription method with platform normalization
+        const subscriptionResult = await safeWebPushSubscribe({
+          vapidPublic: VAPID_PUBLIC_KEY,
           platform: 'web',
           user_id: user.id
-        };
+        });
+        
+        if (!subscriptionResult) {
+          // Page was reloaded for SW control, component will re-initialize
+          console.log('[WEBPUSH-TOGGLE] Page reloaded for SW control');
+          return;
+        }
+        
+        console.log('[WEBPUSH-TOGGLE] Saving subscription to Supabase...');
+        
+        // Use the result directly as it's already in the correct format
+        const payload = subscriptionResult;
+        
+        const host = endpointHost(payload.subscription.endpoint);
+        const platformResolved = normalizePlatform(payload.subscription.endpoint, 'web');
         
         console.log('[WEBPUSH-TOGGLE] Payload diagnostic:', {
           controller: navigator.serviceWorker?.controller ? 'OK' : 'No',
           readyScope: (await navigator.serviceWorker.ready).scope,
           subscribed: true,
-          endpointHost: new URL(subscription.endpoint).hostname,
+          endpointHost: host,
+          platformResolved,
           payloadFields: {
             endpoint: !!payload.subscription.endpoint,
             p256dhLen: payload.subscription.keys.p256dh.length,
@@ -101,6 +147,13 @@ const WebPushToggle: React.FC = () => {
             hasUserId: !!payload.user_id
           }
         });
+        
+        // Update diagnostics
+        setDiagnostics(prev => ({
+          ...prev,
+          endpointHost: host,
+          platformResolved
+        }));
 
         const response = await fetch('https://vkjrqirvdvjbemsfzxof.functions.supabase.co/webpush-upsert', {
           method: 'POST',
@@ -135,8 +188,8 @@ const WebPushToggle: React.FC = () => {
           throw new Error(errorMsg);
         }
 
-        const result = await response.json();
-        console.log('[WEBPUSH-TOGGLE] ✅ Upsert success:', result);
+        const upsertResult = await response.json();
+        console.log('[WEBPUSH-TOGGLE] ✅ Upsert success:', upsertResult);
         
         // Store success status for debug panel
         localStorage.setItem('lastUpsertStatus', `Success ${new Date().toLocaleTimeString()}`);
@@ -209,8 +262,27 @@ const WebPushToggle: React.FC = () => {
       </Button>
       
       {showDebug && (
-        <div className="text-xs text-muted-foreground">
-          Controller: {isControlled ? '✅' : '❌'} | SW: {navigator.serviceWorker?.controller ? 'OK' : 'No'}
+        <div className="text-xs text-muted-foreground space-y-1">
+          <div className="flex items-center justify-between">
+            <span>Controller: {isControlled ? '✅' : '❌'} | SW: {navigator.serviceWorker?.controller ? 'OK' : 'No'}</span>
+            <Button
+              onClick={refreshStatus}
+              variant="ghost"
+              size="sm"
+              className="h-4 px-1 text-xs"
+            >
+              Refresh
+            </Button>
+          </div>
+          {diagnostics.endpointHost && (
+            <div>Host: {diagnostics.endpointHost} | Platform: {diagnostics.platformResolved}</div>
+          )}
+          {diagnostics.lastUpsertStatus && (
+            <div className="text-green-600">✅ {diagnostics.lastUpsertStatus}</div>
+          )}
+          {diagnostics.lastUpsertError && (
+            <div className="text-red-600">❌ {diagnostics.lastUpsertError}</div>
+          )}
         </div>
       )}
     </div>
