@@ -2,6 +2,7 @@
 import React from 'react';
 import { Router } from 'wouter';
 import { Toaster } from "./components/ui/sonner";
+import PushFrozenNotice from "./banners/PushFrozenNotice";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
 import { ErrorBoundary } from "./components/error/ErrorBoundary";
@@ -70,6 +71,7 @@ function App() {
   
   return (
     <div className="app-shell">
+      <PushFrozenNotice />
       <div className="ios-safe-top"></div>
       <ErrorBoundary fallback={
         <div className="min-h-screen flex items-center justify-center bg-black text-white p-4">

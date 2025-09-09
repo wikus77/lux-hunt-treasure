@@ -1,0 +1,63 @@
+name: Push Chain Guard
+
+on:
+  pull_request:
+    paths:
+      - 'public/sw.js'
+      - 'public/firebase-messaging-sw.js'
+      - 'src/components/WebPushToggle.tsx'
+      - 'src/utils/*vapid*.*'
+      - 'src/utils/*push*.*'
+      - 'src/utils/swControl.*'
+      - 'src/utils/safeWebPushSubscribe.*'
+      - 'index.html'
+      - 'src/main.tsx'
+      - 'src/App.tsx'
+      - '.env*'
+
+jobs:
+  push-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check override label
+        id: check-label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            const hasOverride = labels.includes('override-push-guard');
+            
+            if (!hasOverride) {
+              core.setFailed(`
+                🚫 Push chain is frozen for security.
+                
+                Modified protected files detected. To proceed, add the label 'override-push-guard' to this PR with proper approval.
+                
+                Protected files:
+                - /sw.js (Service Worker)
+                - WebPush components and utilities
+                - Environment variables (VAPID keys)
+                - Main app files (registration points)
+                
+                This protection prevents accidental changes to critical push notification infrastructure.
+              `);
+            }
+            
+            return hasOverride;
+
+      - name: Setup Node.js
+        if: steps.check-label.outputs.result == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        if: steps.check-label.outputs.result == 'true'
+        run: npm ci
+
+      - name: Run push guard tests
+        if: steps.check-label.outputs.result == 'true'
+        run: npm run test:push
