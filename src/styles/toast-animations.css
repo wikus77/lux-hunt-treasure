@@ -1,0 +1,88 @@
+/* © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ */
+/* Toast Slide Animations with Safe Area Support */
+
+:root {
+  --toast-safe-top: max(12px, calc(env(safe-area-inset-top, 0px) + 8px));
+}
+
+/* Toast slide animations */
+@keyframes toast-slide-in {
+  from { 
+    transform: translate3d(-50%, -24px, 0); 
+    opacity: 0; 
+  }
+  to { 
+    transform: translate3d(-50%, 0, 0); 
+    opacity: 1; 
+  }
+}
+
+@keyframes toast-slide-out {
+  from { 
+    transform: translate3d(-50%, 0, 0); 
+    opacity: 1; 
+  }
+  to { 
+    transform: translate3d(-50%, -24px, 0); 
+    opacity: 0; 
+  }
+}
+
+/* Sonner toast container overrides for custom animations */
+[data-sonner-toaster] [data-sonner-toast] {
+  animation: toast-slide-in 450ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-out 450ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-swiping="true"] {
+  transform: translate3d(-50%, var(--y), 0) !important;
+  transition: none !important;
+}
+
+/* Swipe dismiss enhancement */
+[data-sonner-toaster] [data-sonner-toast]:active {
+  cursor: grabbing;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toaster] [data-sonner-toast],
+  [data-sonner-toaster] [data-sonner-toast][data-removed="true"] {
+    animation-duration: 120ms;
+    animation-timing-function: ease-out;
+  }
+  
+  @keyframes toast-slide-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes toast-slide-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+}
+
+/* Ensure proper stacking and prevent layout shift */
+[data-sonner-toaster] {
+  pointer-events: none;
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+  pointer-events: auto;
+  position: relative;
+  margin: 0 auto;
+}
+
+/* iOS PWA specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  [data-sonner-toaster] [data-sonner-toast] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    touch-action: pan-y;
+  }
+}
