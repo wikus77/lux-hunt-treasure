@@ -1,6 +1,6 @@
 /* © 2025 M1SSION™ - Toast Animations for PWA iOS */
 
-/* Toast container positioning and animations */
+/* Toast container positioning - perfect centering with safe areas */
 .toaster[data-sonner-toaster] {
   position: fixed !important;
   left: 50% !important;
@@ -10,30 +10,33 @@
   max-width: min(92vw, 640px) !important;
   width: auto !important;
   pointer-events: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
-/* Individual toast styling and animations */
+/* Individual toast - entry animation from header */
 [data-sonner-toast] {
   position: relative !important;
   pointer-events: auto !important;
-  transform: translateY(-24px) !important;
-  opacity: 0 !important;
   will-change: transform, opacity !important;
   animation: toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-  transition: transform 200ms ease-out, opacity 200ms ease-out !important;
+  transform: translateY(-24px) !important;
+  opacity: 0 !important;
 }
 
-/* Exit animation for toasts */
+/* Exit animation - slide up to header */
 [data-sonner-toast][data-removed="true"] {
   animation: toast-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
 }
 
-/* Swipe gesture support */
+/* Swipe gesture - progressive opacity during swipe */
 [data-sonner-toast][data-swiping="true"] {
   transition: transform 100ms ease-out, opacity 100ms ease-out !important;
 }
 
-/* Keyframes for slide animations */
+/* Entry keyframe - slides down from header */
 @keyframes toast-slide-down {
   from {
     transform: translateY(-24px);
@@ -45,6 +48,7 @@
   }
 }
 
+/* Exit keyframe - slides up to header */
 @keyframes toast-slide-up {
   from {
     transform: translateY(0);
@@ -56,12 +60,12 @@
   }
 }
 
-/* Stacking support - ensure multiple toasts stack vertically centered */
+/* Stacking - multiple toasts vertically centered */
 [data-sonner-toast]:not(:first-child) {
   margin-top: 8px !important;
 }
 
-/* Reduced motion support */
+/* Accessibility - reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   [data-sonner-toast] {
     animation: toast-fade-in 120ms ease-out forwards !important;
@@ -82,7 +86,14 @@
   }
 }
 
-/* Debug support (only when VITE_UI_DEBUG=1) */
+/* Touch gesture enhancement for iOS PWA */
+[data-sonner-toast] {
+  touch-action: pan-y !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+}
+
+/* Debug mode (when VITE_UI_DEBUG=1) */
 [data-toast-debug="true"] [data-sonner-toast]::after {
   content: attr(data-toast-id);
   position: absolute;
@@ -91,4 +102,5 @@
   font-size: 10px;
   color: rgba(0, 209, 255, 0.7);
   pointer-events: none;
+  z-index: 10000;
 }
