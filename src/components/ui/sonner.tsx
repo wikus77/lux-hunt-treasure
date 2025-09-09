@@ -7,8 +7,7 @@ type ToasterProps = React.ComponentProps<typeof Sonner>
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
-  // Garantisco che la posizione sia sempre top-right
-  // Questo assicura che le notifiche appaiano solo in questa posizione
+  // Perfect horizontal centering for iOS PWA - maintains exact same toast appearance
   return (
     <Sonner
       theme={theme as ToasterProps["theme"]}
@@ -20,6 +19,22 @@ const Toaster = ({ ...props }: ToasterProps) => {
       expand={false}
       visibleToasts={3}
       offset={0}
+      style={{
+        // Force perfect horizontal centering for iOS PWA
+        position: 'fixed',
+        left: '50%',
+        transform: 'translate3d(-50%, 0, 0)',
+        top: 'calc(env(safe-area-inset-top, 0px) + 20px)',
+        width: '100%',
+        maxWidth: '480px',
+        paddingInline: 'calc(16px + env(safe-area-inset-left, 0px)) calc(16px + env(safe-area-inset-right, 0px))',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+        pointerEvents: 'none',
+        zIndex: 999999,
+      } as React.CSSProperties}
       toastOptions={{
         style: {
           background: 'rgba(0, 12, 24, 0.95)',
@@ -33,7 +48,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           padding: '14px 40px',  // Più largo orizzontalmente, meno alto
           minHeight: '48px',     // Ridotto per renderlo più rettangolare
           width: '450px',        // Larghezza fissa più ampia
-          maxWidth: '450px',
+          maxWidth: 'min(92vw, 420px)', // Responsive but maintains appearance
           fontWeight: '500',
           letterSpacing: '0.025em',
           display: 'flex',
@@ -41,7 +56,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
           justifyContent: 'center',
           WebkitUserSelect: 'none',
           userSelect: 'none',
-          textAlign: 'center' as const
+          textAlign: 'center' as const,
+          pointerEvents: 'auto', // Enable clicks on individual toasts
         },
         classNames: {
           toast: "group toast",
