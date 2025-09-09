@@ -74,22 +74,73 @@ const WebPushToggle: React.FC = () => {
         }
         
         console.log('[WEBPUSH-TOGGLE] Saving subscription to Supabase...');
-        const { error } = await supabase.functions.invoke('webpush-upsert', {
-          body: {
-            user_id: user.id,
+        
+        // Prepare payload in the expected format
+        const payload = {
+          subscription: {
             endpoint: subscription.endpoint,
-            p256dh: subscription.p256dh,
-            auth: subscription.auth,
-            platform: 'ios_pwa',
-            userAgent: navigator.userAgent,
-            vapidKey: VAPID_PUBLIC_KEY
+            keys: {
+              p256dh: subscription.p256dh,
+              auth: subscription.auth
+            }
+          },
+          platform: 'web',
+          user_id: user.id
+        };
+        
+        console.log('[WEBPUSH-TOGGLE] Payload diagnostic:', {
+          controller: navigator.serviceWorker?.controller ? 'OK' : 'No',
+          readyScope: (await navigator.serviceWorker.ready).scope,
+          subscribed: true,
+          endpointHost: new URL(subscription.endpoint).hostname,
+          payloadFields: {
+            endpoint: !!payload.subscription.endpoint,
+            p256dhLen: payload.subscription.keys.p256dh.length,
+            authLen: payload.subscription.keys.auth.length,
+            platform: payload.platform,
+            hasUserId: !!payload.user_id
           }
         });
 
-        if (error) {
-          console.error('[WEBPUSH-TOGGLE] Failed to save subscription:', error);
-          throw new Error(`Failed to save subscription: ${error.message}`);
+        const response = await fetch('https://vkjrqirvdvjbemsfzxof.functions.supabase.co/webpush-upsert', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('[WEBPUSH-TOGGLE] Upsert failed:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
+          
+          // Clean up failed subscription
+          try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+            if (sub) await sub.unsubscribe();
+          } catch {}
+          
+          // Store error status for debug panel
+          const errorMsg = errorData.error_code === 'MISSING_FIELD' 
+            ? `Campi mancanti: ${errorData.missing?.join(', ') || 'unknown'}`
+            : `Server error: ${response.status} - ${errorData.error || response.statusText}`;
+          localStorage.setItem('lastUpsertError', errorMsg);
+          localStorage.removeItem('lastUpsertStatus');
+          
+          throw new Error(errorMsg);
         }
+
+        const result = await response.json();
+        console.log('[WEBPUSH-TOGGLE] ✅ Upsert success:', result);
+        
+        // Store success status for debug panel
+        localStorage.setItem('lastUpsertStatus', `Success ${new Date().toLocaleTimeString()}`);
+        localStorage.removeItem('lastUpsertError');
 
         setIsEnabled(true);
         setIsControlled(true);
