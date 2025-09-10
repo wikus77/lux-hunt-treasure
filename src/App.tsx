@@ -2,6 +2,7 @@
 import React from 'react';
 import { Router } from 'wouter';
 import { Toaster } from "./components/ui/sonner";
+import { BadgeAuditReport } from "./components/debug/BadgeAuditReport";
 import PushFrozenNotice from "./banners/PushFrozenNotice";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -95,6 +96,7 @@ function App() {
                 <PushNotificationSetup className="hidden" />
                 <XpSystemManager />
                 <Toaster />
+                <BadgeAuditReport />
                 </AuthProvider>
               </SoundProvider>
             </Router>

@@ -13,6 +13,7 @@ import { setupProductionConsole, enableProductionOptimizations } from './utils/p
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { diagnostics } from './utils/diagnostics';
 import { initBadgeDiagnostics } from './utils/badgeDiagnostics';
+import { initPWABadgeDiagnostics, createBadgeTestHelpers } from './utils/pwaBadgeAudit';
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
 
 // Initialize diagnostics early (development only)
@@ -22,6 +23,10 @@ if (import.meta.env.DEV) {
 
 // Initialize badge diagnostics
 initBadgeDiagnostics();
+
+// PHASE 1 AUDIT: Initialize PWA badge environment detection
+initPWABadgeDiagnostics();
+createBadgeTestHelpers();
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Import and apply kill switch utilities
