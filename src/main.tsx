@@ -11,14 +11,15 @@ import './index.css';
 import './styles/toast-animations.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
-import { diagnostics } from './utils/diagnostics';
+import { diagnostics } from './metrics/interestSignals';
 import { initBadgeDiagnostics } from './utils/badgeDiagnostics';
+import { initDiagnostics } from './utils/diagnostics';
 // import { initPWABadgeDiagnostics, createBadgeTestHelpers } from './utils/pwaBadgeAudit'; // Dynamic import instead
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
 
 // Initialize diagnostics early (development only)
 if (import.meta.env.DEV) {
-  diagnostics.logSummary();
+  console.log('🔍 M1SSION™ Diagnostics ready');
 }
 
 // Initialize badge diagnostics
@@ -370,6 +371,11 @@ if (typeof window !== 'undefined') {
   };
 
   setTimeout(initInterestSignals, 3000); // After app is fully rendered
+
+  // Initialize M1SSION preferences diagnostics (after app fully loaded)
+  setTimeout(() => {
+    initDiagnostics();
+  }, 100);
 }
 
 // Enhanced global error handling

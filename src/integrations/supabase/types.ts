@@ -4288,6 +4288,14 @@ export type Database = {
         }
         Relationships: []
       }
+      v_user_suggest_throttle: {
+        Row: {
+          last_sent_at: string | null
+          total_sent: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _upsert_premium_feed_source: {
@@ -4429,6 +4437,18 @@ export type Database = {
       exec_sql: {
         Args: { sql: string }
         Returns: Json
+      }
+      fn_candidates_for_user: {
+        Args: { p_limit?: number; p_user_id: string }
+        Returns: {
+          feed_item_id: string
+          locale: string
+          published_at: string
+          score: number
+          tags: string[]
+          title: string
+          url: string
+        }[]
       }
       force_subscription_sync: {
         Args: { p_user_id: string }

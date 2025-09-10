@@ -3,7 +3,7 @@
  * M1SSION™ - Enhanced System Monitoring
  */
 
-import { diagnostics } from './diagnostics';
+import { diagnostics } from '../metrics/interestSignals';
 
 interface ProductionMetrics {
   errors: ErrorMetric[];
@@ -272,9 +272,9 @@ class ProductionMonitor {
       const payload = {
         ...this.metrics,
         diagnostics: {
-          version: diagnostics.getInfo().version,
-          platform: diagnostics.getInfo().platform.type,
-          browser: diagnostics.getInfo().platform.browser
+          queueSize: diagnostics.queueSize(),
+          sessionId: diagnostics.sessionId(),
+          status: diagnostics.lastFlushStatus()
         }
       };
 
