@@ -143,10 +143,22 @@ export function useNotifications() {
       setNotifications(notifs);
       setUnreadCount(unreadCount);
       
-      // Sync PWA app badge with robust implementation
+      // Sync PWA app badge with real-time updates
+      try {
+        await syncAppIconBadge(unreadCount);
+        if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+          console.log('🔍 BADGE SYNC: Updated from Notice counter', unreadCount);
+        }
+      } catch (badgeError) {
+        // Fail silently, don't impact UI
+        if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+          console.warn('🔍 BADGE SYNC: Failed', badgeError);
+        }
+      }
+      
+      // Legacy sync functions (keep existing behavior)
       syncFromNotice(unreadCount);
       updateBadgeState(unreadCount);
-      syncAppIconBadge(unreadCount);
       
       // PHASE 1 AUDIT: Test Badge API when unreadCount > 0
       if (unreadCount > 0 && import.meta.env.VITE_BADGE_DEBUG === '1') {
@@ -203,9 +215,13 @@ export function useNotifications() {
         setUnreadCount(0);
         
         // Sync PWA app badge
+        try {
+          await syncAppIconBadge(0);
+        } catch (badgeError) {
+          // Fail silently
+        }
         syncFromNotice(0);
         updateBadgeState(0);
-        syncAppIconBadge(0);
         
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato");
@@ -346,9 +362,13 @@ export function useNotifications() {
         setUnreadCount(newUnreadCount);
         
         // Sync PWA app badge
+        try {
+          await syncAppIconBadge(newUnreadCount);
+        } catch (badgeError) {
+          // Fail silently
+        }
         syncFromNotice(newUnreadCount);
         updateBadgeState(newUnreadCount);
-        syncAppIconBadge(newUnreadCount);
         
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato per notifica:", id);
@@ -385,9 +405,13 @@ export function useNotifications() {
         setUnreadCount(newUnreadCount);
         
         // Sync PWA app badge
+        try {
+          await syncAppIconBadge(newUnreadCount);
+        } catch (badgeError) {
+          // Fail silently
+        }
         syncFromNotice(newUnreadCount);
         updateBadgeState(newUnreadCount);
-        syncAppIconBadge(newUnreadCount);
         
         listeners.forEach(fn => fn());
       }
@@ -452,9 +476,13 @@ export function useNotifications() {
         setUnreadCount(newUnreadCount);
         
         // Sync PWA app badge
+        try {
+          await syncAppIconBadge(newUnreadCount);
+        } catch (badgeError) {
+          // Fail silently
+        }
         syncFromNotice(newUnreadCount);
         updateBadgeState(newUnreadCount);
-        syncAppIconBadge(newUnreadCount);
         
         listeners.forEach(fn => fn());
         console.log("✅ UNIQUE Notification added successfully:", newNotification);

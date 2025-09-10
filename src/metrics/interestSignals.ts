@@ -173,28 +173,38 @@ class InterestSignalsQueue {
       };
 
       // Try RPC first, fallback to direct insert
-      const { error: rpcError } = await supabase.rpc('interest_track', payload);
+      let rpcError: any = null;
+      try {
+        const { error } = await (supabase as any).rpc('interest_track', payload);
+        rpcError = error;
+      } catch (e) {
+        rpcError = e;
+      }
       
       if (rpcError) {
         // Fallback: direct table insert (less efficient but works)
-        const { error: insertError } = await supabase
-          .from('interest_signals')
-          .insert(
-            eventsToSend.map(event => ({
-              user_id: user.id,
-              session_id: this.sessionId,
-              ts: event.ts,
-              type: event.type,
-              section: event.section || null,
-              category: event.category || null,
-              meta: event.meta || {},
-              device: event.device,
-              keywords: event.keywords
-            }))
-          );
+        try {
+          const { error: insertError } = await (supabase as any)
+            .from('interest_signals')
+            .insert(
+              eventsToSend.map(event => ({
+                user_id: user.id,
+                session_id: this.sessionId,
+                ts: event.ts,
+                type: event.type,
+                section: event.section || null,
+                category: event.category || null,
+                meta: event.meta || {},
+                device: event.device,
+                keywords: event.keywords
+              }))
+            );
 
-        if (insertError) {
-          throw insertError;
+          if (insertError) {
+            throw insertError;
+          }
+        } catch (fallbackError) {
+          throw fallbackError;
         }
       }
 
