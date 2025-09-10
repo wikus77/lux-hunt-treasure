@@ -44,6 +44,18 @@ interface Window {
       getState: () => any;
     };
   };
+  
+  // Badge API diagnostics
+  __M1_BADGE__?: {
+    get?: () => any;
+    getDiagnostics?: () => any;
+    state?: () => any;
+    setAppBadgeSafe?: (count: number) => Promise<boolean>;
+    clearAppBadgeSafe?: () => Promise<boolean>;
+  };
+  
+  // Notification diagnostics
+  __M1_NOTIFICATIONS_DIAG__?: any;
 }
 
 // Mobile-compatible environment interface
