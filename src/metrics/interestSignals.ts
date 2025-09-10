@@ -270,10 +270,17 @@ export function trackFavorite(entity: FavoriteEntity): void {
 export const diagnostics = {
   queueSize: () => queue.queueSize(),
   flushNow: () => queue.flushNow(),
+  lastFlushStatus: () => ({ retryCount: queue['retryCount'], isOnline: queue['isOnline'] }),
   sessionId: () => queue['sessionId']
 };
 
-// Global diagnostic helper (only in debug mode)
-if (typeof window !== 'undefined' && import.meta.env.VITE_DIAG === '1') {
-  (window as any).__M1_SIG__ = diagnostics;
+// Global diagnostic helper (activated by URL param or env)
+if (typeof window !== 'undefined') {
+  const isDebugMode = new URLSearchParams(window.location.search).get('M1_DIAG') === '1' || 
+                     import.meta.env.VITE_DIAG === '1';
+  
+  if (isDebugMode) {
+    (window as any).__M1_SIG__ = diagnostics;
+    console.log('📊 M1_SIG global diagnostics active');
+  }
 }

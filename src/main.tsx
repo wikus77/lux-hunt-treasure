@@ -342,13 +342,34 @@ if (typeof window !== 'undefined') {
   }, 2500); // Longer delay for complete stability
 
   // Initialize interest signals tracking (post first paint, zero UI impact)
-  setTimeout(() => {
-    import('./hooks/useAutoInterestSignals').then(({ initAutoInterestSignals }) => {
-      initAutoInterestSignals();
-    }).catch(err => {
-      console.warn('[MAIN] Interest signals init failed (non-critical):', err);
-    });
-  }, 3000); // After app is fully rendered
+  const initInterestSignals = () => {
+    try {
+      const isDebugMode = new URLSearchParams(window.location.search).get('M1_DIAG') === '1';
+      
+      if (isDebugMode) {
+        console.log('📊 M1SSION Interest Signals - Debug mode active');
+        // Import metrics directly for immediate diagnostics
+        import('./metrics/interestSignals').then(({ diagnostics }) => {
+          (window as any).__M1_SIG__ = diagnostics;
+          console.log('📊 M1_SIG diagnostics available:', Object.keys(diagnostics));
+        });
+      }
+      
+      // Import and initialize auto interest signals
+      import('./hooks/useAutoInterestSignals').then(({ initAutoInterestSignals }) => {
+        initAutoInterestSignals();
+        if (isDebugMode) {
+          console.log('📊 useAutoInterestSignals initialized');
+        }
+      }).catch(err => {
+        console.warn('[MAIN] Interest signals init failed (non-critical):', err);
+      });
+    } catch (error) {
+      console.warn('[MAIN] Interest signals setup failed (non-critical):', error);
+    }
+  };
+
+  setTimeout(initInterestSignals, 3000); // After app is fully rendered
 }
 
 // Enhanced global error handling
