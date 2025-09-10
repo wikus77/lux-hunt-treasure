@@ -10,11 +10,15 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import { NotificationsHeader } from '@/components/notifications/NotificationsHeader';
 import { NotificationsList } from '@/components/notifications/NotificationsList';
+import NotificationBadgeTest from '@/components/NotificationBadgeTest';
 
 const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
+  
+  // Development mode flag
+  const isDev = import.meta.env.DEV;
   
   // Custom hooks for managing notifications behavior
   const { updateDynamicIslandOnRead, closeDynamicIsland } = useNotificationsDynamicIsland(notifications);
@@ -113,6 +117,18 @@ const Notifications = () => {
               onMarkAllAsRead={handleMarkAllAsRead}
               onManualReload={handleManualReload}
             />
+            
+            {/* Badge Test Component - Development Only */}
+            {isDev && (
+              <motion.div
+                className="mb-6"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+              >
+                <NotificationBadgeTest />
+              </motion.div>
+            )}
             
             <NotificationsList
               notifications={notifications}

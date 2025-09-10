@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { setAppBadgeSafe, isBadgeAPISupported } from '@/utils/appBadge';
+import { updateDiagnostics, logDiagnosticError } from '@/utils/notificationDiagnostics';
 
 interface NotificationCounter {
   user_id: string;
@@ -29,6 +31,7 @@ export const useUnreadNotifications = () => {
   const [error, setError] = useState<string | null>(null);
   
   const channelRef = useRef<any>(null);
+  const pollingRef = useRef<number | null>(null);
   const currentUser = getCurrentUser();
   const userId = currentUser?.id;
 
@@ -37,8 +40,14 @@ export const useUnreadNotifications = () => {
 
   useEffect(() => {
     // Feature detect Badge API
-    const isSupported = 'setAppBadge' in navigator;
+    const isSupported = isBadgeAPISupported();
     setBadgeApiSupported(isSupported);
+    
+    // Update diagnostics
+    updateDiagnostics({
+      badgeApiSupported: isSupported,
+      lastSyncAt: Date.now()
+    });
     
     if (isDev) {
       log('Badge API supported:', isSupported);
@@ -47,36 +56,24 @@ export const useUnreadNotifications = () => {
 
   // Update app badge (where supported)
   const updateAppBadge = useCallback(async (count: number) => {
-    if (!badgeApiSupported) return;
-
     try {
-      if (count > 0) {
-        await navigator.setAppBadge(count);
-        if (isDev) {
-          log(`BadgeAPI: set ${count}`);
-          if (window.__M1_DIAG__) {
-            window.__M1_DIAG__.lastBadgeUpdate = { count, timestamp: Date.now() };
-          }
-        }
-      } else {
-        await navigator.clearAppBadge();
-        if (isDev) {
-          log('BadgeAPI: clear');
-          if (window.__M1_DIAG__) {
-            window.__M1_DIAG__.lastBadgeUpdate = { count: 0, timestamp: Date.now() };
-          }
-        }
-      }
-    } catch (err) {
-      // Silent fail with dev logging
+      const success = await setAppBadgeSafe(count);
+      
+      // Update diagnostics
+      updateDiagnostics({
+        lastBadgeUpdate: { count, timestamp: Date.now() }
+      });
+      
       if (isDev) {
-        log('BadgeAPI error:', err);
-        if (window.__M1_DIAG__) {
-          window.__M1_DIAG__.badgeApiError = { error: String(err), timestamp: Date.now() };
-        }
+        log(`BadgeAPI: ${success ? 'success' : 'failed'} - ${count}`);
       }
+      
+      return success;
+    } catch (err) {
+      logDiagnosticError(`Badge update failed: ${String(err)}`, 'updateAppBadge');
+      return false;
     }
-  }, [badgeApiSupported]);
+  }, []);
 
   // Persist count to localStorage for quick render
   const persistCount = useCallback((count: number) => {
@@ -127,12 +124,19 @@ export const useUnreadNotifications = () => {
       persistCount(count);
       await updateAppBadge(count);
       
+      // Update diagnostics
+      updateDiagnostics({
+        unreadCount: count,
+        lastSyncAt: Date.now()
+      });
+      
       log('Fetched unread count:', count);
       
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       log('Fetch error:', err);
       setError(message);
+      logDiagnosticError(message, 'fetchUnreadCount');
     } finally {
       setIsLoading(false);
     }
@@ -170,23 +174,31 @@ export const useUnreadNotifications = () => {
             persistCount(newCount);
             updateAppBadge(newCount);
             
-            log(`Realtime: unread_count -> ${newCount}`);
-            
-            if (isDev && window.__M1_DIAG__) {
-              window.__M1_DIAG__.lastRealtimeUpdate = {
+            // Update diagnostics
+            updateDiagnostics({
+              unreadCount: newCount,
+              lastRealtimeUpdate: {
                 count: newCount,
                 timestamp: Date.now(),
                 payload
-              };
-            }
+              },
+              realtimeConnected: true
+            });
+            
+            log(`Realtime: unread_count -> ${newCount}`);
           }
         }
       )
       .subscribe((status) => {
         log('Realtime subscription status:', status);
         
-        if (isDev && window.__M1_DIAG__) {
-          window.__M1_DIAG__.realtimeStatus = status;
+        // Update diagnostics with connection status
+        updateDiagnostics({
+          realtimeConnected: status === 'SUBSCRIBED'
+        });
+        
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          logDiagnosticError(`Realtime error: ${status}`, 'subscription');
         }
       });
 
@@ -225,6 +237,33 @@ export const useUnreadNotifications = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [isAuthenticated, fetchUnreadCount, loadPersistedCount]);
+
+  // Fallback polling mechanism (60s interval) in case realtime fails
+  useEffect(() => {
+    if (!isAuthenticated || !userId) {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+      return;
+    }
+
+    // Start polling as fallback
+    pollingRef.current = window.setInterval(() => {
+      // Only poll if document is visible to save resources
+      if (document.visibilityState === 'visible') {
+        log('Fallback polling: fetching count');
+        fetchUnreadCount();
+      }
+    }, 60000); // 60 seconds
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [isAuthenticated, userId, fetchUnreadCount]);
 
   // Manual refresh function
   const refreshCount = useCallback(() => {
