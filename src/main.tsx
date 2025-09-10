@@ -13,7 +13,7 @@ import { setupProductionConsole, enableProductionOptimizations } from './utils/p
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { diagnostics } from './utils/diagnostics';
 import { initBadgeDiagnostics } from './utils/badgeDiagnostics';
-import { initPWABadgeDiagnostics, createBadgeTestHelpers } from './utils/pwaBadgeAudit';
+// import { initPWABadgeDiagnostics, createBadgeTestHelpers } from './utils/pwaBadgeAudit'; // Dynamic import instead
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
 
 // Initialize diagnostics early (development only)
@@ -24,9 +24,26 @@ if (import.meta.env.DEV) {
 // Initialize badge diagnostics
 initBadgeDiagnostics();
 
-// PHASE 1 AUDIT: Initialize PWA badge environment detection
-initPWABadgeDiagnostics();
-createBadgeTestHelpers();
+// PHASE 1 AUDIT: Initialize PWA badge environment detection safely
+const initPWABadgeDiagnosticsSafely = async () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Dynamic import to ensure proper loading
+      const { initPWABadgeDiagnostics, createBadgeTestHelpers } = await import('./utils/pwaBadgeAudit');
+      initPWABadgeDiagnostics();
+      createBadgeTestHelpers();
+    } catch (err) {
+      console.warn('PWA Badge diagnostics initialization failed:', err);
+    }
+  }
+};
+
+// Call after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPWABadgeDiagnosticsSafely);
+} else {
+  initPWABadgeDiagnosticsSafely();
+}
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Import and apply kill switch utilities
