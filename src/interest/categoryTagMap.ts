@@ -6,10 +6,10 @@
 export const CATEGORY_TAGS: Record<string, string[]> = {
   'Luxury & moda': ['luxury', 'fashion', 'watch', 'luxurycar'],
   'Viaggi & esperienze': ['travel', 'experience'],
-  'Sport & fitness': ['sport'],
-  'Tecnologia': ['tech'],
+  'Sport & fitness': ['sport', 'fitness'],
+  'Tecnologia': ['tech', 'innovation'],
   'Food & beverage': ['food', 'beverage'],
-  'Arte & cultura': ['art', 'culture', 'design'],
+  'Arte & cultura': ['art', 'culture'],
 };
 
 // Lista ordinata delle categorie per UI

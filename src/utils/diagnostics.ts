@@ -145,18 +145,22 @@ export function initDiagnostics(): void {
       }
     },
 
-    async testCandidates() {
+    async testCandidates(userId?: string) {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          throw new Error('No authenticated user');
+        const targetUserId = userId || user?.id;
+        
+        if (!targetUserId) {
+          throw new Error('No user ID provided');
         }
+
+        console.log('🔍 TEST: Testing candidates for user:', targetUserId);
 
         // Check user resolved tags
         const { data: userTags, error: tagsError } = await supabase
           .from('v_user_resolved_tags')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', targetUserId)
           .single();
 
         // Get recent feed items
@@ -168,16 +172,27 @@ export function initDiagnostics(): void {
           .order('published_at', { ascending: false })
           .limit(10);
 
+        // Test the candidates function directly
+        const { data: candidates, error: candidatesError } = await supabase
+          .rpc('fn_candidates_for_user', {
+            p_user_id: targetUserId,
+            p_limit: 5
+          });
+
         const result = {
-          user_id: user.id,
+          user_id: targetUserId,
           user_tags: userTags || 'No tags resolved',
           tags_error: tagsError?.message,
           feed_items_count: feedItems?.length || 0,
           feed_error: feedError?.message,
-          recent_items: feedItems || []
+          recent_items: feedItems || [],
+          candidates_count: candidates?.length || 0,
+          candidates_error: candidatesError?.message,
+          candidates: candidates || []
         };
 
-        console.log('🔍 TEST: Candidates test:', result);
+        console.log('🔍 TEST: Candidates test result:', result);
+        console.table(candidates);
         return result;
       } catch (error) {
         console.error('🔍 TEST: Error in testCandidates:', error);
