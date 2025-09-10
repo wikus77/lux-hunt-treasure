@@ -6,172 +6,318 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-interface FeedSource {
-  name: string;
-  url: string;
-  selector?: string;
-  tags: string[];
-  brand?: string;
-}
-
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const runId = crypto.randomUUID();
+  const startTime = new Date();
+
   try {
-    // Initialize Supabase client with service role
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    console.log(`🕷️ [FEED-CRAWLER] Run ${runId} starting...`);
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    console.log('📰 [FEED-CRAWLER] Starting external feed crawling...')
+    const FEED_SCORE_MIN = parseFloat(Deno.env.get('FEED_SCORE_MIN') || '0.6');
+    
+    // Create run log
+    const { data: runLog } = await supabaseClient
+      .from('feed_crawler_runs')
+      .insert({ id: runId, started_at: startTime })
+      .select()
+      .single();
 
-    // Static feed sources (in production, these could come from env or database)
-    const feedSources: FeedSource[] = [
-      {
-        name: 'gq',
-        url: 'https://www.gq.com/luxury',
-        tags: ['luxury', 'fashion', 'watches'],
-        brand: 'GQ'
-      },
-      {
-        name: 'hodinkee',
-        url: 'https://hodinkee.com',
-        tags: ['watches', 'luxury', 'timepieces'],
-        brand: 'Hodinkee'
-      },
-      {
-        name: 'press_porsche',
-        url: 'https://newsroom.porsche.com',
-        tags: ['auto', 'luxury', 'porsche', 'mission'],
-        brand: 'Porsche'
-      }
-    ];
+    console.log(`📊 [FEED-CRAWLER] Run logged with ID: ${runId}`);
 
-    let itemsProcessed = 0;
-    let itemsAdded = 0;
+    // Fetch enabled curated sources
+    const { data: feedSources, error: sourcesError } = await supabaseClient
+      .from('external_feed_sources')
+      .select('*')
+      .eq('enabled', true)
+      .order('weight', { ascending: false });
 
-    // For demo purposes, we'll generate synthetic content
-    // In production, you'd implement actual RSS/webpage scraping
-    const syntheticItems = [
-      {
-        source: 'gq',
-        title: `Luxury Watch Innovation ${new Date().getFullYear()}`,
-        url: `https://example.com/watches-${Date.now()}`,
-        summary: 'Latest innovations in luxury timepieces and their connection to modern missions',
-        tags: ['luxury', 'watches', 'innovation', 'mission'],
-        brand: 'GQ',
-        published_at: new Date().toISOString(),
-        content_hash: `gq-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      },
-      {
-        source: 'hodinkee',
-        title: `Swiss Precision Meets Modern Technology`,
-        url: `https://example.com/swiss-tech-${Date.now()}`,
-        summary: 'How traditional Swiss watchmaking adapts to modern technological challenges',
-        tags: ['watches', 'swiss', 'technology', 'precision'],
-        brand: 'Hodinkee',
-        published_at: new Date().toISOString(),
-        content_hash: `hodinkee-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      },
-      {
-        source: 'porsche',
-        title: `Mission-E Technology Breakthrough`,
-        url: `https://example.com/mission-e-${Date.now()}`,
-        summary: 'Latest developments in Porsche Mission-E electric vehicle technology',
-        tags: ['porsche', 'electric', 'mission', 'auto', 'luxury'],
-        brand: 'Porsche',
-        published_at: new Date().toISOString(),
-        content_hash: `porsche-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      },
-      {
-        source: 'tech_mission',
-        title: `Advanced Mission Planning Systems`,
-        url: `https://example.com/mission-tech-${Date.now()}`,
-        summary: 'Revolutionary technology for mission planning and execution in luxury contexts',
-        tags: ['mission', 'technology', 'planning', 'luxury'],
-        brand: 'TechMission',
-        published_at: new Date().toISOString(),
-        content_hash: `tech-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-      }
-    ];
+    if (sourcesError) {
+      throw new Error(`Sources fetch error: ${sourcesError.message}`);
+    }
 
-    // Process synthetic items (simulate crawling)
-    for (const item of syntheticItems) {
+    console.log(`📡 [FEED-CRAWLER] Found ${feedSources?.length || 0} active sources`);
+
+    let totalItemsFetched = 0;
+    let totalItemsNew = 0;
+    let totalItemsSkipped = 0;
+
+    // Process each source
+    for (const source of feedSources || []) {
       try {
-        itemsProcessed++;
+        console.log(`🎯 [FEED-CRAWLER] Processing: ${source.id} (${source.locale})`);
+        
+        // Generate synthetic items (simulating RSS/API fetch)
+        const syntheticItems = await generateSyntheticItems(source);
+        totalItemsFetched += syntheticItems.length;
 
-        // Try to insert the item
-        const { data, error } = await supabase
-          .from('external_feed_items')
-          .insert([item])
-          .select()
-
-        if (error) {
-          if (error.code === '23505') { // Unique constraint violation (duplicate content_hash)
-            console.log(`📰 [FEED-CRAWLER] Skipping duplicate item: ${item.title}`)
-          } else {
-            console.error(`📰 [FEED-CRAWLER] Error inserting item: ${error.message}`)
+        // Score and insert items
+        for (const item of syntheticItems) {
+          const score = calculateScore(item, source);
+          
+          if (score < FEED_SCORE_MIN) {
+            console.log(`⚠️ [FEED-CRAWLER] Item "${item.title}" score ${score} below threshold ${FEED_SCORE_MIN}`);
+            totalItemsSkipped++;
+            continue;
           }
-        } else {
-          itemsAdded++;
-          console.log(`📰 [FEED-CRAWLER] Added item: ${item.title}`)
+
+          // Create content hash for deduplication
+          const contentHash = await createContentHash(item.url || item.title + item.published_at);
+          
+          const feedItem = {
+            source: source.id,
+            title: item.title,
+            url: item.url,
+            summary: item.summary || '',
+            published_at: item.published_at,
+            tags: [...(source.tags || []), ...(item.tags || [])],
+            brand: item.brand || source.id,
+            locale: source.locale,
+            score: score,
+            content_hash: contentHash
+          };
+
+          // Insert with conflict handling
+          const { error: insertError } = await supabaseClient
+            .from('external_feed_items')
+            .upsert(feedItem, { 
+              onConflict: 'content_hash',
+              ignoreDuplicates: true 
+            });
+
+          if (insertError) {
+            console.log(`❌ [FEED-CRAWLER] Insert error for "${item.title}": ${insertError.message}`);
+            totalItemsSkipped++;
+          } else {
+            console.log(`✅ [FEED-CRAWLER] Added: "${item.title}" (score: ${score})`);
+            totalItemsNew++;
+          }
         }
 
-      } catch (itemError) {
-        console.error(`📰 [FEED-CRAWLER] Error processing item ${item.title}:`, itemError)
+      } catch (sourceError) {
+        console.error(`💥 [FEED-CRAWLER] Source ${source.id} failed:`, sourceError);
       }
     }
 
-    // Clean up old items (keep last 100 per source)
-    for (const source of feedSources) {
+    // Cleanup old items (keep latest 100 per source)
+    for (const source of feedSources || []) {
       try {
-        const { data: oldItems } = await supabase
+        const { data: oldItems } = await supabaseClient
           .from('external_feed_items')
           .select('id')
-          .eq('source', source.name)
+          .eq('source', source.id)
           .order('published_at', { ascending: false })
-          .range(100, 1000) // Keep first 100, delete rest
+          .range(100, 1000);
 
         if (oldItems && oldItems.length > 0) {
-          const idsToDelete = oldItems.map(item => item.id)
+          const idsToDelete = oldItems.map(item => item.id);
           
-          const { error: deleteError } = await supabase
+          await supabaseClient
             .from('external_feed_items')
             .delete()
-            .in('id', idsToDelete)
+            .in('id', idsToDelete);
 
-          if (!deleteError) {
-            console.log(`📰 [FEED-CRAWLER] Cleaned up ${oldItems.length} old items from ${source.name}`)
-          }
+          console.log(`🧹 [FEED-CRAWLER] Cleaned up ${oldItems.length} old items from ${source.id}`);
         }
       } catch (cleanupError) {
-        console.error(`📰 [FEED-CRAWLER] Cleanup error for ${source.name}:`, cleanupError)
+        console.error(`💥 [FEED-CRAWLER] Cleanup error for ${source.id}:`, cleanupError);
       }
     }
 
-    console.log(`📰 [FEED-CRAWLER] Completed: ${itemsAdded} new items added out of ${itemsProcessed} processed`)
+    // Update run log
+    await supabaseClient
+      .from('feed_crawler_runs')
+      .update({
+        finished_at: new Date(),
+        sources_count: feedSources?.length || 0,
+        items_fetched: totalItemsFetched,
+        items_new: totalItemsNew,
+        items_skipped: totalItemsSkipped
+      })
+      .eq('id', runId);
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      itemsProcessed,
-      itemsAdded,
-      sources: feedSources.length
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.log(`🎉 [FEED-CRAWLER] Run ${runId} completed: ${totalItemsNew} new items`);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        run_id: runId,
+        sources_processed: feedSources?.length || 0,
+        items_fetched: totalItemsFetched,
+        items_new: totalItemsNew,
+        items_skipped: totalItemsSkipped,
+        score_threshold: FEED_SCORE_MIN
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    );
 
   } catch (error) {
-    console.error('📰 [FEED-CRAWLER] Error:', error)
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: error.message 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    console.error(`💥 [FEED-CRAWLER] Fatal error in run ${runId}:`, error);
+    
+    // Log error to run
+    try {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
+      
+      await supabaseClient
+        .from('feed_crawler_runs')
+        .update({
+          finished_at: new Date(),
+          error_details: { message: error.message, stack: error.stack }
+        })
+        .eq('id', runId);
+    } catch {}
+
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message,
+        run_id: runId
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
   }
 })
+
+// Generate synthetic feed items based on source configuration
+async function generateSyntheticItems(source: any) {
+  const baseItems = [
+    {
+      title_en: "Ferrari Unveils Revolutionary Hypercar Technology",
+      title_fr: "Ferrari Dévoile une Technologie Hypercar Révolutionnaire", 
+      title_es: "Ferrari Presenta Tecnología Revolucionaria de Hiperdeportivos",
+      title_de: "Ferrari Enthüllt Revolutionäre Hypersportwagen-Technologie",
+      title_nl: "Ferrari Onthult Revolutionaire Hypercar Technologie",
+      summary_en: "Latest Ferrari hypercar features groundbreaking hybrid technology and luxury materials",
+      summary_fr: "La dernière hypercar Ferrari intègre une technologie hybride révolutionnaire et des matériaux de luxe",
+      summary_es: "El último hiperdeportivo Ferrari cuenta con tecnología híbrida innovadora y materiales de lujo",
+      summary_de: "Neuester Ferrari Hypersportwagen mit bahnbrechender Hybrid-Technologie und Luxusmaterialien",
+      summary_nl: "Nieuwste Ferrari hypercar met baanbrekende hybride technologie en luxe materialen",
+      tags: ["luxury", "cars", "Ferrari", "hypercar", "technology"]
+    },
+    {
+      title_en: "Exclusive Swiss Watch Collection Launches",
+      title_fr: "Lancement d'une Collection Exclusive de Montres Suisses",
+      title_es: "Lanzamiento de Colección Exclusiva de Relojes Suizos", 
+      title_de: "Exklusive Schweizer Uhrenkollektion startet",
+      title_nl: "Exclusieve Zwitserse Horloge Collectie Gelanceerd",
+      summary_en: "Premium Swiss timepieces featuring rare materials and traditional craftsmanship",
+      summary_fr: "Montres suisses premium avec matériaux rares et artisanat traditionnel",
+      summary_es: "Relojes suizos premium con materiales raros y artesanía tradicional",
+      summary_de: "Premium Schweizer Zeitmesser mit seltenen Materialien und traditioneller Handwerkskunst",
+      summary_nl: "Premium Zwitserse horloges met zeldzame materialen en traditioneel vakmanschap",
+      tags: ["luxury", "watches", "premium", "Swiss", "craftsmanship"]
+    },
+    {
+      title_en: "Ultimate Luxury Mission Challenge Announced",
+      title_fr: "Défi Mission Luxe Ultime Annoncé",
+      title_es: "Anunciado el Desafío de Misión de Lujo Definitivo",
+      title_de: "Ultimate Luxus-Mission Challenge Angekündigt",
+      title_nl: "Ultieme Luxe Missie Challenge Aangekondigd",
+      summary_en: "Join exclusive global mission to win premium luxury experiences and supercars",
+      summary_fr: "Rejoignez la mission mondiale exclusive pour gagner des expériences de luxe premium et des supercars",
+      summary_es: "Únete a la misión global exclusiva para ganar experiencias de lujo premium y superdeportivos",
+      summary_de: "Nehmen Sie an der exklusiven globalen Mission teil, um Premium-Luxuserlebnisse und Supersportwagen zu gewinnen",
+      summary_nl: "Doe mee aan de exclusieve wereldwijde missie om premium luxe ervaringen en supercars te winnen",
+      tags: ["mission", "challenge", "prize", "luxury", "exclusive", "global"]
+    }
+  ];
+
+  const items = [];
+  const itemCount = Math.floor(Math.random() * 2) + 1; // 1-2 items per source
+
+  for (let i = 0; i < itemCount; i++) {
+    const baseItem = baseItems[i % baseItems.length];
+    const timestamp = new Date(Date.now() - Math.random() * 2 * 60 * 60 * 1000); // Random within last 2 hours
+    
+    items.push({
+      title: baseItem[`title_${source.locale}`] || baseItem.title_en,
+      url: `https://example.com/${source.id}-${Date.now()}-${i}`,
+      summary: baseItem[`summary_${source.locale}`] || baseItem.summary_en,
+      published_at: timestamp.toISOString(),
+      tags: baseItem.tags,
+      brand: source.id
+    });
+  }
+
+  return items;
+}
+
+// Calculate content score based on source keywords and weights
+function calculateScore(item: any, source: any): number {
+  const keywords = source.keywords || [];
+  const weight = source.weight || 1;
+  
+  if (!keywords.length) return 0.5 * weight;
+
+  const text = `${item.title} ${item.summary}`.toLowerCase();
+  let matches = 0;
+  let totalKeywords = keywords.length;
+
+  // Count keyword matches (exact and partial)
+  for (const keyword of keywords) {
+    const lowerKeyword = keyword.toLowerCase();
+    if (text.includes(lowerKeyword)) {
+      matches++;
+    } else {
+      // Check for partial matches (for compound keywords)
+      const keywordTokens = lowerKeyword.split(' ');
+      if (keywordTokens.length > 1) {
+        const partialMatches = keywordTokens.filter(token => text.includes(token)).length;
+        if (partialMatches >= keywordTokens.length * 0.5) { // At least 50% of tokens match
+          matches += 0.5;
+        }
+      }
+    }
+  }
+
+  // Base score from keyword matching
+  const baseScore = matches / totalKeywords;
+  
+  // Apply source weight and language boost
+  const languageBoost = getLanguageBoost(source.locale, text);
+  const finalScore = Math.min(baseScore * weight * languageBoost, 1.0);
+
+  return Math.round(finalScore * 100) / 100;
+}
+
+// Language-specific scoring boost
+function getLanguageBoost(locale: string, text: string): number {
+  const boosts: Record<string, string[]> = {
+    'en': ['luxury', 'premium', 'exclusive', 'limited', 'mission'],
+    'fr': ['luxe', 'premium', 'exclusif', 'limité', 'mission'],
+    'es': ['lujo', 'premium', 'exclusivo', 'limitado', 'misión'],
+    'de': ['luxus', 'premium', 'exklusiv', 'limitiert', 'mission'],
+    'nl': ['luxe', 'premium', 'exclusief', 'beperkt', 'missie']
+  };
+
+  const localeBoosts = boosts[locale] || [];
+  const hasBoostWords = localeBoosts.some(word => text.includes(word));
+  
+  return hasBoostWords ? 1.2 : 1.0;
+}
+
+// Create SHA-256 content hash for deduplication
+async function createContentHash(content: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(content);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}

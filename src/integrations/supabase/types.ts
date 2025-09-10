@@ -922,7 +922,9 @@ export type Database = {
           content_hash: string
           created_at: string
           id: string
+          locale: string | null
           published_at: string
+          score: number | null
           source: string
           summary: string | null
           tags: string[] | null
@@ -934,7 +936,9 @@ export type Database = {
           content_hash: string
           created_at?: string
           id?: string
+          locale?: string | null
           published_at: string
+          score?: number | null
           source: string
           summary?: string | null
           tags?: string[] | null
@@ -946,12 +950,53 @@ export type Database = {
           content_hash?: string
           created_at?: string
           id?: string
+          locale?: string | null
           published_at?: string
+          score?: number | null
           source?: string
           summary?: string | null
           tags?: string[] | null
           title?: string
           url?: string
+        }
+        Relationships: []
+      }
+      external_feed_sources: {
+        Row: {
+          created_at: string | null
+          enabled: boolean | null
+          id: string
+          keywords: string[] | null
+          kind: string
+          locale: string
+          tags: string[] | null
+          updated_at: string | null
+          url: string
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id: string
+          keywords?: string[] | null
+          kind: string
+          locale: string
+          tags?: string[] | null
+          updated_at?: string | null
+          url: string
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          enabled?: boolean | null
+          id?: string
+          keywords?: string[] | null
+          kind?: string
+          locale?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          url?: string
+          weight?: number | null
         }
         Relationships: []
       }
@@ -1018,6 +1063,42 @@ export type Database = {
           updated_at?: string | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      feed_crawler_runs: {
+        Row: {
+          created_at: string | null
+          error_details: Json | null
+          finished_at: string | null
+          id: string
+          items_fetched: number | null
+          items_new: number | null
+          items_skipped: number | null
+          sources_count: number | null
+          started_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_details?: Json | null
+          finished_at?: string | null
+          id?: string
+          items_fetched?: number | null
+          items_new?: number | null
+          items_skipped?: number | null
+          sources_count?: number | null
+          started_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_details?: Json | null
+          finished_at?: string | null
+          id?: string
+          items_fetched?: number | null
+          items_new?: number | null
+          items_skipped?: number | null
+          sources_count?: number | null
+          started_at?: string | null
         }
         Relationships: []
       }
