@@ -119,9 +119,17 @@ export function initAutoInterestSignals() {
   // This will be called from main.tsx after first paint
   if (typeof window !== 'undefined') {
     try {
-      // The hook will be activated when the component using it mounts
-      if (import.meta.env.VITE_DIAG === '1') {
+      const isDebugMode = new URLSearchParams(window.location.search).get('M1_DIAG') === '1' || 
+                         import.meta.env.VITE_DIAG === '1';
+      
+      if (isDebugMode) {
         console.log('📊 Auto interest signals initialized');
+        // Expose additional diagnostics for debug mode
+        (window as any).__M1_AUTO_SIG__ = {
+          isActive: true,
+          timestamp: new Date().toISOString(),
+          version: '1.0.0'
+        };
       }
     } catch (error) {
       if (import.meta.env.VITE_DIAG === '1') {
