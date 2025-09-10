@@ -566,6 +566,27 @@ export type Database = {
         }
         Relationships: []
       }
+      category_tag_map: {
+        Row: {
+          category: string
+          created_at: string | null
+          tags: string[]
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          tags: string[]
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          tags?: string[]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       checkout_sessions: {
         Row: {
           amount_total: number | null
@@ -1734,6 +1755,33 @@ export type Database = {
         Update: {
           unread_count?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          category: string
+          created_at: string | null
+          enabled: boolean
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          enabled?: boolean
+          id?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -4229,6 +4277,14 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      v_user_resolved_tags: {
+        Row: {
+          active_categories: number | null
+          resolved_tags: string[] | null
+          user_id: string | null
         }
         Relationships: []
       }
