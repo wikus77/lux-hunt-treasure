@@ -31,11 +31,18 @@ export const CURATED_SOURCES: CuratedSource[] = [
 
   // "Missions", rewards, prize (concorsi/premi)
   { id:'prize_en_1', locale:'en', kind:'search', url:'https://news.google.com/rss/search?q=contest+OR+giveaway+OR+prize+OR+reward', tags:['prize','rewards'], keywords:['mission','challenge','contest','giveaway','prize','reward','earn','win'], enabled:true },
-  { id:'prize_it_1', locale:'en', kind:'search', url:'https://news.google.com/rss/search?q=mission+challenge+reward+prize+luxury', tags:['mission','rewards'], keywords:['mission','premio','premi','ricompensa','sfida','lusso','auto di lusso'], enabled:true },
+  { id:'prize_en_2', locale:'en', kind:'search', url:'https://news.google.com/rss/search?q=mission+challenge+reward+prize+luxury', tags:['mission','rewards'], keywords:['mission','premio','premi','ricompensa','sfida','lusso','auto di lusso'], enabled:true },
   { id:'premio_fr_1', locale:'fr', kind:'search', url:'https://news.google.com/rss/search?q=concours+recompense+prix+mission', tags:['prix','mission'], keywords:['mission','concours','récompense','prix','luxe'], enabled:true },
   { id:'premio_es_1', locale:'es', kind:'search', url:'https://news.google.com/rss/search?q=concurso+premio+recompensa+mision+lujo', tags:['premio','mision'], keywords:['misión','concurso','premio','recompensa','lujo'], enabled:true },
   { id:'premio_de_1', locale:'de', kind:'search', url:'https://news.google.com/rss/search?q=gewinnspiel+preis+belohnung+mission+luxus', tags:['preis','belohnung'], keywords:['Mission','Gewinnspiel','Preis','Belohnung','Luxus'], enabled:true },
-  { id:'premio_nl_1', locale:'nl', kind:'search', url:'https://news.google.com/rss/search?q=wedstrijd+prijs+beloning+missie+luxe', tags:['prijs','missie'], keywords:['missie','wedstrijd','prijs','beloning','luxe'], enabled:true }
+  { id:'premio_nl_1', locale:'nl', kind:'search', url:'https://news.google.com/rss/search?q=wedstrijd+prijs+beloning+missie+luxe', tags:['prijs','missie'], keywords:['missie','wedstrijd','prijs','beloning','luxe'], enabled:true },
+
+  // Mission sources
+  { id:'mission_en_1', locale:'en', kind:'search', url:'https://news.google.com/rss/search?q=mission+OR+challenge+OR+quest', tags:['mission'], keywords:['mission','challenge','quest'], weight:1, enabled:true },
+  { id:'mission_fr_1', locale:'fr', kind:'search', url:'https://news.google.com/rss/search?q=mission+OR+défi+OR+quête', tags:['mission'], keywords:['mission','défi','quête'], weight:1, enabled:true },
+  { id:'mission_es_1', locale:'es', kind:'search', url:'https://news.google.com/rss/search?q=misión+OR+desafío+OR+búsqueda', tags:['mission'], keywords:['misión','desafío','búsqueda'], weight:1, enabled:true },
+  { id:'mission_de_1', locale:'de', kind:'search', url:'https://news.google.com/rss/search?q=mission+OR+herausforderung+OR+suche', tags:['mission'], keywords:['mission','herausforderung','suche'], weight:1, enabled:true },
+  { id:'mission_nl_1', locale:'nl', kind:'search', url:'https://news.google.com/rss/search?q=missie+OR+uitdaging+OR+zoektocht', tags:['mission'], keywords:['missie','uitdaging','zoektocht'], weight:1, enabled:true }
 ];
 
 export default CURATED_SOURCES;
