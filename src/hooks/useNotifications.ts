@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { syncFromNotice } from "@/utils/appBadge";
 import { updateBadgeState } from "@/utils/badgeDiagnostics";
+import { testBadgeAPI } from "@/utils/pwaBadgeAudit";
 
 // Tipizzazione
 export interface Notification {
@@ -129,12 +130,26 @@ export function useNotifications() {
       const unreadCount = notifs.filter(n => !n.read).length;
       console.log("📊 NOTIFICATIONS: Total:", notifs.length, "Unread:", unreadCount);
       
+      // PHASE 1 AUDIT: Log unread count changes for tracing
+      if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+        console.log('🔍 UNREAD COUNT CHANGE:', { 
+          prev: unreadCount, 
+          next: unreadCount,
+          source: 'reloadNotifications'
+        });
+      }
+      
       setNotifications(notifs);
       setUnreadCount(unreadCount);
       
       // Sync PWA app badge
       syncFromNotice(unreadCount);
       updateBadgeState(unreadCount);
+      
+      // PHASE 1 AUDIT: Test Badge API when unreadCount > 0
+      if (unreadCount > 0 && import.meta.env.VITE_BADGE_DEBUG === '1') {
+        testBadgeAPI(unreadCount).catch(console.warn);
+      }
       
       loadingTimeoutRef.current = setTimeout(() => {
         setIsLoading(false);
@@ -312,6 +327,17 @@ export function useNotifications() {
       
       if (saved) {
         const newUnreadCount = updated.filter(n => !n.read).length;
+        
+        // PHASE 1 AUDIT: Log unread count changes
+        if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+          console.log('🔍 UNREAD COUNT CHANGE:', { 
+            prev: unreadCount, 
+            next: newUnreadCount,
+            source: 'markAsRead',
+            notificationId: id
+          });
+        }
+        
         setNotifications(updated);
         setUnreadCount(newUnreadCount);
         
