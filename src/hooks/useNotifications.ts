@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { syncFromNotice } from "@/utils/appBadge";
 import { updateBadgeState } from "@/utils/badgeDiagnostics";
 import { testBadgeAPI } from "@/utils/pwaBadgeAudit";
+import { syncAppIconBadge } from "@/utils/appIconBadgeSync";
 
 // Tipizzazione
 export interface Notification {
@@ -142,9 +143,10 @@ export function useNotifications() {
       setNotifications(notifs);
       setUnreadCount(unreadCount);
       
-      // Sync PWA app badge
+      // Sync PWA app badge with robust implementation
       syncFromNotice(unreadCount);
       updateBadgeState(unreadCount);
+      syncAppIconBadge(unreadCount);
       
       // PHASE 1 AUDIT: Test Badge API when unreadCount > 0
       if (unreadCount > 0 && import.meta.env.VITE_BADGE_DEBUG === '1') {
@@ -203,6 +205,7 @@ export function useNotifications() {
         // Sync PWA app badge
         syncFromNotice(0);
         updateBadgeState(0);
+        syncAppIconBadge(0);
         
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato");
@@ -292,6 +295,7 @@ export function useNotifications() {
         console.log("🎯 NOTIFICATIONS: Window focused, syncing badge...");
         // Re-sync badge on focus in case of inconsistency
         syncFromNotice(unreadCount);
+        syncAppIconBadge(unreadCount);
       }
     };
     
@@ -344,6 +348,7 @@ export function useNotifications() {
         // Sync PWA app badge
         syncFromNotice(newUnreadCount);
         updateBadgeState(newUnreadCount);
+        syncAppIconBadge(newUnreadCount);
         
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato per notifica:", id);
@@ -382,6 +387,7 @@ export function useNotifications() {
         // Sync PWA app badge
         syncFromNotice(newUnreadCount);
         updateBadgeState(newUnreadCount);
+        syncAppIconBadge(newUnreadCount);
         
         listeners.forEach(fn => fn());
       }
@@ -448,6 +454,7 @@ export function useNotifications() {
         // Sync PWA app badge
         syncFromNotice(newUnreadCount);
         updateBadgeState(newUnreadCount);
+        syncAppIconBadge(newUnreadCount);
         
         listeners.forEach(fn => fn());
         console.log("✅ UNIQUE Notification added successfully:", newNotification);
