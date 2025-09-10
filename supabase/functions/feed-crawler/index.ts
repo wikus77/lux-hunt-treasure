@@ -1,10 +1,31 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// DO NOT TOUCH PUSH CHAIN - Import premium sources for enhanced scoring
+import { CURATED_SOURCES } from '../../../src/interest/curatedSources.ts'
+import { CURATED_SOURCES_EXTENDED } from '../../../src/interest/curatedSources.extended.ts' 
+import { CURATED_SOURCES_PREMIUM, mergeCuratedSources } from '../../../src/interest/curatedSources.premium.ts'
+import { scoreContentPro, DEFAULT_PRO_CONFIG, filterByQuality, normalizeUrl, ContentRateLimiter } from '../../../src/interest/scoringPro.ts'
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// DO NOT TOUCH PUSH CHAIN - Global state for diagnostics and rate limiting
+let globalStats = {
+  lastRun: null as Date | null,
+  itemsProcessed: 0,
+  averageScore: 0,
+  discardReasons: {
+    tooOld: 0,
+    lowScore: 0,
+    duplicate: 0,
+    rateLimited: 0
+  }
+};
+
+const rateLimiter = new ContentRateLimiter();
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -28,7 +49,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const FEED_SCORE_MIN = parseFloat(Deno.env.get('FEED_SCORE_MIN') || '0.6');
+    const FEED_SCORE_MIN = parseFloat(Deno.env.get('FEED_SCORE_MIN') || '0.72');
+    const USE_PRO_SCORING = Deno.env.get('USE_PRO_SCORING') !== 'false';
+    
+    // DO NOT TOUCH PUSH CHAIN - Merge all curated sources for comprehensive crawling
+    const allCuratedSources = mergeCuratedSources(CURATED_SOURCES, CURATED_SOURCES_EXTENDED, CURATED_SOURCES_PREMIUM);
     
     // Create run log
     const { data: runLog } = await supabaseClient
@@ -39,12 +64,15 @@ serve(async (req) => {
 
     console.log(`📊 [FEED-CRAWLER] Run logged with ID: ${runId}`);
 
-    // Fetch enabled curated sources
-    const { data: feedSources, error: sourcesError } = await supabaseClient
+    // DO NOT TOUCH PUSH CHAIN - Fetch enabled curated sources and merge with curated ones
+    const { data: dbSources, error: sourcesError } = await supabaseClient
       .from('external_feed_sources')
       .select('*')
       .eq('enabled', true)
       .order('weight', { ascending: false });
+      
+    // Merge DB sources with curated sources (DB sources take priority)
+    const feedSources = dbSources ? mergeCuratedSources(allCuratedSources, dbSources, []) : allCuratedSources;
 
     if (sourcesError) {
       throw new Error(`Sources fetch error: ${sourcesError.message}`);
@@ -65,18 +93,55 @@ serve(async (req) => {
         const syntheticItems = await generateSyntheticItems(source);
         totalItemsFetched += syntheticItems.length;
 
-        // Score and insert items
+        // DO NOT TOUCH PUSH CHAIN - Score and filter items with advanced algorithms
         for (const item of syntheticItems) {
-          const score = calculateScore(item, source);
+          let score: number;
+          let filterReason: string | undefined;
+          
+          // Check rate limiting first
+          const category = source.tags?.[0] || 'general';
+          if (!rateLimiter.canProcess(source.locale, category, 3)) {
+            globalStats.discardReasons.rateLimited++;
+            console.log(`🚫 [FEED-CRAWLER] Rate limited: ${source.locale}:${category}`);
+            continue;
+          }
+          
+          if (USE_PRO_SCORING) {
+            // Use advanced pro scoring
+            const contentItem = {
+              title: item.title,
+              summary: item.summary || '',
+              tags: [...(source.tags || []), ...(item.tags || [])],
+              publishedAt: item.published_at,
+              locale: source.locale as 'en'|'fr'|'es'|'de'|'nl',
+              category: category
+            };
+            
+            const proResult = scoreContentPro(contentItem, source.keywords || [], DEFAULT_PRO_CONFIG);
+            score = proResult.score;
+            
+            if (proResult.ageHours > DEFAULT_PRO_CONFIG.maxAgeHours) {
+              globalStats.discardReasons.tooOld++;
+              filterReason = 'too_old';
+            }
+          } else {
+            // Use basic scoring
+            score = calculateScore(item, source);
+          }
           
           if (score < FEED_SCORE_MIN) {
             console.log(`⚠️ [FEED-CRAWLER] Item "${item.title}" score ${score} below threshold ${FEED_SCORE_MIN}`);
+            globalStats.discardReasons.lowScore++;
             totalItemsSkipped++;
             continue;
           }
+          
+          globalStats.itemsProcessed++;
+          globalStats.averageScore = (globalStats.averageScore + score) / 2;
 
-          // Create content hash for deduplication
-          const contentHash = await createContentHash(item.url || item.title + item.published_at);
+          // DO NOT TOUCH PUSH CHAIN - Enhanced deduplication with URL normalization
+          const normalizedUrl = item.url ? normalizeUrl(item.url) : item.title + item.published_at;
+          const contentHash = await createContentHash(normalizedUrl);
           
           const feedItem = {
             source: source.id,
