@@ -1,21 +1,27 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Global type definitions for M1SSION™
-
 declare global {
-  interface Navigator {
-    standalone?: boolean;
-  }
-
-  interface Performance {
-    memory?: {
-      usedJSHeapSize: number;
-      jsHeapSizeLimit: number;
-      totalJSHeapSize: number;
+  interface Window {
+    __M1_DIAG__?: {
+      lastBadgeUpdate?: { count: number; timestamp: number };
+      badgeApiError?: { error: string; timestamp: number };
+      lastRealtimeUpdate?: { count: number; timestamp: number; payload: any };
+      realtimeStatus?: string;
+      unreadNotifications?: {
+        currentCount: number;
+        isLoading: boolean;
+        error: string | null;
+        badgeApiSupported: boolean;
+        userId?: string;
+        refreshCount: () => void;
+        getState: () => any;
+      };
     };
   }
 
-  interface Window {
-    gc?: () => void;
+  interface Navigator {
+    setAppBadge?: (contents?: number) => Promise<void>;
+    clearAppBadge?: () => Promise<void>;
+    standalone?: boolean;
   }
 }
 
