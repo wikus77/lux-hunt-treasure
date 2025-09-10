@@ -81,11 +81,33 @@ export const initDiagnostics = () => {
     async dryRunPref(userId: string, max=5, cooldownHours?: number) {
       const qs = new URLSearchParams({ user_id:userId, max:String(max) });
       if (cooldownHours != null) qs.set('cooldown', String(cooldownHours));
-      const res = await fetch('/functions/v1/notifier-engine/dry-run?' + qs.toString(), { method:'POST' });
-      const json = await res.json();
-      if (Array.isArray(json?.candidates)) {
-        console.table(json.candidates.map((c:any)=>({id:c.id, score:c.score, locale:c.locale})));
+      
+      const baseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine';
+      const res = await fetch(`${baseUrl}/dry-run?${qs.toString()}`, { 
+        method:'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+        }
+      });
+      
+      if (!res.ok) {
+        const error = await res.text();
+        console.error('🔍 [DRY-RUN] HTTP Error:', res.status, error);
+        return { error: `HTTP ${res.status}: ${error}` };
       }
+      
+      const json = await res.json();
+      
+      if (Array.isArray(json?.candidates_sample)) {
+        console.table(json.candidates_sample.map((c:any)=>({
+          id: c.id?.substring(0,8) + '...',
+          title: c.title?.substring(0,50) + '...',
+          score: c.score,
+          tags: c.tags?.slice(0,3).join(',')
+        })));
+      }
+      
       return json;
     },
     

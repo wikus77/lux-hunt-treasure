@@ -101,14 +101,29 @@ serve(async (req) => {
       
       const wouldSend = !throttleApplied && candidates && candidates.length > 0
       
+      // Get qualified items count for debugging
+      const { count: qualifiedItemsCount } = await supabase
+        .from('external_feed_items')
+        .select('id', { count: 'exact', head: true })
+        .gte('score', 0.72)
+        .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+
       const response = {
         user_id: testUserId,
         resolved_tags: resolvedTags?.resolved_tags || [],
+        qualified_items_count: qualifiedItemsCount || 0,
         candidates_count: candidates?.length || 0,
-        candidates: candidates || [],
+        candidates_sample: candidates?.slice(0, 3).map(c => ({
+          id: c.feed_item_id,
+          title: c.title,
+          score: c.score,
+          tags: c.tags,
+          url: c.url,
+          published_at: c.published_at
+        })) || [],
         cooldown_hours: overrideCooldown,
         total_ever: totalEver || 0,
-        recent_suggestions: recentCount || 0,
+        recent_suggestions_12h: recentCount || 0,
         throttle_applied: throttleApplied,
         throttle_reason: throttleReason,
         would_send: wouldSend
@@ -119,8 +134,13 @@ serve(async (req) => {
         ...response
       }))
       
-      return new Response(JSON.stringify(response), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify(response, null, 2), {
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store'
+        },
+        status: 200
       })
     }
 
