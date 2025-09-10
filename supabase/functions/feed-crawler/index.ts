@@ -11,6 +11,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // DO NOT TOUCH PUSH CHAIN - Handle diagnostics endpoint
+  const url = new URL(req.url);
+  if (url.pathname === '/feed-crawler/diag') {
+    return handleDiagnostics(req);
+  }
+
   const runId = crypto.randomUUID();
   const startTime = new Date();
 
@@ -311,6 +317,77 @@ function getLanguageBoost(locale: string, text: string): number {
   const hasBoostWords = localeBoosts.some(word => text.includes(word));
   
   return hasBoostWords ? 1.2 : 1.0;
+}
+
+// DO NOT TOUCH PUSH CHAIN - Diagnostics endpoint handler
+async function handleDiagnostics(req: Request) {
+  try {
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
+    // Get source count by locale
+    const { data: sourceStats } = await supabaseClient
+      .from('external_feed_sources')
+      .select('locale')
+      .eq('enabled', true);
+
+    const localeStats = sourceStats?.reduce((acc: Record<string, number>, source) => {
+      acc[source.locale] = (acc[source.locale] || 0) + 1;
+      return acc;
+    }, {}) || {};
+
+    // Get last 10 feed items (as proxy for URLs visited)
+    const { data: recentItems } = await supabaseClient
+      .from('external_feed_items')
+      .select('url, source, created_at')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    // Get latest crawler run
+    const { data: latestRun } = await supabaseClient
+      .from('feed_crawler_runs')
+      .select('*')
+      .order('started_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        source_count_by_locale: localeStats,
+        last_10_urls: recentItems?.map(item => ({
+          url: item.url,
+          source: item.source,
+          timestamp: item.created_at
+        })) || [],
+        latest_job: latestRun ? {
+          id: latestRun.id,
+          started_at: latestRun.started_at,
+          finished_at: latestRun.finished_at,
+          sources_count: latestRun.sources_count,
+          items_new: latestRun.items_new
+        } : null,
+        timestamp: new Date().toISOString()
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    );
+  } catch (error) {
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    );
+  }
 }
 
 // Create SHA-256 content hash for deduplication
