@@ -22,8 +22,8 @@ import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
-
 import LegalOnboarding from "./components/legal/LegalOnboarding";
+import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -86,17 +86,19 @@ function App() {
             <Router>
               <SoundProvider>
                 <AuthProvider>
-                {/* OneSignal rimosso - usando solo FCM */}
-                <BuzzPaymentMonitor />
-                <LegalOnboarding />
-                <WouterRoutes />
-                <InstallPrompt />
-                <IOSPermissionManager />
-                <AndroidPushSetup className="hidden" />
-                <PushNotificationSetup className="hidden" />
-                <XpSystemManager />
-                <Toaster />
-                <BadgeAuditReport />
+                  <InterestSignalsProvider>
+                    {/* OneSignal rimosso - usando solo FCM */}
+                    <BuzzPaymentMonitor />
+                    <LegalOnboarding />
+                    <WouterRoutes />
+                    <InstallPrompt />
+                    <IOSPermissionManager />
+                    <AndroidPushSetup className="hidden" />
+                    <PushNotificationSetup className="hidden" />
+                    <XpSystemManager />
+                    <Toaster />
+                    <BadgeAuditReport />
+                  </InterestSignalsProvider>
                 </AuthProvider>
               </SoundProvider>
             </Router>
