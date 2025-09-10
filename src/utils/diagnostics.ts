@@ -1,7 +1,7 @@
 /**
  * © 2025 Joseph MULÉ – M1SSION™ Development Diagnostics
- * Funzioni diagnostic per debug preferenze e notifiche (solo se ?M1_DIAG=1)
- * NON TOCCA PUSH CHAIN
+ * Enhanced diagnostics for notification testing (only if ?M1_DIAG=1)
+ * DOES NOT TOUCH PUSH CHAIN
  */
 
 import { 
@@ -10,78 +10,74 @@ import {
 } from '@/interest/resolveUserInterests';
 import { supabase } from '@/integrations/supabase/client';
 
-// Interfaccia globale diagnostics (solo dev)
-interface M1DiagPrefs {
-  get(): Promise<Record<string, boolean>>;
-  tags(): Promise<string[]>;
-  refresh(): Promise<void>;
-}
-
+// Enhanced interface for notification testing
 interface M1DiagNotifTest {
   triggerPrefFallback(): Promise<any>;
   checkQuota(): Promise<any>;
   testCandidates(): Promise<any>;
+  dryRunPref(userId?: string): Promise<any>;
 }
 
 declare global {
   interface Window {
-    __M1_PREFS__?: M1DiagPrefs;
     __M1_NOTIF_TEST__?: M1DiagNotifTest;
   }
 }
 
 /**
- * Inizializza diagnostics globali (solo se dev mode)
+ * Test notification preferences flow without sending
  */
-export function initDiagnostics(): void {
-  const isDev = window.location.search.includes('M1_DIAG=1') || 
-                window.location.search.includes('M1_DIAG=true');
-  
-  if (!isDev) {
-    return;
-  }
-
-  console.log('🔍 M1SSION™ Diagnostics enabled - use window.__M1_PREFS__ and window.__M1_NOTIF_TEST__');
-
-  // M1_PREFS diagnostics
-  window.__M1_PREFS__ = {
-    async get() {
-      try {
-        const prefs = await getCurrentPreferencesState();
-        console.log('🔍 PREFS: Current preferences:', prefs);
-        return prefs;
-      } catch (error) {
-        console.error('🔍 PREFS: Error getting preferences:', error);
-        return {};
-      }
-    },
-
-    async tags() {
-      try {
-        const tags = await resolveTagsForCurrentUser();
-        console.log('🔍 PREFS: Resolved tags:', tags);
-        return tags;
-      } catch (error) {
-        console.error('🔍 PREFS: Error resolving tags:', error);
-        return [];
-      }
-    },
-
-    async refresh() {
-      try {
-        const [prefs, tags] = await Promise.all([
-          getCurrentPreferencesState(),
-          resolveTagsForCurrentUser()
-        ]);
-        console.log('🔍 PREFS: Refreshed - Preferences:', prefs, 'Tags:', tags);
-      } catch (error) {
-        console.error('🔍 PREFS: Error refreshing:', error);
-      }
+const dryRunPreferences = async (userId?: string): Promise<any> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const targetUserId = userId || user?.id;
+    
+    if (!targetUserId) {
+      throw new Error('No user ID provided');
     }
-  };
+    
+    console.log(`🔍 [M1_NOTIF_TEST] Testing preferences for user ${targetUserId}...`);
+    
+    // Manual dry-run endpoint call (to be exposed by notifier-engine)
+    const url = new URL(`https://vkjrqirvdvjbemsfzxof.functions.supabase.co/notifier-engine/dry-run`);
+    url.searchParams.set('user_id', targetUserId);
+    
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+      }
+    });
 
-  // M1_NOTIF_TEST diagnostics
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    }
+
+    const data = await response.json();
+    console.log('🔍 [M1_NOTIF_TEST] Dry-run result:', data);
+    return data;
+    
+  } catch (error) {
+    console.error('🔍 [M1_NOTIF_TEST] Exception:', error);
+    return { error: error.message };
+  }
+};
+
+/**
+ * Initialize enhanced diagnostics helpers
+ */
+export const initDiagnostics = () => {
+  const isDev = import.meta.env.DEV || location.search.includes('M1_DIAG=1');
+  
+  if (!isDev) return;
+
+  console.log('🔍 M1SSION™ Enhanced Diagnostics enabled');
+
+  // Enhanced M1_NOTIF_TEST with dry-run
   window.__M1_NOTIF_TEST__ = {
+    dryRunPref: dryRunPreferences,
+    
     async triggerPrefFallback() {
       try {
         console.log('🔍 TEST: Triggering preferences fallback test...');
@@ -200,16 +196,21 @@ export function initDiagnostics(): void {
       }
     }
   };
-}
+  
+  console.log('🔍 [M1SSION DIAGNOSTICS] Available commands:');
+  console.log('  - __M1_NOTIF_TEST__.dryRunPref("user-id") - Test notification preferences');
+  console.log('  - __M1_NOTIF_TEST__.testCandidates() - Test candidates function');
+  console.log('  - __M1_PUSH_TOGGLE__.refresh() - Refresh push toggle state');
+  console.log('  - __M1_PUSH_TOGGLE__.get() - Get real push subscription status');
+};
 
 /**
- * Cleanup diagnostics (chiamato su unmount)
+ * Cleanup diagnostics (called on unmount)
  */
 export function cleanupDiagnostics(): void {
-  if (window.__M1_PREFS__) {
-    delete window.__M1_PREFS__;
-  }
   if (window.__M1_NOTIF_TEST__) {
     delete window.__M1_NOTIF_TEST__;
   }
 }
+
+export { dryRunPreferences };

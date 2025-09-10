@@ -70,24 +70,57 @@ const WebPushToggle: React.FC = () => {
     
     if (support.supported) {
       refreshStatus();
+      
+      // Refresh on visibility change and window focus (derive-from-truth)
+      const refresh = async () => setIsEnabled(await readRealPushStatus());
+      
+      document.addEventListener('visibilitychange', refresh);
+      window.addEventListener('focus', refresh);
+      
+      // Expose diagnostics in dev mode
+      if (import.meta.env.DEV || location.search.includes('M1_DIAG=1')) {
+        (window as any).__M1_PUSH_TOGGLE__ = { refresh, get: readRealPushStatus };
+      }
+      
+      return () => {
+        document.removeEventListener('visibilitychange', refresh);
+        window.removeEventListener('focus', refresh);
+      };
     }
   }, []);
+
+  // Derive-from-truth function - reads REAL push subscription status
+  const readRealPushStatus = async (): Promise<boolean> => {
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+      if (!navigator.serviceWorker.controller) {
+        await new Promise(r => setTimeout(r, 500)); // iOS PWA warmup
+      }
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      return !!sub;
+    } catch { 
+      return false; 
+    }
+  };
 
   const refreshStatus = async () => {
     if (!isSupported) return;
     
     try {
-      // Get fresh status
+      // Always derive from real subscription status
+      const realStatus = await readRealPushStatus();
+      setIsEnabled(realStatus);
+      
+      // Get diagnostics
       const controller = !!navigator.serviceWorker.controller;
       const reg = await navigator.serviceWorker.ready;
       const readyScope = reg.scope;
       const subscription = await reg.pushManager.getSubscription();
       const subscribed = !!subscription;
       
-      setIsEnabled(subscribed);
       setIsControlled(controller);
       
-      // Update diagnostics
       const diagnosticUpdate: typeof diagnostics = {
         controller,
         readyScope,

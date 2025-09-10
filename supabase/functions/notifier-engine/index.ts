@@ -38,6 +38,52 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
+    // Check if this is a dry-run request
+    const url = new URL(req.url)
+    const isDryRun = url.pathname.includes('/dry-run')
+    const testUserId = url.searchParams.get('user_id')
+    
+    if (isDryRun && testUserId) {
+      // DRY-RUN MODE: preferences-first only, no actual sending
+      console.log(`🔔 [NOTIFIER-ENGINE] DRY-RUN for user ${testUserId}`)
+      
+      const { data: resolvedTags } = await supabase
+        .from('v_user_resolved_tags')
+        .select('resolved_tags')
+        .eq('user_id', testUserId)
+        .single()
+      
+      const { data: candidates } = await supabase
+        .rpc('fn_candidates_for_user', {
+          p_user_id: testUserId,
+          p_limit: 5
+        })
+      
+      // Check throttling
+      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+      const { data: recentSuggestion } = await supabase
+        .from('suggested_notifications')
+        .select('id')
+        .eq('user_id', testUserId)
+        .gte('created_at', twelveHoursAgo)
+        .single()
+      
+      const reason = recentSuggestion ? 'throttled_12h' : 
+                     !candidates || candidates.length === 0 ? 'no_candidates' : 
+                     'ready_to_send'
+      
+      return new Response(JSON.stringify({
+        dry_run: true,
+        user_id: testUserId,
+        resolved_tags: resolvedTags?.resolved_tags || [],
+        candidates: candidates || [],
+        reason,
+        candidates_count: candidates?.length || 0
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
     console.log('🔔 [NOTIFIER-ENGINE] Starting intelligent notifications processing...')
 
     // Get active user profiles (updated in last 30 days)
@@ -299,9 +345,11 @@ serve(async (req) => {
           const currentSent = isQuotaReset ? 0 : quota.sent_today
 
           if (currentSent >= 1) { // Max 1 notification per 12h for preferences fallback
-            console.log(`🔔 [NOTIFIER-ENGINE] Preferences user ${prefUser.user_id} reached daily quota`)
+            console.log(`🔔 [NOTIFIER-ENGINE] Preferences user ${prefUser.user_id} reached daily quota (sent: ${currentSent})`)
             continue
           }
+          
+          console.log(`🔔 [NOTIFIER-ENGINE] Processing preferences user ${prefUser.user_id}, resolved_tags: ${JSON.stringify(prefUser.resolved_tags)}`)
 
           // Get candidates using new function (fresh feed items matching user preferences)
           const { data: candidates, error: candidatesError } = await supabase
@@ -311,9 +359,11 @@ serve(async (req) => {
             })
 
           if (candidatesError || !candidates || candidates.length === 0) {
-            console.log(`🔔 [NOTIFIER-ENGINE] No candidates for preferences user ${prefUser.user_id}`)
+            console.log(`🔔 [NOTIFIER-ENGINE] No candidates for preferences user ${prefUser.user_id}, error: ${candidatesError?.message || 'none'}`)
             continue
           }
+          
+          console.log(`🔔 [NOTIFIER-ENGINE] Found ${candidates.length} candidates for user ${prefUser.user_id}, top score: ${candidates[0]?.score || 'none'}`)
 
           // Select best candidate (highest score)
           const bestCandidate = candidates[0]
@@ -328,9 +378,11 @@ serve(async (req) => {
             .single()
 
           if (recentSuggestion) {
-            console.log(`🔔 [NOTIFIER-ENGINE] User ${prefUser.user_id} has recent suggestion (12h throttle)`)
+            console.log(`🔔 [NOTIFIER-ENGINE] User ${prefUser.user_id} has recent suggestion (12h throttle), suggestion_id: ${recentSuggestion.id}`)
             continue
           }
+          
+          console.log(`🔔 [NOTIFIER-ENGINE] Selected item for user ${prefUser.user_id}: ${bestCandidate.title} (score: ${bestCandidate.score}, id: ${bestCandidate.feed_item_id})`)
 
           // Create suggestion (idempotency via unique index)
           const dedupeKey = `${prefUser.user_id}-${bestCandidate.feed_item_id}`
