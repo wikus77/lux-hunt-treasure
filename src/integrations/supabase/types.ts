@@ -916,6 +916,45 @@ export type Database = {
         }
         Relationships: []
       }
+      external_feed_items: {
+        Row: {
+          brand: string | null
+          content_hash: string
+          created_at: string
+          id: string
+          published_at: string
+          source: string
+          summary: string | null
+          tags: string[] | null
+          title: string
+          url: string
+        }
+        Insert: {
+          brand?: string | null
+          content_hash: string
+          created_at?: string
+          id?: string
+          published_at: string
+          source: string
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          url: string
+        }
+        Update: {
+          brand?: string | null
+          content_hash?: string
+          created_at?: string
+          id?: string
+          published_at?: string
+          source?: string
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          url?: string
+        }
+        Relationships: []
+      }
       fcm_subscriptions: {
         Row: {
           created_at: string | null
@@ -1149,6 +1188,45 @@ export type Database = {
           mission_id?: string | null
           tool_name?: string
           used_on?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      interest_signals: {
+        Row: {
+          category: string | null
+          device: string | null
+          id: string
+          keywords: string[] | null
+          meta: Json | null
+          section: string | null
+          session_id: string
+          ts: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          device?: string | null
+          id?: string
+          keywords?: string[] | null
+          meta?: Json | null
+          section?: string | null
+          session_id: string
+          ts?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          device?: string | null
+          id?: string
+          keywords?: string[] | null
+          meta?: Json | null
+          section?: string | null
+          session_id?: string
+          ts?: string
+          type?: string
           user_id?: string
         }
         Relationships: []
@@ -1545,6 +1623,24 @@ export type Database = {
         Update: {
           unread_count?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_quota: {
+        Row: {
+          last_reset: string
+          sent_today: number
+          user_id: string
+        }
+        Insert: {
+          last_reset?: string
+          sent_today?: number
+          user_id: string
+        }
+        Update: {
+          last_reset?: string
+          sent_today?: number
           user_id?: string
         }
         Relationships: []
@@ -2815,6 +2911,47 @@ export type Database = {
         }
         Relationships: []
       }
+      suggested_notifications: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          id: string
+          item_id: string | null
+          reason: string
+          score: number
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          item_id?: string | null
+          reason: string
+          score: number
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          item_id?: string | null
+          reason?: string
+          score?: number
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suggested_notifications_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "external_feed_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_badges: {
         Row: {
           badge_id: string
@@ -3224,6 +3361,24 @@ export type Database = {
           id?: string
           reward_value?: number | null
           title?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_interest_profile: {
+        Row: {
+          topics: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          topics?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          topics?: Json
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -4272,6 +4427,10 @@ export type Database = {
       }
       increment_xp: {
         Args: { p_amount: number; p_user: string }
+        Returns: undefined
+      }
+      interest_track: {
+        Args: { payload: Json }
         Returns: undefined
       }
       is_admin: {
