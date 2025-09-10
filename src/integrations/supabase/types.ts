@@ -1102,6 +1102,36 @@ export type Database = {
         }
         Relationships: []
       }
+      feed_scoring_stats: {
+        Row: {
+          average_score: number | null
+          created_at: string | null
+          discard_reasons: Json | null
+          id: string
+          run_timestamp: string | null
+          scoring_mode: string | null
+          total_processed: number | null
+        }
+        Insert: {
+          average_score?: number | null
+          created_at?: string | null
+          discard_reasons?: Json | null
+          id?: string
+          run_timestamp?: string | null
+          scoring_mode?: string | null
+          total_processed?: number | null
+        }
+        Update: {
+          average_score?: number | null
+          created_at?: string | null
+          discard_reasons?: Json | null
+          id?: string
+          run_timestamp?: string | null
+          scoring_mode?: string | null
+          total_processed?: number | null
+        }
+        Relationships: []
+      }
       final_shot_rules: {
         Row: {
           cooldown_hours: number | null
@@ -4204,6 +4234,19 @@ export type Database = {
       }
     }
     Functions: {
+      _upsert_premium_feed_source: {
+        Args: {
+          p_enabled: boolean
+          p_id: string
+          p_keywords: string[]
+          p_kind: string
+          p_locale: string
+          p_tags: string[]
+          p_url: string
+          p_weight: number
+        }
+        Returns: undefined
+      }
       add_referral_credits: {
         Args: { credits_to_add: number; user_email: string }
         Returns: undefined
@@ -4570,6 +4613,10 @@ export type Database = {
           p_user_agent?: string
           p_user_id: string
         }
+        Returns: string
+      }
+      normalize_feed_url: {
+        Args: { input_url: string }
         Returns: string
       }
       perform_security_check: {
