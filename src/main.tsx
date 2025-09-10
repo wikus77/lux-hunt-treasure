@@ -28,10 +28,20 @@ initBadgeDiagnostics();
 const initPWABadgeDiagnosticsSafely = async () => {
   if (typeof window !== 'undefined') {
     try {
-      // Dynamic import to ensure proper loading
-      const { initPWABadgeDiagnostics, createBadgeTestHelpers } = await import('./utils/pwaBadgeAudit');
+      // Dynamic imports to ensure proper loading
+      const [
+        { initPWABadgeDiagnostics, createBadgeTestHelpers },
+        { initializeGlobalDebugHelpers }
+      ] = await Promise.all([
+        import('./utils/pwaBadgeAudit'),
+        import('./utils/debugHelpers')
+      ]);
+      
       initPWABadgeDiagnostics();
       createBadgeTestHelpers();
+      initializeGlobalDebugHelpers();
+      
+      console.log('✅ PWA Badge diagnostics initialized');
     } catch (err) {
       console.warn('PWA Badge diagnostics initialization failed:', err);
     }
