@@ -319,7 +319,11 @@ class ProductionMonitor {
   exportMetrics(): string {
     return JSON.stringify({
       ...this.metrics,
-      diagnostics: diagnostics.getInfo(),
+      diagnostics: {
+        queueSize: diagnostics.queueSize(),
+        sessionId: diagnostics.sessionId(),
+        lastFlushStatus: diagnostics.lastFlushStatus()
+      },
       exportedAt: new Date().toISOString()
     }, null, 2);
   }
