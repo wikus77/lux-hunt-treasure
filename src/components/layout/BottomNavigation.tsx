@@ -3,13 +3,14 @@ import React from "react";
 import { useLocation } from "wouter";
 import { Mail, Map, Home, Award, User, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useUnreadNotifications } from "@/hooks/useUnreadNotifications";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
+import NotificationBadge from "@/components/NotificationBadge";
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // PWA Navigation Component
 const BottomNavigationComponent = () => {
   const [currentPath] = useLocation();
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useUnreadNotifications();
   const { navigate } = useWouterNavigation();
   const isPWA = typeof window !== 'undefined' && 
     window.matchMedia('(display-mode: standalone)').matches;
@@ -211,28 +212,9 @@ const BottomNavigationComponent = () => {
                   )}
 
                   {/* Enhanced notification badge */}
-                  <AnimatePresence>
-                    {link.badge && link.badgeCount && (
-                      <motion.div 
-                        className="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 bg-[#FF59F8] rounded-full shadow-[0_0_8px_rgba(240,89,255,0.5)]"
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: 1
-                        }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity,
-                          repeatType: "reverse"
-                        }}
-                      >
-                        <span className="text-[9px] font-bold text-white">
-                          {link.badgeCount > 99 ? "99+" : link.badgeCount}
-                        </span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {link.badge && (
+                    <NotificationBadge count={link.badgeCount || 0} size="md" />
+                  )}
                 </motion.div>
 
                 {/* Enhanced label with color */}
