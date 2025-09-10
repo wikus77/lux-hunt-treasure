@@ -12,12 +12,16 @@ import './styles/toast-animations.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { diagnostics } from './utils/diagnostics';
+import { initBadgeDiagnostics } from './utils/badgeDiagnostics';
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
 
 // Initialize diagnostics early (development only)
 if (import.meta.env.DEV) {
   diagnostics.logSummary();
 }
+
+// Initialize badge diagnostics
+initBadgeDiagnostics();
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Import and apply kill switch utilities
