@@ -57,7 +57,7 @@ const BottomNavigationComponent = () => {
       icon: <Mail className="h-6 w-6" />,
       label: "Notice",
       path: "/notifications",
-      badge: unreadCount > 0,
+      badge: true, // Always check for badge, let NotificationBadge handle visibility
       badgeCount: unreadCount,
       color: "#00D1FF"
     },
@@ -212,8 +212,8 @@ const BottomNavigationComponent = () => {
                   )}
 
                   {/* Enhanced notification badge */}
-                  {link.badge && (
-                    <NotificationBadge count={link.badgeCount || 0} size="md" />
+                  {link.badge && link.badgeCount && link.badgeCount > 0 && (
+                    <NotificationBadge count={link.badgeCount} size="md" />
                   )}
                 </motion.div>
 

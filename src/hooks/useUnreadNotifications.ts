@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { setAppBadgeSafe, isBadgeAPISupported } from '@/utils/appBadge';
 import { updateDiagnostics, logDiagnosticError } from '@/utils/notificationDiagnostics';
+// Import badge test utilities for development
+import '@/utils/badgeTestUtils';
+import '@/utils/consoleBadgeHelpers';
 
 interface NotificationCounter {
   user_id: string;
@@ -142,6 +145,30 @@ export const useUnreadNotifications = () => {
     }
   }, [isAuthenticated, userId, persistCount, updateAppBadge]);
 
+  // Debounced count setter to prevent flicker
+  const debounceTimerRef = useRef<number | null>(null);
+  
+  const debouncedSetCount = useCallback((count: number) => {
+    // 250ms debounce to prevent rapid updates from causing flicker
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = window.setTimeout(() => {
+      setUnreadCount(count);
+      persistCount(count);
+      updateAppBadge(count);
+      
+      // Update diagnostics
+      updateDiagnostics({
+        unreadCount: count,
+        lastSyncAt: Date.now()
+      });
+      
+      debounceTimerRef.current = null;
+    }, 250);
+  }, [persistCount, updateAppBadge]);
+
   // Set up realtime subscription
   useEffect(() => {
     if (!isAuthenticated || !userId) {
@@ -170,13 +197,12 @@ export const useUnreadNotifications = () => {
           const newData = payload.new as NotificationCounter;
           if (newData) {
             const newCount = newData.unread_count || 0;
-            setUnreadCount(newCount);
-            persistCount(newCount);
-            updateAppBadge(newCount);
             
-            // Update diagnostics
+            // Use debounced setter to prevent flicker
+            debouncedSetCount(newCount);
+            
+            // Update diagnostics with realtime info
             updateDiagnostics({
-              unreadCount: newCount,
               lastRealtimeUpdate: {
                 count: newCount,
                 timestamp: Date.now(),
@@ -199,6 +225,15 @@ export const useUnreadNotifications = () => {
         
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           logDiagnosticError(`Realtime error: ${status}`, 'subscription');
+          // Start fallback polling on realtime failure
+          if (!pollingRef.current) {
+            pollingRef.current = window.setInterval(() => {
+              if (document.visibilityState === 'visible') {
+                log('Realtime failed, using fallback polling');
+                fetchUnreadCount();
+              }
+            }, 30000); // More frequent polling when realtime fails
+          }
         }
       });
 
@@ -210,7 +245,7 @@ export const useUnreadNotifications = () => {
         channelRef.current = null;
       }
     };
-  }, [isAuthenticated, userId, persistCount, updateAppBadge]);
+  }, [isAuthenticated, userId, debouncedSetCount]);
 
   // Initial load and app lifecycle management
   useEffect(() => {
@@ -270,9 +305,32 @@ export const useUnreadNotifications = () => {
     fetchUnreadCount();
   }, [fetchUnreadCount]);
 
-  // Development diagnostics
+  // Enhanced development diagnostics
   useEffect(() => {
-    if (isDev && window.__M1_DIAG__) {
+    if (isDev && typeof window !== 'undefined') {
+      window.__M1_BADGE__ = window.__M1_BADGE__ || {};
+      window.__M1_BADGE__.get = () => ({
+        unreadCount,
+        lastUpdate: Date.now(),
+        supportsIconBadge: badgeApiSupported,
+        platform: navigator.userAgent.includes('iPhone') && window.navigator.standalone ? 'iosPWA' : 
+                 navigator.userAgent.includes('Android') ? 'android' : 'desktop',
+        isLoading,
+        error,
+        realtimeConnected: channelRef.current !== null,
+        userId: userId?.slice(-8) + '...'
+      });
+      
+      window.__M1_BADGE__.test = (n: number) => {
+        log(`Manual test: setting count to ${n}`);
+        setUnreadCount(n);
+        persistCount(n);
+        updateAppBadge(n);
+        return `Set badge to ${n}`;
+      };
+
+      // Legacy diagnostic object for compatibility
+      window.__M1_DIAG__ = window.__M1_DIAG__ || {};
       window.__M1_DIAG__.unreadNotifications = {
         currentCount: unreadCount,
         isLoading,
@@ -290,7 +348,7 @@ export const useUnreadNotifications = () => {
         })
       };
     }
-  }, [unreadCount, isLoading, error, badgeApiSupported, userId, refreshCount]);
+  }, [unreadCount, isLoading, error, badgeApiSupported, userId, refreshCount, persistCount, updateAppBadge]);
 
   return {
     unreadCount,

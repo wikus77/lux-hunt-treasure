@@ -5,67 +5,94 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Test utilities for badge functionality
 export const badgeTestUtils = {
-  // Simulate adding a notification to increment badge
-  async incrementBadge(userId: string, delta: number = 1): Promise<boolean> {
+  // Quick increment badge for testing (gets current user automatically)
+  async incrementBadge(delta: number = 1): Promise<boolean> {
     try {
       const { data, error } = await supabase.functions.invoke('test-notification-counter', {
         body: { action: 'increment', delta }
       });
       
       if (error) {
-        console.error('Increment badge error:', error);
+        console.error('🔴 Increment badge error:', error);
         return false;
       }
       
-      console.log('Badge incremented:', data);
+      console.log('✅ Badge incremented:', data);
       return true;
     } catch (err) {
-      console.error('Badge increment failed:', err);
+      console.error('❌ Badge increment failed:', err);
       return false;
     }
   },
 
-  // Simulate reading notifications to decrement badge
-  async decrementBadge(userId: string, delta: number = 1): Promise<boolean> {
+  // Quick decrement badge for testing (gets current user automatically)
+  async decrementBadge(delta: number = 1): Promise<boolean> {
     try {
       const { data, error } = await supabase.functions.invoke('test-notification-counter', {
         body: { action: 'decrement', delta }
       });
       
       if (error) {
-        console.error('Decrement badge error:', error);
+        console.error('🔴 Decrement badge error:', error);
         return false;
       }
       
-      console.log('Badge decremented:', data);
+      console.log('✅ Badge decremented:', data);
       return true;
     } catch (err) {
-      console.error('Badge decrement failed:', err);
+      console.error('❌ Badge decrement failed:', err);
       return false;
     }
   },
 
-  // Clear all unread notifications
-  async clearBadge(userId: string): Promise<boolean> {
+  // Clear all unread notifications (gets current user automatically)
+  async clearBadge(): Promise<boolean> {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('❌ No authenticated user');
+        return false;
+      }
+
       const { error } = await supabase
         .from('notification_counters')
         .upsert({ 
-          user_id: userId, 
+          user_id: user.id, 
           unread_count: 0,
           updated_at: new Date().toISOString()
         });
       
       if (error) {
-        console.error('Clear badge error:', error);
+        console.error('🔴 Clear badge error:', error);
         return false;
       }
       
-      console.log('Badge cleared');
+      console.log('✅ Badge cleared');
       return true;
     } catch (err) {
-      console.error('Badge clear failed:', err);
+      console.error('❌ Badge clear failed:', err);
       return false;
+    }
+  },
+
+  // Test app icon badge directly (bypasses database)
+  async testIconBadge(count: number = 5): Promise<string> {
+    try {
+      const canBadge = !!(navigator as any).setAppBadge;
+      
+      if (!canBadge) {
+        return `❌ Badge API not supported on this platform`;
+      }
+      
+      if (count > 0) {
+        await (navigator as any).setAppBadge(count);
+        return `✅ App icon badge set to ${count}`;
+      } else {
+        await (navigator as any).clearAppBadge();
+        return `✅ App icon badge cleared`;
+      }
+    } catch (err) {
+      return `❌ Failed to set app icon badge: ${err}`;
     }
   },
 
