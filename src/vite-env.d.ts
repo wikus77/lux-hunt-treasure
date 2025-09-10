@@ -27,6 +27,23 @@ interface Window {
     ready: (callback: () => void) => void;
     execute: (siteKey: string, options: { action: string }) => Promise<string>;
   };
+  
+  // M1SSION Diagnostic interface for development
+  __M1_DIAG__?: {
+    lastBadgeUpdate?: { count: number; timestamp: number };
+    badgeApiError?: { error: string; timestamp: number };
+    lastRealtimeUpdate?: { count: number; timestamp: number; payload: any };
+    realtimeStatus?: string;
+    unreadNotifications?: {
+      currentCount: number;
+      isLoading: boolean;
+      error: string | null;
+      badgeApiSupported: boolean;
+      userId?: string;
+      refreshCount: () => void;
+      getState: () => any;
+    };
+  };
 }
 
 // Mobile-compatible environment interface
@@ -63,4 +80,11 @@ interface MailjetRecipient {
   MessageUUID?: string;
   MessageID?: number;
   MessageHref?: string;
+}
+
+// Badge API support for notifications
+interface Navigator {
+  setAppBadge?: (contents?: number) => Promise<void>;
+  clearAppBadge?: () => Promise<void>;
+  standalone?: boolean;
 }
