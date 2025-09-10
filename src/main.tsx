@@ -340,6 +340,15 @@ if (typeof window !== 'undefined') {
       });
     });
   }, 2500); // Longer delay for complete stability
+
+  // Initialize interest signals tracking (post first paint, zero UI impact)
+  setTimeout(() => {
+    import('./hooks/useAutoInterestSignals').then(({ initAutoInterestSignals }) => {
+      initAutoInterestSignals();
+    }).catch(err => {
+      console.warn('[MAIN] Interest signals init failed (non-critical):', err);
+    });
+  }, 3000); // After app is fully rendered
 }
 
 // Enhanced global error handling
