@@ -90,7 +90,7 @@ serve(async (req) => {
     let notificationsSent = 0
     let notificationsQueued = 0
 
-    // Process each user profile
+    // Process each user profile (SIGNALS-BASED BRANCH)
     for (const profile of profiles as UserProfile[]) {
       try {
         // Check daily quota
@@ -270,13 +270,174 @@ serve(async (req) => {
       }
     }
 
+    // PREFERENCES-FIRST FALLBACK BRANCH
+    // Get users with notification preferences but no user_interest_profile
+    const { data: prefUsers, error: prefError } = await supabase
+      .from('v_user_resolved_tags')
+      .select('user_id, resolved_tags')
+      .not('resolved_tags', 'eq', '{}') // Has active preferences
+
+    if (!prefError && prefUsers && prefUsers.length > 0) {
+      console.log(`🔔 [NOTIFIER-ENGINE] Processing ${prefUsers.length} users with preferences fallback...`)
+      
+      for (const prefUser of prefUsers) {
+        try {
+          // Skip if user already processed in signals branch
+          if (profiles.some(p => p.user_id === prefUser.user_id)) {
+            continue
+          }
+
+          // Check daily quota for preferences users
+          const today = new Date().toISOString().split('T')[0]
+          const { data: quota } = await supabase
+            .from('notification_quota')
+            .select('*')
+            .eq('user_id', prefUser.user_id)
+            .single()
+
+          const isQuotaReset = !quota || quota.last_reset.split('T')[0] !== today
+          const currentSent = isQuotaReset ? 0 : quota.sent_today
+
+          if (currentSent >= 1) { // Max 1 notification per 12h for preferences fallback
+            console.log(`🔔 [NOTIFIER-ENGINE] Preferences user ${prefUser.user_id} reached daily quota`)
+            continue
+          }
+
+          // Get candidates using new function (fresh feed items matching user preferences)
+          const { data: candidates, error: candidatesError } = await supabase
+            .rpc('fn_candidates_for_user', {
+              p_user_id: prefUser.user_id,
+              p_limit: 3
+            })
+
+          if (candidatesError || !candidates || candidates.length === 0) {
+            console.log(`🔔 [NOTIFIER-ENGINE] No candidates for preferences user ${prefUser.user_id}`)
+            continue
+          }
+
+          // Select best candidate (highest score)
+          const bestCandidate = candidates[0]
+          
+          // Check 12h throttling
+          const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
+          const { data: recentSuggestion } = await supabase
+            .from('suggested_notifications')
+            .select('id')
+            .eq('user_id', prefUser.user_id)
+            .gte('created_at', twelveHoursAgo)
+            .single()
+
+          if (recentSuggestion) {
+            console.log(`🔔 [NOTIFIER-ENGINE] User ${prefUser.user_id} has recent suggestion (12h throttle)`)
+            continue
+          }
+
+          // Create suggestion (idempotency via unique index)
+          const dedupeKey = `${prefUser.user_id}-${bestCandidate.feed_item_id}`
+          
+          const { data: suggestion, error: suggestionError } = await supabase
+            .from('suggested_notifications')
+            .insert({
+              user_id: prefUser.user_id,
+              item_id: bestCandidate.feed_item_id,
+              reason: 'preferences_fallback',
+              score: bestCandidate.score,
+              dedupe_key: dedupeKey
+            })
+            .select()
+            .single()
+
+          if (suggestionError) {
+            if (suggestionError.code === '23505') { // Unique violation = already exists
+              console.log(`🔔 [NOTIFIER-ENGINE] Suggestion already exists for user ${prefUser.user_id}`)
+              continue
+            }
+            console.error(`🔔 [NOTIFIER-ENGINE] Error creating preferences suggestion for user ${prefUser.user_id}:`, suggestionError)
+            continue
+          }
+
+          notificationsQueued++
+
+          // Try to send push notification (same as signals branch)
+          try {
+            const { data: subscription } = await supabase
+              .from('webpush_subscriptions')
+              .select('*')
+              .eq('user_id', prefUser.user_id)
+              .eq('is_active', true)
+              .single()
+
+            if (subscription) {
+              const notificationPayload = {
+                subscription: {
+                  endpoint: subscription.endpoint,
+                  keys: {
+                    p256dh: subscription.p256dh,
+                    auth: subscription.auth
+                  }
+                },
+                title: `🎯 M1SSION™: ${bestCandidate.title.substring(0, 40)}...`,
+                body: `Based on your interests: ${bestCandidate.tags.slice(0, 3).join(', ')}`,
+                data: {
+                  type: 'preferences_notification',
+                  item_id: bestCandidate.feed_item_id,
+                  url: bestCandidate.url,
+                  score: bestCandidate.score,
+                  reason: 'preferences_fallback'
+                }
+              }
+
+              const pushResponse = await fetch(`${functionsUrl}/webpush-send`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${supabaseServiceKey}`,
+                },
+                body: JSON.stringify(notificationPayload)
+              })
+
+              if (pushResponse.ok) {
+                // Mark as sent and update quota
+                await supabase
+                  .from('suggested_notifications')
+                  .update({ sent_at: new Date().toISOString() })
+                  .eq('id', suggestion.id)
+
+                await supabase
+                  .from('notification_quota')
+                  .upsert({
+                    user_id: prefUser.user_id,
+                    last_reset: new Date().toISOString(),
+                    sent_today: currentSent + 1
+                  })
+
+                notificationsSent++
+                console.log(`🔔 [NOTIFIER-ENGINE] Sent preferences notification to user ${prefUser.user_id}: ${bestCandidate.title}`)
+              } else {
+                console.error(`🔔 [NOTIFIER-ENGINE] Failed to send preferences push to user ${prefUser.user_id}:`, await pushResponse.text())
+              }
+            } else {
+              console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for preferences user ${prefUser.user_id}`)
+            }
+          } catch (pushError) {
+            console.error(`🔔 [NOTIFIER-ENGINE] Preferences push error for user ${prefUser.user_id}:`, pushError)
+          }
+
+        } catch (prefUserError) {
+          console.error(`🔔 [NOTIFIER-ENGINE] Error processing preferences user ${prefUser.user_id}:`, prefUserError)
+        }
+      }
+    }
+
     console.log(`🔔 [NOTIFIER-ENGINE] Completed: ${notificationsSent} sent, ${notificationsQueued} queued`)
+    console.log(`🔔 [NOTIFIER-ENGINE] Signals users: ${profiles.length}, Preferences users: ${prefUsers?.length || 0}`)
 
     return new Response(JSON.stringify({ 
       success: true, 
       notificationsSent,
       notificationsQueued,
       profilesProcessed: profiles.length,
+      preferencesUsersProcessed: prefUsers?.length || 0,
       feedItemsAvailable: feedItems.length
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

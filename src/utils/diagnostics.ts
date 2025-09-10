@@ -1,223 +1,200 @@
 /**
- * Diagnostic Utilities - Non-Invasive System Health
- * M1SSION™ - System Monitoring
+ * © 2025 Joseph MULÉ – M1SSION™ Development Diagnostics
+ * Funzioni diagnostic per debug preferenze e notifiche (solo se ?M1_DIAG=1)
+ * NON TOCCA PUSH CHAIN
  */
 
-interface DiagnosticInfo {
-  version: string;
-  commit?: string;
-  buildTime?: string;
-  environment: 'development' | 'production';
-  serviceWorker: {
-    supported: boolean;
-    registered: boolean;
-    controller: boolean;
-    updateAvailable: boolean;
-  };
-  platform: {
-    type: 'desktop' | 'mobile' | 'tablet';
-    os: string;
-    browser: string;
-    standalone: boolean;
-    pwa: boolean;
-  };
-  performance: {
-    memory?: {
-      used: number;
-      total: number;
-      limit: number;
-    };
-    connection?: {
-      type: string;
-      effectiveType: string;
-      downlink: number;
-    };
-  };
-  features: {
-    geolocation: boolean;
-    notifications: boolean;
-    localStorage: boolean;
-    serviceWorker: boolean;
-    webGL: boolean;
-  };
-  flags: Record<string, boolean>;
+import { 
+  getCurrentPreferencesState, 
+  resolveTagsForCurrentUser 
+} from '@/interest/resolveUserInterests';
+import { supabase } from '@/integrations/supabase/client';
+
+// Interfaccia globale diagnostics (solo dev)
+interface M1DiagPrefs {
+  get(): Promise<Record<string, boolean>>;
+  tags(): Promise<string[]>;
+  refresh(): Promise<void>;
 }
 
-class DiagnosticMonitor {
-  private _info: DiagnosticInfo | null = null;
+interface M1DiagNotifTest {
+  triggerPrefFallback(): Promise<any>;
+  checkQuota(): Promise<any>;
+  testCandidates(): Promise<any>;
+}
 
-  /**
-   * Get comprehensive diagnostic information
-   */
-  getInfo(): DiagnosticInfo {
-    if (!this._info) {
-      this._info = this.collectDiagnosticInfo();
-    }
-    return this._info;
-  }
-
-  /**
-   * Refresh diagnostic information
-   */
-  refresh(): DiagnosticInfo {
-    this._info = this.collectDiagnosticInfo();
-    return this._info;
-  }
-
-  private collectDiagnosticInfo(): DiagnosticInfo {
-    return {
-      version: import.meta.env.VITE_PWA_VERSION || '1.0.0',
-      commit: import.meta.env.VITE_GIT_COMMIT?.slice(0, 8),
-      buildTime: import.meta.env.VITE_BUILD_TIME,
-      environment: import.meta.env.PROD ? 'production' : 'development',
-      serviceWorker: this.getServiceWorkerInfo(),
-      platform: this.getPlatformInfo(),
-      performance: this.getPerformanceInfo(),
-      features: this.getFeatureSupport(),
-      flags: this.getActiveFlags(),
-    };
-  }
-
-  private getServiceWorkerInfo() {
-    const supported = 'serviceWorker' in navigator;
-    
-    return {
-      supported,
-      registered: supported && !!navigator.serviceWorker.controller,
-      controller: supported && !!navigator.serviceWorker.controller,
-      updateAvailable: false, // This would be updated by SW event listeners
-    };
-  }
-
-  private getPlatformInfo() {
-    const userAgent = navigator.userAgent;
-    
-    // Basic platform detection
-    const isStandalone = (window.navigator as any).standalone === true ||
-                        window.matchMedia('(display-mode: standalone)').matches;
-    
-    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-    const isTablet = /iPad|Android(?=.*\bMobile\b)(?=.*\bSafari\b)/i.test(userAgent);
-    
-    // OS detection
-    let os = 'Unknown';
-    if (/Windows/i.test(userAgent)) os = 'Windows';
-    else if (/Mac/i.test(userAgent)) os = 'macOS';
-    else if (/Linux/i.test(userAgent)) os = 'Linux';
-    else if (/Android/i.test(userAgent)) os = 'Android';
-    else if (/iPhone|iPad|iPod/i.test(userAgent)) os = 'iOS';
-
-    // Browser detection
-    let browser = 'Unknown';
-    if (/Chrome/i.test(userAgent)) browser = 'Chrome';
-    else if (/Safari/i.test(userAgent)) browser = 'Safari';
-    else if (/Firefox/i.test(userAgent)) browser = 'Firefox';
-    else if (/Edge/i.test(userAgent)) browser = 'Edge';
-
-    return {
-      type: (isTablet ? 'tablet' : (isMobile ? 'mobile' : 'desktop')) as 'desktop' | 'mobile' | 'tablet',
-      os,
-      browser,
-      standalone: isStandalone,
-      pwa: isStandalone,
-    };
-  }
-
-  private getPerformanceInfo() {
-    const info: DiagnosticInfo['performance'] = {};
-
-    // Memory info (Chrome only)
-    if ('memory' in performance) {
-      const memory = (performance as any).memory;
-      info.memory = {
-        used: Math.round(memory.usedJSHeapSize / 1024 / 1024),
-        total: Math.round(memory.totalJSHeapSize / 1024 / 1024),
-        limit: Math.round(memory.jsHeapSizeLimit / 1024 / 1024),
-      };
-    }
-
-    // Network info
-    if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
-      info.connection = {
-        type: connection.type || 'unknown',
-        effectiveType: connection.effectiveType || 'unknown',
-        downlink: connection.downlink || 0,
-      };
-    }
-
-    return info;
-  }
-
-  private getFeatureSupport() {
-    return {
-      geolocation: 'geolocation' in navigator,
-      notifications: 'Notification' in window,
-      localStorage: (() => {
-        try {
-          return typeof localStorage !== 'undefined';
-        } catch {
-          return false;
-        }
-      })(),
-      serviceWorker: 'serviceWorker' in navigator,
-      webGL: (() => {
-        try {
-          const canvas = document.createElement('canvas');
-          return !!(canvas.getContext('webgl') || canvas.getContext('experimental-webgl'));
-        } catch {
-          return false;
-        }
-      })(),
-    };
-  }
-
-  private getActiveFlags() {
-    return {
-      qaMode: import.meta.env.VITE_QA_MODE === '1',
-      bundleAnalyze: import.meta.env.VITE_BUNDLE_ANALYZE === '1',
-      dev: import.meta.env.DEV,
-      prod: import.meta.env.PROD,
-    };
-  }
-
-  /**
-   * Export diagnostic info as JSON for support
-   */
-  exportForSupport(): string {
-    const info = this.getInfo();
-    return JSON.stringify(info, null, 2);
-  }
-
-  /**
-   * Log diagnostic summary to console (dev only)
-   */
-  logSummary(): void {
-    if (!import.meta.env.DEV) return;
-
-    const info = this.getInfo();
-    console.group('🔍 M1SSION™ Diagnostics');
-    console.log('Version:', info.version);
-    console.log('Environment:', info.environment);
-    console.log('Platform:', `${info.platform.type} (${info.platform.os})`);
-    console.log('Browser:', info.platform.browser);
-    console.log('PWA Mode:', info.platform.pwa);
-    console.log('Service Worker:', info.serviceWorker.registered ? '✅' : '❌');
-    console.log('Features:', info.features);
-    console.log('Active Flags:', info.flags);
-    console.groupEnd();
+declare global {
+  interface Window {
+    __M1_PREFS__?: M1DiagPrefs;
+    __M1_NOTIF_TEST__?: M1DiagNotifTest;
   }
 }
 
-// Global diagnostics instance
-export const diagnostics = new DiagnosticMonitor();
+/**
+ * Inizializza diagnostics globali (solo se dev mode)
+ */
+export function initDiagnostics(): void {
+  const isDev = window.location.search.includes('M1_DIAG=1') || 
+                window.location.search.includes('M1_DIAG=true');
+  
+  if (!isDev) {
+    return;
+  }
 
-// Expose to window for debugging (dev only)
-if (import.meta.env.DEV) {
-  (window as any).__M1_DIAG__ = {
-    get info() { return diagnostics.getInfo(); },
-    refresh: () => diagnostics.refresh(),
-    export: () => diagnostics.exportForSupport(),
-    log: () => diagnostics.logSummary(),
+  console.log('🔍 M1SSION™ Diagnostics enabled - use window.__M1_PREFS__ and window.__M1_NOTIF_TEST__');
+
+  // M1_PREFS diagnostics
+  window.__M1_PREFS__ = {
+    async get() {
+      try {
+        const prefs = await getCurrentPreferencesState();
+        console.log('🔍 PREFS: Current preferences:', prefs);
+        return prefs;
+      } catch (error) {
+        console.error('🔍 PREFS: Error getting preferences:', error);
+        return {};
+      }
+    },
+
+    async tags() {
+      try {
+        const tags = await resolveTagsForCurrentUser();
+        console.log('🔍 PREFS: Resolved tags:', tags);
+        return tags;
+      } catch (error) {
+        console.error('🔍 PREFS: Error resolving tags:', error);
+        return [];
+      }
+    },
+
+    async refresh() {
+      try {
+        const [prefs, tags] = await Promise.all([
+          getCurrentPreferencesState(),
+          resolveTagsForCurrentUser()
+        ]);
+        console.log('🔍 PREFS: Refreshed - Preferences:', prefs, 'Tags:', tags);
+      } catch (error) {
+        console.error('🔍 PREFS: Error refreshing:', error);
+      }
+    }
   };
+
+  // M1_NOTIF_TEST diagnostics
+  window.__M1_NOTIF_TEST__ = {
+    async triggerPrefFallback() {
+      try {
+        console.log('🔍 TEST: Triggering preferences fallback test...');
+        
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('No authenticated user');
+        }
+
+        // Test call to fn_candidates_for_user
+        const { data: candidates, error } = await supabase
+          .rpc('fn_candidates_for_user', {
+            p_user_id: user.id,
+            p_limit: 3
+          });
+
+        if (error) {
+          console.error('🔍 TEST: Error getting candidates:', error);
+          return { error: error.message };
+        }
+
+        console.log('🔍 TEST: Found', candidates?.length || 0, 'candidates:');
+        console.table(candidates);
+
+        return {
+          success: true,
+          user_id: user.id,
+          candidates_count: candidates?.length || 0,
+          candidates: candidates || []
+        };
+      } catch (error) {
+        console.error('🔍 TEST: Error in triggerPrefFallback:', error);
+        return { error: error.message };
+      }
+    },
+
+    async checkQuota() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('No authenticated user');
+        }
+
+        const { data: quota, error } = await supabase
+          .from('notification_quota')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        const result = {
+          user_id: user.id,
+          quota: quota || 'No quota record',
+          error: error?.message
+        };
+
+        console.log('🔍 TEST: User quota:', result);
+        return result;
+      } catch (error) {
+        console.error('🔍 TEST: Error checking quota:', error);
+        return { error: error.message };
+      }
+    },
+
+    async testCandidates() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error('No authenticated user');
+        }
+
+        // Check user resolved tags
+        const { data: userTags, error: tagsError } = await supabase
+          .from('v_user_resolved_tags')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        // Get recent feed items
+        const { data: feedItems, error: feedError } = await supabase
+          .from('external_feed_items')
+          .select('id, title, tags, score, published_at')
+          .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+          .gte('score', 0.72)
+          .order('published_at', { ascending: false })
+          .limit(10);
+
+        const result = {
+          user_id: user.id,
+          user_tags: userTags || 'No tags resolved',
+          tags_error: tagsError?.message,
+          feed_items_count: feedItems?.length || 0,
+          feed_error: feedError?.message,
+          recent_items: feedItems || []
+        };
+
+        console.log('🔍 TEST: Candidates test:', result);
+        return result;
+      } catch (error) {
+        console.error('🔍 TEST: Error in testCandidates:', error);
+        return { error: error.message };
+      }
+    }
+  };
+}
+
+/**
+ * Cleanup diagnostics (chiamato su unmount)
+ */
+export function cleanupDiagnostics(): void {
+  if (window.__M1_PREFS__) {
+    delete window.__M1_PREFS__;
+  }
+  if (window.__M1_NOTIF_TEST__) {
+    delete window.__M1_NOTIF_TEST__;
+  }
 }
