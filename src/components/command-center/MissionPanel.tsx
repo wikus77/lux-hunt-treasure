@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Map, AlertTriangle, Clock, Target } from "lucide-react";
 import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
+import { NotifierDebugPanel } from "@/components/mission/NotifierDebugPanel";
 
 interface MissionPanelProps {
   mission: Mission;
@@ -138,6 +139,9 @@ export const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
           </motion.button>
         )}
       </div>
+      
+      {/* Notifier Debug Panel (dev-only) */}
+      <NotifierDebugPanel className="mt-4" />
     </motion.div>
   );
 };

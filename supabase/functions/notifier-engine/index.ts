@@ -36,50 +36,90 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const functionsUrl = `${supabaseUrl}/functions/v1`
     
+    // Configurable cooldown (default 12 hours)
+    const cooldownHours = parseInt(Deno.env.get('NOTIFIER_PREFS_COOLDOWN_HOURS') || '12')
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Check if this is a dry-run request
     const url = new URL(req.url)
     const isDryRun = url.pathname.includes('/dry-run')
     const testUserId = url.searchParams.get('user_id')
+    const maxCandidates = parseInt(url.searchParams.get('max') || '5')
+    const overrideCooldown = url.searchParams.get('cooldown') ? parseInt(url.searchParams.get('cooldown')!) : cooldownHours
     
     if (isDryRun && testUserId) {
-      // DRY-RUN MODE: preferences-first only, no actual sending
-      console.log(`🔔 [NOTIFIER-ENGINE] DRY-RUN for user ${testUserId}`)
+      // DRY-RUN MODE: Complete preferences-first pipeline without DB writes or push sends
+      console.log(JSON.stringify({
+        event: "dry_run_start",
+        user_id: testUserId,
+        max_candidates: maxCandidates,
+        cooldown_hours: overrideCooldown
+      }))
       
+      // Get resolved tags
       const { data: resolvedTags } = await supabase
         .from('v_user_resolved_tags')
         .select('resolved_tags')
         .eq('user_id', testUserId)
         .single()
       
+      // Get candidates using function
       const { data: candidates } = await supabase
         .rpc('fn_candidates_for_user', {
           p_user_id: testUserId,
-          p_limit: 5
+          p_limit: maxCandidates
         })
       
-      // Check throttling
-      const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
-      const { data: recentSuggestion } = await supabase
+      // Check throttling with configurable cooldown
+      const cooldownTime = new Date(Date.now() - overrideCooldown * 60 * 60 * 1000).toISOString()
+      
+      // Check total ever (for first notification logic)
+      const { count: totalEver } = await supabase
         .from('suggested_notifications')
-        .select('id')
+        .select('id', { count: 'exact', head: true })
         .eq('user_id', testUserId)
-        .gte('created_at', twelveHoursAgo)
-        .single()
       
-      const reason = recentSuggestion ? 'throttled_12h' : 
-                     !candidates || candidates.length === 0 ? 'no_candidates' : 
-                     'ready_to_send'
+      // Check recent suggestions  
+      const { count: recentCount } = await supabase
+        .from('suggested_notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', testUserId)
+        .gte('created_at', cooldownTime)
       
-      return new Response(JSON.stringify({
-        dry_run: true,
+      // Throttle logic: if totalEver = 0, allow first notification
+      let throttleApplied = false
+      let throttleReason = "none"
+      
+      if (totalEver === 0) {
+        throttleApplied = false
+        throttleReason = "first_notification"
+      } else if (recentCount && recentCount > 0) {
+        throttleApplied = true
+        throttleReason = "recent_suggestion"
+      }
+      
+      const wouldSend = !throttleApplied && candidates && candidates.length > 0
+      
+      const response = {
         user_id: testUserId,
         resolved_tags: resolvedTags?.resolved_tags || [],
+        candidates_count: candidates?.length || 0,
         candidates: candidates || [],
-        reason,
-        candidates_count: candidates?.length || 0
-      }), {
+        cooldown_hours: overrideCooldown,
+        total_ever: totalEver || 0,
+        recent_suggestions: recentCount || 0,
+        throttle_applied: throttleApplied,
+        throttle_reason: throttleReason,
+        would_send: wouldSend
+      }
+      
+      console.log(JSON.stringify({
+        event: "dry_run_complete",
+        ...response
+      }))
+      
+      return new Response(JSON.stringify(response), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
@@ -349,7 +389,14 @@ serve(async (req) => {
             continue
           }
           
-          console.log(`🔔 [NOTIFIER-ENGINE] Processing preferences user ${prefUser.user_id}, resolved_tags: ${JSON.stringify(prefUser.resolved_tags)}`)
+          const resolvedTags = prefUser.resolved_tags || []
+          
+          console.log(JSON.stringify({
+            phase: "prefs-fallback",
+            user_id: prefUser.user_id,
+            resolved_tags: resolvedTags,
+            step: "getting_candidates"
+          }))
 
           // Get candidates using new function (fresh feed items matching user preferences)
           const { data: candidates, error: candidatesError } = await supabase
@@ -358,27 +405,82 @@ serve(async (req) => {
               p_limit: 3
             })
 
-          if (candidatesError || !candidates || candidates.length === 0) {
-            console.log(`🔔 [NOTIFIER-ENGINE] No candidates for preferences user ${prefUser.user_id}, error: ${candidatesError?.message || 'none'}`)
+          const candidatesCount = candidates?.length || 0
+
+          if (candidatesError || candidatesCount === 0) {
+            // If no candidates, log sample of qualified items for debugging
+            if (candidatesCount === 0) {
+              const { data: sampleItems } = await supabase
+                .from('external_feed_items')
+                .select('id, title, score, tags, locale')
+                .gte('score', 0.72)
+                .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+                .limit(5)
+              
+              console.log(JSON.stringify({
+                phase: "prefs-fallback",
+                user_id: prefUser.user_id,
+                resolved_tags: resolvedTags,
+                candidates_count: 0,
+                sample_qualified_items: sampleItems || [],
+                error: candidatesError?.message || 'no_candidates_found'
+              }))
+            }
             continue
           }
-          
-          console.log(`🔔 [NOTIFIER-ENGINE] Found ${candidates.length} candidates for user ${prefUser.user_id}, top score: ${candidates[0]?.score || 'none'}`)
 
           // Select best candidate (highest score)
           const bestCandidate = candidates[0]
           
-          // Check 12h throttling
-          const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString()
-          const { data: recentSuggestion } = await supabase
+          // Enhanced throttling with first notification logic
+          const cooldownTime = new Date(Date.now() - cooldownHours * 60 * 60 * 1000).toISOString()
+          
+          // Check total ever (for first notification logic)
+          const { count: totalEver } = await supabase
             .from('suggested_notifications')
-            .select('id')
+            .select('id', { count: 'exact', head: true })
             .eq('user_id', prefUser.user_id)
-            .gte('created_at', twelveHoursAgo)
-            .single()
+          
+          // Check recent suggestions
+          const { count: recentCount } = await supabase
+            .from('suggested_notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', prefUser.user_id)
+            .gte('created_at', cooldownTime)
+          
+          let throttleApplied = false
+          let throttleReason = "none"
+          
+          // NEW LOGIC: Allow first notification (totalEver = 0)
+          if (totalEver === 0) {
+            throttleApplied = false
+            throttleReason = "first_notification_allowed"
+          } else if (recentCount && recentCount > 0) {
+            throttleApplied = true
+            throttleReason = "recent_suggestion"
+          }
 
-          if (recentSuggestion) {
-            console.log(`🔔 [NOTIFIER-ENGINE] User ${prefUser.user_id} has recent suggestion (12h throttle), suggestion_id: ${recentSuggestion.id}`)
+          console.log(JSON.stringify({
+            phase: "prefs-fallback",
+            user_id: prefUser.user_id,
+            resolved_tags: resolvedTags,
+            candidates_count: candidatesCount,
+            cooldown_hours: cooldownHours,
+            throttle: { 
+              totalEver: totalEver || 0, 
+              recentCount: recentCount || 0, 
+              applied: throttleApplied, 
+              reason: throttleReason 
+            },
+            selection: bestCandidate ? { 
+              id: bestCandidate.feed_item_id, 
+              score: bestCandidate.score, 
+              locale: bestCandidate.locale 
+            } : null
+          }))
+
+          if (throttleApplied) {
+            console.log(`🔔 [NOTIFIER-ENGINE] User ${prefUser.user_id} throttled: ${throttleReason}`)
             continue
           }
           
