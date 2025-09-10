@@ -17,11 +17,12 @@ interface NotifierDebugPanelProps {
 interface DryRunResult {
   user_id: string;
   resolved_tags: string[];
+  qualified_items_count: number;
   candidates_count: number;
-  candidates: any[];
+  candidates_sample: any[];
   cooldown_hours: number;
   total_ever: number;
-  recent_suggestions: number;
+  recent_suggestions_12h: number;
   throttle_applied: boolean;
   throttle_reason: string;
   would_send: boolean;
@@ -170,8 +171,8 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
                 <p className="font-mono">{debugResult.total_ever}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Recent</p>
-                <p className="font-mono">{debugResult.recent_suggestions}</p>
+                <p className="text-muted-foreground">Recent 12h</p>
+                <p className="font-mono">{debugResult.recent_suggestions_12h}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Cooldown</p>
@@ -185,15 +186,15 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
               </div>
             )}
 
-            {debugResult.candidates.length > 0 && (
+            {debugResult.candidates_sample.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-orange-400 mb-2">Top Candidates:</p>
                 <div className="space-y-1 text-xs">
-                  {debugResult.candidates.slice(0, 3).map((candidate, i) => (
+                  {debugResult.candidates_sample.slice(0, 3).map((candidate, i) => (
                     <div key={candidate.id || i} className="flex justify-between bg-background/50 rounded p-2">
                       <span className="truncate">{candidate.title || 'No title'}</span>
                       <Badge variant="secondary" className="text-xs">
-                        {candidate.score?.toFixed(2)} • {candidate.locale}
+                        {candidate.score?.toFixed(2)}
                       </Badge>
                     </div>
                   ))}
