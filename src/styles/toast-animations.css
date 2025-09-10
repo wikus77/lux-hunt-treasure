@@ -1,56 +1,93 @@
-/* © 2025 M1SSION™ - Clean Toast Animations for PWA iOS */
+/* © 2025 M1SSION™ - Toast Centered Animations with Swipe-up */
 
-/* Slide-down animation keyframe */
-@keyframes toast-slide-down {
-  from {
-    transform: translateY(-24px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Slide-up animation keyframe */
-@keyframes toast-slide-up {
-  from {
-    transform: translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateY(-24px);
-    opacity: 0;
-  }
-}
-
-/* Clean toast animation class */
-.toast-slide-animation[data-sonner-toast] {
-  animation: toast-slide-down 350ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-}
-
-/* Exit animation */
-.toast-slide-animation[data-sonner-toast][data-removed="true"] {
-  animation: toast-slide-up 350ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-}
-
-/* Center positioning override for Sonner */
+/* Toast positioning and portal wrapper */
 [data-sonner-toaster] {
+  position: fixed !important;
+  top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+  z-index: 9999 !important;
+  width: 100% !important;
+  pointer-events: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* Toast card container */
+[data-sonner-toast] {
+  display: inline-flex !important;
   max-width: min(92vw, 640px) !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* Touch support for swipe */
-.toast-slide-animation[data-sonner-toast] {
+/* Entry animation keyframes */
+@keyframes toastIn {
+  from {
+    transform: translate(-50%, -24px);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Exit animation keyframes */
+@keyframes toastOut {
+  from {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -24px);
+    opacity: 0;
+  }
+}
+
+/* Apply entry animation */
+[data-sonner-toast][data-mounted] {
+  animation: toastIn 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+/* Apply exit animation */
+[data-sonner-toast][data-removed="true"] {
+  animation: toastOut 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
+}
+
+/* Swipe interaction states */
+[data-sonner-toast].toast-swiping {
+  transition: none !important;
+}
+
+[data-sonner-toast].toast-snap-back {
+  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* Touch support */
+[data-sonner-toast] {
   touch-action: pan-y !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
 }
 
-/* Reduced motion support */
+/* Reduced motion accessibility */
 @media (prefers-reduced-motion: reduce) {
-  .toast-slide-animation[data-sonner-toast] {
+  [data-sonner-toast] {
     animation: none !important;
     transition: opacity 200ms ease !important;
+  }
+  
+  @keyframes toastIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes toastOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
   }
 }
