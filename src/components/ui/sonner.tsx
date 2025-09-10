@@ -1,98 +1,111 @@
 
 import { useTheme } from "next-themes"
 import { Toaster as Sonner } from "sonner"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
+import { toastDebug } from "@/utils/toastDebug"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
+  const gestureRef = useRef<{
+    startY: number;
+    startTime: number;
+    currentToast: HTMLElement | null;
+    isDragging: boolean;
+    timerId?: number;
+  }>({ startY: 0, startTime: 0, currentToast: null, isDragging: false })
 
-  // Swipe-up gesture handler for toast dismissal
+  // Enhanced swipe-up gesture handler for PWA iOS
   useEffect(() => {
-    let touchStartY = 0
-    let touchStartTime = 0
-    let currentToast: HTMLElement | null = null
-    let isDragging = false
+    const gesture = gestureRef.current
 
     const handleTouchStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement
       const toastElement = target.closest('[data-sonner-toast]') as HTMLElement
       if (!toastElement) return
 
-      currentToast = toastElement
-      touchStartY = e.touches[0].clientY
-      touchStartTime = Date.now()
-      isDragging = false
+      gesture.currentToast = toastElement
+      gesture.startY = e.touches[0].clientY
+      gesture.startTime = Date.now()
+      gesture.isDragging = false
       
-      // Add swiping class to disable transitions during gesture
+      // Debug tracking
+      toastDebug.trackGesture(toastElement.id || 'unknown', {
+        startY: gesture.startY,
+        currentY: gesture.startY,
+        isDragging: false
+      })
+      
+      // Add swiping class to disable animations during gesture
       toastElement.classList.add('toast-swiping')
     }
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!currentToast) return
+      if (!gesture.currentToast) return
 
-      const deltaY = e.touches[0].clientY - touchStartY
+      const deltaY = e.touches[0].clientY - gesture.startY
       
       // Only handle upward swipes (negative deltaY)
       if (deltaY < 0) {
-        e.preventDefault() // Prevent page scroll
-        isDragging = true
+        e.preventDefault() // Critical: prevent page scroll
+        gesture.isDragging = true
         
         // Clamp movement to max -80px and apply visual feedback
         const clampedDelta = Math.max(deltaY, -80)
         const opacity = Math.max(0.2, 1 + (clampedDelta / 80) * 0.8)
         
-        currentToast.style.transform = `translateY(${clampedDelta}px)`
-        currentToast.style.opacity = opacity.toString()
+        gesture.currentToast.style.transform = `translateY(${clampedDelta}px)`
+        gesture.currentToast.style.opacity = opacity.toString()
+        
+        // Debug tracking
+        toastDebug.trackGesture(gesture.currentToast.id || 'unknown', {
+          startY: gesture.startY,
+          currentY: e.touches[0].clientY,
+          isDragging: true
+        })
       }
     }
 
     const handleTouchEnd = (e: TouchEvent) => {
-      if (!currentToast) return
+      if (!gesture.currentToast) return
 
-      const deltaY = e.changedTouches[0].clientY - touchStartY
-      const deltaTime = Date.now() - touchStartTime
+      const deltaY = e.changedTouches[0].clientY - gesture.startY
+      const deltaTime = Date.now() - gesture.startTime
       const velocity = Math.abs(deltaY) / deltaTime // px/ms
 
       // Remove swiping class
-      currentToast.classList.remove('toast-swiping')
+      gesture.currentToast.classList.remove('toast-swiping')
 
-      // Check dismiss thresholds
+      // Check dismiss thresholds: |deltaY| >= 32px OR velocity >= 0.35 px/ms
       const shouldDismiss = (Math.abs(deltaY) >= 32 && deltaY < 0) || (velocity >= 0.35 && deltaY < 0)
 
-      if (shouldDismiss && isDragging) {
-        // Trigger dismiss animation
-        currentToast.style.transform = 'translateY(-80px)'
-        currentToast.style.opacity = '0'
+      if (shouldDismiss && gesture.isDragging) {
+        // CRITICAL: Trigger proper exit animation
+        gesture.currentToast.setAttribute('data-removed', 'true')
+        toastDebug.trackToast(gesture.currentToast.id || 'unknown', 'exiting')
         
-        // Find and click the close button or trigger sonner's dismiss
-        const dismissButton = currentToast.querySelector('[data-close-button]') as HTMLElement
-        if (dismissButton) {
-          dismissButton.click()
-        } else {
-          // Fallback: set data-removed attribute to trigger exit animation
-          currentToast.setAttribute('data-removed', 'true')
-          setTimeout(() => {
-            currentToast?.remove()
-          }, 320)
-        }
-      } else if (isDragging) {
+        // Let CSS animation handle the exit
+        setTimeout(() => {
+          gesture.currentToast?.remove()
+        }, 320) // Match animation duration
+      } else if (gesture.isDragging) {
         // Snap back to original position
-        currentToast.classList.add('toast-snap-back')
-        currentToast.style.transform = 'translateY(0)'
-        currentToast.style.opacity = '1'
+        gesture.currentToast.classList.add('toast-snap-back')
+        gesture.currentToast.style.transform = ''
+        gesture.currentToast.style.opacity = ''
         
         setTimeout(() => {
-          currentToast?.classList.remove('toast-snap-back')
+          gesture.currentToast?.classList.remove('toast-snap-back')
         }, 320)
       }
 
-      currentToast = null
-      isDragging = false
+      // Reset gesture state
+      gesture.currentToast = null
+      gesture.isDragging = false
     }
 
-    // Add touch event listeners
+    // Add touch event listeners with passive: false for preventDefault
     document.addEventListener('touchstart', handleTouchStart, { passive: false })
     document.addEventListener('touchmove', handleTouchMove, { passive: false })
     document.addEventListener('touchend', handleTouchEnd, { passive: false })
