@@ -51,13 +51,11 @@
 /* Apply CORRECT entry animation */
 [data-sonner-toast]:not([data-removed]) {
   animation: toast-slide-down 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-  will-change: transform, opacity;
 }
 
 /* Apply CORRECT exit animation */
 [data-sonner-toast][data-removed="true"] {
   animation: toast-slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1) forwards !important;
-  will-change: transform, opacity;
 }
 
 /* Swipe interaction states */
@@ -71,16 +69,12 @@
   transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms cubic-bezier(0.22, 1, 0.36, 1) !important;
 }
 
-/* PWA iOS optimizations */
+/* Touch support for PWA iOS */
 [data-sonner-toast] {
   touch-action: pan-y !important;
   user-select: none !important;
   -webkit-user-select: none !important;
   -webkit-touch-callout: none !important;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
 }
 
 /* Reduced motion accessibility */

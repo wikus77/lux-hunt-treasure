@@ -1531,24 +1531,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notification_counters: {
-        Row: {
-          unread_count: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          unread_count?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          unread_count?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       panel_logs: {
         Row: {
           area_radius_assigned: number | null
@@ -4192,10 +4174,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      get_unread_count: {
-        Args: { p_user_id?: string }
-        Returns: number
-      }
       get_user_by_email: {
         Args: { email_param: string }
         Returns: unknown[]
@@ -4443,10 +4421,6 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
-      }
-      upsert_notification_counter: {
-        Args: { p_delta: number; p_user_id: string }
-        Returns: number
       }
       upsert_webpush_subscription: {
         Args: {
