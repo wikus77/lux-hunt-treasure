@@ -1,109 +1,126 @@
-// © 2025 M1SSION™ – Toast Debug Utility (dev only)
+// © 2025 Joseph MULÉ – M1SSION™ – Toast Debug Utility
+const isDev = import.meta.env.DEV;
 
-interface ToastDebugState {
+interface ToastState {
   id: string;
   state: 'entering' | 'visible' | 'exiting' | 'removed';
-  startTime: number;
-  timer?: number;
-  gesture?: {
-    startY: number;
-    currentY: number;
-    isDragging: boolean;
-  };
+  timestamp: number;
+  transform?: string;
+  opacity?: string;
+  animationName?: string;
+  animationPlayState?: string;
+}
+
+interface GestureState {
+  startY: number;
+  currentY: number;
+  isDragging: boolean;
 }
 
 class ToastDebugManager {
-  private toasts = new Map<string, ToastDebugState>();
-  private isEnabled = import.meta.env.VITE_UI_DEBUG === '1' || import.meta.env.DEV;
+  private toasts: Map<string, ToastState> = new Map();
+  private gestures: Map<string, GestureState> = new Map();
 
-  constructor() {
-    if (this.isEnabled && typeof window !== 'undefined') {
-      (window as any).__M1_TOAST_DEBUG__ = {
-        get: () => this.getState(),
-        list: () => this.list(),
-        show: (message: string) => this.testShow(message),
-        dismiss: (id: string) => this.testDismiss(id)
-      };
-      console.log('🧪 Toast Debug enabled: window.__M1_TOAST_DEBUG__');
+  trackToast(id: string, state: ToastState['state']) {
+    if (!isDev) return;
+    
+    this.toasts.set(id, {
+      id,
+      state,
+      timestamp: Date.now()
+    });
+    
+    console.log(`🍞 [ToastDebug] ${id}: ${state}`);
+  }
+
+  trackGesture(id: string, gesture: GestureState) {
+    if (!isDev) return;
+    
+    this.gestures.set(id, gesture);
+    
+    if (gesture.isDragging) {
+      console.log(`👆 [ToastDebug] ${id}: swipe deltaY=${gesture.currentY - gesture.startY}px`);
     }
   }
 
-  public trackToast(id: string, state: ToastDebugState['state']) {
-    if (!this.isEnabled) return;
+  getToastComputedStyle(id: string) {
+    if (!isDev) return null;
     
-    const existing = this.toasts.get(id);
-    const now = Date.now();
+    const element = document.querySelector(`[data-sonner-toast][id="${id}"]`) || 
+                   document.querySelector('[data-sonner-toast]');
     
-    if (state === 'entering' && !existing) {
-      this.toasts.set(id, {
-        id,
-        state,
-        startTime: now
-      });
-      console.log(`🍞 Toast ${id}: entering`);
-    } else if (existing) {
-      existing.state = state;
-      console.log(`🍞 Toast ${id}: ${state} (age: ${now - existing.startTime}ms)`);
-      
-      if (state === 'removed') {
-        this.toasts.delete(id);
-      }
-    }
-  }
-
-  public trackGesture(id: string, gesture: ToastDebugState['gesture']) {
-    if (!this.isEnabled) return;
+    if (!element) return null;
     
-    const toast = this.toasts.get(id);
-    if (toast) {
-      toast.gesture = gesture;
-      console.log(`🍞 Toast ${id}: gesture`, gesture);
-    }
-  }
-
-  public trackTimer(id: string, timer: number) {
-    if (!this.isEnabled) return;
+    const computed = getComputedStyle(element as HTMLElement);
     
-    const toast = this.toasts.get(id);
-    if (toast) {
-      toast.timer = timer;
-      console.log(`🍞 Toast ${id}: timer set (${timer}ms remaining)`);
-    }
-  }
-
-  private getState() {
     return {
-      toasts: Array.from(this.toasts.values()),
-      timestamp: Date.now(),
-      enabled: this.isEnabled
+      transform: computed.transform,
+      opacity: computed.opacity,
+      animationName: computed.animationName,
+      animationPlayState: computed.animationPlayState,
+      animationDuration: computed.animationDuration,
+      willChange: computed.willChange
     };
   }
 
-  private list() {
-    console.table(Array.from(this.toasts.values()));
-    return this.toasts.size;
+  list() {
+    if (!isDev) return;
+    
+    console.log('🍞 [ToastDebug] Current toasts:', Array.from(this.toasts.values()));
+    console.log('👆 [ToastDebug] Current gestures:', Array.from(this.gestures.values()));
   }
 
-  private testShow(message: string) {
-    if (typeof window !== 'undefined' && (window as any).toast) {
-      (window as any).toast(message || 'Test toast message');
-      return 'Toast triggered';
-    }
-    return 'Toast function not found';
+  show(message: string = 'Debug toast') {
+    if (!isDev) return;
+    
+    // Dynamically import to avoid build issues
+    import('sonner').then(({ toast }) => {
+      toast.info(message);
+      console.log(`🍞 [ToastDebug] Forced toast: ${message}`);
+    });
   }
 
-  private testDismiss(id: string) {
-    const toast = this.toasts.get(id);
-    if (toast) {
-      this.trackToast(id, 'exiting');
-      return `Dismissing toast ${id}`;
-    }
-    return `Toast ${id} not found`;
+  state() {
+    if (!isDev) return;
+    
+    const allToasts = document.querySelectorAll('[data-sonner-toast]');
+    const results: any[] = [];
+    
+    allToasts.forEach((toast, index) => {
+      const computed = getComputedStyle(toast as HTMLElement);
+      results.push({
+        index,
+        id: (toast as HTMLElement).id || `toast-${index}`,
+        transform: computed.transform,
+        animationName: computed.animationName,
+        animationPlayState: computed.animationPlayState,
+        opacity: computed.opacity,
+        removed: toast.getAttribute('data-removed')
+      });
+    });
+    
+    console.log('🍞 [ToastDebug] Live state:', results);
+    return results;
+  }
+
+  clear() {
+    if (!isDev) return;
+    
+    this.toasts.clear();
+    this.gestures.clear();
+    console.log('🍞 [ToastDebug] Cleared all debug data');
   }
 }
 
-// Initialize debug manager
 export const toastDebug = new ToastDebugManager();
 
-// Export types for use in components
-export type { ToastDebugState };
+// Global debug interface
+if (isDev && typeof window !== 'undefined') {
+  (window as any).__M1_TOAST_DEBUG__ = {
+    list: () => toastDebug.list(),
+    show: (message?: string) => toastDebug.show(message),
+    state: () => toastDebug.state(),
+    clear: () => toastDebug.clear(),
+    getStyle: (id: string) => toastDebug.getToastComputedStyle(id)
+  };
+}
