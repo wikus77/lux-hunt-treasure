@@ -9,7 +9,7 @@ import type { CuratedSource } from './curatedSources';
 
 export const CURATED_SOURCES_PREMIUM: CuratedSource[] = [
   /* ===== EN - Premium Luxury Cars (Hypercars/Supercars) ===== */
-  { id:'luxurycar_en_p1', locale:'en', kind:'rss', url:'https://www.carmagazine.co.uk/feed/', tags:['auto','luxury','premium'], keywords:['hypercar','supercar','ferrari','bugatti','mclaren','koenigsegg','pagani'], weight:2.5, enabled:true },
+  { id:'luxurycar_en_p1', locale:'en', kind:'rss', url:'https://www.carmagazine.co.uk/feed/', tags:['auto','luxury','premium'], keywords:['hypercar','supercar','ferrari','bugatti','mclaren','koenigsegg','pagani'], weight:2, enabled:true },
   { id:'luxurycar_en_p2', locale:'en', kind:'rss', url:'https://www.dupontregistry.com/autos/rss', tags:['auto','luxury','premium'], keywords:['luxury car','exotic car','lamborghini','aston martin','rolls royce'], weight:2.5, enabled:true },
   { id:'luxurycar_en_p3', locale:'en', kind:'search', url:'https://news.google.com/rss/search?q=hypercar+OR+supercar+OR+bugatti+OR+koenigsegg+limited+edition&hl=en', tags:['auto','luxury','limited'], keywords:['limited edition','one-off','bespoke','hypercar'], weight:2.2, enabled:true },
 
