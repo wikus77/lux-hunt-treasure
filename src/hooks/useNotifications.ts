@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { syncFromNotice } from "@/utils/appBadge";
+import { updateBadgeState } from "@/utils/badgeDiagnostics";
 
 // Tipizzazione
 export interface Notification {
@@ -130,6 +132,10 @@ export function useNotifications() {
       setNotifications(notifs);
       setUnreadCount(unreadCount);
       
+      // Sync PWA app badge
+      syncFromNotice(unreadCount);
+      updateBadgeState(unreadCount);
+      
       loadingTimeoutRef.current = setTimeout(() => {
         setIsLoading(false);
         loadingTimeoutRef.current = null;
@@ -178,6 +184,11 @@ export function useNotifications() {
       if (saved) {
         setNotifications(updated);
         setUnreadCount(0);
+        
+        // Sync PWA app badge
+        syncFromNotice(0);
+        updateBadgeState(0);
+        
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato");
       }
@@ -261,12 +272,22 @@ export function useNotifications() {
       }
     };
     
+    const handleFocus = () => {
+      if (!isInitialLoadRef.current) {
+        console.log("🎯 NOTIFICATIONS: Window focused, syncing badge...");
+        // Re-sync badge on focus in case of inconsistency
+        syncFromNotice(unreadCount);
+      }
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [reloadNotifications]);
+  }, [reloadNotifications, unreadCount]);
 
   // Singola notifica come letta
   const markAsRead = useCallback(async (id: string) => {
@@ -290,8 +311,14 @@ export function useNotifications() {
       const saved = saveNotifications(updated);
       
       if (saved) {
+        const newUnreadCount = updated.filter(n => !n.read).length;
         setNotifications(updated);
-        setUnreadCount(updated.filter(n => !n.read).length);
+        setUnreadCount(newUnreadCount);
+        
+        // Sync PWA app badge
+        syncFromNotice(newUnreadCount);
+        updateBadgeState(newUnreadCount);
+        
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato per notifica:", id);
       }
@@ -322,8 +349,14 @@ export function useNotifications() {
       const saved = saveNotifications(updated);
       
       if (saved) {
+        const newUnreadCount = updated.filter(n => !n.read).length;
         setNotifications(updated);
-        setUnreadCount(updated.filter(n => !n.read).length);
+        setUnreadCount(newUnreadCount);
+        
+        // Sync PWA app badge
+        syncFromNotice(newUnreadCount);
+        updateBadgeState(newUnreadCount);
+        
         listeners.forEach(fn => fn());
       }
       return saved;
@@ -382,8 +415,14 @@ export function useNotifications() {
       const saved = saveNotifications(updated);
       
       if (saved) {
+        const newUnreadCount = updated.filter(n => !n.read).length;
         setNotifications(updated);
-        setUnreadCount(prev => prev + 1);
+        setUnreadCount(newUnreadCount);
+        
+        // Sync PWA app badge
+        syncFromNotice(newUnreadCount);
+        updateBadgeState(newUnreadCount);
+        
         listeners.forEach(fn => fn());
         console.log("✅ UNIQUE Notification added successfully:", newNotification);
       }
