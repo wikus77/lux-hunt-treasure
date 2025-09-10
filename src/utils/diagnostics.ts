@@ -75,8 +75,19 @@ export const initDiagnostics = () => {
   console.log('🔍 M1SSION™ Enhanced Diagnostics enabled');
 
   // Enhanced M1_NOTIF_TEST with dry-run
-  window.__M1_NOTIF_TEST__ = {
-    dryRunPref: dryRunPreferences,
+  (window as any).__M1_NOTIF_TEST__ = {
+    ...(window as any).__M1_NOTIF_TEST__,
+    
+    async dryRunPref(userId: string, max=5, cooldownHours?: number) {
+      const qs = new URLSearchParams({ user_id:userId, max:String(max) });
+      if (cooldownHours != null) qs.set('cooldown', String(cooldownHours));
+      const res = await fetch('/functions/v1/notifier-engine/dry-run?' + qs.toString(), { method:'POST' });
+      const json = await res.json();
+      if (Array.isArray(json?.candidates)) {
+        console.table(json.candidates.map((c:any)=>({id:c.id, score:c.score, locale:c.locale})));
+      }
+      return json;
+    },
     
     async triggerPrefFallback() {
       try {
