@@ -50,6 +50,7 @@ interface Window {
     get?: () => any;
     getDiagnostics?: () => any;
     state?: () => any;
+    test?: (n: number) => any;
     setAppBadgeSafe?: (count: number) => Promise<boolean>;
     clearAppBadgeSafe?: () => Promise<boolean>;
   };

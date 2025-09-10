@@ -55,6 +55,14 @@ if (isDev && typeof window !== 'undefined') {
     supported: isBadgeAPISupported(),
     lastSyncAt: Date.now(),
     setAppBadgeSafe,
-    clearAppBadgeSafe
+    clearAppBadgeSafe,
+    platform: navigator.userAgent.includes('iPhone') && window.navigator.standalone ? 'iosPWA' : 
+             navigator.userAgent.includes('Android') ? 'android' : 'desktop'
   });
+  window.__M1_BADGE__.test = (n: number) => {
+    if (isDev) {
+      log(`Manual test: setting badge to ${n}`);
+      return setAppBadgeSafe(n);
+    }
+  };
 }
