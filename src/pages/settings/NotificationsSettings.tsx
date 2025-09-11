@@ -15,6 +15,7 @@ import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
 import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
+import PushInspector from "@/components/PushInspector";
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -254,6 +255,8 @@ const NotificationsSettings: React.FC = () => {
             <div className="mt-4">
               <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
             </div>
+            {/* Audit read-only */}
+            <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
           </div>
 
           {/* Debug Panel for Push Notifications */}
