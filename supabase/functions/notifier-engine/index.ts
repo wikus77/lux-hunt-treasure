@@ -496,18 +496,74 @@ serve(async (req) => {
         // Enhanced throttling with first notification logic
         const cooldownTime = new Date(Date.now() - cooldownHours * 60 * 60 * 1000).toISOString()
         
-        // Check total ever (for first notification logic)
-        const { count: totalEver } = await supabase
-          .from('suggested_notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId)
+        // Check total ever (for first notification logic) - wrapped for 22P02 protection
+        let totalEver = 0
+        try {
+          const result = await supabase
+            .from('suggested_notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+          totalEver = result.count || 0
+          if (result.error && result.error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: result.error.message,
+              operation: 'total_ever_check',
+              user_id: userId
+            }))
+            continue
+          }
+        } catch (error: any) {
+          if (error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: error.message,
+              operation: 'total_ever_check',
+              user_id: userId
+            }))
+            continue
+          }
+          throw error
+        }
         
-        // Check recent suggestions
-        const { count: recentCount } = await supabase
-          .from('suggested_notifications')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .gte('created_at', cooldownTime)
+        // Check recent suggestions - wrapped for 22P02 protection
+        let recentCount = 0
+        try {
+          const result = await supabase
+            .from('suggested_notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .gte('created_at', cooldownTime)
+          recentCount = result.count || 0
+          if (result.error && result.error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: result.error.message,
+              operation: 'recent_suggestions_check',
+              user_id: userId
+            }))
+            continue
+          }
+        } catch (error: any) {
+          if (error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: error.message,
+              operation: 'recent_suggestions_check',
+              user_id: userId
+            }))
+            continue
+          }
+          throw error
+        }
         
         let throttleApplied = false
         let throttleReason = "none"
@@ -516,7 +572,7 @@ serve(async (req) => {
         if (totalEver === 0) {
           throttleApplied = false
           throttleReason = "first_notification_allowed"
-        } else if (recentCount && recentCount > 0) {
+        } else if (recentCount > 0) {
           throttleApplied = true
           throttleReason = "recent_suggestion"
         }
@@ -528,14 +584,14 @@ serve(async (req) => {
           phase: "prefs-first",
           action: "throttle_check",
           user_id: userId,
-          totalEver: totalEver || 0,
-          recent_12h: recentCount || 0,
+           totalEver: totalEver,
+           recent_12h: recentCount,
           throttle_applied: throttleApplied,
           throttle_reason: throttleReason,
           would_send: wouldSend,
           cooldown_hours: cooldownHours,
-          resolved_tags: resolvedTags,
-          qualified_items_count: qualifiedItemsCount || 0,
+           resolved_tags: resolvedTags,
+           qualified_items_count: qualifiedItemsCount || 0,
           candidates_count: candidatesCount
         }))
         
@@ -692,7 +748,7 @@ serve(async (req) => {
       for (const profile of profiles as UserProfile[]) {
         try {
           // Skip if user already processed in preferences branch
-          if (distinctUserIds.includes(profile.user_id)) {
+          if (validUserIds.includes(profile.user_id)) {
             continue
           }
 
@@ -893,13 +949,13 @@ serve(async (req) => {
     }
 
     console.log(`🔔 [NOTIFIER-ENGINE] Completed: ${notificationsSent} sent, ${notificationsQueued} queued`)
-    console.log(`🔔 [NOTIFIER-ENGINE] Preferences users: ${distinctUserIds.length}, Signals users: ${profiles?.length || 0}`)
+    console.log(`🔔 [NOTIFIER-ENGINE] Preferences users: ${validUserIds.length}, Signals users: ${profiles?.length || 0}`)
 
     return new Response(JSON.stringify({ 
       success: true, 
       notificationsSent,
       notificationsQueued,
-      preferencesUsersProcessed: distinctUserIds.length,
+      preferencesUsersProcessed: validUserIds.length,
       profilesProcessed: profiles?.length || 0,
       feedItemsAvailable: feedItems?.length || 0
     }), {
