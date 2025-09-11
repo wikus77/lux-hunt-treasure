@@ -34,6 +34,7 @@ serve(async (req) => {
     // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const functionsUrl = `${supabaseUrl}/functions/v1`
     
     // Configurable cooldown (default 12 hours)
@@ -47,11 +48,35 @@ serve(async (req) => {
     const testUserId = url.searchParams.get('user_id')
     const maxCandidates = parseInt(url.searchParams.get('max') || '5')
     const overrideCooldown = url.searchParams.get('cooldown') ? parseInt(url.searchParams.get('cooldown')!) : cooldownHours
+    const isDiag = url.searchParams.get('diag') === '1'
     
+    // TASK A: Enhanced dry-run authentication
+    if (isDryRun) {
+      const authHeader = req.headers.get('authorization')
+      const isValidAuth = authHeader && (
+        authHeader.includes(supabaseServiceKey) || 
+        authHeader.includes(supabaseAnonKey)
+      )
+      const allowedOrigin = req.headers.get('origin')
+      const isDiagAllowed = isDiag && (
+        allowedOrigin?.includes('lovableproject.com') || 
+        allowedOrigin?.includes('localhost')
+      )
+      
+      if (!isValidAuth && !isDiagAllowed) {
+        return new Response(JSON.stringify({ 
+          error: 'Missing authorization header or invalid diag mode' 
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+    }
+
     if (isDryRun && testUserId) {
       // DRY-RUN MODE: Complete preferences-first pipeline without DB writes or push sends
       console.log(JSON.stringify({
-        event: "dry_run_start",
+        phase: "dry_run_start",
         user_id: testUserId,
         max_candidates: maxCandidates,
         cooldown_hours: overrideCooldown
@@ -93,7 +118,7 @@ serve(async (req) => {
       
       if (totalEver === 0) {
         throttleApplied = false
-        throttleReason = "first_notification"
+        throttleReason = "first_notification_allowed"
       } else if (recentCount && recentCount > 0) {
         throttleApplied = true
         throttleReason = "recent_suggestion"
@@ -107,6 +132,19 @@ serve(async (req) => {
         .select('id', { count: 'exact', head: true })
         .gte('score', 0.72)
         .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+
+      // TASK B: Enhanced JSON logging
+      console.log(JSON.stringify({
+        phase: "prefs-first",
+        user_id: testUserId,
+        resolved_tags: resolvedTags?.resolved_tags || [],
+        qualified_items_count: qualifiedItemsCount || 0,
+        candidates_count: candidates?.length || 0,
+        throttle_applied: throttleApplied,
+        throttle_reason: throttleReason,
+        would_send: wouldSend,
+        cooldown_hours: overrideCooldown
+      }))
 
       const response = {
         user_id: testUserId,
@@ -123,14 +161,14 @@ serve(async (req) => {
         })) || [],
         cooldown_hours: overrideCooldown,
         total_ever: totalEver || 0,
-        recent_suggestions_12h: recentCount || 0,
+        recent_suggestions: recentCount || 0,
         throttle_applied: throttleApplied,
         throttle_reason: throttleReason,
         would_send: wouldSend
       }
       
       console.log(JSON.stringify({
-        event: "dry_run_complete",
+        phase: "dry_run_complete",
         ...response
       }))
       
@@ -146,7 +184,27 @@ serve(async (req) => {
 
     console.log('🔔 [NOTIFIER-ENGINE] Starting intelligent notifications processing...')
 
-    // Get active user profiles (updated in last 30 days)
+    // TASK C: Start with preferences-first approach
+    // Get users with active notification preferences
+    const { data: prefUsers, error: prefError } = await supabase
+      .from('notification_preferences')
+      .select('user_id')
+      .eq('enabled', true)
+      .neq('user_id', null)
+
+    if (prefError) {
+      console.error('Failed to fetch preference users:', prefError)
+    }
+
+    const distinctUserIds = [...new Set(prefUsers?.map(p => p.user_id) || [])]
+    
+    console.log(JSON.stringify({
+      phase: "prefs-first",
+      step: "enumeration",
+      users_with_prefs: distinctUserIds.length
+    }))
+
+    // Get active user profiles (updated in last 30 days) as fallback
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
     
     const { data: profiles, error: profilesError } = await supabase
@@ -156,17 +214,6 @@ serve(async (req) => {
 
     if (profilesError) {
       throw new Error(`Failed to fetch profiles: ${profilesError.message}`)
-    }
-
-    if (!profiles || profiles.length === 0) {
-      console.log('🔔 [NOTIFIER-ENGINE] No active user profiles found')
-      return new Response(JSON.stringify({ 
-        success: true, 
-        processed: 0,
-        message: 'No active user profiles' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
     }
 
     // Get recent feed items (last 24 hours)
@@ -182,122 +229,176 @@ serve(async (req) => {
       throw new Error(`Failed to fetch feed items: ${feedError.message}`)
     }
 
-    if (!feedItems || feedItems.length === 0) {
-      console.log('🔔 [NOTIFIER-ENGINE] No recent feed items found')
-      return new Response(JSON.stringify({ 
-        success: true, 
-        processed: 0,
-        message: 'No recent feed items' 
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
     let notificationsSent = 0
     let notificationsQueued = 0
 
-    // Process each user profile (SIGNALS-BASED BRANCH)
-    for (const profile of profiles as UserProfile[]) {
+    // PREFERENCES-FIRST PRIMARY BRANCH
+    console.log(JSON.stringify({
+      phase: "prefs-first",
+      step: "main_processing",
+      users_count: distinctUserIds.length
+    }))
+
+    for (const userId of distinctUserIds) {
       try {
-        // Check daily quota
-        const today = new Date().toISOString().split('T')[0]
+        // Skip if user already processed in signals branch
+        if (profiles && profiles.some(p => p.user_id === userId)) {
+          continue
+        }
+
+        // Get resolved tags for this user
+        const { data: resolvedTagsData } = await supabase
+          .from('v_user_resolved_tags')
+          .select('resolved_tags')
+          .eq('user_id', userId)
+          .single()
+
+        const resolvedTags = resolvedTagsData?.resolved_tags || []
         
+        if (resolvedTags.length === 0) {
+          console.log(JSON.stringify({
+            phase: "prefs-first",
+            user_id: userId,
+            resolved_tags: [],
+            step: "skipped_no_tags"
+          }))
+          continue
+        }
+
+        // Check daily quota for preferences users
+        const today = new Date().toISOString().split('T')[0]
         const { data: quota } = await supabase
           .from('notification_quota')
           .select('*')
-          .eq('user_id', profile.user_id)
+          .eq('user_id', userId)
           .single()
 
         const isQuotaReset = !quota || quota.last_reset.split('T')[0] !== today
         const currentSent = isQuotaReset ? 0 : quota.sent_today
 
-        if (currentSent >= 3) { // Max 3 notifications per day
-          console.log(`🔔 [NOTIFIER-ENGINE] User ${profile.user_id} reached daily quota`)
+        if (currentSent >= 1) { // Max 1 notification per 12h for preferences fallback
+          console.log(JSON.stringify({
+            phase: "prefs-first",
+            user_id: userId,
+            resolved_tags: resolvedTags,
+            step: "quota_reached",
+            current_sent: currentSent
+          }))
+          continue
+        }
+        
+        console.log(JSON.stringify({
+          phase: "prefs-first",
+          user_id: userId,
+          resolved_tags: resolvedTags,
+          step: "getting_candidates"
+        }))
+
+        // Get candidates using new function (fresh feed items matching user preferences)
+        const { data: candidates, error: candidatesError } = await supabase
+          .rpc('fn_candidates_for_user', {
+            p_user_id: userId,
+            p_limit: 3
+          })
+
+        const candidatesCount = candidates?.length || 0
+
+        // Get qualified items count for logging
+        const { count: qualifiedItemsCount } = await supabase
+          .from('external_feed_items')
+          .select('id', { count: 'exact', head: true })
+          .gte('score', 0.72)
+          .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+
+        if (candidatesError || candidatesCount === 0) {
+          // If no candidates, log sample of qualified items for debugging
+          const { data: sampleItems } = await supabase
+            .from('external_feed_items')
+            .select('id, title, score, tags, locale')
+            .gte('score', 0.72)
+            .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
+            .limit(5)
+          
+          console.log(JSON.stringify({
+            phase: "prefs-first",
+            user_id: userId,
+            resolved_tags: resolvedTags,
+            qualified_items_count: qualifiedItemsCount || 0,
+            candidates_count: 0,
+            throttle_applied: false,
+            throttle_reason: "no_candidates",
+            would_send: false,
+            cooldown_hours: cooldownHours,
+            sample_qualified_items: sampleItems || [],
+            error: candidatesError?.message || 'no_candidates_found'
+          }))
           continue
         }
 
-        // Calculate scores for each feed item
-        const scoredItems: { item: FeedItem; score: number; reason: string }[] = []
-
-        for (const item of feedItems as FeedItem[]) {
-          // Check for duplicates (same content_hash sent to this user)
-          const dedupeKey = `${profile.user_id}-${item.content_hash}`
-          
-          const { data: existing } = await supabase
-            .from('suggested_notifications')
-            .select('id')
-            .eq('dedupe_key', dedupeKey)
-            .single()
-
-          if (existing) {
-            continue // Skip if already sent to this user
-          }
-
-          let score = 0
-          let reason = 'general_interest'
-
-          // Calculate interest score based on user topics and item tags
-          const userTopics = profile.topics
-          const itemTags = item.tags
-
-          for (const tag of itemTags) {
-            const userInterest = userTopics[tag.toLowerCase()] || 0
-            score += userInterest * 0.5 // Base tag match
-          }
-
-          // Boost for brand affinity
-          if (item.brand) {
-            const brandInterest = userTopics[item.brand.toLowerCase()] || 0
-            score += brandInterest * 0.3
-          }
-
-          // Recency boost (newer content gets higher score)
-          const hoursAgo = (Date.now() - new Date(item.published_at).getTime()) / (1000 * 60 * 60)
-          const recencyBoost = Math.max(0, 1 - hoursAgo / 24) * 0.2
-          score += recencyBoost
-
-          // Mission-related content gets special boost
-          if (itemTags.some(tag => tag.toLowerCase().includes('mission'))) {
-            score += 0.3
-            reason = 'mission_context'
-          }
-
-          // Luxury content boost for interested users
-          if (userTopics.luxury > 0.5 && itemTags.some(tag => 
-            ['luxury', 'premium', 'exclusive'].includes(tag.toLowerCase())
-          )) {
-            score += 0.2
-            reason = 'luxury_match'
-          }
-
-          if (score > 0.4) { // Minimum threshold
-            scoredItems.push({ item, score, reason })
-          }
+        // Select best candidate (highest score)
+        const bestCandidate = candidates[0]
+        
+        // Enhanced throttling with first notification logic
+        const cooldownTime = new Date(Date.now() - cooldownHours * 60 * 60 * 1000).toISOString()
+        
+        // Check total ever (for first notification logic)
+        const { count: totalEver } = await supabase
+          .from('suggested_notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+        
+        // Check recent suggestions
+        const { count: recentCount } = await supabase
+          .from('suggested_notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .gte('created_at', cooldownTime)
+        
+        let throttleApplied = false
+        let throttleReason = "none"
+        
+        // NEW LOGIC: Allow first notification (totalEver = 0)
+        if (totalEver === 0) {
+          throttleApplied = false
+          throttleReason = "first_notification_allowed"
+        } else if (recentCount && recentCount > 0) {
+          throttleApplied = true
+          throttleReason = "recent_suggestion"
         }
 
-        // Sort by score and take the best match
-        scoredItems.sort((a, b) => b.score - a.score)
+        const wouldSend = !throttleApplied && candidatesCount > 0
+
+        // TASK B: Enhanced JSON logging for decision point
+        console.log(JSON.stringify({
+          phase: "prefs-first",
+          user_id: userId,
+          resolved_tags: resolvedTags,
+          qualified_items_count: qualifiedItemsCount || 0,
+          candidates_count: candidatesCount,
+          throttle_applied: throttleApplied,
+          throttle_reason: throttleReason,
+          would_send: wouldSend,
+          cooldown_hours: cooldownHours
+        }))
         
-        if (scoredItems.length > 0 && currentSent < 3) {
-          const bestMatch = scoredItems[0]
-          
+        if (!throttleApplied && bestCandidate) {
           // Queue the notification suggestion
-          const dedupeKey = `${profile.user_id}-${bestMatch.item.content_hash}`
+          const dedupeKey = `${userId}-${bestCandidate.feed_item_id}`
           
           const { data: suggestion, error: suggestionError } = await supabase
             .from('suggested_notifications')
             .insert({
-              user_id: profile.user_id,
-              item_id: bestMatch.item.id,
-              reason: bestMatch.reason,
-              score: bestMatch.score,
+              user_id: userId,
+              item_id: bestCandidate.feed_item_id,
+              reason: "preferences_match",
+              score: bestCandidate.score,
               dedupe_key: dedupeKey
             })
             .select()
             .single()
 
           if (suggestionError) {
-            console.error(`🔔 [NOTIFIER-ENGINE] Error creating suggestion for user ${profile.user_id}:`, suggestionError)
+            console.error(`🔔 [NOTIFIER-ENGINE] Error creating preference suggestion for user ${userId}:`, suggestionError)
             continue
           }
 
@@ -309,7 +410,7 @@ serve(async (req) => {
             const { data: subscription } = await supabase
               .from('webpush_subscriptions')
               .select('*')
-              .eq('user_id', profile.user_id)
+              .eq('user_id', userId)
               .eq('is_active', true)
               .single()
 
@@ -323,241 +424,14 @@ serve(async (req) => {
                     auth: subscription.auth
                   }
                 },
-                title: `🎯 ${bestMatch.item.brand || 'M1SSION'}: ${bestMatch.item.title.substring(0, 50)}...`,
-                body: bestMatch.item.summary.substring(0, 120) + '...',
-                data: {
-                  type: 'interest_notification',
-                  item_id: bestMatch.item.id,
-                  url: bestMatch.item.url,
-                  score: bestMatch.score,
-                  reason: bestMatch.reason
-                }
-              }
-
-              const pushResponse = await fetch(`${functionsUrl}/webpush-send`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${supabaseServiceKey}`,
-                },
-                body: JSON.stringify(notificationPayload)
-              })
-
-              if (pushResponse.ok) {
-                // Mark as sent and update quota
-                await supabase
-                  .from('suggested_notifications')
-                  .update({ sent_at: new Date().toISOString() })
-                  .eq('id', suggestion.id)
-
-                await supabase
-                  .from('notification_quota')
-                  .upsert({
-                    user_id: profile.user_id,
-                    last_reset: new Date().toISOString(),
-                    sent_today: currentSent + 1
-                  })
-
-                notificationsSent++
-                console.log(`🔔 [NOTIFIER-ENGINE] Sent notification to user ${profile.user_id}: ${bestMatch.item.title}`)
-              } else {
-                console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${profile.user_id}:`, await pushResponse.text())
-              }
-            } else {
-              console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for user ${profile.user_id}`)
-            }
-          } catch (pushError) {
-            console.error(`🔔 [NOTIFIER-ENGINE] Push error for user ${profile.user_id}:`, pushError)
-          }
-        }
-
-      } catch (userError) {
-        console.error(`🔔 [NOTIFIER-ENGINE] Error processing user ${profile.user_id}:`, userError)
-      }
-    }
-
-    // PREFERENCES-FIRST FALLBACK BRANCH
-    // Get users with notification preferences but no user_interest_profile
-    const { data: prefUsers, error: prefError } = await supabase
-      .from('v_user_resolved_tags')
-      .select('user_id, resolved_tags')
-      .not('resolved_tags', 'eq', '{}') // Has active preferences
-
-    if (!prefError && prefUsers && prefUsers.length > 0) {
-      console.log(`🔔 [NOTIFIER-ENGINE] Processing ${prefUsers.length} users with preferences fallback...`)
-      
-      for (const prefUser of prefUsers) {
-        try {
-          // Skip if user already processed in signals branch
-          if (profiles.some(p => p.user_id === prefUser.user_id)) {
-            continue
-          }
-
-          // Check daily quota for preferences users
-          const today = new Date().toISOString().split('T')[0]
-          const { data: quota } = await supabase
-            .from('notification_quota')
-            .select('*')
-            .eq('user_id', prefUser.user_id)
-            .single()
-
-          const isQuotaReset = !quota || quota.last_reset.split('T')[0] !== today
-          const currentSent = isQuotaReset ? 0 : quota.sent_today
-
-          if (currentSent >= 1) { // Max 1 notification per 12h for preferences fallback
-            console.log(`🔔 [NOTIFIER-ENGINE] Preferences user ${prefUser.user_id} reached daily quota (sent: ${currentSent})`)
-            continue
-          }
-          
-          const resolvedTags = prefUser.resolved_tags || []
-          
-          console.log(JSON.stringify({
-            phase: "prefs-fallback",
-            user_id: prefUser.user_id,
-            resolved_tags: resolvedTags,
-            step: "getting_candidates"
-          }))
-
-          // Get candidates using new function (fresh feed items matching user preferences)
-          const { data: candidates, error: candidatesError } = await supabase
-            .rpc('fn_candidates_for_user', {
-              p_user_id: prefUser.user_id,
-              p_limit: 3
-            })
-
-          const candidatesCount = candidates?.length || 0
-
-          if (candidatesError || candidatesCount === 0) {
-            // If no candidates, log sample of qualified items for debugging
-            if (candidatesCount === 0) {
-              const { data: sampleItems } = await supabase
-                .from('external_feed_items')
-                .select('id, title, score, tags, locale')
-                .gte('score', 0.72)
-                .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
-                .limit(5)
-              
-              console.log(JSON.stringify({
-                phase: "prefs-fallback",
-                user_id: prefUser.user_id,
-                resolved_tags: resolvedTags,
-                candidates_count: 0,
-                sample_qualified_items: sampleItems || [],
-                error: candidatesError?.message || 'no_candidates_found'
-              }))
-            }
-            continue
-          }
-
-          // Select best candidate (highest score)
-          const bestCandidate = candidates[0]
-          
-          // Enhanced throttling with first notification logic
-          const cooldownTime = new Date(Date.now() - cooldownHours * 60 * 60 * 1000).toISOString()
-          
-          // Check total ever (for first notification logic)
-          const { count: totalEver } = await supabase
-            .from('suggested_notifications')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', prefUser.user_id)
-          
-          // Check recent suggestions
-          const { count: recentCount } = await supabase
-            .from('suggested_notifications')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', prefUser.user_id)
-            .gte('created_at', cooldownTime)
-          
-          let throttleApplied = false
-          let throttleReason = "none"
-          
-          // NEW LOGIC: Allow first notification (totalEver = 0)
-          if (totalEver === 0) {
-            throttleApplied = false
-            throttleReason = "first_notification_allowed"
-          } else if (recentCount && recentCount > 0) {
-            throttleApplied = true
-            throttleReason = "recent_suggestion"
-          }
-
-          console.log(JSON.stringify({
-            phase: "prefs-fallback",
-            user_id: prefUser.user_id,
-            resolved_tags: resolvedTags,
-            candidates_count: candidatesCount,
-            cooldown_hours: cooldownHours,
-            throttle: { 
-              totalEver: totalEver || 0, 
-              recentCount: recentCount || 0, 
-              applied: throttleApplied, 
-              reason: throttleReason 
-            },
-            selection: bestCandidate ? { 
-              id: bestCandidate.feed_item_id, 
-              score: bestCandidate.score, 
-              locale: bestCandidate.locale 
-            } : null
-          }))
-
-          if (throttleApplied) {
-            console.log(`🔔 [NOTIFIER-ENGINE] User ${prefUser.user_id} throttled: ${throttleReason}`)
-            continue
-          }
-          
-          console.log(`🔔 [NOTIFIER-ENGINE] Selected item for user ${prefUser.user_id}: ${bestCandidate.title} (score: ${bestCandidate.score}, id: ${bestCandidate.feed_item_id})`)
-
-          // Create suggestion (idempotency via unique index)
-          const dedupeKey = `${prefUser.user_id}-${bestCandidate.feed_item_id}`
-          
-          const { data: suggestion, error: suggestionError } = await supabase
-            .from('suggested_notifications')
-            .insert({
-              user_id: prefUser.user_id,
-              item_id: bestCandidate.feed_item_id,
-              reason: 'preferences_fallback',
-              score: bestCandidate.score,
-              dedupe_key: dedupeKey
-            })
-            .select()
-            .single()
-
-          if (suggestionError) {
-            if (suggestionError.code === '23505') { // Unique violation = already exists
-              console.log(`🔔 [NOTIFIER-ENGINE] Suggestion already exists for user ${prefUser.user_id}`)
-              continue
-            }
-            console.error(`🔔 [NOTIFIER-ENGINE] Error creating preferences suggestion for user ${prefUser.user_id}:`, suggestionError)
-            continue
-          }
-
-          notificationsQueued++
-
-          // Try to send push notification (same as signals branch)
-          try {
-            const { data: subscription } = await supabase
-              .from('webpush_subscriptions')
-              .select('*')
-              .eq('user_id', prefUser.user_id)
-              .eq('is_active', true)
-              .single()
-
-            if (subscription) {
-              const notificationPayload = {
-                subscription: {
-                  endpoint: subscription.endpoint,
-                  keys: {
-                    p256dh: subscription.p256dh,
-                    auth: subscription.auth
-                  }
-                },
-                title: `🎯 M1SSION™: ${bestCandidate.title.substring(0, 40)}...`,
-                body: `Based on your interests: ${bestCandidate.tags.slice(0, 3).join(', ')}`,
+                title: `🎯 ${bestCandidate.title.substring(0, 50)}...`,
+                body: bestCandidate.summary?.substring(0, 120) + '...' || 'New content available',
                 data: {
                   type: 'preferences_notification',
                   item_id: bestCandidate.feed_item_id,
                   url: bestCandidate.url,
                   score: bestCandidate.score,
-                  reason: 'preferences_fallback'
+                  reason: "preferences_match"
                 }
               }
 
@@ -580,39 +454,228 @@ serve(async (req) => {
                 await supabase
                   .from('notification_quota')
                   .upsert({
-                    user_id: prefUser.user_id,
+                    user_id: userId,
                     last_reset: new Date().toISOString(),
                     sent_today: currentSent + 1
                   })
 
                 notificationsSent++
-                console.log(`🔔 [NOTIFIER-ENGINE] Sent preferences notification to user ${prefUser.user_id}: ${bestCandidate.title}`)
+                console.log(`🔔 [NOTIFIER-ENGINE] Sent preferences notification to user ${userId}: ${bestCandidate.title}`)
               } else {
-                console.error(`🔔 [NOTIFIER-ENGINE] Failed to send preferences push to user ${prefUser.user_id}:`, await pushResponse.text())
+                console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${userId}:`, await pushResponse.text())
               }
             } else {
-              console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for preferences user ${prefUser.user_id}`)
+              console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for user ${userId}`)
             }
           } catch (pushError) {
-            console.error(`🔔 [NOTIFIER-ENGINE] Preferences push error for user ${prefUser.user_id}:`, pushError)
+            console.error(`🔔 [NOTIFIER-ENGINE] Push error for user ${userId}:`, pushError)
+          }
+        }
+
+      } catch (userError) {
+        console.error(`🔔 [NOTIFIER-ENGINE] Error processing preferences user ${userId}:`, userError)
+      }
+    }
+
+    // SIGNALS-BASED FALLBACK BRANCH (existing logic for users with profiles)
+    if (profiles && profiles.length > 0 && feedItems && feedItems.length > 0) {
+      console.log(`🔔 [NOTIFIER-ENGINE] Processing ${profiles.length} users with signals fallback...`)
+      
+      for (const profile of profiles as UserProfile[]) {
+        try {
+          // Skip if user already processed in preferences branch
+          if (distinctUserIds.includes(profile.user_id)) {
+            continue
           }
 
-        } catch (prefUserError) {
-          console.error(`🔔 [NOTIFIER-ENGINE] Error processing preferences user ${prefUser.user_id}:`, prefUserError)
+          // Check daily quota
+          const today = new Date().toISOString().split('T')[0]
+          
+          const { data: quota } = await supabase
+            .from('notification_quota')
+            .select('*')
+            .eq('user_id', profile.user_id)
+            .single()
+
+          const isQuotaReset = !quota || quota.last_reset.split('T')[0] !== today
+          const currentSent = isQuotaReset ? 0 : quota.sent_today
+
+          if (currentSent >= 3) { // Max 3 notifications per day
+            console.log(`🔔 [NOTIFIER-ENGINE] User ${profile.user_id} reached daily quota`)
+            continue
+          }
+
+          // Calculate scores for each feed item
+          const scoredItems: { item: FeedItem; score: number; reason: string }[] = []
+
+          for (const item of feedItems as FeedItem[]) {
+            // Check for duplicates (same content_hash sent to this user)
+            const dedupeKey = `${profile.user_id}-${item.content_hash}`
+            
+            const { data: existing } = await supabase
+              .from('suggested_notifications')
+              .select('id')
+              .eq('dedupe_key', dedupeKey)
+              .single()
+
+            if (existing) {
+              continue // Skip if already sent to this user
+            }
+
+            let score = 0
+            let reason = 'general_interest'
+
+            // Calculate interest score based on user topics and item tags
+            const userTopics = profile.topics
+            const itemTags = item.tags
+
+            for (const tag of itemTags) {
+              const userInterest = userTopics[tag.toLowerCase()] || 0
+              score += userInterest * 0.5 // Base tag match
+            }
+
+            // Boost for brand affinity
+            if (item.brand) {
+              const brandInterest = userTopics[item.brand.toLowerCase()] || 0
+              score += brandInterest * 0.3
+            }
+
+            // Recency boost (newer content gets higher score)
+            const hoursAgo = (Date.now() - new Date(item.published_at).getTime()) / (1000 * 60 * 60)
+            const recencyBoost = Math.max(0, 1 - hoursAgo / 24) * 0.2
+            score += recencyBoost
+
+            // Mission-related content gets special boost
+            if (itemTags.some(tag => tag.toLowerCase().includes('mission'))) {
+              score += 0.3
+              reason = 'mission_context'
+            }
+
+            // Luxury content boost for interested users
+            if (userTopics.luxury > 0.5 && itemTags.some(tag => 
+              ['luxury', 'premium', 'exclusive'].includes(tag.toLowerCase())
+            )) {
+              score += 0.2
+              reason = 'luxury_match'
+            }
+
+            if (score > 0.4) { // Minimum threshold
+              scoredItems.push({ item, score, reason })
+            }
+          }
+
+          // Sort by score and take the best match
+          scoredItems.sort((a, b) => b.score - a.score)
+          
+          if (scoredItems.length > 0 && currentSent < 3) {
+            const bestMatch = scoredItems[0]
+            
+            // Queue the notification suggestion
+            const dedupeKey = `${profile.user_id}-${bestMatch.item.content_hash}`
+            
+            const { data: suggestion, error: suggestionError } = await supabase
+              .from('suggested_notifications')
+              .insert({
+                user_id: profile.user_id,
+                item_id: bestMatch.item.id,
+                reason: bestMatch.reason,
+                score: bestMatch.score,
+                dedupe_key: dedupeKey
+              })
+              .select()
+              .single()
+
+            if (suggestionError) {
+              console.error(`🔔 [NOTIFIER-ENGINE] Error creating suggestion for user ${profile.user_id}:`, suggestionError)
+              continue
+            }
+
+            notificationsQueued++
+
+            // Try to send the push notification via existing webpush-send function
+            try {
+              // Get user's webpush subscription
+              const { data: subscription } = await supabase
+                .from('webpush_subscriptions')
+                .select('*')
+                .eq('user_id', profile.user_id)
+                .eq('is_active', true)
+                .single()
+
+              if (subscription) {
+                // Call webpush-send function (existing push chain)
+                const notificationPayload = {
+                  subscription: {
+                    endpoint: subscription.endpoint,
+                    keys: {
+                      p256dh: subscription.p256dh,
+                      auth: subscription.auth
+                    }
+                  },
+                  title: `🎯 ${bestMatch.item.brand || 'M1SSION'}: ${bestMatch.item.title.substring(0, 50)}...`,
+                  body: bestMatch.item.summary.substring(0, 120) + '...',
+                  data: {
+                    type: 'interest_notification',
+                    item_id: bestMatch.item.id,
+                    url: bestMatch.item.url,
+                    score: bestMatch.score,
+                    reason: bestMatch.reason
+                  }
+                }
+
+                const pushResponse = await fetch(`${functionsUrl}/webpush-send`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseServiceKey}`,
+                  },
+                  body: JSON.stringify(notificationPayload)
+                })
+
+                if (pushResponse.ok) {
+                  // Mark as sent and update quota
+                  await supabase
+                    .from('suggested_notifications')
+                    .update({ sent_at: new Date().toISOString() })
+                    .eq('id', suggestion.id)
+
+                  await supabase
+                    .from('notification_quota')
+                    .upsert({
+                      user_id: profile.user_id,
+                      last_reset: new Date().toISOString(),
+                      sent_today: currentSent + 1
+                    })
+
+                  notificationsSent++
+                  console.log(`🔔 [NOTIFIER-ENGINE] Sent notification to user ${profile.user_id}: ${bestMatch.item.title}`)
+                } else {
+                  console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${profile.user_id}:`, await pushResponse.text())
+                }
+              } else {
+                console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for user ${profile.user_id}`)
+              }
+            } catch (pushError) {
+              console.error(`🔔 [NOTIFIER-ENGINE] Push error for user ${profile.user_id}:`, pushError)
+            }
+          }
+
+        } catch (userError) {
+          console.error(`🔔 [NOTIFIER-ENGINE] Error processing user ${profile.user_id}:`, userError)
         }
       }
     }
 
     console.log(`🔔 [NOTIFIER-ENGINE] Completed: ${notificationsSent} sent, ${notificationsQueued} queued`)
-    console.log(`🔔 [NOTIFIER-ENGINE] Signals users: ${profiles.length}, Preferences users: ${prefUsers?.length || 0}`)
+    console.log(`🔔 [NOTIFIER-ENGINE] Preferences users: ${distinctUserIds.length}, Signals users: ${profiles?.length || 0}`)
 
     return new Response(JSON.stringify({ 
       success: true, 
       notificationsSent,
       notificationsQueued,
-      profilesProcessed: profiles.length,
-      preferencesUsersProcessed: prefUsers?.length || 0,
-      feedItemsAvailable: feedItems.length
+      preferencesUsersProcessed: distinctUserIds.length,
+      profilesProcessed: profiles?.length || 0,
+      feedItemsAvailable: feedItems?.length || 0
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
