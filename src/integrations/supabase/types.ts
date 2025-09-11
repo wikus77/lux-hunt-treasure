@@ -4280,6 +4280,21 @@ export type Database = {
         }
         Relationships: []
       }
+      v_latest_webpush_subscription: {
+        Row: {
+          created_at: string | null
+          endpoint: string | null
+          sub_id: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
+      v_pref_users: {
+        Row: {
+          user_id: string | null
+        }
+        Relationships: []
+      }
       v_user_resolved_tags: {
         Row: {
           active_categories: number | null
