@@ -383,18 +383,20 @@ serve(async (req) => {
 
         const wouldSend = !throttleApplied && candidatesCount > 0
 
-        // TASK B: Enhanced JSON logging for decision point with all required fields
+        // TASK 3: Enhanced throttle check logging
         console.log(JSON.stringify({
           phase: "prefs-first",
+          action: "throttle_check",
           user_id: userId,
-          resolved_tags: resolvedTags,
-          qualified_items_count: qualifiedItemsCount || 0,
-          candidates_count: candidatesCount,
+          totalEver: totalEver || 0,
+          recent_12h: recentCount || 0,
           throttle_applied: throttleApplied,
           throttle_reason: throttleReason,
           would_send: wouldSend,
           cooldown_hours: cooldownHours,
-          total_ever: totalEver || 0
+          resolved_tags: resolvedTags,
+          qualified_items_count: qualifiedItemsCount || 0,
+          candidates_count: candidatesCount
         }))
         
         if (!throttleApplied && bestCandidate) {
@@ -414,17 +416,23 @@ serve(async (req) => {
             .single()
 
           if (suggestionError) {
+            console.log(JSON.stringify({
+              phase: "prefs-first",
+              action: "insert_failed",
+              user_id: userId,
+              error: suggestionError.message
+            }))
             console.error(`🔔 [NOTIFIER-ENGINE] Error creating preference suggestion for user ${userId}:`, suggestionError)
             continue
           }
 
-          // Structured logging after successful insert
+          // TASK 1c: Structured logging after successful insert
           console.log(JSON.stringify({
-            phase: 'prefs-first',
-            action: 'suggestion_inserted',
+            phase: "prefs-first",
+            action: "suggestion_inserted",
             user_id: userId,
             item_id: bestCandidate.feed_item_id,
-            reason: 'preferences_match',
+            reason: "preferences_match",
             score: bestCandidate.score,
             row_id: suggestion.id,
             sent_at: null
@@ -434,6 +442,15 @@ serve(async (req) => {
 
           // Try to send the push notification via existing webpush-send function
           try {
+            // TASK 1d: Pre-send logging
+            console.log(JSON.stringify({
+              phase: "prefs-first",
+              action: "send_start", 
+              user_id: userId,
+              suggestion_id: suggestion.id,
+              item_id: bestCandidate.feed_item_id
+            }))
+
             // Get user's webpush subscription
             const { data: subscription } = await supabase
               .from('webpush_subscriptions')
@@ -488,9 +505,32 @@ serve(async (req) => {
                   })
 
                 notificationsSent++
+                
+                // TASK 1d: Post-send success logging
+                console.log(JSON.stringify({
+                  phase: "prefs-first",
+                  action: "send_done",
+                  user_id: userId,
+                  suggestion_id: suggestion.id,
+                  status: "success",
+                  sent_at: new Date().toISOString()
+                }))
+                
                 console.log(`🔔 [NOTIFIER-ENGINE] Sent preferences notification to user ${userId}: ${bestCandidate.title}`)
               } else {
-                console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${userId}:`, await pushResponse.text())
+                const errorText = await pushResponse.text()
+                
+                // TASK 1d: Post-send failure logging
+                console.log(JSON.stringify({
+                  phase: "prefs-first",
+                  action: "send_done",
+                  user_id: userId,
+                  suggestion_id: suggestion.id,
+                  status: "failed",
+                  error: errorText
+                }))
+                
+                console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${userId}:`, errorText)
               }
             } else {
               console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for user ${userId}`)
@@ -614,6 +654,12 @@ serve(async (req) => {
               .single()
 
             if (suggestionError) {
+              console.log(JSON.stringify({
+                phase: "signals-based",
+                action: "insert_failed",
+                user_id: profile.user_id,
+                error: suggestionError.message
+              }))
               console.error(`🔔 [NOTIFIER-ENGINE] Error creating suggestion for user ${profile.user_id}:`, suggestionError)
               continue
             }
