@@ -22,7 +22,8 @@ interface DryRunResult {
   candidates_sample: any[];
   cooldown_hours: number;
   total_ever: number;
-  recent_suggestions_12h: number;
+  recent_suggestions?: number;
+  recent_suggestions_12h?: number;
   throttle_applied: boolean;
   throttle_reason: string;
   would_send: boolean;
@@ -49,17 +50,48 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
     setError(null);
     
     try {
-      // Use the enhanced diagnostics function
-      const result = await (window as any).__M1_NOTIF_TEST__?.dryRunPref(
-        currentUser.id, 
-        5, 
-        cooldownHours
+      // Direct call to notifier-engine dry-run endpoint with diag=1
+      const params = new URLSearchParams({
+        user_id: currentUser.id,
+        max: '5',
+        diag: '1'
+      });
+      
+      if (cooldownHours !== undefined) {
+        params.set('cooldown', cooldownHours.toString());
+      }
+      
+      const response = await fetch(
+        `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine/dry-run?${params}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
       
       if (result?.error) {
         setError(result.error);
       } else {
         setDebugResult(result);
+        
+        // Enhanced logging for console.table
+        if (result.candidates_sample && result.candidates_sample.length > 0) {
+          console.log('🎯 M1SSION Notifier Candidates:');
+          console.table(result.candidates_sample.map((c: any) => ({
+            Title: c.title?.substring(0, 50) + '...',
+            Score: c.score?.toFixed(2),
+            Tags: c.tags?.join(', '),
+            Published: new Date(c.published_at).toLocaleString()
+          })));
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
@@ -171,8 +203,8 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
                 <p className="font-mono">{debugResult.total_ever}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">Recent 12h</p>
-                <p className="font-mono">{debugResult.recent_suggestions_12h}</p>
+                <p className="text-muted-foreground">Recent</p>
+                <p className="font-mono">{debugResult.recent_suggestions || debugResult.recent_suggestions_12h}</p>
               </div>
               <div>
                 <p className="text-muted-foreground">Cooldown</p>
