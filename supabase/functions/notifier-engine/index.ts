@@ -40,12 +40,11 @@ serve(async (req) => {
     // Configurable cooldown (default 12 hours)
     const cooldownHours = parseInt(Deno.env.get('NOTIFIER_PREFS_COOLDOWN_HOURS') || '12')
     
-    // TASK 1: Service role key validation
+    // TASK 2: Service role key validation - REQUIRED IN PROD
     if (!supabaseServiceKey) {
       console.log(JSON.stringify({
-        phase: 'prefs-first',
-        action: 'boot',
-        mode: 'prod',
+        phase: "prefs-first",
+        action: "boot",
         hasServiceKey: false
       }))
       return new Response(JSON.stringify({ 
@@ -120,7 +119,7 @@ serve(async (req) => {
         .eq('user_id', testUserId)
         .single()
       
-      // Get candidates using function
+      // Get candidates using unified function (same as prod)
       const { data: candidates } = await supabase
         .rpc('fn_candidates_for_user', {
           p_user_id: testUserId,
@@ -214,13 +213,13 @@ serve(async (req) => {
       })
     }
 
-    // TASK 1: Boot logging with service key check and enum hardening
+    // TASK 7: Boot logging with structured JSON format
     console.log(JSON.stringify({
-      phase: 'prefs-first',
-      action: 'boot',
-      mode: 'prod',
-      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
-      enum_hardened: true
+      "phase": "prefs-first",
+      "action": "boot",
+      "mode": "prod",
+      "hasServiceKey": true,
+      "enum_hardened": true
     }))
     
     console.log('🔔 [NOTIFIER-ENGINE] Starting intelligent notifications processing...')
@@ -247,9 +246,9 @@ serve(async (req) => {
     const validUserIds = (prefUsers ?? []).map(r => r.user_id)
     
     console.log(JSON.stringify({
-      phase: "prefs-first",
-      step: "enumeration",
-      users_with_prefs: validUserIds.length
+      "phase": "prefs-first",
+      "step": "enumeration",
+      "users_with_prefs": validUserIds.length
     }))
 
     if (validUserIds.length === 0) {
@@ -479,13 +478,13 @@ serve(async (req) => {
         // Select best candidate (highest score)
         const bestCandidate = candidates[0]
         
-        // TASK 2: Candidate pick logging
+        // TASK 7: Candidate pick logging 
         console.log(JSON.stringify({
-          phase: 'prefs-first',
-          action: 'candidate_pick',
-          candidate_id: bestCandidate.feed_item_id,
-          title: bestCandidate.title,
-          score: bestCandidate.score
+          "phase": "prefs-first",
+          "action": "candidate_pick",
+          "candidate_id": bestCandidate.feed_item_id,
+          "title": bestCandidate.title,
+          "score": bestCandidate.score
         }))
         
         // Enhanced throttling with first notification logic
@@ -574,20 +573,20 @@ serve(async (req) => {
 
         const wouldSend = !throttleApplied && candidatesCount > 0
 
-        // TASK 3: Enhanced throttle check logging
+        // TASK 7: Enhanced throttle check logging
         console.log(JSON.stringify({
-          phase: "prefs-first",
-          action: "throttle_check",
-          user_id: userId,
-           totalEver: totalEver,
-           recent_12h: recentCount,
-          throttle_applied: throttleApplied,
-          throttle_reason: throttleReason,
-          would_send: wouldSend,
-          cooldown_hours: cooldownHours,
-           resolved_tags: resolvedTags,
-           qualified_items_count: qualifiedItemsCount || 0,
-          candidates_count: candidatesCount
+          "phase": "prefs-first",
+          "action": "throttle_check",
+          "user_id": userId,
+          "totalEver": totalEver,
+          "recent_12h": recentCount,
+          "throttle_applied": throttleApplied,
+          "throttle_reason": throttleReason,
+          "would_send": wouldSend,
+          "cooldown_hours": cooldownHours,
+          "resolved_tags": resolvedTags,
+          "qualified_items_count": qualifiedItemsCount || 0,
+          "candidates_count": candidatesCount
         }))
         
         if (!throttleApplied && bestCandidate) {
@@ -617,29 +616,29 @@ serve(async (req) => {
             continue
           }
 
-          // TASK 1c: Structured logging after successful insert
+          // TASK 7: Structured logging after successful insert
           console.log(JSON.stringify({
-            phase: "prefs-first",
-            action: "suggestion_inserted",
-            user_id: userId,
-            item_id: bestCandidate.feed_item_id,
-            reason: "preferences_match",
-            score: bestCandidate.score,
-            row_id: suggestion.id,
-            sent_at: null
+            "phase": "prefs-first",
+            "action": "suggestion_inserted",
+            "user_id": userId,
+            "item_id": bestCandidate.feed_item_id,
+            "reason": "preferences_match",
+            "score": bestCandidate.score,
+            "row_id": suggestion.id,
+            "sent_at": null
           }))
 
           notificationsQueued++
 
           // Try to send the push notification via existing webpush-send function
           try {
-            // TASK 1d: Pre-send logging
+            // TASK 7: Pre-send logging
             console.log(JSON.stringify({
-              phase: "prefs-first",
-              action: "send_start", 
-              user_id: userId,
-              suggestion_id: suggestion.id,
-              item_id: bestCandidate.feed_item_id
+              "phase": "prefs-first",
+              "action": "send_start", 
+              "user_id": userId,
+              "suggestion_id": suggestion.id,
+              "item_id": bestCandidate.feed_item_id
             }))
 
             // Get user's webpush subscription
@@ -697,34 +696,35 @@ serve(async (req) => {
 
                 notificationsSent++
                 
-                // TASK 1d: Post-send success logging
+                // TASK 7: Post-send success logging
                 console.log(JSON.stringify({
-                  phase: "prefs-first",
-                  action: "send_done",
-                  user_id: userId,
-                  suggestion_id: suggestion.id,
-                  status: "success",
-                  sent_at: new Date().toISOString()
+                  "phase": "prefs-first",
+                  "action": "send_done",
+                  "status": "success",
+                  "sent_at": new Date().toISOString()
                 }))
                 
                 console.log(`🔔 [NOTIFIER-ENGINE] Sent preferences notification to user ${userId}: ${bestCandidate.title}`)
               } else {
                 const errorText = await pushResponse.text()
                 
-                // TASK 1d: Post-send failure logging
+                // TASK 7: Post-send failure logging
                 console.log(JSON.stringify({
-                  phase: "prefs-first",
-                  action: "send_done",
-                  user_id: userId,
-                  suggestion_id: suggestion.id,
-                  status: "failed",
-                  error: errorText
+                  "phase": "prefs-first",
+                  "action": "send_done",
+                  "status": "failed",
+                  "error": errorText
                 }))
                 
                 console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${userId}:`, errorText)
               }
             } else {
-              console.log(`🔔 [NOTIFIER-ENGINE] No active subscription for user ${userId}`)
+              // TASK 7: No active subscription logging
+              console.log(JSON.stringify({
+                "phase": "prefs-first",
+                "action": "no_active_subscription",
+                "user_id": userId
+              }))
             }
           } catch (pushError) {
             console.error(`🔔 [NOTIFIER-ENGINE] Push error for user ${userId}:`, pushError)
