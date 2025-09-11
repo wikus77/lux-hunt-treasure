@@ -4287,18 +4287,6 @@ export type Database = {
           sub_id: string | null
           user_id: string | null
         }
-        Insert: {
-          created_at?: string | null
-          endpoint?: string | null
-          sub_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          endpoint?: string | null
-          sub_id?: string | null
-          user_id?: string | null
-        }
         Relationships: []
       }
       v_pref_users: {
