@@ -641,15 +641,45 @@ serve(async (req) => {
               "item_id": bestCandidate.feed_item_id
             }))
 
-          // TASK 1: Lookup subscription PRIMA del push usando v_latest_webpush_subscription (simulated)
-            const { data: sub, error: subErr } = await supabase
-              .from('webpush_subscriptions')
-              .select('id as sub_id, created_at, endpoint')
-              .eq('user_id', userId)
-              .eq('is_active', true)
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle()
+          // TASK 1: Lookup subscription PRIMA del push usando v_latest_webpush_subscription
+            let sub, subErr
+            try {
+              // Try with the view first (preferred)
+              const viewResult = await supabase
+                .from('v_latest_webpush_subscription')
+                .select('sub_id, created_at, endpoint')
+                .eq('user_id', userId)
+                .maybeSingle()
+              
+              if (viewResult.data) {
+                sub = viewResult.data
+                subErr = viewResult.error
+              } else {
+                // Fallback to table if view doesn't exist
+                const tableResult = await supabase
+                  .from('webpush_subscriptions')
+                  .select('id as sub_id, created_at, endpoint')
+                  .eq('user_id', userId)
+                  .eq('is_active', true)
+                  .order('created_at', { ascending: false })
+                  .limit(1)
+                  .maybeSingle()
+                sub = tableResult.data
+                subErr = tableResult.error
+              }
+            } catch (error: any) {
+              if (error.code === '22P02') {
+                console.log(JSON.stringify({ 
+                  phase: 'prefs-first', 
+                  action: 'uuid_syntax_error', 
+                  code: '22P02', 
+                  operation: 'subscription_lookup',
+                  user_id: userId
+                }))
+                continue
+              }
+              subErr = error
+            }
 
             if (sub) {
               // TASK 1: Log subscription found

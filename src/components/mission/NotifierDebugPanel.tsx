@@ -60,10 +60,12 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
     
     setWebPushLoading(true);
     try {
+      // Use fallback approach since view types not available
       const { data, error } = await supabase
         .from('webpush_subscriptions')
         .select('id, endpoint, created_at')
         .eq('user_id', currentUser.id)
+        .eq('is_active', true)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
