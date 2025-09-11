@@ -641,15 +641,33 @@ serve(async (req) => {
               "item_id": bestCandidate.feed_item_id
             }))
 
-            // Get user's webpush subscription
-            const { data: subscription } = await supabase
+            // TASK 1: Robust subscription lookup - get latest subscription for user
+            const { data: sub, error: subErr } = await supabase
               .from('webpush_subscriptions')
-              .select('*')
+              .select('id, endpoint, created_at')
               .eq('user_id', userId)
-              .eq('is_active', true)
+              .order('created_at', { ascending: false })
+              .limit(1)
               .single()
 
-            if (subscription) {
+            if (sub) {
+              // TASK 1: Log subscription found
+              console.log(JSON.stringify({
+                "phase": "prefs-first",
+                "action": "subscription_found",
+                "user_id": userId,
+                "sub_id": sub.id,
+                "created_at": sub.created_at
+              }))
+
+              // Get full subscription details for push
+              const { data: subscription } = await supabase
+                .from('webpush_subscriptions')
+                .select('*')
+                .eq('id', sub.id)
+                .single()
+
+              if (subscription) {
               // Call webpush-send function (existing push chain)
               const notificationPayload = {
                 subscription: {
@@ -718,8 +736,9 @@ serve(async (req) => {
                 
                 console.error(`🔔 [NOTIFIER-ENGINE] Failed to send push to user ${userId}:`, errorText)
               }
+              }
             } else {
-              // TASK 7: No active subscription logging
+              // TASK 1: Log no active subscription found
               console.log(JSON.stringify({
                 "phase": "prefs-first",
                 "action": "no_active_subscription",

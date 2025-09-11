@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-import { Bell, Settings, ExternalLink, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Bell, Settings, ExternalLink, RefreshCw, Wifi } from 'lucide-react';
 
 interface NotifierDebugPanelProps {
   className?: string;
@@ -29,15 +30,55 @@ interface DryRunResult {
   would_send: boolean;
 }
 
+interface WebPushSubscription {
+  id: string;
+  endpoint: string;
+  created_at: string;
+}
+
 export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ className }) => {
   const { getCurrentUser } = useUnifiedAuth();
   const currentUser = getCurrentUser();
   const [debugResult, setDebugResult] = useState<DryRunResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [webPushSub, setWebPushSub] = useState<WebPushSubscription | null>(null);
+  const [webPushLoading, setWebPushLoading] = useState(false);
 
   // Only render if M1_DIAG=1 is present
   const isDiagMode = new URL(window.location.href).searchParams.has('M1_DIAG');
+  
+  // Load WebPush subscription data on mount
+  useEffect(() => {
+    if (currentUser?.id && isDiagMode) {
+      loadWebPushSubscription();
+    }
+  }, [currentUser?.id, isDiagMode]);
+
+  const loadWebPushSubscription = async () => {
+    if (!currentUser?.id) return;
+    
+    setWebPushLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('webpush_subscriptions')
+        .select('id, endpoint, created_at')
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('WebPush subscription error:', error);
+      } else {
+        setWebPushSub(data);
+      }
+    } catch (err) {
+      console.error('WebPush subscription fetch error:', err);
+    } finally {
+      setWebPushLoading(false);
+    }
+  };
   
   if (!isDiagMode || !currentUser) {
     return null;
@@ -110,6 +151,11 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
     window.open(url, '_blank');
   };
 
+  const openNotificationSettings = () => {
+    // Navigate to notification settings or main page where WebPushToggle is available
+    window.open('/', '_blank');
+  };
+
   return (
     <Card className={`border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-red-500/5 ${className}`}>
       <CardHeader className="pb-3">
@@ -134,6 +180,73 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
             </p>
           )}
         </div>
+
+        {/* WebPush Subscription Info */}
+        <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-blue-400 text-sm">
+              <Wifi className="h-4 w-4" />
+              WebPush Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            {webPushLoading ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                Loading subscription...
+              </div>
+            ) : webPushSub ? (
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status:</span>
+                  <Badge variant="default" className="bg-green-500/20 text-green-400 text-xs">
+                    ACTIVE
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Created:</span>
+                  <span className="font-mono text-xs">
+                    {new Date(webPushSub.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Endpoint:</span>
+                  <span className="font-mono text-xs truncate max-w-[120px]">
+                    {webPushSub.endpoint.substring(0, 32)}...
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">Status:</span>
+                  <Badge variant="destructive" className="text-xs">
+                    NO SUBSCRIPTION
+                  </Badge>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={openNotificationSettings}
+                  className="w-full border-blue-500/30 hover:bg-blue-500/10 text-xs"
+                >
+                  <Settings className="h-3 w-3 mr-1" />
+                  Open Notification Settings
+                </Button>
+              </div>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={loadWebPushSubscription}
+              disabled={webPushLoading}
+              className="w-full text-blue-400 hover:bg-blue-500/10 text-xs"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${webPushLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </CardContent>
+        </Card>
 
         {/* Action Buttons */}
         <div className="flex flex-wrap gap-2">
