@@ -225,12 +225,13 @@ serve(async (req) => {
     
     console.log('🔔 [NOTIFIER-ENGINE] Starting intelligent notifications processing...')
 
-    // TASK C: Start with preferences-first approach - HARDENED enumeration
-    // Get users with active notification preferences with rigid filtering
+    // TASK C: Start with preferences-first approach - PRODUCTION READY enumeration
+    // Get users with active notification preferences from clean SQL view
     const { data: prefUsers, error: prefError } = await supabase
-      .from('notification_preferences')
-      .select('user_id', { head: false })
-      .eq('enabled', true)
+      .from('v_pref_users')
+      .select('user_id')
+      .order('user_id')
+      .limit(100)
 
     if (prefError) {
       console.log(JSON.stringify({ 
@@ -242,14 +243,8 @@ serve(async (req) => {
       return new Response('enum_error', { status: 500, headers: corsHeaders })
     }
 
-    // Filter client-side against dirty values to prevent 22P02
-    const validUserIds = Array.from(
-      new Set(
-        (prefUsers ?? [])
-          .map(r => r.user_id)
-          .filter(u => !!u && typeof u === 'string' ? u.toLowerCase() !== 'null' && u.trim() !== '' : !!u)
-      )
-    )
+    // Extract user IDs from clean view (no client-side filtering needed)
+    const validUserIds = (prefUsers ?? []).map(r => r.user_id)
     
     console.log(JSON.stringify({
       phase: "prefs-first",
