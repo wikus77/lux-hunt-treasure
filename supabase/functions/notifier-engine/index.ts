@@ -641,14 +641,15 @@ serve(async (req) => {
               "item_id": bestCandidate.feed_item_id
             }))
 
-            // TASK 1: Robust subscription lookup - get latest subscription for user
+          // TASK 1: Lookup subscription PRIMA del push usando v_latest_webpush_subscription (simulated)
             const { data: sub, error: subErr } = await supabase
               .from('webpush_subscriptions')
-              .select('id, endpoint, created_at')
+              .select('id as sub_id, created_at, endpoint')
               .eq('user_id', userId)
+              .eq('is_active', true)
               .order('created_at', { ascending: false })
               .limit(1)
-              .single()
+              .maybeSingle()
 
             if (sub) {
               // TASK 1: Log subscription found
@@ -656,7 +657,7 @@ serve(async (req) => {
                 "phase": "prefs-first",
                 "action": "subscription_found",
                 "user_id": userId,
-                "sub_id": sub.id,
+                "sub_id": sub.sub_id,
                 "created_at": sub.created_at
               }))
 
@@ -664,7 +665,7 @@ serve(async (req) => {
               const { data: subscription } = await supabase
                 .from('webpush_subscriptions')
                 .select('*')
-                .eq('id', sub.id)
+                .eq('id', sub.sub_id)
                 .single()
 
               if (subscription) {
@@ -738,7 +739,7 @@ serve(async (req) => {
               }
               }
             } else {
-              // TASK 1: Log no active subscription found
+              // TASK 1: Log no active subscription found e SKIP push (ma l'INSERT resta)
               console.log(JSON.stringify({
                 "phase": "prefs-first",
                 "action": "no_active_subscription",
