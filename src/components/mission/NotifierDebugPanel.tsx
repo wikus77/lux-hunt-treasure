@@ -93,7 +93,7 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
     setError(null);
     
     try {
-      // Direct call to notifier-engine dry-run endpoint with diag=1
+      // Direct call to notifier-engine with diag=1 (no /dry-run needed, just query param)
       const params = new URLSearchParams({
         user_id: currentUser.id,
         max: '5',
@@ -104,14 +104,14 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
         params.set('cooldown', cooldownHours.toString());
       }
       
-      // TASK A: Add Authorization header with ANON_KEY
+      // Use ANON_KEY for diag=1 mode (as per TASK 9 specs)
       const headers = {
         'Content-Type': 'application/json',
         'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
       };
 
       const response = await fetch(
-        `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine/dry-run?${params}`,
+        `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine?${params}`,
         {
           method: 'POST',
           headers

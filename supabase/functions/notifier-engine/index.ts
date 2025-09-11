@@ -60,13 +60,13 @@ serve(async (req) => {
 
     // Check if this is a dry-run request
     const url = new URL(req.url)
-    const isDryRun = url.pathname.includes('/dry-run')
+    const isDryRun = url.pathname.includes('/dry-run') || url.searchParams.get('diag') === '1'
     const testUserId = url.searchParams.get('user_id')
     const maxCandidates = parseInt(url.searchParams.get('max') || '5')
     const overrideCooldown = url.searchParams.get('cooldown') ? parseInt(url.searchParams.get('cooldown')!) : cooldownHours
     const isDiag = url.searchParams.get('diag') === '1'
     
-    // TASK A: Fixed dry-run authentication - accept ANON_KEY OR diag bypass
+    // TASK 9: Fixed dry-run authentication - accept ANON_KEY OR diag bypass
     if (isDryRun) {
       const authHeader = req.headers.get('authorization')
       const isValidAuth = authHeader && (
@@ -163,18 +163,31 @@ serve(async (req) => {
         .gte('score', 0.72)
         .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
 
-      // TASK B: Enhanced JSON logging with all required fields
+      // Log candidate pick for dry-run (matching prod behavior)
+      if (candidates && candidates.length > 0) {
+        console.log(JSON.stringify({
+          "phase": "prefs-first",
+          "action": "candidate_pick",
+          "candidate_id": candidates[0].feed_item_id,
+          "title": candidates[0].title,
+          "score": candidates[0].score
+        }))
+      }
+
+      // TASK 3: Enhanced throttle check logging (matching prod)
       console.log(JSON.stringify({
-        phase: "prefs-first",
-        user_id: testUserId,
-        resolved_tags: resolvedTags?.resolved_tags || [],
-        qualified_items_count: qualifiedItemsCount || 0,
-        candidates_count: candidates?.length || 0,
-        throttle_applied: throttleApplied,
-        throttle_reason: throttleReason,
-        would_send: wouldSend,
-        cooldown_hours: overrideCooldown,
-        total_ever: totalEver || 0
+        "phase": "prefs-first",
+        "action": "throttle_check",
+        "user_id": testUserId,
+        "totalEver": totalEver || 0,
+        "recent_12h": recentCount || 0,
+        "throttle_applied": throttleApplied,
+        "throttle_reason": throttleReason,
+        "would_send": wouldSend,
+        "cooldown_hours": overrideCooldown,
+        "resolved_tags": resolvedTags?.resolved_tags || [],
+        "qualified_items_count": qualifiedItemsCount || 0,
+        "candidates_count": candidates?.length || 0
       }))
 
       const response = {
@@ -213,7 +226,7 @@ serve(async (req) => {
       })
     }
 
-    // TASK 7: Boot logging with structured JSON format
+    // TASK 8: Boot logging with structured JSON format
     console.log(JSON.stringify({
       "phase": "prefs-first",
       "action": "boot",
@@ -478,7 +491,7 @@ serve(async (req) => {
         // Select best candidate (highest score)
         const bestCandidate = candidates[0]
         
-        // TASK 7: Candidate pick logging 
+        // TASK 2: Candidate pick logging 
         console.log(JSON.stringify({
           "phase": "prefs-first",
           "action": "candidate_pick",
@@ -573,7 +586,7 @@ serve(async (req) => {
 
         const wouldSend = !throttleApplied && candidatesCount > 0
 
-        // TASK 7: Enhanced throttle check logging
+        // TASK 3: Enhanced throttle check logging
         console.log(JSON.stringify({
           "phase": "prefs-first",
           "action": "throttle_check",
@@ -590,7 +603,7 @@ serve(async (req) => {
         }))
         
         if (!throttleApplied && bestCandidate) {
-          // TASK 3: Simple dedupe key with user + candidate id
+          // TASK 4: Simple dedupe key with user + candidate id, use Service Role for bypass RLS
           const dedupeKey = `${userId}-${bestCandidate.feed_item_id}`
           
           const { data: suggestion, error: suggestionError } = await supabase
@@ -607,32 +620,29 @@ serve(async (req) => {
 
           if (suggestionError) {
             console.log(JSON.stringify({
-              phase: "prefs-first",
-              action: "insert_failed",
-              user_id: userId,
-              error: suggestionError.message
+              "phase": "prefs-first",
+              "action": "insert_failed",
+              "user_id": userId,
+              "error": suggestionError.message
             }))
             console.error(`🔔 [NOTIFIER-ENGINE] Error creating preference suggestion for user ${userId}:`, suggestionError)
             continue
           }
 
-          // TASK 7: Structured logging after successful insert
+          // TASK 4: Structured logging after successful insert
           console.log(JSON.stringify({
             "phase": "prefs-first",
             "action": "suggestion_inserted",
             "user_id": userId,
             "item_id": bestCandidate.feed_item_id,
-            "reason": "preferences_match",
-            "score": bestCandidate.score,
-            "row_id": suggestion.id,
-            "sent_at": null
+            "row_id": suggestion.id
           }))
 
           notificationsQueued++
 
           // Try to send the push notification via existing webpush-send function
           try {
-            // TASK 7: Pre-send logging
+            // TASK 6: Pre-send logging
             console.log(JSON.stringify({
               "phase": "prefs-first",
               "action": "send_start", 
@@ -641,7 +651,7 @@ serve(async (req) => {
               "item_id": bestCandidate.feed_item_id
             }))
 
-          // TASK 1: Lookup subscription PRIMA del push usando v_latest_webpush_subscription
+          // TASK 5: Lookup subscription PRIMA del push usando v_latest_webpush_subscription
             let sub, subErr
             try {
               // Try with the view first (preferred)
@@ -682,7 +692,7 @@ serve(async (req) => {
             }
 
             if (sub) {
-              // TASK 1: Log subscription found
+              // TASK 5: Log subscription found
               console.log(JSON.stringify({
                 "phase": "prefs-first",
                 "action": "subscription_found",
@@ -745,10 +755,12 @@ serve(async (req) => {
 
                 notificationsSent++
                 
-                // TASK 7: Post-send success logging
+                // TASK 6: Post-send success logging
                 console.log(JSON.stringify({
                   "phase": "prefs-first",
                   "action": "send_done",
+                  "user_id": userId,
+                  "suggestion_id": suggestion.id,
                   "status": "success",
                   "sent_at": new Date().toISOString()
                 }))
@@ -757,10 +769,12 @@ serve(async (req) => {
               } else {
                 const errorText = await pushResponse.text()
                 
-                // TASK 7: Post-send failure logging
+                // TASK 6: Post-send failure logging
                 console.log(JSON.stringify({
                   "phase": "prefs-first",
                   "action": "send_done",
+                  "user_id": userId,
+                  "suggestion_id": suggestion.id,
                   "status": "failed",
                   "error": errorText
                 }))
@@ -769,7 +783,7 @@ serve(async (req) => {
               }
               }
             } else {
-              // TASK 1: Log no active subscription found e SKIP push (ma l'INSERT resta)
+              // TASK 5: Log no active subscription found e SKIP push (ma l'INSERT resta)
               console.log(JSON.stringify({
                 "phase": "prefs-first",
                 "action": "no_active_subscription",
