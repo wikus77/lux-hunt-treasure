@@ -214,35 +214,57 @@ serve(async (req) => {
       })
     }
 
-    // TASK 1: Boot logging with service key check
+    // TASK 1: Boot logging with service key check and enum hardening
     console.log(JSON.stringify({
       phase: 'prefs-first',
       action: 'boot',
       mode: 'prod',
-      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      enum_hardened: true
     }))
     
     console.log('🔔 [NOTIFIER-ENGINE] Starting intelligent notifications processing...')
 
-    // TASK C: Start with preferences-first approach
-    // Get users with active notification preferences
+    // TASK C: Start with preferences-first approach - HARDENED enumeration
+    // Get users with active notification preferences with rigid filtering
     const { data: prefUsers, error: prefError } = await supabase
       .from('notification_preferences')
-      .select('user_id')
+      .select('user_id', { head: false })
       .eq('enabled', true)
-      .neq('user_id', null)
 
     if (prefError) {
-      console.error('Failed to fetch preference users:', prefError)
+      console.log(JSON.stringify({ 
+        phase: 'prefs-first', 
+        action: 'enum_error', 
+        code: prefError.code, 
+        message: prefError.message 
+      }))
+      return new Response('enum_error', { status: 500, headers: corsHeaders })
     }
 
-    const distinctUserIds = [...new Set(prefUsers?.map(p => p.user_id) || [])]
+    // Filter client-side against dirty values to prevent 22P02
+    const validUserIds = Array.from(
+      new Set(
+        (prefUsers ?? [])
+          .map(r => r.user_id)
+          .filter(u => !!u && typeof u === 'string' ? u.toLowerCase() !== 'null' && u.trim() !== '' : !!u)
+      )
+    )
     
     console.log(JSON.stringify({
       phase: "prefs-first",
       step: "enumeration",
-      users_with_prefs: distinctUserIds.length
+      users_with_prefs: validUserIds.length
     }))
+
+    if (validUserIds.length === 0) {
+      console.log(JSON.stringify({ 
+        phase: 'prefs-first', 
+        step: 'main_processing', 
+        users_count: 0 
+      }))
+      return new Response('ok', { status: 200, headers: corsHeaders })
+    }
 
     // Get active user profiles (updated in last 30 days) as fallback
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
@@ -276,22 +298,48 @@ serve(async (req) => {
     console.log(JSON.stringify({
       phase: "prefs-first",
       step: "main_processing",
-      users_count: distinctUserIds.length
+      users_count: validUserIds.length
     }))
 
-    for (const userId of distinctUserIds) {
+    for (const userId of validUserIds) {
       try {
         // Skip if user already processed in signals branch
         if (profiles && profiles.some(p => p.user_id === userId)) {
           continue
         }
 
-        // Get resolved tags for this user
-        const { data: resolvedTagsData } = await supabase
-          .from('v_user_resolved_tags')
-          .select('resolved_tags')
-          .eq('user_id', userId)
-          .single()
+        // Get resolved tags for this user - wrapped for 22P02 protection
+        let resolvedTagsData
+        try {
+          const result = await supabase
+            .from('v_user_resolved_tags')
+            .select('resolved_tags')
+            .eq('user_id', userId)
+            .single()
+          resolvedTagsData = result.data
+          if (result.error && result.error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: result.error.message,
+              user_id: userId
+            }))
+            continue
+          }
+        } catch (error: any) {
+          if (error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: error.message,
+              user_id: userId
+            }))
+            continue
+          }
+          throw error
+        }
 
         const resolvedTags = resolvedTagsData?.resolved_tags || []
         
@@ -305,13 +353,42 @@ serve(async (req) => {
           continue
         }
 
-        // Check daily quota for preferences users
+        // Check daily quota for preferences users - wrapped for 22P02 protection
         const today = new Date().toISOString().split('T')[0]
-        const { data: quota } = await supabase
-          .from('notification_quota')
-          .select('*')
-          .eq('user_id', userId)
-          .single()
+        let quota
+        try {
+          const result = await supabase
+            .from('notification_quota')
+            .select('*')
+            .eq('user_id', userId)
+            .single()
+          quota = result.data
+          if (result.error && result.error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: result.error.message,
+              operation: 'quota_check',
+              user_id: userId
+            }))
+            continue
+          }
+        } catch (error: any) {
+          if (error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: error.message,
+              operation: 'quota_check',
+              user_id: userId
+            }))
+            continue
+          }
+          // Non-22P02 errors can be ignored for quota (defaulting to no quota)
+          quota = null
+        }
 
         const isQuotaReset = !quota || quota.last_reset.split('T')[0] !== today
         const currentSent = isQuotaReset ? 0 : quota.sent_today
@@ -334,12 +411,41 @@ serve(async (req) => {
           step: "getting_candidates"
         }))
 
-        // Get candidates using same function as dry-run (fresh feed items matching user preferences)
-        const { data: candidates, error: candidatesError } = await supabase
-          .rpc('fn_candidates_for_user', {
-            p_user_id: userId,
-            p_limit: 5  // Match dry-run limit
-          })
+        // Get candidates using same function as dry-run (fresh feed items matching user preferences) - wrapped for 22P02 protection
+        let candidates, candidatesError
+        try {
+          const result = await supabase
+            .rpc('fn_candidates_for_user', {
+              p_user_id: userId,
+              p_limit: 5  // Match dry-run limit
+            })
+          candidates = result.data
+          candidatesError = result.error
+          if (result.error && result.error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: result.error.message,
+              operation: 'candidates_fetch',
+              user_id: userId
+            }))
+            continue
+          }
+        } catch (error: any) {
+          if (error.code === '22P02') {
+            console.log(JSON.stringify({ 
+              phase: 'prefs-first', 
+              action: 'uuid_syntax_error', 
+              code: '22P02', 
+              details: error.message,
+              operation: 'candidates_fetch',
+              user_id: userId
+            }))
+            continue
+          }
+          throw error
+        }
 
         const candidatesCount = candidates?.length || 0
 
