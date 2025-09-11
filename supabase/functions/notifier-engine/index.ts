@@ -50,7 +50,7 @@ serve(async (req) => {
     const overrideCooldown = url.searchParams.get('cooldown') ? parseInt(url.searchParams.get('cooldown')!) : cooldownHours
     const isDiag = url.searchParams.get('diag') === '1'
     
-    // TASK A: Enhanced dry-run authentication
+    // TASK A: Fixed dry-run authentication - accept ANON_KEY OR diag bypass
     if (isDryRun) {
       const authHeader = req.headers.get('authorization')
       const isValidAuth = authHeader && (
@@ -60,15 +60,29 @@ serve(async (req) => {
       const allowedOrigin = req.headers.get('origin')
       const isDiagAllowed = isDiag && (
         allowedOrigin?.includes('lovableproject.com') || 
-        allowedOrigin?.includes('localhost')
+        allowedOrigin?.includes('localhost') ||
+        allowedOrigin?.includes('127.0.0.1')
       )
       
+      // Allow if valid auth OR if diag mode from allowed origin
       if (!isValidAuth && !isDiagAllowed) {
+        console.log(JSON.stringify({
+          phase: "dry_run_auth_failed",
+          auth_header_present: !!authHeader,
+          origin: allowedOrigin,
+          diag_mode: isDiag
+        }))
         return new Response(JSON.stringify({ 
-          error: 'Missing authorization header or invalid diag mode' 
+          error: 'Missing authorization header or invalid diag mode',
+          phase: "auth_error",
+          details: "Provide Authorization: Bearer <ANON_KEY> or use diag=1 from allowed origin"
         }), {
           status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store'
+          }
         })
       }
     }
@@ -133,7 +147,7 @@ serve(async (req) => {
         .gte('score', 0.72)
         .gte('published_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
 
-      // TASK B: Enhanced JSON logging
+      // TASK B: Enhanced JSON logging with all required fields
       console.log(JSON.stringify({
         phase: "prefs-first",
         user_id: testUserId,
@@ -143,7 +157,8 @@ serve(async (req) => {
         throttle_applied: throttleApplied,
         throttle_reason: throttleReason,
         would_send: wouldSend,
-        cooldown_hours: overrideCooldown
+        cooldown_hours: overrideCooldown,
+        total_ever: totalEver || 0
       }))
 
       const response = {
@@ -368,7 +383,7 @@ serve(async (req) => {
 
         const wouldSend = !throttleApplied && candidatesCount > 0
 
-        // TASK B: Enhanced JSON logging for decision point
+        // TASK B: Enhanced JSON logging for decision point with all required fields
         console.log(JSON.stringify({
           phase: "prefs-first",
           user_id: userId,
@@ -378,7 +393,8 @@ serve(async (req) => {
           throttle_applied: throttleApplied,
           throttle_reason: throttleReason,
           would_send: wouldSend,
-          cooldown_hours: cooldownHours
+          cooldown_hours: cooldownHours,
+          total_ever: totalEver || 0
         }))
         
         if (!throttleApplied && bestCandidate) {
