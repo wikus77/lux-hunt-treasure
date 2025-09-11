@@ -79,12 +79,16 @@ export const initDiagnostics = () => {
     ...(window as any).__M1_NOTIF_TEST__,
     
     async dryRunPref(userId: string, max=5, cooldownHours?: number) {
-      const qs = new URLSearchParams({ user_id:userId, max:String(max) });
+      const qs = new URLSearchParams({ 
+        user_id: userId, 
+        max: String(max),
+        diag: '1'
+      });
       if (cooldownHours != null) qs.set('cooldown', String(cooldownHours));
       
       const baseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine';
       const res = await fetch(`${baseUrl}/dry-run?${qs.toString()}`, { 
-        method:'POST',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
@@ -99,13 +103,18 @@ export const initDiagnostics = () => {
       
       const json = await res.json();
       
-      if (Array.isArray(json?.candidates_sample)) {
+      // TASK 4: Enhanced console.table display of candidates
+      if (Array.isArray(json?.candidates_sample) && json.candidates_sample.length > 0) {
+        console.log('🎯 Notifier Engine - Top Candidates:');
         console.table(json.candidates_sample.map((c:any)=>({
-          id: c.id?.substring(0,8) + '...',
-          title: c.title?.substring(0,50) + '...',
-          score: c.score,
-          tags: c.tags?.slice(0,3).join(',')
+          ID: c.id?.substring(0,8) + '...',
+          Title: c.title?.substring(0,50) + '...',
+          Score: c.score?.toFixed(2),
+          Tags: c.tags?.slice(0,3).join(','),
+          Published: c.published_at ? new Date(c.published_at).toLocaleDateString() : 'N/A'
         })));
+      } else {
+        console.log('🎯 Notifier Engine - No candidates found');
       }
       
       return json;
