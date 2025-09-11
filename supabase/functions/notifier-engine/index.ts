@@ -418,6 +418,18 @@ serve(async (req) => {
             continue
           }
 
+          // Structured logging after successful insert
+          console.log(JSON.stringify({
+            phase: 'prefs-first',
+            action: 'suggestion_inserted',
+            user_id: userId,
+            item_id: bestCandidate.feed_item_id,
+            reason: 'preferences_match',
+            score: bestCandidate.score,
+            row_id: suggestion.id,
+            sent_at: null
+          }))
+
           notificationsQueued++
 
           // Try to send the push notification via existing webpush-send function
@@ -605,6 +617,18 @@ serve(async (req) => {
               console.error(`🔔 [NOTIFIER-ENGINE] Error creating suggestion for user ${profile.user_id}:`, suggestionError)
               continue
             }
+
+            // Structured logging after successful insert
+            console.log(JSON.stringify({
+              phase: 'signals-based',
+              action: 'suggestion_inserted',
+              user_id: profile.user_id,
+              item_id: bestMatch.item.id,
+              reason: bestMatch.reason,
+              score: bestMatch.score,
+              row_id: suggestion.id,
+              sent_at: null
+            }))
 
             notificationsQueued++
 
