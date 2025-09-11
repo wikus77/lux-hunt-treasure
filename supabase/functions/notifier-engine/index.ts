@@ -33,12 +33,29 @@ serve(async (req) => {
   try {
     // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const functionsUrl = `${supabaseUrl}/functions/v1`
     
     // Configurable cooldown (default 12 hours)
     const cooldownHours = parseInt(Deno.env.get('NOTIFIER_PREFS_COOLDOWN_HOURS') || '12')
+    
+    // TASK 1: Service role key validation
+    if (!supabaseServiceKey) {
+      console.log(JSON.stringify({
+        phase: 'prefs-first',
+        action: 'boot',
+        mode: 'prod',
+        hasServiceKey: false
+      }))
+      return new Response(JSON.stringify({ 
+        error: 'Missing SUPABASE_SERVICE_ROLE_KEY environment variable',
+        phase: "service_key_error"
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
@@ -317,11 +334,11 @@ serve(async (req) => {
           step: "getting_candidates"
         }))
 
-        // Get candidates using new function (fresh feed items matching user preferences)
+        // Get candidates using same function as dry-run (fresh feed items matching user preferences)
         const { data: candidates, error: candidatesError } = await supabase
           .rpc('fn_candidates_for_user', {
             p_user_id: userId,
-            p_limit: 3
+            p_limit: 5  // Match dry-run limit
           })
 
         const candidatesCount = candidates?.length || 0
