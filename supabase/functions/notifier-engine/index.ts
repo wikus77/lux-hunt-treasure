@@ -197,6 +197,14 @@ serve(async (req) => {
       })
     }
 
+    // TASK 1: Boot logging with service key check
+    console.log(JSON.stringify({
+      phase: 'prefs-first',
+      action: 'boot',
+      mode: 'prod',
+      hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    }))
+    
     console.log('🔔 [NOTIFIER-ENGINE] Starting intelligent notifications processing...')
 
     // TASK C: Start with preferences-first approach
@@ -353,6 +361,15 @@ serve(async (req) => {
         // Select best candidate (highest score)
         const bestCandidate = candidates[0]
         
+        // TASK 2: Candidate pick logging
+        console.log(JSON.stringify({
+          phase: 'prefs-first',
+          action: 'candidate_pick',
+          candidate_id: bestCandidate.feed_item_id,
+          title: bestCandidate.title,
+          score: bestCandidate.score
+        }))
+        
         // Enhanced throttling with first notification logic
         const cooldownTime = new Date(Date.now() - cooldownHours * 60 * 60 * 1000).toISOString()
         
@@ -400,7 +417,7 @@ serve(async (req) => {
         }))
         
         if (!throttleApplied && bestCandidate) {
-          // Queue the notification suggestion
+          // TASK 3: Simple dedupe key with user + candidate id
           const dedupeKey = `${userId}-${bestCandidate.feed_item_id}`
           
           const { data: suggestion, error: suggestionError } = await supabase
