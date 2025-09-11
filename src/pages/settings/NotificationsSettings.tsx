@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
 import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import NotificationsStatus from '@/components/NotificationsStatus';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -250,6 +251,9 @@ const NotificationsSettings: React.FC = () => {
           {/* Push Notifications using UnifiedPushToggle */}
           <div className="border-t border-white/10 pt-4">
             <UnifiedPushToggle className="w-full" />
+            <div className="mt-4">
+              <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
+            </div>
           </div>
 
           {/* Debug Panel for Push Notifications */}
