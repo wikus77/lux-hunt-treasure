@@ -71,44 +71,94 @@ export function PushConsole() {
         return;
       }
 
+      // Generate invocation ID for correlation
+      const invocationId = crypto.randomUUID();
+
+      // Prepare payload for webpush-admin-broadcast
       const targetPayload = target === "all" 
         ? { all: true }
         : { user_ids_csv: userIdsCsv.trim() };
 
-      const payload = {
+      const webpushPayload = {
         title: title.trim(),
         body: body.trim(),
         url: url.trim() || "/",
         target: targetPayload
       };
 
-      console.log("📤 Sending admin broadcast:", payload);
+      // Prepare payload for mirror-push-logtee (different format)
+      const logteeTarget = target === "all" 
+        ? "all" as const
+        : { userIds: userIdsCsv.trim().split(',').map(id => id.trim()).filter(Boolean) };
 
-      const projectRef = "vkjrqirvdvjbemsfzxof"; // Your project ref
-      const response = await fetch(`https://${projectRef}.functions.supabase.co/webpush-admin-broadcast`, {
-        method: "POST",
-        mode: "cors",
-        headers: {
-          "content-type": "application/json",
-          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
-          "authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const logteePayload = {
+        title: title.trim(),
+        body: body.trim(),
+        url: url.trim() || "/",
+        target: logteeTarget,
+        invocation_id: invocationId
+      };
 
-      const json = await response.json().catch(() => ({}));
-      const resultData = { status: response.status, ...json };
-      
-      setResult(resultData);
+      console.log("📤 Sending admin broadcast:", webpushPayload);
+      console.log("📋 Logging to TEE:", logteePayload);
 
-      if (response.ok && json.success !== false) {
-        toast.success(`✅ Push sent: ${json.success}/${json.total} successful`);
-      } else {
-        if (response.status === 403) {
-          toast.error("❌ Accesso non autorizzato: aggiungi l'UUID all'elenco ADMIN_USER_IDS");
+      const projectRef = "vkjrqirvdvjbemsfzxof";
+      const headers = {
+        "content-type": "application/json",
+        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+        "authorization": `Bearer ${token}`,
+      };
+
+      // Call both functions in parallel with Promise.allSettled
+      const [mainResult, logteeResult] = await Promise.allSettled([
+        fetch(`https://${projectRef}.functions.supabase.co/webpush-admin-broadcast`, {
+          method: "POST",
+          mode: "cors",
+          headers,
+          body: JSON.stringify(webpushPayload),
+        }),
+        fetch(`https://${projectRef}.functions.supabase.co/mirror-push-logtee`, {
+          method: "POST",
+          mode: "cors",
+          headers,
+          body: JSON.stringify(logteePayload),
+        }).catch(err => {
+          console.warn("TEE logging failed (non-blocking):", err);
+          return null;
+        })
+      ]);
+
+      // Process main result (webpush-admin-broadcast)
+      if (mainResult.status === 'fulfilled') {
+        const response = mainResult.value;
+        const json = await response.json().catch(() => ({}));
+        const resultData = { status: response.status, ...json };
+        
+        // Add TEE status to result for debugging
+        if (logteeResult.status === 'fulfilled' && logteeResult.value) {
+          resultData.tee_logged = true;
         } else {
-          toast.error(`❌ Error: ${json.error || 'Unknown error'}`);
+          resultData.tee_logged = false;
+          resultData.tee_error = logteeResult.status === 'rejected' ? logteeResult.reason?.message : 'unknown';
         }
+        
+        setResult(resultData);
+
+        if (response.ok && json.success !== false) {
+          const teeStatus = resultData.tee_logged ? " (logged)" : " (log failed)";
+          toast.success(`✅ Push sent: ${json.success}/${json.total} successful${teeStatus}`);
+        } else {
+          if (response.status === 403) {
+            toast.error("❌ Accesso non autorizzato: aggiungi l'UUID all'elenco ADMIN_USER_IDS");
+          } else {
+            toast.error(`❌ Error: ${json.error || 'Unknown error'}`);
+          }
+        }
+      } else {
+        // Main function failed
+        console.error("Push broadcast error:", mainResult.reason);
+        toast.error(`Network error: ${mainResult.reason?.message || 'Unknown error'}`);
+        setResult({ error: mainResult.reason?.message || 'Unknown error' });
       }
 
     } catch (error: any) {
