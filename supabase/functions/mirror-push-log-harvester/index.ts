@@ -106,105 +106,153 @@ serve(async (req) => {
 
     console.log(`🔍 [HARVESTER] Starting harvest since: ${sinceTimestamp}`);
 
-    // Query edge function logs for webpush-admin-broadcast
-    const { data: logs, error: logsError } = await supabase
-      .rpc('exec_sql', {
-        sql: `
-          SELECT id, function_edge_logs.timestamp, event_message, metadata, 
-                 m.function_id, m.execution_time_ms, m.deployment_id, m.version
-          FROM function_edge_logs
-          CROSS JOIN unnest(metadata) as m
-          WHERE m.function_id IN (
-            SELECT function_id FROM function_edge_logs 
-            CROSS JOIN unnest(metadata) as meta 
-            WHERE event_message LIKE '%webpush-admin-broadcast%' 
-            OR meta.function_name = 'webpush-admin-broadcast'
-            LIMIT 1
-          )
-          AND function_edge_logs.timestamp >= '${sinceTimestamp}'
-          ORDER BY function_edge_logs.timestamp DESC
-          LIMIT 1000
-        `
-      });
-
-    if (logsError) {
-      console.error('❌ [HARVESTER] Error fetching logs:', logsError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch logs' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    console.log(`📊 [HARVESTER] Found ${logs?.length || 0} log entries`);
-
     const notifications: ParsedNotification[] = [];
     const processedExecutions = new Set<string>();
 
-    // Parse logs and extract notification data
-    for (const log of logs || []) {
-      try {
-        const executionId = log.metadata?.[0]?.execution_id || log.id;
-        
-        // Skip if already processed
-        if (processedExecutions.has(executionId)) continue;
-        processedExecutions.add(executionId);
-
-        // Parse the log message for notification details
-        let title = null, body = null, url = null, endpoint = null;
-        let sentBy = null, provider = null, statusCode = null;
-
-        // Extract from event_message if it contains JSON
-        if (log.event_message) {
-          try {
-            // Look for JSON patterns in the message
-            const jsonMatch = log.event_message.match(/\{.*\}/);
-            if (jsonMatch) {
-              const parsed = JSON.parse(jsonMatch[0]);
-              title = parsed.title || parsed.notification?.title;
-              body = parsed.body || parsed.notification?.body;
-              url = parsed.url || parsed.notification?.url;
-            }
-          } catch (e) {
-            // Try to extract key-value pairs
-            const titleMatch = log.event_message.match(/title[:\s]+"([^"]+)"/i);
-            const bodyMatch = log.event_message.match(/body[:\s]+"([^"]+)"/i);
-            const urlMatch = log.event_message.match(/url[:\s]+"([^"]+)"/i);
-            
-            if (titleMatch) title = titleMatch[1];
-            if (bodyMatch) body = bodyMatch[1];
-            if (urlMatch) url = urlMatch[1];
-          }
-        }
-
-        // Extract metadata
-        const metadata = log.metadata?.[0];
-        if (metadata?.response?.status_code) {
-          statusCode = metadata.response.status_code;
-        }
-
-        // Try to determine provider from endpoint patterns
-        if (endpoint) {
-          if (endpoint.includes('fcm.googleapis.com')) provider = 'fcm';
-          else if (endpoint.includes('web.push.apple.com')) provider = 'apns';
-          else if (endpoint.includes('push.mozilla.org')) provider = 'mozilla';
-        }
-
-        notifications.push({
-          execution_id: executionId,
-          timestamp: log.timestamp,
-          sent_by: sentBy,
-          provider: provider,
-          status_code: statusCode,
-          title: title,
-          body: body,
-          url: url,
-          endpoint: endpoint ? (endpoint.length > 100 ? endpoint.substring(0, 100) + '...' : endpoint) : null,
-          project_ref: 'vkjrqirvdvjbemsfzxof'
+    // 1. Query edge function logs for webpush-admin-broadcast using analytics query
+    try {
+      const { data: edgeLogs, error: logsError } = await supabase
+        .rpc('exec_sql', {
+          sql: `
+            SELECT id, function_edge_logs.timestamp, event_message, 
+                   response.status_code, request.method, m.function_id, 
+                   m.execution_time_ms, m.deployment_id, m.version
+            FROM function_edge_logs
+            CROSS JOIN unnest(metadata) as m
+            CROSS JOIN unnest(m.response) as response
+            CROSS JOIN unnest(m.request) as request
+            WHERE event_message LIKE '%webpush-admin-broadcast%'
+            AND function_edge_logs.timestamp >= '${sinceTimestamp}'
+            ORDER BY function_edge_logs.timestamp DESC
+            LIMIT 500
+          `
         });
 
-      } catch (error) {
-        console.error('❌ [HARVESTER] Error parsing log entry:', error);
+      if (!logsError && edgeLogs) {
+        console.log(`📊 [HARVESTER] Found ${edgeLogs.length} edge function logs`);
+        
+        for (const log of edgeLogs) {
+          const executionId = log.deployment_id || log.id;
+          if (processedExecutions.has(executionId)) continue;
+          processedExecutions.add(executionId);
+
+          // Extract basic metadata from edge function logs
+          let title = null, body = null, url = null, endpoint = null;
+          let sentBy = null, provider = null;
+
+          // Try to parse event_message for notification details
+          if (log.event_message) {
+            try {
+              const jsonMatch = log.event_message.match(/\{.*\}/s);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                title = parsed.title || parsed.notification?.title;
+                body = parsed.body || parsed.notification?.body; 
+                url = parsed.url || parsed.notification?.url;
+              }
+            } catch (e) {
+              // Extract from text patterns
+              const titleMatch = log.event_message.match(/title[:\s]*["']([^"']+)["']/i);
+              const bodyMatch = log.event_message.match(/body[:\s]*["']([^"']+)["']/i);
+              if (titleMatch) title = titleMatch[1];
+              if (bodyMatch) body = bodyMatch[1];
+            }
+          }
+
+          notifications.push({
+            execution_id: executionId,
+            timestamp: log.timestamp,
+            sent_by: sentBy, // Not available in edge logs
+            provider: provider,
+            status_code: log.status_code,
+            title: title,
+            body: body,
+            url: url,
+            endpoint: endpoint,
+            project_ref: 'vkjrqirvdvjbemsfzxof'
+          });
+        }
       }
+    } catch (error) {
+      console.error('❌ [HARVESTER] Error fetching edge logs:', error);
+    }
+
+    // 2. Query public.push_notification_logs table
+    try {
+      const { data: pushLogs, error: pushLogsError } = await supabase
+        .from('push_notification_logs')
+        .select('*')
+        .gte('created_at', sinceTimestamp)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (!pushLogsError && pushLogs) {
+        console.log(`📊 [HARVESTER] Found ${pushLogs.length} push notification logs`);
+        
+        for (const log of pushLogs) {
+          const executionId = `push_log_${log.id}`;
+          if (processedExecutions.has(executionId)) continue;
+          processedExecutions.add(executionId);
+
+          // Determine provider from endpoint
+          let provider = null;
+          if (log.endpoint) {
+            if (log.endpoint.includes('fcm.googleapis.com')) provider = 'fcm';
+            else if (log.endpoint.includes('web.push.apple.com')) provider = 'apns';
+            else if (log.endpoint.includes('push.mozilla.org')) provider = 'mozilla';
+          }
+
+          notifications.push({
+            execution_id: executionId,
+            timestamp: log.created_at,
+            sent_by: log.user_id, // Use user_id as sent_by
+            provider: provider,
+            status_code: log.success ? 200 : 500,
+            title: log.title,
+            body: log.body,
+            url: log.url,
+            endpoint: log.endpoint ? (log.endpoint.length > 100 ? log.endpoint.substring(0, 100) + '...' : log.endpoint) : null,
+            project_ref: 'vkjrqirvdvjbemsfzxof'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ [HARVESTER] Error fetching push logs:', error);
+    }
+
+    // 3. Query public.user_notifications table
+    try {
+      const { data: userNotifications, error: userNotificationsError } = await supabase
+        .from('user_notifications')
+        .select('*')
+        .gte('created_at', sinceTimestamp)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      if (!userNotificationsError && userNotifications) {
+        console.log(`📊 [HARVESTER] Found ${userNotifications.length} user notifications`);
+        
+        for (const notification of userNotifications) {
+          const executionId = `user_notif_${notification.id}`;
+          if (processedExecutions.has(executionId)) continue;
+          processedExecutions.add(executionId);
+
+          notifications.push({
+            execution_id: executionId,
+            timestamp: notification.created_at,
+            sent_by: notification.created_by || null,
+            provider: null, // Not available in user_notifications
+            status_code: null, // Not available
+            title: notification.title,
+            body: notification.message,
+            url: notification.action_url,
+            endpoint: null,
+            project_ref: 'vkjrqirvdvjbemsfzxof'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ [HARVESTER] Error fetching user notifications:', error);
     }
 
     console.log(`🔄 [HARVESTER] Parsed ${notifications.length} notification records`);
