@@ -193,15 +193,13 @@ Deno.serve(async (req) => {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       
-      const { data: todayLogs } = await supabase
-        .schema('geo_push')
-        .from('delivery_log')
-        .select('id')
-        .eq('user_id', position.user_id)
-        .eq('sent', true)
-        .gte('created_at', todayStart.toISOString());
+      // Get daily count from delivery state view (read-only)
+      const { data: dailyDeliveries } = await supabase
+        .from('geo_push_delivery_state_v')
+        .select('sent_count')
+        .eq('user_id', position.user_id);
 
-      const dailyCount = todayLogs?.length || 0;
+      const dailyCount = dailyDeliveries?.reduce((sum, state) => sum + (state.sent_count || 0), 0) || 0;
       
       if (dailyCount >= config.daily_cap) {
         // Log daily cap reached
@@ -231,10 +229,9 @@ Deno.serve(async (req) => {
         if (distance <= radius) {
           // User is within geofence
           
-          // Get existing state
+          // Get existing state via public view (read-only)
           const { data: existingState } = await supabase
-            .schema('geo_push')
-            .from('delivery_state')
+            .from('geo_push_delivery_state_v')
             .select('*')
             .eq('user_id', position.user_id)
             .eq('marker_id', marker.id)
