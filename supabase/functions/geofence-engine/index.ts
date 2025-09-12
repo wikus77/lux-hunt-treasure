@@ -64,9 +64,9 @@ Deno.serve(async req => {
       positions = pos ?? [];
     }
 
-    // 3) Marker attivi (public)
+    // 3) Marker attivi (unificati: classici + QR)
     const { data: markers, error: mErr } =
-      await sb.from("markers").select("id,title,lat,lng,active").eq("active",true);
+      await sb.from("geo_push_markers_v").select("id,title,lat,lng");
     if(mErr) throw new Error("Failed to fetch markers");
     if(!positions.length || !markers?.length){
       return new Response(JSON.stringify({success:true, processed:0, sent:0, dry, message:"no positions or markers"}),{headers:{...corsHeaders,"Content-Type":"application/json"}});
