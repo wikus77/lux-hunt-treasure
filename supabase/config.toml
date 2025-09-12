@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.mirror-push-log-harvester]
 verify_jwt = false
+
+[functions.webpush-admin-broadcast]
+verify_jwt = true

@@ -15,7 +15,7 @@ const cors = (req: Request, init: ResponseInit = {}, body?: BodyInit) => {
   h.set("access-control-allow-origin", allow.includes(origin) ? origin : allow[0]);
   h.set("vary", "origin");
   h.set("access-control-allow-methods", "POST, OPTIONS");
-  h.set("access-control-allow-headers", "authorization, apikey, content-type, x-client-info");
+  h.set("access-control-allow-headers", "authorization, apikey, content-type, x-client-info, x-admin-token");
   return new Response(body, { ...init, headers: h });
 };
 
@@ -25,15 +25,47 @@ const normalize = (ep: string) =>
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return cors(req, { status: 204 });
   try {
+    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
     const auth = req.headers.get("authorization") ?? "";
-    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-    if (!token) return cors(req, { status: 401 }, JSON.stringify({ error: "Missing bearer" }));
+    const apiKey = req.headers.get("apikey") ?? "";
+    const xAdmin = req.headers.get("x-admin-token") ?? "";
+    const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    const SRV = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN") || "";
 
-    // verify minimal JWT and pull `sub`
-    const jwtPayload = JSON.parse(atob(token.split(".")[1] || "e30="));
-    const uid = jwtPayload?.sub as string | undefined;
+    if (!bearer && !apiKey && !xAdmin) {
+      return cors(req, { status: 401 }, JSON.stringify({ error: "Missing credentials" }));
+    }
+
+    let isService = false;
+    let uid: string | undefined;
+
+    // Service-role acceptance via Authorization or apikey
+    if (bearer && SRV && bearer === SRV) isService = true;
+    if (!isService && apiKey && SRV && apiKey === SRV) isService = true;
+
+    // Try decode JWT to detect service_role or extract sub for admin allowlist
+    if (!isService && bearer) {
+      try {
+        const jwtPayload = JSON.parse(atob(bearer.split(".")[1] || "e30="));
+        uid = jwtPayload?.sub as string | undefined;
+        const role = jwtPayload?.role || jwtPayload?.user_role || jwtPayload?.app_metadata?.role;
+        if (role === "service_role") isService = true;
+      } catch {
+        // ignore decode errors
+      }
+    }
+
+    // Fallback admin token header
+    if (!isService && ADMIN_TOKEN && xAdmin && xAdmin === ADMIN_TOKEN) isService = true;
+
+    // Admin user allowlist
     const admins = (Deno.env.get("ADMIN_USER_IDS") ?? "").split(",").map(s => s.trim()).filter(Boolean);
-    if (!uid || !admins.includes(uid)) return cors(req, { status: 403 }, JSON.stringify({ error: "Forbidden" }));
+    const isAdminUser = !!uid && admins.includes(uid);
+
+    if (!(isService || isAdminUser)) {
+      return cors(req, { status: 403 }, JSON.stringify({ error: "Forbidden" }));
+    }
 
     const { title, body, url, target } = await req.json();
     if (!title || !body) return cors(req, { status: 400 }, JSON.stringify({ error: "Missing title/body" }));
