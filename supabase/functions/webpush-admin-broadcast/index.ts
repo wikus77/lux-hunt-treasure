@@ -45,6 +45,16 @@ Deno.serve(async (req) => {
       (bearer && SERVICE_ROLE_KEY && bearer === SERVICE_ROLE_KEY)
     );
 
+    // M1SSION™ diagnostic (no secrets): which auth method matched
+    const usedAuth = (xAdmin && PUSH_ADMIN_TOKEN && xAdmin === PUSH_ADMIN_TOKEN)
+      ? 'x-admin-token'
+      : (apiKey && SERVICE_ROLE_KEY && apiKey === SERVICE_ROLE_KEY)
+      ? 'apikey'
+      : (bearer && SERVICE_ROLE_KEY && bearer === SERVICE_ROLE_KEY)
+      ? 'bearer'
+      : 'none';
+    console.log('[M1SSION] webpush-admin-broadcast auth_method=' + usedAuth);
+
     if (!isAuthorized) {
       return cors(req, { status: 401 }, JSON.stringify({ error: "Unauthorized access" }));
     }
