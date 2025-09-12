@@ -74,7 +74,8 @@ Deno.serve(async (req) => {
 
     // Get the last harvest timestamp
     const { data: watermark, error: watermarkError } = await supabase
-      .from('mirror_push.sync_watermarks')
+      .schema('mirror_push')
+      .from('sync_watermarks')
       .select('last_run_at')
       .eq('name', 'harvester')
       .single();
@@ -105,13 +106,89 @@ Deno.serve(async (req) => {
 
     if (logsError) {
       console.error('❌ Error fetching logs:', logsError);
-      // Create a fallback response if no logs API access
-      console.log('⚠️ No analytics access, using fallback method');
-      
+      console.log('⚠️ No analytics access, using fallback from public.push_notification_logs');
+
+      // Fallback: ingest incremental deltas from panel logs
+      const { data: panelLogs, error: panelError } = await supabase
+        .from('push_notification_logs')
+        .select('id, created_at, sent_at, admin_user_id, target_user_id, title, message, status')
+        .or(`created_at.gt.${lastHarvestTime},sent_at.gt.${lastHarvestTime}`)
+        .order('created_at', { ascending: true })
+        .limit(200);
+
+      if (panelError) {
+        console.error('❌ Fallback error fetching panel logs:', panelError);
+        return new Response(JSON.stringify({ 
+          success: false, 
+          processed: 0, 
+          message: 'Fallback failed: cannot read public.push_notification_logs',
+          error: panelError.message
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      let processedCount = 0;
+      let latestTs = lastHarvestTime as string;
+      const notifications: any[] = [];
+
+      for (const row of panelLogs ?? []) {
+        notifications.push({
+          created_at: row.created_at || row.sent_at || new Date().toISOString(),
+          sent_at: row.sent_at || row.created_at,
+          sent_by: row.admin_user_id,
+          provider: 'PANEL',
+          status_code: row.status === 'sent' ? 200 : row.status === 'failed' ? 500 : 202,
+          title: row.title,
+          body: row.message,
+          url: null,
+          endpoint: null,
+          project_ref: 'vkjrqirvdvjbemsfzxof',
+          user_id: row.target_user_id || null,
+          invocation_id: `panel:${row.id}`,
+          metadata: { source: 'panel' }
+        });
+
+        const cand = row.sent_at || row.created_at;
+        if (cand && cand > latestTs) latestTs = cand;
+        processedCount++;
+      }
+
+      if (notifications.length > 0) {
+        const { error: insertError } = await supabase
+          .schema('mirror_push')
+          .from('notification_logs')
+          .insert(notifications);
+        if (insertError) {
+          console.error('❌ Error inserting fallback notifications:', insertError);
+          return new Response(JSON.stringify({ 
+            success: false, 
+            processed: processedCount, 
+            message: 'Insert failed in fallback',
+            error: insertError.message
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const { error: updateError } = await supabase
+          .schema('mirror_push')
+          .from('sync_watermarks')
+          .update({ last_run_at: latestTs })
+          .eq('name', 'harvester');
+        if (updateError) {
+          console.error('❌ Error updating watermark (fallback):', updateError);
+        }
+      }
+
       return new Response(JSON.stringify({ 
         success: true, 
-        processed: 0, 
-        message: 'No analytics access - harvester ready for when logs are available' 
+        processed: processedCount, 
+        inserted: notifications.length,
+        latest_timestamp: latestTs,
+        path: 'fallback_panel'
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -230,7 +307,8 @@ Deno.serve(async (req) => {
       console.log(`💾 Inserting ${notifications.length} notification records`);
       
       const { error: insertError } = await supabase
-        .from('mirror_push.notification_logs')
+        .schema('mirror_push')
+        .from('notification_logs')
         .insert(notifications);
 
       if (insertError) {
@@ -241,7 +319,8 @@ Deno.serve(async (req) => {
 
     // Update watermark
     const { error: updateError } = await supabase
-      .from('mirror_push.sync_watermarks')
+      .schema('mirror_push')
+      .from('sync_watermarks')
       .update({ last_run_at: latestTimestamp })
       .eq('name', 'harvester');
 
