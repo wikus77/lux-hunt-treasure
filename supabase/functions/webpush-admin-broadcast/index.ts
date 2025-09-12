@@ -26,45 +26,27 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return cors(req, { status: 204 });
   try {
     // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-    const auth = req.headers.get("authorization") ?? "";
-    const apiKey = req.headers.get("apikey") ?? "";
+    // Internal authorization - check required headers
     const xAdmin = req.headers.get("x-admin-token") ?? "";
+    const apiKey = req.headers.get("apikey") ?? "";
+    const auth = req.headers.get("authorization") ?? "";
     const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-    const SRV = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN") || "";
+    
+    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+    const PUSH_ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN") || "";
 
-    if (!bearer && !apiKey && !xAdmin) {
-      return cors(req, { status: 401 }, JSON.stringify({ error: "Missing credentials" }));
-    }
+    // Allow if any of these conditions are met:
+    // 1. x-admin-token matches PUSH_ADMIN_TOKEN
+    // 2. apikey matches SERVICE_ROLE_KEY  
+    // 3. Authorization Bearer matches SERVICE_ROLE_KEY
+    const isAuthorized = (
+      (xAdmin && PUSH_ADMIN_TOKEN && xAdmin === PUSH_ADMIN_TOKEN) ||
+      (apiKey && SERVICE_ROLE_KEY && apiKey === SERVICE_ROLE_KEY) ||
+      (bearer && SERVICE_ROLE_KEY && bearer === SERVICE_ROLE_KEY)
+    );
 
-    let isService = false;
-    let uid: string | undefined;
-
-    // Service-role acceptance via Authorization or apikey
-    if (bearer && SRV && bearer === SRV) isService = true;
-    if (!isService && apiKey && SRV && apiKey === SRV) isService = true;
-
-    // Try decode JWT to detect service_role or extract sub for admin allowlist
-    if (!isService && bearer) {
-      try {
-        const jwtPayload = JSON.parse(atob(bearer.split(".")[1] || "e30="));
-        uid = jwtPayload?.sub as string | undefined;
-        const role = jwtPayload?.role || jwtPayload?.user_role || jwtPayload?.app_metadata?.role;
-        if (role === "service_role") isService = true;
-      } catch {
-        // ignore decode errors
-      }
-    }
-
-    // Fallback admin token header
-    if (!isService && ADMIN_TOKEN && xAdmin && xAdmin === ADMIN_TOKEN) isService = true;
-
-    // Admin user allowlist
-    const admins = (Deno.env.get("ADMIN_USER_IDS") ?? "").split(",").map(s => s.trim()).filter(Boolean);
-    const isAdminUser = !!uid && admins.includes(uid);
-
-    if (!(isService || isAdminUser)) {
-      return cors(req, { status: 403 }, JSON.stringify({ error: "Forbidden" }));
+    if (!isAuthorized) {
+      return cors(req, { status: 401 }, JSON.stringify({ error: "Unauthorized access" }));
     }
 
     const { title, body, url, target } = await req.json();
