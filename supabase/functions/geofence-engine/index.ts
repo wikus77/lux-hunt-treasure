@@ -118,10 +118,9 @@ Deno.serve(async (req) => {
       console.log('🔍 DRY RUN MODE - No actual notifications will be sent');
     }
 
-    // 1. Load engine configuration
+    // 1. Load engine configuration (via public view)
     const { data: configData, error: configError } = await supabase
-      .schema('geo_push')
-      .from('settings')
+      .from('geo_push_settings_v')
       .select('value')
       .eq('key', 'engine')
       .single();
@@ -143,11 +142,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Get recent user positions (last 15 minutes)
+    // 2. Get recent user positions (last 15 minutes) via public view
     const recentThreshold = new Date(Date.now() - 15 * 60 * 1000).toISOString();
     
     const { data: positions, error: positionsError } = await supabase
-      .from('geo_radar_coordinates')
+      .from('geo_push_positions_v')
       .select('user_id, lat, lng, updated_at')
       .gte('updated_at', recentThreshold)
       .not('lat', 'is', null)
@@ -190,7 +189,7 @@ Deno.serve(async (req) => {
 
     // 5. Process each user position against each marker
     for (const position of positions as UserPosition[]) {
-      // Get daily count for this user
+      // Get daily count for this user (read via schema to maintain geo_push.* write isolation)
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
       
