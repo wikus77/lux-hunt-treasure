@@ -4789,6 +4789,10 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
+      trigger_mirror_push_harvest: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       update_personality_quiz_result: {
         Args: {
           p_assigned_description: string
