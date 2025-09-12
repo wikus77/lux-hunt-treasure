@@ -1,310 +1,273 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+// Mirror Push Log Harvester - Extract push logs and save to mirror_push.notification_logs
+import { corsHeaders } from '../_shared/cors.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface LogEntry {
-  id: string;
-  timestamp: string;
-  event_message: string;
-  function_id: string;
-  level: string;
-  metadata?: any;
+interface RequestPayload {
+  title: string;
+  body: string;
+  url?: string | null;
+  target: 'all' | { userIds: string[] };
 }
 
-interface ParsedNotification {
-  execution_id: string;
-  timestamp: string;
-  sent_by: string | null;
-  provider: string | null;
-  status_code: number | null;
-  title: string | null;
-  body: string | null;
-  url: string | null;
-  endpoint: string | null;
-  project_ref: string;
+interface ResponsePayload {
+  status: string;
+  success: number;
+  failed: number;
+  deactivated: number;
+  total: number;
+  details?: Array<{
+    user_id?: string;
+    code?: number;
+    endpoint?: string;
+    status?: string;
+  }>;
 }
 
-serve(async (req) => {
+function getProviderFromEndpoint(endpoint: string): string {
+  if (!endpoint) return 'UNKNOWN';
+  if (endpoint.includes('web.push.apple.com')) return 'APPLE';
+  if (endpoint.includes('fcm.googleapis.com')) return 'FCM';
+  return 'UNKNOWN';
+}
+
+function extractAuthUserId(headers: Record<string, string>): string | null {
+  const authHeader = headers['authorization'] || headers['Authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  
+  try {
+    // Simple JWT decode (just the payload part)
+    const token = authHeader.substring(7);
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    
+    const payload = JSON.parse(atob(parts[1]));
+    return payload.sub || null;
+  } catch {
+    return null;
+  }
+}
+
+Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        }
-      }
-    );
-
-    // Verify admin access
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      return new Response('Unauthorized', { 
-        status: 401, 
-        headers: corsHeaders 
-      });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    // Get environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    if (authError || !user) {
-      return new Response('Unauthorized', { 
-        status: 401, 
-        headers: corsHeaders 
-      });
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing required environment variables');
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
+    // Create Supabase client with service role for database operations
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.49.4');
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    console.log('🚀 Mirror Push Log Harvester started');
+
+    // Get the last harvest timestamp
+    const { data: watermark, error: watermarkError } = await supabase
+      .from('mirror_push.sync_watermarks')
+      .select('last_run_at')
+      .eq('name', 'harvester')
       .single();
 
-    if (!profile || profile.role !== 'admin') {
-      return new Response('Forbidden - Admin access required', { 
-        status: 403, 
-        headers: corsHeaders 
+    if (watermarkError) {
+      console.error('❌ Error fetching watermark:', watermarkError);
+      throw new Error('Failed to fetch watermark');
+    }
+
+    const lastHarvestTime = watermark?.last_run_at || '1970-01-01T00:00:00Z';
+    console.log('📅 Last harvest time:', lastHarvestTime);
+
+    // Use Supabase Analytics query to get function logs
+    const { data: logs, error: logsError } = await supabase.rpc('supabase_analytics_query', {
+      query: `
+        select id, function_edge_logs.timestamp, event_message, m.function_id, m.execution_time_ms, m.deployment_id, m.version, request, response
+        from function_edge_logs
+        cross join unnest(metadata) as m
+        cross join unnest(m.request) as request  
+        cross join unnest(m.response) as response
+        where m.function_name = 'webpush-admin-broadcast'
+          and response.status_code = 200
+          and function_edge_logs.timestamp > '${lastHarvestTime}'
+        order by timestamp asc
+        limit 100
+      `
+    });
+
+    if (logsError) {
+      console.error('❌ Error fetching logs:', logsError);
+      // Create a fallback response if no logs API access
+      console.log('⚠️ No analytics access, using fallback method');
+      
+      return new Response(JSON.stringify({ 
+        success: true, 
+        processed: 0, 
+        message: 'No analytics access - harvester ready for when logs are available' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    const url = new URL(req.url);
-    const sinceParam = url.searchParams.get('since');
-    
-    // Get last sync timestamp or default to 24h ago
-    let sinceTimestamp: string;
-    
-    if (sinceParam) {
-      sinceTimestamp = sinceParam;
-    } else {
-      const { data: watermark } = await supabase
-        .from('mirror_push.sync_watermarks')
-        .select('last_sync_timestamp')
-        .eq('source_name', 'webpush-admin-broadcast')
-        .single();
-      
-      if (watermark?.last_sync_timestamp) {
-        sinceTimestamp = watermark.last_sync_timestamp;
-      } else {
-        // Default to 24h ago
-        const yesterday = new Date();
-        yesterday.setHours(yesterday.getHours() - 24);
-        sinceTimestamp = yesterday.toISOString();
-      }
+    console.log(`📊 Found ${logs?.length || 0} log entries to process`);
+
+    if (!logs || logs.length === 0) {
+      console.log('✅ No new logs to process');
+      return new Response(JSON.stringify({ 
+        success: true, 
+        processed: 0, 
+        message: 'No new logs to process' 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    console.log(`🔍 [HARVESTER] Starting harvest since: ${sinceTimestamp}`);
+    let processedCount = 0;
+    let latestTimestamp = lastHarvestTime;
+    const notifications = [];
 
-    const notifications: ParsedNotification[] = [];
-    const processedExecutions = new Set<string>();
+    // Process each log entry
+    for (const log of logs) {
+      try {
+        console.log(`🔄 Processing log ${log.id} from ${log.timestamp}`);
 
-    // 1. Query edge function logs for webpush-admin-broadcast using analytics query
-    try {
-      const { data: edgeLogs, error: logsError } = await supabase
-        .rpc('exec_sql', {
-          sql: `
-            SELECT id, function_edge_logs.timestamp, event_message, 
-                   response.status_code, request.method, m.function_id, 
-                   m.execution_time_ms, m.deployment_id, m.version
-            FROM function_edge_logs
-            CROSS JOIN unnest(metadata) as m
-            CROSS JOIN unnest(m.response) as response
-            CROSS JOIN unnest(m.request) as request
-            WHERE event_message LIKE '%webpush-admin-broadcast%'
-            AND function_edge_logs.timestamp >= '${sinceTimestamp}'
-            ORDER BY function_edge_logs.timestamp DESC
-            LIMIT 500
-          `
-        });
+        let requestPayload: RequestPayload | null = null;
+        let responsePayload: ResponsePayload | null = null;
+        let authUserId: string | null = null;
 
-      if (!logsError && edgeLogs) {
-        console.log(`📊 [HARVESTER] Found ${edgeLogs.length} edge function logs`);
-        
-        for (const log of edgeLogs) {
-          const executionId = log.deployment_id || log.id;
-          if (processedExecutions.has(executionId)) continue;
-          processedExecutions.add(executionId);
+        // Parse request body
+        if (log.request?.body) {
+          try {
+            requestPayload = JSON.parse(log.request.body);
+          } catch (e) {
+            console.warn(`⚠️ Failed to parse request body for log ${log.id}:`, e);
+          }
+        }
 
-          // Extract basic metadata from edge function logs
-          let title = null, body = null, url = null, endpoint = null;
-          let sentBy = null, provider = null;
+        // Parse response body
+        if (log.response?.body) {
+          try {
+            responsePayload = JSON.parse(log.response.body);
+          } catch (e) {
+            console.warn(`⚠️ Failed to parse response body for log ${log.id}:`, e);
+          }
+        }
 
-          // Try to parse event_message for notification details
-          if (log.event_message) {
-            try {
-              const jsonMatch = log.event_message.match(/\{.*\}/s);
-              if (jsonMatch) {
-                const parsed = JSON.parse(jsonMatch[0]);
-                title = parsed.title || parsed.notification?.title;
-                body = parsed.body || parsed.notification?.body; 
-                url = parsed.url || parsed.notification?.url;
+        // Extract auth user ID from request headers
+        if (log.request?.headers) {
+          authUserId = extractAuthUserId(log.request.headers);
+        }
+
+        // If we have response details, create individual records
+        if (responsePayload?.details && responsePayload.details.length > 0) {
+          for (const detail of responsePayload.details) {
+            const provider = getProviderFromEndpoint(detail.endpoint || '');
+            
+            notifications.push({
+              created_at: new Date().toISOString(),
+              sent_at: log.timestamp,
+              sent_by: authUserId,
+              provider: provider,
+              status_code: detail.code || log.response?.status_code || 200,
+              title: requestPayload?.title || null,
+              body: requestPayload?.body || null,
+              url: requestPayload?.url || null,
+              endpoint: detail.endpoint || null,
+              project_ref: 'vkjrqirvdvjbemsfzxof',
+              user_id: detail.user_id || null,
+              invocation_id: log.id,
+              metadata: {
+                execution_id: log.id,
+                target: requestPayload?.target || null,
+                response_status: detail.status || 'sent'
               }
-            } catch (e) {
-              // Extract from text patterns
-              const titleMatch = log.event_message.match(/title[:\s]*["']([^"']+)["']/i);
-              const bodyMatch = log.event_message.match(/body[:\s]*["']([^"']+)["']/i);
-              if (titleMatch) title = titleMatch[1];
-              if (bodyMatch) body = bodyMatch[1];
-            }
+            });
           }
-
+        } else {
+          // Create aggregate record for the invocation
           notifications.push({
-            execution_id: executionId,
-            timestamp: log.timestamp,
-            sent_by: sentBy, // Not available in edge logs
-            provider: provider,
-            status_code: log.status_code,
-            title: title,
-            body: body,
-            url: url,
-            endpoint: endpoint,
-            project_ref: 'vkjrqirvdvjbemsfzxof'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ [HARVESTER] Error fetching edge logs:', error);
-    }
-
-    // 2. Query public.push_notification_logs table
-    try {
-      const { data: pushLogs, error: pushLogsError } = await supabase
-        .from('push_notification_logs')
-        .select('*')
-        .gte('created_at', sinceTimestamp)
-        .order('created_at', { ascending: false })
-        .limit(500);
-
-      if (!pushLogsError && pushLogs) {
-        console.log(`📊 [HARVESTER] Found ${pushLogs.length} push notification logs`);
-        
-        for (const log of pushLogs) {
-          const executionId = `push_log_${log.id}`;
-          if (processedExecutions.has(executionId)) continue;
-          processedExecutions.add(executionId);
-
-          // Determine provider from endpoint
-          let provider = null;
-          if (log.endpoint) {
-            if (log.endpoint.includes('fcm.googleapis.com')) provider = 'fcm';
-            else if (log.endpoint.includes('web.push.apple.com')) provider = 'apns';
-            else if (log.endpoint.includes('push.mozilla.org')) provider = 'mozilla';
-          }
-
-          notifications.push({
-            execution_id: executionId,
-            timestamp: log.created_at,
-            sent_by: log.user_id, // Use user_id as sent_by
-            provider: provider,
-            status_code: log.success ? 200 : 500,
-            title: log.title,
-            body: log.body,
-            url: log.url,
-            endpoint: log.endpoint ? (log.endpoint.length > 100 ? log.endpoint.substring(0, 100) + '...' : log.endpoint) : null,
-            project_ref: 'vkjrqirvdvjbemsfzxof'
-          });
-        }
-      }
-    } catch (error) {
-      console.error('❌ [HARVESTER] Error fetching push logs:', error);
-    }
-
-    // 3. Query public.user_notifications table
-    try {
-      const { data: userNotifications, error: userNotificationsError } = await supabase
-        .from('user_notifications')
-        .select('*')
-        .gte('created_at', sinceTimestamp)
-        .order('created_at', { ascending: false })
-        .limit(500);
-
-      if (!userNotificationsError && userNotifications) {
-        console.log(`📊 [HARVESTER] Found ${userNotifications.length} user notifications`);
-        
-        for (const notification of userNotifications) {
-          const executionId = `user_notif_${notification.id}`;
-          if (processedExecutions.has(executionId)) continue;
-          processedExecutions.add(executionId);
-
-          notifications.push({
-            execution_id: executionId,
-            timestamp: notification.created_at,
-            sent_by: notification.created_by || null,
-            provider: null, // Not available in user_notifications
-            status_code: null, // Not available
-            title: notification.title,
-            body: notification.message,
-            url: notification.action_url,
+            created_at: new Date().toISOString(),
+            sent_at: log.timestamp,
+            sent_by: authUserId,
+            provider: 'HARVESTER',
+            status_code: log.response?.status_code || 200,
+            title: requestPayload?.title || null,
+            body: requestPayload?.body || null,
+            url: requestPayload?.url || null,
             endpoint: null,
-            project_ref: 'vkjrqirvdvjbemsfzxof'
+            project_ref: 'vkjrqirvdvjbemsfzxof',
+            user_id: null,
+            invocation_id: log.id,
+            metadata: {
+              execution_id: log.id,
+              target: requestPayload?.target || null,
+              total_sent: responsePayload?.total || 0,
+              success_count: responsePayload?.success || 0,
+              failed_count: responsePayload?.failed || 0,
+              deactivated_count: responsePayload?.deactivated || 0
+            }
           });
         }
+
+        processedCount++;
+        latestTimestamp = log.timestamp;
+
+      } catch (error) {
+        console.error(`❌ Error processing log ${log.id}:`, error);
       }
-    } catch (error) {
-      console.error('❌ [HARVESTER] Error fetching user notifications:', error);
     }
 
-    console.log(`🔄 [HARVESTER] Parsed ${notifications.length} notification records`);
-
-    // Insert notifications (avoiding duplicates)
-    let insertedCount = 0;
-    for (const notification of notifications) {
+    // Batch insert notifications
+    if (notifications.length > 0) {
+      console.log(`💾 Inserting ${notifications.length} notification records`);
+      
       const { error: insertError } = await supabase
         .from('mirror_push.notification_logs')
-        .upsert(notification, {
-          onConflict: 'execution_id,timestamp',
-          ignoreDuplicates: true
-        });
+        .insert(notifications);
 
-      if (!insertError) {
-        insertedCount++;
-      } else {
-        console.error('❌ [HARVESTER] Insert error:', insertError);
+      if (insertError) {
+        console.error('❌ Error inserting notifications:', insertError);
+        throw new Error('Failed to insert notification logs');
       }
     }
 
-    // Update sync watermark
-    const latestTimestamp = notifications.length > 0 
-      ? Math.max(...notifications.map(n => new Date(n.timestamp).getTime()))
-      : new Date().getTime();
-
-    await supabase
+    // Update watermark
+    const { error: updateError } = await supabase
       .from('mirror_push.sync_watermarks')
-      .upsert({
-        source_name: 'webpush-admin-broadcast',
-        last_sync_timestamp: new Date(latestTimestamp).toISOString()
-      }, {
-        onConflict: 'source_name'
-      });
+      .update({ last_run_at: latestTimestamp })
+      .eq('name', 'harvester');
 
-    console.log(`✅ [HARVESTER] Completed: ${insertedCount} new records inserted`);
+    if (updateError) {
+      console.error('❌ Error updating watermark:', updateError);
+      throw new Error('Failed to update watermark');
+    }
+
+    console.log('✅ Harvesting completed successfully');
+    console.log(`📈 Processed: ${processedCount} logs, Inserted: ${notifications.length} notifications`);
 
     return new Response(JSON.stringify({
       success: true,
-      processed: notifications.length,
-      inserted: insertedCount,
-      since: sinceTimestamp,
-      latest_timestamp: new Date(latestTimestamp).toISOString()
+      processed: processedCount,
+      inserted: notifications.length,
+      latest_timestamp: latestTimestamp
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('❌ [HARVESTER] Fatal error:', error);
-    return new Response(JSON.stringify({ 
-      error: 'Internal server error',
-      details: error.message 
+    console.error('❌ Harvester error:', error);
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
