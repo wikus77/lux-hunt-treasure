@@ -4280,6 +4280,72 @@ export type Database = {
         }
         Relationships: []
       }
+      geo_push_delivery_state_v: {
+        Row: {
+          enter_count: number | null
+          last_enter_at: string | null
+          last_sent_at: string | null
+          marker_id: string | null
+          sent_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          enter_count?: number | null
+          last_enter_at?: string | null
+          last_sent_at?: string | null
+          marker_id?: string | null
+          sent_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          enter_count?: number | null
+          last_enter_at?: string | null
+          last_sent_at?: string | null
+          marker_id?: string | null
+          sent_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      geo_push_positions_v: {
+        Row: {
+          lat: number | null
+          lng: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          lat?: number | null
+          lng?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          lat?: number | null
+          lng?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      geo_push_settings_v: {
+        Row: {
+          key: string | null
+          updated_at: string | null
+          value: Json | null
+        }
+        Insert: {
+          key?: string | null
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Update: {
+          key?: string | null
+          updated_at?: string | null
+          value?: Json | null
+        }
+        Relationships: []
+      }
       v_latest_webpush_subscription: {
         Row: {
           created_at: string | null
