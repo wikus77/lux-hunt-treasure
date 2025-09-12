@@ -4307,6 +4307,15 @@ export type Database = {
         }
         Relationships: []
       }
+      geo_push_markers_v: {
+        Row: {
+          id: string | null
+          lat: number | null
+          lng: number | null
+          title: string | null
+        }
+        Relationships: []
+      }
       geo_push_positions_v: {
         Row: {
           lat: number | null
@@ -4554,6 +4563,36 @@ export type Database = {
       generate_unique_agent_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      geo_push_log_delivery: {
+        Args: {
+          p_body: string
+          p_distance_m: number
+          p_marker_id: string
+          p_payload: Json
+          p_provider: string
+          p_reason: string
+          p_response: Json
+          p_sent: boolean
+          p_title: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      geo_push_touch_watermark: {
+        Args: { p_name: string; p_ts: string }
+        Returns: undefined
+      }
+      geo_push_upsert_state: {
+        Args: {
+          p_enter_inc: number
+          p_last_enter_at: string
+          p_last_sent_at: string
+          p_marker_id: string
+          p_sent_inc: number
+          p_user_id: string
+        }
+        Returns: undefined
       }
       get_active_subscription: {
         Args: { p_user_id: string }
