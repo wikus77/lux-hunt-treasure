@@ -1,9 +1,12 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, FileText, Edit2, Trash2 } from "lucide-react";
 import MapNoteList from '@/components/maps/MapNoteList';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 interface Note {
   id: string;
@@ -12,10 +15,69 @@ interface Note {
 }
 
 const NotesSection = () => {
+  const { user } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load notes from database
+  useEffect(() => {
+    if (!user?.id) return;
+    loadNotes();
+  }, [user?.id]);
+
+  // Setup realtime subscription
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('map_notes_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'map_notes',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          loadNotes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  const loadNotes = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('map_notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedNotes = data.map(note => ({
+        id: note.id,
+        note: note.text,
+        importance: note.importance as 'high' | 'medium' | 'low'
+      }));
+
+      setNotes(mappedNotes);
+    } catch (error) {
+      console.error('Error loading notes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Toggle showing the note input
   const toggleNoteInput = () => {
@@ -24,42 +86,74 @@ const NotesSection = () => {
     setNewNote('');
   };
 
-  // Add a new note
-  const addNote = () => {
-    if (newNote.trim()) {
+  // Add or update note
+  const addNote = async () => {
+    if (!newNote.trim() || !user?.id) return;
+
+    try {
       if (editingNote) {
         // Update existing note
-        setNotes(notes.map(note => 
-          note.id === editingNote.id 
-            ? { ...note, note: newNote.trim() } 
-            : note
-        ));
-        setEditingNote(null);
+        const { error } = await supabase
+          .from('map_notes')
+          .update({ 
+            text: newNote.trim(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingNote.id)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        toast.success('Nota aggiornata');
       } else {
         // Add new note
-        const newNoteItem = {
-          id: Date.now().toString(),
-          note: newNote.trim(),
-          importance: 'medium' as 'high' | 'medium' | 'low'
-        };
-        setNotes([...notes, newNoteItem]);
+        const { error } = await supabase
+          .from('map_notes')
+          .insert({
+            user_id: user.id,
+            text: newNote.trim(),
+            importance: 'medium'
+          });
+
+        if (error) throw error;
+        toast.success('Nota aggiunta');
       }
+
       setNewNote('');
       setShowNoteInput(false);
+      setEditingNote(null);
+    } catch (error) {
+      console.error('Error saving note:', error);
+      toast.error('Errore nel salvare la nota');
     }
   };
 
   // Cycle through importance levels
-  const handleImportanceClick = (id: string) => {
-    setNotes(notes.map(note => {
-      if (note.id === id) {
-        const importanceOrder: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low'];
-        const currentIndex = importanceOrder.indexOf(note.importance);
-        const nextIndex = (currentIndex + 1) % importanceOrder.length;
-        return { ...note, importance: importanceOrder[nextIndex] };
-      }
-      return note;
-    }));
+  const handleImportanceClick = async (id: string) => {
+    if (!user?.id) return;
+
+    try {
+      const note = notes.find(n => n.id === id);
+      if (!note) return;
+
+      const importanceOrder: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low'];
+      const currentIndex = importanceOrder.indexOf(note.importance);
+      const nextIndex = (currentIndex + 1) % importanceOrder.length;
+      const newImportance = importanceOrder[nextIndex];
+
+      const { error } = await supabase
+        .from('map_notes')
+        .update({ 
+          importance: newImportance,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating importance:', error);
+      toast.error('Errore nell\'aggiornare la priorità');
+    }
   };
 
   // Edit note
@@ -70,8 +164,22 @@ const NotesSection = () => {
   };
 
   // Delete note
-  const handleDeleteNote = (id: string) => {
-    setNotes(notes.filter(note => note.id !== id));
+  const handleDeleteNote = async (id: string) => {
+    if (!user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('map_notes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      toast.success('Nota eliminata');
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast.error('Errore nell\'eliminare la nota');
+    }
   };
 
   return (

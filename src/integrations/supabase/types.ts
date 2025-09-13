@@ -1477,6 +1477,36 @@ export type Database = {
         }
         Relationships: []
       }
+      map_notes: {
+        Row: {
+          created_at: string
+          id: string
+          importance: string
+          marker_id: string | null
+          text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          importance?: string
+          marker_id?: string | null
+          text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          importance?: string
+          marker_id?: string | null
+          text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       map_points: {
         Row: {
           created_at: string
