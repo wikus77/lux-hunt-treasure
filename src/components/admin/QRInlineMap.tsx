@@ -47,7 +47,9 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
         style={{ 
           height: 320, 
           width: '100%',
-          background: 'transparent'
+          background: 'transparent',
+          willChange: 'transform',
+          transform: 'translateZ(0)'
         }}
         zoomControl={true}
         scrollWheelZoom={true}
@@ -56,6 +58,11 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
         boxZoom={true}
         keyboard={true}
         dragging={true}
+        zoomAnimation={true}
+        markerZoomAnimation={true}
+        fadeAnimation={true}
+        zoomAnimationThreshold={4}
+        preferCanvas={false}
         ref={(mapInstance) => {
           if (mapInstance) {
             mapRef.current = mapInstance;

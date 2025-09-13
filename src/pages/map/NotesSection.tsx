@@ -21,6 +21,7 @@ const NotesSection = () => {
   const [newNote, setNewNote] = useState('');
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Load notes from database
   useEffect(() => {
@@ -90,6 +91,8 @@ const NotesSection = () => {
   const addNote = async () => {
     if (!newNote.trim() || !user?.id) return;
 
+    setSaving(true);
+
     const tempId = `temp-${Date.now()}`;
     const newNoteData = {
       id: tempId,
@@ -146,6 +149,8 @@ const NotesSection = () => {
       } else {
         setNotes(prev => prev.filter(n => n.id !== tempId));
       }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -185,9 +190,13 @@ const NotesSection = () => {
     setShowNoteInput(true);
   };
 
-  // Delete note
+  // Delete note (optimistic)
   const handleDeleteNote = async (id: string) => {
     if (!user?.id) return;
+
+    const prev = notes;
+    // Optimistic remove
+    setNotes(prevNotes => prevNotes.filter(n => n.id !== id));
 
     try {
       const { error } = await supabase
@@ -201,6 +210,8 @@ const NotesSection = () => {
     } catch (error) {
       console.error('Error deleting note:', error);
       toast.error('Errore nell\'eliminare la nota');
+      // Rollback
+      setNotes(prev);
     }
   };
 
@@ -235,8 +246,9 @@ const NotesSection = () => {
                 size="sm" 
                 onClick={addNote}
                 className="rounded-full"
+                disabled={saving || !newNote.trim()}
               >
-                {editingNote ? 'Aggiorna' : 'Aggiungi'}
+                {saving ? 'Salvataggio...' : (editingNote ? 'Aggiorna' : 'Aggiungi')}
               </Button>
             </div>
           </div>
