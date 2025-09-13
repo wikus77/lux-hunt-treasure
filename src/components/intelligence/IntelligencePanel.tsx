@@ -9,6 +9,8 @@ import ClueJournal from './ClueJournal';
 import GeoRadarTool from './GeoRadarTool';
 import BuzzInterceptor from './BuzzInterceptor';
 import PrecisionResult from './PrecisionResult';
+import ClueArchive from './ClueArchive';
+import FinalShotPage from './FinalShotPage';
 
 interface IntelligencePanelProps {
   isOpen: boolean;
@@ -17,7 +19,7 @@ interface IntelligencePanelProps {
   finalShotFailed?: boolean;
 }
 
-type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision';
+type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot' | 'finalshotmap';
 
 const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
   isOpen,
@@ -71,12 +73,17 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
         return <CoordinateSelector />;
       case 'journal':
         return <ClueJournal />;
+      case 'archive':
+        return <ClueArchive />;
       case 'radar':
         return <GeoRadarTool />;
       case 'interceptor':
         return <BuzzInterceptor />;
       case 'precision':
         return <PrecisionResult />;
+      case 'finalshot':
+      case 'finalshotmap':
+        return <FinalShotPage />;
       default:
         return <CoordinateSelector />;
     }
@@ -157,7 +164,14 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
                 <button 
                   type="button"
                   className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold cursor-pointer"
-                  onClick={() => console.log('Final shot triggered')}
+                  onClick={() => setActiveTool('finalshotmap')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setActiveTool('finalshotmap');
+                    }
+                  }}
+                  aria-label="Apri Final Shot Mappa"
                 >
                   🎯 FINAL SHOT
                 </button>
@@ -231,7 +245,18 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               </div>
 
               {/* Archivio Indizi */}
-              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+              <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto transition-all duration-300 ${
+                activeTool === 'archive' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20'
+              } cursor-pointer hover:scale-[1.02]`}
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveTool('archive')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTool('archive');
+                }
+              }}>
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Archivio Indizi</span>
@@ -315,7 +340,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               </div>
 
               {/* Final Shot */}
-              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300 cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={() => setActiveTool('finalshot')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTool('finalshot');
+                  }
+                }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Crosshair className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Final Shot</span>
