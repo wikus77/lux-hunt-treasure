@@ -23,17 +23,18 @@ import {
   Activity,
   Database
 } from 'lucide-react';
-import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import BottomNavigation from '@/components/layout/BottomNavigation';
 import { useLocation } from 'wouter';
-import { useState } from 'react';
-import { IntelligencePanelLazy } from '@/components/lazy/LazyComponents';
-
 const IntelligenceStyledPage: React.FC = () => {
   const [, setLocation] = useLocation();
-  const [isIntelligencePanelOpen, setIsIntelligencePanelOpen] = useState(false);
-  const [selectedModule, setSelectedModule] = useState<string>('coordinates');
-  const currentWeek = 5; // Can be connected to actual week logic later
+  const INTEL_ROUTES: Record<string, string> = {
+    coordinates: '/intelligence/coordinates',
+    journal: '/intelligence/clue-journal',
+    archive: '/intelligence/archive',
+    radar: '/intelligence/radar',
+    interceptor: '/intelligence/interceptor',
+    finalshot: '/intelligence/final-shot',
+    finalshotmap: '/intelligence/final-shot'
+  };
 
   const intelligenceModules = [
     {
@@ -102,8 +103,8 @@ const IntelligenceStyledPage: React.FC = () => {
   };
 
   const openModule = (moduleId: string) => {
-    setSelectedModule(moduleId);
-    setIsIntelligencePanelOpen(true);
+    const path = INTEL_ROUTES[moduleId];
+    if (path) setLocation(path);
   };
 
   return (
