@@ -74,7 +74,7 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
           attribution={attribution}
           maxZoom={18}
           minZoom={3}
-          keepBuffer={8}
+          keepBuffer={12}
           updateWhenIdle={true}
           updateWhenZooming={false}
           crossOrigin="anonymous"
@@ -83,6 +83,8 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
           zoomOffset={0}
           bounds={[[-90, -180], [90, 180]]}
           noWrap={false}
+          subdomains={['a', 'b', 'c']}
+          errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
         />
         <ClickHandler onChange={onChange} />
         {typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng) && (

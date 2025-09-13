@@ -29,16 +29,41 @@ const NotesSection = () => {
     loadNotes();
   }, [user?.id]);
 
-  // Setup realtime subscription
+  // Setup realtime subscription with full event handling
   useEffect(() => {
     if (!user?.id) return;
 
     const channel = supabase
-      .channel('map_notes_changes')
+      .channel('map_notes_realtime')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
+          schema: 'public',
+          table: 'map_notes',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          // Only reload if not from current session (avoid duplicate optimistic updates)
+          setTimeout(() => loadNotes(), 100);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'map_notes',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          loadNotes();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
           schema: 'public',
           table: 'map_notes',
           filter: `user_id=eq.${user.id}`
@@ -190,12 +215,14 @@ const NotesSection = () => {
     setShowNoteInput(true);
   };
 
-  // Delete note (optimistic)
+  // Delete note (optimistic with immediate UI update)
   const handleDeleteNote = async (id: string) => {
     if (!user?.id) return;
 
-    const prev = notes;
-    // Optimistic remove
+    // Store previous state for rollback
+    const previousNotes = [...notes];
+    
+    // Optimistic removal - immediate UI update
     setNotes(prevNotes => prevNotes.filter(n => n.id !== id));
 
     try {
@@ -210,8 +237,8 @@ const NotesSection = () => {
     } catch (error) {
       console.error('Error deleting note:', error);
       toast.error('Errore nell\'eliminare la nota');
-      // Rollback
-      setNotes(prev);
+      // Rollback to previous state
+      setNotes(previousNotes);
     }
   };
 

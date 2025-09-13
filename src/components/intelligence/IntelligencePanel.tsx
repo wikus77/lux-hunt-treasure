@@ -267,7 +267,17 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               </div>
 
               {/* Indizi Settimanali */}
-              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300 cursor-pointer hover:scale-[1.02]"
+                role="button"
+                tabIndex={0}
+                onClick={() => console.log('Indizi Settimanali clicked')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    console.log('Indizi Settimanali activated via keyboard');
+                  }
+                }}
+                aria-label="Visualizza Indizi Settimanali">
                 <div className="flex items-center gap-2 mb-3">
                   <Target className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Indizi Settimanali</span>
@@ -360,7 +370,17 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               </div>
 
               {/* Final Shot Mappa */}
-              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300">
+              <div className="bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 max-h-[180px] overflow-y-auto hover:bg-black/75 hover:border-white/20 transition-all duration-300 cursor-pointer hover:scale-[1.02]"
+                role="button"
+                tabIndex={0}
+                onClick={() => setActiveTool('finalshotmap')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setActiveTool('finalshotmap');
+                  }
+                }}
+                aria-label="Apri Final Shot Mappa">
                 <div className="flex items-center gap-2 mb-3">
                   <Target className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Final Shot Mappa</span>
