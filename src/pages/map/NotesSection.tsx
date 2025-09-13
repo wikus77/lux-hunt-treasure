@@ -90,9 +90,22 @@ const NotesSection = () => {
   const addNote = async () => {
     if (!newNote.trim() || !user?.id) return;
 
+    const tempId = `temp-${Date.now()}`;
+    const newNoteData = {
+      id: tempId,
+      note: newNote.trim(),
+      importance: 'medium' as const
+    };
+
     try {
       if (editingNote) {
-        // Update existing note
+        // Optimistic update for edit
+        setNotes(prev => prev.map(n => 
+          n.id === editingNote.id 
+            ? { ...n, note: newNote.trim() }
+            : n
+        ));
+
         const { error } = await supabase
           .from('map_notes')
           .update({ 
@@ -105,7 +118,9 @@ const NotesSection = () => {
         if (error) throw error;
         toast.success('Nota aggiornata');
       } else {
-        // Add new note
+        // Optimistic update for new note
+        setNotes(prev => [newNoteData, ...prev]);
+
         const { error } = await supabase
           .from('map_notes')
           .insert({
@@ -124,6 +139,13 @@ const NotesSection = () => {
     } catch (error) {
       console.error('Error saving note:', error);
       toast.error('Errore nel salvare la nota');
+      
+      // Rollback optimistic update
+      if (editingNote) {
+        loadNotes();
+      } else {
+        setNotes(prev => prev.filter(n => n.id !== tempId));
+      }
     }
   };
 

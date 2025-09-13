@@ -67,10 +67,15 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
           attribution={attribution}
           maxZoom={18}
           minZoom={3}
-          keepBuffer={4}
-          updateWhenIdle={false}
+          keepBuffer={8}
+          updateWhenIdle={true}
           updateWhenZooming={false}
-          crossOrigin={true}
+          crossOrigin="anonymous"
+          detectRetina={true}
+          tileSize={256}
+          zoomOffset={0}
+          bounds={[[-90, -180], [90, 180]]}
+          noWrap={false}
         />
         <ClickHandler onChange={onChange} />
         {typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng) && (

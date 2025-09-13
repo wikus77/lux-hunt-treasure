@@ -113,7 +113,19 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
                 <button 
                   type="button"
                   className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
-                  onClick={() => console.log('Satellite view')}
+                  onClick={() => {
+                    console.log('Satellite view toggled');
+                    // Satellite view functionality can be implemented here
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      console.log('Satellite view toggled via keyboard');
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Toggle satellite view"
                 >
                   🛰️ Satellite
                 </button>
