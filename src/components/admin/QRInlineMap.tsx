@@ -29,6 +29,7 @@ const markerIcon = L.icon({
 });
 
 export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) => {
+  const mapRef = useRef<L.Map | null>(null);
   const center = useMemo<[number, number]>(() => {
     if (typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng)) {
       return [lat, lng];
@@ -40,8 +41,37 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
 
   return (
     <div className="rounded-lg overflow-hidden border border-border">
-      <MapContainer center={center} zoom={12} style={{ height: 320, width: '100%' }}>
-        <TileLayer url={tileUrl} attribution={attribution} />
+      <MapContainer 
+        center={center} 
+        zoom={12} 
+        style={{ 
+          height: 320, 
+          width: '100%',
+          background: 'transparent'
+        }}
+        zoomControl={true}
+        scrollWheelZoom={true}
+        doubleClickZoom={true}
+        touchZoom={true}
+        boxZoom={true}
+        keyboard={true}
+        dragging={true}
+        ref={(mapInstance) => {
+          if (mapInstance) {
+            mapRef.current = mapInstance;
+          }
+        }}
+      >
+        <TileLayer 
+          url={tileUrl} 
+          attribution={attribution}
+          maxZoom={18}
+          minZoom={3}
+          keepBuffer={4}
+          updateWhenIdle={false}
+          updateWhenZooming={false}
+          crossOrigin={true}
+        />
         <ClickHandler onChange={onChange} />
         {typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng) && (
           <Marker

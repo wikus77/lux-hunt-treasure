@@ -110,23 +110,43 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
             {/* Map Overlay Controls - Top Right */}
             <div className="absolute top-4 right-4 z-40 flex flex-wrap gap-2">
               <div className="flex gap-1 bg-black/60 backdrop-blur-sm rounded-full p-1">
-                <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                <button 
+                  type="button"
+                  className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                  onClick={() => console.log('Satellite view')}
+                >
                   🛰️ Satellite
                 </button>
-                <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                <button 
+                  type="button"
+                  className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                  onClick={() => console.log('Dark Military view')}
+                >
                   🌑 Dark Military
                 </button>
-                <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                <button 
+                  type="button"
+                  className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                  onClick={() => console.log('Terrain view')}
+                >
                   🏔️ Terrain
                 </button>
-                <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all">
+                <button 
+                  type="button"
+                  className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all cursor-pointer"
+                  onClick={() => console.log('Standard view')}
+                >
                   🗺️ Standard
                 </button>
               </div>
               
               {/* FINAL SHOT Button Overlay */}
               <div className="bg-black/60 backdrop-blur-sm rounded-full p-1">
-                <button className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold">
+                <button 
+                  type="button"
+                  className="px-3 py-1 text-xs text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-all font-semibold cursor-pointer"
+                  onClick={() => console.log('Final shot triggered')}
+                >
                   🎯 FINAL SHOT
                 </button>
               </div>
@@ -147,7 +167,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               {/* Coordinate Selector */}
               <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
                 activeTool === 'coordinates' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20'
-              } cursor-pointer hover:scale-[1.02]`} onClick={() => setActiveTool('coordinates')}>
+              } cursor-pointer hover:scale-[1.02]`} 
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveTool('coordinates')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTool('coordinates');
+                }
+              }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Target className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Coordinate Selector</span>
@@ -165,7 +194,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               {/* Clue Journal */}
               <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
                 activeTool === 'journal' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20'
-              } cursor-pointer hover:scale-[1.02]`} onClick={() => setActiveTool('journal')}>
+              } cursor-pointer hover:scale-[1.02]`} 
+              role="button"
+              tabIndex={0}
+              onClick={() => setActiveTool('journal')}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setActiveTool('journal');
+                }
+              }}>
                 <div className="flex items-center gap-2 mb-3">
                   <BookOpen className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Clue Journal</span>
@@ -206,7 +244,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
                 !tools.find(t => t.id === 'radar')?.available ? 'opacity-50 cursor-not-allowed' : 
                 (activeTool === 'radar' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20 cursor-pointer hover:scale-[1.02]')
-              }`} onClick={() => tools.find(t => t.id === 'radar')?.available && setActiveTool('radar')}>
+              }`} 
+              role="button"
+              tabIndex={tools.find(t => t.id === 'radar')?.available ? 0 : -1}
+              onClick={() => tools.find(t => t.id === 'radar')?.available && setActiveTool('radar')}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && tools.find(t => t.id === 'radar')?.available) {
+                  e.preventDefault();
+                  setActiveTool('radar');
+                }
+              }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Radar className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Geo Radar</span>
@@ -228,7 +275,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
                 !tools.find(t => t.id === 'interceptor')?.available ? 'opacity-50 cursor-not-allowed' : 
                 (activeTool === 'interceptor' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20 cursor-pointer hover:scale-[1.02]')
-              }`} onClick={() => tools.find(t => t.id === 'interceptor')?.available && setActiveTool('interceptor')}>
+              }`} 
+              role="button"
+              tabIndex={tools.find(t => t.id === 'interceptor')?.available ? 0 : -1}
+              onClick={() => tools.find(t => t.id === 'interceptor')?.available && setActiveTool('interceptor')}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && tools.find(t => t.id === 'interceptor')?.available) {
+                  e.preventDefault();
+                  setActiveTool('interceptor');
+                }
+              }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Zap className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">BUZZ Interceptor</span>
@@ -272,7 +328,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
               <div className={`bg-black/70 backdrop-blur-xl rounded-xl p-4 text-white shadow-[0_0_12px_rgba(255,255,255,0.1)] border border-white/10 transition-all duration-300 max-h-[180px] overflow-y-auto ${
                 !finalShotFailed ? 'opacity-50 cursor-not-allowed' : 
                 (activeTool === 'precision' ? 'ring-2 ring-primary/50 bg-black/80' : 'hover:bg-black/75 hover:border-white/20 cursor-pointer hover:scale-[1.02]')
-              }`} onClick={() => finalShotFailed && setActiveTool('precision')}>
+              }`} 
+              role="button"
+              tabIndex={finalShotFailed ? 0 : -1}
+              onClick={() => finalShotFailed && setActiveTool('precision')}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && finalShotFailed) {
+                  e.preventDefault();
+                  setActiveTool('precision');
+                }
+              }}>
                 <div className="flex items-center gap-2 mb-3">
                   <Crosshair className="w-4 h-4 text-primary flex-shrink-0" />
                   <span className="text-sm font-semibold text-white uppercase tracking-wider">Precision Result</span>
