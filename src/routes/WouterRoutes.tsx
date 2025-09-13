@@ -13,6 +13,15 @@ import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
+
+// Intel module components
+import CoordinateSelector from '@/components/intelligence/CoordinateSelector';
+import ClueJournal from '@/components/intelligence/ClueJournal';
+import ClueArchive from '@/components/intelligence/ClueArchive';
+import GeoRadarTool from '@/components/intelligence/GeoRadarTool';
+import BuzzInterceptor from '@/components/intelligence/BuzzInterceptor';
+import FinalShotPage from '@/components/intelligence/FinalShotPage';
+import IntelModuleHeader from '@/components/intelligence/IntelModuleHeader';
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
@@ -129,6 +138,73 @@ const WouterRoutes: React.FC = () => {
           <Route path="/intelligence">
             <ProtectedRoute>
               <GlobalLayout><IntelligenceStyledPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* INTEL — sottorotte esclusive */}
+          <Route path="/intelligence/coordinates">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <div className="min-h-screen w-full overflow-hidden">
+                  <IntelModuleHeader title="Coordinate Selector" />
+                  <CoordinateSelector />
+                </div>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/clue-journal">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <div className="min-h-screen w-full overflow-hidden">
+                  <IntelModuleHeader title="Clue Journal" />
+                  <ClueJournal />
+                </div>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/archive">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <div className="min-h-screen w-full overflow-hidden">
+                  <IntelModuleHeader title="Archivio Indizi" />
+                  <ClueArchive />
+                </div>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/radar">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <div className="min-h-screen w-full overflow-hidden">
+                  <IntelModuleHeader title="Geo Radar" />
+                  <GeoRadarTool />
+                </div>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/interceptor">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <div className="min-h-screen w-full overflow-hidden">
+                  <IntelModuleHeader title="BUZZ Interceptor" />
+                  <BuzzInterceptor />
+                </div>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/final-shot">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <div className="min-h-screen w-full overflow-hidden">
+                  <IntelModuleHeader title="Final Shot" />
+                  <FinalShotPage />
+                </div>
+              </GlobalLayout>
             </ProtectedRoute>
           </Route>
 

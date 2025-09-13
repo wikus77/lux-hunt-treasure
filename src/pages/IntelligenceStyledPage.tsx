@@ -103,7 +103,12 @@ const IntelligenceStyledPage: React.FC = () => {
     }
   };
 
-  const openModule = (moduleId: string) => {
+  const openModule = (moduleId: string, status?: string) => {
+    if (status && status !== 'Disponibile') {
+      // Non navigare se il modulo è bloccato
+      return;
+    }
+    
     const path = INTEL_ROUTES[moduleId];
     if (path) setLocation(path);
   };
@@ -170,10 +175,10 @@ const IntelligenceStyledPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {intelligenceModules.map((module) => (
-                <div 
+                 <div 
                   key={module.id} 
                   className="glass-card p-4 bg-background/20 border-0 cursor-pointer hover:bg-background/30 transition-all duration-200"
-                  onClick={() => module.status === 'Disponibile' && openModule(module.id)}
+                  onClick={() => openModule(module.id, module.status)}
                   onKeyDown={(e) => {
                     if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
                       e.preventDefault();
