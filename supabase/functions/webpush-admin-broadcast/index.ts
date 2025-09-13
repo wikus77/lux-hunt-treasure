@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const { data: prof } = await supabase
       .from('profiles')
       .select('is_admin')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .maybeSingle();
 
     const adminHeader = req.headers.get('x-admin-token');

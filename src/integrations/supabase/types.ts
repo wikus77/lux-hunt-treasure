@@ -2185,6 +2185,7 @@ export type Database = {
           full_name: string | null
           id: string
           investigative_style: string | null
+          is_admin: boolean
           is_pre_registered: boolean | null
           language: string | null
           last_cookie_banner_shown: string | null
@@ -2235,6 +2236,7 @@ export type Database = {
           full_name?: string | null
           id: string
           investigative_style?: string | null
+          is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
@@ -2285,6 +2287,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           investigative_style?: string | null
+          is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
