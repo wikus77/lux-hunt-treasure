@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Brain, Target, BookOpen, Radar, Zap, Crosshair } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -17,6 +17,7 @@ interface IntelligencePanelProps {
   onClose: () => void;
   currentWeek: number;
   finalShotFailed?: boolean;
+  initialTool?: ToolType;
 }
 
 type ToolType = 'coordinates' | 'journal' | 'radar' | 'interceptor' | 'precision' | 'archive' | 'finalshot' | 'finalshotmap';
@@ -25,9 +26,16 @@ const IntelligencePanel: React.FC<IntelligencePanelProps> = ({
   isOpen,
   onClose,
   currentWeek,
-  finalShotFailed = false
+  finalShotFailed = false,
+  initialTool
 }) => {
-  const [activeTool, setActiveTool] = useState<ToolType>('coordinates');
+  const [activeTool, setActiveTool] = useState<ToolType>(initialTool ?? 'coordinates');
+
+  useEffect(() => {
+    if (initialTool && isOpen) {
+      setActiveTool(initialTool);
+    }
+  }, [initialTool, isOpen]);
 
   const tools = [
     {

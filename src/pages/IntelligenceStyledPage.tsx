@@ -342,6 +342,7 @@ const IntelligenceStyledPage: React.FC = () => {
         onClose={() => setIsIntelligencePanelOpen(false)}
         currentWeek={currentWeek}
         finalShotFailed={false}
+        initialTool={selectedModule as any}
       />
 
       <BottomNavigation />
