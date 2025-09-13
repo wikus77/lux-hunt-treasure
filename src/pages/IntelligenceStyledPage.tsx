@@ -24,6 +24,7 @@ import {
   Database
 } from 'lucide-react';
 import { useLocation } from 'wouter';
+
 const IntelligenceStyledPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const INTEL_ROUTES: Record<string, string> = {
@@ -109,9 +110,7 @@ const IntelligenceStyledPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
-      <UnifiedHeader />
-      
-      <main className="pt-16 pb-20 px-4">
+      <main className="pt-4 pb-20 px-4">
         <div className="max-w-lg mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center space-x-4 mb-6">
@@ -336,17 +335,6 @@ const IntelligenceStyledPage: React.FC = () => {
           </Card>
         </div>
       </main>
-
-      {/* Intelligence Panel - Opens when module is selected */}
-      <IntelligencePanelLazy
-        isOpen={isIntelligencePanelOpen}
-        onClose={() => setIsIntelligencePanelOpen(false)}
-        currentWeek={currentWeek}
-        finalShotFailed={false}
-        initialTool={selectedModule as any}
-      />
-
-      <BottomNavigation />
     </div>
   );
 };
