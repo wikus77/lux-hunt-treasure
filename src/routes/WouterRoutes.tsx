@@ -4,13 +4,8 @@
 import React, { useState, useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
 
-// Utility functions for first-time registration routing
-const PLAN_SEEN_KEY = 'm1_plan_choice_seen';
-const isWithin = (minutes: number, iso?: string) => {
-  if (!iso) return false;
-  const created = new Date(iso).getTime();
-  return (Date.now() - created) <= minutes * 60_000;
-};
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Database-based plan choice tracking instead of localStorage
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
@@ -125,23 +120,21 @@ const WouterRoutes: React.FC = () => {
         const hasActiveSubResult = await fetchHasActiveSub(supabase, user.id);
         setHasActiveSub(hasActiveSubResult);
         
-        // Get user profile for admin check
+        // Get user profile for admin check and choose_plan_seen flag
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('role, choose_plan_seen')
           .eq('id', user.id)
           .single();
         
         const isAdmin = !!profile?.role?.includes?.('admin');
-        const alreadyPrompted = localStorage.getItem(PLAN_SEEN_KEY) === '1';
-        const justSignedUp = isWithin(15, (user as any)?.created_at) || new URLSearchParams(window.location.search).has('fromSignup');
+        const choosePlanSeen = !!profile?.choose_plan_seen;
 
         // Mostra /choose-plan SOLO se:
         // - utente NON admin
-        // - NON abbiamo già mostrato la scelta
-        // - è il PRIMO accesso post-registrazione (justSignedUp)
+        // - NON ha già visto la pagina piani (choose_plan_seen=false)
         // - e NON ha ancora una subscription attiva
-        const mustShowPlanNow = !isAdmin && !alreadyPrompted && justSignedUp && !hasActiveSubResult;
+        const mustShowPlanNow = !isAdmin && !choosePlanSeen && !hasActiveSubResult;
 
         if (mustShowPlanNow && location !== '/choose-plan') {
           console.log('🔄 Redirecting new user to choose-plan');
