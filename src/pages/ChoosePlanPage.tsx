@@ -127,26 +127,54 @@ const ChoosePlanPage: React.FC = () => {
   const startFreePlan = async () => {
     setIsLoadingFree(true);
     try {
+      // Telemetria per diagnosi
+      console.warn('[FREE] Starting free plan creation...');
+      
       const { data, error } = await supabase.rpc('create_free_subscription');
+      console.warn('[FREE]', { data, error });
+      
       if (error) {
         const msg = (error.message || '').toLowerCase();
-        if (msg.includes('unique') || msg.includes('already') || msg.includes('23505')) {
-          // trattiamo come successo idempotente
+        if (msg.includes('unique') || msg.includes('already') || msg.includes('23505') || msg.includes('duplicate')) {
+          // Trattato come successo idempotente - marca come visto
+          try {
+            await supabase.rpc('mark_choose_plan_seen');
+          } catch (markError) {
+            console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
+          }
           setLocation('/home');
           return;
         }
         toast.error('Errore temporaneo, riprova');
         return;
       }
+      
+      // Successo: marca come visto e redirecta
       if (data && typeof data === 'object' && 'ok' in data && data.ok) {
+        try {
+          await supabase.rpc('mark_choose_plan_seen');
+        } catch (markError) {
+          console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
+        }
         setLocation('/home');
         return;
       }
-      // fallback: consideriamo successo
+      
+      // Fallback: consideriamo successo
+      try {
+        await supabase.rpc('mark_choose_plan_seen');
+      } catch (markError) {
+        console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
+      }
       setLocation('/home');
     } catch (e) {
       const msg = String(e ?? '').toLowerCase();
-      if (msg.includes('unique') || msg.includes('already') || msg.includes('23505')) {
+      if (msg.includes('unique') || msg.includes('already') || msg.includes('23505') || msg.includes('duplicate')) {
+        try {
+          await supabase.rpc('mark_choose_plan_seen');
+        } catch (markError) {
+          console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
+        }
         setLocation('/home');
       } else {
         toast.error('Errore temporaneo, riprova');

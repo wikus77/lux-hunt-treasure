@@ -1,10 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Shield, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
+import { getActiveSubscription } from '@/lib/subscriptions';
+import { supabase } from '@/integrations/supabase/client';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface AccessBlockedViewProps {
   subscriptionPlan: string;
@@ -18,6 +21,20 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
   timeUntilAccess
 }) => {
   const { navigate } = useWouterNavigation();
+  const { getCurrentUser } = useUnifiedAuth();
+  const [realPlanName, setRealPlanName] = useState<string>('Free');
+
+  // Ottieni il piano reale dal DB invece di fallback hardcoded
+  useEffect(() => {
+    async function fetchRealPlan() {
+      const user = getCurrentUser();
+      if (user?.id) {
+        const result = await getActiveSubscription(supabase, user.id);
+        setRealPlanName(result.plan || 'Free');
+      }
+    }
+    fetchRealPlan();
+  }, [getCurrentUser]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
     const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
@@ -35,7 +52,8 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
       case 'GOLD': return 'Gold';
       case 'BLACK': return 'Black';
       case 'TITANIUM': return 'Titanium';
-      default: return 'Base';
+      case 'FREE': return 'Free';
+      default: return 'Free'; // ZERO fallback a "Titanium" 
     }
   };
 
@@ -64,7 +82,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
 
         {/* Messaggio principale */}
         <p className="text-gray-300 mb-6">
-          L'accesso alla missione non è ancora disponibile per il tuo piano <span className="font-semibold text-cyan-400">{getPlanDisplayName(subscriptionPlan)}</span>.
+          L'accesso alla missione non è ancora disponibile per il tuo piano <span className="font-semibold text-cyan-400">{getPlanDisplayName(realPlanName)}</span>.
         </p>
 
         {/* Countdown */}
@@ -112,10 +130,10 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
 
         {/* Pulsanti azione */}
         <div className="space-y-3">
-          {subscriptionPlan.toLowerCase() === 'base' && (
+          {(realPlanName.toLowerCase() === 'base' || realPlanName.toLowerCase() === 'free') && (
             <Button
               onClick={() => {
-                navigate('/subscriptions?upgrade=true&from=access-blocked&current_plan=' + encodeURIComponent(subscriptionPlan));
+                navigate('/subscriptions?upgrade=true&from=access-blocked&current_plan=' + encodeURIComponent(realPlanName));
               }}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
             >
@@ -124,10 +142,9 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
           )}
           
             <Button
+              type="button"
               variant="outline"
-              onClick={() => {
-                navigate('/home');
-              }}
+              onClick={() => navigate('/home')}
               className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
             >
               ← Torna alla homepage
