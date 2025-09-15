@@ -16,6 +16,21 @@ import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 const plans = [
   {
+    id: 'free',
+    name: 'Free (Base)',
+    price: '0',
+    icon: <Shield className="w-8 h-8" />,
+    earlyAccess: 'Accesso quando disponibile',
+    features: [
+      '1 indizio a settimana',
+      'Accesso alle missioni quando attive',
+      'Badge Base nel profilo',
+      'Partecipazione al gioco'
+    ],
+    color: 'from-gray-500 to-gray-700',
+    free: true
+  },
+  {
     id: 'Silver',
     name: 'Silver',
     price: '3.99',
@@ -82,6 +97,7 @@ const ChoosePlanPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingFree, setIsLoadingFree] = useState(false);
   const { getCurrentUser } = useUnifiedAuth();
   
   // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
@@ -95,8 +111,35 @@ const ChoosePlanPage: React.FC = () => {
     handlePaymentSuccess 
   } = useStripeInAppPayment();
   
+  // © 2025 Joseph Mulé – M1SSION™
+  const handleFreePlan = async () => {
+    if (isLoadingFree) return;
+    
+    setIsLoadingFree(true);
+    try {
+      const { data, error } = await supabase.rpc('create_free_subscription', {});
+      if (error) {
+        console.error('FREE subscribe error', error);
+        toast.error('Impossibile attivare il piano Free. Riprova.');
+        return;
+      }
+      toast.success('Piano Free attivato!');
+      setLocation('/home');
+    } catch (error) {
+      console.error('❌ Errore durante attivazione FREE:', error);
+      toast.error('Errore durante l\'attivazione del piano Free');
+    } finally {
+      setIsLoadingFree(false);
+    }
+  };
+
   const handlePlanSelection = async (planId: string) => {
     if (isProcessing) return;
+    
+    // Handle FREE plan separately
+    if (planId === 'free') {
+      return handleFreePlan();
+    }
     
     setIsProcessing(true);
     setSelectedPlan(planId);
@@ -193,16 +236,19 @@ const ChoosePlanPage: React.FC = () => {
                   
                   <Button
                     onClick={() => handlePlanSelection(plan.id)}
-                    disabled={isProcessing}
+                    disabled={isProcessing || (plan.id === 'free' && isLoadingFree)}
                     className={`w-full mt-6 ${
-                      selectedPlan === plan.id ? 'opacity-50' : ''
+                      selectedPlan === plan.id || (plan.id === 'free' && isLoadingFree) ? 'opacity-50' : ''
                     } ${
+                      plan.free ? 'bg-gray-600 hover:bg-gray-700 text-white' :
                       plan.popular ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
                       plan.premium ? 'bg-purple-500 hover:bg-purple-600' :
                       'bg-white text-black hover:bg-gray-200'
                     }`}
                   >
-                    {selectedPlan === plan.id ? 'Elaborazione...' : 'Seleziona Piano'}
+                    {plan.id === 'free' && isLoadingFree ? 'Attivazione...' :
+                     selectedPlan === plan.id ? 'Elaborazione...' : 
+                     plan.free ? 'Inizia Gratis' : 'Seleziona Piano'}
                   </Button>
                 </CardContent>
               </Card>

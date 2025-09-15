@@ -1,8 +1,8 @@
 // M1SSION™ — First Visit Landing Logic & PWA Routing
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React from "react";
-import { Route, Switch } from "wouter";
+import React, { useState, useEffect } from "react";
+import { Route, Switch, useLocation } from "wouter";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
@@ -10,6 +10,7 @@ import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
@@ -76,9 +77,61 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
 import FcmTest from "@/pages/FcmTest";
 
+// © 2025 Joseph Mulé – M1SSION™
+async function fetchHasActiveSub(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('id, status, tier')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .limit(1)
+    .maybeSingle();
+  if (error && error.code !== 'PGRST116') console.warn('hasActiveSub error', error);
+  return !!data;
+}
+
 const WouterRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading } = useUnifiedAuth();
+  const { isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
+  const [location, setLocation] = useLocation();
+  const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
+  const [subCheckLoading, setSubCheckLoading] = useState(false);
+  
   useQueryQRRedirect();
+
+  // Check active subscription when user is authenticated
+  useEffect(() => {
+    async function checkSubscription() {
+      if (!isAuthenticated || isLoading) {
+        setHasActiveSub(null);
+        return;
+      }
+
+      const user = getCurrentUser();
+      if (!user?.id) {
+        setHasActiveSub(false);
+        return;
+      }
+
+      setSubCheckLoading(true);
+      try {
+        const hasActiveSub = await fetchHasActiveSub(supabase, user.id);
+        setHasActiveSub(hasActiveSub);
+        
+        // If authenticated but no active subscription, redirect to /choose-plan
+        if (!hasActiveSub && location !== '/choose-plan') {
+          console.log('🔄 No active subscription found - redirecting to choose-plan');
+          setLocation('/choose-plan');
+        }
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        setHasActiveSub(false);
+      } finally {
+        setSubCheckLoading(false);
+      }
+    }
+
+    checkSubscription();
+  }, [isAuthenticated, isLoading, getCurrentUser, location, setLocation]);
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
@@ -104,21 +157,22 @@ const WouterRoutes: React.FC = () => {
 
           {/* Landing page - FIRST VISIT LOGIC IMPLEMENTATION */}
           <Route path="/">
-            {isLoading ? (
+            {isLoading || subCheckLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="text-white">🎯 M1SSION™ Loading...</div>
               </div>
             ) : !isAuthenticated ? (
-              shouldShowLanding(isAuthenticated) ? (
-                <LandingPage />
-              ) : (
-                (() => {
-                  // If not first visit and not authenticated, go to login
-                  console.log('🏁 Not first visit - redirecting to login');
-                  markFirstVisitCompleted(); // Ensure flag is set
+              (() => {
+                // Check if this is first visit using localStorage
+                const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
+                
+                if (isFirstVisit) {
+                  localStorage.setItem('m1_first_visit_seen', '1');
+                  return <LandingPage />;
+                } else {
                   return <Login />;
-                })()
-              )
+                }
+              })()
             ) : (
               <ProtectedRoute>
                 <GlobalLayout><AppHome /></GlobalLayout>
