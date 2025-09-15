@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Crown, Zap, Shield, Star } from 'lucide-react';
@@ -112,35 +112,34 @@ const ChoosePlanPage: React.FC = () => {
   } = useStripeInAppPayment();
   
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  async function startFreePlan() {
-    const { data, error } = await supabase.rpc('create_free_subscription', {});
-    if (!error) return 'ok';
-    const msg = (error.message || '').toLowerCase();
-    if (error.code === '23505' || msg.includes('already_active') || msg.includes('duplicate')) return 'ok';
-    throw error;
-  }
-
-  const handleFreePlan = async () => {
-    if (isLoadingFree) return;
-    
-    setIsLoadingFree(true);
+  const startFreePlan = useCallback(async () => {
     try {
-      await startFreePlan();
-      setLocation('/home');
-    } catch (error) {
-      console.error('❌ Errore durante attivazione FREE:', error);
-      toast.error('Errore temporaneo, riprova');
+      setIsLoadingFree(true);
+      const { data, error } = await supabase.rpc("create_free_subscription");
+      if (!error) {
+        setLocation("/home");
+        return;
+      }
+      // Tratta i casi "già attivo" o "duplicato" come successo
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("already") || msg.includes("duplicate") || msg.includes("unique") || msg.includes("23505")) {
+        setLocation("/home");
+        return;
+      }
+      toast.error("Errore temporaneo, riprova");
+    } catch (e) {
+      toast.error("Errore temporaneo, riprova");
     } finally {
-      setIsLoadingFree(false);
+      setTimeout(() => setIsLoadingFree(false), 1200);
     }
-  };
+  }, [setLocation]);
 
   const handlePlanSelection = async (planId: string) => {
     if (isProcessing) return;
     
     // Handle FREE plan separately
     if (planId === 'free') {
-      return handleFreePlan();
+      return startFreePlan();
     }
     
     setIsProcessing(true);
@@ -182,7 +181,7 @@ const ChoosePlanPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="plans-title">
-            Scegli il tuo Piano <span className="brand-m1">M<span className="neon-1">1</span>SSION™</span>
+            Scegli il tuo Piano <span className="brand-m1">M1</span><span className="brand-ss">SSION™</span>
           </h1>
           <p className="text-xl text-gray-300">
             Seleziona il piano di abbonamento per accedere alla missione
@@ -199,15 +198,15 @@ const ChoosePlanPage: React.FC = () => {
               transition={{ delay: plans.indexOf(plan) * 0.1 }}
               className="relative"
             >
-              <Card className={`plan-card bg-gray-900 border-gray-700 h-full ${
+              <Card className={`plan-card ${plan.popular ? 'gold' : ''} ${plan.premium ? 'titanium' : ''} ${plan.free ? 'free' : ''} bg-gray-900 border-gray-700 h-full ${
                 plan.popular ? 'border-yellow-500 border-2' : 
                 plan.premium ? 'border-purple-500 border-2' : ''
               }`}>
                 {plan.popular && (
-                  <div className="plan-ribbon ribbon-gold">Più Popolare</div>
+                  <div className="ribbon">Più Popolare</div>
                 )}
                 {plan.premium && (
-                  <div className="plan-ribbon ribbon-titanium">Premium</div>
+                  <div className="ribbon">Premium</div>
                 )}
                 
                 <CardHeader className="text-center">
