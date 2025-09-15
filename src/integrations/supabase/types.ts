@@ -2317,6 +2317,24 @@ export type Database = {
         }
         Relationships: []
       }
+      push_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       push_notification_logs: {
         Row: {
           apns_failed: number | null
@@ -4421,6 +4439,10 @@ export type Database = {
       }
     }
     Functions: {
+      _gen_unique_agent_code: {
+        Args: { len?: number }
+        Returns: string
+      }
       _upsert_premium_feed_source: {
         Args: {
           p_enabled: boolean
@@ -4967,6 +4989,10 @@ export type Database = {
       upsert_notification_counter: {
         Args: { p_delta: number; p_user_id: string }
         Returns: number
+      }
+      upsert_user_position: {
+        Args: { lat: number; lng: number; uid: string }
+        Returns: undefined
       }
       upsert_webpush_subscription: {
         Args: {
