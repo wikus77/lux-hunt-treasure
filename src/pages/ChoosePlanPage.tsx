@@ -141,9 +141,9 @@ const ChoosePlanPage: React.FC = () => {
 
         // Se la funzione non esiste o manca il GRANT, mostriamo toast chiaro
         if (msg.includes('function') && msg.includes('not') && msg.includes('exist')) {
-          toast.error('FREE non disponibile: crea l'RPC create_free_subscription su Supabase')
+          toast.error("FREE non disponibile: crea l'RPC create_free_subscription su Supabase")
         } else if (msg.includes('permission') || msg.includes('permission denied')) {
-          toast.error('Permesso negato all'RPC FREE: aggiungi GRANT a authenticated')
+          toast.error("Permesso negato all'RPC FREE: aggiungi GRANT a authenticated")
         } else {
           toast.error('Errore temporaneo, riprova')
         }
@@ -262,6 +262,7 @@ const ChoosePlanPage: React.FC = () => {
                   <Button
                     onClick={() => handlePlanSelection(plan.id)}
                     disabled={isProcessing || (plan.id === 'free' && isLoadingFree)}
+                    data-testid={plan.id === 'free' ? 'cta-free' : undefined}
                     className={`w-full mt-6 ${plan.free ? 'free-cta' : ''} ${
                       selectedPlan === plan.id || (plan.id === 'free' && isLoadingFree) ? 'opacity-50' : ''
                     } ${
