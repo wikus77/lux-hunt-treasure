@@ -100,6 +100,11 @@ const ChoosePlanPage: React.FC = () => {
   const [isLoadingFree, setIsLoadingFree] = useState(false);
   const { getCurrentUser } = useUnifiedAuth();
   
+  // Mark that user has seen the plan choice page
+  React.useEffect(() => { 
+    localStorage.setItem('m1_plan_choice_seen', '1'); 
+  }, []);
+  
   // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
   // No redirect needed - WouterProtectedRoute handles admin bypass
   
@@ -115,39 +120,34 @@ const ChoosePlanPage: React.FC = () => {
   const startFreePlan = async () => {
     try {
       setIsLoadingFree(true);
-
-      // Chiamata RPC
+      // la RPC restituisce {status:'created'|'already_active'}
       const { data, error } = await supabase.rpc('create_free_subscription');
 
-      // Log diagnostico completo (non rimuovere)
-      console.log('[FREE/RPC] data:', data);
-      console.log('[FREE/RPC] error:', error);
-
-      // Se il backend risponde ok o already_active trattalo come successo
-      const ok = !error && data && ((data as any).status === 'ok' || (data as any).already_active === true);
-
-      // Gestione codici noti che vanno considerati "ok" (idempotenza lato client)
-      const benign =
-        error &&
-        (
-          (error.code && (error.code === '23505' || error.code === 'PGRST116')) || // 23505 unique_violation, PGRST116 "record already exists"
-          (error.message && /already|duplicate|unique/i.test(error.message))
-        );
-
-      if (ok || benign) {
-        setLocation('/home');  // usa il tuo router: navigate('/home') o equivalente
+      if (!error) {
+        // ok pieno o già attivo → vai in app
+        setLocation('/home');
         return;
       }
 
-      // Errori reali
-      const msg = error?.message || 'Errore temporaneo. Riprova.';
-      toast.error(msg);
-    } catch (e:any) {
-      console.error('[FREE/RPC] exception:', e);
-      toast.error('Errore temporaneo. Riprova.');
+      const msg = (error.message || '').toLowerCase();
+      const isDuplicate =
+        msg.includes('already') ||
+        msg.includes('active') ||
+        msg.includes('duplicate') ||
+        msg.includes('unique') ||
+        msg.includes('23505');
+
+      if (isDuplicate) {
+        setLocation('/home');
+        return;
+      }
+
+      // errore reale
+      toast.error('Errore temporaneo, riprova');
+    } catch {
+      toast.error('Errore temporaneo, riprova');
     } finally {
-      // riabilita il bottone dopo un attimo
-      setTimeout(() => setIsLoadingFree(false), 1000);
+      setTimeout(() => setIsLoadingFree(false), 1200);
     }
   };
 
@@ -252,7 +252,7 @@ const ChoosePlanPage: React.FC = () => {
                     onClick={() => handlePlanSelection(plan.id)}
                     disabled={isProcessing || (plan.id === 'free' && isLoadingFree)}
                     data-testid={plan.id === 'free' ? 'cta-free' : undefined}
-                    className={`w-full mt-6 ${plan.free ? 'free-cta' : ''} ${
+                    className={`w-full mt-6 free-cta ${
                       selectedPlan === plan.id || (plan.id === 'free' && isLoadingFree) ? 'opacity-50' : ''
                     } ${
                       plan.free ? 'bg-gray-600 hover:bg-gray-700 text-white' :
@@ -261,7 +261,7 @@ const ChoosePlanPage: React.FC = () => {
                       'bg-white text-black hover:bg-gray-200'
                     }`}
                   >
-                    {plan.id === 'free' && isLoadingFree ? 'Attivazione...' :
+                    {plan.id === 'free' && isLoadingFree ? 'Attivazione…' : 
                      selectedPlan === plan.id ? 'Elaborazione...' : 
                      plan.free ? 'Inizia Gratis' : 'Seleziona Piano'}
                   </Button>
