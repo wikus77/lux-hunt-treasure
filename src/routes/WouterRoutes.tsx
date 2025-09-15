@@ -1,5 +1,5 @@
-// M1SSION™ - Wouter Routes for Capacitor iOS Compatibility
-// 🔐 FIRMATO: Joseph Mulè – CEO NIYVORA KFT™
+// M1SSION™ — First Visit Landing Logic & PWA Routing
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React from "react";
 import { Route, Switch } from "wouter";
@@ -9,6 +9,7 @@ import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
+import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
 
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
@@ -101,14 +102,23 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
-          {/* Landing page - CRITICAL FIX: Direct LandingPage render */}
+          {/* Landing page - FIRST VISIT LOGIC IMPLEMENTATION */}
           <Route path="/">
             {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="text-white">🎯 M1SSION™ Loading...</div>
               </div>
             ) : !isAuthenticated ? (
-              <LandingPage />
+              shouldShowLanding(isAuthenticated) ? (
+                <LandingPage />
+              ) : (
+                (() => {
+                  // If not first visit and not authenticated, go to login
+                  console.log('🏁 Not first visit - redirecting to login');
+                  markFirstVisitCompleted(); // Ensure flag is set
+                  return <Login />;
+                })()
+              )
             ) : (
               <ProtectedRoute>
                 <GlobalLayout><AppHome /></GlobalLayout>
