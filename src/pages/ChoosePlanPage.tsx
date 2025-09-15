@@ -102,7 +102,14 @@ const ChoosePlanPage: React.FC = () => {
   
   // Mark that user has seen the plan choice page
   React.useEffect(() => { 
-    localStorage.setItem('m1_plan_choice_seen', '1'); 
+    const markSeen = async () => {
+      try {
+        await supabase.rpc('mark_choose_plan_seen');
+      } catch (error) {
+        console.warn('Error marking plan as seen:', error);
+      }
+    };
+    markSeen();
   }, []);
   
   // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
@@ -118,34 +125,32 @@ const ChoosePlanPage: React.FC = () => {
   
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
   const startFreePlan = async () => {
+    setIsLoadingFree(true);
     try {
-      setIsLoadingFree(true);
-      // la RPC restituisce {status:'created'|'already_active'}
       const { data, error } = await supabase.rpc('create_free_subscription');
-
-      if (!error) {
-        // ok pieno o già attivo → vai in app
+      if (error) {
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('unique') || msg.includes('already') || msg.includes('23505')) {
+          // trattiamo come successo idempotente
+          setLocation('/home');
+          return;
+        }
+        toast.error('Errore temporaneo, riprova');
+        return;
+      }
+      if (data && typeof data === 'object' && 'ok' in data && data.ok) {
         setLocation('/home');
         return;
       }
-
-      const msg = (error.message || '').toLowerCase();
-      const isDuplicate =
-        msg.includes('already') ||
-        msg.includes('active') ||
-        msg.includes('duplicate') ||
-        msg.includes('unique') ||
-        msg.includes('23505');
-
-      if (isDuplicate) {
+      // fallback: consideriamo successo
+      setLocation('/home');
+    } catch (e) {
+      const msg = String(e ?? '').toLowerCase();
+      if (msg.includes('unique') || msg.includes('already') || msg.includes('23505')) {
         setLocation('/home');
-        return;
+      } else {
+        toast.error('Errore temporaneo, riprova');
       }
-
-      // errore reale
-      toast.error('Errore temporaneo, riprova');
-    } catch {
-      toast.error('Errore temporaneo, riprova');
     } finally {
       setTimeout(() => setIsLoadingFree(false), 1200);
     }

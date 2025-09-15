@@ -2173,6 +2173,7 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           can_access_app: boolean | null
+          choose_plan_seen: boolean
           city: string | null
           country: string | null
           created_at: string
@@ -2224,6 +2225,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           can_access_app?: boolean | null
+          choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
@@ -2275,6 +2277,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           can_access_app?: boolean | null
+          choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
@@ -4869,6 +4872,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      mark_choose_plan_seen: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       normalize_feed_url: {
         Args: { input_url: string }
