@@ -234,7 +234,7 @@ const ChoosePlanPage: React.FC = () => {
                   <Button
                     onClick={() => handlePlanSelection(plan.id)}
                     disabled={isProcessing || (plan.id === 'free' && isLoadingFree)}
-                    className={`w-full mt-6 ${
+                    className={`w-full mt-6 ${plan.free ? 'free-cta' : ''} ${
                       selectedPlan === plan.id || (plan.id === 'free' && isLoadingFree) ? 'opacity-50' : ''
                     } ${
                       plan.free ? 'bg-gray-600 hover:bg-gray-700 text-white' :
