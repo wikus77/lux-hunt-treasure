@@ -80,18 +80,9 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
 import FcmTest from "@/pages/FcmTest";
 
-// © 2025 Joseph Mulé – M1SSION™
-async function fetchHasActiveSub(supabase: any, userId: string) {
-  const { data, error } = await supabase
-    .from('subscriptions')
-    .select('id, status, tier')
-    .eq('user_id', userId)
-    .eq('status', 'active')
-    .limit(1)
-    .maybeSingle();
-  if (error && error.code !== 'PGRST116') console.warn('hasActiveSub error', error);
-  return !!data;
-}
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Import centralizzato
+import { getActiveSubscription } from '@/lib/subscriptions';
 
 const WouterRoutes: React.FC = () => {
   const { isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
@@ -117,24 +108,25 @@ const WouterRoutes: React.FC = () => {
 
       setSubCheckLoading(true);
       try {
-        const hasActiveSubResult = await fetchHasActiveSub(supabase, user.id);
-        setHasActiveSub(hasActiveSubResult);
+        // Check subscription con helper centralizzato
+        const subResult = await getActiveSubscription(supabase, user.id);
+        setHasActiveSub(subResult.hasActive);
         
-        // Get user profile for admin check and choose_plan_seen flag
+        // Get user profile per admin check e choose_plan_seen flag
         const { data: profile } = await supabase
           .from('profiles')
           .select('role, choose_plan_seen')
           .eq('id', user.id)
           .single();
         
-        const isAdmin = !!profile?.role?.includes?.('admin');
+        const isAdmin = !!profile?.role?.includes?.('admin') || !!profile?.role?.includes?.('owner');
         const choosePlanSeen = !!profile?.choose_plan_seen;
 
         // Mostra /choose-plan SOLO se:
-        // - utente NON admin
-        // - NON ha già visto la pagina piani (choose_plan_seen=false)
+        // - utente NON admin/owner
+        // - NON ha già visto la pagina piani (choose_plan_seen=false)  
         // - e NON ha ancora una subscription attiva
-        const mustShowPlanNow = !isAdmin && !choosePlanSeen && !hasActiveSubResult;
+        const mustShowPlanNow = !isAdmin && !choosePlanSeen && !subResult.hasActive;
 
         if (mustShowPlanNow && location !== '/choose-plan') {
           console.log('🔄 Redirecting new user to choose-plan');
