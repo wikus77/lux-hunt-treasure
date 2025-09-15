@@ -112,27 +112,55 @@ const ChoosePlanPage: React.FC = () => {
   } = useStripeInAppPayment();
   
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  const startFreePlan = useCallback(async () => {
+  async function startFreePlan() {
     try {
-      setIsLoadingFree(true);
-      const { data, error } = await supabase.rpc("create_free_subscription");
-      if (!error) {
-        setLocation("/home");
-        return;
+      setIsLoadingFree(true)
+      // RPC idempotente: deve esistere in DB (create_free_subscription)
+      const { data, error } = await supabase.rpc('create_free_subscription', {})
+      if (error) {
+        // Log diagnostico completo: CI SERVE per capire perché fallisce
+        console.error('[FREE RPC ERROR]', {
+          code: (error as any)?.code,
+          message: error.message,
+          details: (error as any)?.details,
+          hint:    (error as any)?.hint
+        })
+        const msg = `${(error as any)?.code ?? ''} ${error.message ?? ''} ${(error as any)?.details ?? ''}`.toLowerCase()
+
+        // Trattiamo i casi idempotenti come SUCCESSO → /home
+        if (
+          msg.includes('23505') ||        // unique_violation
+          msg.includes('duplicate') ||
+          msg.includes('already') ||
+          msg.includes('exists') ||
+          msg.includes('on conflict') ||
+          msg.includes('constraint')
+        ) {
+          setLocation('/home'); return
+        }
+
+        // Se la funzione non esiste o manca il GRANT, mostriamo toast chiaro
+        if (msg.includes('function') && msg.includes('not') && msg.includes('exist')) {
+          toast.error('FREE non disponibile: crea l'RPC create_free_subscription su Supabase')
+        } else if (msg.includes('permission') || msg.includes('permission denied')) {
+          toast.error('Permesso negato all'RPC FREE: aggiungi GRANT a authenticated')
+        } else {
+          toast.error('Errore temporaneo, riprova')
+        }
+
+        setIsLoadingFree(false)
+        return
       }
-      // Tratta i casi "già attivo" o "duplicato" come successo
-      const msg = (error.message || "").toLowerCase();
-      if (msg.includes("already") || msg.includes("duplicate") || msg.includes("unique") || msg.includes("23505")) {
-        setLocation("/home");
-        return;
-      }
-      toast.error("Errore temporaneo, riprova");
-    } catch (e) {
-      toast.error("Errore temporaneo, riprova");
-    } finally {
-      setTimeout(() => setIsLoadingFree(false), 1200);
+
+      // Successo: anche se data è null (returns void/json), proseguiamo
+      console.log('[FREE RPC OK]', data)
+      setLocation('/home')
+    } catch (e:any) {
+      console.error('[FREE CLIENT EXCEPTION]', e)
+      toast.error('Errore temporaneo, riprova')
+      setIsLoadingFree(false)
     }
-  }, [setLocation]);
+  }
 
   const handlePlanSelection = async (planId: string) => {
     if (isProcessing) return;
