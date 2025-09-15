@@ -4579,6 +4579,10 @@ export type Database = {
         Args: { since: string }
         Returns: number
       }
+      create_free_subscription: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       exec_sql: {
         Args: { sql: string }
         Returns: Json
