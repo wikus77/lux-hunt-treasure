@@ -111,23 +111,25 @@ const ChoosePlanPage: React.FC = () => {
     handlePaymentSuccess 
   } = useStripeInAppPayment();
   
-  // © 2025 Joseph Mulé – M1SSION™
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  async function startFreePlan() {
+    const { data, error } = await supabase.rpc('create_free_subscription', {});
+    if (!error) return 'ok';
+    const msg = (error.message || '').toLowerCase();
+    if (error.code === '23505' || msg.includes('already_active') || msg.includes('duplicate')) return 'ok';
+    throw error;
+  }
+
   const handleFreePlan = async () => {
     if (isLoadingFree) return;
     
     setIsLoadingFree(true);
     try {
-      const { data, error } = await supabase.rpc('create_free_subscription', {});
-      if (error) {
-        console.error('FREE subscribe error', error);
-        toast.error('Impossibile attivare il piano Free. Riprova.');
-        return;
-      }
-      toast.success('Piano Free attivato!');
+      await startFreePlan();
       setLocation('/home');
     } catch (error) {
       console.error('❌ Errore durante attivazione FREE:', error);
-      toast.error('Errore durante l\'attivazione del piano Free');
+      toast.error('Errore temporaneo, riprova');
     } finally {
       setIsLoadingFree(false);
     }
@@ -179,8 +181,8 @@ const ChoosePlanPage: React.FC = () => {
       >
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-red-500 bg-clip-text text-transparent">
-            Scegli il Tuo Piano M1SSION™
+          <h1 className="plans-title">
+            Scegli il tuo Piano <span className="brand-m1">M<span className="neon-1">1</span>SSION™</span>
           </h1>
           <p className="text-xl text-gray-300">
             Seleziona il piano di abbonamento per accedere alla missione
@@ -188,7 +190,7 @@ const ChoosePlanPage: React.FC = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-6xl mx-auto">
+        <div className="plans-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <motion.div
               key={plan.id}
@@ -197,19 +199,15 @@ const ChoosePlanPage: React.FC = () => {
               transition={{ delay: plans.indexOf(plan) * 0.1 }}
               className="relative"
             >
-              <Card className={`bg-gray-900 border-gray-700 h-full ${
+              <Card className={`plan-card bg-gray-900 border-gray-700 h-full ${
                 plan.popular ? 'border-yellow-500 border-2' : 
                 plan.premium ? 'border-purple-500 border-2' : ''
               }`}>
                 {plan.popular && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black">
-                    Più Popolare
-                  </Badge>
+                  <div className="plan-ribbon ribbon-gold">Più Popolare</div>
                 )}
                 {plan.premium && (
-                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white">
-                    Premium
-                  </Badge>
+                  <div className="plan-ribbon ribbon-titanium">Premium</div>
                 )}
                 
                 <CardHeader className="text-center">

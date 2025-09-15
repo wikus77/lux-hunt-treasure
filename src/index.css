@@ -334,6 +334,56 @@
   .badge-secondary {
     @apply bg-white/10 text-white;
   }
+
+  /* M1SSION™ Plans Styling */
+  .plans-title {
+    font-weight: 800;
+    letter-spacing: .5px;
+    @apply text-4xl font-bold mb-4;
+  }
+  
+  .brand-m1 {
+    color: #fff;
+  }
+  
+  .brand-m1 .neon-1 {
+    color: #00E5FF;
+    text-shadow: 0 0 6px rgba(0,229,255,.8), 0 0 16px rgba(0,229,255,.4);
+  }
+  
+  /* Ribbon styling */
+  .plan-card {
+    position: relative;
+    overflow: visible;
+    z-index: 0;
+  }
+  
+  .plan-ribbon {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 2;
+    border-radius: 12px;
+    padding: 4px 12px;
+    font-weight: 700;
+    pointer-events: none;
+  }
+  
+  .ribbon-gold {
+    background: #ffd400;
+    color: #000;
+  }
+  
+  .ribbon-titanium {
+    background: #8a2be2;
+    color: #fff;
+  }
+  
+  /* Ensure container doesn't clip */
+  .plans-grid {
+    overflow: visible;
+  }
 }
 
 @layer utilities {
