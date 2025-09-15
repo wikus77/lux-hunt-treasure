@@ -352,6 +352,9 @@
   }
 
   /* ——— Ribbon visibili ——— */
+  .pricing-section, .plans-wrapper, .plans-grid, .plan-card { 
+    overflow: visible !important; 
+  }
   .plans-grid, 
   .plans-wrapper, 
   .pricing-section { 

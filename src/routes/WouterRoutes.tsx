@@ -3,6 +3,14 @@
 
 import React, { useState, useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
+
+// Utility functions for first-time registration routing
+const PLAN_SEEN_KEY = 'm1_plan_choice_seen';
+const isWithin = (minutes: number, iso?: string) => {
+  if (!iso) return false;
+  const created = new Date(iso).getTime();
+  return (Date.now() - created) <= minutes * 60_000;
+};
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
@@ -114,12 +122,29 @@ const WouterRoutes: React.FC = () => {
 
       setSubCheckLoading(true);
       try {
-        const hasActiveSub = await fetchHasActiveSub(supabase, user.id);
-        setHasActiveSub(hasActiveSub);
+        const hasActiveSubResult = await fetchHasActiveSub(supabase, user.id);
+        setHasActiveSub(hasActiveSubResult);
         
-        // If authenticated but no active subscription, redirect to /choose-plan
-        if (!hasActiveSub && location !== '/choose-plan') {
-          console.log('🔄 No active subscription found - redirecting to choose-plan');
+        // Get user profile for admin check
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+        
+        const isAdmin = !!profile?.role?.includes?.('admin');
+        const alreadyPrompted = localStorage.getItem(PLAN_SEEN_KEY) === '1';
+        const justSignedUp = isWithin(15, (user as any)?.created_at) || new URLSearchParams(window.location.search).has('fromSignup');
+
+        // Mostra /choose-plan SOLO se:
+        // - utente NON admin
+        // - NON abbiamo già mostrato la scelta
+        // - è il PRIMO accesso post-registrazione (justSignedUp)
+        // - e NON ha ancora una subscription attiva
+        const mustShowPlanNow = !isAdmin && !alreadyPrompted && justSignedUp && !hasActiveSubResult;
+
+        if (mustShowPlanNow && location !== '/choose-plan') {
+          console.log('🔄 Redirecting new user to choose-plan');
           setLocation('/choose-plan');
         }
       } catch (error) {
