@@ -34,7 +34,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
         setRealPlanName(plan);
         
         // SBLOCCO FREE: reindirizza subito se piano = 'free'
-        if (plan === 'free') {
+        if (plan === 'free' && window.location.pathname !== '/choose-plan') {
           navigate('/home', { replace: true });
           return;
         }
