@@ -552,6 +552,11 @@ const WouterRoutes: React.FC = () => {
             {React.createElement(React.lazy(() => import('@/pages/BillingSmokeTest')))}
           </Route>
 
+          {/* DEV SETUP - Stripe Keys Configuration (URL-only access) */}
+          <Route path="/dev-stripe-setup">
+            {React.createElement(React.lazy(() => import('@/pages/DevStripeKeysSetup')))}
+          </Route>
+
           {/* Plan selection route - accessible even without plan selected */}
           <Route path="/choose-plan">
             {isAuthenticated ? (
