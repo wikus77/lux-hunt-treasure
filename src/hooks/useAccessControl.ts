@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from './useUnifiedAuth';
+import { getActiveSubscription } from '@/lib/subscriptions';
 
 interface AccessControlState {
   canAccess: boolean;
@@ -87,6 +88,21 @@ export const useAccessControl = (): AccessControlState => {
             accessStartDate: new Date(),
             subscriptionPlan: rawPlan || 'free',
             status: 'free_access_enabled',
+            timeUntilAccess: null
+          });
+          return;
+        }
+
+        // Fallback bypass: se la tabella subscriptions ha un FREE attivo → accesso immediato
+        const activeSub = await getActiveSubscription(supabase, user.id);
+        if (activeSub?.plan?.toLowerCase() === 'free') {
+          console.log('🆓 useAccessControl - FREE BYPASS via subscriptions (Test mode)');
+          setState({
+            canAccess: true,
+            isLoading: false,
+            accessStartDate: new Date(),
+            subscriptionPlan: 'free',
+            status: 'free_access_enabled_subscriptions',
             timeUntilAccess: null
           });
           return;
