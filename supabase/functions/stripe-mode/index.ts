@@ -14,13 +14,14 @@ function cors(origin: string | null) {
   return {
     'Access-Control-Allow-Origin': o,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info, x-supabase-auth, x-requested-with',
+    'Access-Control-Max-Age': '86400',
   };
 }
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: cors(req.headers.get('origin')) });
+    return new Response(null, { status: 204, headers: cors(req.headers.get('origin')) });
   }
 
   // Accept both GET and POST for flexibility with supabase.functions.invoke
