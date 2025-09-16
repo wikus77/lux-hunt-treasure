@@ -15,6 +15,7 @@ import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
 import { supabase } from "@/integrations/supabase/client";
 
+
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";

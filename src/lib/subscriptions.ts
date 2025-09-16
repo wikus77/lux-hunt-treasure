@@ -20,7 +20,7 @@ export async function getActiveSubscription(supabase: any, userId?: string): Pro
     // Nota: plan_tier non esiste nel DB, usiamo solo tier e plan
     const { data, error } = await supabase
       .from('subscriptions')
-      .select('id, status, tier, plan, is_active, created_at')
+      .select('id, status, tier, is_active, created_at')
       .eq('user_id', userId)
       .or('status.eq.active,is_active.eq.true')
       .order('created_at', { ascending: false })
@@ -36,8 +36,8 @@ export async function getActiveSubscription(supabase: any, userId?: string): Pro
       return { hasActive: false, plan: null };
     }
 
-    // Estrai il nome del piano (tier o plan)
-    const planName = data.tier || data.plan || null;
+    // Estrai il nome del piano (tier)
+    const planName = data.tier || null;
     
     return {
       hasActive: true,
