@@ -11,6 +11,7 @@ import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import AddCardDialog from './AddCardDialog';
 import { assertPkMatchesMode } from '@/lib/stripe/guard';
+import { getStripe } from '@/lib/stripe/stripeClient';
 
 interface SavedCard {
   id: string;
@@ -52,6 +53,8 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
           .select('*')
           .eq('user_id', user.id)
           .eq('is_default', true)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
 
         if (error) {
@@ -118,12 +121,33 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         return;
       }
 
-      if (data?.client_secret) {
-        console.log('✅ M1SSION™ Payment intent created, redirecting to Stripe');
-        // Redirect to Stripe with client_secret for payment completion
-        const stripeUrl = `https://checkout.stripe.com/c/pay/${data.client_secret}`;
-        window.open(stripeUrl, '_blank');
-        toast.success('Reindirizzamento a Stripe per completare il pagamento...');
+      if (data?.client_secret && savedCard?.stripe_pm_id) {
+        console.log('✅ M1SSION™ Payment intent created, confirming with saved payment method');
+        
+        // 🔥 FIXED: Use stripe.confirmCardPayment instead of redirect
+        const stripe = await getStripe();
+        if (!stripe) {
+          throw new Error('Stripe non inizializzato');
+        }
+        
+        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(data.client_secret, {
+          payment_method: savedCard.stripe_pm_id
+        });
+        
+        if (confirmError) {
+          console.error('❌ M1SSION™ Stripe confirmation error:', confirmError);
+          throw new Error(confirmError.message || 'Errore nella conferma del pagamento');
+        }
+        
+        if (paymentIntent?.status === 'succeeded') {
+          console.log('✅ M1SSION™ Payment succeeded');
+          onSuccess(paymentIntent.id);
+        } else if (paymentIntent?.status === 'requires_action') {
+          console.log('🔄 M1SSION™ Payment requires additional action');
+          toast.info('Autenticazione aggiuntiva richiesta');
+        } else {
+          throw new Error(`Stato pagamento non gestito: ${paymentIntent?.status}`);
+        }
       } else if (data?.payment_intent_id) {
         console.log('✅ M1SSION™ Payment succeeded immediately');
         onSuccess(data.payment_intent_id);
