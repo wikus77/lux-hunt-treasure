@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import AddCardDialog from './AddCardDialog';
+import { assertPkMatchesMode } from '@/lib/stripe/guard';
 
 interface SavedCard {
   id: string;
@@ -81,6 +82,22 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
     setLoading(true);
     try {
       console.log('🚀 M1SSION™ Processing payment with saved card:', savedCard.stripe_pm_id);
+
+      // Guard: Ensure client pk_* matches server sk_* mode
+      try {
+        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+        if (modeErr) {
+          console.warn('Stripe mode introspection failed', modeErr);
+          toast.error('Configurazione pagamento non valida. Contatta il supporto.');
+          return;
+        } else {
+          assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+        }
+      } catch (e) {
+        console.error('Stripe mode mismatch or error', e);
+        toast.error('Configurazione pagamento non valida. Contatta il supporto.');
+        return;
+      }
 
       // 🔥 FIXED: Use create-payment-intent instead of broken process-saved-card-payment
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
