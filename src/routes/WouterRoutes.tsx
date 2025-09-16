@@ -113,6 +113,7 @@ const WouterRoutes: React.FC = () => {
         const subResult = await getActiveSubscription(supabase, user.id);
         setHasActiveSub(subResult.hasActive);
         
+        // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
         // Get user profile per admin check e choose_plan_seen flag
         const { data: profile } = await supabase
           .from('profiles')
@@ -120,18 +121,20 @@ const WouterRoutes: React.FC = () => {
           .eq('id', user.id)
           .single();
         
-        const isAdmin = ['admin','owner'].some(r => profile?.role?.includes?.(r));
-        const choosePlanSeen = !!profile?.choose_plan_seen;
-
-        // Mostra /choose-plan SOLO se:
-        // - utente NON admin/owner
-        // - NON ha già visto la pagina piani (choose_plan_seen=false)  
-        // - e NON ha ancora una subscription attiva
-        const mustShowPlanNow = !isAdmin && !choosePlanSeen && !subResult.hasActive;
-
-        if (mustShowPlanNow && location !== '/choose-plan') {
-          console.log('🔄 Redirecting new user to choose-plan');
-          setLocation('/choose-plan');
+        const isAdmin = ['admin','owner'].some(r => profile?.role?.toLowerCase?.().includes(r));
+        
+        // Guard per /choose-plan (mostrare SOLO se: non admin, nessuna sub attiva, e choose_plan_seen = false)
+        if (!isAdmin && !subResult.hasActive && !profile?.choose_plan_seen) {
+          if (location !== '/choose-plan') {
+            setLocation('/choose-plan');
+            return;
+          }
+        }
+        
+        // Mai bloccare se piano = FREE
+        if (subResult.plan === 'free' && location !== '/home') {
+          setLocation('/home');
+          return;
         }
       } catch (error) {
         console.error('Error checking subscription:', error);
