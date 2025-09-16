@@ -547,6 +547,11 @@ const WouterRoutes: React.FC = () => {
             <GlobalLayout><Contact /></GlobalLayout>
           </Route>
 
+          {/* SMOKE TEST - Can be removed at any time */}
+          <Route path="/billing-smoke-test">
+            {React.createElement(React.lazy(() => import('@/pages/BillingSmokeTest')))}
+          </Route>
+
           {/* Plan selection route - accessible even without plan selected */}
           <Route path="/choose-plan">
             {isAuthenticated ? (
