@@ -24,17 +24,24 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
   const { getCurrentUser } = useUnifiedAuth();
   const [realPlanName, setRealPlanName] = useState<string>('Free');
 
-  // Ottieni il piano reale dal DB invece di fallback hardcoded
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
   useEffect(() => {
     async function fetchRealPlan() {
       const user = getCurrentUser();
       if (user?.id) {
         const result = await getActiveSubscription(supabase, user.id);
-        setRealPlanName(result.plan || 'Free');
+        const plan = result.plan || 'free';
+        setRealPlanName(plan);
+        
+        // SBLOCCO FREE: reindirizza subito se piano = 'free'
+        if (plan === 'free') {
+          navigate('/home', { replace: true });
+          return;
+        }
       }
     }
     fetchRealPlan();
-  }, [getCurrentUser]);
+  }, [getCurrentUser, navigate]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
     const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
@@ -144,7 +151,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
             <Button
               type="button"
               variant="outline"
-              onClick={() => navigate('/home')}
+              onClick={() => navigate('/home', { replace: true })}
               className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 pointer-events-auto z-10"
               style={{ pointerEvents: 'auto' }}
             >

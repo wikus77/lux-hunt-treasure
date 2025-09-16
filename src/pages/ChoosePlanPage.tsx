@@ -100,16 +100,9 @@ const ChoosePlanPage: React.FC = () => {
   const [isLoadingFree, setIsLoadingFree] = useState(false);
   const { getCurrentUser } = useUnifiedAuth();
   
-  // Mark that user has seen the plan choice page
-  React.useEffect(() => { 
-    const markSeen = async () => {
-      try {
-        await supabase.rpc('mark_choose_plan_seen');
-      } catch (error) {
-        console.warn('Error marking plan as seen:', error);
-      }
-    };
-    markSeen();
+  // Prima visita: segna "vista" appena si apre /choose-plan
+  useEffect(() => {
+    supabase.rpc('mark_choose_plan_seen').catch(() => {});
   }, []);
   
   // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
@@ -125,36 +118,21 @@ const ChoosePlanPage: React.FC = () => {
   
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
   const startFreePlan = async () => {
+    if (isLoadingFree) return;
     setIsLoadingFree(true);
     try {
-      console.log('[FREE] Starting free plan creation...');
-      
       const { data, error } = await supabase.rpc('create_free_subscription');
-      
-      console.warn('[FREE]', { data, error });
-      
-      // Se errore duplicate/unique constraint - TRATTA COME SUCCESSO
-      if (error && (error.code === '23505' || error.message?.toLowerCase().includes('already') || 
-                   error.message?.toLowerCase().includes('exists') || 
-                   error.message?.toLowerCase().includes('duplicate') ||
-                   error.message?.toLowerCase().includes('unique'))) {
-        console.log('[FREE] Duplicate subscription detected - proceeding as success');
+      console.warn('[FREE][rpc] create_free_subscription ->', { data, error });
+      if (error && !/23505|unique|duplicate|already/i.test(error.message)) {
+        toast.error('Errore temporaneo, riprova');
+        setIsLoadingFree(false);
+        return;
       }
-      
-      // Sempre marca come visto (soft fail se RPC non esiste)
-      try {
-        await supabase.rpc('mark_choose_plan_seen');
-      } catch (markError) {
-        console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
-      }
-      
-      // Redirect immediato
+      await supabase.rpc('mark_choose_plan_seen').catch(() => {});
       setLocation('/home');
-      
-    } catch (error) {
-      console.warn('[FREE] Unexpected error (continuing):', error);
-      setLocation('/home'); // Prosegui comunque
-    } finally {
+    } catch (e) {
+      console.warn('[FREE] unexpected', e);
+      toast.error('Errore temporaneo, riprova');
       setIsLoadingFree(false);
     }
   };
