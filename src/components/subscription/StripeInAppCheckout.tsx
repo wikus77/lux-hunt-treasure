@@ -19,6 +19,7 @@ import SavedCardPayment from '@/components/payments/SavedCardPayment';
 
 // Initialize Stripe using environment variable
 import { getStripe } from '@/lib/stripe/stripeClient';
+import { assertPkMatchesMode } from '@/lib/stripe/guard';
 const stripePromise = getStripe();
 
 interface StripeInAppCheckoutProps {
@@ -45,6 +46,20 @@ const CheckoutForm: React.FC<{
     const createPaymentIntent = async () => {
       try {
         console.log('🔥 M1SSION™ Creating payment intent for:', config.type, config);
+
+        // Guard: Ensure client pk_* matches server sk_* mode
+        try {
+          const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+          if (modeErr) {
+            console.warn('Stripe mode introspection failed', modeErr);
+          } else {
+            assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+          }
+        } catch (e) {
+          console.error('Stripe mode mismatch or error', e);
+          toast.error('Stripe mode mismatch: contatta il supporto.');
+          return;
+        }
         
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
@@ -96,6 +111,19 @@ const CheckoutForm: React.FC<{
 
     try {
       console.log('🚀 M1SSION™ Processing payment...');
+
+      // Guard again at confirmation time
+      try {
+        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+        if (!modeErr) {
+          assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+        }
+      } catch (e) {
+        console.error('Stripe mode mismatch or error before confirm', e);
+        toast.error('Stripe mode mismatch: contatta il supporto.');
+        setLoading(false);
+        return;
+      }
 
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
