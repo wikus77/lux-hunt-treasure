@@ -140,7 +140,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
           {(realPlanName.toLowerCase() === 'base' || realPlanName.toLowerCase() === 'free') && (
             <Button
               onClick={() => {
-                navigate('/subscriptions?upgrade=true&from=access-blocked&current_plan=' + encodeURIComponent(realPlanName));
+                navigate('/choose-plan?from=access-blocked&current_plan=' + encodeURIComponent(realPlanName));
               }}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
             >

@@ -77,14 +77,15 @@ export const useAccessControl = (): AccessControlState => {
         }
 
         // 🆓 FREE PLAN BYPASS - IMMEDIATE ACCESS (SOLUZIONE B)
-        const planLower = (userProfile.subscription_plan || '').toLowerCase();
-        if (planLower.includes('free') || planLower.includes('base')) {
-          console.log('🆓 useAccessControl - FREE PLAN BYPASS');
+        const rawPlan = userProfile.subscription_plan || '';
+        const planLower = rawPlan.toLowerCase();
+        if (!rawPlan || planLower.includes('free') || planLower.includes('base')) {
+          console.log('🆓 useAccessControl - FREE/BASE/EMPTY PLAN BYPASS (Test mode)');
           setState({
             canAccess: true,
             isLoading: false,
             accessStartDate: new Date(),
-            subscriptionPlan: userProfile.subscription_plan || 'free',
+            subscriptionPlan: rawPlan || 'free',
             status: 'free_access_enabled',
             timeUntilAccess: null
           });
