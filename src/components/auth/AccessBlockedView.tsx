@@ -53,7 +53,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
       case 'BLACK': return 'Black';
       case 'TITANIUM': return 'Titanium';
       case 'FREE': return 'Free';
-      default: return 'Free'; // ZERO fallback a "Titanium" 
+      default: return 'Free'; // NESSUN fallback a "Titanium" 
     }
   };
 
@@ -145,7 +145,8 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
               type="button"
               variant="outline"
               onClick={() => navigate('/home')}
-              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 pointer-events-auto z-10"
+              style={{ pointerEvents: 'auto' }}
             >
               ← Torna alla homepage
             </Button>

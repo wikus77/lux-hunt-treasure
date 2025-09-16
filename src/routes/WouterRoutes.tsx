@@ -120,7 +120,7 @@ const WouterRoutes: React.FC = () => {
           .eq('id', user.id)
           .single();
         
-        const isAdmin = !!profile?.role?.includes?.('admin') || !!profile?.role?.includes?.('owner');
+        const isAdmin = ['admin','owner'].some(r => profile?.role?.includes?.(r));
         const choosePlanSeen = !!profile?.choose_plan_seen;
 
         // Mostra /choose-plan SOLO se:

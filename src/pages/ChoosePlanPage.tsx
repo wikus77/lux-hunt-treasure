@@ -127,60 +127,35 @@ const ChoosePlanPage: React.FC = () => {
   const startFreePlan = async () => {
     setIsLoadingFree(true);
     try {
-      // Telemetria per diagnosi
-      console.warn('[FREE] Starting free plan creation...');
+      console.log('[FREE] Starting free plan creation...');
       
       const { data, error } = await supabase.rpc('create_free_subscription');
+      
       console.warn('[FREE]', { data, error });
       
-      if (error) {
-        const msg = (error.message || '').toLowerCase();
-        if (msg.includes('unique') || msg.includes('already') || msg.includes('23505') || msg.includes('duplicate')) {
-          // Trattato come successo idempotente - marca come visto
-          try {
-            await supabase.rpc('mark_choose_plan_seen');
-          } catch (markError) {
-            console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
-          }
-          setLocation('/home');
-          return;
-        }
-        toast.error('Errore temporaneo, riprova');
-        return;
+      // Se errore duplicate/unique constraint - TRATTA COME SUCCESSO
+      if (error && (error.code === '23505' || error.message?.toLowerCase().includes('already') || 
+                   error.message?.toLowerCase().includes('exists') || 
+                   error.message?.toLowerCase().includes('duplicate') ||
+                   error.message?.toLowerCase().includes('unique'))) {
+        console.log('[FREE] Duplicate subscription detected - proceeding as success');
       }
       
-      // Successo: marca come visto e redirecta
-      if (data && typeof data === 'object' && 'ok' in data && data.ok) {
-        try {
-          await supabase.rpc('mark_choose_plan_seen');
-        } catch (markError) {
-          console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
-        }
-        setLocation('/home');
-        return;
-      }
-      
-      // Fallback: consideriamo successo
+      // Sempre marca come visto (soft fail se RPC non esiste)
       try {
         await supabase.rpc('mark_choose_plan_seen');
       } catch (markError) {
         console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
       }
+      
+      // Redirect immediato
       setLocation('/home');
-    } catch (e) {
-      const msg = String(e ?? '').toLowerCase();
-      if (msg.includes('unique') || msg.includes('already') || msg.includes('23505') || msg.includes('duplicate')) {
-        try {
-          await supabase.rpc('mark_choose_plan_seen');
-        } catch (markError) {
-          console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
-        }
-        setLocation('/home');
-      } else {
-        toast.error('Errore temporaneo, riprova');
-      }
+      
+    } catch (error) {
+      console.warn('[FREE] Unexpected error (continuing):', error);
+      setLocation('/home'); // Prosegui comunque
     } finally {
-      setTimeout(() => setIsLoadingFree(false), 1200);
+      setIsLoadingFree(false);
     }
   };
 
