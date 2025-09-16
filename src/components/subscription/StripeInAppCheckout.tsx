@@ -17,8 +17,9 @@ import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
 
-// Initialize Stripe - M1SSION™ Project Key LIVE
-const stripePromise = loadStripe("pk_live_51QWy1JJ6V46p1E83lB4LKnZAH5oLGBgM9IwK6Jj9iMIgKiojGRAqv3bUhc7Jxuu9Xjux2tYyg4kbnW2LGMfDODJW00SH0X7LvW");
+// Initialize Stripe using environment variable
+import { getStripe } from '@/lib/stripe/stripeClient';
+const stripePromise = getStripe();
 
 interface StripeInAppCheckoutProps {
   config: PaymentConfig;
