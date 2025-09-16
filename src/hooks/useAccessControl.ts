@@ -76,7 +76,22 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
 
-        // Check mission access via database function
+        // 🆓 FREE PLAN BYPASS - IMMEDIATE ACCESS (SOLUZIONE B)
+        const planLower = (userProfile.subscription_plan || '').toLowerCase();
+        if (planLower.includes('free') || planLower.includes('base')) {
+          console.log('🆓 useAccessControl - FREE PLAN BYPASS');
+          setState({
+            canAccess: true,
+            isLoading: false,
+            accessStartDate: new Date(),
+            subscriptionPlan: userProfile.subscription_plan || 'free',
+            status: 'free_access_enabled',
+            timeUntilAccess: null
+          });
+          return;
+        }
+
+        // Check mission access via database function (solo per piani premium)
         const { data: canAccessData, error: accessError } = await supabase
           .rpc('can_user_access_mission', { user_id: user.id });
 
