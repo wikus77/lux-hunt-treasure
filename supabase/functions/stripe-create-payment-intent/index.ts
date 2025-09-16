@@ -2,23 +2,33 @@
 // Fixed Stripe Payment Intent Function - Deno compatible
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+const ALLOW = new Set([
+  'https://m1ssion.eu',
+  'https://www.m1ssion.eu',
+  'http://localhost:5173',
+  'http://localhost:3000'
+]);
+
+function cors(origin: string | null) {
+  const o = origin && ALLOW.has(origin) ? origin : '*';
+  return {
+    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
 
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: cors(req.headers.get('origin')) });
   }
 
   // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'content-type': 'application/json', ...corsHeaders }
+      headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
     });
   }
 
