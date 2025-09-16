@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Crown, Zap, Shield, Star } from 'lucide-react';
@@ -102,7 +102,14 @@ const ChoosePlanPage: React.FC = () => {
   
   // Prima visita: segna "vista" appena si apre /choose-plan
   useEffect(() => {
-    supabase.rpc('mark_choose_plan_seen').catch(() => {});
+    const markSeen = async () => {
+      try {
+        await supabase.rpc('mark_choose_plan_seen');
+      } catch (error) {
+        console.warn('Error marking plan as seen:', error);
+      }
+    };
+    markSeen();
   }, []);
   
   // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
@@ -128,7 +135,11 @@ const ChoosePlanPage: React.FC = () => {
         setIsLoadingFree(false);
         return;
       }
-      await supabase.rpc('mark_choose_plan_seen').catch(() => {});
+      try {
+        await supabase.rpc('mark_choose_plan_seen');
+      } catch (markError) {
+        console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
+      }
       setLocation('/home');
     } catch (e) {
       console.warn('[FREE] unexpected', e);
