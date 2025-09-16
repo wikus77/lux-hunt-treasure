@@ -4584,7 +4584,7 @@ export type Database = {
       }
       create_free_subscription: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: Json
       }
       exec_sql: {
         Args: { sql: string }
