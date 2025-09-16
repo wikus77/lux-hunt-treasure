@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.webpush-admin-broadcast]
 verify_jwt = false
+
+[functions.stripe-create-payment-intent]
+verify_jwt = false
