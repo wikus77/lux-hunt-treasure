@@ -42,6 +42,8 @@ serve(async (req) => {
       });
     }
 
+    const mode = secret.startsWith('sk_live_') ? 'live' : secret.startsWith('sk_test_') ? 'test' : 'unknown';
+
     const body = await req.json();
     const { amountCents, currency } = body;
 
@@ -53,7 +55,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Creating Payment Intent: ${amountCents} ${currency || 'eur'}`);
+    console.log(`[M1SSION] Creating Payment Intent in ${mode} mode: ${amountCents} ${currency || 'eur'}`);
 
     // Create Payment Intent using fetch API instead of Stripe SDK
     const response = await fetch('https://api.stripe.com/v1/payment_intents', {
@@ -81,13 +83,14 @@ serve(async (req) => {
     }
 
     const intent = await response.json();
-    console.log(`Payment Intent created: ${intent.id}`);
+    console.log(`[M1SSION] Payment Intent created: ${intent.id} (mode=${mode})`);
 
     return new Response(JSON.stringify({ 
       clientSecret: intent.client_secret,
       paymentIntentId: intent.id,
       amount: intent.amount,
-      currency: intent.currency
+      currency: intent.currency,
+      mode
     }), {
       status: 200,
       headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }

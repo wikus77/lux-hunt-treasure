@@ -11,7 +11,7 @@ export function getStripe(): Promise<Stripe | null> {
   if (!stripePromise) {
     const pk = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
     if (!pk) {
-      console.warn('Missing VITE_STRIPE_PUBLISHABLE_KEY');
+      throw new Error('Missing VITE_STRIPE_PUBLISHABLE_KEY');
     }
     stripePromise = loadStripe(pk as string);
   }

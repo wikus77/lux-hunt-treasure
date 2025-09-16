@@ -80,3 +80,6 @@ verify_jwt = false
 
 [functions.stripe-create-payment-intent]
 verify_jwt = false
+
+[functions.stripe-mode]
+verify_jwt = false
