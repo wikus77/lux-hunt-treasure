@@ -77,11 +77,15 @@
 
   @media (max-width: 640px) {
     button, a {
-      @apply touch-manipulation mobile-touch-target;
+      /* was: @apply touch-manipulation mobile-touch-target; */
+      touch-action: manipulation;
+      min-height: 44px;
+      min-width: 44px;
     }
 
     input, select, textarea {
-      @apply text-base mobile-optimized;
+      /* was: @apply text-base mobile-optimized; */
+      font-size: 16px;
     }
 
     .content-section {

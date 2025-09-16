@@ -131,8 +131,10 @@ const WouterRoutes: React.FC = () => {
           }
         }
         
-        // Mai bloccare se piano = FREE
-        if (subResult.plan === 'free' && location !== '/home' && location !== '/choose-plan') {
+        // Non forzare più redirect globali per FREE: consenti navigazione completa
+        // Redirect a /home solo nei casi di ingresso iniziale
+        const initialRoutes = ['/', '/login', '/mission-intro', '/subscription-verify'];
+        if (subResult.plan === 'free' && initialRoutes.includes(location)) {
           setLocation('/home');
           return;
         }
