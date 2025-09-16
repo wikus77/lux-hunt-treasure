@@ -1,4 +1,4 @@
-
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Stripe Payment Hook - RESET COMPLETO 17/07/2025
 
@@ -29,6 +29,21 @@ export const useStripePayment = () => {
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
+      return false;
+    }
+
+    // Verify Stripe mode alignment (client pk_* vs server sk_*)
+    try {
+      const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+      if (modeErr) {
+        console.warn('Stripe mode introspection failed', modeErr);
+      } else {
+        const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
+        assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+      }
+    } catch (e) {
+      console.error('Stripe mode mismatch or error', e);
+      toast.error('Stripe mode mismatch: contatta il supporto.');
       return false;
     }
 
@@ -105,6 +120,21 @@ export const useStripePayment = () => {
   const processSubscription = async (plan: string, paymentMethod?: string): Promise<void> => {
     if (!user) {
       toast.error('Devi essere loggato per effettuare acquisti');
+      return;
+    }
+
+    // Verify Stripe mode alignment (client pk_* vs server sk_*)
+    try {
+      const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+      if (modeErr) {
+        console.warn('Stripe mode introspection failed', modeErr);
+      } else {
+        const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
+        assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+      }
+    } catch (e) {
+      console.error('Stripe mode mismatch or error', e);
+      toast.error('Stripe mode mismatch: contatta il supporto.');
       return;
     }
 
