@@ -31,9 +31,7 @@
 }
 
 /* Instagram animation */
-@layer base {
-  .instagram-story-ring::before,
-  .instagram-story-ring-gradient::before {
-    animation: spin-gradient 2.8s linear infinite;
-  }
+.instagram-story-ring::before,
+.instagram-story-ring-gradient::before {
+  animation: spin-gradient 2.8s linear infinite;
 }
