@@ -1,35 +1,24 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// SMOKE TEST EDGE FUNCTION - Can be removed at any time
-import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno&dts';
+// Fixed Stripe Payment Intent Function - Deno compatible
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
-const ALLOW = new Set([
-  'https://m1ssion.eu',
-  'https://www.m1ssion.eu', 
-  'http://localhost:5173',
-  'http://localhost:3000'
-]);
-
-function cors(origin: string | null) {
-  const o = origin && ALLOW.has(origin) ? origin : '*';
-  return {
-    'Access-Control-Allow-Origin': o,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  };
-}
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
 
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: cors(req.headers.get('origin')) });
+    return new Response(null, { headers: corsHeaders });
   }
 
   // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
-      headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
+      headers: { 'content-type': 'application/json', ...corsHeaders }
     });
   }
 
@@ -39,11 +28,9 @@ serve(async (req) => {
       console.error('Missing STRIPE_SECRET_KEY environment variable');
       return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY' }), {
         status: 500,
-        headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
+        headers: { 'content-type': 'application/json', ...corsHeaders }
       });
     }
-
-    const stripe = new Stripe(secret, { apiVersion: '2024-06-20' });
 
     const body = await req.json();
     const { amountCents, currency } = body;
@@ -52,23 +39,38 @@ serve(async (req) => {
     if (!Number.isFinite(amountCents) || amountCents < 1) {
       return new Response(JSON.stringify({ error: 'Invalid amountCents' }), {
         status: 400,
-        headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
+        headers: { 'content-type': 'application/json', ...corsHeaders }
       });
     }
 
     console.log(`Creating Payment Intent: ${amountCents} ${currency || 'eur'}`);
 
-    // Create Payment Intent
-    const intent = await stripe.paymentIntents.create({
-      amount: Math.floor(amountCents),
-      currency: String(currency || 'eur'),
-      automatic_payment_methods: { enabled: true },
-      metadata: {
-        source: 'M1SSION_SMOKE_TEST',
-        timestamp: new Date().toISOString()
-      }
+    // Create Payment Intent using fetch API instead of Stripe SDK
+    const response = await fetch('https://api.stripe.com/v1/payment_intents', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${secret}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        amount: Math.floor(amountCents).toString(),
+        currency: String(currency || 'eur'),
+        'automatic_payment_methods[enabled]': 'true',
+        'metadata[source]': 'M1SSION_SMOKE_TEST',
+        'metadata[timestamp]': new Date().toISOString()
+      })
     });
 
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Stripe API Error:', error);
+      return new Response(JSON.stringify({ error: 'Stripe API error' }), {
+        status: response.status,
+        headers: { 'content-type': 'application/json', ...corsHeaders }
+      });
+    }
+
+    const intent = await response.json();
     console.log(`Payment Intent created: ${intent.id}`);
 
     return new Response(JSON.stringify({ 
@@ -78,17 +80,17 @@ serve(async (req) => {
       currency: intent.currency
     }), {
       status: 200,
-      headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
+      headers: { 'content-type': 'application/json', ...corsHeaders }
     });
 
   } catch (err) {
-    console.error('Stripe Payment Intent Error:', err);
+    console.error('Payment Intent Error:', err);
     return new Response(JSON.stringify({ 
       error: (err as Error).message,
       type: 'stripe_error'
     }), {
       status: 500,
-      headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
+      headers: { 'content-type': 'application/json', ...corsHeaders }
     });
   }
 });
