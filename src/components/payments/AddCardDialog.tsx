@@ -10,8 +10,9 @@ import { CreditCard, X, AlertCircle, Shield, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Initialize Stripe
-const stripePromise = loadStripe('pk_test_51QVLKLHM8cWnSL9I8GXe7CZdyqnKqHHp5GXhJXgE1mQpzm1fPqXwE8SY2dGUQEsFLu0yfxBP1FE5OQKfKgCcdxU2009yyY8BKp');
+// Initialize Stripe using environment variable
+import { getStripe } from '@/lib/stripe/stripeClient';
+const stripePromise = getStripe();
 
 interface AddCardDialogProps {
   onClose: () => void;

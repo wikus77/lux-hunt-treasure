@@ -38,7 +38,7 @@ serve(async (req) => {
       console.error('Missing STRIPE_SECRET_KEY environment variable');
       return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY' }), {
         status: 500,
-        headers: { 'content-type': 'application/json', ...corsHeaders }
+        headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
       });
     }
 
@@ -49,7 +49,7 @@ serve(async (req) => {
     if (!Number.isFinite(amountCents) || amountCents < 1) {
       return new Response(JSON.stringify({ error: 'Invalid amountCents' }), {
         status: 400,
-        headers: { 'content-type': 'application/json', ...corsHeaders }
+        headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
       });
     }
 
@@ -76,7 +76,7 @@ serve(async (req) => {
       console.error('Stripe API Error:', error);
       return new Response(JSON.stringify({ error: 'Stripe API error' }), {
         status: response.status,
-        headers: { 'content-type': 'application/json', ...corsHeaders }
+        headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
       });
     }
 
@@ -90,7 +90,7 @@ serve(async (req) => {
       currency: intent.currency
     }), {
       status: 200,
-      headers: { 'content-type': 'application/json', ...corsHeaders }
+      headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
     });
 
   } catch (err) {
@@ -100,7 +100,7 @@ serve(async (req) => {
       type: 'stripe_error'
     }), {
       status: 500,
-      headers: { 'content-type': 'application/json', ...corsHeaders }
+      headers: { 'content-type': 'application/json', ...cors(req.headers.get('origin')) }
     });
   }
 });
