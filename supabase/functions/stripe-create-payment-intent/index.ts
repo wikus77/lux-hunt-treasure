@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // SMOKE TEST EDGE FUNCTION - Can be removed at any time
-import Stripe from 'https://esm.sh/stripe@14.26.0?target=deno';
+import Stripe from 'https://esm.sh/stripe@13.6.0?target=deno&dts';
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
 const ALLOW = new Set([
