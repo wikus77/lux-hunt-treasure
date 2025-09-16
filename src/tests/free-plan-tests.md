@@ -59,3 +59,9 @@ Console logs per verifica:
 - AccessBlockedView NON mostra più fallback "Titanium"
 - Piano mostrato deriva da `getActiveSubscription()` → "Free" se null
 - Helper `getActiveSubscription` ritorna `{hasActive: false, plan: null}` se nessun abbonamento
+
+## ERRORI RISOLTI
+- ✅ Piano tier colonna: `subscriptions.plan_tier` NON esiste, rimosso da query
+- ✅ RLS policies aggiunte: `profiles_update_choose_plan_seen`, `subscriptions_insert_own` 
+- ✅ Indice unique per abbonamento attivo per utente: `idx_unique_active_sub_per_user`
+- ✅ RPC idempotenti: `create_free_subscription()`, `mark_choose_plan_seen()`
