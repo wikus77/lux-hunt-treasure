@@ -132,7 +132,7 @@ const WouterRoutes: React.FC = () => {
         }
         
         // Mai bloccare se piano = FREE
-        if (subResult.plan === 'free' && location !== '/home') {
+        if (subResult.plan === 'free' && location !== '/home' && location !== '/choose-plan') {
           setLocation('/home');
           return;
         }
