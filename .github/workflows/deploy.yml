@@ -19,13 +19,14 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: |
-          export VITE_PWA_VERSION=$(date +%Y%m%d%H%M%S)
           export VITE_BUILD_ID="v$(date +%Y%m%d%H%M%S)"
+          export VITE_PWA_VERSION="$VITE_BUILD_ID"
+          echo "🔧 Build variables: VITE_BUILD_ID=$VITE_BUILD_ID VITE_PWA_VERSION=$VITE_PWA_VERSION"
           npm run build
           # Verify versioned SW was generated
           if [ ! -f dist/sw-app-*.js ]; then
             echo "❌ ERROR: Versioned SW file not found in dist/"
-            ls -la dist/sw-*
+            ls -la dist/sw-* || echo "No SW files found"
             exit 1
           fi
           echo "✅ Versioned SW files generated:"
