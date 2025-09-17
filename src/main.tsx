@@ -193,33 +193,75 @@ const initErrorOverlay = () => {
   if (new URLSearchParams(window.location.search).get('noerr') === '1') return;
   
   const showErrorOverlay = (error: any, context: string) => {
+    // 🔥 ENHANCED: Previene overlay duplicati
+    const existing = document.getElementById('error-overlay');
+    if (existing) existing.remove();
+    
     const overlay = document.createElement('div');
     overlay.id = 'error-overlay';
     overlay.style.cssText = `
       position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
-      background: rgba(0,0,0,0.95); color: white; z-index: 999999;
+      background: rgba(0,0,0,0.97); color: white; z-index: 999999;
       font-family: 'Courier New', monospace; padding: 20px;
-      overflow: auto; font-size: 14px;
+      overflow: auto; font-size: 14px; backdrop-filter: blur(2px);
     `;
+    
+    // 🔥 ENHANCED: Rilevamento automatico tipo errore
+    const isStripeError = (error?.message || '').includes('getStripe');
+    const isNetworkError = (error?.message || '').includes('Failed to fetch');
+    const isSWError = (error?.message || '').includes('service worker');
+    
+    const getErrorType = () => {
+      if (isStripeError) return '💳 STRIPE ERROR';
+      if (isNetworkError) return '🌐 NETWORK ERROR';
+      if (isSWError) return '⚙️ SERVICE WORKER ERROR';
+      return '🚨 RUNTIME ERROR';
+    };
+    
+    const getSuggestion = () => {
+      if (isStripeError) return '💡 Prova a ricaricare con reset cache o controlla la configurazione Stripe';
+      if (isNetworkError) return '💡 Verifica la connessione internet o riprova più tardi';
+      if (isSWError) return '💡 Ricarica la pagina per risolvere i problemi del service worker';
+      return '💡 Prova a ricaricare la pagina. Se il problema persiste, usa Reset App';
+    };
+    
     overlay.innerHTML = `
-      <div style="max-width: 800px; margin: 0 auto;">
-        <h2 style="color: #ff4444; margin-bottom: 20px;">🚨 Runtime Error (${context})</h2>
-        <pre style="background: #222; padding: 15px; border-radius: 5px; white-space: pre-wrap;">
+      <div style="max-width: 900px; margin: 0 auto;">
+        <h2 style="color: #ff6b6b; margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+          ${getErrorType()} (${context})
+        </h2>
+        <div style="background: #1a1a2e; padding: 12px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #4361ee;">
+          <strong>${getSuggestion()}</strong>
+        </div>
+        <pre style="background: #0f0f23; padding: 15px; border-radius: 8px; white-space: pre-wrap; font-size: 12px; max-height: 300px; overflow: auto; border: 1px solid #333;">
 ${error?.stack || error?.message || String(error)}
         </pre>
-        <div style="margin-top: 20px;">
+        <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
           <button onclick="this.parentElement.parentElement.parentElement.remove()" 
-                  style="background: #333; color: white; border: none; padding: 10px 20px; margin-right: 10px; border-radius: 4px; cursor: pointer;">
-            Chiudi
+                  style="background: #333; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+            ❌ Chiudi
           </button>
-          <button onclick="window.location.reload()" 
-                  style="background: #4361ee; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
-            Ricarica
+          <button onclick="if('caches' in window){caches.keys().then(n => n.forEach(name => caches.delete(name))).finally(() => window.location.reload());} else {window.location.reload();}" 
+                  style="background: #4361ee; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+            🔄 Ricarica + Cache Reset
+          </button>
+          <button onclick="localStorage.setItem('push:disable', '1'); window.location.reload();" 
+                  style="background: #f39c12; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+            🔔 Disabilita Push
+          </button>
+          <button onclick="localStorage.clear(); sessionStorage.clear(); window.location.href='/app-reset.html';" 
+                  style="background: #e74c3c; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+            🔨 Reset App Completo
           </button>
           <button onclick="window.location.href='/?noerr=1'" 
-                  style="background: #666; color: white; border: none; padding: 10px 20px; margin-left: 10px; border-radius: 4px; cursor: pointer;">
-            Disabilita overlay
+                  style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+            🚫 Disabilita Overlay
           </button>
+        </div>
+        <div style="margin-top: 15px; padding: 10px; background: #16213e; border-radius: 6px; font-size: 11px; color: #a0a0a0;">
+          <strong>Debug Info:</strong> ${navigator.userAgent.includes('Mobile') ? '📱 Mobile' : '🖥️ Desktop'} | 
+          ${window.location.protocol === 'capacitor:' ? '📱 Capacitor' : '🌐 Web'} | 
+          SW: ${navigator.serviceWorker?.controller?.scriptURL?.split('/').pop() || 'None'}
         </div>
       </div>
     `;

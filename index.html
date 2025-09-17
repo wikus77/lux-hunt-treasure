@@ -86,6 +86,29 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     
+    <!-- 🔥 STRIPE GLOBAL SHIM - Previene errori "getStripe is not defined" -->
+    <script>
+      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Stripe Shim Globale
+      window.getStripe = window.getStripe || function() {
+        console.warn('[STRIPE-SHIM] getStripe chiamato prima dell\'inizializzazione - usa getStripeSafe()');
+        return Promise.resolve(null);
+      };
+      
+      // Propaga VITE_STRIPE_PUBLISHABLE_KEY se disponibile  
+      if (!window.__STRIPE_PK__ && typeof window !== 'undefined') {
+        try {
+          // Fallback per Cloudflare Pages - cerca in window.ENV se presente
+          const envKey = window.ENV?.VITE_STRIPE_PUBLISHABLE_KEY;
+          if (envKey && typeof envKey === 'string' && envKey.startsWith('pk_')) {
+            window.__STRIPE_PK__ = envKey;
+            console.log('[STRIPE-SHIM] ✅ PK propagato da window.ENV');
+          }
+        } catch (e) {
+          console.warn('[STRIPE-SHIM] ⚠️ Fallback PK non trovato in window.ENV');
+        }
+      }
+    </script>
+    
     <!-- Service Worker Registration (single instance) -->
     <script>
       // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ

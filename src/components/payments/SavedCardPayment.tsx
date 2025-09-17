@@ -11,7 +11,8 @@ import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import AddCardDialog from './AddCardDialog';
 import { assertPkMatchesMode } from '@/lib/stripe/guard';
-import { getStripe } from '@/lib/stripe/stripeClient';
+// 🔥 FIX CRITICO: Rimuovo import diretto per prevenire "getStripe is not defined"
+// Uso dynamic import da stripeFallback che gestisce gli errori
 
 interface SavedCard {
   id: string;
