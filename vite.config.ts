@@ -33,31 +33,6 @@ export default defineConfig(({ mode }) => ({
       gzipSize: true,
       brotliSize: true,
     }),
-    // SW App Template Processor Plugin (ESM)
-    {
-      name: 'sw-app-processor',
-      generateBundle(this: any) {
-        const buildId = process.env.VITE_BUILD_ID || process.env.VITE_PWA_VERSION || `build-${Date.now().toString(36)}`;
-        
-        try {
-          const __dirname = path.dirname(fileURLToPath(import.meta.url));
-          const templatePath = path.join(__dirname, 'public/sw-app-template.js');
-          const templateContent = readFileSync(templatePath, 'utf8');
-          const processedContent = templateContent.replace(/__BUILD_ID__/g, buildId);
-          
-          this.emitFile({
-            type: 'asset',
-            fileName: `sw-app-${buildId}.js`,
-            source: processedContent
-          });
-          
-          console.log(`✅ Generated versioned SW: sw-app-${buildId}.js`);
-        } catch (error) {
-          console.error('❌ SW App processor failed:', error);
-          throw error; // Fail build if SW generation fails
-        }
-      }
-    }
   ].filter(Boolean),
   resolve: {
     alias: {
