@@ -37,22 +37,33 @@ const ensureMainSWController = async () => {
   
   try {
     const ctrl = navigator.serviceWorker.controller?.scriptURL || '';
+    console.log('[SW-GUARD] Current controller:', ctrl);
     
     if (!ctrl.endsWith('/sw.js')) {
       console.log('🔧 Pages.dev: Ensuring /sw.js as main controller');
       
-      await navigator.serviceWorker.register('/sw.js', { 
+      // Register main SW with immediate activation
+      const registration = await navigator.serviceWorker.register('/sw.js', { 
         scope: '/', 
         updateViaCache: 'none' 
       });
       
-      // One-time reload on controller change
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!sessionStorage.getItem('sw-reloaded')) {
-          sessionStorage.setItem('sw-reloaded', '1');
+      // Force activation without waiting
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      }
+      
+      // One-time reload on controller change with loop protection
+      const reloadKey = 'sw-main-reload';
+      if (!sessionStorage.getItem(reloadKey)) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          sessionStorage.setItem(reloadKey, '1');
+          console.log('🔄 Controller changed to /sw.js, reloading...');
           location.reload();
-        }
-      });
+        }, { once: true });
+      }
+    } else {
+      console.log('✅ Main SW already controlling');
     }
   } catch (error) {
     console.warn('SW controller enforcement failed:', error);
