@@ -61,7 +61,7 @@ const CheckoutForm: React.FC<{
           return;
         }
         
-        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+        const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', {
           body: {
             user_id: user.id,
             plan: config.plan || config.type,

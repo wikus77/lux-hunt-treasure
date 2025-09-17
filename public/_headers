@@ -5,6 +5,12 @@
 /sw.js
   Cache-Control: no-store, no-cache, must-revalidate
 
+/firebase-messaging-sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/sw-m1ssion.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
   X-Content-Type-Options: nosniff
