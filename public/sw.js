@@ -148,14 +148,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Handle offline fallback
+  // Handle navigation requests with network-first strategy to prevent white-screen
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
+        .then(response => {
+          // Cache successful responses
+          if (response.ok) {
+            caches.open(CACHE_NAME).then(cache => {
+              cache.put(request, response.clone());
+            });
+          }
+          return response;
+        })
         .catch(() => {
-          return caches.match(OFFLINE_URL) || 
-                 caches.match('/') ||
-                 new Response('Offline', { status: 503 });
+          // Fallback to cached version, then offline page
+          return caches.match(request).then(cachedResponse => {
+            return cachedResponse || 
+                   caches.match(OFFLINE_URL) || 
+                   caches.match('/') ||
+                   new Response('Offline', { status: 503 });
+          });
         })
     );
     return;

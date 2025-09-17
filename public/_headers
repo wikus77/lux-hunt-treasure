@@ -2,7 +2,14 @@
   Clear-Site-Data: "cache","cookies","storage","executionContexts"
   Cache-Control: no-store, no-cache, must-revalidate
 
+/app-reset.html
+  Clear-Site-Data: "cache","cookies","storage","executionContexts"
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/sw-push.js
   Cache-Control: no-store, no-cache, must-revalidate
 
 /sw-app-*.js
