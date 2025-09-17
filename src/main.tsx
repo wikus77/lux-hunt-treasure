@@ -339,8 +339,23 @@ async function initAppWithSWGuard() {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       import('./utils/swControllerGuard').then(async ({ ensureAppSWController, logActiveSWs }) => {
         try {
-          await ensureAppSWController();
+          console.log('[MAIN] 🔄 Activating SW Controller Guard...');
+          const success = await ensureAppSWController();
           await logActiveSWs();
+          
+          // Dev logging for BUILD_ID verification
+          if (import.meta.env.DEV) {
+            const buildId = import.meta.env.VITE_BUILD_ID;
+            const controller = navigator.serviceWorker.controller;
+            console.log('[MAIN] 🔍 BUILD_ID:', buildId);
+            console.log('[MAIN] 🔍 Controller SW:', controller?.scriptURL || 'none');
+          }
+          
+          if (success) {
+            console.log('[MAIN] ✅ SW Controller Guard activated successfully');
+          } else {
+            console.warn('[MAIN] ⚠️ SW Controller Guard failed but app continues');
+          }
         } catch (error) {
           console.warn('[MAIN] SW guard failed (non-critical):', error);
         }
