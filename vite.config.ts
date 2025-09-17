@@ -7,8 +7,6 @@ import react from "@vitejs/plugin-react-swc";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from "path";
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -33,6 +31,14 @@ export default defineConfig(({ mode }) => ({
       gzipSize: true,
       brotliSize: true,
     }),
+    // Post-build: Copy custom SW to override any generated ones
+    mode === 'production' && {
+      name: 'copy-custom-sw',
+      closeBundle() {
+        const { execSync } = require('child_process');
+        execSync('node scripts/copy-sw.js', { stdio: 'inherit' });
+      }
+    },
   ].filter(Boolean),
   resolve: {
     alias: {
