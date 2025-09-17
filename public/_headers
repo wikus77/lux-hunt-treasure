@@ -1,5 +1,5 @@
 /index.html
-  Cache-Control: no-store, no-cache, must-revalidate
+  Cache-Control: no-store
 
 /app-reset.html
   Clear-Site-Data: "cache","cookies","storage","executionContexts"

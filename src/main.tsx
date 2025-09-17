@@ -28,6 +28,45 @@ if (import.meta.env.DEV) {
 // Initialize badge diagnostics
 initBadgeDiagnostics();
 
+// SW Controller enforcement for Pages.dev (NON tocca push chain)
+const ensureMainSWController = async () => {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  
+  try {
+    const registration = await navigator.serviceWorker.getRegistration('/');
+    const isPagesEnv = location.hostname.includes('.pages.dev');
+    
+    if (isPagesEnv && (!navigator.serviceWorker.controller || 
+        !navigator.serviceWorker.controller.scriptURL.endsWith('/sw.js'))) {
+      
+      console.log('🔧 Pages.dev: Ensuring /sw.js as main controller');
+      
+      const mainSW = await navigator.serviceWorker.register('/sw.js', { 
+        scope: '/', 
+        updateViaCache: 'none' 
+      });
+      
+      // Wait for controller change (one reload max)
+      if (!navigator.serviceWorker.controller) {
+        await new Promise(resolve => {
+          navigator.serviceWorker.addEventListener('controllerchange', resolve, { once: true });
+          setTimeout(resolve, 3000); // Emergency timeout
+        });
+        
+        if (!sessionStorage.getItem('sw-controller-reload')) {
+          sessionStorage.setItem('sw-controller-reload', '1');
+          location.reload();
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('SW controller enforcement failed:', error);
+  }
+};
+
+// Initialize SW controller enforcement (non-blocking)
+ensureMainSWController();
+
 // PHASE 1 AUDIT: Initialize PWA badge environment detection safely
 const initPWABadgeDiagnosticsSafely = async () => {
   if (typeof window !== 'undefined') {
