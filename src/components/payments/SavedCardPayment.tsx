@@ -102,8 +102,8 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         return;
       }
 
-      // 🔥 FIXED: Use create-payment-intent instead of broken process-saved-card-payment
-      const { data, error } = await supabase.functions.invoke('create-payment-intent', {
+      // 🔥 FIXED: Use stripe-create-payment-intent 
+      const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', {
         body: {
           user_id: user.id,
           plan: config.plan || config.type,
@@ -125,7 +125,7 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         console.log('✅ M1SSION™ Payment intent created, confirming with saved payment method');
         
         // 🔥 FIXED: Use stripe.confirmCardPayment instead of redirect
-        const stripe = await getStripe();
+        const stripe = await (await import('@/lib/stripeFallback')).getStripeSafe();
         if (!stripe) {
           throw new Error('Stripe non inizializzato');
         }

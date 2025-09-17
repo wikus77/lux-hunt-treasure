@@ -17,10 +17,10 @@ import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
 
-// Initialize Stripe using environment variable
-import { getStripe } from '@/lib/stripe/stripeClient';
+// Initialize Stripe using fallback for better compatibility
+import { getStripeSafe } from '@/lib/stripeFallback';
 import { assertPkMatchesMode } from '@/lib/stripe/guard';
-const stripePromise = getStripe();
+const stripePromise = getStripeSafe();
 
 interface StripeInAppCheckoutProps {
   config: PaymentConfig;

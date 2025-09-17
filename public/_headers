@@ -5,6 +5,9 @@
 /sw.js
   Cache-Control: no-store, no-cache, must-revalidate
 
+/sw-app-*.js
+  Cache-Control: no-store, no-cache, must-revalidate
+
 /firebase-messaging-sw.js
   Cache-Control: no-store, no-cache, must-revalidate
 

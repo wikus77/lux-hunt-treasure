@@ -321,15 +321,40 @@ const renderApp = () => {
   }
 };
 
-// Enhanced DOM readiness check
+// Enhanced DOM readiness check with SW Controller Guard
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     console.log("📄 DOM fully loaded - initializing enhanced app");
-    renderApp();
+    initAppWithSWGuard();
   });
 } else {
   console.log("📄 DOM already loaded - initializing enhanced app immediately");
-  renderApp();
+  initAppWithSWGuard();
+}
+
+// Initialize app with Service Worker controller protection
+async function initAppWithSWGuard() {
+  try {
+    // Step 1: Ensure our app SW is the controller (non-blocking)
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      import('./utils/swControllerGuard').then(async ({ ensureAppSWController, logActiveSWs }) => {
+        try {
+          await ensureAppSWController();
+          await logActiveSWs();
+        } catch (error) {
+          console.warn('[MAIN] SW guard failed (non-critical):', error);
+        }
+      });
+    }
+    
+    // Step 2: Always render app (never block on SW operations)
+    renderApp();
+    
+  } catch (error) {
+    console.error('[MAIN] Init with SW guard failed:', error);
+    // Fallback: render app anyway
+    renderApp();
+  }
 }
 
 // Initialize silent auto-update (no UI banners, just one refresh per BUILD_ID)
