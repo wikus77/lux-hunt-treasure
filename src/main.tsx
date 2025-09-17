@@ -391,9 +391,21 @@ const enforceAppSWController = async () => {
     const controller = navigator.serviceWorker.controller;
     const isOnPagesdev = window.location.hostname.includes('pages.dev');
     
+    log('[SW-ENFORCE] Current controller:', controller?.scriptURL || 'none');
+    log('[SW-ENFORCE] On Pages.dev:', isOnPagesdev);
+    
     // Only enforce on Pages.dev if controller is not our main SW
     if (isOnPagesdev && (!controller || !controller.scriptURL.endsWith('/sw.js'))) {
       console.log('[SW-ENFORCE] 🔄 Re-registering main SW on Pages.dev...');
+      
+      // Clear any conflicting registrations first
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      for (const reg of registrations) {
+        if (reg.scope === window.location.origin + '/' && !reg.active?.scriptURL.endsWith('/sw.js')) {
+          console.log('[SW-ENFORCE] Clearing conflicting SW:', reg.active?.scriptURL);
+          await reg.unregister();
+        }
+      }
       
       const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/',
@@ -409,17 +421,30 @@ const enforceAppSWController = async () => {
           position: fixed; top: 20px; right: 20px; z-index: 999999;
           background: #4361ee; color: white; padding: 12px 20px;
           border-radius: 8px; font-family: sans-serif; font-size: 14px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         `;
-        toast.textContent = 'Aggiornamento app...';
+        toast.textContent = '🔄 Aggiornamento app...';
         document.body.appendChild(toast);
         
-        setTimeout(() => window.location.reload(), 1000);
+        setTimeout(() => {
+          toast.remove();
+          window.location.reload();
+        }, 1500);
       };
       
       navigator.serviceWorker.addEventListener('controllerchange', showUpdateToast, { once: true });
+    } else {
+      console.log('[SW-ENFORCE] ✅ Main SW already controlling or not on Pages.dev');
     }
   } catch (error) {
     console.warn('[SW-ENFORCE] Failed (non-critical):', error);
+  }
+};
+
+// Helper function for consistent logging
+const log = (message: string, data?: any) => {
+  if (import.meta.env.DEV || window.location.search.includes('debug=1')) {
+    console.log(`[M1SSION-SW] ${message}`, data || '');
   }
 };
 

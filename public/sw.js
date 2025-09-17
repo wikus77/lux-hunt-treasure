@@ -1,6 +1,9 @@
 // M1SSION™ Service Worker - Enhanced with Caching
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
-// ATTENZIONE: file unico. Niente importScripts, niente Workbox.
+// MANTIENE importScripts per push chain blindata
+
+// VINCOLO: importScripts per catena push (NON RIMUOVERE)
+importScripts('sw-push.js');
 
 const CACHE_NAME = 'm1ssion-cache-v1';
 const OFFLINE_URL = '/offline.html';
@@ -148,10 +151,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Handle navigation requests with network-first strategy to prevent white-screen
+  // Handle navigation requests (index.html) with network-first to prevent stale content
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-cache' })
         .then(response => {
           // Cache successful responses
           if (response.ok) {
