@@ -259,10 +259,12 @@ const NotificationsSettings: React.FC = () => {
             <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
           </div>
 
-          {/* Debug Panel for Push Notifications */}
-          <div className="border-t border-white/10 pt-4">
-            <PushDebugPanel />
-          </div>
+          {/* Debug Panel for Push Notifications - Solo development */}
+          {!import.meta.env.PROD && (
+            <div className="border-t border-white/10 pt-4">
+              <PushDebugPanel />
+            </div>
+          )}
         </CardContent>
       </Card>
 

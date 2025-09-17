@@ -14,6 +14,10 @@ export const SafeAreaVisualizer: React.FC<SafeAreaVisualizerProps> = ({
   showByDefault = false,
   includeStatusBar = true
 }) => {
+  // ⚡ PRODUZIONE: Nascondi completamente se non richiesto
+  if (import.meta.env.PROD && !new URLSearchParams(window.location.search).get('diag')) {
+    return null;
+  }
   const [overlayVisible, setOverlayVisible] = useState(showByDefault);
   const [statusBarVisible, setStatusBarVisible] = useState(includeStatusBar);
 
