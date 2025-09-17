@@ -2,7 +2,7 @@
   Cache-Control: no-store, no-cache, must-revalidate
 
 /index.html
-  Cache-Control: no-store
+  Cache-Control: no-store, no-cache, must-revalidate
 
 /app-reset.html
   Clear-Site-Data: "cache","cookies","storage","executionContexts"
