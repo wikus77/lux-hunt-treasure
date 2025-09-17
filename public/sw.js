@@ -46,31 +46,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-self.addEventListener('activate', (event) => {
-  log('Service Worker activating...');
-  
-  event.waitUntil(
-    // Clean up old caches
-    caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              log('Deleting old cache', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(() => {
-        // Prendi controllo senza distruggere storage
-        return self.clients.claim();
-      })
-      .then(() => {
-        log('Service Worker activated and controlling all pages');
-      })
-  );
-});
+// Moved to after navHandler definition
 
 // Update controllato dal main thread
 self.addEventListener('message', (event) => {
@@ -134,36 +110,80 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// CRITICAL FIX: Enable navigation preload for faster first paint
-if ('navigationPreload' in self.registration) {
-  self.registration.navigationPreload.enable();
-}
+// Enable navigation preload for faster first paint
+self.addEventListener('activate', (event) => {
+  log('Service Worker activating...');
+  
+  event.waitUntil(
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME) {
+              log('Deleting old cache', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Enable navigation preload if available
+      (async () => {
+        if (self.registration.navigationPreload) {
+          await self.registration.navigationPreload.enable();
+          log('Navigation preload enabled');
+        }
+      })()
+    ]).then(() => {
+      // Take control without destroying storage
+      return self.clients.claim();
+    }).then(() => {
+      log('Service Worker activated and controlling all pages');
+    })
+  );
+});
 
 // NetworkFirst strategy for ALL navigation requests - ELIMINATES WHITE SCREEN
 const navHandler = async (event) => {
-  const cache = await caches.open(CACHE_NAME);
-  
   try {
-    // Network-first with 10s timeout for navigation requests
-    const networkResponse = await Promise.race([
-      fetch(event.request, { cache: 'no-cache' }),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 10000))
-    ]);
-    
-    if (networkResponse.ok) {
-      // Cache the fresh index.html for offline fallback
-      cache.put(event.request, networkResponse.clone());
-      log('Fresh index.html served from network and cached');
+    // Try navigation preload first
+    const preloadResponse = await event.preloadResponse;
+    if (preloadResponse) {
+      log('Using navigation preload response');
+      return preloadResponse;
     }
-    return networkResponse;
-  } catch (error) {
-    log('Network failed, trying cache fallback:', error.message);
-    // Fallback to cached version, then offline page
-    const cachedResponse = await cache.match(event.request) || 
-                          await cache.match(OFFLINE_URL) || 
-                          await cache.match('/');
+
+    // Network-first with 10s timeout for navigation requests
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 10000);
     
-    return cachedResponse || new Response('Offline - Please check connection', { status: 503 });
+    try {
+      const networkResponse = await fetch(event.request, { 
+        cache: 'no-cache',
+        signal: ctrl.signal 
+      });
+      clearTimeout(timeoutId);
+      
+      if (networkResponse.ok) {
+        log('Fresh index.html served from network');
+        return networkResponse;
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      log('Network failed, trying cache fallback:', fetchError.message);
+    }
+
+    // Fallback to offline page only (NO precached index.html)
+    const cache = await caches.open(CACHE_NAME);
+    const offlineResponse = await cache.match(OFFLINE_URL);
+    
+    return offlineResponse || new Response('Offline - Please check connection', { 
+      status: 503,
+      headers: { 'Content-Type': 'text/html' }
+    });
+  } catch (error) {
+    log('NavHandler error:', error.message);
+    return new Response('Navigation Error', { status: 503 });
   }
 };
 
