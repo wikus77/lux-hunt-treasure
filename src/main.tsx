@@ -235,6 +235,8 @@ const queryClient = new QueryClient({
 
 // Global error overlay for production debugging (prevents white screen)
 const initErrorOverlay = () => {
+  // ⚡ PRODUZIONE: Solo se esplicitamente richiesto con ?diag=1
+  if (import.meta.env.PROD && !new URLSearchParams(window.location.search).get('diag')) return;
   if (new URLSearchParams(window.location.search).get('noerr') === '1') return;
   
   const showErrorOverlay = (error: any, context: string) => {
