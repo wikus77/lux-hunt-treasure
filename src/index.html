@@ -30,6 +30,16 @@
       }
     </script>
     
+    <!-- CRITICAL: UN SOLO Stripe Shim Anti-ReferenceError -->
+    <script>
+      (function () {
+        if (!window.getStripe) window.getStripe = function () { return null; };
+        if (window.ENV && window.ENV.VITE_STRIPE_PUBLISHABLE_KEY && !window.STRIPE_PK) {
+          window.STRIPE_PK = window.ENV.VITE_STRIPE_PUBLISHABLE_KEY;
+        }
+      })();
+    </script>
+    
     <!-- Google tag (gtag.js) - Google Ads -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-9824MZJZ63" crossorigin="anonymous"></script>
     <script>

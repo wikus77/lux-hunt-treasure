@@ -135,7 +135,40 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Fetch handler with stale-while-revalidate for static assets
+// CRITICAL FIX: Enable navigation preload for faster first paint
+if ('navigationPreload' in self.registration) {
+  self.registration.navigationPreload.enable();
+}
+
+// NetworkFirst strategy for ALL navigation requests - ELIMINATES WHITE SCREEN
+const navHandler = async (event) => {
+  const cache = await caches.open(CACHE_NAME);
+  
+  try {
+    // Network-first with 10s timeout for navigation requests
+    const networkResponse = await Promise.race([
+      fetch(event.request, { cache: 'no-cache' }),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 10000))
+    ]);
+    
+    if (networkResponse.ok) {
+      // Cache the fresh index.html for offline fallback
+      cache.put(event.request, networkResponse.clone());
+      log('Fresh index.html served from network and cached');
+    }
+    return networkResponse;
+  } catch (error) {
+    log('Network failed, trying cache fallback:', error.message);
+    // Fallback to cached version, then offline page
+    const cachedResponse = await cache.match(event.request) || 
+                          await cache.match(OFFLINE_URL) || 
+                          await cache.match('/');
+    
+    return cachedResponse || new Response('Offline - Please check connection', { status: 503 });
+  }
+};
+
+// Fetch handler with enhanced caching strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -151,38 +184,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // NetworkFirst strategy for ALL navigation requests (index.html) - ANTI WHITE-SCREEN
+  // NetworkFirst for ALL navigation requests (index.html) - ANTI WHITE-SCREEN
   if (request.mode === 'navigate') {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        // Network-first with 10s timeout for navigation requests
-        const networkPromise = fetch(request, { cache: 'no-cache' })
-          .then(response => {
-            if (response.ok) {
-              // Cache the fresh index.html for offline fallback
-              cache.put(request, response.clone());
-              log('Fresh index.html cached from network');
-            }
-            return response;
-          });
-
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Network timeout')), 10000)
-        );
-
-        return Promise.race([networkPromise, timeoutPromise])
-          .catch(() => {
-            log('Network failed, trying cache fallback');
-            // Fallback to cached version, then offline page
-            return cache.match(request).then(cachedResponse => {
-              return cachedResponse || 
-                     cache.match(OFFLINE_URL) || 
-                     cache.match('/') ||
-                     new Response('Offline - Please check connection', { status: 503 });
-            });
-          });
-      })
-    );
+    event.respondWith(navHandler(event));
     return;
   }
   
