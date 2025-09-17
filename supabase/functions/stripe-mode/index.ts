@@ -5,17 +5,26 @@ import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 const ALLOW = new Set([
   'https://m1ssion.eu',
   'https://www.m1ssion.eu',
+  'https://production.m1ssion-pwa.pages.dev',
   'http://localhost:5173',
   'http://localhost:3000'
 ]);
 
+function isValidOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOW.has(origin)) return true;
+  // Allow any *.pages.dev domain containing m1ssion-pwa
+  return origin.endsWith('.pages.dev') && origin.includes('m1ssion-pwa');
+}
+
 function cors(origin: string | null) {
-  const o = origin && ALLOW.has(origin) ? origin : '*';
+  const validOrigin = isValidOrigin(origin) ? origin : '*';
   return {
-    'Access-Control-Allow-Origin': o,
+    'Access-Control-Allow-Origin': validOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey',
     'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin'
   };
 }
 

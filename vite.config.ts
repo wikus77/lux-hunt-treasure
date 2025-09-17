@@ -30,7 +30,32 @@ export default defineConfig(({ mode }) => ({
       open: false,
       gzipSize: true,
       brotliSize: true,
-    })
+    }),
+    // SW App Template Processor Plugin
+    {
+      name: 'sw-app-processor',
+      generateBundle(this: any) {
+        const buildId = process.env.VITE_BUILD_ID || `build-${Date.now().toString(36)}`;
+        const fs = require('fs');
+        const path = require('path');
+        
+        try {
+          const templatePath = path.join(__dirname, 'public/sw-app-template.js');
+          const templateContent = fs.readFileSync(templatePath, 'utf8');
+          const processedContent = templateContent.replace(/__BUILD_ID__/g, buildId);
+          
+          this.emitFile({
+            type: 'asset',
+            fileName: `sw-app-${buildId}.js`,
+            source: processedContent
+          });
+          
+          console.log(`✅ Generated versioned SW: sw-app-${buildId}.js`);
+        } catch (error) {
+          console.error('❌ SW App processor failed:', error);
+        }
+      }
+    }
   ].filter(Boolean),
   resolve: {
     alias: {
