@@ -10,9 +10,9 @@ import { CreditCard, X, AlertCircle, Shield, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { loadStripe } from '@stripe/stripe-js';
 
-// Initialize Stripe using environment variable
-import { getStripe } from '@/lib/stripe/stripeClient';
-const stripePromise = getStripe();
+// Initialize Stripe using fallback for better compatibility
+import { getStripeSafe } from '@/lib/stripeFallback';
+const stripePromise = getStripeSafe();
 
 interface AddCardDialogProps {
   onClose: () => void;
