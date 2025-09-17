@@ -8,9 +8,8 @@ importScripts('sw-push.js');
 const CACHE_NAME = 'm1ssion-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
-// Assets to cache immediately
+// Assets to cache immediately (EXCLUDE index.html to prevent white-screen)
 const STATIC_ASSETS = [
-  '/',
   '/offline.html',
   '/favicon.ico',
   '/manifest.json'
