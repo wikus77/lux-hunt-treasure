@@ -188,10 +188,61 @@ const queryClient = new QueryClient({
   },
 });
 
+// Global error overlay for production debugging (prevents white screen)
+const initErrorOverlay = () => {
+  if (new URLSearchParams(window.location.search).get('noerr') === '1') return;
+  
+  const showErrorOverlay = (error: any, context: string) => {
+    const overlay = document.createElement('div');
+    overlay.id = 'error-overlay';
+    overlay.style.cssText = `
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0; 
+      background: rgba(0,0,0,0.95); color: white; z-index: 999999;
+      font-family: 'Courier New', monospace; padding: 20px;
+      overflow: auto; font-size: 14px;
+    `;
+    overlay.innerHTML = `
+      <div style="max-width: 800px; margin: 0 auto;">
+        <h2 style="color: #ff4444; margin-bottom: 20px;">🚨 Runtime Error (${context})</h2>
+        <pre style="background: #222; padding: 15px; border-radius: 5px; white-space: pre-wrap;">
+${error?.stack || error?.message || String(error)}
+        </pre>
+        <div style="margin-top: 20px;">
+          <button onclick="this.parentElement.parentElement.parentElement.remove()" 
+                  style="background: #333; color: white; border: none; padding: 10px 20px; margin-right: 10px; border-radius: 4px; cursor: pointer;">
+            Chiudi
+          </button>
+          <button onclick="window.location.reload()" 
+                  style="background: #4361ee; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer;">
+            Ricarica
+          </button>
+          <button onclick="window.location.href='/?noerr=1'" 
+                  style="background: #666; color: white; border: none; padding: 10px 20px; margin-left: 10px; border-radius: 4px; cursor: pointer;">
+            Disabilita overlay
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+  };
+
+  // Global error handlers
+  window.addEventListener('error', (event) => {
+    showErrorOverlay(event.error, 'JavaScript Error');
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    showErrorOverlay(event.reason, 'Promise Rejection');
+  });
+};
+
 // Enhanced error handling for better debugging
 const renderApp = () => {
   console.log("🚀 ENHANCED APP INITIALIZATION - Starting render");
   console.log("🔍 MAIN.TSX - Checking for potential reload causes");
+  
+  // Initialize error overlay early
+  initErrorOverlay();
   
   const rootElement = document.getElementById('root');
 
@@ -332,11 +383,54 @@ if (document.readyState === 'loading') {
   initAppWithSWGuard();
 }
 
+// SW Controller enforcement for Pages.dev (prevent other SWs from taking control)
+const enforceAppSWController = async () => {
+  if (!('serviceWorker' in navigator)) return;
+  
+  try {
+    const controller = navigator.serviceWorker.controller;
+    const isOnPagesdev = window.location.hostname.includes('pages.dev');
+    
+    // Only enforce on Pages.dev if controller is not our main SW
+    if (isOnPagesdev && (!controller || !controller.scriptURL.endsWith('/sw.js'))) {
+      console.log('[SW-ENFORCE] 🔄 Re-registering main SW on Pages.dev...');
+      
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/',
+        updateViaCache: 'none'
+      });
+      
+      await registration.update();
+      
+      // Show toast and reload on controller change
+      const showUpdateToast = () => {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed; top: 20px; right: 20px; z-index: 999999;
+          background: #4361ee; color: white; padding: 12px 20px;
+          border-radius: 8px; font-family: sans-serif; font-size: 14px;
+        `;
+        toast.textContent = 'Aggiornamento app...';
+        document.body.appendChild(toast);
+        
+        setTimeout(() => window.location.reload(), 1000);
+      };
+      
+      navigator.serviceWorker.addEventListener('controllerchange', showUpdateToast, { once: true });
+    }
+  } catch (error) {
+    console.warn('[SW-ENFORCE] Failed (non-critical):', error);
+  }
+};
+
 // Initialize app with Service Worker controller protection
 async function initAppWithSWGuard() {
   try {
-    // Step 1: Ensure our app SW is the controller (non-blocking)
+    // Step 1: Enforce main SW controller on Pages.dev
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      enforceAppSWController();
+      
+      // Step 2: Ensure our app SW is the controller (existing guard)
       import('./utils/swControllerGuard').then(async ({ ensureAppSWController, logActiveSWs }) => {
         try {
           console.log('[MAIN] 🔄 Activating SW Controller Guard...');
