@@ -7,6 +7,8 @@ import react from "@vitejs/plugin-react-swc";
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from "path";
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -31,17 +33,16 @@ export default defineConfig(({ mode }) => ({
       gzipSize: true,
       brotliSize: true,
     }),
-    // SW App Template Processor Plugin
+    // SW App Template Processor Plugin (ESM)
     {
       name: 'sw-app-processor',
       generateBundle(this: any) {
-        const buildId = process.env.VITE_BUILD_ID || `build-${Date.now().toString(36)}`;
-        const fs = require('fs');
-        const path = require('path');
+        const buildId = process.env.VITE_BUILD_ID || process.env.VITE_PWA_VERSION || `build-${Date.now().toString(36)}`;
         
         try {
+          const __dirname = path.dirname(fileURLToPath(import.meta.url));
           const templatePath = path.join(__dirname, 'public/sw-app-template.js');
-          const templateContent = fs.readFileSync(templatePath, 'utf8');
+          const templateContent = readFileSync(templatePath, 'utf8');
           const processedContent = templateContent.replace(/__BUILD_ID__/g, buildId);
           
           this.emitFile({
@@ -53,6 +54,7 @@ export default defineConfig(({ mode }) => ({
           console.log(`✅ Generated versioned SW: sw-app-${buildId}.js`);
         } catch (error) {
           console.error('❌ SW App processor failed:', error);
+          throw error; // Fail build if SW generation fails
         }
       }
     }
