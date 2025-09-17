@@ -1,5 +1,4 @@
 /index.html
-  Clear-Site-Data: "cache","cookies","storage","executionContexts"
   Cache-Control: no-store, no-cache, must-revalidate
 
 /app-reset.html
