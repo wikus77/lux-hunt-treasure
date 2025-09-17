@@ -17,6 +17,9 @@ import { initDiagnostics } from './utils/diagnostics';
 // import { initPWABadgeDiagnostics, createBadgeTestHelpers } from './utils/pwaBadgeAudit'; // Dynamic import instead
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
 
+// Ensure global Stripe fallback is available across the app (no side effects)
+import './lib/stripeFallback';
+
 // Initialize diagnostics early (development only)
 if (import.meta.env.DEV) {
   console.log('🔍 M1SSION™ Diagnostics ready');
