@@ -151,28 +151,37 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Handle navigation requests (index.html) with network-first to prevent stale content
+  // NetworkFirst strategy for ALL navigation requests (index.html) - ANTI WHITE-SCREEN
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request, { cache: 'no-cache' })
-        .then(response => {
-          // Cache successful responses
-          if (response.ok) {
-            caches.open(CACHE_NAME).then(cache => {
+      caches.open(CACHE_NAME).then(cache => {
+        // Network-first with 10s timeout for navigation requests
+        const networkPromise = fetch(request, { cache: 'no-cache' })
+          .then(response => {
+            if (response.ok) {
+              // Cache the fresh index.html for offline fallback
               cache.put(request, response.clone());
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cached version, then offline page
-          return caches.match(request).then(cachedResponse => {
-            return cachedResponse || 
-                   caches.match(OFFLINE_URL) || 
-                   caches.match('/') ||
-                   new Response('Offline', { status: 503 });
+              log('Fresh index.html cached from network');
+            }
+            return response;
           });
-        })
+
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Network timeout')), 10000)
+        );
+
+        return Promise.race([networkPromise, timeoutPromise])
+          .catch(() => {
+            log('Network failed, trying cache fallback');
+            // Fallback to cached version, then offline page
+            return cache.match(request).then(cachedResponse => {
+              return cachedResponse || 
+                     cache.match(OFFLINE_URL) || 
+                     cache.match('/') ||
+                     new Response('Offline - Please check connection', { status: 503 });
+            });
+          });
+      })
     );
     return;
   }
