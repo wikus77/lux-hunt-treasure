@@ -427,9 +427,9 @@ const WouterRoutes: React.FC = () => {
           {/* Dev diagnostics route - only accessible to admins or in debug mode */}
           <Route path="/dev/markers-healthcheck">
             <ProtectedRoute>
-              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
                 <MarkersHealthcheck />
-              </Suspense>
+              </React.Suspense>
             </ProtectedRoute>
           </Route>
 
