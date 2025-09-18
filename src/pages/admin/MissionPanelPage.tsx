@@ -55,6 +55,12 @@ const MissionPanelPage: React.FC = () => {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  // HTTP diagnostics
+  const [httpStatus, setHttpStatus] = useState<number | null>(null);
+  const [responseHeaders, setResponseHeaders] = useState<Record<string, string>>({});
+  const [rawBody, setRawBody] = useState<string>('');
+  const [parsedResponse, setParsedResponse] = useState<any>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   React.useEffect(() => {
     (async () => {
@@ -161,7 +167,7 @@ const MissionPanelPage: React.FC = () => {
       console.log('🚀 Calling create-random-markers with payload:', request);
 
       // Use direct fetch with explicit headers instead of supabase.functions.invoke
-      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers`, {
+      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers?debug=1`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -174,6 +180,16 @@ const MissionPanelPage: React.FC = () => {
       const rawText = await response.text();
       console.log(`📡 Edge Function response: ${response.status}`, rawText);
 
+      // Save diagnostics
+      setHttpStatus(response.status);
+      setRawBody(rawText);
+      const hdrs: Record<string, string> = {};
+      ;['content-type','date','x-edge-functions-region','cf-ray','server','content-length'].forEach(k => {
+        const v = response.headers.get(k);
+        if (v) hdrs[k] = v;
+      });
+      setResponseHeaders(hdrs);
+
       let data: any = null;
       try {
         data = JSON.parse(rawText);
@@ -182,6 +198,9 @@ const MissionPanelPage: React.FC = () => {
         toast.error(`Risposta non valida: ${response.status} ${response.statusText}`);
         return;
       }
+
+      setParsedResponse(data);
+      if (data?.request_id) setRequestId(data.request_id);
 
       if (!response.ok) {
         console.error('Edge Function error:', {
