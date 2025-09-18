@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * M1SSION™ PWA - BOM (Byte Order Mark) Fixer
- * Removes BOM characters that can cause encoding issues
+ * Script to remove BOM (Byte Order Mark) characters from files
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -32,30 +31,22 @@ function removeBOMFromFile(filePath: string): boolean {
 }
 
 async function main() {
-  console.log('🧹 M1SSION™ - Removing BOM Characters...');
+  console.log('🧹 Removing BOM Characters...');
   
-  const patterns = [
-    'src/**/*.{ts,tsx,js,jsx,json,css,scss}',
-    '*.{ts,tsx,js,jsx,json,css}',
-    '!node_modules/**',
-    '!dist/**'
-  ];
+  const files = await glob('src/**/*.{ts,tsx,js,jsx}', { 
+    ignore: ['**/node_modules/**', '**/dist/**'] 
+  });
   
-  let totalFiles = 0;
   let fixedFiles = 0;
   
-  for (const pattern of patterns) {
-    const files = await glob(pattern);
-    for (const file of files) {
-      totalFiles++;
-      if (removeBOMFromFile(file)) {
-        fixedFiles++;
-      }
+  for (const file of files) {
+    if (removeBOMFromFile(file)) {
+      fixedFiles++;
     }
   }
   
-  console.log(`\n📊 BOM Fix Summary:`);
-  console.log(`   Total files scanned: ${totalFiles}`);
+  console.log(`📊 BOM Fix Summary:`);
+  console.log(`   Total files scanned: ${files.length}`);
   console.log(`   Files with BOM removed: ${fixedFiles}`);
   console.log('✅ BOM fixing completed!');
 }
