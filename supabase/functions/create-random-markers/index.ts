@@ -54,7 +54,12 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const url = new URL(req.url);
+  const debugMode = url.searchParams.get('debug') === '1';
+
   try {
+    // Initialize Supabase with Service Role for database operations
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -68,8 +73,14 @@ serve(async (req) => {
       );
     }
 
+    // Create user client for auth verification
+    const userSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    );
+
     // Verify user is admin
-    const { data: user, error: userError } = await supabase.auth.getUser(authHeader);
+    const { data: user, error: userError } = await userSupabase.auth.getUser(authHeader);
     if (userError || !user.user) {
       return new Response(
         JSON.stringify({ error: 'Invalid auth' }),
@@ -77,11 +88,11 @@ serve(async (req) => {
       );
     }
 
-    const { data: profile } = await supabase
+    const { data: profile } = await userSupabase
       .from('profiles')
       .select('role')
       .eq('id', user.user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== 'admin') {
       return new Response(
@@ -91,6 +102,11 @@ serve(async (req) => {
     }
 
     const body: BulkMarkerRequest = await req.json();
+    console.log(`🚀 [${requestId}] Starting bulk marker creation: ${JSON.stringify({
+      distributions: body.distributions?.length || 0,
+      totalRequested: body.distributions?.reduce((sum, d) => sum + d.count, 0) || 0,
+      debugMode
+    })}`);;
     
     // Validate input
     if (!body.distributions || !Array.isArray(body.distributions)) {
@@ -161,27 +177,57 @@ serve(async (req) => {
       }
     }
 
-    // Batch insert markers (chunk by 1000)
+    // Enhanced batch insert with detailed error tracking
     let insertedCount = 0;
     const chunkSize = 1000;
-    let hadError = false;
-    let firstError: any = null;
+    const errors: Array<{
+      code: string;
+      message: string;
+      hint?: string;
+      payload_hash: string;
+    }> = [];
+    
+    console.log(`📦 [${requestId}] Processing ${markersToInsert.length} markers in chunks of ${chunkSize}`);
     
     for (let i = 0; i < markersToInsert.length; i += chunkSize) {
       const chunk = markersToInsert.slice(i, i + chunkSize);
-      const { error: insertError } = await supabase
-        .from('markers')
-        .insert(chunk);
-        
-      if (insertError) {
-        hadError = true;
-        firstError = firstError || insertError;
-        console.error('Marker insert error:', insertError);
-        continue;
-      }
       
-      insertedCount += chunk.length;
+      try {
+        const { data: insertedData, error: insertError } = await supabase
+          .from('markers')
+          .insert(chunk)
+          .select('id');
+          
+        if (insertError) {
+          const errorDetails = {
+            code: insertError.code || 'UNKNOWN_ERROR',
+            message: insertError.message || 'Unknown insertion error',
+            hint: insertError.hint || undefined,
+            payload_hash: `CHUNK_${i}_${chunk.length}`
+          };
+          errors.push(errorDetails);
+          console.error(`❌ [${requestId}] Chunk ${i} failed:`, {
+            code: errorDetails.code,
+            message: errorDetails.message,
+            chunkSize: chunk.length
+          });
+        } else {
+          const actualInserted = insertedData?.length || 0;
+          insertedCount += actualInserted;
+          console.log(`✅ [${requestId}] Chunk ${i} success: ${actualInserted} markers inserted`);
+        }
+      } catch (chunkError) {
+        const errorDetails = {
+          code: 'CHUNK_EXCEPTION',
+          message: chunkError instanceof Error ? chunkError.message : 'Unknown chunk error',
+          payload_hash: `CHUNK_${i}_${chunk.length}`
+        };
+        errors.push(errorDetails);
+        console.error(`💥 [${requestId}] Chunk ${i} exception:`, chunkError);
+      }
     }
+    
+    console.log(`📊 [${requestId}] Final results: ${insertedCount} inserted, ${errors.length} errors`);
 
     // Update drop record with actual count
     await supabase
@@ -189,38 +235,73 @@ serve(async (req) => {
       .update({ created_count: insertedCount })
       .eq('id', dropRecord.id);
 
-    console.log(`✅ Bulk drop completed: ${insertedCount} markers created`);
+    console.log(`📋 [${requestId}] Bulk drop completed: ${insertedCount} markers created, ${errors.length} errors`);
 
-    if (hadError && insertedCount === 0) {
+    // Determine response based on results
+    if (insertedCount === 0 && errors.length > 0) {
+      // Complete failure
+      const responseBody: any = {
+        drop_id: dropRecord.id,
+        created: insertedCount,
+        error: 'INSERT_FAILED',
+        request_id: requestId
+      };
+      
+      if (debugMode) {
+        responseBody.errors = errors;
+        responseBody.details = `All ${markersToInsert.length} markers failed to insert`;
+      }
+      
       return new Response(
-        JSON.stringify({
-          drop_id: dropRecord.id,
-          created: insertedCount,
-          error: 'INSERT_FAILED',
-          details: (firstError as any)?.message || firstError || 'Unknown error'
-        }),
+        JSON.stringify(responseBody),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    } else if (insertedCount > 0 && errors.length > 0) {
+      // Partial success
+      const responseBody: any = {
+        drop_id: dropRecord.id,
+        created: insertedCount,
+        partial_failures: errors.length,
+        request_id: requestId
+      };
+      
+      if (debugMode) {
+        responseBody.errors = errors;
+      }
+      
+      return new Response(
+        JSON.stringify(responseBody),
+        { 
+          status: 207, // Multi-status
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    } else {
+      // Complete success
+      return new Response(
+        JSON.stringify({
+          drop_id: dropRecord.id,
+          created: insertedCount,
+          request_id: requestId
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    return new Response(
-      JSON.stringify({
-        drop_id: dropRecord.id,
-        created: insertedCount
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    );
-
   } catch (error) {
-    console.error('Function error:', error);
+    console.error(`💥 [${requestId}] Function error:`, error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ 
+        error: 'Internal server error',
+        request_id: requestId,
+        details: debugMode ? (error instanceof Error ? error.message : 'Unknown error') : undefined
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

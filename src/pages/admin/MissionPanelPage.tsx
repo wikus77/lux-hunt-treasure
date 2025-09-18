@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, Plus, Map, AlertTriangle } from 'lucide-react';
+import { Trash2, Plus, Map, AlertTriangle, Wrench } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useLocation } from 'wouter';
 
 interface Distribution {
   type: 'BUZZ_FREE' | 'MESSAGE' | 'XP_POINTS' | 'EVENT_TICKET' | 'BADGE';
@@ -40,6 +41,7 @@ const REWARD_TYPES = [
 
 const MissionPanelPage: React.FC = () => {
   const [showBulkDrop, setShowBulkDrop] = useState(false);
+  const [, setLocation] = useLocation();
   const [distributions, setDistributions] = useState<Distribution[]>([
     { type: 'BUZZ_FREE', count: 0 }
   ]);
