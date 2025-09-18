@@ -197,13 +197,24 @@ const BulkMarkerDropComponent = () => {
         return;
       }
 
-      toast.success(`✅ ${data.created} marker creati con successo!`, {
-        description: `Drop ID: ${data.drop_id}`,
-        action: {
-          label: 'Vedi su Buzz Map',
-          onClick: () => window.open('/map', '_blank')
-        }
-      });
+      // Handle partial success (207 Multi-Status)
+      if (response.status === 207) {
+        toast.warning(`⚠️ ${data.created} marker creati (${data.partial_failures} fallimenti)`, {
+          description: `Drop ID: ${data.drop_id} | ${data.errors?.length || 0} errori`,
+          action: {
+            label: 'Vedi su Buzz Map',
+            onClick: () => window.open('/map', '_blank')
+          }
+        });
+      } else {
+        toast.success(`✅ ${data.created} marker creati con successo!`, {
+          description: `Drop ID: ${data.drop_id}`,
+          action: {
+            label: 'Vedi su Buzz Map',
+            onClick: () => window.open('/map', '_blank')
+          }
+        });
+      }
 
       setDistributions([{ type: 'BUZZ_FREE', count: 0 }]);
       setSeed('');
@@ -429,7 +440,9 @@ const BulkMarkerDropComponent = () => {
 
             {httpStatus !== null && (
               <div className="mt-6 p-4 border border-gray-700 rounded-lg space-y-3">
-                <div className="text-sm">Stato: <Badge variant="secondary">{httpStatus}</Badge></div>
+                <div className="text-sm">Stato: <Badge variant={httpStatus === 207 ? "destructive" : "secondary"}>{httpStatus}</Badge>
+                  {httpStatus === 207 && <span className="ml-2 text-amber-400">Parziale</span>}
+                </div>
                 {requestId && (
                   <div className="text-sm">request_id: <code className="text-cyan-400">{requestId}</code></div>
                 )}
@@ -449,6 +462,11 @@ const BulkMarkerDropComponent = () => {
                 </div>
                 <div>
                   <Label>Parsed JSON</Label>
+                  {parsedResponse?.partial_failures && (
+                    <div className="text-amber-400 text-sm mb-2">
+                      ⚠️ {parsedResponse.partial_failures} fallimenti | {parsedResponse.errors?.length || 0} errori
+                    </div>
+                  )}
                   <Textarea value={parsedResponse ? JSON.stringify(parsedResponse, null, 2) : ''} readOnly rows={8} className="mt-1 font-mono text-xs" />
                 </div>
               </div>
