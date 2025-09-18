@@ -421,6 +421,7 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+
           {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
           <Route path="/push-test">
             <PushTestPage />
