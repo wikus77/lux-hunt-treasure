@@ -94,9 +94,11 @@ serve(async (req) => {
       .eq('id', user.user.id)
       .maybeSingle();
 
-    if (profile?.role !== 'admin') {
+    const role = (profile?.role || '').toLowerCase();
+    const isAllowed = role === 'admin' || role === 'owner';
+    if (!isAllowed) {
       return new Response(
-        JSON.stringify({ error: 'Admin access required' }),
+        JSON.stringify({ error: 'Admin access required', request_id: requestId }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -292,7 +294,7 @@ serve(async (req) => {
     } else if (insertedCount > 0 && errors.length > 0) {
       // Partial success
       const responseBody: any = {
-        drop_id: dropRecord.id,
+        drop_id: dropId,
         created: insertedCount,
         partial_failures: errors.length,
         request_id: requestId
@@ -313,7 +315,7 @@ serve(async (req) => {
       // Complete success
       return new Response(
         JSON.stringify({
-          drop_id: dropRecord.id,
+          drop_id: dropId,
           created: insertedCount,
           request_id: requestId
         }),

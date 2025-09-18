@@ -1,7 +1,7 @@
 // M1SSION™ — First Visit Landing Logic & PWA Routing
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
 
 // Dev tools (conditionally loaded)
