@@ -12,6 +12,11 @@
     "quality:typescript": "tsc --noEmit",
     "quality:lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "quality:build": "npm run build",
-    "quality:full": "npm run fix:bom && npm run fix:imports && npm run fix:use-client && npm run quality:check && npm run quality:build"
+    "quality:report": "tsx scripts/generate-quality-report.ts",
+    "quality:suite": "tsx scripts/run-quality-suite.ts",
+    "quality:full": "npm run fix:bom && npm run fix:imports && npm run fix:use-client && npm run quality:check && npm run quality:build && npm run quality:report",
+    "security:check": "npm audit --audit-level moderate",
+    "performance:check": "npm run check-bundle-size",
+    "final:report": "npm run quality:full && npm run quality:report"
   }
 }

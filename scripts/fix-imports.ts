@@ -1,117 +1,103 @@
 #!/usr/bin/env tsx
 /**
- * Script to fix broken import statements in TypeScript/React files
- * Fixes patterns where 'import {' is missing from the beginning of import blocks
+ * M1SSION™ PWA - Import Statement Fixer
+ * Fixes common import issues and ensures proper module resolution
  */
 
 import { readFileSync, writeFileSync } from 'fs';
 import { glob } from 'glob';
-import path from 'path';
 
-// Pattern to match broken imports - lines that end with } from but don't start with import
-const brokenImportPattern = /^(\s*)([A-Za-z][A-Za-z0-9_,\s\n]*?)(\} from ['"][^'"]*['"];?)$/gm;
+interface ImportFix {
+  from: string;
+  to: string;
+  description: string;
+}
 
-function fixFileImports(filePath: string): boolean {
+const IMPORT_FIXES: ImportFix[] = [
+  {
+    from: 'import\\s+\\{([^}]+)\\}\\s+from\\s+["\']@/lib/utils["\'];?',
+    to: 'import { $1 } from "@/lib/utils";',
+    description: 'Standardize utils imports'
+  },
+  {
+    from: 'import\\s+React\\s*,\\s*\\{([^}]+)\\}\\s+from\\s+["\']react["\'];?',
+    to: 'import React, { $1 } from "react";',
+    description: 'Standardize React imports'
+  },
+  {
+    from: 'import\\s+\\{([^}]+)\\}\\s+from\\s+["\']react["\'];?',
+    to: 'import { $1 } from "react";',
+    description: 'Clean React hook imports'
+  }
+];
+
+function fixImportsInFile(filePath: string): boolean {
   try {
-    const content = readFileSync(filePath, 'utf-8');
-    let fixed = false;
-    
-    // Split into lines for better processing
-    const lines = content.split('\n');
-    const newLines = [];
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmed = line.trim();
+    let content = readFileSync(filePath, 'utf-8');
+    let modified = false;
+
+    for (const fix of IMPORT_FIXES) {
+      const regex = new RegExp(fix.from, 'g');
+      const before = content;
+      content = content.replace(regex, fix.to);
       
-      // Check if this line starts with an identifier and might be a broken import
-      if (/^  [A-Z][A-Za-z0-9_]*,?\s*$/.test(line) && i > 0) {
-        // Look back to see if previous lines suggest this is in an import context
-        let prevIndex = i - 1;
-        while (prevIndex >= 0 && (lines[prevIndex].trim() === '' || /^  [A-Z]/.test(lines[prevIndex]))) {
-          prevIndex--;
-        }
-        
-        // Look forward to find the closing } from
-        let hasFromClause = false;
-        let endIndex = i;
-        for (let j = i; j < lines.length && j < i + 20; j++) {
-          if (lines[j].includes('} from')) {
-            hasFromClause = true;
-            endIndex = j;
-            break;
-          }
-        }
-        
-        if (hasFromClause && (prevIndex < 0 || !lines[prevIndex].includes('import'))) {
-          // This looks like a broken import block - collect all lines
-          const importLines = [];
-          let startIndex = i;
-          
-          // Find the actual start of the import block
-          while (startIndex > 0 && (/^  [A-Z]/.test(lines[startIndex - 1]) || lines[startIndex - 1].trim() === '')) {
-            if (/^  [A-Z]/.test(lines[startIndex - 1])) {
-              startIndex--;
-            } else {
-              break;
-            }
-          }
-          
-          // Collect the import content
-          for (let k = startIndex; k <= endIndex; k++) {
-            importLines.push(lines[k]);
-          }
-          
-          // Create the fixed import statement
-          const indent = importLines[0].match(/^(\s*)/)[1];
-          const importContent = importLines.map(l => l.trim()).join(' ');
-          const fixedImport = `${indent}import { ${importContent}`;
-          
-          newLines.push(fixedImport);
-          console.log(`Fixed broken import in ${filePath}`);
-          fixed = true;
-          
-          // Skip the processed lines
-          i = endIndex;
-          continue;
-        }
+      if (before !== content) {
+        modified = true;
       }
-      
-      newLines.push(line);
     }
-    
-    const newContent = newLines.join('\n');
-    
-    if (fixed && newContent !== content) {
-      writeFileSync(filePath, newContent, 'utf-8');
-      console.log(`✅ Fixed imports in: ${filePath}`);
+
+    // Remove duplicate imports
+    const lines = content.split('\n');
+    const seenImports = new Set<string>();
+    const cleanedLines = lines.filter(line => {
+      if (line.trim().startsWith('import ')) {
+        if (seenImports.has(line.trim())) {
+          modified = true;
+          return false;
+        }
+        seenImports.add(line.trim());
+      }
+      return true;
+    });
+
+    if (modified) {
+      writeFileSync(filePath, cleanedLines.join('\n'), 'utf-8');
       return true;
     }
+
+    return false;
   } catch (error) {
-    console.error(`❌ Error processing ${filePath}:`, error);
+    console.error(`❌ Error fixing imports in ${filePath}:`, error);
+    return false;
   }
-  return false;
 }
 
 async function main() {
-  console.log('🔧 Fixing broken import statements...');
+  console.log('🔧 M1SSION™ - Fixing Import Statements...');
   
-  // Find all TypeScript/React files
   const files = await glob('src/**/*.{ts,tsx}', { 
-    ignore: ['**/node_modules/**', '**/dist/**'] 
+    ignore: ['**/node_modules/**', '**/dist/**', '**/types.ts'] 
   });
   
-  let fixedCount = 0;
+  let totalFiles = 0;
+  let fixedFiles = 0;
   
   for (const file of files) {
-    if (fixFileImports(file)) {
-      fixedCount++;
+    totalFiles++;
+    if (fixImportsInFile(file)) {
+      fixedFiles++;
+      console.log(`✅ Fixed imports: ${file}`);
     }
   }
   
-  console.log(`✅ Fixed ${fixedCount} files with broken imports`);
+  console.log(`\n📊 Import Fix Summary:`);
+  console.log(`   Total files scanned: ${totalFiles}`);
+  console.log(`   Files with fixed imports: ${fixedFiles}`);
+  console.log('✅ Import fixing completed!');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
+
+export { main as fixImports };
