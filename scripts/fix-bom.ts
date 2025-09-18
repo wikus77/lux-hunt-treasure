@@ -1,48 +1,67 @@
 #!/usr/bin/env tsx
 /**
- * Script to remove BOM (Byte Order Mark) from TypeScript/React files
- * Avoids shell command line length limits by processing files individually
+ * M1SSION™ PWA - BOM (Byte Order Mark) Fixer
+ * Removes BOM characters that can cause encoding issues
  */
 
 import { readFileSync, writeFileSync } from 'fs';
 import { glob } from 'glob';
 
-function removeBomFromFile(filePath: string): boolean {
+function removeBOMFromFile(filePath: string): boolean {
   try {
-    const content = readFileSync(filePath, 'utf-8');
+    const buffer = readFileSync(filePath);
     
-    // Check if file starts with BOM (U+FEFF)
-    if (content.charCodeAt(0) === 0xFEFF) {
-      const cleanContent = content.slice(1);
-      writeFileSync(filePath, cleanContent, 'utf-8');
-      console.log(`Removed BOM from: ${filePath}`);
+    // Check for BOM (EF BB BF for UTF-8)
+    if (buffer.length >= 3 && 
+        buffer[0] === 0xEF && 
+        buffer[1] === 0xBB && 
+        buffer[2] === 0xBF) {
+      
+      // Remove BOM by taking slice from position 3
+      const contentWithoutBOM = buffer.slice(3);
+      writeFileSync(filePath, contentWithoutBOM);
+      console.log(`✅ Removed BOM: ${filePath}`);
       return true;
     }
+    
+    return false;
   } catch (error) {
-    console.error(`Error processing ${filePath}:`, error);
+    console.error(`❌ Error processing ${filePath}:`, error);
+    return false;
   }
-  return false;
 }
 
 async function main() {
-  console.log('🧹 Removing BOM from TypeScript/React files...');
+  console.log('🧹 M1SSION™ - Removing BOM Characters...');
   
-  // Find all TypeScript/React files
-  const files = await glob('src/**/*.{ts,tsx}', { 
-    ignore: ['**/node_modules/**', '**/dist/**'] 
-  });
+  const patterns = [
+    'src/**/*.{ts,tsx,js,jsx,json,css,scss}',
+    '*.{ts,tsx,js,jsx,json,css}',
+    '!node_modules/**',
+    '!dist/**'
+  ];
   
-  let fixedCount = 0;
+  let totalFiles = 0;
+  let fixedFiles = 0;
   
-  for (const file of files) {
-    if (removeBomFromFile(file)) {
-      fixedCount++;
+  for (const pattern of patterns) {
+    const files = await glob(pattern);
+    for (const file of files) {
+      totalFiles++;
+      if (removeBOMFromFile(file)) {
+        fixedFiles++;
+      }
     }
   }
   
-  console.log(`✅ Removed BOM from ${fixedCount} files`);
+  console.log(`\n📊 BOM Fix Summary:`);
+  console.log(`   Total files scanned: ${totalFiles}`);
+  console.log(`   Files with BOM removed: ${fixedFiles}`);
+  console.log('✅ BOM fixing completed!');
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch(console.error);
 }
+
+export { main as fixBOM };
