@@ -542,7 +542,7 @@ async function initAppWithSWGuard() {
   try {
     // Step 1: Enforce main SW controller on Pages.dev
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      enforceAppSWController();
+      await enforceAppSWController();
       
       // Step 2: Ensure our app SW is the controller (existing guard)
       import('./utils/swControllerGuard').then(async ({ ensureAppSWController, logActiveSWs }) => {
