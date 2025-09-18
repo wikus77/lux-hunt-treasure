@@ -41,29 +41,36 @@ function generateSeededRandom(seed: string): () => number {
 }
 
 function validateLatLng(lat: number, lng: number): boolean {
-  return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && 
+  // Strict DB constraints alignment: lat [-90,90], lng [-180,180]
+  return lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && 
          !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng);
 }
 
 function generateValidCoordinates(
   bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number },
   rng: () => number,
-  maxAttempts: number = 8
+  maxAttempts: number = 10
 ): { lat: number; lng: number } | null {
-  // Ensure bbox is within valid DB constraints
+  // Strict DB constraint enforcement: lat [-90,90], lng [-180,180]
   const safeBbox = {
-    minLat: Math.max(-90, Math.min(90, bbox.minLat)),
-    maxLat: Math.max(-90, Math.min(90, bbox.maxLat)),
-    minLng: Math.max(-180, Math.min(180, bbox.minLng)),
-    maxLng: Math.max(-180, Math.min(180, bbox.maxLng))
+    minLat: Math.max(-90.0, Math.min(90.0, bbox.minLat)),
+    maxLat: Math.max(-90.0, Math.min(90.0, bbox.maxLat)),
+    minLng: Math.max(-180.0, Math.min(180.0, bbox.minLng)),
+    maxLng: Math.max(-180.0, Math.min(180.0, bbox.maxLng))
   };
+  
+  // Validate bbox makes sense
+  if (safeBbox.minLat >= safeBbox.maxLat || safeBbox.minLng >= safeBbox.maxLng) {
+    return null;
+  }
   
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     const lat = safeBbox.minLat + rng() * (safeBbox.maxLat - safeBbox.minLat);
     const lng = safeBbox.minLng + rng() * (safeBbox.maxLng - safeBbox.minLng);
     
+    // Double validation before returning
     if (validateLatLng(lat, lng)) {
-      return { lat, lng };
+      return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
     }
   }
   
@@ -165,11 +172,11 @@ serve(async (req) => {
       );
     }
 
-    // Default bbox to world (safe margins within DB constraints)
+    // Default bbox to world (strict DB constraints: lat [-90,90], lng [-180,180])
     const bbox = body.bbox || {
-      minLat: -85.0,
+      minLat: -89.0,
       minLng: -179.0,
-      maxLat: 85.0,
+      maxLat: 89.0,
       maxLng: 179.0
     };
 
@@ -187,11 +194,11 @@ serve(async (req) => {
           bbox,
           summary: body.distributions
         })
-        .select('marker_drops.id AS drop_id')
+        .select('id')
         .single();
 
-      if (!dropError && dropRecord?.drop_id) {
-        dropId = dropRecord.drop_id;
+      if (!dropError && dropRecord?.id) {
+        dropId = dropRecord.id;
       } else if (dropError) {
         // Table might not exist in some environments: continue without drop record
         console.warn(`[${requestId}] marker_drops insert skipped:`, {
@@ -211,14 +218,23 @@ serve(async (req) => {
     
     for (const dist of body.distributions) {
       for (let i = 0; i < dist.count; i++) {
-        const coords = generateValidCoordinates(bbox, rng, 8);
+        const coords = generateValidCoordinates(bbox, rng, 10);
         
         if (!coords) {
           coordinateFailures.push({
             type: dist.type,
-            reason: `Failed to generate valid coordinates after 8 attempts for ${dist.type}`
+            reason: `Failed to generate valid coordinates after 10 attempts for ${dist.type}`
           });
           continue; // Skip this marker
+        }
+        
+        // Triple validation before insert preparation
+        if (!validateLatLng(coords.lat, coords.lng)) {
+          coordinateFailures.push({
+            type: dist.type,
+            reason: `Generated coordinates failed final validation: lat=${coords.lat}, lng=${coords.lng}`
+          });
+          continue;
         }
         
         const markerRow: Record<string, any> = {
@@ -271,7 +287,7 @@ serve(async (req) => {
         const { data: insertedData, error: insertError } = await supabase
           .from('markers')
           .insert(chunk)
-          .select('markers.id AS marker_id');
+          .select('id');
 
         if (insertError) {
           // Detailed error handling by error type
@@ -356,7 +372,7 @@ serve(async (req) => {
       await supabase
         .from('marker_drops')
         .update({ created_count: insertedCount })
-        .eq('marker_drops.id', dropId);
+        .eq('id', dropId);
     }
 
     console.log(`📋 [${requestId}] Bulk drop completed: ${insertedCount} markers created, ${errors.length} errors`);
@@ -416,7 +432,7 @@ serve(async (req) => {
         try {
           const { data: markersData } = await supabase
             .from('markers')
-            .select('markers.id AS marker_id')
+            .select('id')
             .eq('drop_id', dropId);
           createdMarkers = markersData || [];
         } catch (e) {
