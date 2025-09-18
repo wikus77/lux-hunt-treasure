@@ -136,6 +136,13 @@ const MissionPanelPage: React.FC = () => {
     setIsProcessing(true);
     
     try {
+      // Get current session for proper headers
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Nessuna sessione di autenticazione');
+        return;
+      }
+
       const request: BulkMarkerRequest = {
         distributions,
         seed: seed.trim() || undefined,
@@ -151,13 +158,42 @@ const MissionPanelPage: React.FC = () => {
         };
       }
 
-      const { data, error } = await supabase.functions.invoke('create-random-markers', {
-        body: request
+      console.log('🚀 Calling create-random-markers with payload:', request);
+
+      // Use direct fetch with explicit headers instead of supabase.functions.invoke
+      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+        },
+        body: JSON.stringify(request)
       });
 
-      if (error) {
-        console.error('Bulk drop error:', error);
-        toast.error('Errore durante la creazione dei marker');
+      const rawText = await response.text();
+      console.log(`📡 Edge Function response: ${response.status}`, rawText);
+
+      let data: any = null;
+      try {
+        data = JSON.parse(rawText);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', rawText);
+        toast.error(`Risposta non valida: ${response.status} ${response.statusText}`);
+        return;
+      }
+
+      if (!response.ok) {
+        console.error('Edge Function error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: data
+        });
+        
+        // Show detailed error information
+        const errorMsg = data?.error || `HTTP ${response.status}`;
+        const requestId = data?.request_id ? ` (${data.request_id})` : '';
+        toast.error(`Errore Edge Function: ${errorMsg}${requestId}`);
         return;
       }
 
@@ -183,8 +219,8 @@ const MissionPanelPage: React.FC = () => {
       setShowBulkDrop(false);
 
     } catch (error) {
-      console.error('Request error:', error);
-      toast.error('Errore di rete durante la creazione');
+      console.error('Network error:', error);
+      toast.error(`Errore di rete: ${error instanceof Error ? error.message : 'Sconosciuto'}`);
     } finally {
       setIsProcessing(false);
     }
