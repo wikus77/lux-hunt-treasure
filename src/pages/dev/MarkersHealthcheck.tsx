@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { AlertCircle, Database, Play, RefreshCw } from 'lucide-react';
+import { AlertCircle, Database, Play, RefreshCw, User, Clock } from 'lucide-react';
 
 interface MarkerDistribution {
   BUZZ_FREE: number;
@@ -50,6 +50,13 @@ interface DbStats {
   recent_markers: RecentMarker[];
 }
 
+interface UserDiagnostics {
+  role: string | null;
+  email: string | null;
+  jwt_exp: number | null;
+  jwt_exp_warning: boolean;
+}
+
 export default function MarkersHealthcheck() {
   const [isLoading, setIsLoading] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
@@ -69,11 +76,67 @@ export default function MarkersHealthcheck() {
   const [rawResponse, setRawResponse] = useState<string>('');
   const [dbStats, setDbStats] = useState<DbStats | null>(null);
   const [isRefreshingStats, setIsRefreshingStats] = useState(false);
+  const [userDiag, setUserDiag] = useState<UserDiagnostics | null>(null);
   const { toast } = useToast();
+
+  const loadUserDiagnostics = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setUserDiag({ role: null, email: null, jwt_exp: null, jwt_exp_warning: false });
+        return;
+      }
+
+      // Decode JWT to get exp
+      let jwt_exp = null;
+      let jwt_exp_warning = false;
+      try {
+        const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+        jwt_exp = payload.exp;
+        const now = Date.now() / 1000;
+        jwt_exp_warning = (jwt_exp - now) < 600; // Less than 10 minutes
+      } catch (e) {
+        console.warn('Failed to decode JWT:', e);
+      }
+
+      // Get user profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      setUserDiag({
+        role: profile?.role || null,
+        email: session.user.email || null,
+        jwt_exp,
+        jwt_exp_warning
+      });
+    } catch (error) {
+      console.error('Error loading user diagnostics:', error);
+      setUserDiag({ role: null, email: null, jwt_exp: null, jwt_exp_warning: false });
+    }
+  };
 
   const loadDbStats = async () => {
     setIsRefreshingStats(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Errore",
+          description: "Nessuna sessione di autenticazione",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Use same headers as Edge Function calls
+      const headers = {
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+      };
+
       // Get total count
       const { count: totalCount } = await supabase
         .from('markers')
@@ -112,6 +175,7 @@ export default function MarkersHealthcheck() {
   };
 
   useEffect(() => {
+    loadUserDiagnostics();
     loadDbStats();
   }, []);
 
@@ -213,8 +277,53 @@ export default function MarkersHealthcheck() {
         <Badge variant="outline">DEV</Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
+        {/* User Diagnostics */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              User Diagnostics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {userDiag ? (
+              <>
+                <div>
+                  <Label className="text-sm font-medium">Email</Label>
+                  <p className="text-sm font-mono">{userDiag.email || 'N/A'}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Role</Label>
+                  <Badge variant={['admin','owner'].includes(userDiag.role?.toLowerCase() || '') ? 'default' : 'secondary'}>
+                    {userDiag.role || 'N/A'}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    JWT Expiry
+                    {userDiag.jwt_exp_warning && <Clock className="h-4 w-4 text-amber-500" />}
+                  </Label>
+                  {userDiag.jwt_exp ? (
+                    <p className={`text-sm ${userDiag.jwt_exp_warning ? 'text-amber-500' : ''}`}>
+                      {new Date(userDiag.jwt_exp * 1000).toLocaleString()}
+                      {userDiag.jwt_exp_warning && ' (< 10min)'}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">N/A</p>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Admin/Owner richiesto per Edge Function
+                </div>
+              </>
+            ) : (
+              <p>Caricamento diagnostica utente...</p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Test Configuration */}
         <Card>
           <CardHeader>
