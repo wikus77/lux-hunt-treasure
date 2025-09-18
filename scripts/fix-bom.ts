@@ -3,56 +3,22 @@
  * Script to remove BOM (Byte Order Mark) characters from files
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { glob } from 'glob';
+import { glob } from "glob";
+import fs from "node:fs";
 
-function removeBOMFromFile(filePath: string): boolean {
-  try {
-    const buffer = readFileSync(filePath);
-    
-    // Check for BOM (EF BB BF for UTF-8)
-    if (buffer.length >= 3 && 
-        buffer[0] === 0xEF && 
-        buffer[1] === 0xBB && 
-        buffer[2] === 0xBF) {
-      
-      // Remove BOM by taking slice from position 3
-      const contentWithoutBOM = buffer.slice(3);
-      writeFileSync(filePath, contentWithoutBOM);
-      console.log(`✅ Removed BOM: ${filePath}`);
-      return true;
-    }
-    
-    return false;
-  } catch (error) {
-    console.error(`❌ Error processing ${filePath}:`, error);
-    return false;
-  }
-}
+const stripBom = (s:string) => s.charCodeAt(0)===0xFEFF ? s.slice(1) : s;
 
-async function main() {
-  console.log('🧹 Removing BOM Characters...');
-  
-  const files = await glob('src/**/*.{ts,tsx,js,jsx}', { 
-    ignore: ['**/node_modules/**', '**/dist/**'] 
-  });
-  
-  let fixedFiles = 0;
-  
-  for (const file of files) {
-    if (removeBOMFromFile(file)) {
-      fixedFiles++;
+const run = async () => {
+  const files = await glob("src/**/*.{ts,tsx}", { ignore: ['**/node_modules/**', '**/dist/**'] });
+  let changed = 0;
+  for (const f of files) {
+    const c = fs.readFileSync(f, "utf8");
+    const nc = stripBom(c);
+    if (nc !== c) {
+      fs.writeFileSync(f, nc);
+      changed++;
     }
   }
-  
-  console.log(`📊 BOM Fix Summary:`);
-  console.log(`   Total files scanned: ${files.length}`);
-  console.log(`   Files with BOM removed: ${fixedFiles}`);
-  console.log('✅ BOM fixing completed!');
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
-}
-
-export { main as fixBOM };
+  console.log(JSON.stringify({fixedBOM: changed}));
+};
+run();
