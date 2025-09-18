@@ -1,7 +1,6 @@
-// © 2025 Joseph MULÉ – M1SSION™
-// Bulk Marker Drop Component
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { Trash2, Plus, Map, AlertTriangle } from 'lucide-react';
 
 interface Distribution {
@@ -33,6 +33,13 @@ const BulkMarkerDropComponent = () => {
     maxLng: ''
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  // HTTP diagnostics
+  const [httpStatus, setHttpStatus] = useState<number | null>(null);
+  const [responseHeaders, setResponseHeaders] = useState<Record<string, string>>({});
+  const [rawBody, setRawBody] = useState<string>('');
+  const [parsedResponse, setParsedResponse] = useState<any>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const REWARD_TYPES = [
     { value: 'BUZZ_FREE', label: 'Buzz Gratuiti', description: 'Buzz che non costano nulla' },
@@ -41,6 +48,25 @@ const BulkMarkerDropComponent = () => {
     { value: 'EVENT_TICKET', label: 'Ticket Evento', description: 'Biglietto per evento speciale' },
     { value: 'BADGE', label: 'Badge', description: 'Badge da assegnare al giocatore' },
   ];
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) { setIsAdmin(false); return; }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        const role = profile?.role?.toLowerCase?.() || '';
+        setIsAdmin(role === 'admin' || role === 'owner');
+      } catch {
+        setIsAdmin(false);
+      }
+    })();
+  }, []);
+
 
   const addDistribution = () => {
     setDistributions([...distributions, { type: 'BUZZ_FREE', count: 0 }]);
@@ -119,22 +145,46 @@ const BulkMarkerDropComponent = () => {
         seed: seed.trim() || undefined,
       };
 
-      if (bbox.minLat && bbox.minLng && bbox.maxLat && bbox.maxLng) {
-        request.bbox = {
-          minLat: parseFloat(bbox.minLat),
-          minLng: parseFloat(bbox.minLng),
-          maxLat: parseFloat(bbox.maxLat),
-          maxLng: parseFloat(bbox.maxLng)
-        };
+      // Session & gate
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Nessuna sessione di autenticazione');
+        return;
+      }
+      if (!isAdmin) {
+        toast.error('Accesso riservato ad admin/owner');
+        return;
       }
 
-      const { data, error } = await supabase.functions.invoke('create-random-markers', {
-        body: request
+      const url = `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers?debug=1`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+        },
+        body: JSON.stringify(request)
       });
 
-      if (error) {
-        console.error('Bulk drop error:', error);
-        toast.error('Errore durante la creazione dei marker');
+      const rawText = await response.text();
+      setHttpStatus(response.status);
+      setRawBody(rawText);
+      const hdrs: Record<string, string> = {};
+      ;['content-type','date','x-edge-functions-region','cf-ray','server','content-length'].forEach(k => {
+        const v = response.headers.get(k);
+        if (v) hdrs[k] = v;
+      });
+      setResponseHeaders(hdrs);
+
+      let data: any = null;
+      try { data = JSON.parse(rawText); } catch {}
+      setParsedResponse(data);
+      if (data?.request_id) setRequestId(data.request_id);
+
+      if (!response.ok) {
+        const msg = data?.error || `HTTP ${response.status}`;
+        toast.error(`Errore Edge Function: ${msg}${data?.request_id ? ` (${data.request_id})` : ''}`);
         return;
       }
 
