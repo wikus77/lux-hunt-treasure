@@ -40,13 +40,34 @@ function generateSeededRandom(seed: string): () => number {
   };
 }
 
-function generateRandomCoordinates(
+function validateLatLng(lat: number, lng: number): boolean {
+  return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && 
+         !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng);
+}
+
+function generateValidCoordinates(
   bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number },
-  rng: () => number
-): { lat: number; lng: number } {
-  const lat = bbox.minLat + rng() * (bbox.maxLat - bbox.minLat);
-  const lng = bbox.minLng + rng() * (bbox.maxLng - bbox.minLng);
-  return { lat, lng };
+  rng: () => number,
+  maxAttempts: number = 8
+): { lat: number; lng: number } | null {
+  // Ensure bbox is within valid DB constraints
+  const safeBbox = {
+    minLat: Math.max(-90, Math.min(90, bbox.minLat)),
+    maxLat: Math.max(-90, Math.min(90, bbox.maxLat)),
+    minLng: Math.max(-180, Math.min(180, bbox.minLng)),
+    maxLng: Math.max(-180, Math.min(180, bbox.maxLng))
+  };
+  
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const lat = safeBbox.minLat + rng() * (safeBbox.maxLat - safeBbox.minLat);
+    const lng = safeBbox.minLng + rng() * (safeBbox.maxLng - safeBbox.minLng);
+    
+    if (validateLatLng(lat, lng)) {
+      return { lat, lng };
+    }
+  }
+  
+  return null; // Failed to generate valid coordinates after maxAttempts
 }
 
 serve(async (req) => {
@@ -144,12 +165,12 @@ serve(async (req) => {
       );
     }
 
-    // Default bbox to world
+    // Default bbox to world (safe margins within DB constraints)
     const bbox = body.bbox || {
-      minLat: -85,
-      minLng: -180,
-      maxLat: 85,
-      maxLng: 180
+      minLat: -85.0,
+      minLng: -179.0,
+      maxLat: 85.0,
+      maxLng: 179.0
     };
 
     const seed = body.seed || `DROP-${Date.now()}`;
@@ -184,12 +205,21 @@ serve(async (req) => {
 
     // Generate markers for each distribution
     const markersToInsert = [] as any[];
+    const coordinateFailures: Array<{ type: string; reason: string }> = [];
     const visibleFrom = (body as any).visible_from ?? new Date().toISOString();
     const visibleTo = (body as any).visible_to ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     
     for (const dist of body.distributions) {
       for (let i = 0; i < dist.count; i++) {
-        const coords = generateRandomCoordinates(bbox, rng);
+        const coords = generateValidCoordinates(bbox, rng, 8);
+        
+        if (!coords) {
+          coordinateFailures.push({
+            type: dist.type,
+            reason: `Failed to generate valid coordinates after 8 attempts for ${dist.type}`
+          });
+          continue; // Skip this marker
+        }
         
         const markerRow: Record<string, any> = {
           title: (dist.payload && (dist.payload.title || dist.payload.name)) || dist.type,
@@ -205,16 +235,33 @@ serve(async (req) => {
         markersToInsert.push(markerRow);
       }
     }
+    
+    // Log coordinate generation issues
+    if (coordinateFailures.length > 0) {
+      console.warn(`[${requestId}] Coordinate generation failures:`, coordinateFailures);
+    }
 
-    // Enhanced batch insert with detailed error tracking
-    let insertedCount = 0;
-    const chunkSize = 1000;
+    // Add coordinate failures to errors array
     const errors: Array<{
       code: string;
       message: string;
       hint?: string;
       payload_hash: string;
+      sqlState?: string;
     }> = [];
+    
+    coordinateFailures.forEach((failure, index) => {
+      errors.push({
+        code: 'VALIDATION_FAILED',
+        message: failure.reason,
+        payload_hash: `COORD_FAIL_${index}`,
+        sqlState: 'VALIDATION_FAILED'
+      });
+    });
+
+    // Enhanced batch insert with detailed error tracking
+    let insertedCount = 0;
+    const chunkSize = 1000;
     
     console.log(`📦 [${requestId}] Processing ${markersToInsert.length} markers in chunks of ${chunkSize}`);
     
@@ -227,38 +274,63 @@ serve(async (req) => {
           .select('markers.id AS marker_id');
 
         if (insertError) {
-          // Fallback to RPC for enum casts / constraints
-          let rpcInserted = 0;
-          try {
-            const { data: rpcData, error: rpcErr } = await supabase
-              .rpc('fn_markers_bulk_insert', { _rows: chunk, _drop_id: dropId });
-            if (rpcErr) {
-              const errorDetails = {
-                code: rpcErr.code || insertError.code || 'INSERT_AND_RPC_FAILED',
-                message: rpcErr.message || insertError.message || 'Insert and RPC both failed',
-                hint: rpcErr.hint || insertError.hint || undefined,
-                payload_hash: `CHUNK_${i}_${chunk.length}`
-              };
-              errors.push(errorDetails);
-              console.error('INSERT_FAILED', { 
-                request_id: requestId, 
-                sqlState: rpcErr.code || insertError.code, 
-                message: rpcErr.message || insertError.message,
-                chunkSize: chunk.length
+          // Detailed error handling by error type
+          const errorDetails = {
+            code: insertError.code || 'INSERT_FAILED',
+            message: insertError.message || 'Insert failed',
+            hint: insertError.hint || undefined,
+            payload_hash: `CHUNK_${i}_${chunk.length}`,
+            sqlState: insertError.code
+          };
+          
+          console.error('INSERT_FAILED', { 
+            request_id: requestId, 
+            sqlState: insertError.code, 
+            message: insertError.message,
+            chunkSize: chunk.length
+          });
+
+          // Handle specific constraint violations
+          if (insertError.code === '23514') {
+            // Constraint violation - don't retry with RPC for coordinate issues
+            errors.push({
+              ...errorDetails,
+              message: `Constraint violation: ${insertError.message} (likely invalid coordinates)`
+            });
+          } else {
+            // Try RPC fallback for other errors (ENUM casting, etc.)
+            let rpcInserted = 0;
+            try {
+              const { data: rpcData, error: rpcErr } = await supabase
+                .rpc('fn_markers_bulk_insert', { _rows: chunk, _drop_id: dropId });
+              if (rpcErr) {
+                errors.push({
+                  code: rpcErr.code || 'RPC_FAILED',
+                  message: rpcErr.message || 'RPC fallback failed',
+                  hint: rpcErr.hint || undefined,
+                  payload_hash: `RPC_CHUNK_${i}_${chunk.length}`,
+                  sqlState: rpcErr.code
+                });
+                console.error('RPC_FAILED', { 
+                  request_id: requestId, 
+                  sqlState: rpcErr.code, 
+                  message: rpcErr.message,
+                  chunkSize: chunk.length
+                });
+              } else {
+                rpcInserted = rpcData?.length || 0;
+                insertedCount += rpcInserted;
+                console.log(`✅ [${requestId}] Chunk ${i} RPC fallback success: ${rpcInserted} inserted`);
+              }
+            } catch (rpcException) {
+              errors.push({
+                code: 'RPC_EXCEPTION',
+                message: rpcException instanceof Error ? rpcException.message : 'Unknown RPC exception',
+                payload_hash: `RPC_EXC_${i}_${chunk.length}`,
+                sqlState: 'RPC_EXCEPTION'
               });
-            } else {
-              rpcInserted = rpcData?.length || 0;
-              insertedCount += rpcInserted;
-              console.log(`✅ [${requestId}] Chunk ${i} RPC fallback success: ${rpcInserted} inserted`);
+              console.error(`💥 [${requestId}] Chunk ${i} RPC exception:`, rpcException);
             }
-          } catch (rpcException) {
-            const errorDetails = {
-              code: 'RPC_EXCEPTION',
-              message: rpcException instanceof Error ? rpcException.message : 'Unknown RPC exception',
-              payload_hash: `CHUNK_${i}_${chunk.length}`
-            };
-            errors.push(errorDetails);
-            console.error(`💥 [${requestId}] Chunk ${i} RPC exception:`, rpcException);
           }
         } else {
           const actualInserted = insertedData?.length || 0;
@@ -269,7 +341,8 @@ serve(async (req) => {
         const errorDetails = {
           code: 'CHUNK_EXCEPTION',
           message: chunkError instanceof Error ? chunkError.message : 'Unknown chunk error',
-          payload_hash: `CHUNK_${i}_${chunk.length}`
+          payload_hash: `CHUNK_${i}_${chunk.length}`,
+          sqlState: 'CHUNK_EXCEPTION'
         };
         errors.push(errorDetails);
         console.error(`💥 [${requestId}] Chunk ${i} exception:`, chunkError);
