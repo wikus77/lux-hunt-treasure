@@ -4650,7 +4650,7 @@ export type Database = {
         }[]
       }
       fn_markers_bulk_insert: {
-        Args: { markers: Json }
+        Args: { _drop_id?: string; _rows: Json } | { markers: Json }
         Returns: {
           id: string
         }[]

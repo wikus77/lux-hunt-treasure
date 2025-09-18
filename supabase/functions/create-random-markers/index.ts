@@ -166,11 +166,11 @@ serve(async (req) => {
           bbox,
           summary: body.distributions
         })
-        .select('id')
+        .select('marker_drops.id AS drop_id')
         .single();
 
-      if (!dropError && dropRecord?.id) {
-        dropId = dropRecord.id;
+      if (!dropError && dropRecord?.drop_id) {
+        dropId = dropRecord.drop_id;
       } else if (dropError) {
         // Table might not exist in some environments: continue without drop record
         console.warn(`[${requestId}] marker_drops insert skipped:`, {
@@ -224,14 +224,14 @@ serve(async (req) => {
         const { data: insertedData, error: insertError } = await supabase
           .from('markers')
           .insert(chunk)
-          .select('id');
+          .select('markers.id AS marker_id');
 
         if (insertError) {
           // Fallback to RPC for enum casts / constraints
           let rpcInserted = 0;
           try {
             const { data: rpcData, error: rpcErr } = await supabase
-              .rpc('fn_markers_bulk_insert', { markers: chunk });
+              .rpc('fn_markers_bulk_insert', { _rows: chunk, _drop_id: dropId });
             if (rpcErr) {
               const errorDetails = {
                 code: rpcErr.code || insertError.code || 'INSERT_AND_RPC_FAILED',
@@ -240,9 +240,10 @@ serve(async (req) => {
                 payload_hash: `CHUNK_${i}_${chunk.length}`
               };
               errors.push(errorDetails);
-              console.error(`❌ [${requestId}] Chunk ${i} failed (RPC fallback):`, {
-                code: errorDetails.code,
-                message: errorDetails.message,
+              console.error('INSERT_FAILED', { 
+                request_id: requestId, 
+                sqlState: rpcErr.code || insertError.code, 
+                message: rpcErr.message || insertError.message,
                 chunkSize: chunk.length
               });
             } else {
@@ -282,7 +283,7 @@ serve(async (req) => {
       await supabase
         .from('marker_drops')
         .update({ created_count: insertedCount })
-        .eq('id', dropId);
+        .eq('marker_drops.id', dropId);
     }
 
     console.log(`📋 [${requestId}] Bulk drop completed: ${insertedCount} markers created, ${errors.length} errors`);
@@ -298,7 +299,10 @@ serve(async (req) => {
       };
       
       if (debugMode) {
-        responseBody.errors = errors;
+        responseBody.errors = errors.map(err => ({
+          ...err,
+          sqlState: err.code
+        }));
         responseBody.details = `All ${markersToInsert.length} markers failed to insert`;
       }
       
@@ -319,7 +323,10 @@ serve(async (req) => {
       };
       
       if (debugMode) {
-        responseBody.errors = errors;
+        responseBody.errors = errors.map(err => ({
+          ...err,
+          sqlState: err.code
+        }));
       }
       
       return new Response(
@@ -330,11 +337,25 @@ serve(async (req) => {
         }
       );
     } else {
-      // Complete success
+      // Complete success - fetch created markers for response
+      let createdMarkers: any[] = [];
+      if (dropId) {
+        try {
+          const { data: markersData } = await supabase
+            .from('markers')
+            .select('markers.id AS marker_id')
+            .eq('drop_id', dropId);
+          createdMarkers = markersData || [];
+        } catch (e) {
+          // Continue without markers list
+        }
+      }
+      
       return new Response(
         JSON.stringify({
           drop_id: dropId,
           created: insertedCount,
+          markers: createdMarkers,
           request_id: requestId
         }),
         { 
