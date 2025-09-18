@@ -4,6 +4,7 @@
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import checker from 'vite-plugin-checker';
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from "path";
@@ -20,10 +21,16 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     target: 'es2020',
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    drop: mode === 'production' ? ['console', 'debugger'] : [],
+    // In produzione NON droppiamo "console" a livello esbuild per preservare error/warn.
+    // La rimozione selettiva di log/info/debug è gestita da Terser (pure_funcs) in build.
+    drop: mode === 'production' ? ['debugger'] : [],
   },
   plugins: [
     react(),
+    checker({
+      typescript: true,
+      eslint: { lintCommand: 'eslint "src/**/*.{ts,tsx}"' }
+    }),
     mode === 'development' && componentTagger(),
     mode === 'production' && visualizer({
       filename: 'dist/bundle-analysis.html',
