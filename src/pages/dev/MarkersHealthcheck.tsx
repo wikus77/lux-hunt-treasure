@@ -61,8 +61,12 @@ export default function MarkersHealthcheck() {
     EVENT_TICKET: 2,
     BADGE: 0
   });
-  const [visibilityHours, setVisibilityHours] = useState(168); // 7 giorni
+  const [visibleFrom, setVisibleFrom] = useState<string>(new Date().toISOString().slice(0,16));
+  const [visibleTo, setVisibleTo] = useState<string>(new Date(Date.now()+7*24*60*60*1000).toISOString().slice(0,16));
   const [lastResult, setLastResult] = useState<CreateMarkersResponse | null>(null);
+  const [responseStatus, setResponseStatus] = useState<number | null>(null);
+  const [responseHeaders, setResponseHeaders] = useState<Record<string,string>>({});
+  const [rawResponse, setRawResponse] = useState<string>('');
   const [dbStats, setDbStats] = useState<DbStats | null>(null);
   const [isRefreshingStats, setIsRefreshingStats] = useState(false);
   const { toast } = useToast();
@@ -88,7 +92,7 @@ export default function MarkersHealthcheck() {
         .select('created_at')
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       setDbStats({
         total_markers: totalCount || 0,
@@ -119,15 +123,15 @@ export default function MarkersHealthcheck() {
         throw new Error('Nessuna sessione di autenticazione');
       }
 
-      // Prepare distributions array
+      // Prepare distributions array coerente con count totale
       const distributions = Object.entries(distribution)
-        .filter(([_, count]) => count > 0)
-        .map(([type, count]) => ({
+        .filter(([_, ctn]) => ctn > 0)
+        .map(([type, ctn]) => ({
           type: type as keyof MarkerDistribution,
-          count
+          count: ctn
         }));
 
-      const payload = {
+      const payload: any = {
         distributions,
         bbox: {
           minLat: 45.0,
@@ -138,6 +142,9 @@ export default function MarkersHealthcheck() {
         visibilityPreset: 'custom',
         seed: `TEST-${Date.now()}`
       };
+
+      if (visibleFrom) payload.visible_from = new Date(visibleFrom).toISOString();
+      if (visibleTo) payload.visible_to = new Date(visibleTo).toISOString();
 
       console.log('🚀 Calling create-random-markers with payload:', payload);
 
@@ -155,28 +162,27 @@ export default function MarkersHealthcheck() {
         body: JSON.stringify(payload)
       });
 
-      const result = await response.json() as CreateMarkersResponse;
-      setLastResult(result);
+      const rawText = await response.text();
+      setRawResponse(rawText);
+      setResponseStatus(response.status);
+      const headersObj: Record<string,string> = {};
+      ['content-type','date','x-edge-functions-region','cf-ray','server','content-length'].forEach(k => {
+        const v = response.headers.get(k);
+        if (v) headersObj[k] = v;
+      });
+      setResponseHeaders(headersObj);
 
-      if (response.ok) {
-        if (result.created > 0) {
-          toast({
-            title: "Successo",
-            description: `${result.created} marker creati con successo`,
-          });
-        } else {
-          toast({
-            title: "Attenzione",
-            description: "Nessun marker creato",
-            variant: "destructive",
-          });
-        }
+      let parsed: CreateMarkersResponse | null = null;
+      try { parsed = JSON.parse(rawText); } catch {}
+      setLastResult(parsed);
+
+      // UI feedback by status
+      if (response.status === 200) {
+        toast({ title: 'Successo', description: `${parsed?.created ?? 0} marker creati` });
+      } else if (response.status === 207) {
+        toast({ title: 'Parziale', description: `${parsed?.created ?? 0} creati, ${parsed?.partial_failures ?? 0} falliti` });
       } else {
-        toast({
-          title: "Errore",
-          description: result.error || 'Errore sconosciuto',
-          variant: "destructive",
-        });
+        toast({ title: 'Errore', description: parsed?.error || 'Chiamata fallita', variant: 'destructive' });
       }
 
       // Refresh stats after test
@@ -184,10 +190,13 @@ export default function MarkersHealthcheck() {
 
     } catch (error) {
       console.error('Test error:', error);
+      setResponseStatus(null);
+      setResponseHeaders({});
+      setRawResponse('');
       toast({
-        title: "Errore",
+        title: 'Errore',
         description: error instanceof Error ? error.message : 'Errore di rete',
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -201,7 +210,7 @@ export default function MarkersHealthcheck() {
       <div className="flex items-center gap-2">
         <Database className="h-6 w-6" />
         <h1 className="text-2xl font-bold">Markers System Healthcheck</h1>
-        <Badge variant="outline">DEV MODE</Badge>
+        <Badge variant="outline">DEV</Badge>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -226,14 +235,14 @@ export default function MarkersHealthcheck() {
             </div>
 
             <div>
-              <Label htmlFor="count">Numero totale marker</Label>
+              <Label htmlFor="count">Numero totale marker (informativo)</Label>
               <Input
                 id="count"
                 type="number"
                 value={count}
                 onChange={(e) => setCount(parseInt(e.target.value) || 0)}
                 min="1"
-                max="1000"
+                max="5000"
               />
             </div>
 
@@ -259,16 +268,25 @@ export default function MarkersHealthcheck() {
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="visibility">Visibilità (ore)</Label>
-              <Input
-                id="visibility"
-                type="number"
-                value={visibilityHours}
-                onChange={(e) => setVisibilityHours(parseInt(e.target.value) || 24)}
-                min="1"
-                max="8760"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="visible_from">Visibile da</Label>
+                <Input
+                  id="visible_from"
+                  type="datetime-local"
+                  value={visibleFrom}
+                  onChange={(e) => setVisibleFrom(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="visible_to">Visibile fino a</Label>
+                <Input
+                  id="visible_to"
+                  type="datetime-local"
+                  value={visibleTo}
+                  onChange={(e) => setVisibleTo(e.target.value)}
+                />
+              </div>
             </div>
 
             <Button 
@@ -358,13 +376,53 @@ export default function MarkersHealthcheck() {
 
       </div>
 
-      {/* Last Result */}
+      {/* HTTP Response Diagnostics */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5" />
+            Esito ultima chiamata Edge Function
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-4">
+            <Label className="text-sm">HTTP Status:</Label>
+            <Badge variant={responseStatus === 200 ? 'default' : responseStatus === 207 ? 'secondary' : 'destructive'}>
+              {responseStatus ?? '—'}
+            </Badge>
+          </div>
+          {Object.keys(responseHeaders).length > 0 && (
+            <div>
+              <Label className="text-sm">Headers</Label>
+              <Textarea
+                value={JSON.stringify(responseHeaders, null, 2)}
+                readOnly
+                className="mt-1 text-xs font-mono"
+                rows={5}
+              />
+            </div>
+          )}
+          {rawResponse && (
+            <div>
+              <Label className="text-sm">Body (raw)</Label>
+              <Textarea
+                value={rawResponse}
+                readOnly
+                className="mt-1 text-xs font-mono"
+                rows={8}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Last Result (parsed) */}
       {lastResult && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Ultimo Risultato Test
+              Ultimo Risultato Test (parsed)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -390,7 +448,7 @@ export default function MarkersHealthcheck() {
                 </div>
               )}
 
-              {lastResult.partial_failures && (
+              {typeof lastResult.partial_failures === 'number' && (
                 <div>
                   <Label className="text-sm font-medium text-amber-600">Fallimenti parziali</Label>
                   <p className="text-sm">{lastResult.partial_failures} inserimenti falliti</p>
