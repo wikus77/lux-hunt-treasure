@@ -1,103 +1,36 @@
 #!/usr/bin/env tsx
 /**
- * M1SSION™ PWA - Import Statement Fixer
- * Fixes common import issues and ensures proper module resolution
+ * Script to fix broken import statements
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { glob } from 'glob';
+import { glob } from "glob";
+import fs from "node:fs";
 
-interface ImportFix {
-  from: string;
-  to: string;
-  description: string;
-}
+const RE_BLOCK = /(^|\n)([ \t]*)([A-Za-z0-9_,$ \t\n\r]+)\n[ \t]*\}[ \t]*from[ \t]*(['"][^'"]+['"])[ \t]*;?/g;
 
-const IMPORT_FIXES: ImportFix[] = [
-  {
-    from: 'import\\s+\\{([^}]+)\\}\\s+from\\s+["\']@/lib/utils["\'];?',
-    to: 'import { $1 } from "@/lib/utils";',
-    description: 'Standardize utils imports'
-  },
-  {
-    from: 'import\\s+React\\s*,\\s*\\{([^}]+)\\}\\s+from\\s+["\']react["\'];?',
-    to: 'import React, { $1 } from "react";',
-    description: 'Standardize React imports'
-  },
-  {
-    from: 'import\\s+\\{([^}]+)\\}\\s+from\\s+["\']react["\'];?',
-    to: 'import { $1 } from "react";',
-    description: 'Clean React hook imports'
-  }
-];
-
-function fixImportsInFile(filePath: string): boolean {
-  try {
-    let content = readFileSync(filePath, 'utf-8');
-    let modified = false;
-
-    for (const fix of IMPORT_FIXES) {
-      const regex = new RegExp(fix.from, 'g');
-      const before = content;
-      content = content.replace(regex, fix.to);
-      
-      if (before !== content) {
-        modified = true;
-      }
-    }
-
-    // Remove duplicate imports
-    const lines = content.split('\n');
-    const seenImports = new Set<string>();
-    const cleanedLines = lines.filter(line => {
-      if (line.trim().startsWith('import ')) {
-        if (seenImports.has(line.trim())) {
-          modified = true;
-          return false;
-        }
-        seenImports.add(line.trim());
-      }
-      return true;
-    });
-
-    if (modified) {
-      writeFileSync(filePath, cleanedLines.join('\n'), 'utf-8');
-      return true;
-    }
-
-    return false;
-  } catch (error) {
-    console.error(`❌ Error fixing imports in ${filePath}:`, error);
-    return false;
-  }
-}
-
-async function main() {
-  console.log('🔧 M1SSION™ - Fixing Import Statements...');
-  
-  const files = await glob('src/**/*.{ts,tsx}', { 
-    ignore: ['**/node_modules/**', '**/dist/**', '**/types.ts'] 
+const fixContent = (code: string) => {
+  return code.replace(RE_BLOCK, (m, nl, indent, names, from) => {
+    // se già c'è "import", non toccare
+    if (/^\s*import\s/.test(names)) return m;
+    // normalizza elenco simboli su una riga
+    const compact = names.replace(/\s+/g, " ").trim().replace(/,\s*$/,"");
+    // se sembra default + named (rara), NON assumere: qui gestiamo solo named
+    // ricomponi come import { ... } from 'mod'
+    return `${nl}${indent}import { ${compact} } from ${from};`;
   });
-  
-  let totalFiles = 0;
-  let fixedFiles = 0;
-  
-  for (const file of files) {
-    totalFiles++;
-    if (fixImportsInFile(file)) {
-      fixedFiles++;
-      console.log(`✅ Fixed imports: ${file}`);
+};
+
+const run = async () => {
+  const files = await glob("src/**/*.{ts,tsx}", { ignore: ['**/node_modules/**', '**/dist/**'] });
+  let touched = 0;
+  for (const f of files) {
+    const before = fs.readFileSync(f,"utf8");
+    const after = fixContent(before);
+    if (after !== before) {
+      fs.writeFileSync(f, after);
+      touched++;
     }
   }
-  
-  console.log(`\n📊 Import Fix Summary:`);
-  console.log(`   Total files scanned: ${totalFiles}`);
-  console.log(`   Files with fixed imports: ${fixedFiles}`);
-  console.log('✅ Import fixing completed!');
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
-}
-
-export { main as fixImports };
+  console.log(JSON.stringify({fixedImports: touched}));
+};
+run();
