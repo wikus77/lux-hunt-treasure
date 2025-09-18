@@ -65,23 +65,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const authHeader = req.headers.get('Authorization')?.replace('Bearer ', '');
-    if (!authHeader) {
+    const fullAuthz = req.headers.get('Authorization') || req.headers.get('authorization') || '';
+    const token = fullAuthz.replace(/^Bearer\s+/i, '');
+    if (!token) {
       return new Response(
         JSON.stringify({ error: 'Authorization required' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // Create user client for auth verification with anon key
+    // Create user-scoped client that propagates the caller JWT to PostgREST
     const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
     const userSupabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      anonKey
+      anonKey,
+      { global: { headers: { Authorization: fullAuthz } } }
     );
 
-    // Verify user is admin
-    const { data: user, error: userError } = await userSupabase.auth.getUser(authHeader);
+    // Verify user identity
+    const { data: user, error: userError } = await userSupabase.auth.getUser(token);
     if (userError || !user.user) {
       return new Response(
         JSON.stringify({ error: 'Invalid auth' }),
@@ -89,14 +91,29 @@ serve(async (req) => {
       );
     }
 
-    const { data: profile } = await userSupabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.user.id)
-      .maybeSingle();
+    // Resolve role via profiles (admin/owner), with secure fallbacks
+    let role = '';
+    let isAllowed = false;
 
-    const role = (profile?.role || '').toLowerCase();
-    const isAllowed = role === 'admin' || role === 'owner';
+    try {
+      const { data: profile } = await userSupabase
+        .from('profiles')
+        .select('role, email')
+        .eq('id', user.user.id)
+        .maybeSingle();
+      role = (profile?.role || '').toLowerCase();
+      isAllowed = role === 'admin' || role === 'owner';
+    } catch (_) {
+      // ignore
+    }
+
+    if (!isAllowed) {
+      try {
+        const { data: rpcIsAdmin } = await userSupabase.rpc('is_admin_secure');
+        isAllowed = rpcIsAdmin === true;
+      } catch (_) { /* ignore */ }
+    }
+
     if (!isAllowed) {
       return new Response(
         JSON.stringify({ error: 'Admin access required', request_id: requestId }),

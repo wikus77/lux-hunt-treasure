@@ -145,6 +145,15 @@ const BulkMarkerDropComponent = () => {
         seed: seed.trim() || undefined,
       };
 
+      if (bbox.minLat && bbox.minLng && bbox.maxLat && bbox.maxLng) {
+        request.bbox = {
+          minLat: parseFloat(bbox.minLat),
+          minLng: parseFloat(bbox.minLng),
+          maxLat: parseFloat(bbox.maxLat),
+          maxLng: parseFloat(bbox.maxLng)
+        };
+      }
+
       // Session & gate
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -408,12 +417,42 @@ const BulkMarkerDropComponent = () => {
             <div className="pt-4">
               <Button 
                 onClick={createBulkMarkers}
-                disabled={isProcessing || getTotalCount() <= 0}
+                disabled={isProcessing || getTotalCount() <= 0 || !isAdmin}
                 className="w-full bg-gradient-to-r from-cyan-600 to-blue-500 hover:opacity-90"
               >
                 {isProcessing ? 'Creazione in corso...' : 'Lancia Marker'}
               </Button>
+              {!isAdmin && (
+                <p className="mt-2 text-sm text-amber-400">Accesso consentito solo ad admin/owner</p>
+              )}
             </div>
+
+            {httpStatus !== null && (
+              <div className="mt-6 p-4 border border-gray-700 rounded-lg space-y-3">
+                <div className="text-sm">Stato: <Badge variant="secondary">{httpStatus}</Badge></div>
+                {requestId && (
+                  <div className="text-sm">request_id: <code className="text-cyan-400">{requestId}</code></div>
+                )}
+                {Object.keys(responseHeaders).length > 0 && (
+                  <div className="text-sm space-y-1">
+                    <div className="font-semibold">Headers</div>
+                    <ul className="list-disc pl-5">
+                      {Object.entries(responseHeaders).map(([k, v]) => (
+                        <li key={k}><span className="text-muted-foreground">{k}</span>: <span className="text-foreground">{v}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div>
+                  <Label>Raw body</Label>
+                  <Textarea value={rawBody} readOnly rows={6} className="mt-1 font-mono text-xs" />
+                </div>
+                <div>
+                  <Label>Parsed JSON</Label>
+                  <Textarea value={parsedResponse ? JSON.stringify(parsedResponse, null, 2) : ''} readOnly rows={8} className="mt-1 font-mono text-xs" />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
