@@ -135,45 +135,54 @@ serve(async (req) => {
     const seed = body.seed || `DROP-${Date.now()}`;
     const rng = generateSeededRandom(seed);
 
-    // Create marker drop record
-    const { data: dropRecord, error: dropError } = await supabase
-      .from('marker_drops')
-      .insert({
-        created_by: user.user.id,
-        seed,
-        bbox,
-        summary: body.distributions
-      })
-      .select('id')
-      .single();
+    // Create marker drop record (graceful if table missing)
+    let dropId: string | null = null;
+    try {
+      const { data: dropRecord, error: dropError } = await supabase
+        .from('marker_drops')
+        .insert({
+          created_by: user.user.id,
+          seed,
+          bbox,
+          summary: body.distributions
+        })
+        .select('id')
+        .single();
 
-    if (dropError || !dropRecord) {
-      console.error('Drop creation error:', dropError);
-      return new Response(
-        JSON.stringify({ error: 'Failed to create drop record' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (!dropError && dropRecord?.id) {
+        dropId = dropRecord.id;
+      } else if (dropError) {
+        // Table might not exist in some environments: continue without drop record
+        console.warn(`[${requestId}] marker_drops insert skipped:`, {
+          code: dropError.code,
+          message: dropError.message,
+        });
+      }
+    } catch (e) {
+      console.warn(`[${requestId}] marker_drops insert exception, proceeding without drop record`);
     }
 
     // Generate markers for each distribution
-    const markersToInsert = [];
+    const markersToInsert = [] as any[];
+    const visibleFrom = (body as any).visible_from ?? new Date().toISOString();
+    const visibleTo = (body as any).visible_to ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     
     for (const dist of body.distributions) {
       for (let i = 0; i < dist.count; i++) {
         const coords = generateRandomCoordinates(bbox, rng);
         
-        markersToInsert.push({
+        const markerRow: Record<string, any> = {
           title: (dist.payload && (dist.payload.title || dist.payload.name)) || dist.type,
           lat: coords.lat,
           lng: coords.lng,
           active: true,
           reward_type: dist.type,
           reward_payload: dist.payload || {},
-          drop_id: dropRecord.id,
-          // Use existing marker defaults for visibility
-          visible_from: new Date().toISOString(),
-          visible_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
-        });
+          visible_from: visibleFrom,
+          visible_to: visibleTo
+        };
+        if (dropId) markerRow.drop_id = dropId;
+        markersToInsert.push(markerRow);
       }
     }
 
@@ -191,26 +200,45 @@ serve(async (req) => {
     
     for (let i = 0; i < markersToInsert.length; i += chunkSize) {
       const chunk = markersToInsert.slice(i, i + chunkSize);
-      
       try {
         const { data: insertedData, error: insertError } = await supabase
           .from('markers')
           .insert(chunk)
           .select('id');
-          
+
         if (insertError) {
-          const errorDetails = {
-            code: insertError.code || 'UNKNOWN_ERROR',
-            message: insertError.message || 'Unknown insertion error',
-            hint: insertError.hint || undefined,
-            payload_hash: `CHUNK_${i}_${chunk.length}`
-          };
-          errors.push(errorDetails);
-          console.error(`❌ [${requestId}] Chunk ${i} failed:`, {
-            code: errorDetails.code,
-            message: errorDetails.message,
-            chunkSize: chunk.length
-          });
+          // Fallback to RPC for enum casts / constraints
+          let rpcInserted = 0;
+          try {
+            const { data: rpcData, error: rpcErr } = await supabase
+              .rpc('fn_markers_bulk_insert', { markers: chunk });
+            if (rpcErr) {
+              const errorDetails = {
+                code: rpcErr.code || insertError.code || 'INSERT_AND_RPC_FAILED',
+                message: rpcErr.message || insertError.message || 'Insert and RPC both failed',
+                hint: rpcErr.hint || insertError.hint || undefined,
+                payload_hash: `CHUNK_${i}_${chunk.length}`
+              };
+              errors.push(errorDetails);
+              console.error(`❌ [${requestId}] Chunk ${i} failed (RPC fallback):`, {
+                code: errorDetails.code,
+                message: errorDetails.message,
+                chunkSize: chunk.length
+              });
+            } else {
+              rpcInserted = rpcData?.length || 0;
+              insertedCount += rpcInserted;
+              console.log(`✅ [${requestId}] Chunk ${i} RPC fallback success: ${rpcInserted} inserted`);
+            }
+          } catch (rpcException) {
+            const errorDetails = {
+              code: 'RPC_EXCEPTION',
+              message: rpcException instanceof Error ? rpcException.message : 'Unknown RPC exception',
+              payload_hash: `CHUNK_${i}_${chunk.length}`
+            };
+            errors.push(errorDetails);
+            console.error(`💥 [${requestId}] Chunk ${i} RPC exception:`, rpcException);
+          }
         } else {
           const actualInserted = insertedData?.length || 0;
           insertedCount += actualInserted;
@@ -229,11 +257,13 @@ serve(async (req) => {
     
     console.log(`📊 [${requestId}] Final results: ${insertedCount} inserted, ${errors.length} errors`);
 
-    // Update drop record with actual count
-    await supabase
-      .from('marker_drops')
-      .update({ created_count: insertedCount })
-      .eq('id', dropRecord.id);
+    // Update drop record with actual count if present
+    if (dropId) {
+      await supabase
+        .from('marker_drops')
+        .update({ created_count: insertedCount })
+        .eq('id', dropId);
+    }
 
     console.log(`📋 [${requestId}] Bulk drop completed: ${insertedCount} markers created, ${errors.length} errors`);
 
@@ -241,7 +271,7 @@ serve(async (req) => {
     if (insertedCount === 0 && errors.length > 0) {
       // Complete failure
       const responseBody: any = {
-        drop_id: dropRecord.id,
+        drop_id: dropId,
         created: insertedCount,
         error: 'INSERT_FAILED',
         request_id: requestId
