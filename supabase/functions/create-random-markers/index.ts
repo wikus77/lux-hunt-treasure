@@ -164,6 +164,8 @@ serve(async (req) => {
     // Batch insert markers (chunk by 1000)
     let insertedCount = 0;
     const chunkSize = 1000;
+    let hadError = false;
+    let firstError: any = null;
     
     for (let i = 0; i < markersToInsert.length; i += chunkSize) {
       const chunk = markersToInsert.slice(i, i + chunkSize);
@@ -172,6 +174,8 @@ serve(async (req) => {
         .insert(chunk);
         
       if (insertError) {
+        hadError = true;
+        firstError = firstError || insertError;
         console.error('Marker insert error:', insertError);
         continue;
       }
@@ -186,6 +190,21 @@ serve(async (req) => {
       .eq('id', dropRecord.id);
 
     console.log(`✅ Bulk drop completed: ${insertedCount} markers created`);
+
+    if (hadError && insertedCount === 0) {
+      return new Response(
+        JSON.stringify({
+          drop_id: dropRecord.id,
+          created: insertedCount,
+          error: 'INSERT_FAILED',
+          details: (firstError as any)?.message || firstError || 'Unknown error'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
 
     return new Response(
       JSON.stringify({
