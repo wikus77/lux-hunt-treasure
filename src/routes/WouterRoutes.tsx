@@ -1,8 +1,11 @@
 // M1SSION™ — First Visit Landing Logic & PWA Routing
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Route, Switch, useLocation } from "wouter";
+
+// Dev tools (conditionally loaded)
+const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Database-based plan choice tracking instead of localStorage
@@ -418,6 +421,15 @@ const WouterRoutes: React.FC = () => {
           <Route path="/admin/mission-panel">
             <ProtectedRoute>
               <MissionPanelPage />
+            </ProtectedRoute>
+          </Route>
+
+          {/* Dev diagnostics route - only accessible to admins or in debug mode */}
+          <Route path="/dev/markers-healthcheck">
+            <ProtectedRoute>
+              <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                <MarkersHealthcheck />
+              </Suspense>
             </ProtectedRoute>
           </Route>
 
