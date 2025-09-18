@@ -1,5 +1,6 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 /* Web Push Toggle Component for iOS PWA - Stable Version */
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
