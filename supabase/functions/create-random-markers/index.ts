@@ -154,8 +154,8 @@ serve(async (req) => {
           reward_payload: dist.payload || {},
           drop_id: dropRecord.id,
           // Use existing marker defaults for visibility
-          start_at: new Date().toISOString(),
-          end_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
+          visible_from: new Date().toISOString(),
+          visible_to: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days
         });
       }
     }
