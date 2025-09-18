@@ -142,7 +142,7 @@ const BulkMarkerDropComponent = () => {
         description: `Drop ID: ${data.drop_id}`,
         action: {
           label: 'Vedi su Buzz Map',
-          onClick: () => window.open('/buzz-map', '_blank')
+          onClick: () => window.open('/map', '_blank')
         }
       });
 
