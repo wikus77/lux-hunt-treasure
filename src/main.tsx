@@ -461,16 +461,12 @@ const renderApp = () => {
   }
 };
 
-// Enhanced DOM readiness check with SW Controller Guard
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log("📄 DOM fully loaded - initializing enhanced app");
-    initAppWithSWGuard();
-  });
-} else {
-  console.log("📄 DOM already loaded - initializing enhanced app immediately");
-  initAppWithSWGuard();
-}
+// Helper function for consistent logging
+const log = (message: string, data?: any) => {
+  if (import.meta.env.DEV || window.location.search.includes('debug=1')) {
+    console.log(`[M1SSION-SW] ${message}`, data || '');
+  }
+};
 
 // SW Controller enforcement for Pages.dev (prevent other SWs from taking control)
 const enforceAppSWController = async () => {
@@ -530,12 +526,16 @@ const enforceAppSWController = async () => {
   }
 };
 
-// Helper function for consistent logging
-const log = (message: string, data?: any) => {
-  if (import.meta.env.DEV || window.location.search.includes('debug=1')) {
-    console.log(`[M1SSION-SW] ${message}`, data || '');
-  }
-};
+// Enhanced DOM readiness check with SW Controller Guard
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("📄 DOM fully loaded - initializing enhanced app");
+    initAppWithSWGuard();
+  });
+} else {
+  console.log("📄 DOM already loaded - initializing enhanced app immediately");
+  initAppWithSWGuard();
+}
 
 // Initialize app with Service Worker controller protection
 async function initAppWithSWGuard() {
