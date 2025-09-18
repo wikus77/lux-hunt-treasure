@@ -147,6 +147,7 @@ serve(async (req) => {
         const coords = generateRandomCoordinates(bbox, rng);
         
         markersToInsert.push({
+          title: (dist.payload && (dist.payload.title || dist.payload.name)) || dist.type,
           lat: coords.lat,
           lng: coords.lng,
           active: true,
