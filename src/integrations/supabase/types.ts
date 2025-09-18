@@ -4649,6 +4649,12 @@ export type Database = {
           url: string
         }[]
       }
+      fn_markers_bulk_insert: {
+        Args: { markers: Json }
+        Returns: {
+          id: string
+        }[]
+      }
       force_subscription_sync: {
         Args: { p_user_id: string }
         Returns: boolean

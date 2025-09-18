@@ -54,6 +54,17 @@ const MissionPanelPage: React.FC = () => {
     maxLng: ''
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  React.useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user?.id) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+        setIsAdmin(!!profile && ['admin','owner'].some(r => profile.role?.toLowerCase?.().includes(r)));
+      }
+    })();
+  }, []);
 
   const addDistribution = () => {
     setDistributions([...distributions, { type: 'BUZZ_FREE', count: 0 }]);
@@ -193,6 +204,19 @@ const MissionPanelPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Dev link - only for admins */}
+        {isAdmin && (
+          <Card className="border-emerald-500/20">
+            <CardContent className="pt-4 flex items-center justify-between gap-4">
+              <div className="text-sm">
+                <div className="font-medium">Markers Healthcheck</div>
+                <div className="text-muted-foreground">Diagnostica Edge Function e readback DB (solo lettura)</div>
+              </div>
+              <Button onClick={() => setLocation('/dev/markers-healthcheck')} variant="outline">Apri</Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Bulk Marker Drop Card */}
         <Card className="border-cyan-500/20 hover:border-cyan-500/40 transition-colors">
           <CardHeader>
