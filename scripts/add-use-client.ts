@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 /**
  * Script to add "use client" directive to React component files that need it
- * Only adds to files that use React hooks or have JSX and don't already have the directive
  */
 
 import { readFileSync, writeFileSync } from 'fs';
@@ -61,10 +60,10 @@ function addUseClientDirective(filePath: string): boolean {
     const newContent = lines.join('\n');
     
     writeFileSync(filePath, newContent, 'utf-8');
-    console.log(`Added "use client" to: ${filePath}`);
+    console.log(`✅ Added "use client" to: ${filePath}`);
     return true;
   } catch (error) {
-    console.error(`Error processing ${filePath}:`, error);
+    console.error(`❌ Error processing ${filePath}:`, error);
   }
   return false;
 }
@@ -72,7 +71,6 @@ function addUseClientDirective(filePath: string): boolean {
 async function main() {
   console.log('🔧 Adding "use client" directives to React components...');
   
-  // Find all TypeScript/React files
   const files = await glob('src/**/*.{ts,tsx}', { 
     ignore: ['**/node_modules/**', '**/dist/**'] 
   });
