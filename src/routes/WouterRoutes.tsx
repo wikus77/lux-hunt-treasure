@@ -49,6 +49,7 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
+import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
@@ -411,6 +412,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/admin/send-notification">
             <ProtectedRoute>
               <SendNotificationPage />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/admin/mission-panel">
+            <ProtectedRoute>
+              <MissionPanelPage />
             </ProtectedRoute>
           </Route>
 
