@@ -1,32 +1,63 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+// M1SSION™ Edge Function: Secure Bulk Marker Drop
+// Hardened with header validation, admin gate, and audit trail
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-interface Distribution {
-  type: 'BUZZ_FREE' | 'MESSAGE' | 'XP_POINTS' | 'EVENT_TICKET' | 'BADGE';
+interface DistributionRequest {
+  type: string;
   count: number;
-  payload?: Record<string, any>;
 }
 
-interface BulkMarkerRequest {
-  seed?: string;
+interface BulkDropRequest {
+  distributions: DistributionRequest[];
+  visibility?: { hours: number };
   bbox?: {
     minLat: number;
     minLng: number;
     maxLat: number;
     maxLng: number;
   };
-  distributions: Distribution[];
-  visibilityPreset?: string;
 }
 
-function generateSeededRandom(seed: string): () => number {
+const ALLOWED_ORIGINS = [
+  'https://m1ssion.eu',
+  'https://www.m1ssion.eu', 
+  'https://m1ssion.pages.dev',
+  'http://localhost:3000',
+  'https://localhost:3000'
+];
+
+const validateSecurityHeaders = (req: Request): { valid: boolean; error?: string } => {
+  const version = req.headers.get('X-M1-Dropper-Version');
+  const codeHash = req.headers.get('X-M1-Code-Hash');
+  const origin = req.headers.get('Origin');
+  
+  if (version !== 'v1') {
+    return { valid: false, error: 'Missing or invalid X-M1-Dropper-Version header' };
+  }
+  
+  if (!codeHash || !/^[a-f0-9]{64}$/.test(codeHash)) {
+    return { valid: false, error: 'Missing or invalid X-M1-Code-Hash header' };
+  }
+  
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return { valid: false, error: 'Origin not in allowlist' };
+  }
+  
+  return { valid: true };
+};
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-m1-dropper-version, x-m1-code-hash',
+};
+
+function generateSeededRandom(seed?: string): () => number {
+  if (!seed) return Math.random;
+  
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     const char = seed.charCodeAt(i);
@@ -41,7 +72,7 @@ function generateSeededRandom(seed: string): () => number {
 }
 
 function validateLatLng(lat: number, lng: number): boolean {
-  // Strict DB constraints alignment: lat [-90,90], lng [-180,180]
+  // Strict DB constraints: lat [-90,90], lng [-180,180]
   return lat >= -90.0 && lat <= 90.0 && lng >= -180.0 && lng <= 180.0 && 
          !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng);
 }
@@ -68,111 +99,139 @@ function generateValidCoordinates(
     const lat = safeBbox.minLat + rng() * (safeBbox.maxLat - safeBbox.minLat);
     const lng = safeBbox.minLng + rng() * (safeBbox.maxLng - safeBbox.minLng);
     
-    // Double validation before returning
+    // Triple validation before returning
     if (validateLatLng(lat, lng)) {
       return { lat: Number(lat.toFixed(6)), lng: Number(lng.toFixed(6)) };
     }
   }
   
-  return null; // Failed to generate valid coordinates after maxAttempts
+  return null;
 }
 
 serve(async (req) => {
+  const requestId = `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const requestId = `REQ-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  const url = new URL(req.url);
-  const debugMode = url.searchParams.get('debug') === '1';
-
   try {
-    // Initialize Supabase with Service Role for database operations
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+    console.log(`🚀 [${requestId}] Starting secure bulk marker creation`);
 
-    const fullAuthz = req.headers.get('Authorization') || req.headers.get('authorization') || '';
-    const token = fullAuthz.replace(/^Bearer\s+/i, '');
-    if (!token) {
+    // Security: Validate required headers first
+    const headerValidation = validateSecurityHeaders(req);
+    if (!headerValidation.valid) {
+      console.log(`❌ [${requestId}] Header validation failed: ${headerValidation.error}`);
       return new Response(
-        JSON.stringify({ error: 'Authorization required' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: headerValidation.error, 
+          request_id: requestId 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
-    // Create user-scoped client that propagates the caller JWT to PostgREST
-    const anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
-    const userSupabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      anonKey,
-      { global: { headers: { Authorization: fullAuthz } } }
-    );
+    // Parse request body
+    const body: BulkDropRequest = await req.json();
+    const debugMode = new URL(req.url).searchParams.get('debug') === '1';
 
-    // Verify user identity
-    const { data: user, error: userError } = await userSupabase.auth.getUser(token);
-    if (userError || !user.user) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid auth' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Resolve role via profiles (admin/owner), with secure fallbacks
-    let role = '';
-    let isAllowed = false;
-
-    try {
-      const { data: profile } = await userSupabase
-        .from('profiles')
-        .select('role, email')
-        .eq('id', user.user.id)
-        .maybeSingle();
-      role = (profile?.role || '').toLowerCase();
-      isAllowed = role === 'admin' || role === 'owner';
-    } catch (_) {
-      // ignore
-    }
-
-    if (!isAllowed) {
-      try {
-        const { data: rpcIsAdmin } = await userSupabase.rpc('is_admin_secure');
-        isAllowed = rpcIsAdmin === true;
-      } catch (_) { /* ignore */ }
-    }
-
-    if (!isAllowed) {
-      return new Response(
-        JSON.stringify({ error: 'Admin access required', request_id: requestId }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const body: BulkMarkerRequest = await req.json();
-    console.log(`🚀 [${requestId}] Starting bulk marker creation: ${JSON.stringify({
+    console.log(`📊 [${requestId}] Request details:`, {
       distributions: body.distributions?.length || 0,
       totalRequested: body.distributions?.reduce((sum, d) => sum + d.count, 0) || 0,
       debugMode
-    })}`);;
+    });
+
+    // Validate distributions
+    if (!body.distributions || !Array.isArray(body.distributions) || body.distributions.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'distributions array is required and must not be empty', 
+          request_id: requestId 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const totalRequested = body.distributions.reduce((sum, d) => sum + (d.count || 0), 0);
+    if (totalRequested <= 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Total marker count must be greater than 0', 
+          request_id: requestId 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Initialize Supabase client with auth propagation
+    const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
+    const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
-    // Validate input
-    if (!body.distributions || !Array.isArray(body.distributions)) {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      console.error(`❌ [${requestId}] Missing environment variables`);
       return new Response(
-        JSON.stringify({ error: 'distributions array required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'Server configuration error', 
+          request_id: requestId 
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
-    const totalCount = body.distributions.reduce((sum, d) => sum + d.count, 0);
-    if (totalCount <= 0) {
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization') ?? '' }
+      }
+    });
+
+    // Security gate: validate admin/owner role
+    const { data: authUser } = await supabase.auth.getUser();
+    if (!authUser.user) {
+      console.log(`❌ [${requestId}] Authentication failed`);
       return new Response(
-        JSON.stringify({ error: 'Total count must be > 0' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: 'Authentication required', 
+          request_id: requestId 
+        }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
       );
     }
 
-    // Default bbox to world (strict DB constraints: lat [-90,90], lng [-180,180])
+    // Use secure RPC to check admin role
+    const { data: isAdminResult, error: adminError } = await supabase
+      .rpc('is_admin_secure', { p_uid: authUser.user.id });
+
+    if (adminError || !isAdminResult) {
+      console.log(`❌ [${requestId}] Admin check failed:`, adminError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Admin or Owner role required', 
+          request_id: requestId 
+        }),
+        { 
+          status: 403, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    // Default bbox with strict constraints
     const bbox = body.bbox || {
       minLat: -89.0,
       minLng: -179.0,
@@ -180,17 +239,13 @@ serve(async (req) => {
       maxLng: 179.0
     };
 
-    const seed = body.seed || `DROP-${Date.now()}`;
-    const rng = generateSeededRandom(seed);
-
-    // Create marker drop record (graceful if table missing)
+    // Create drop record (optional audit trail)
     let dropId: string | null = null;
     try {
       const { data: dropRecord, error: dropError } = await supabase
         .from('marker_drops')
         .insert({
-          created_by: user.user.id,
-          seed,
+          created_by: authUser.user.id,
           bbox,
           summary: body.distributions
         })
@@ -199,175 +254,93 @@ serve(async (req) => {
 
       if (!dropError && dropRecord?.id) {
         dropId = dropRecord.id;
-      } else if (dropError) {
-        // Table might not exist in some environments: continue without drop record
-        console.warn(`[${requestId}] marker_drops insert skipped:`, {
-          code: dropError.code,
-          message: dropError.message,
+        
+        // Audit the drop request
+        await supabase.rpc('audit_drop_request', {
+          p_drop_id: dropId,
+          p_payload: {
+            distributions: body.distributions,
+            bbox,
+            request_id: requestId,
+            headers: {
+              version: req.headers.get('X-M1-Dropper-Version'),
+              codeHash: req.headers.get('X-M1-Code-Hash')?.substring(0, 12)
+            }
+          }
         });
       }
     } catch (e) {
-      console.warn(`[${requestId}] marker_drops insert exception, proceeding without drop record`);
+      console.warn(`[${requestId}] Drop record creation failed:`, e);
     }
 
-    // Generate markers for each distribution
-    const markersToInsert = [] as any[];
-    const coordinateFailures: Array<{ type: string; reason: string }> = [];
-    const visibleFrom = (body as any).visible_from ?? new Date().toISOString();
-    const visibleTo = (body as any).visible_to ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-    
+    // Generate markers using secure RPC
+    const rng = generateSeededRandom(body.visibility?.hours?.toString());
+    let insertedCount = 0;
+    let partialFailures = 0;
+    const errors: any[] = [];
+
     for (const dist of body.distributions) {
       for (let i = 0; i < dist.count; i++) {
         const coords = generateValidCoordinates(bbox, rng, 10);
         
         if (!coords) {
-          coordinateFailures.push({
+          partialFailures++;
+          errors.push({
             type: dist.type,
-            reason: `Failed to generate valid coordinates after 10 attempts for ${dist.type}`
-          });
-          continue; // Skip this marker
-        }
-        
-        // Triple validation before insert preparation
-        if (!validateLatLng(coords.lat, coords.lng)) {
-          coordinateFailures.push({
-            type: dist.type,
-            reason: `Generated coordinates failed final validation: lat=${coords.lat}, lng=${coords.lng}`
+            reason: `Failed to generate valid coordinates after 10 attempts`,
+            code: 'VALIDATION_FAILED'
           });
           continue;
         }
         
-        const markerRow: Record<string, any> = {
-          title: (dist.payload && (dist.payload.title || dist.payload.name)) || dist.type,
-          lat: coords.lat,
-          lng: coords.lng,
-          active: true,
-          reward_type: dist.type,
-          reward_payload: dist.payload || {},
-          visible_from: visibleFrom,
-          visible_to: visibleTo
-        };
-        if (dropId) markerRow.drop_id = dropId;
-        markersToInsert.push(markerRow);
-      }
-    }
-    
-    // Log coordinate generation issues
-    if (coordinateFailures.length > 0) {
-      console.warn(`[${requestId}] Coordinate generation failures:`, coordinateFailures);
-    }
-
-    // Add coordinate failures to errors array
-    const errors: Array<{
-      code: string;
-      message: string;
-      hint?: string;
-      payload_hash: string;
-      sqlState?: string;
-    }> = [];
-    
-    coordinateFailures.forEach((failure, index) => {
-      errors.push({
-        code: 'VALIDATION_FAILED',
-        message: failure.reason,
-        payload_hash: `COORD_FAIL_${index}`,
-        sqlState: 'VALIDATION_FAILED'
-      });
-    });
-
-    // Enhanced batch insert with detailed error tracking
-    let insertedCount = 0;
-    const chunkSize = 1000;
-    
-    console.log(`📦 [${requestId}] Processing ${markersToInsert.length} markers in chunks of ${chunkSize}`);
-    
-    for (let i = 0; i < markersToInsert.length; i += chunkSize) {
-      const chunk = markersToInsert.slice(i, i + chunkSize);
-      try {
-        const { data: insertedData, error: insertError } = await supabase
-          .from('markers')
-          .insert(chunk)
-          .select('id');
-
-        if (insertError) {
-          // Detailed error handling by error type
-          const errorDetails = {
-            code: insertError.code || 'INSERT_FAILED',
-            message: insertError.message || 'Insert failed',
-            hint: insertError.hint || undefined,
-            payload_hash: `CHUNK_${i}_${chunk.length}`,
-            sqlState: insertError.code
-          };
-          
-          console.error('INSERT_FAILED', { 
-            request_id: requestId, 
-            sqlState: insertError.code, 
-            message: insertError.message,
-            chunkSize: chunk.length
+        // Final validation before RPC call
+        if (!validateLatLng(coords.lat, coords.lng)) {
+          partialFailures++;
+          errors.push({
+            type: dist.type,
+            reason: `Generated coordinates failed final validation: lat=${coords.lat}, lng=${coords.lng}`,
+            code: 'VALIDATION_FAILED'
           });
+          continue;
+        }
 
-          // Handle specific constraint violations
-          if (insertError.code === '23514') {
-            // Constraint violation - don't retry with RPC for coordinate issues
+        try {
+          // Use secure RPC for marker insertion
+          const { data: markerId, error: insertError } = await supabase
+            .rpc('fn_markers_secure_insert', {
+              p_drop_id: dropId,
+              p_title: `${dist.type} Marker`,
+              p_lat: coords.lat,
+              p_lng: coords.lng,
+              p_reward_type: dist.type as any,
+              p_reward_payload: {}
+            });
+
+          if (insertError) {
+            console.error(`❌ [${requestId}] RPC insert failed:`, insertError);
+            partialFailures++;
             errors.push({
-              ...errorDetails,
-              message: `Constraint violation: ${insertError.message} (likely invalid coordinates)`
+              type: dist.type,
+              reason: insertError.message,
+              code: insertError.code || 'RPC_FAILED',
+              sqlState: insertError.details || 'unknown'
             });
           } else {
-            // Try RPC fallback for other errors (ENUM casting, etc.)
-            let rpcInserted = 0;
-            try {
-              const { data: rpcData, error: rpcErr } = await supabase
-                .rpc('fn_markers_bulk_insert', { _rows: chunk, _drop_id: dropId });
-              if (rpcErr) {
-                errors.push({
-                  code: rpcErr.code || 'RPC_FAILED',
-                  message: rpcErr.message || 'RPC fallback failed',
-                  hint: rpcErr.hint || undefined,
-                  payload_hash: `RPC_CHUNK_${i}_${chunk.length}`,
-                  sqlState: rpcErr.code
-                });
-                console.error('RPC_FAILED', { 
-                  request_id: requestId, 
-                  sqlState: rpcErr.code, 
-                  message: rpcErr.message,
-                  chunkSize: chunk.length
-                });
-              } else {
-                rpcInserted = rpcData?.length || 0;
-                insertedCount += rpcInserted;
-                console.log(`✅ [${requestId}] Chunk ${i} RPC fallback success: ${rpcInserted} inserted`);
-              }
-            } catch (rpcException) {
-              errors.push({
-                code: 'RPC_EXCEPTION',
-                message: rpcException instanceof Error ? rpcException.message : 'Unknown RPC exception',
-                payload_hash: `RPC_EXC_${i}_${chunk.length}`,
-                sqlState: 'RPC_EXCEPTION'
-              });
-              console.error(`💥 [${requestId}] Chunk ${i} RPC exception:`, rpcException);
-            }
+            insertedCount++;
+            console.log(`✅ [${requestId}] Marker inserted: ${markerId}`);
           }
-        } else {
-          const actualInserted = insertedData?.length || 0;
-          insertedCount += actualInserted;
-          console.log(`✅ [${requestId}] Chunk ${i} success: ${actualInserted} markers inserted`);
+        } catch (e) {
+          partialFailures++;
+          errors.push({
+            type: dist.type,
+            reason: e instanceof Error ? e.message : 'Unknown RPC error',
+            code: 'RPC_EXCEPTION'
+          });
         }
-      } catch (chunkError) {
-        const errorDetails = {
-          code: 'CHUNK_EXCEPTION',
-          message: chunkError instanceof Error ? chunkError.message : 'Unknown chunk error',
-          payload_hash: `CHUNK_${i}_${chunk.length}`,
-          sqlState: 'CHUNK_EXCEPTION'
-        };
-        errors.push(errorDetails);
-        console.error(`💥 [${requestId}] Chunk ${i} exception:`, chunkError);
       }
     }
-    
-    console.log(`📊 [${requestId}] Final results: ${insertedCount} inserted, ${errors.length} errors`);
 
-    // Update drop record with actual count if present
+    // Update drop record with results
     if (dropId) {
       await supabase
         .from('marker_drops')
@@ -377,92 +350,69 @@ serve(async (req) => {
 
     console.log(`📋 [${requestId}] Bulk drop completed: ${insertedCount} markers created, ${errors.length} errors`);
 
-    // Determine response based on results
-    if (insertedCount === 0 && errors.length > 0) {
-      // Complete failure
-      const responseBody: any = {
-        drop_id: dropId,
-        created: insertedCount,
-        error: 'INSERT_FAILED',
-        request_id: requestId
-      };
-      
+    // Build response
+    const responseData: any = {
+      created: insertedCount,
+      drop_id: dropId,
+      request_id: requestId
+    };
+
+    // Handle partial success
+    if (partialFailures > 0) {
+      responseData.partial_failures = partialFailures;
       if (debugMode) {
-        responseBody.errors = errors.map(err => ({
-          ...err,
-          sqlState: err.code
-        }));
-        responseBody.details = `All ${markersToInsert.length} markers failed to insert`;
+        responseData.errors = errors.slice(0, 10); // Limit error details in debug mode
       }
       
       return new Response(
-        JSON.stringify(responseBody),
+        JSON.stringify(responseData),
         { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    } else if (insertedCount > 0 && errors.length > 0) {
-      // Partial success
-      const responseBody: any = {
-        drop_id: dropId,
-        created: insertedCount,
-        partial_failures: errors.length,
-        request_id: requestId
-      };
-      
-      if (debugMode) {
-        responseBody.errors = errors.map(err => ({
-          ...err,
-          sqlState: err.code
-        }));
-      }
-      
-      return new Response(
-        JSON.stringify(responseBody),
-        { 
-          status: 207, // Multi-status
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    } else {
-      // Complete success - fetch created markers for response
-      let createdMarkers: any[] = [];
-      if (dropId) {
-        try {
-          const { data: markersData } = await supabase
-            .from('markers')
-            .select('id')
-            .eq('drop_id', dropId);
-          createdMarkers = markersData || [];
-        } catch (e) {
-          // Continue without markers list
-        }
-      }
-      
-      return new Response(
-        JSON.stringify({
-          drop_id: dropId,
-          created: insertedCount,
-          markers: createdMarkers,
-          request_id: requestId
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          status: 207, // Multi-Status
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'X-Request-ID': requestId
+          } 
         }
       );
     }
 
-  } catch (error) {
-    console.error(`💥 [${requestId}] Function error:`, error);
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error',
-        request_id: requestId,
-        details: debugMode ? (error instanceof Error ? error.message : 'Unknown error') : undefined
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(responseData),
+      { 
+        status: 200,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'X-Request-ID': requestId
+        } 
+      }
+    );
+
+  } catch (error) {
+    console.error(`💥 [${requestId}] Unhandled error:`, error);
+    
+    const errorResponse: any = {
+      error: 'Internal server error',
+      request_id: requestId
+    };
+    
+    // Include error details only in debug mode
+    const debugMode = new URL(req.url).searchParams.get('debug') === '1';
+    if (debugMode) {
+      errorResponse.details = error instanceof Error ? error.message : 'Unknown error';
+    }
+    
+    return new Response(
+      JSON.stringify(errorResponse),
+      { 
+        status: 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json',
+          'X-Request-ID': requestId
+        } 
+      }
     );
   }
 });
