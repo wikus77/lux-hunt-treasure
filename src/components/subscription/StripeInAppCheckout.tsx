@@ -62,13 +62,16 @@ const CheckoutForm: React.FC<{
         
         const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', {
           body: {
-            user_id: user.id,
-            plan: config.plan || config.type,
-            amount: config.amount,
+            amountCents: config.amount, // Already in cents
             currency: config.currency || 'eur',
-            payment_type: config.type,
-            description: config.description,
-            metadata: config.metadata
+            metadata: {
+              user_id: user.id,
+              plan: config.plan || config.type,
+              payment_type: config.type,
+              description: config.description,
+              source: 'M1SSION_PWA',
+              ...config.metadata
+            }
           }
         });
 
@@ -78,8 +81,8 @@ const CheckoutForm: React.FC<{
           return;
         }
 
-        if (data?.client_secret) {
-          setClientSecret(data.client_secret);
+        if (data?.clientSecret) {
+          setClientSecret(data.clientSecret);
           console.log('✅ M1SSION™ Payment intent created successfully');
         }
       } catch (error) {
