@@ -622,6 +622,15 @@ const WouterRoutes: React.FC = () => {
           <Route path="/register" component={Register} />
           <Route path="/auth/reset" component={ResetPasswordPage} />
 
+          {/* Admin Panel route */}
+          <Route path="/admin">
+            <ProtectedRoute>
+              <GlobalLayout>
+                {React.createElement(React.lazy(() => import('@/pages/Admin')))}
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           {/* 404 fallback */}
           <Route>
             <GlobalLayout>
