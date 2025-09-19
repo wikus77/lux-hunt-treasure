@@ -384,3 +384,5 @@ export const BulkMarkerDropComponent: React.FC = () => {
     </div>
   );
 };
+
+export default BulkMarkerDropComponent;
