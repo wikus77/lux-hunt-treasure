@@ -1,3 +1,4 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 /* M1SSION™ AG-X0197 */
 import './styles/map.css';
 
@@ -9,6 +10,14 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
 import './styles/toast-animations.css';
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Production safety: Hide debug content in production builds
+if (import.meta.env.PROD) {
+  import('./styles/prod-hide-debug.css');
+  // Ensure no shim dump is visible in production
+  (window as any).__M1_NO_SHIM_DUMP__ = true;
+}
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { diagnostics } from './metrics/interestSignals';
