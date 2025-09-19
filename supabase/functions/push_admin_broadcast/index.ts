@@ -34,14 +34,13 @@ interface PushPayload {
   badge?: string | null;
 }
 
-interface PushSendRequest {
-  audience: 'all' | 'segment' | 'list';
-  filters?: {
-    segment?: 'winners' | 'active_24h' | 'ios' | 'android' | 'webpush';
-    ids?: string[];
-    emails?: string[];
-  };
-  payload: PushPayload;
+interface AdminBroadcastRequest {
+  title: string;
+  body: string;
+  image?: string | null;
+  deepLink?: string | null;
+  badge?: string | null;
+  testToken?: string | null;
 }
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -91,102 +90,26 @@ serve(async (req) => {
       });
     }
 
-    const body: PushSendRequest = await req.json();
+    const body: AdminBroadcastRequest = await req.json();
     
     // Validate required fields
-    if (!body.payload?.title?.trim() || !body.payload?.body?.trim()) {
+    if (!body.title?.trim() || !body.body?.trim()) {
       return new Response(JSON.stringify({ ok: false, error: 'Title and body are required' }), {
         status: 400,
         headers: { "Content-Type": "application/json", ...corsHeaders(req) },
       });
     }
 
-    // Build device query based on audience
-    let fcmQuery = supabase
+    // Get all active device subscriptions
+    const { data: devices, error: devicesError } = await supabase
       .from('fcm_subscriptions')
       .select('user_id, token, platform, device_info')
       .eq('is_active', true);
 
-    let webpushQuery = supabase
+    const { data: webpushSubs, error: webpushError } = await supabase
       .from('webpush_subscriptions')
       .select('user_id, endpoint, p256dh, auth, platform')
       .eq('is_active', true);
-
-    // Apply filters based on audience
-    if (body.audience === 'segment' && body.filters?.segment) {
-      const segment = body.filters.segment;
-      
-      if (segment === 'active_24h') {
-        const yesterday = new Date();
-        yesterday.setHours(yesterday.getHours() - 24);
-        
-        fcmQuery = fcmQuery.gte('updated_at', yesterday.toISOString());
-        webpushQuery = webpushQuery.gte('updated_at', yesterday.toISOString());
-      } else if (segment === 'ios') {
-        fcmQuery = fcmQuery.eq('platform', 'ios');
-        webpushQuery = webpushQuery.eq('platform', 'ios');
-      } else if (segment === 'android') {
-        fcmQuery = fcmQuery.eq('platform', 'android');
-        webpushQuery = webpushQuery.eq('platform', 'android');
-      } else if (segment === 'webpush') {
-        // Only get webpush subscriptions for this segment
-        fcmQuery = fcmQuery.eq('platform', 'web');
-      } else if (segment === 'winners') {
-        // Get winners from a dedicated table/view if it exists
-        const { data: winners } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('role', 'winner'); // Assuming winners have a special role
-        
-        if (winners?.length) {
-          const winnerIds = winners.map(w => w.id);
-          fcmQuery = fcmQuery.in('user_id', winnerIds);
-          webpushQuery = webpushQuery.in('user_id', winnerIds);
-        } else {
-          // No winners, return empty result
-          return new Response(JSON.stringify({ 
-            ok: true, 
-            sent: 0, 
-            failed: 0,
-            message: 'No winners found'
-          }), {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders(req) },
-          });
-        }
-      }
-    } else if (body.audience === 'list') {
-      if (body.filters?.ids?.length) {
-        fcmQuery = fcmQuery.in('user_id', body.filters.ids);
-        webpushQuery = webpushQuery.in('user_id', body.filters.ids);
-      } else if (body.filters?.emails?.length) {
-        // Get user IDs from emails
-        const { data: userProfiles } = await supabase
-          .from('profiles')
-          .select('id')
-          .in('email', body.filters.emails);
-        
-        if (userProfiles?.length) {
-          const userIds = userProfiles.map(p => p.id);
-          fcmQuery = fcmQuery.in('user_id', userIds);
-          webpushQuery = webpushQuery.in('user_id', userIds);
-        } else {
-          return new Response(JSON.stringify({ 
-            ok: true, 
-            sent: 0, 
-            failed: 0,
-            message: 'No users found for provided emails'
-          }), {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...corsHeaders(req) },
-          });
-        }
-      }
-    }
-    // For 'all' audience, no additional filters needed
-
-    const { data: devices, error: devicesError } = await fcmQuery;
-    const { data: webpushSubs, error: webpushError } = await webpushQuery;
 
     if (devicesError || webpushError) {
       console.error('Database error:', { devicesError, webpushError });
@@ -199,7 +122,13 @@ serve(async (req) => {
     let sent = 0;
     let failed = 0;
 
-    const payload = body.payload;
+    const payload: PushPayload = {
+      title: body.title.trim(),
+      body: body.body.trim(),
+      image: body.image?.trim() || null,
+      deepLink: body.deepLink?.trim() || null,
+      badge: body.badge?.trim() || null,
+    };
 
     // Send FCM notifications
     if (fcmServerKey && devices?.length) {
@@ -243,10 +172,8 @@ serve(async (req) => {
       }
     }
 
-    // Send WebPush notifications (only if not targeting specific non-webpush platforms)
-    if (vapidPrivateKey && vapidPublicKey && vapidContact && webpushSubs?.length && 
-        !(body.audience === 'segment' && body.filters?.segment && ['ios', 'android'].includes(body.filters.segment))) {
-      
+    // Send WebPush notifications
+    if (vapidPrivateKey && vapidPublicKey && vapidContact && webpushSubs?.length) {
       // Import webpush for WebPush API
       const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
       
@@ -288,26 +215,26 @@ serve(async (req) => {
       }
     }
 
-    // Log the send
+    // Log the broadcast
     await supabase.from('admin_logs').insert({
-      event_type: 'push_send',
+      event_type: 'push_admin_broadcast',
       user_id: user.id,
-      note: `Push send: "${payload.title}" to ${body.audience}${body.filters?.segment ? `:${body.filters.segment}` : ''} - ${sent}/${sent + failed} sent`,
-      context: 'push_send',
+      note: `Admin broadcast: "${payload.title}" - ${sent}/${sent + failed} sent`,
+      context: 'push_admin_broadcast',
     });
 
     return new Response(JSON.stringify({ 
       ok: true, 
       sent, 
       failed,
-      message: `Notification sent to ${sent} devices, ${failed} failed`
+      message: `Broadcast sent to ${sent} devices, ${failed} failed`
     }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders(req) },
     });
 
   } catch (error) {
-    console.error('Push send error:', error);
+    console.error('Admin broadcast error:', error);
     return new Response(JSON.stringify({ 
       ok: false, 
       error: error.message || 'Internal server error' 

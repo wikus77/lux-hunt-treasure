@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, Plus, Map, AlertTriangle, Wrench } from 'lucide-react';
+import { Trash2, Plus, Map, AlertTriangle, Wrench, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
 
@@ -259,6 +259,53 @@ const MissionPanelPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6">
+        {/* Admin Push Console Cards */}
+        {isAdmin && (
+          <>
+            <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5 text-purple-400" />
+                  Admin Push Console
+                </CardTitle>
+                <CardDescription>
+                  Invio notifiche push broadcast a tutti gli utenti - Solo Amministratori
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setLocation('/panel/push-admin')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Apri Admin Console
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Send className="h-5 w-5 text-blue-400" />
+                  Push Console
+                </CardTitle>
+                <CardDescription>
+                  Invio notifiche push mirate a segmenti specifici o liste utenti
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button 
+                  onClick={() => setLocation('/panel/push')}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Apri Push Console
+                </Button>
+              </CardContent>
+            </Card>
+          </>
+        )}
+
         {/* Dev link - only for admins */}
         {isAdmin && (
           <Card className="border-emerald-500/20">
