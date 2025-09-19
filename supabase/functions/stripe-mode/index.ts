@@ -1,48 +1,81 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Stripe Mode Introspection Function - Deno compatible
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
-const ALLOWED_ORIGINS = [
-  "https://m1ssion.eu",
-  "https://www.m1ssion.eu",
-  "https://m1ssion.pages.dev",
-  "http://localhost:8788", // dev
-  "http://localhost:5173", // vite dev
-  "http://localhost:3000"  // legacy dev
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+};
+
+const allowedOrigins = [
+  'https://m1ssion.eu',
+  'https://www.m1ssion.eu', 
+  'https://m1ssion.pages.dev',
+  'http://localhost:5173'
 ];
 
-function corsHeaders(req: Request) {
-  const origin = req.headers.get("Origin") ?? "";
-  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
-  return {
-    "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
-    "Access-Control-Allow-Credentials": "true",
-    "Vary": "Origin",
-  };
-}
-
-function handleOptions(req: Request) {
-  return new Response("ok", { status: 200, headers: corsHeaders(req) });
+function getCorsHeaders(origin: string | null): Record<string, string> {
+  const headers = { ...corsHeaders };
+  if (origin && allowedOrigins.includes(origin)) {
+    headers['Access-Control-Allow-Origin'] = origin;
+  }
+  return headers;
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') return handleOptions(req);
+  const origin = req.headers.get('origin');
+  const headers = getCorsHeaders(origin);
 
-  // Accept both GET and POST for flexibility with supabase.functions.invoke
-  if (req.method !== 'GET' && req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'content-type': 'application/json', ...corsHeaders(req) }
-    });
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers });
   }
 
-  const sk = Deno.env.get('STRIPE_SECRET_KEY') || '';
-  const mode = sk.startsWith('sk_live_') ? 'live' : sk.startsWith('sk_test_') ? 'test' : 'unknown';
+  if (req.method !== 'GET') {
+    return new Response(
+      JSON.stringify({
+        error: 'Method not allowed'
+      }),
+      { status: 405, headers: { ...headers, 'Content-Type': 'application/json' } }
+    );
+  }
 
-  return new Response(JSON.stringify({ mode }), {
-    status: 200,
-    headers: { 'content-type': 'application/json', ...corsHeaders(req) }
-  });
+  try {
+    // Get Stripe mode from secret key
+    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+    
+    if (!stripeSecretKey) {
+      return new Response(
+        JSON.stringify({
+          error: 'Stripe configuration error'
+        }),
+        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const mode = stripeSecretKey.startsWith('sk_live_') ? 'live' : 'test';
+
+    return new Response(
+      JSON.stringify({ mode }),
+      { 
+        status: 200, 
+        headers: { ...headers, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error('Error getting Stripe mode:', error);
+    
+    return new Response(
+      JSON.stringify({
+        error: 'Internal server error'
+      }),
+      { 
+        status: 500, 
+        headers: { ...headers, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
 });
