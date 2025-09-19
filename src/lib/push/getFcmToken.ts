@@ -49,18 +49,15 @@ export async function getFcmToken(): Promise<FcmTokenResult> {
 
     console.log('[M1SSION FCM] Permission granted');
 
-    // Register service worker
+    // BLINDATA: Use existing main SW registration only
     if ('serviceWorker' in navigator) {
-      console.log('[M1SSION FCM] Registering service worker...');
+      console.log('[M1SSION FCM] Using BLINDATA main SW registration...');
       
       const existingReg = await navigator.serviceWorker.getRegistration('/');
       if (existingReg) {
-        console.log('[M1SSION FCM] Using existing SW registration');
+        console.log('[M1SSION FCM] Using existing BLINDATA SW registration');
       } else {
-        await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-          scope: '/'
-        });
-        console.log('[M1SSION FCM] SW registered successfully');
+        console.warn('[M1SSION FCM] No main SW registration found - PWA Stabilizer should handle this');
       }
       
       await navigator.serviceWorker.ready;

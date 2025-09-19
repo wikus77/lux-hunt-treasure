@@ -65,20 +65,23 @@ export async function ensureFcmReady(): Promise<{ messaging: any, registration: 
     console.log('[M1SSION FCM] app already initialized → OK');
   }
 
-  // Register Service Worker if needed - USE /sw-m1ssion.js as primary
+  // BLINDATA: Use existing main SW registration (no more concurrency)
   if (!registrationInstance) {
-    console.log('[M1SSION FCM] SW register → START');
+    console.log('[M1SSION FCM] SW register → using BLINDATA main registration');
     try {
-      // Try primary SW first
-      registrationInstance = await navigator.serviceWorker.register('/sw-m1ssion.js', { scope: '/' });
+      // Use existing main SW registration from PWA stabilizer
+      registrationInstance = await navigator.serviceWorker.getRegistration('/');
+      if (!registrationInstance) {
+        // Se non esiste, registra /sw.js (blindata standard)
+        registrationInstance = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        console.log('[M1SSION FCM] SW registered → /sw.js BLINDATA');
+      } else {
+        console.log('[M1SSION FCM] SW existing → using current controller');
+      }
       await navigator.serviceWorker.ready;
-      console.log('[M1SSION FCM] SW registered → /sw-m1ssion.js OK');
     } catch (error) {
-      // Fallback to shim
-      console.log('[M1SSION FCM] SW fallback → trying /firebase-messaging-sw.js');
-      registrationInstance = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-      await navigator.serviceWorker.ready;
-      console.log('[M1SSION FCM] SW registered → /firebase-messaging-sw.js OK (shim)');
+      console.error('[M1SSION FCM] SW registration failed:', error);
+      throw error;
     }
     
     // Log SW version if available
