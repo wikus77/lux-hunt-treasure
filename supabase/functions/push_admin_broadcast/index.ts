@@ -185,8 +185,8 @@ serve(async (req) => {
 
     // Send WebPush notifications
     if (vapidPrivateKey && vapidPublicKey && vapidContact && webpushSubs?.length) {
-      // Import webpush for WebPush API
-      const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
+      // Import webpush for WebPush API  
+      const webpush = await import('npm:web-push');
       
       webpush.setVapidDetails(
         vapidContact,
