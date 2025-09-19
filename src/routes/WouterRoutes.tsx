@@ -424,6 +424,23 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          {/* Push Console routes */}
+          <Route path="/panel/push-admin">
+            <ProtectedRoute>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                {React.createElement(React.lazy(() => import('../pages/push/AdminPushConsolePage')))}
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/push">
+            <ProtectedRoute>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+                {React.createElement(React.lazy(() => import('../pages/push/UserPushConsolePage')))}
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
           {/* Dev diagnostics route - only accessible to admins or in debug mode */}
           <Route path="/dev/markers-healthcheck">
             <ProtectedRoute>
