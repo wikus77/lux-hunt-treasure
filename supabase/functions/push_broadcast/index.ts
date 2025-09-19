@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // supabase/functions/push_broadcast/index.ts
-import webpush from "npm:web-push";
+import webpush from 'https://esm.sh/web-push@3.6.7';
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 type Payload = {

@@ -8,6 +8,7 @@ const ALLOWED_ORIGINS = [
   "https://www.m1ssion.eu", 
   "https://m1ssion.pages.dev",
   "http://localhost:8788",
+  "http://localhost:5173",
 ];
 
 function corsHeaders(req: Request) {
@@ -113,7 +114,7 @@ serve(async (req) => {
 
       try {
         // Import webpush for WebPush API
-        const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
+        const webpush = await import('https://esm.sh/web-push@3.6.7');
         
         webpush.setVapidDetails(
           vapidContact,
