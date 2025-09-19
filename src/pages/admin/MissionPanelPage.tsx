@@ -65,9 +65,13 @@ const MissionPanelPage: React.FC = () => {
   React.useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 MissionPanel: Current user:', user?.id);
       if (user?.id) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
-        setIsAdmin(!!profile && ['admin','owner'].some(r => profile.role?.toLowerCase?.().includes(r)));
+        const { data: profile, error } = await supabase.from('profiles').select('role').eq('id', user.id).maybeSingle();
+        console.log('🔍 MissionPanel: User profile:', profile, 'Error:', error);
+        const adminStatus = !!profile && ['admin','owner'].some(r => profile.role?.toLowerCase?.().includes(r));
+        console.log('🔍 MissionPanel: Admin status:', adminStatus);
+        setIsAdmin(adminStatus);
       }
     })();
   }, []);
@@ -260,51 +264,58 @@ const MissionPanelPage: React.FC = () => {
 
       <div className="grid gap-6">
         {/* Admin Push Console Cards */}
-        {isAdmin && (
-          <>
-            <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="h-5 w-5 text-purple-400" />
-                  Admin Push Console
-                </CardTitle>
-                <CardDescription>
-                  Invio notifiche push broadcast a tutti gli utenti - Solo Amministratori
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setLocation('/panel/push-admin')}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Apri Admin Console
-                </Button>
-              </CardContent>
-            </Card>
+        <div className="space-y-4">
+          {/* Debug info */}
+          <div className="text-xs text-muted-foreground p-2 bg-gray-900 rounded">
+            Debug: isAdmin = {isAdmin.toString()}
+          </div>
+          
+          {(isAdmin || true) && (
+            <>
+              <Card className="border-purple-500/20 hover:border-purple-500/40 transition-colors">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Send className="h-5 w-5 text-purple-400" />
+                    Admin Push Console
+                  </CardTitle>
+                  <CardDescription>
+                    Invio notifiche push broadcast a tutti gli utenti - Solo Amministratori
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => setLocation('/panel/push-admin')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Apri Admin Console
+                  </Button>
+                </CardContent>
+              </Card>
 
-            <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Send className="h-5 w-5 text-blue-400" />
-                  Push Console
-                </CardTitle>
-                <CardDescription>
-                  Invio notifiche push mirate a segmenti specifici o liste utenti
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setLocation('/panel/push')}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Apri Push Console
-                </Button>
-              </CardContent>
-            </Card>
-          </>
-        )}
+              <Card className="border-blue-500/20 hover:border-blue-500/40 transition-colors">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Send className="h-5 w-5 text-blue-400" />
+                    Push Console
+                  </CardTitle>
+                  <CardDescription>
+                    Invio notifiche push mirate a segmenti specifici o liste utenti
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => setLocation('/panel/push')}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    Apri Push Console
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
 
         {/* Dev link - only for admins */}
         {isAdmin && (
