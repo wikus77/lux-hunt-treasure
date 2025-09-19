@@ -489,6 +489,44 @@ const PanelAccessPage = () => {
                 </div>
               </motion.div>
 
+              {isAdmin && (
+                <>
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setLocation('/panel/push-admin')}
+                    className="glass-card p-4 border border-orange-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-600 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Send className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Admin Push Console</h3>
+                        <p className="text-gray-400 text-sm">Broadcast globale (solo admin)</p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setLocation('/panel/push')}
+                    className="glass-card p-4 border border-cyan-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Push Console</h3>
+                        <p className="text-gray-400 text-sm">Invio a utenti/segmenti selezionati</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                </>
+              )}
+
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
