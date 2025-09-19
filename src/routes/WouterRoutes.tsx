@@ -16,6 +16,7 @@ import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
+import { M1ssionLoader } from "@/components/ui/M1ssionLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -427,7 +428,7 @@ const WouterRoutes: React.FC = () => {
           {/* Push Console routes */}
           <Route path="/panel/push-admin">
             <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento console push admin..." /></div>}>
                 {React.createElement(React.lazy(() => import('../pages/push/AdminPushConsolePage')))}
               </React.Suspense>
             </ProtectedRoute>
@@ -435,7 +436,7 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/panel/push">
             <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento console push..." /></div>}>
                 {React.createElement(React.lazy(() => import('../pages/push/UserPushConsolePage')))}
               </React.Suspense>
             </ProtectedRoute>
@@ -444,7 +445,7 @@ const WouterRoutes: React.FC = () => {
           {/* Dev diagnostics route - only accessible to admins or in debug mode */}
           <Route path="/dev/markers-healthcheck">
             <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento diagnostica..." /></div>}>
                 <MarkersHealthcheck />
               </React.Suspense>
             </ProtectedRoute>
@@ -626,7 +627,9 @@ const WouterRoutes: React.FC = () => {
           <Route path="/admin">
             <ProtectedRoute>
               <GlobalLayout>
-                {React.createElement(React.lazy(() => import('@/pages/Admin')))}
+                <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento pannello admin..." /></div>}>
+                  {React.createElement(React.lazy(() => import('@/pages/Admin')))}
+                </React.Suspense>
               </GlobalLayout>
             </ProtectedRoute>
           </Route>
