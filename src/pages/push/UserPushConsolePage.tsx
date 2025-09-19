@@ -9,9 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { Send, TestTube, ArrowLeft, Users } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { invokePushFunction } from '@/lib/push/pushApi';
 import type { PushSendRequest, PushTestRequest, PushResult } from '@/types/push';
 
 export default function UserPushConsolePage() {
@@ -54,13 +54,8 @@ export default function UserPushConsolePage() {
         }
       };
 
-      const { data, error } = await supabase.functions.invoke('push_test', {
-        body: payload
-      });
+      const result = await invokePushFunction('push_test', payload);
 
-      if (error) throw error;
-
-      const result = data as PushResult;
       if (result.ok) {
         toast.success('✅ Test inviato con successo!');
       } else {
@@ -125,13 +120,8 @@ export default function UserPushConsolePage() {
         }
       }
 
-      const { data, error } = await supabase.functions.invoke('push_send', {
-        body: payload
-      });
+      const result = await invokePushFunction('push_send', payload);
 
-      if (error) throw error;
-
-      const result = data as PushResult;
       if (result.ok) {
         toast.success(`✅ Notifica inviata! ${result.sent}/${result.sent! + result.failed!} device raggiunti`);
         // Reset form

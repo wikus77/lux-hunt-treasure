@@ -16,7 +16,7 @@ function corsHeaders(req: Request) {
   return {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, X-M1-Dropper-Version",
     "Access-Control-Allow-Credentials": "true",
     "Vary": "Origin",
   };
@@ -54,6 +54,17 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return handleOptions(req);
 
   try {
+    // Check for required header
+    const version = req.headers.get('X-M1-Dropper-Version');
+    if (!version || version !== 'v1') {
+      return new Response(JSON.stringify({ 
+        error: 'Missing or invalid X-M1-Dropper-Version header',
+        request_id: crypto.randomUUID()
+      }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+      });
+    }
     // Auth check
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {

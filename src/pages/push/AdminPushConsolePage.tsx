@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 import { Send, TestTube, ArrowLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { invokePushFunction } from '@/lib/push/pushApi';
 import type { AdminBroadcastRequest, PushResult } from '@/types/push';
 
 export default function AdminPushConsolePage() {
@@ -35,22 +35,17 @@ export default function AdminPushConsolePage() {
 
     setIsSending(true);
     try {
-      const { data, error } = await supabase.functions.invoke('push_test', {
-        body: {
-          token: testToken.trim(),
-          payload: {
-            title: title.trim(),
-            body: body.trim(),
-            image: image.trim() || null,
-            deepLink: deepLink.trim() || null,
-            badge: badge.trim() || null,
-          }
+      const result = await invokePushFunction('push_test', {
+        token: testToken.trim(),
+        payload: {
+          title: title.trim(),
+          body: body.trim(),
+          image: image.trim() || null,
+          deepLink: deepLink.trim() || null,
+          badge: badge.trim() || null,
         }
       });
 
-      if (error) throw error;
-
-      const result = data as PushResult;
       if (result.ok) {
         toast.success('✅ Test inviato con successo!');
       } else {
@@ -87,13 +82,8 @@ export default function AdminPushConsolePage() {
         testToken: testToken.trim() || null,
       };
 
-      const { data, error } = await supabase.functions.invoke('push_admin_broadcast', {
-        body: payload
-      });
+      const result = await invokePushFunction('push_admin_broadcast', payload);
 
-      if (error) throw error;
-
-      const result = data as PushResult;
       if (result.ok) {
         toast.success(`✅ Broadcast inviato! ${result.sent}/${result.sent! + result.failed!} device raggiunti`);
         // Reset form
