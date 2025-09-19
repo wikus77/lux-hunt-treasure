@@ -4655,6 +4655,17 @@ export type Database = {
           id: string
         }[]
       }
+      fn_markers_secure_insert: {
+        Args: {
+          p_drop_id: string
+          p_lat: number
+          p_lng: number
+          p_reward_payload?: Json
+          p_reward_type: Database["public"]["Enums"]["reward_type"]
+          p_title: string
+        }
+        Returns: string
+      }
       force_subscription_sync: {
         Args: { p_user_id: string }
         Returns: boolean

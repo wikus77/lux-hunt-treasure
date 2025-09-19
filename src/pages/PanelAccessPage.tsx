@@ -17,7 +17,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
 import { M1ssionDebugTest } from './M1ssionDebugTest';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
-import BulkMarkerDropComponent from '@/components/admin/BulkMarkerDropComponent';
+import { BulkMarkerDropComponent } from '@/components/admin/BulkMarkerDropComponent';
 
 type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'bulk-marker-drop';
 
