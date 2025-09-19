@@ -16,10 +16,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
+import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
+import { assertPkMatchesMode } from '@/lib/stripe/guard';
 
 // Initialize Stripe using fallback for better compatibility
 import { getStripeSafe } from '@/lib/stripeFallback';
-import { assertPkMatchesMode } from '@/lib/stripe/guard';
 const stripePromise = getStripeSafe();
 
 interface StripeInAppCheckoutProps {
@@ -49,15 +50,13 @@ const CheckoutForm: React.FC<{
 
         // Guard: Ensure client pk_* matches server sk_* mode
         try {
-          const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-          if (modeErr) {
-            console.warn('Stripe mode introspection failed', modeErr);
-          } else {
+          await PaymentErrorHandler.retryWithBackoff(async () => {
+            const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+            if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
             assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-          }
+          });
         } catch (e) {
-          console.error('Stripe mode mismatch or error', e);
-          toast.error('Stripe mode mismatch: contatta il supporto.');
+          await PaymentErrorHandler.handlePaymentError(e, 'payment_intent_creation');
           return;
         }
         
@@ -119,8 +118,7 @@ const CheckoutForm: React.FC<{
           assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
         }
       } catch (e) {
-        console.error('Stripe mode mismatch or error before confirm', e);
-        toast.error('Stripe mode mismatch: contatta il supporto.');
+        await PaymentErrorHandler.handlePaymentError(e, 'payment_confirmation');
         setLoading(false);
         return;
       }

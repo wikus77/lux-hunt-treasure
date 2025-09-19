@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
+import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
 
 interface PaymentResult {
   success: boolean;
@@ -34,16 +35,15 @@ export const useStripePayment = () => {
 
     // Verify Stripe mode alignment (client pk_* vs server sk_*)
     try {
-      const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-      if (modeErr) {
-        console.warn('Stripe mode introspection failed', modeErr);
-      } else {
+      await PaymentErrorHandler.retryWithBackoff(async () => {
+        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+        if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
+        
         const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
         assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-      }
+      });
     } catch (e) {
-      console.error('Stripe mode mismatch or error', e);
-      toast.error('Stripe mode mismatch: contatta il supporto.');
+      await PaymentErrorHandler.handlePaymentError(e, 'stripe_mode_check');
       return false;
     }
 
@@ -125,16 +125,16 @@ export const useStripePayment = () => {
 
     // Verify Stripe mode alignment (client pk_* vs server sk_*)
     try {
-      const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-      if (modeErr) {
-        console.warn('Stripe mode introspection failed', modeErr);
-      } else {
+      await PaymentErrorHandler.retryWithBackoff(async () => {
+        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+        if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
+        
         const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
         assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-      }
+      });
     } catch (e) {
-      console.error('Stripe mode mismatch or error', e);
-      toast.error('Stripe mode mismatch: contatta il supporto.');
+      await PaymentErrorHandler.handlePaymentError(e, 'stripe_mode_check');
+      setLoading(false);
       return;
     }
 
