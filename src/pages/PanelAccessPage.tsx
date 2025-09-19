@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send, Map } from 'lucide-react';
+import { Shield, Lock, Cpu, Zap, AlertTriangle, RotateCcw, MapPin, QrCode, Send, Map, Users } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { useProfileImage } from '@/hooks/useProfileImage';
@@ -18,6 +18,8 @@ import { QRControlPanel } from '@/components/admin/QRControlPanel';
 import { M1ssionDebugTest } from './M1ssionDebugTest';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import BulkMarkerDropComponent from '@/components/admin/BulkMarkerDropComponent';
+import { useLocation } from 'wouter';
+import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
 
 type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'bulk-marker-drop';
 
@@ -26,6 +28,8 @@ const PanelAccessPage = () => {
   const { profileImage } = useProfileImage();
   const { isWhitelisted, isValidating, accessDeniedReason } = usePanelAccessProtection();
   const [currentView, setCurrentView] = useState<ViewType>('home');
+  const [, setLocation] = useLocation();
+  const { isAdmin } = useAdminCheck(false);
 
   const hasAccess = isWhitelisted;
 
@@ -311,8 +315,6 @@ const PanelAccessPage = () => {
       </div>
     );
   }
-
-
 
   // ========== HOME VIEW ==========
   return (
