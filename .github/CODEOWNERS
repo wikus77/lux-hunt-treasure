@@ -1,0 +1,14 @@
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+# CODEOWNERS for M1SSION™ Bulk Marker Drop Protection
+
+# Bulk Marker Drop - Requires Joseph approval
+/src/components/admin/BulkMarkerDropComponent.tsx @Joseph
+/src/pages/admin/MissionPanelPage.tsx             @Joseph
+/src/pages/dev/MarkersHealthcheck.tsx             @Joseph
+/src/routes/WouterRoutes.tsx                      @Joseph
+/supabase/functions/create-random-markers/**      @Joseph
+
+# Additional security-sensitive paths
+/.github/CODEOWNERS                               @Joseph
+/.github/workflows/guard-bulk-drop.yml            @Joseph
+/supabase/config.toml                             @Joseph
