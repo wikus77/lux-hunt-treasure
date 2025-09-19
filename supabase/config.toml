@@ -113,3 +113,12 @@ verify_jwt = false
 
 [functions.generate-mission-clues]
 verify_jwt = false
+
+[functions.push_test]
+verify_jwt = false
+
+[functions.push_broadcast]
+verify_jwt = false
+
+[functions.push_send]
+verify_jwt = false
