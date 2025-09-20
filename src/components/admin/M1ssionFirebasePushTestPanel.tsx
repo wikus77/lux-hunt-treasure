@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { invokePushFunction } from '@/lib/push/pushApi';
 
 export const M1ssionFirebasePushTestPanel = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -16,49 +15,56 @@ export const M1ssionFirebasePushTestPanel = () => {
     setTestResult(null);
 
     try {
-      console.log('🔥 M1SSION™ Testing Push Blindata Connection...');
+      console.log('🔥 M1SSION™ Testing Firebase FCM connection...');
       
       // Log test in admin_logs
       await supabase
         .from('admin_logs')
         .insert({
-          event_type: 'push_blindata_test',
-          note: 'Push Test Blindata - M1SSION Panel™ test',
+          event_type: 'firebase_push_test',
+          note: 'Push Test Quick - Firebase FCM connection test',
           context: 'admin_panel_quick_test'
         });
       
       const testPayload = {
-        title: '🔥 M1SSION™ Push Blindata Test',
-        body: 'Test notifiche push blindate da M1SSION Panel™',
-        url: '/panel-access',
-        icon: '/icon-192.png',
-        badge: '/badge.png'
+        title: '🔥 M1SSION™ Firebase Test',
+        body: 'Test Firebase Cloud Messaging da M1SSION Panel™',
+        broadcast: true,
+        additionalData: {
+          source: 'admin_panel_quick_test',
+          timestamp: new Date().toISOString()
+        }
       };
 
-      // Use push_test for single test with blindata headers
-      const result = await invokePushFunction('push_test', {
-        token: 'test-token-m1ssion-panel',
-        payload: testPayload
+      const { data, error } = await supabase.functions.invoke('send-firebase-push', {
+        body: testPayload,
+        headers: {
+          'Content-Type': 'application/json'
+        }
       });
 
-      console.log('🔥 M1SSION™ Push Blindata Test Result:', result);
+      console.log('🔥 M1SSION™ Firebase Test Result:', { data, error });
 
-      setTestResult(result);
+      if (error) {
+        throw new Error(error.message);
+      }
 
-      if (result?.ok) {
-        toast.success('✅ Push Blindata connection successful!', {
-          description: `Test push inviato con successo tramite catena blindata`
+      setTestResult(data);
+
+      if (data?.success) {
+        toast.success('✅ Firebase FCM connection successful!', {
+          description: `Sent: ${data.sent_count || 0} devices | Failed: ${data.failed_count || 0}`
         });
       } else {
-        toast.error('❌ Push Blindata connection failed', {
-          description: result?.message || result?.error || 'Unknown error'
+        toast.error('❌ Firebase FCM connection failed', {
+          description: data?.message || 'Unknown error'
         });
       }
 
     } catch (error: any) {
-      console.error('❌ Push Blindata test failed:', error);
-      setTestResult({ ok: false, error: error.message });
-      toast.error('Push Blindata test failed', {
+      console.error('❌ Firebase connection test failed:', error);
+      setTestResult({ success: false, error: error.message });
+      toast.error('Firebase connection test failed', {
         description: error.message
       });
     } finally {
@@ -78,16 +84,16 @@ export const M1ssionFirebasePushTestPanel = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            🔐 M1SSION™ Push Blindata Test
-            <Badge variant="outline">BLINDATA</Badge>
+            🔥 M1SSION™ Firebase FCM Pipeline Test
+            <Badge variant="outline">FCM V1</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">
             <p><strong>Project ID:</strong> vkjrqirvdvjbemsfzxof</p>
-            <p><strong>Push Type:</strong> M1SSION™ Blindata Chain</p>
-            <p><strong>Function:</strong> push_test (Blindata)</p>
-            <p><strong>Status:</strong> {testResult?.ok ? '✅ Connected' : 'Ready to test'}</p>
+            <p><strong>Firebase Project:</strong> m1ssion-app</p>
+            <p><strong>Function:</strong> send-firebase-push</p>
+            <p><strong>Status:</strong> {testResult?.success ? '✅ Connected' : 'Ready to test'}</p>
           </div>
 
           <Button
@@ -96,13 +102,13 @@ export const M1ssionFirebasePushTestPanel = () => {
             className="w-full"
             size="lg"
           >
-            {isTestingConnection ? '🔄 Testing Push Blindata...' : '🔐 Test Push Blindata'}
+            {isTestingConnection ? '🔄 Testing Firebase FCM...' : '🔥 Test Firebase Connection'}
           </Button>
 
           {testResult && (
             <div className="mt-4 p-4 border rounded-lg">
               <h4 className="font-semibold mb-2">
-                {testResult.ok ? '✅ Push Blindata Test Results - SUCCESS' : '❌ Push Blindata Test Results - FAILED'}
+                {testResult.success ? '✅ Firebase Test Results - SUCCESS' : '❌ Firebase Test Results - FAILED'}
               </h4>
               <pre className="text-xs bg-muted p-3 rounded overflow-auto">
                 {JSON.stringify(testResult, null, 2)}
@@ -111,13 +117,13 @@ export const M1ssionFirebasePushTestPanel = () => {
           )}
 
           <div className="text-xs text-muted-foreground">
-            <p>This Push Blindata test verifies:</p>
+            <p>This Firebase test verifies:</p>
             <ul className="list-disc list-inside ml-2 space-y-1">
-              <li>✅ X-M1-Dropper-Version header validation</li>
-              <li>✅ CORS blindata protection</li>
-              <li>✅ Admin authorization check</li>
-              <li>✅ Edge Function push_test execution</li>
-              <li>✅ SAFE_HEADERS compliance</li>
+              <li>✅ Firebase Server Key validity</li>
+              <li>✅ Supabase Edge Function deployment</li>
+              <li>✅ Firebase FCM API connectivity</li>
+              <li>✅ FCM token retrieval from database</li>
+              <li>✅ Broadcast notification capability</li>
             </ul>
           </div>
         </CardContent>

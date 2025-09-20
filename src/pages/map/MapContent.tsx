@@ -6,7 +6,6 @@ import SearchAreaMapLayer from './SearchAreaMapLayer';
 import MapPopupManager from '../../components/map/MapPopupManager';
 import MapEventHandler from '../../components/map/MapEventHandler';
 import PrizeAreaOverlay from './components/PrizeAreaOverlay';
-import MapMarkers from '../../components/map/MapMarkers';
 
 interface MapContentProps {
   mapRef: React.MutableRefObject<L.Map | null>;
@@ -65,9 +64,6 @@ const MapContent: React.FC<MapContentProps> = ({
       <UserMapAreas areas={currentWeekAreas} />
       
       <PrizeAreaOverlay />
-      
-      {/* Database Markers for Rewards */}
-      <MapMarkers />
       
       <SearchAreaMapLayer 
         searchAreas={searchAreas}

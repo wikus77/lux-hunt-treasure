@@ -13,7 +13,6 @@ import SkipToContent from "./components/accessibility/SkipToContent";
 import OfflineIndicator from "./components/offline/OfflineIndicator";
 import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
-import { ProductionSafetyWrapper } from "./components/ProductionSafetyWrapper";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 // OneSignal rimosso - usando solo FCM
 import { IOSPermissionManager } from "./components/IOSPermissionManager";
@@ -80,12 +79,11 @@ function App() {
           </div>
         </div>
       }>
-        <ProductionSafetyWrapper>
-          <ProductionSafety>
-            <HelmetProvider>
-              <SkipToContent />
-              <OfflineIndicator />
-              <Router>
+        <ProductionSafety>
+          <HelmetProvider>
+            <SkipToContent />
+            <OfflineIndicator />
+            <Router>
               <SoundProvider>
                 <AuthProvider>
                   <InterestSignalsProvider>
@@ -106,7 +104,6 @@ function App() {
             </Router>
           </HelmetProvider>
         </ProductionSafety>
-      </ProductionSafetyWrapper>
       </ErrorBoundary>
     </div>
   );
