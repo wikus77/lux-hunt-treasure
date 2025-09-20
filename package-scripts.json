@@ -4,19 +4,6 @@
     "production-optimize": "npm run clean-console && npm run build",
     "audit-performance": "lighthouse --output json --output html --form-factor mobile --throttling-method simulate4G --chrome-flags=\"--headless\" http://localhost:5173",
     "test-quiz-debug": "echo 'Use WeeklyEventsManager.forceDebugEvent() in development console'",
-    "check-bundle-size": "npm run build && du -sh dist/",
-    "fix:imports": "tsx scripts/fix-imports.ts",
-    "fix:bom": "tsx scripts/fix-bom.ts",
-    "fix:use-client": "tsx scripts/add-use-client.ts",
-    "quality:check": "npm run quality:typescript && npm run quality:lint",
-    "quality:typescript": "tsc --noEmit",
-    "quality:lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
-    "quality:build": "npm run build",
-    "quality:report": "tsx scripts/generate-quality-report.ts",
-    "quality:suite": "tsx scripts/run-quality-suite.ts",
-    "quality:full": "npm run fix:bom && npm run fix:imports && npm run fix:use-client && npm run quality:check && npm run quality:build && npm run quality:report",
-    "security:check": "npm audit --audit-level moderate",
-    "performance:check": "npm run check-bundle-size",
-    "final:report": "npm run quality:full && npm run quality:report"
+    "check-bundle-size": "npm run build && du -sh dist/"
   }
 }

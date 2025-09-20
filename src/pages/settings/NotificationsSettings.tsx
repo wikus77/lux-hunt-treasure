@@ -260,7 +260,7 @@ const NotificationsSettings: React.FC = () => {
           </div>
 
           {/* Debug Panel for Push Notifications - Solo development */}
-          {import.meta.env.DEV && !(window as any).__M1_PROD_MODE__ && (
+          {!import.meta.env.PROD && (
             <div className="border-t border-white/10 pt-4">
               <PushDebugPanel />
             </div>

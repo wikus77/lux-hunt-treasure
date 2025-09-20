@@ -1,11 +1,9 @@
-import { execSync } from 'node:child_process'
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ Treasure Hunt App - Custom Vite Configuration
 // Optimized for Capacitor iOS/Android deployment with enhanced build settings
 
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import checker from 'vite-plugin-checker';
 import { componentTagger } from "lovable-tagger";
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from "path";
@@ -22,17 +20,10 @@ export default defineConfig(({ mode }) => ({
   esbuild: {
     target: 'es2020',
     logOverride: { 'this-is-undefined-in-esm': 'silent' },
-    // In produzione NON droppiamo "console" a livello esbuild per preservare error/warn.
-    // La rimozione selettiva di log/info/debug è gestita da Terser (pure_funcs) in build.
-    drop: mode === 'production' ? ['debugger'] : [],
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
   plugins: [
     react(),
-    // Checker temporaneamente disabilitato durante build per permettere esecuzione script qualità
-    // checker({
-    //   typescript: true,
-    //   eslint: { lintCommand: 'eslint "src/**/*.{ts,tsx}"' }
-    // }),
     mode === 'development' && componentTagger(),
     mode === 'production' && visualizer({
       filename: 'dist/bundle-analysis.html',
@@ -44,7 +35,8 @@ export default defineConfig(({ mode }) => ({
     mode === 'production' && {
       name: 'copy-custom-sw',
       closeBundle() {
-        execSync('node scripts/copy-sw.cjs', { stdio: 'inherit' });
+        const { execSync } = require('child_process');
+        execSync('node scripts/copy-sw.js', { stdio: 'inherit' });
       }
     },
   ].filter(Boolean),

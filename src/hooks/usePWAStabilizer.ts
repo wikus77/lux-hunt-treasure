@@ -24,20 +24,14 @@ export const usePWAStabilizer = () => {
         await runPWACleanupOnce();
         console.log('✅ PWA Stabilizer: Cleanup completed');
 
-        // 2. BLINDATA: Lock a Service Worker unico /sw.js (evita conflitti)
+        // 2. Basic SW registration (silent update system handles updates)
         if ('serviceWorker' in navigator) {
           try {
-            // Verifica che /sw.js sia già controller, altrimenti lo registra
-            const currentController = navigator.serviceWorker.controller;
-            if (!currentController || !currentController.scriptURL.endsWith('/sw.js')) {
-              const registration = await navigator.serviceWorker.register('/sw.js', {
-                scope: '/',
-                updateViaCache: 'none'
-              });
-              console.log('🔐 PWA Stabilizer: BLINDATA SW registration completed');
-            } else {
-              console.log('🔐 PWA Stabilizer: BLINDATA SW already controlling');
-            }
+            const registration = await navigator.serviceWorker.register('/sw.js', {
+              scope: '/',
+              updateViaCache: 'none'
+            });
+            console.log('✅ PWA Stabilizer: SW registration completed');
           } catch (swError) {
             console.warn('⚠️ PWA Stabilizer: SW registration failed (non-critical):', swError);
           }

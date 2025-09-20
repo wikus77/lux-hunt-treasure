@@ -1,189 +1,120 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Fixed Stripe Payment Intent Function - Deno compatible
+import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 
-import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import Stripe from 'https://esm.sh/stripe@14.25.0';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-};
-
-const allowedOrigins = [
+const ALLOWED_ORIGINS = new Set([
   'https://m1ssion.eu',
   'https://www.m1ssion.eu', 
-  'https://m1ssion.pages.dev',
-  'http://localhost:5173'
-];
+  'https://production.m1ssion-pwa.pages.dev',
+  'http://localhost:5173',
+  'http://localhost:3000'
+]);
 
-function getCorsHeaders(origin: string | null): Record<string, string> {
-  const headers = { ...corsHeaders };
-  if (origin && allowedOrigins.includes(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  }
-  return headers;
+function isValidOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  if (ALLOWED_ORIGINS.has(origin)) return true;
+  // Allow any *.pages.dev domain containing m1ssion-pwa
+  return origin.endsWith('.pages.dev') && origin.includes('m1ssion-pwa');
 }
 
-function generateRequestId(): string {
-  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+function getCorsHeaders(origin: string | null) {
+  const validOrigin = isValidOrigin(origin) ? origin : '*';
+  return {
+    'Access-Control-Allow-Origin': validOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Max-Age': '86400',
+    'Vary': 'Origin'
+  };
 }
+
 
 serve(async (req) => {
-  const requestId = generateRequestId();
-  const origin = req.headers.get('origin');
-  const headers = getCorsHeaders(origin);
-
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers });
+    return new Response(null, { status: 204, headers: getCorsHeaders(req.headers.get('origin')) });
   }
 
+  // Only allow POST requests
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({
-        status: 405,
-        code: 'METHOD_NOT_ALLOWED',
-        message: 'Only POST method allowed',
-        request_id: requestId
-      }),
-      { status: 405, headers: { ...headers, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'content-type': 'application/json', ...getCorsHeaders(req.headers.get('origin')) }
+    });
   }
 
   try {
-    // Parse request body
+    const secret = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!secret) {
+      console.error('Missing STRIPE_SECRET_KEY environment variable');
+      return new Response(JSON.stringify({ error: 'Missing STRIPE_SECRET_KEY' }), {
+        status: 500,
+        headers: { 'content-type': 'application/json', ...getCorsHeaders(req.headers.get('origin')) }
+      });
+    }
+
+    const mode = secret.startsWith('sk_live_') ? 'live' : secret.startsWith('sk_test_') ? 'test' : 'unknown';
+
     const body = await req.json();
-    console.log(`[${requestId}] Request received:`, {
-      hasAmountCents: 'amountCents' in body,
-      hasAmount: 'amount' in body,
-      currency: body.currency || 'eur'
-    });
+    const { amountCents, currency } = body;
 
-    // Extract and validate amount
-    let amountCents: number;
-    
-    if (body.amountCents && typeof body.amountCents === 'number') {
-      // Preferred: direct amountCents
-      amountCents = Math.round(body.amountCents);
-    } else if (body.amount && typeof body.amount === 'number') {
-      // Retro-compatibility: convert amount to cents
-      amountCents = Math.round(body.amount * 100);
-      console.log(`[${requestId}] Converted amount ${body.amount} to ${amountCents} cents`);
-    } else {
-      return new Response(
-        JSON.stringify({
-          status: 400,
-          code: 'INVALID_AMOUNT',
-          message: 'amountCents (integer) or amount (decimal) is required',
-          request_id: requestId
-        }),
-        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
-      );
+    // Validate input
+    if (!Number.isFinite(amountCents) || amountCents < 1) {
+      return new Response(JSON.stringify({ error: 'Invalid amountCents' }), {
+        status: 400,
+        headers: { 'content-type': 'application/json', ...getCorsHeaders(req.headers.get('origin')) }
+      });
     }
 
-    // Validate amount range
-    if (amountCents < 100 || amountCents > 1_000_000) {
-      return new Response(
-        JSON.stringify({
-          status: 400,
-          code: 'AMOUNT_OUT_OF_RANGE',
-          message: 'Amount must be between 100 and 1,000,000 cents (€1.00 - €10,000.00)',
-          request_id: requestId
-        }),
-        { status: 400, headers: { ...headers, 'Content-Type': 'application/json' } }
-      );
-    }
+    console.log(`[M1SSION] Creating Payment Intent in ${mode} mode: ${amountCents} ${currency || 'eur'}`);
 
-    const currency = body.currency || 'eur';
-    const metadata = body.metadata || {};
-
-    // Initialize Stripe
-    const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
-    if (!stripeSecretKey) {
-      console.error(`[${requestId}] Missing STRIPE_SECRET_KEY`);
-      return new Response(
-        JSON.stringify({
-          status: 500,
-          code: 'STRIPE_CONFIG_ERROR',
-          message: 'Stripe configuration error',
-          request_id: requestId
-        }),
-        { status: 500, headers: { ...headers, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16',
-    });
-
-    // Determine mode from key
-    const mode = stripeSecretKey.startsWith('sk_live_') ? 'live' : 'test';
-
-    // Create Payment Intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: amountCents,
-      currency: currency.toLowerCase(),
-      automatic_payment_methods: {
-        enabled: true,
+    // Create Payment Intent using fetch API instead of Stripe SDK
+    const response = await fetch('https://api.stripe.com/v1/payment_intents', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${secret}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      metadata: {
-        ...metadata,
-        request_id: requestId,
-        source: 'M1SSION_PWA',
-        timestamp: new Date().toISOString()
-      }
+      body: new URLSearchParams({
+        amount: Math.floor(amountCents).toString(),
+        currency: String(currency || 'eur'),
+        'automatic_payment_methods[enabled]': 'true',
+        'metadata[source]': 'M1SSION_SMOKE_TEST',
+        'metadata[timestamp]': new Date().toISOString()
+      })
     });
 
-    console.log(`[${requestId}] Payment Intent created:`, {
-      id: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      mode: mode
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Stripe API Error:', error);
+      return new Response(JSON.stringify({ error: 'Stripe API error' }), {
+        status: response.status,
+        headers: { 'content-type': 'application/json', ...getCorsHeaders(req.headers.get('origin')) }
+      });
+    }
+
+    const intent = await response.json();
+    console.log(`[M1SSION] Payment Intent created: ${intent.id} (mode=${mode})`);
+
+    return new Response(JSON.stringify({ 
+      clientSecret: intent.client_secret,
+      paymentIntentId: intent.id,
+      amount: intent.amount,
+      currency: intent.currency,
+      mode
+    }), {
+      status: 200,
+      headers: { 'content-type': 'application/json', ...getCorsHeaders(req.headers.get('origin')) }
     });
 
-    // Return response
-    const response = {
-      clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id,
-      amount: paymentIntent.amount,
-      currency: paymentIntent.currency,
-      mode: mode,
-      request_id: requestId
-    };
-
-    console.log(`[${requestId}] Response prepared:`, {
-      hasClientSecret: !!response.clientSecret,
-      paymentIntentId: response.paymentIntentId,
-      amount: response.amount,
-      mode: response.mode
+  } catch (err) {
+    console.error('Payment Intent Error:', err);
+    return new Response(JSON.stringify({ 
+      error: (err as Error).message,
+      type: 'stripe_error'
+    }), {
+      status: 500,
+      headers: { 'content-type': 'application/json', ...getCorsHeaders(req.headers.get('origin')) }
     });
-
-    return new Response(
-      JSON.stringify(response),
-      { 
-        status: 200, 
-        headers: { ...headers, 'Content-Type': 'application/json' } 
-      }
-    );
-
-  } catch (error) {
-    console.error(`[${requestId}] Error:`, error);
-    
-    const isStripeError = error && typeof error === 'object' && 'type' in error;
-    
-    return new Response(
-      JSON.stringify({
-        status: isStripeError ? 402 : 500,
-        code: isStripeError ? 'STRIPE_ERROR' : 'INTERNAL_ERROR',
-        message: isStripeError ? error.message : 'Internal server error',
-        request_id: requestId
-      }),
-      { 
-        status: isStripeError ? 402 : 500, 
-        headers: { ...headers, 'Content-Type': 'application/json' } 
-      }
-    );
   }
 });
