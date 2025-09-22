@@ -79,7 +79,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Push "tick" (no payload) compatibile con Safari/APNs
+// Safe push event handler
 self.addEventListener('push', (event) => {
   console.log('📢 Push notification received:', event);
   
@@ -91,18 +91,18 @@ self.addEventListener('push', (event) => {
   }
   
   const title = data.title || 'M1SSION™';
-  const body = data.body || 'Hai un nuovo aggiornamento';
-  const screen = (data.data && data.data.screen) || '/';
+  const body = data.body || '';
+  const url = data.url || '/';
   
-  console.log('📢 Showing notification:', { title, body, screen });
+  console.log('📢 Showing notification:', { title, body, url });
   
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      data: { screen },
-      badge: '/favicon.ico',
-      icon: '/favicon.ico',
-      tag: 'm1ssion-notification'
+      data: { url },
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge.png',
+      tag: 'm1ssion-push'
     })
   );
 });
@@ -111,24 +111,10 @@ self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification clicked:', event);
   
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.screen) || '/';
+  const url = (event.notification.data && event.notification.data.url) || '/';
   
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clients => {
-        // Try to focus existing window
-        for (const client of clients) {
-          if ('focus' in client) {
-            client.navigate(url);
-            return client.focus();
-          }
-        }
-        // Open new window if none found
-        if (self.clients.openWindow) {
-          return self.clients.openWindow(url);
-        }
-        return Promise.resolve();
-      })
+    self.clients.openWindow(url)
   );
 });
 
