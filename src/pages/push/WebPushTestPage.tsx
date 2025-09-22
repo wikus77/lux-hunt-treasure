@@ -8,59 +8,77 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TestTube, Send, Users, Heart, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  testWebPushHealth, 
-  testWebPushWithSubscriptions, 
-  testWebPushWithUserIds,
-  formatTestResult,
-  type WebPushTestResult 
-} from '@/utils/webpushTest';
+import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface TestLog {
   id: string;
-  type: 'health' | 'subscriptions' | 'user_ids';
-  result: WebPushTestResult;
+  type: 'health' | 'subscriptions' | 'user_ids' | 'debug';
+  request: any;
+  response: any;
   timestamp: string;
+  success: boolean;
 }
 
 export const WebPushTestPage: React.FC = () => {
+  const { toast } = useToast();
   const [logs, setLogs] = useState<TestLog[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [testUserId, setTestUserId] = useState('495246c1-9154-4f01-a428-7f37fe230180');
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null);
 
-  const addLog = (type: TestLog['type'], result: WebPushTestResult) => {
+  const addLog = (type: TestLog['type'], request: any, response: any, success: boolean) => {
     const log: TestLog = {
       id: Math.random().toString(36).substr(2, 9),
       type,
-      result,
-      timestamp: new Date().toISOString()
+      request,
+      response,
+      timestamp: new Date().toISOString(),
+      success
     };
-    setLogs(prev => [log, ...prev]);
+    setLogs(prev => [log, ...prev].slice(0, 10)); // Keep only last 10 logs
   };
 
   const loadSubscriptions = async () => {
     try {
+      // Load from new webpush_subscriptions table
       const { data, error } = await supabase
-        .from('push_subscriptions')
-        .select('endpoint, p256dh, auth, endpoint_type, platform')
+        .from('webpush_subscriptions')
+        .select('endpoint, keys, provider, platform')
         .limit(5);
       
       if (error) throw error;
       
-      // Convert to webpush format
-      const formatted = data?.map(sub => ({
-        endpoint: sub.endpoint,
-        keys: {
-          p256dh: sub.p256dh,
-          auth: sub.auth
-        },
-        provider: sub.endpoint_type
-      })) || [];
-      
-      setSubscriptions(formatted);
-      console.log(`📊 Loaded ${formatted.length} subscriptions from DB`);
+      // Already in correct format
+      setSubscriptions(data || []);
+      console.log(`📊 Loaded ${data?.length || 0} subscriptions from new webpush_subscriptions table`);
     } catch (error) {
       console.error('Failed to load subscriptions:', error);
+      // Fallback to old table
+      try {
+        const { data, error } = await supabase
+          .from('push_subscriptions')
+          .select('endpoint, p256dh, auth, endpoint_type, platform')
+          .limit(5);
+        
+        if (error) throw error;
+        
+        const formatted = data?.map(sub => ({
+          endpoint: sub.endpoint,
+          keys: {
+            p256dh: sub.p256dh,
+            auth: sub.auth
+          },
+          provider: sub.endpoint_type
+        })) || [];
+        
+        setSubscriptions(formatted);
+        console.log(`📊 Loaded ${formatted.length} subscriptions from fallback push_subscriptions table`);
+      } catch (fallbackError) {
+        console.error('Failed to load from fallback table too:', fallbackError);
+      }
     }
   };
 
@@ -68,40 +86,205 @@ export const WebPushTestPage: React.FC = () => {
     loadSubscriptions();
   }, []);
 
-  const runHealthTest = async () => {
+  const testHealth = async () => {
     setIsLoading(true);
     try {
-      const result = await testWebPushHealth();
-      addLog('health', result);
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-send/health`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        }
+      });
+      
+      const data = await response.json();
+      const success = response.ok;
+      
+      addLog('health', { endpoint: '/health' }, data, success);
+      
+      toast({
+        title: success ? "✅ Health Check OK" : "❌ Health Check Failed",
+        description: `VAPID Public: ${data.vapidPublicKeySet}, Private: ${data.vapidPrivateKeySet}`,
+        variant: success ? "default" : "destructive"
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      addLog('health', { endpoint: '/health' }, { error: errorMsg }, false);
+      toast({
+        title: "❌ Health Check Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const runSubscriptionsTest = async () => {
-    if (subscriptions.length === 0) {
-      alert('No subscriptions loaded. Make sure push_subscriptions table has data.');
+  const testDebug = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-send/debug`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        }
+      });
+      
+      const data = await response.json();
+      const success = response.ok;
+      
+      addLog('debug', { endpoint: '/debug' }, data, success);
+      
+      toast({
+        title: success ? "✅ Debug Info Retrieved" : "❌ Debug Failed",
+        description: `VAPID configured: ${data.env?.vapidPublicKeySet && data.env?.vapidPrivateKeySet}`,
+        variant: success ? "default" : "destructive"
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      addLog('debug', { endpoint: '/debug' }, { error: errorMsg }, false);
+      toast({
+        title: "❌ Debug Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getCurrentSubscription = async () => {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+      toast({
+        title: "❌ Not Supported",
+        description: "Push notifications not supported on this device",
+        variant: "destructive"
+      });
+      return null;
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        toast({
+          title: "ℹ️ No Subscription",
+          description: "No active push subscription found",
+        });
+        return null;
+      }
+
+      const sub = {
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: subscription.toJSON().keys?.p256dh,
+          auth: subscription.toJSON().keys?.auth
+        }
+      };
+
+      setCurrentSubscription(sub);
+      return sub;
+    } catch (error) {
+      console.error('Error getting subscription:', error);
+      return null;
+    }
+  };
+
+  const testSendToDevice = async () => {
+    const sub = await getCurrentSubscription();
+    if (!sub) return;
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        subscriptions: [sub],
+        payload: {
+          title: "Test M1SSION™ Push",
+          body: "This is a test notification from WebPush Admin Panel",
+          url: "/settings/notifications"
+        }
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      const success = response.ok && data.success;
+      
+      addLog('subscriptions', payload, data, success);
+      
+      toast({
+        title: success ? "✅ Push Sent" : "❌ Push Failed",
+        description: success ? `Sent to ${data.sent}/${data.total} devices` : data.error,
+        variant: success ? "default" : "destructive"
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      addLog('subscriptions', { currentDevice: true }, { error: errorMsg }, false);
+      toast({
+        title: "❌ Send Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const testSendByUserId = async () => {
+    if (!testUserId.trim()) {
+      toast({
+        title: "❌ Invalid Input",
+        description: "Please enter a valid User ID",
+        variant: "destructive"
+      });
       return;
     }
-    
-    setIsLoading(true);
-    try {
-      const result = await testWebPushWithSubscriptions(subscriptions);
-      addLog('subscriptions', result);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const runUserIdsTest = async () => {
     setIsLoading(true);
     try {
-      // Use current user or a test user ID
-      const { data: { user } } = await supabase.auth.getUser();
-      const userIds = user ? [user.id] : ['495246c1-9154-4f01-a428-7f37fe230180'];
+      const payload = {
+        user_ids: [testUserId.trim()],
+        payload: {
+          title: "Admin Test Push",
+          body: "Test notification sent to specific user via Admin Panel",
+          url: "/notifications"
+        }
+      };
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(payload)
+      });
       
-      const result = await testWebPushWithUserIds(userIds);
-      addLog('user_ids', result);
+      const data = await response.json();
+      const success = response.ok && data.success;
+      
+      addLog('user_ids', payload, data, success);
+      
+      toast({
+        title: success ? "✅ Push Sent" : "❌ Push Failed",
+        description: success ? `Sent to ${data.sent}/${data.total} users` : data.error,
+        variant: success ? "default" : "destructive"
+      });
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      addLog('user_ids', { user_ids: [testUserId] }, { error: errorMsg }, false);
+      toast({
+        title: "❌ Send Error",
+        description: errorMsg,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -109,8 +292,8 @@ export const WebPushTestPage: React.FC = () => {
 
   const clearLogs = () => setLogs([]);
 
-  const getStatusBadge = (result: WebPushTestResult) => {
-    if (result.success) {
+  const getStatusBadge = (success: boolean) => {
+    if (success) {
       return <Badge className="bg-green-600 text-white">✅ SUCCESS</Badge>;
     }
     return <Badge variant="destructive">❌ FAILED</Badge>;
@@ -121,6 +304,7 @@ export const WebPushTestPage: React.FC = () => {
       case 'health': return <Heart className="w-4 h-4" />;
       case 'subscriptions': return <Send className="w-4 h-4" />;
       case 'user_ids': return <Users className="w-4 h-4" />;
+      case 'debug': return <TestTube className="w-4 h-4" />;
     }
   };
 
@@ -150,11 +334,11 @@ export const WebPushTestPage: React.FC = () => {
                 <div className="text-sm text-white/70">Subscriptions Loaded</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">{logs.filter(l => l.result.success).length}</div>
+                <div className="text-2xl font-bold text-green-400">{logs.filter(l => l.success).length}</div>
                 <div className="text-sm text-white/70">Tests Passed</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-red-400">{logs.filter(l => !l.result.success).length}</div>
+                <div className="text-2xl font-bold text-red-400">{logs.filter(l => !l.success).length}</div>
                 <div className="text-sm text-white/70">Tests Failed</div>
               </div>
               <div className="text-center">
@@ -171,9 +355,9 @@ export const WebPushTestPage: React.FC = () => {
             <CardTitle className="text-white">Test Controls</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <Button 
-                onClick={runHealthTest}
+                onClick={testHealth}
                 disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
               >
@@ -182,21 +366,21 @@ export const WebPushTestPage: React.FC = () => {
               </Button>
               
               <Button 
-                onClick={runSubscriptionsTest}
-                disabled={isLoading || subscriptions.length === 0}
-                className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                onClick={testDebug}
+                disabled={isLoading}
+                className="bg-cyan-600 hover:bg-cyan-700 flex items-center gap-2"
               >
-                <Send className="w-4 h-4" />
-                Test Subscriptions
+                <TestTube className="w-4 h-4" />
+                Debug Info
               </Button>
               
               <Button 
-                onClick={runUserIdsTest}
+                onClick={testSendToDevice}
                 disabled={isLoading}
-                className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2"
+                className="bg-green-600 hover:bg-green-700 flex items-center gap-2"
               >
-                <Users className="w-4 h-4" />
-                Test User IDs
+                <Send className="w-4 h-4" />
+                Send to Device
               </Button>
               
               <Button 
@@ -207,6 +391,23 @@ export const WebPushTestPage: React.FC = () => {
                 <RefreshCw className="w-4 h-4" />
                 Reload Data
               </Button>
+              
+              <div className="flex gap-2">
+                <Input 
+                  placeholder="User ID"
+                  value={testUserId}
+                  onChange={(e) => setTestUserId(e.target.value)}
+                  className="bg-black/40 border-white/20 text-white text-xs"
+                />
+                <Button 
+                  onClick={testSendByUserId}
+                  disabled={isLoading || !testUserId.trim()}
+                  className="bg-purple-600 hover:bg-purple-700 flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Users className="w-4 h-4" />
+                  Send to User
+                </Button>
+              </div>
             </div>
             
             <div className="mt-4 flex gap-2">
@@ -220,6 +421,20 @@ export const WebPushTestPage: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Current Subscription Display */}
+        {currentSubscription && (
+          <Card className="bg-blue-900/20 border-blue-700/50">
+            <CardHeader>
+              <CardTitle className="text-white">Current Device Subscription</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm font-mono text-white/70 bg-black/40 p-4 rounded-lg overflow-x-auto">
+                <pre>{JSON.stringify(currentSubscription, null, 2)}</pre>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Test Results */}
         <Card className="bg-black/40 border-white/10">
@@ -235,7 +450,11 @@ export const WebPushTestPage: React.FC = () => {
               ) : (
                 <div className="space-y-4">
                   {logs.map((log) => (
-                    <div key={log.id} className="border border-white/10 rounded-lg p-4">
+                    <div key={log.id} className={`border rounded-lg p-4 ${
+                      log.success 
+                        ? 'border-green-700/50 bg-green-900/20' 
+                        : 'border-red-700/50 bg-red-900/20'
+                    }`}>
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           {getTypeIcon(log.type)}
@@ -244,35 +463,27 @@ export const WebPushTestPage: React.FC = () => {
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
-                          {getStatusBadge(log.result)}
+                          {getStatusBadge(log.success)}
                           <span className="text-xs text-white/50">
                             {new Date(log.timestamp).toLocaleTimeString()}
                           </span>
                         </div>
                       </div>
                       
-                      <div className="text-sm">
-                        <div className="mb-1">
-                          <span className="text-white/70">Status:</span> {log.result.status}
+                      <div className="space-y-2">
+                        <div>
+                          <span className="text-white/70 text-sm font-medium">Request:</span>
+                          <div className="text-xs font-mono text-white/60 bg-black/50 p-2 rounded mt-1 overflow-x-auto">
+                            <pre>{JSON.stringify(log.request, null, 2)}</pre>
+                          </div>
                         </div>
                         
-                        {log.result.data && (
-                          <div>
-                            <span className="text-white/70">Response:</span>
-                            <pre className="mt-1 p-2 bg-black/40 rounded text-xs overflow-x-auto">
-                              {JSON.stringify(log.result.data, null, 2)}
-                            </pre>
+                        <div>
+                          <span className="text-white/70 text-sm font-medium">Response:</span>
+                          <div className="text-xs font-mono text-white/60 bg-black/50 p-2 rounded mt-1 overflow-x-auto">
+                            <pre>{JSON.stringify(log.response, null, 2)}</pre>
                           </div>
-                        )}
-                        
-                        {log.result.error && (
-                          <div>
-                            <span className="text-red-400">Error:</span>
-                            <div className="mt-1 p-2 bg-red-900/20 rounded text-xs">
-                              {log.result.error}
-                            </div>
-                          </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   ))}

@@ -158,8 +158,17 @@ const NotificationsSettings: React.FC = () => {
   const handleRetryPushRegistration = async () => {
     setPushRegistrationError(null);
     
-    if (!isNotificationSupported) {
+    // Safe feature detection using guards
+    const hasNotificationAPI = canUseNotifications();
+    const hasPushManager = canUseServiceWorker();
+    
+    if (!hasNotificationAPI) {
       setPushRegistrationError("Le notifiche non sono supportate su questo dispositivo/browser.");
+      toast({
+        title: "❌ Non supportato",
+        description: "Le notifiche push non sono supportate su questo dispositivo/browser.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -173,14 +182,46 @@ const NotificationsSettings: React.FC = () => {
     }
 
     try {
-      if (!isServiceWorkerSupported) {
-        throw new Error('Service Worker non supportato');
+      if (!hasPushManager) {
+        throw new Error('Service Worker o PushManager non supportato');
       }
 
-      // Safe permission request
+      // Safe permission request with guard
+      if (!hasNotificationAPI) {
+        throw new Error('API Notification non disponibile');
+      }
+      
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         throw new Error('Permesso per le notifiche negato');
+      }
+
+      // Save subscription to new webpush_subscriptions table
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        
+        if (subscription && user) {
+          const subData = {
+            user_id: user.id,
+            endpoint: subscription.endpoint,
+            keys: {
+              p256dh: subscription.toJSON().keys?.p256dh,
+              auth: subscription.toJSON().keys?.auth
+            },
+            platform: navigator.platform,
+            provider: subscription.endpoint.includes('web.push.apple.com') ? 'apns' : 
+                     subscription.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'unknown',
+            ua: navigator.userAgent
+          };
+          
+          // Save to new webpush_subscriptions table via webpush-upsert function
+          await supabase.functions.invoke('webpush-upsert', {
+            body: subData
+          });
+        }
+      } catch (dbError) {
+        console.warn('Failed to save subscription to database:', dbError);
       }
 
       toast({
