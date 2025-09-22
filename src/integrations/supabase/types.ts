@@ -4446,6 +4446,36 @@ export type Database = {
         }
         Relationships: []
       }
+      v_webpush_diag: {
+        Row: {
+          created_at: string | null
+          detected_provider: string | null
+          endpoint: string | null
+          endpoint_host: string | null
+          endpoint_type: string | null
+          platform: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          detected_provider?: never
+          endpoint?: string | null
+          endpoint_host?: never
+          endpoint_type?: string | null
+          platform?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          detected_provider?: never
+          endpoint?: string | null
+          endpoint_host?: never
+          endpoint_type?: string | null
+          platform?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _gen_unique_agent_code: {
