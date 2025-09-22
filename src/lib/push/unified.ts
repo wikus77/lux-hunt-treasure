@@ -1,8 +1,4 @@
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * M1SSION™ Unified Push Manager - Complete Push System
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
- */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import { supabase } from '@/integrations/supabase/client';
 import { initFcmAndGetToken } from './initFcm';
@@ -382,8 +378,3 @@ export class UnifiedPushManager {
 
 // Export singleton instance
 export const unifiedPushManager = UnifiedPushManager.getInstance();
-
-/*
- * 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
- */

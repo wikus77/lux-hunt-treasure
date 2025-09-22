@@ -1,3 +1,4 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 /* M1SSION™ AG-X0197 */
 import './styles/map.css';
 
@@ -9,6 +10,14 @@ import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
 import './styles/toast-animations.css';
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Production safety: Hide debug content in production builds
+if (import.meta.env.PROD) {
+  import('./styles/prod-hide-debug.css');
+  // Ensure no shim dump is visible in production
+  (window as any).__M1_NO_SHIM_DUMP__ = true;
+}
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
 import { diagnostics } from './metrics/interestSignals';
@@ -461,16 +470,12 @@ const renderApp = () => {
   }
 };
 
-// Enhanced DOM readiness check with SW Controller Guard
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log("📄 DOM fully loaded - initializing enhanced app");
-    initAppWithSWGuard();
-  });
-} else {
-  console.log("📄 DOM already loaded - initializing enhanced app immediately");
-  initAppWithSWGuard();
-}
+// Helper function for consistent logging
+const log = (message: string, data?: any) => {
+  if (import.meta.env.DEV || window.location.search.includes('debug=1')) {
+    console.log(`[M1SSION-SW] ${message}`, data || '');
+  }
+};
 
 // SW Controller enforcement for Pages.dev (prevent other SWs from taking control)
 const enforceAppSWController = async () => {
@@ -530,19 +535,23 @@ const enforceAppSWController = async () => {
   }
 };
 
-// Helper function for consistent logging
-const log = (message: string, data?: any) => {
-  if (import.meta.env.DEV || window.location.search.includes('debug=1')) {
-    console.log(`[M1SSION-SW] ${message}`, data || '');
-  }
-};
+// Enhanced DOM readiness check with SW Controller Guard
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log("📄 DOM fully loaded - initializing enhanced app");
+    initAppWithSWGuard();
+  });
+} else {
+  console.log("📄 DOM already loaded - initializing enhanced app immediately");
+  initAppWithSWGuard();
+}
 
 // Initialize app with Service Worker controller protection
 async function initAppWithSWGuard() {
   try {
     // Step 1: Enforce main SW controller on Pages.dev
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-      enforceAppSWController();
+      await enforceAppSWController();
       
       // Step 2: Ensure our app SW is the controller (existing guard)
       import('./utils/swControllerGuard').then(async ({ ensureAppSWController, logActiveSWs }) => {

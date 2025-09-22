@@ -4,6 +4,9 @@
 import React, { useState, useEffect } from "react";
 import { Route, Switch, useLocation } from "wouter";
 
+// Dev tools (conditionally loaded)
+const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Database-based plan choice tracking instead of localStorage
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
@@ -13,6 +16,7 @@ import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
 import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
+import { M1ssionLoader } from "@/components/ui/M1ssionLoader";
 import { supabase } from "@/integrations/supabase/client";
 
 
@@ -49,6 +53,7 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
+import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
@@ -414,6 +419,39 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/admin/mission-panel">
+            <ProtectedRoute>
+              <MissionPanelPage />
+            </ProtectedRoute>
+          </Route>
+
+          {/* Push Console routes */}
+          <Route path="/panel/push-admin">
+            <ProtectedRoute>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento console push admin..." /></div>}>
+                {React.createElement(React.lazy(() => import('../pages/push/AdminPushConsolePage')))}
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/push">
+            <ProtectedRoute>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento console push..." /></div>}>
+                {React.createElement(React.lazy(() => import('../pages/push/UserPushConsolePage')))}
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
+          {/* Dev diagnostics route - only accessible to admins or in debug mode */}
+          <Route path="/dev/markers-healthcheck">
+            <ProtectedRoute>
+              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento diagnostica..." /></div>}>
+                <MarkersHealthcheck />
+              </React.Suspense>
+            </ProtectedRoute>
+          </Route>
+
+
           {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
           <Route path="/push-test">
             <PushTestPage />
@@ -584,6 +622,17 @@ const WouterRoutes: React.FC = () => {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/auth/reset" component={ResetPasswordPage} />
+
+          {/* Admin Panel route */}
+          <Route path="/admin">
+            <ProtectedRoute>
+              <GlobalLayout>
+                <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento pannello admin..." /></div>}>
+                  {React.createElement(React.lazy(() => import('@/pages/Admin')))}
+                </React.Suspense>
+              </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
 
           {/* 404 fallback */}
           <Route>

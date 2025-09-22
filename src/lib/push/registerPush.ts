@@ -63,10 +63,9 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
       return null;
     }
 
-    // Register or get existing FCM service worker with explicit scope
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-      scope: '/'
-    });
+    // BLINDATA: Use existing main service worker registration
+    const registration = await navigator.serviceWorker.getRegistration('/') || 
+                         await navigator.serviceWorker.register('/sw.js', { scope: '/' });
     
     console.log('✅ FCM-REGISTER: Service Worker registered with scope:', registration.scope);
     
