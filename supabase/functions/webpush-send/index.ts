@@ -1,6 +1,8 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { generateVapidJWT } from "../_shared/vapid.ts";
+import { buildPushHeaders } from "../_shared/pushHeaders.ts";
 
 const ALLOW_ORIGIN = ["https://m1ssion.eu", "https://lovable.dev", "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com"];
 
@@ -91,37 +93,51 @@ function normalizeSubscription(sub: InputSubscription): NormalizedSubscription |
   }
 }
 
-// Web Crypto Web Push implementation using fetch
+// Web Crypto Web Push implementation with VAPID JWT for APNs
 async function sendWebPushNotification(
   subscription: NormalizedSubscription,
   payload: string
 ) {
-  // Simple implementation using direct fetch to FCM
-  if (subscription.provider === 'fcm') {
+  try {
+    const endpointURL = new URL(subscription.endpoint);
+    const audience = `${endpointURL.protocol}//${endpointURL.hostname}`;
+    
+    // Get VAPID keys from environment
+    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+    
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      throw new Error('VAPID keys not configured');
+    }
+
+    // Generate VAPID JWT for authentication
+    const vapidJWT = await generateVapidJWT(
+      audience,
+      'mailto:support@m1ssion.eu',
+      vapidPublicKey,
+      vapidPrivateKey
+    );
+
+    // Build appropriate headers for each provider
+    const headers = buildPushHeaders(endpointURL, vapidJWT, vapidPublicKey);
+    
+    console.log(`🔐 [WEBPUSH-SEND] Sending with VAPID to ${subscription.provider}:`, {
+      audience,
+      hasVapidJWT: !!vapidJWT,
+      headers: Object.keys(headers)
+    });
+
     const response = await fetch(subscription.endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'TTL': '86400'
-      },
-      body: JSON.stringify({
-        notification: JSON.parse(payload)
-      })
+      headers,
+      body: payload
     });
+    
     return response;
+  } catch (error) {
+    console.error(`❌ [WEBPUSH-SEND] VAPID error for ${subscription.provider}:`, error);
+    throw error;
   }
-  
-  // For APNs and other providers, use basic fetch
-  const response = await fetch(subscription.endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/octet-stream',
-      'TTL': '86400'
-    },
-    body: payload
-  });
-  
-  return response;
 }
 
 serve(async (req) => {
