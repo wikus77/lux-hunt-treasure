@@ -358,19 +358,21 @@ serve(async (req) => {
       });
     }
 
+    // Map payload.url to targetUrl to avoid variable conflicts
+    const targetUrl = payload.url || "/";
+    
     // Build notification payload with default URL if missing
     const notificationPayload = JSON.stringify({
       title: payload.title || "M1SSION™",
       body: payload.body || "New notification",
-      data: { url: payload.url || "/" }, // Default to '/' if URL missing
+      data: { url: targetUrl }, // Use mapped targetUrl
       icon: "/favicon.ico",
       badge: "/favicon.ico",
     });
 
     console.log('📦 [WEBPUSH-SEND] Final payload:', notificationPayload);
 
-    // Check for dryRun and debug parameters
-    const url = new URL(req.url);
+    // Check for dryRun and debug parameters (using existing URL from line 184)
     const dryRun = url.searchParams.get('dryRun') === 'true';
     const debug = url.searchParams.get('debug') === '1';
 
