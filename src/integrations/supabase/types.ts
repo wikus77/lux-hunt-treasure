@@ -4476,6 +4476,22 @@ export type Database = {
         }
         Relationships: []
       }
+      webpush_latest_per_user: {
+        Row: {
+          auth: string | null
+          created_at: string | null
+          endpoint: string | null
+          id: string | null
+          is_active: boolean | null
+          keys: Json | null
+          p256dh: string | null
+          platform: string | null
+          provider: string | null
+          rn: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _gen_unique_agent_code: {
