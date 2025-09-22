@@ -10,7 +10,7 @@ export const WebPushDeploymentTest = () => {
   const [subscriptionTestResult, setSubscriptionTestResult] = useState<WebPushTestResult | null>(null);
   const [userIdTestResult, setUserIdTestResult] = useState<WebPushTestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [subscriptions, setSubscriptions] = useState<Record<string, any>[]>([]);
+  const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [userIds, setUserIds] = useState<string[]>([]);
 
   const loadTestData = async () => {
@@ -24,7 +24,7 @@ export const WebPushDeploymentTest = () => {
       
       if (subsData) {
         setSubscriptions(subsData);
-        setUserIds(subsData.map(s => s.user_id).filter(Boolean));
+        setUserIds(subsData.map((s: any) => s.user_id).filter(Boolean));
       }
     } catch (error) {
       console.error('Errore caricamento dati test:', error);
@@ -95,7 +95,7 @@ export const WebPushDeploymentTest = () => {
   const getStatusBadge = (result: WebPushTestResult | null) => {
     if (!result) return <Badge variant="secondary">Non testato</Badge>;
     return result.success ? 
-      <Badge variant="default" className="bg-green-600">✅ SUCCESS</Badge> : 
+      <Badge variant="default" className="bg-success">✅ SUCCESS</Badge> : 
       <Badge variant="destructive">❌ FAILED</Badge>;
   };
 
@@ -103,7 +103,7 @@ export const WebPushDeploymentTest = () => {
     <div className="container mx-auto p-6 space-y-6">
       <div className="text-center">
         <h1 className="text-2xl font-bold mb-2">M1SSION™ WebPush Deployment Test</h1>
-        <p className="text-muted-foreground">Test completo catena push blindata</p>
+        <p className="text-muted-foreground">Test completo catena push blindata - FASE 1: VERIFICA DEPLOYMENT</p>
       </div>
 
       <div className="flex justify-center gap-4">
@@ -190,7 +190,37 @@ export const WebPushDeploymentTest = () => {
               <strong>Test User IDs:</strong> {userIds.length}
             </div>
             <div className="col-span-2">
-              <strong>Providers:</strong> {subscriptions.map(s => s.endpoint_type).join(', ')}
+              <strong>Providers:</strong> {subscriptions.map((s: any) => s.endpoint_type).join(', ')}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>🚨 STATO DEPLOYMENT WEBPUSH-SEND</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span>Function logs:</span>
+              <Badge variant="destructive">0 logs trovati</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span>VAPID secrets:</span>
+              <Badge variant="default">Configurati</Badge>
+            </div>
+            <div className="flex justify-between">
+              <span>Config supabase:</span>
+              <Badge variant="default">verify_jwt = false</Badge>
+            </div>
+            <div className="p-3 bg-muted rounded mt-4">
+              <p className="text-xs">
+                ⚠️ CRITICAL: Function webpush-send non mostra logs - possibile problema deployment.<br/>
+                📊 Database: 3 subscriptions attive (2 APNS, 1 FCM)<br/>
+                🔑 VAPID: Public/Private keys configurati<br/>
+                🎯 NEXT: Test health endpoint per verificare deployment
+              </p>
             </div>
           </div>
         </CardContent>
