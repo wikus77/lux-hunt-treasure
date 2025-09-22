@@ -1,4 +1,3 @@
-import { execSync } from 'node:child_process';
 // © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
 // M1SSION™ Treasure Hunt App - Custom Vite Configuration
 // Optimized for Capacitor iOS/Android deployment with enhanced build settings
@@ -31,18 +30,15 @@ export default defineConfig(({ mode }) => ({
       open: false,
       gzipSize: true,
       brotliSize: true,
-<<<<<<< HEAD
-    })
-=======
     }),
     // Post-build: Copy custom SW to override any generated ones
     mode === 'production' && {
       name: 'copy-custom-sw',
       closeBundle() {
-        execSync('node scripts/copy-sw.cjs', { stdio: 'inherit' });
+        const { execSync } = require('child_process');
+        execSync('node scripts/copy-sw.js', { stdio: 'inherit' });
       }
     },
->>>>>>> 18c0d0c8 (Fix: SW copy, functions and vite config for push)
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -101,6 +97,9 @@ export default defineConfig(({ mode }) => ({
     global: 'globalThis',
     'process.env.NODE_ENV': '"production"',
     __PWA_VERSION__: JSON.stringify(new Date().toISOString()),
+    'import.meta.env.VITE_BUILD_ID': JSON.stringify(
+      process.env.VITE_BUILD_ID || `build-${Date.now().toString(36)}`
+    ),
   },
   optimizeDeps: {
     include: ['react', 'react-dom', 'react-router-dom'],

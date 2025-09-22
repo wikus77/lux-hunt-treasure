@@ -1,0 +1,13 @@
+name = "m1ssion-fcm-proxy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+account_id = "500da52af182b29fb9bb710ec23c205f"
+
+# Wildcard routes for priority routing
+[[route]]
+pattern = "m1ssion.eu/*"
+zone_name = "m1ssion.eu"
+
+[[route]]
+pattern = "www.m1ssion.eu/*"
+zone_name = "m1ssion.eu"
