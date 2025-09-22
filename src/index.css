@@ -7,6 +7,7 @@
 @import './styles/theme.css';
 @import './styles/mobile-optimizations.css';
 @import './styles/ios-safe-area-fixes.css';
+@import './styles/bottom-navigation.css';
 
 @tailwind base;
 @tailwind components;
@@ -393,6 +394,16 @@
 
   .text-gradient-text {
     @apply gradient-text;
+  }
+
+  .mobile-touch-target {
+    @apply min-h-[44px] min-w-[44px];
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-optimized {
+    font-size: 16px; /* Prevent zoom on input focus */
   }
 }
 
