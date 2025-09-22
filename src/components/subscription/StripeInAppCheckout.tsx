@@ -16,10 +16,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
+import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
+import { assertPkMatchesMode } from '@/lib/stripe/guard';
 
 // Initialize Stripe using fallback for better compatibility
 import { getStripeSafe } from '@/lib/stripeFallback';
-import { assertPkMatchesMode } from '@/lib/stripe/guard';
 const stripePromise = getStripeSafe();
 
 interface StripeInAppCheckoutProps {
@@ -49,27 +50,28 @@ const CheckoutForm: React.FC<{
 
         // Guard: Ensure client pk_* matches server sk_* mode
         try {
-          const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-          if (modeErr) {
-            console.warn('Stripe mode introspection failed', modeErr);
-          } else {
+          await PaymentErrorHandler.retryWithBackoff(async () => {
+            const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+            if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
             assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-          }
+          });
         } catch (e) {
-          console.error('Stripe mode mismatch or error', e);
-          toast.error('Stripe mode mismatch: contatta il supporto.');
+          await PaymentErrorHandler.handlePaymentError(e, 'payment_intent_creation');
           return;
         }
         
         const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', {
           body: {
-            user_id: user.id,
-            plan: config.plan || config.type,
-            amount: config.amount,
+            amountCents: config.amount, // Already in cents
             currency: config.currency || 'eur',
-            payment_type: config.type,
-            description: config.description,
-            metadata: config.metadata
+            metadata: {
+              user_id: user.id,
+              plan: config.plan || config.type,
+              payment_type: config.type,
+              description: config.description,
+              source: 'M1SSION_PWA',
+              ...config.metadata
+            }
           }
         });
 
@@ -79,8 +81,8 @@ const CheckoutForm: React.FC<{
           return;
         }
 
-        if (data?.client_secret) {
-          setClientSecret(data.client_secret);
+        if (data?.clientSecret) {
+          setClientSecret(data.clientSecret);
           console.log('✅ M1SSION™ Payment intent created successfully');
         }
       } catch (error) {
@@ -119,8 +121,7 @@ const CheckoutForm: React.FC<{
           assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
         }
       } catch (e) {
-        console.error('Stripe mode mismatch or error before confirm', e);
-        toast.error('Stripe mode mismatch: contatta il supporto.');
+        await PaymentErrorHandler.handlePaymentError(e, 'payment_confirmation');
         setLoading(false);
         return;
       }

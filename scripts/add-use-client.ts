@@ -1,93 +1,55 @@
 #!/usr/bin/env tsx
 /**
- * Script to add "use client" directive to React component files that need it
- * Only adds to files that use React hooks or have JSX and don't already have the directive
+ * Script to add "use client" directive where needed
  */
 
-import { readFileSync, writeFileSync } from 'fs';
-import { glob } from 'glob';
+import { glob } from "glob";
+import fs from "node:fs";
 
-// Patterns that indicate a file needs "use client"
-const NEEDS_USE_CLIENT_PATTERNS = [
-  /\b(useState|useEffect|useMemo|useCallback|useReducer|useContext|useRef|useLayoutEffect)\s*\(/,
-  /\bsetState\s*\(/,
-  /\bevent\.(preventDefault|stopPropagation)\s*\(/,
-  /\bonClick|onChange|onSubmit|onFocus|onBlur\s*=/,
-];
+const needsUseClient = (code: string) => {
+  // Heuristics: JSX o hooks/DOM API → client
+  const usesJSX = /<[A-Za-z][A-Za-z0-9]*/.test(code);
+  const usesHooks = /\buse(State|Effect|Memo|Callback|Ref|Context|Reducer)\b/.test(code);
+  const usesBrowser = /\b(window|document|localStorage|navigator)\b/.test(code);
+  return usesJSX || usesHooks || usesBrowser;
+};
 
-function needsUseClient(content: string): boolean {
-  // Check if it's a React component file with hooks or event handlers
-  const hasReactImport = /import.*React.*from\s+['"]react['"]/.test(content);
-  const hasHooksImport = /import.*\{[^}]*(?:useState|useEffect|useMemo|useCallback)[^}]*\}.*from\s+['"]react['"]/.test(content);
-  const hasJSX = /<\w+[^>]*>/.test(content);
-  
-  if (!hasReactImport && !hasHooksImport && !hasJSX) {
-    return false;
-  }
-  
-  return NEEDS_USE_CLIENT_PATTERNS.some(pattern => pattern.test(content));
-}
+const alreadyHasDirective = (code: string) => /^\s*["']use client["'];?/.test(code);
 
-function addUseClientDirective(filePath: string): boolean {
-  try {
-    const content = readFileSync(filePath, 'utf-8');
-    
-    // Skip if already has "use client"
-    if (content.includes('"use client"') || content.includes("'use client'")) {
-      return false;
-    }
-    
-    // Skip if doesn't need "use client"
-    if (!needsUseClient(content)) {
-      return false;
-    }
-    
-    // Find first import or first non-comment line
-    const lines = content.split('\n');
-    let insertIndex = 0;
-    
-    // Skip initial comments and empty lines
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line === '' || line.startsWith('//') || line.startsWith('/*') || line.startsWith('*')) {
-        continue;
-      }
-      insertIndex = i;
-      break;
-    }
-    
-    // Insert "use client" directive
-    lines.splice(insertIndex, 0, '"use client";', '');
-    const newContent = lines.join('\n');
-    
-    writeFileSync(filePath, newContent, 'utf-8');
-    console.log(`Added "use client" to: ${filePath}`);
-    return true;
-  } catch (error) {
-    console.error(`Error processing ${filePath}:`, error);
-  }
-  return false;
-}
+const shouldSkip = (filepath: string) => {
+  // NON toccare push/FCM/OneSignal/SW chain
+  const p = filepath.replace(/\\/g,"/");
+  return (
+    /^public\/sw/.test(p) ||
+    /\/service-worker/i.test(p) ||
+    /\/(Push|IOSPush|OneSignal)/.test(p) ||
+    /\/lib\/push\//.test(p) ||
+    /\/webpush/i.test(p) ||
+    /\/subscribe\.ts$/.test(p)
+  );
+};
 
-async function main() {
-  console.log('🔧 Adding "use client" directives to React components...');
-  
-  // Find all TypeScript/React files
-  const files = await glob('src/**/*.{ts,tsx}', { 
-    ignore: ['**/node_modules/**', '**/dist/**'] 
-  });
-  
-  let fixedCount = 0;
-  
-  for (const file of files) {
-    if (addUseClientDirective(file)) {
-      fixedCount++;
+const addDirective = (code: string) => {
+  const lines = code.split(/\r?\n/);
+  // mantieni eventuali commenti licenza alla cima
+  let i = 0;
+  while (i < lines.length && /^\s*\/\//.test(lines[i])) i++;
+  // inserisci direttiva subito dopo eventuali commenti iniziali
+  lines.splice(i, 0, `"use client";`);
+  return lines.join("\n");
+};
+
+const run = async () => {
+  const files = await glob("src/**/*.{ts,tsx}", { ignore: ['**/node_modules/**', '**/dist/**'] });
+  let added = 0, skipped = 0;
+  for (const f of files) {
+    if (shouldSkip(f)) { skipped++; continue; }
+    const code = fs.readFileSync(f,"utf8");
+    if (needsUseClient(code) && !alreadyHasDirective(code)) {
+      fs.writeFileSync(f, addDirective(code));
+      added++;
     }
   }
-  
-  console.log(`✅ Added "use client" to ${fixedCount} files`);
-}
-
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch(console.error);
-}
+  console.log(JSON.stringify({useClientAdded: added, skipped}));
+};
+run();
