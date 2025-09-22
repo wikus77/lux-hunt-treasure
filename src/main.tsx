@@ -8,9 +8,53 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
+import './styles/toast-animations.css';
 import { setupProductionConsole, enableProductionOptimizations } from './utils/productionSafety';
 import { setupProductionLogging, monitorPerformance } from './utils/buildOptimization';
+import { diagnostics } from './metrics/interestSignals';
+import { initBadgeDiagnostics } from './utils/badgeDiagnostics';
+import { initDiagnostics } from './utils/diagnostics';
+// import { initPWABadgeDiagnostics, createBadgeTestHelpers } from './utils/pwaBadgeAudit'; // Dynamic import instead
 // import { EnhancedToastProvider } from '@/components/ui/enhanced-toast-provider'; // Rimosso per evitare toast duplicati
+
+// Initialize diagnostics early (development only)
+if (import.meta.env.DEV) {
+  console.log('🔍 M1SSION™ Diagnostics ready');
+}
+
+// Initialize badge diagnostics
+initBadgeDiagnostics();
+
+// PHASE 1 AUDIT: Initialize PWA badge environment detection safely
+const initPWABadgeDiagnosticsSafely = async () => {
+  if (typeof window !== 'undefined') {
+    try {
+      // Dynamic imports to ensure proper loading
+      const [
+        { initPWABadgeDiagnostics, createBadgeTestHelpers },
+        { initializeGlobalDebugHelpers }
+      ] = await Promise.all([
+        import('./utils/pwaBadgeAudit'),
+        import('./utils/debugHelpers')
+      ]);
+      
+      initPWABadgeDiagnostics();
+      createBadgeTestHelpers();
+      initializeGlobalDebugHelpers();
+      
+      console.log('✅ PWA Badge diagnostics initialized');
+    } catch (err) {
+      console.warn('PWA Badge diagnostics initialization failed:', err);
+    }
+  }
+};
+
+// Call after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initPWABadgeDiagnosticsSafely);
+} else {
+  initPWABadgeDiagnosticsSafely();
+}
 
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Import and apply kill switch utilities
@@ -82,20 +126,37 @@ setupProductionConsole();
 setupProductionLogging();
 enableProductionOptimizations();
 
+// Initialize performance and accessibility enhancements
+if (typeof window !== 'undefined') {
+  import('./utils/performanceOptimizer').then(({ initPerformanceOptimizations }) => {
+    initPerformanceOptimizations();
+  });
+  
+  import('./utils/accessibilityEnhancer').then(({ initAccessibilityEnhancements }) => {
+    initAccessibilityEnhancements();
+  });
+
+  // Initialize production monitoring
+  if (import.meta.env.PROD) {
+    import('./utils/productionMonitoring').then(({ monitoring }) => {
+      monitoring.trackFeature('app_initialization');
+    });
+  }
+}
+
 // Performance monitoring in development
 if (typeof window !== 'undefined' && import.meta.env?.DEV) {
   setTimeout(() => monitorPerformance(), 2000);
 }
 
-// Mobile-compatible Sentry initialization
-// Uses Supabase secret for DSN to work in Capacitor environments
+// Secure Sentry initialization with environment variables
 const initializeSentry = () => {
   // Only initialize if not in development and DSN is available
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
-    // Use Supabase secret SENTRY_DSN for production
-    const SENTRY_DSN = 'https://d8a8e8d8e8d8e8d8e8d8e8d8e8d8e8d8@o1234567.ingest.sentry.io/1234567';
+    // Use environment variable for DSN - no hardcoded values
+    const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
     
-    if (SENTRY_DSN && !SENTRY_DSN.includes('your-sentry-dsn-here')) {
+    if (SENTRY_DSN && !SENTRY_DSN.includes('placeholder')) {
       Sentry.init({
         dsn: SENTRY_DSN,
         integrations: [
@@ -105,6 +166,8 @@ const initializeSentry = () => {
         enabled: true,
         environment: window.location.protocol === 'capacitor:' ? 'mobile' : 'web'
       });
+    } else if (import.meta.env.PROD) {
+      console.warn('⚠️ Sentry DSN not configured in production');
     }
   }
 };
@@ -150,10 +213,19 @@ const renderApp = () => {
     console.log("✅ Creating React root with enhanced configuration");
     const root = ReactDOM.createRoot(rootElement);
     
-    // Enhanced app rendering with better error boundaries
+    // Enhanced app rendering with PWA Loading Guard to prevent black screen
     root.render(
       <QueryClientProvider client={queryClient}>
-        <App />
+        <React.Suspense fallback={
+          <div className="min-h-screen bg-background flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+              <p className="text-muted-foreground font-orbitron">Caricamento M1SSION™...</p>
+            </div>
+          </div>
+        }>
+          <App />
+        </React.Suspense>
       </QueryClientProvider>
     );
     
@@ -257,7 +329,54 @@ if (document.readyState === 'loading') {
   renderApp();
 }
 
-// SW registration is now handled by swControl utils only - no duplicate registration
+// Initialize silent auto-update (no UI banners, just one refresh per BUILD_ID)
+if (typeof window !== 'undefined') {
+  // Delay to ensure app is fully rendered before SW operations
+  setTimeout(() => {
+    import('./utils/silentAutoUpdate').then(({ initSilentAutoUpdate }) => {
+      initSilentAutoUpdate({
+        debug: import.meta.env.VITE_SW_UPDATE_DEBUG === '1' || import.meta.env.DEV
+      }).catch(err => {
+        console.warn('[MAIN] Silent auto-update init failed (non-critical):', err);
+      });
+    });
+  }, 2500); // Longer delay for complete stability
+
+  // Initialize interest signals tracking (post first paint, zero UI impact)
+  const initInterestSignals = () => {
+    try {
+      const isDebugMode = new URLSearchParams(window.location.search).get('M1_DIAG') === '1';
+      
+      if (isDebugMode) {
+        console.log('📊 M1SSION Interest Signals - Debug mode active');
+        // Import metrics directly for immediate diagnostics
+        import('./metrics/interestSignals').then(({ diagnostics }) => {
+          (window as any).__M1_SIG__ = diagnostics;
+          console.log('📊 M1_SIG diagnostics available:', Object.keys(diagnostics));
+        });
+      }
+      
+      // Import and initialize auto interest signals
+      import('./hooks/useAutoInterestSignals').then(({ initAutoInterestSignals }) => {
+        initAutoInterestSignals();
+        if (isDebugMode) {
+          console.log('📊 useAutoInterestSignals initialized');
+        }
+      }).catch(err => {
+        console.warn('[MAIN] Interest signals init failed (non-critical):', err);
+      });
+    } catch (error) {
+      console.warn('[MAIN] Interest signals setup failed (non-critical):', error);
+    }
+  };
+
+  setTimeout(initInterestSignals, 3000); // After app is fully rendered
+
+  // Initialize M1SSION preferences diagnostics (after app fully loaded)
+  setTimeout(() => {
+    initDiagnostics();
+  }, 100);
+}
 
 // Enhanced global error handling
 window.addEventListener('error', (event) => {
