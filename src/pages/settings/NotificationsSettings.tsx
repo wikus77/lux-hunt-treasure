@@ -155,6 +155,64 @@ const NotificationsSettings: React.FC = () => {
     });
   };
 
+  const subscribeToPush = async () => {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.subscribe({ 
+      userVisibleOnly: true, 
+      applicationServerKey: urlBase64ToUint8Array(
+        import.meta.env.VITE_FIREBASE_VAPID_KEY || 
+        import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY || 
+        import.meta.env.VAPID_PUBLIC_KEY ||
+        'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A'
+      )
+    });
+
+    const body = {
+      endpoint: sub.endpoint,
+      keys: sub.toJSON()?.keys || {},
+      platform: /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios' : 'web',
+      provider: sub.endpoint.includes('web.push.apple.com') ? 'apns' : 
+               (sub.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'mozilla'),
+    };
+
+    // Save to webpush_subscriptions table (with minimal fields)
+    if (user) {
+      await supabase
+        .from('webpush_subscriptions')
+        .upsert({
+          user_id: user.id,
+          endpoint: body.endpoint,
+          keys: body.keys,
+          platform: body.platform,
+          provider: body.provider
+        } as any);
+
+      // Show endpoint host in UI
+      const endpointHost = new URL(sub.endpoint).hostname;
+      toast({
+        title: "✅ Push registrato",
+        description: `Endpoint host: ${endpointHost}`
+      });
+    }
+
+    return sub;
+  };
+
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
+
   const handleRetryPushRegistration = async () => {
     setPushRegistrationError(null);
     
@@ -197,32 +255,7 @@ const NotificationsSettings: React.FC = () => {
       }
 
       // Save subscription to new webpush_subscriptions table
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-        
-        if (subscription && user) {
-          const subData = {
-            user_id: user.id,
-            endpoint: subscription.endpoint,
-            keys: {
-              p256dh: subscription.toJSON().keys?.p256dh,
-              auth: subscription.toJSON().keys?.auth
-            },
-            platform: navigator.platform,
-            provider: subscription.endpoint.includes('web.push.apple.com') ? 'apns' : 
-                     subscription.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'unknown',
-            ua: navigator.userAgent
-          };
-          
-          // Save to new webpush_subscriptions table via webpush-upsert function
-          await supabase.functions.invoke('webpush-upsert', {
-            body: subData
-          });
-        }
-      } catch (dbError) {
-        console.warn('Failed to save subscription to database:', dbError);
-      }
+      await subscribeToPush();
 
       toast({
         title: "✅ Prova a registrare di nuovo",

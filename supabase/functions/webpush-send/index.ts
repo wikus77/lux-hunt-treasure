@@ -1,7 +1,6 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
-import webpush from "npm:web-push@3.6.7";
 
 const ALLOW_ORIGIN = ["https://m1ssion.eu", "https://lovable.dev", "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com"];
 
@@ -92,70 +91,103 @@ function normalizeSubscription(sub: InputSubscription): NormalizedSubscription |
   }
 }
 
-serve(async (req) => {
-  const url = new URL(req.url);
-  const origin = req.headers.get("Origin");
-  
-  console.log('📡 [WEBPUSH-SEND] Request:', req.method, url.pathname);
-  console.log('📡 [WEBPUSH-SEND] Origin:', origin);
-  
-  // Handle health check BEFORE any json parsing
-  if (url.pathname.endsWith('/health') && req.method === 'GET') {
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-    return new Response(JSON.stringify({
-      ok: true,
-      vapidPublicKeySet: !!vapidPublicKey,
-      vapidPrivateKeySet: !!vapidPrivateKey
-    }), {
-      headers: { "content-type": "application/json", ...corsHeaders(origin) },
-      status: 200,
+// Web Crypto Web Push implementation using fetch
+async function sendWebPushNotification(
+  subscription: NormalizedSubscription,
+  payload: string
+) {
+  // Simple implementation using direct fetch to FCM
+  if (subscription.provider === 'fcm') {
+    const response = await fetch(subscription.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'TTL': '86400'
+      },
+      body: JSON.stringify({
+        notification: JSON.parse(payload)
+      })
     });
+    return response;
   }
+  
+  // For APNs and other providers, use basic fetch
+  const response = await fetch(subscription.endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      'TTL': '86400'
+    },
+    body: payload
+  });
+  
+  return response;
+}
 
-  // Handle debug endpoint BEFORE any json parsing
-  if (url.pathname.endsWith('/debug') && req.method === 'GET') {
-    const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
-    const corsAllowedOrigin = ALLOW_ORIGIN.some(allowed => origin?.includes(allowed.replace('https://', ''))) ? origin! : ALLOW_ORIGIN[0];
+serve(async (req) => {
+  try {
+    const url = new URL(req.url);
+    const origin = req.headers.get("Origin");
     
-    return new Response(JSON.stringify({
-      now: new Date().toISOString(),
-      env: {
+    console.log('📡 [WEBPUSH-SEND] Request:', req.method, url.pathname);
+    console.log('📡 [WEBPUSH-SEND] Origin:', origin);
+    
+    // Handle health check BEFORE any json parsing
+    if (url.pathname.endsWith('/health') && req.method === 'GET') {
+      const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+      const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+      return new Response(JSON.stringify({
+        ok: true,
         vapidPublicKeySet: !!vapidPublicKey,
         vapidPrivateKeySet: !!vapidPrivateKey
-      },
-      requestHeaders: Object.fromEntries(req.headers.entries()),
-      corsAllowedOrigin
-    }), {
-      headers: { "content-type": "application/json", ...corsHeaders(origin) },
-      status: 200,
-    });
-  }
-  
-  // Handle CORS preflight BEFORE any json parsing
-  if (req.method === 'OPTIONS') {
-    console.log('📡 [WEBPUSH-SEND] Handling OPTIONS preflight request');
-    return new Response(null, { headers: corsHeaders(origin), status: 204 });
-  }
+      }), {
+        headers: { "content-type": "application/json", ...corsHeaders(origin) },
+        status: 200,
+      });
+    }
 
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      headers: { "content-type": "application/json", ...corsHeaders(origin) },
-      status: 405,
-    });
-  }
+    // Handle debug endpoint BEFORE any json parsing
+    if (url.pathname.endsWith('/debug') && req.method === 'GET') {
+      const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
+      const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+      const corsAllowedOrigin = ALLOW_ORIGIN.some(allowed => origin?.includes(allowed.replace('https://', ''))) ? origin! : ALLOW_ORIGIN[0];
+      
+      return new Response(JSON.stringify({
+        now: new Date().toISOString(),
+        env: {
+          vapidPublicKeySet: !!vapidPublicKey,
+          vapidPrivateKeySet: !!vapidPrivateKey
+        },
+        requestHeaders: Object.fromEntries(req.headers.entries()),
+        corsAllowedOrigin
+      }), {
+        headers: { "content-type": "application/json", ...corsHeaders(origin) },
+        status: 200,
+      });
+    }
+    
+    // Handle CORS preflight BEFORE any json parsing
+    if (req.method === 'OPTIONS') {
+      console.log('📡 [WEBPUSH-SEND] Handling OPTIONS preflight request');
+      return new Response(null, { headers: corsHeaders(origin), status: 204 });
+    }
 
-  // Safe JSON parsing for POST requests
-  let body: any;
-  try {
-    body = await req.json();
-  } catch (e) {
-    body = {};
-    console.warn('📡 [WEBPUSH-SEND] Failed to parse JSON body:', e.message);
-  }
+    if (req.method !== "POST") {
+      return new Response(JSON.stringify({ error: "Method not allowed" }), {
+        headers: { "content-type": "application/json", ...corsHeaders(origin) },
+        status: 405,
+      });
+    }
 
-  try {
+    // Safe JSON parsing for POST requests - ONLY ONCE
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (e) {
+      body = {};
+      console.warn('📡 [WEBPUSH-SEND] Failed to parse JSON body:', e.message);
+    }
+
     const requestBody: RequestBody = body;
     // Log raw first subscription for debugging
     const sample = Array.isArray(requestBody.subscriptions) ? requestBody.subscriptions[0] : null;
@@ -180,28 +212,6 @@ serve(async (req) => {
         status: 400,
       });
     }
-
-    // Check VAPID keys
-    const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY");
-    const vapidPrivate = Deno.env.get("VAPID_PRIVATE_KEY");
-    const vapidContact = Deno.env.get("WEBPUSH_CONTACT_EMAIL") || "mailto:contact@m1ssion.eu";
-    
-    console.log('🔑 [WEBPUSH-SEND] VAPID keys status:', {
-      hasPublic: !!vapidPublic,
-      hasPrivate: !!vapidPrivate,
-      contact: vapidContact
-    });
-    
-    if (!vapidPublic || !vapidPrivate) {
-      console.error('❌ [WEBPUSH-SEND] Missing VAPID keys - cannot proceed');
-      return new Response(JSON.stringify({ error: "Missing VAPID keys" }), {
-        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-        status: 500,
-      });
-    }
-
-    // Set VAPID details
-    webpush.setVapidDetails(vapidContact, vapidPublic, vapidPrivate);
 
     let normalizedSubs: NormalizedSubscription[] = [];
 
@@ -304,19 +314,31 @@ serve(async (req) => {
 
     console.log('📦 [WEBPUSH-SEND] Final payload:', notificationPayload);
 
-    // Send notifications
+    // Send notifications using Web Crypto
     const results = [];
     for (const sub of normalizedSubs) {
       try {
-        console.log(`🚀 [WEBPUSH-SEND] Sending to:`, sub.vendorHost, `(${sub.provider})`);
+        const endpointHost = sub.vendorHost;
+        const hasP256dh = !!sub.keys.p256dh;
+        const hasAuth = !!sub.keys.auth;
+        const keysAt = sub.keys ? 'object' : 'missing';
+        const providerDetected = sub.provider;
         
-        const res = await webpush.sendNotification(sub as any, notificationPayload);
+        console.log(`🚀 [WEBPUSH-SEND] Sending to:`, {
+          endpointHost,
+          hasP256dh,
+          hasAuth,
+          keysAt,
+          providerDetected
+        });
         
-        console.log(`✅ [WEBPUSH-SEND] Success:`, sub.vendorHost, 'Status:', res.statusCode);
+        const res = await sendWebPushNotification(sub, notificationPayload);
+        
+        console.log(`✅ [WEBPUSH-SEND] Success:`, endpointHost, 'Status:', res.status);
         results.push({
           endpoint: sub.endpoint.substring(0, 50) + '...',
           success: true,
-          status: res.statusCode,
+          status: res.status,
           provider: sub.provider
         });
       } catch (e: any) {
@@ -325,7 +347,7 @@ serve(async (req) => {
           endpoint: sub.endpoint.substring(0, 50) + '...',
           success: false,
           error: e.message,
-          status: e.statusCode || 500,
+          status: e.status || 500,
           provider: sub.provider
         });
       }
@@ -345,29 +367,13 @@ serve(async (req) => {
     });
 
   } catch (e: any) {
-    console.error('❌ [WEBPUSH-SEND] Detailed error analysis:');
-    console.error('❌ [WEBPUSH-SEND] Error type:', e.constructor.name);
-    console.error('❌ [WEBPUSH-SEND] Error message:', e.message);
-    console.error('❌ [WEBPUSH-SEND] Error stack (shortened):', e.stack?.substring(0, 500));
+    console.error('[WEBPUSH-SEND] FATAL', e, e?.stack);
     
-    // Get the first normalized subscription for debugging
-    const firstNormalizedSub = normalizedSubs?.[0];
-    
-    const errorResponse = {
-      error: e.message ?? String(e),
-      status: e.statusCode || 500,
-      stack: e.stack?.substring(0, 200), // Shortened stack
-      firstSubscription: firstNormalizedSub ? {
-        endpointHost: firstNormalizedSub.vendorHost,
-        provider: firstNormalizedSub.provider
-      } : null,
-      origin: req.headers.get("Origin"),
-      body: e.body,
-      headers: e.headers,
-    };
-    
-    return new Response(JSON.stringify(errorResponse), {
-      headers: { "content-type": "application/json", ...corsHeaders(origin) },
+    return new Response(JSON.stringify({
+      error: "internal",
+      message: String(e)
+    }), {
+      headers: { "content-type": "application/json" },
       status: 500,
     });
   }
