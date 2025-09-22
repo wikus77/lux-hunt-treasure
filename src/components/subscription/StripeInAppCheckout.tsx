@@ -16,12 +16,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
-import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
-import { assertPkMatchesMode } from '@/lib/stripe/guard';
 
-// Initialize Stripe using fallback for better compatibility
-import { getStripeSafe } from '@/lib/stripeFallback';
-const stripePromise = getStripeSafe();
+// Initialize Stripe - M1SSION™ Project Key LIVE
+const stripePromise = loadStripe("pk_live_51QWy1JJ6V46p1E83lB4LKnZAH5oLGBgM9IwK6Jj9iMIgKiojGRAqv3bUhc7Jxuu9Xjux2tYyg4kbnW2LGMfDODJW00SH0X7LvW");
 
 interface StripeInAppCheckoutProps {
   config: PaymentConfig;
@@ -47,31 +44,16 @@ const CheckoutForm: React.FC<{
     const createPaymentIntent = async () => {
       try {
         console.log('🔥 M1SSION™ Creating payment intent for:', config.type, config);
-
-        // Guard: Ensure client pk_* matches server sk_* mode
-        try {
-          await PaymentErrorHandler.retryWithBackoff(async () => {
-            const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-            if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
-            assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-          });
-        } catch (e) {
-          await PaymentErrorHandler.handlePaymentError(e, 'payment_intent_creation');
-          return;
-        }
         
-        const { data, error } = await supabase.functions.invoke('stripe-create-payment-intent', {
+        const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
-            amountCents: config.amount, // Already in cents
+            user_id: user.id,
+            plan: config.plan || config.type,
+            amount: config.amount,
             currency: config.currency || 'eur',
-            metadata: {
-              user_id: user.id,
-              plan: config.plan || config.type,
-              payment_type: config.type,
-              description: config.description,
-              source: 'M1SSION_PWA',
-              ...config.metadata
-            }
+            payment_type: config.type,
+            description: config.description,
+            metadata: config.metadata
           }
         });
 
@@ -81,8 +63,8 @@ const CheckoutForm: React.FC<{
           return;
         }
 
-        if (data?.clientSecret) {
-          setClientSecret(data.clientSecret);
+        if (data?.client_secret) {
+          setClientSecret(data.client_secret);
           console.log('✅ M1SSION™ Payment intent created successfully');
         }
       } catch (error) {
@@ -113,18 +95,6 @@ const CheckoutForm: React.FC<{
 
     try {
       console.log('🚀 M1SSION™ Processing payment...');
-
-      // Guard again at confirmation time
-      try {
-        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-        if (!modeErr) {
-          assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-        }
-      } catch (e) {
-        await PaymentErrorHandler.handlePaymentError(e, 'payment_confirmation');
-        setLoading(false);
-        return;
-      }
 
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {

@@ -82,12 +82,12 @@
   .mobile-optimized {
     font-size: 16px; /* Prevent zoom on input focus */
   }
+  
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
-
-/* Tailwind utilities registration for custom classes used with @apply */
-.mobile-touch-target { min-height: 44px; min-width: 44px; }
-.mobile-optimized { font-size: 16px; }
-.touch-manipulation { touch-action: manipulation; }
 
 /* Retina Display Optimizations */
 @media (-webkit-min-device-pixel-ratio: 2) {

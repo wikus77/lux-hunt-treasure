@@ -1,6 +1,5 @@
 
 /**
- * M1SSION™ — AuthProvider Memory Leak Fix & PWA Optimizations
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
  * AuthProvider - Sistema unificato di autenticazione per M1SSION™
@@ -37,10 +36,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [userRoles, setUserRoles] = useState<string[]>([]);
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
 
-  // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized with Cache Clear + AbortController
+  // INIZIALIZZAZIONE SESSIONE - PWA Safari iOS Optimized with Cache Clear
   useEffect(() => {
     let isMounted = true;
-    const abortController = new AbortController();
 
   const initializeAuth = async () => {
     try {
@@ -128,17 +126,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   initializeAuth();
 
-  // Cleanup - MEMORY LEAK FIX
+  // Cleanup
   return () => {
     isMounted = false;
-    abortController.abort();
   };
   }, []);
 
-  // LISTENER STATO AUTH - Gestione eventi Supabase + MEMORY LEAK FIX
+  // LISTENER STATO AUTH - Gestione eventi Supabase
   useEffect(() => {
     log("Setup auth state listener");
-    let timeoutId: NodeJS.Timeout | null = null;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
@@ -157,10 +153,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Don't auto-redirect admin - let normal routing take over
           }
           
-          // PWA iOS: Force reload once after login to stabilize - MEMORY LEAK FIX
+          // PWA iOS: Force reload once after login to stabilize
           if ((window as any).Capacitor || navigator.userAgent.includes('Safari')) {
             log("🔄 PWA iOS: Post-login cache refresh");
-            timeoutId = setTimeout(() => {
+            setTimeout(() => {
               if (!sessionStorage.getItem('auth_reload_done')) {
                 sessionStorage.setItem('auth_reload_done', 'true');
                 window.location.reload();
@@ -179,22 +175,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     );
 
-    // Cleanup - MEMORY LEAK FIX
+    // Cleanup
     return () => {
       log("Cleanup auth listener");
       subscription.unsubscribe();
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
     };
   }, []);
 
-  // PWA VISIBILITY HANDLER - Safari iOS ottimizzato + MEMORY LEAK FIX
+  // PWA VISIBILITY HANDLER - Safari iOS ottimizzato
   useEffect(() => {
-    const abortController = new AbortController();
-    
     const handleVisibilityChange = async () => {
-      if (document.visibilityState === 'visible' && !isLoading && !abortController.signal.aborted) {
+      if (document.visibilityState === 'visible' && !isLoading) {
         log("PWA tornata attiva - verifica sessione");
         
         try {
@@ -207,9 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(currentSession.user);
           }
         } catch (error) {
-          if (!abortController.signal.aborted) {
-            log("Errore verifica sessione visibility", error);
-          }
+          log("Errore verifica sessione visibility", error);
         }
       }
     };
@@ -217,17 +206,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Solo per PWA installate
     if (window.matchMedia('(display-mode: standalone)').matches || 
         (window.navigator as any).standalone === true) {
-      document.addEventListener('visibilitychange', handleVisibilityChange, { signal: abortController.signal });
+      document.addEventListener('visibilitychange', handleVisibilityChange);
       
       return () => {
-        abortController.abort();
         document.removeEventListener('visibilitychange', handleVisibilityChange);
       };
     }
-
-    return () => {
-      abortController.abort();
-    };
   }, [session, isLoading]);
 
   // FETCH USER ROLES - Sistema unificato

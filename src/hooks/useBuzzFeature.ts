@@ -1,7 +1,4 @@
 
-// M1SSION™ — BUZZ Feature with Anti-Double-Tap Protection
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import useHasPaymentMethod from "@/hooks/useHasPaymentMethod";
@@ -13,12 +10,6 @@ import { useBuzzNavigation } from "@/hooks/buzz/useBuzzNavigation";
 import { useBuzzApi } from "@/hooks/buzz/useBuzzApi";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { supabase } from "@/integrations/supabase/client";
-import { 
-  canExecuteBuzz, 
-  startBuzzProcessing, 
-  endBuzzProcessing, 
-  getRemainingDebounceTime 
-} from "@/utils/buzzDebounce";
 
 // Funzione per generare indizi realmente univoci
 const generateUniqueClue = (userId: string, buzzCount: number): string => {
@@ -96,28 +87,10 @@ export const useBuzzFeature = () => {
   }, [savePaymentMethod, navigate, initializeSound]);
 
   const handleBuzzClick = async () => {
-    // ANTI-DOUBLE-TAP PROTECTION
-    if (!canExecuteBuzz()) {
-      const remaining = getRemainingDebounceTime();
-      if (remaining > 0) {
-        toast.error(`Attendi ${Math.ceil(remaining / 1000)} secondi prima del prossimo BUZZ`, {
-          description: "Prevenzione doppio tap attiva"
-        });
-      } else {
-        toast.error("BUZZ già in elaborazione...", {
-          description: "Attendi il completamento"
-        });
-      }
-      return;
-    }
-
     if (!hasPaymentMethod) {
       navigateToPaymentMethods(getNextVagueClue());
       return;
     }
-    
-    // Start debounce protection
-    startBuzzProcessing();
     
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -146,7 +119,6 @@ export const useBuzzFeature = () => {
         console.error("❌ Errore risposta BUZZ API:", response.error);
         toast.error(response.error || "Errore durante l'elaborazione dell'indizio");
         setShowDialog(false);
-        endBuzzProcessing(); // End debounce on error
         return;
       }
       
@@ -207,16 +179,13 @@ export const useBuzzFeature = () => {
         
         setShowExplosion(true);
         setShowDialog(false);
-        endBuzzProcessing(); // End debounce on success
       } catch (saveError) {
         console.error("❌ Error saving clue:", saveError);
-        endBuzzProcessing(); // End debounce on save error
       }
     } catch (error) {
       console.error("❌ Error in buzz process:", error);
       toast.error("Si è verificato un errore");
       setShowDialog(false);
-      endBuzzProcessing(); // End debounce on error
     }
   };
 

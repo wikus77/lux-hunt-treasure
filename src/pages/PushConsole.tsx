@@ -9,7 +9,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Send, Users, User, Loader2, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { sendAdminBroadcast } from '@/lib/sendAdminBroadcast';
 
 export function PushConsole() {
   const [title, setTitle] = useState("");
@@ -63,7 +62,15 @@ export function PushConsole() {
     setResult(null);
 
     try {
-      // Prepare payload for webpush-admin-broadcast
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      
+      if (!token) {
+        toast.error("Authentication required");
+        setLoading(false);
+        return;
+      }
+
       const targetPayload = target === "all" 
         ? { all: true }
         : { user_ids_csv: userIdsCsv.trim() };
@@ -77,26 +84,36 @@ export function PushConsole() {
 
       console.log("📤 Sending admin broadcast:", payload);
 
-      // Use the new helper function that handles JWT automatically
-      const resultData = await sendAdminBroadcast(payload);
+      const projectRef = "vkjrqirvdvjbemsfzxof"; // Your project ref
+      const response = await fetch(`https://${projectRef}.functions.supabase.co/webpush-admin-broadcast`, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "content-type": "application/json",
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+          "authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await response.json().catch(() => ({}));
+      const resultData = { status: response.status, ...json };
       
       setResult(resultData);
 
-      if (resultData.success !== false) {
-        toast.success(`✅ Push sent: ${resultData.success}/${resultData.total} successful`);
+      if (response.ok && json.success !== false) {
+        toast.success(`✅ Push sent: ${json.success}/${json.total} successful`);
       } else {
-        toast.error(`❌ Error: ${resultData.error || 'Unknown error'}`);
+        if (response.status === 403) {
+          toast.error("❌ Accesso non autorizzato: aggiungi l'UUID all'elenco ADMIN_USER_IDS");
+        } else {
+          toast.error(`❌ Error: ${json.error || 'Unknown error'}`);
+        }
       }
 
     } catch (error: any) {
       console.error("Push broadcast error:", error);
-      
-      if (error.message.includes('Unauthorized') || error.message.includes('401')) {
-        toast.error("❌ Accesso non autorizzato: verifica di essere admin");
-      } else {
-        toast.error(`❌ Error: ${error.message}`);
-      }
-      
+      toast.error(`Network error: ${error.message}`);
       setResult({ error: error.message });
     } finally {
       setLoading(false);

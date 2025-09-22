@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from './useUnifiedAuth';
-import { getActiveSubscription } from '@/lib/subscriptions';
 
 interface AccessControlState {
   canAccess: boolean;
@@ -77,38 +76,7 @@ export const useAccessControl = (): AccessControlState => {
           return;
         }
 
-        // 🆓 FREE PLAN BYPASS - IMMEDIATE ACCESS (SOLUZIONE B)
-        const rawPlan = userProfile.subscription_plan || '';
-        const planLower = rawPlan.toLowerCase();
-        if (!rawPlan || planLower.includes('free') || planLower.includes('base')) {
-          console.log('🆓 useAccessControl - FREE/BASE/EMPTY PLAN BYPASS (Test mode)');
-          setState({
-            canAccess: true,
-            isLoading: false,
-            accessStartDate: new Date(),
-            subscriptionPlan: rawPlan || 'free',
-            status: 'free_access_enabled',
-            timeUntilAccess: null
-          });
-          return;
-        }
-
-        // Fallback bypass: se la tabella subscriptions ha un FREE attivo → accesso immediato
-        const activeSub = await getActiveSubscription(supabase, user.id);
-        if (activeSub?.plan?.toLowerCase() === 'free') {
-          console.log('🆓 useAccessControl - FREE BYPASS via subscriptions (Test mode)');
-          setState({
-            canAccess: true,
-            isLoading: false,
-            accessStartDate: new Date(),
-            subscriptionPlan: 'free',
-            status: 'free_access_enabled_subscriptions',
-            timeUntilAccess: null
-          });
-          return;
-        }
-
-        // Check mission access via database function (solo per piani premium)
+        // Check mission access via database function
         const { data: canAccessData, error: accessError } = await supabase
           .rpc('can_user_access_mission', { user_id: user.id });
 

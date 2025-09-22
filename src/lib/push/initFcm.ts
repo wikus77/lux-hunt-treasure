@@ -19,12 +19,8 @@ export async function initFcmAndGetToken(): Promise<string | null> {
   // @ts-ignore
   if (!firebase.messaging.isSupported()) return null;
 
-  // 3) BLINDATA: Use existing main SW registration
-  const reg = await navigator.serviceWorker.getRegistration('/');
-  if (!reg) {
-    console.warn('[M1SSION FCM] No main SW registration found - PWA Stabilizer should handle this');
-    return null;
-  }
+  // 3) assicura SW (should be /firebase-messaging-sw.js for m1ssion.eu)
+  const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
   await navigator.serviceWorker.ready;
 
   // 4) permessi

@@ -566,27 +566,6 @@ export type Database = {
         }
         Relationships: []
       }
-      category_tag_map: {
-        Row: {
-          category: string
-          created_at: string | null
-          tags: string[]
-          updated_at: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          tags: string[]
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          tags?: string[]
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       checkout_sessions: {
         Row: {
           amount_total: number | null
@@ -937,90 +916,6 @@ export type Database = {
         }
         Relationships: []
       }
-      external_feed_items: {
-        Row: {
-          brand: string | null
-          content_hash: string
-          created_at: string
-          id: string
-          locale: string | null
-          published_at: string
-          score: number | null
-          source: string
-          summary: string | null
-          tags: string[] | null
-          title: string
-          url: string
-        }
-        Insert: {
-          brand?: string | null
-          content_hash: string
-          created_at?: string
-          id?: string
-          locale?: string | null
-          published_at: string
-          score?: number | null
-          source: string
-          summary?: string | null
-          tags?: string[] | null
-          title: string
-          url: string
-        }
-        Update: {
-          brand?: string | null
-          content_hash?: string
-          created_at?: string
-          id?: string
-          locale?: string | null
-          published_at?: string
-          score?: number | null
-          source?: string
-          summary?: string | null
-          tags?: string[] | null
-          title?: string
-          url?: string
-        }
-        Relationships: []
-      }
-      external_feed_sources: {
-        Row: {
-          created_at: string | null
-          enabled: boolean | null
-          id: string
-          keywords: string[] | null
-          kind: string
-          locale: string
-          tags: string[] | null
-          updated_at: string | null
-          url: string
-          weight: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          enabled?: boolean | null
-          id: string
-          keywords?: string[] | null
-          kind: string
-          locale: string
-          tags?: string[] | null
-          updated_at?: string | null
-          url: string
-          weight?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          enabled?: boolean | null
-          id?: string
-          keywords?: string[] | null
-          kind?: string
-          locale?: string
-          tags?: string[] | null
-          updated_at?: string | null
-          url?: string
-          weight?: number | null
-        }
-        Relationships: []
-      }
       fcm_subscriptions: {
         Row: {
           created_at: string | null
@@ -1084,72 +979,6 @@ export type Database = {
           updated_at?: string | null
           user_agent?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      feed_crawler_runs: {
-        Row: {
-          created_at: string | null
-          error_details: Json | null
-          finished_at: string | null
-          id: string
-          items_fetched: number | null
-          items_new: number | null
-          items_skipped: number | null
-          sources_count: number | null
-          started_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_details?: Json | null
-          finished_at?: string | null
-          id?: string
-          items_fetched?: number | null
-          items_new?: number | null
-          items_skipped?: number | null
-          sources_count?: number | null
-          started_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          error_details?: Json | null
-          finished_at?: string | null
-          id?: string
-          items_fetched?: number | null
-          items_new?: number | null
-          items_skipped?: number | null
-          sources_count?: number | null
-          started_at?: string | null
-        }
-        Relationships: []
-      }
-      feed_scoring_stats: {
-        Row: {
-          average_score: number | null
-          created_at: string | null
-          discard_reasons: Json | null
-          id: string
-          run_timestamp: string | null
-          scoring_mode: string | null
-          total_processed: number | null
-        }
-        Insert: {
-          average_score?: number | null
-          created_at?: string | null
-          discard_reasons?: Json | null
-          id?: string
-          run_timestamp?: string | null
-          scoring_mode?: string | null
-          total_processed?: number | null
-        }
-        Update: {
-          average_score?: number | null
-          created_at?: string | null
-          discard_reasons?: Json | null
-          id?: string
-          run_timestamp?: string | null
-          scoring_mode?: string | null
-          total_processed?: number | null
         }
         Relationships: []
       }
@@ -1264,39 +1093,6 @@ export type Database = {
         }
         Relationships: []
       }
-      idempotency_keys: {
-        Row: {
-          created_at: string
-          expires_at: string
-          id: string
-          key: string
-          request_hash: string
-          response_data: Json | null
-          status_code: number | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          expires_at: string
-          id?: string
-          key: string
-          request_hash: string
-          response_data?: Json | null
-          status_code?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          expires_at?: string
-          id?: string
-          key?: string
-          request_hash?: string
-          response_data?: Json | null
-          status_code?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       intelligence_tool_usage: {
         Row: {
           created_at: string
@@ -1320,45 +1116,6 @@ export type Database = {
           mission_id?: string | null
           tool_name?: string
           used_on?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      interest_signals: {
-        Row: {
-          category: string | null
-          device: string | null
-          id: string
-          keywords: string[] | null
-          meta: Json | null
-          section: string | null
-          session_id: string
-          ts: string
-          type: string
-          user_id: string
-        }
-        Insert: {
-          category?: string | null
-          device?: string | null
-          id?: string
-          keywords?: string[] | null
-          meta?: Json | null
-          section?: string | null
-          session_id: string
-          ts?: string
-          type: string
-          user_id: string
-        }
-        Update: {
-          category?: string | null
-          device?: string | null
-          id?: string
-          keywords?: string[] | null
-          meta?: Json | null
-          section?: string | null
-          session_id?: string
-          ts?: string
-          type?: string
           user_id?: string
         }
         Relationships: []
@@ -1477,36 +1234,6 @@ export type Database = {
         }
         Relationships: []
       }
-      map_notes: {
-        Row: {
-          created_at: string
-          id: string
-          importance: string
-          marker_id: string | null
-          text: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          importance?: string
-          marker_id?: string | null
-          text: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          importance?: string
-          marker_id?: string | null
-          text?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       map_points: {
         Row: {
           created_at: string
@@ -1561,36 +1288,6 @@ export type Database = {
         }
         Relationships: []
       }
-      marker_drops: {
-        Row: {
-          bbox: Json | null
-          created_at: string
-          created_by: string | null
-          created_count: number | null
-          id: string
-          seed: string | null
-          summary: Json
-        }
-        Insert: {
-          bbox?: Json | null
-          created_at?: string
-          created_by?: string | null
-          created_count?: number | null
-          id?: string
-          seed?: string | null
-          summary: Json
-        }
-        Update: {
-          bbox?: Json | null
-          created_at?: string
-          created_by?: string | null
-          created_count?: number | null
-          id?: string
-          seed?: string | null
-          summary?: Json
-        }
-        Relationships: []
-      }
       marker_rewards: {
         Row: {
           created_at: string | null
@@ -1625,12 +1322,9 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string | null
-          drop_id: string | null
           id: string
           lat: number
           lng: number
-          reward_payload: Json | null
-          reward_type: Database["public"]["Enums"]["reward_type"] | null
           title: string
           updated_at: string | null
           visible_from: string | null
@@ -1641,12 +1335,9 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string | null
-          drop_id?: string | null
           id?: string
           lat: number
           lng: number
-          reward_payload?: Json | null
-          reward_type?: Database["public"]["Enums"]["reward_type"] | null
           title: string
           updated_at?: string | null
           visible_from?: string | null
@@ -1657,12 +1348,9 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string | null
-          drop_id?: string | null
           id?: string
           lat?: number
           lng?: number
-          reward_payload?: Json | null
-          reward_type?: Database["public"]["Enums"]["reward_type"] | null
           title?: string
           updated_at?: string | null
           visible_from?: string | null
@@ -1670,15 +1358,7 @@ export type Database = {
           zoom_max?: number | null
           zoom_min?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "markers_drop_id_fkey"
-            columns: ["drop_id"]
-            isOneToOne: false
-            referencedRelation: "marker_drops"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       mission_targets: {
         Row: {
@@ -1815,69 +1495,6 @@ export type Database = {
           referrer?: string | null
           updated_at?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      notification_counters: {
-        Row: {
-          unread_count: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          unread_count?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          unread_count?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      notification_preferences: {
-        Row: {
-          category: string
-          created_at: string | null
-          enabled: boolean
-          id: string
-          updated_at: string | null
-          user_id: string
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          enabled?: boolean
-          id?: string
-          updated_at?: string | null
-          user_id: string
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          enabled?: boolean
-          id?: string
-          updated_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      notification_quota: {
-        Row: {
-          last_reset: string
-          sent_today: number
-          user_id: string
-        }
-        Insert: {
-          last_reset?: string
-          sent_today?: number
-          user_id: string
-        }
-        Update: {
-          last_reset?: string
-          sent_today?: number
-          user_id?: string
         }
         Relationships: []
       }
@@ -2220,7 +1837,6 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           can_access_app: boolean | null
-          choose_plan_seen: boolean
           city: string | null
           country: string | null
           created_at: string
@@ -2233,7 +1849,6 @@ export type Database = {
           full_name: string | null
           id: string
           investigative_style: string | null
-          is_admin: boolean
           is_pre_registered: boolean | null
           language: string | null
           last_cookie_banner_shown: string | null
@@ -2272,7 +1887,6 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           can_access_app?: boolean | null
-          choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
@@ -2285,7 +1899,6 @@ export type Database = {
           full_name?: string | null
           id: string
           investigative_style?: string | null
-          is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
@@ -2324,7 +1937,6 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           can_access_app?: boolean | null
-          choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
@@ -2337,7 +1949,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           investigative_style?: string | null
-          is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
@@ -2364,24 +1975,6 @@ export type Database = {
           updated_at?: string
           username?: string | null
           weekly_hints?: string | null
-        }
-        Relationships: []
-      }
-      push_config: {
-        Row: {
-          key: string
-          updated_at: string
-          value: Json
-        }
-        Insert: {
-          key: string
-          updated_at?: string
-          value: Json
-        }
-        Update: {
-          key?: string
-          updated_at?: string
-          value?: Json
         }
         Relationships: []
       }
@@ -3075,33 +2668,6 @@ export type Database = {
         }
         Relationships: []
       }
-      stripe_webhook_events: {
-        Row: {
-          created_at: string
-          event_data: Json | null
-          event_type: string
-          id: string
-          processed_at: string
-          stripe_event_id: string
-        }
-        Insert: {
-          created_at?: string
-          event_data?: Json | null
-          event_type: string
-          id?: string
-          processed_at?: string
-          stripe_event_id: string
-        }
-        Update: {
-          created_at?: string
-          event_data?: Json | null
-          event_type?: string
-          id?: string
-          processed_at?: string
-          stripe_event_id?: string
-        }
-        Relationships: []
-      }
       subscription_tiers: {
         Row: {
           buzz_days: string[]
@@ -3170,47 +2736,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      suggested_notifications: {
-        Row: {
-          created_at: string
-          dedupe_key: string
-          id: string
-          item_id: string | null
-          reason: string
-          score: number
-          sent_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          dedupe_key: string
-          id?: string
-          item_id?: string | null
-          reason: string
-          score: number
-          sent_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          dedupe_key?: string
-          id?: string
-          item_id?: string | null
-          reason?: string
-          score?: number
-          sent_at?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suggested_notifications_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "external_feed_items"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       user_badges: {
         Row: {
@@ -3621,24 +3146,6 @@ export type Database = {
           id?: string
           reward_value?: number | null
           title?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_interest_profile: {
-        Row: {
-          topics: Json
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          topics?: Json
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          topics?: Json
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -4381,131 +3888,8 @@ export type Database = {
         }
         Relationships: []
       }
-      geo_push_delivery_state_v: {
-        Row: {
-          enter_count: number | null
-          last_enter_at: string | null
-          last_sent_at: string | null
-          marker_id: string | null
-          sent_count: number | null
-          user_id: string | null
-        }
-        Insert: {
-          enter_count?: number | null
-          last_enter_at?: string | null
-          last_sent_at?: string | null
-          marker_id?: string | null
-          sent_count?: number | null
-          user_id?: string | null
-        }
-        Update: {
-          enter_count?: number | null
-          last_enter_at?: string | null
-          last_sent_at?: string | null
-          marker_id?: string | null
-          sent_count?: number | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      geo_push_markers_v: {
-        Row: {
-          id: string | null
-          lat: number | null
-          lng: number | null
-          title: string | null
-        }
-        Relationships: []
-      }
-      geo_push_positions_v: {
-        Row: {
-          lat: number | null
-          lng: number | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          lat?: number | null
-          lng?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          lat?: number | null
-          lng?: number | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      geo_push_settings_v: {
-        Row: {
-          key: string | null
-          updated_at: string | null
-          value: Json | null
-        }
-        Insert: {
-          key?: string | null
-          updated_at?: string | null
-          value?: Json | null
-        }
-        Update: {
-          key?: string | null
-          updated_at?: string | null
-          value?: Json | null
-        }
-        Relationships: []
-      }
-      v_latest_webpush_subscription: {
-        Row: {
-          created_at: string | null
-          endpoint: string | null
-          sub_id: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      v_pref_users: {
-        Row: {
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      v_user_resolved_tags: {
-        Row: {
-          active_categories: number | null
-          resolved_tags: string[] | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
-      v_user_suggest_throttle: {
-        Row: {
-          last_sent_at: string | null
-          total_sent: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
-      _gen_unique_agent_code: {
-        Args: { len?: number }
-        Returns: string
-      }
-      _upsert_premium_feed_source: {
-        Args: {
-          p_enabled: boolean
-          p_id: string
-          p_keywords: string[]
-          p_kind: string
-          p_locale: string
-          p_tags: string[]
-          p_url: string
-          p_weight: number
-        }
-        Returns: undefined
-      }
       add_referral_credits: {
         Args: { credits_to_add: number; user_email: string }
         Returns: undefined
@@ -4593,10 +3977,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
-      cleanup_expired_idempotency_keys: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       cleanup_old_abuse_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -4629,42 +4009,9 @@ export type Database = {
         Args: { since: string }
         Returns: number
       }
-      create_free_subscription: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       exec_sql: {
         Args: { sql: string }
         Returns: Json
-      }
-      fn_candidates_for_user: {
-        Args: { p_limit?: number; p_user_id: string }
-        Returns: {
-          feed_item_id: string
-          locale: string
-          published_at: string
-          score: number
-          tags: string[]
-          title: string
-          url: string
-        }[]
-      }
-      fn_markers_bulk_insert: {
-        Args: { _drop_id?: string; _rows: Json } | { markers: Json }
-        Returns: {
-          id: string
-        }[]
-      }
-      fn_markers_secure_insert: {
-        Args: {
-          p_drop_id: string
-          p_lat: number
-          p_lng: number
-          p_reward_payload?: Json
-          p_reward_type: Database["public"]["Enums"]["reward_type"]
-          p_title: string
-        }
-        Returns: string
       }
       force_subscription_sync: {
         Args: { p_user_id: string }
@@ -4689,36 +4036,6 @@ export type Database = {
       generate_unique_agent_code: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      geo_push_log_delivery: {
-        Args: {
-          p_body: string
-          p_distance_m: number
-          p_marker_id: string
-          p_payload: Json
-          p_provider: string
-          p_reason: string
-          p_response: Json
-          p_sent: boolean
-          p_title: string
-          p_user_id: string
-        }
-        Returns: string
-      }
-      geo_push_touch_watermark: {
-        Args: { p_name: string; p_ts: string }
-        Returns: undefined
-      }
-      geo_push_upsert_state: {
-        Args: {
-          p_enter_inc: number
-          p_last_enter_at: string
-          p_last_sent_at: string
-          p_marker_id: string
-          p_sent_inc: number
-          p_user_id: string
-        }
-        Returns: undefined
       }
       get_active_subscription: {
         Args: { p_user_id: string }
@@ -4758,14 +4075,6 @@ export type Database = {
           year_num: number
         }[]
       }
-      get_drop_stats: {
-        Args: { drop_uuid: string }
-        Returns: {
-          active_count: number
-          reward_type: string
-          total_count: number
-        }[]
-      }
       get_legal_document: {
         Args: { document_type: string }
         Returns: {
@@ -4800,10 +4109,6 @@ export type Database = {
       get_my_balance: {
         Args: Record<PropertyKey, never>
         Returns: Json
-      }
-      get_unread_count: {
-        Args: { p_user_id?: string }
-        Returns: number
       }
       get_user_by_email: {
         Args: { email_param: string }
@@ -4883,10 +4188,6 @@ export type Database = {
         Args: { p_amount: number; p_user: string }
         Returns: undefined
       }
-      interest_track: {
-        Args: { payload: Json }
-        Returns: undefined
-      }
       is_admin: {
         Args: { user_id?: string }
         Returns: boolean
@@ -4943,14 +4244,6 @@ export type Database = {
           p_user_agent?: string
           p_user_id: string
         }
-        Returns: string
-      }
-      mark_choose_plan_seen: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      normalize_feed_url: {
-        Args: { input_url: string }
         Returns: string
       }
       perform_security_check: {
@@ -5032,10 +4325,6 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: undefined
       }
-      trigger_mirror_push_harvest: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
       update_personality_quiz_result: {
         Args: {
           p_assigned_description: string
@@ -5068,14 +4357,6 @@ export type Database = {
           p_user_id: string
         }
         Returns: Json
-      }
-      upsert_notification_counter: {
-        Args: { p_delta: number; p_user_id: string }
-        Returns: number
-      }
-      upsert_user_position: {
-        Args: { lat: number; lng: number; uid: string }
-        Returns: undefined
       }
       upsert_webpush_subscription: {
         Args: {
@@ -5112,12 +4393,6 @@ export type Database = {
     }
     Enums: {
       referral_status: "pending" | "registered"
-      reward_type:
-        | "BUZZ_FREE"
-        | "MESSAGE"
-        | "XP_POINTS"
-        | "EVENT_TICKET"
-        | "BADGE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5246,13 +4521,6 @@ export const Constants = {
   public: {
     Enums: {
       referral_status: ["pending", "registered"],
-      reward_type: [
-        "BUZZ_FREE",
-        "MESSAGE",
-        "XP_POINTS",
-        "EVENT_TICKET",
-        "BADGE",
-      ],
     },
   },
 } as const

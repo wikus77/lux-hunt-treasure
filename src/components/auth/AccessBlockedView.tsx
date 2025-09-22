@@ -1,13 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Clock, Shield, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
-import { getActiveSubscription } from '@/lib/subscriptions';
-import { supabase } from '@/integrations/supabase/client';
-import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface AccessBlockedViewProps {
   subscriptionPlan: string;
@@ -21,27 +18,6 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
   timeUntilAccess
 }) => {
   const { navigate } = useWouterNavigation();
-  const { getCurrentUser } = useUnifiedAuth();
-  const [realPlanName, setRealPlanName] = useState<string>('Free');
-
-  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  useEffect(() => {
-    async function fetchRealPlan() {
-      const user = getCurrentUser();
-      if (user?.id) {
-        const result = await getActiveSubscription(supabase, user.id);
-        const plan = result.plan || 'free';
-        setRealPlanName(plan);
-        
-        // SBLOCCO FREE: reindirizza subito se piano = 'free'
-        if (plan === 'free' && window.location.pathname !== '/choose-plan') {
-          navigate('/home', { replace: true });
-          return;
-        }
-      }
-    }
-    fetchRealPlan();
-  }, [getCurrentUser, navigate]);
 
   const formatTimeRemaining = (milliseconds: number): string => {
     const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
@@ -59,8 +35,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
       case 'GOLD': return 'Gold';
       case 'BLACK': return 'Black';
       case 'TITANIUM': return 'Titanium';
-      case 'FREE': return 'Free';
-      default: return 'Free'; // NESSUN fallback a "Titanium" 
+      default: return 'Base';
     }
   };
 
@@ -89,7 +64,7 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
 
         {/* Messaggio principale */}
         <p className="text-gray-300 mb-6">
-          L'accesso alla missione non è ancora disponibile per il tuo piano <span className="font-semibold text-cyan-400">{getPlanDisplayName(realPlanName)}</span>.
+          L'accesso alla missione non è ancora disponibile per il tuo piano <span className="font-semibold text-cyan-400">{getPlanDisplayName(subscriptionPlan)}</span>.
         </p>
 
         {/* Countdown */}
@@ -137,10 +112,10 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
 
         {/* Pulsanti azione */}
         <div className="space-y-3">
-          {(realPlanName.toLowerCase() === 'base' || realPlanName.toLowerCase() === 'free') && (
+          {subscriptionPlan.toLowerCase() === 'base' && (
             <Button
               onClick={() => {
-                navigate('/choose-plan?from=access-blocked&current_plan=' + encodeURIComponent(realPlanName));
+                navigate('/subscriptions?upgrade=true&from=access-blocked&current_plan=' + encodeURIComponent(subscriptionPlan));
               }}
               className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105"
             >
@@ -149,11 +124,11 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
           )}
           
             <Button
-              type="button"
               variant="outline"
-              onClick={() => navigate('/home', { replace: true })}
-              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 pointer-events-auto z-10"
-              style={{ pointerEvents: 'auto' }}
+              onClick={() => {
+                navigate('/home');
+              }}
+              className="w-full border-gray-600 text-gray-300 hover:bg-gray-800"
             >
               ← Torna alla homepage
             </Button>
