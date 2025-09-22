@@ -1,21 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { testWebPushHealth, testWebPushWithSubscriptions, testWebPushWithUserIds, formatTestResult, type WebPushTestResult } from '@/utils/webpushTest';
 
-export const WebPushDeploymentTest = () => {
-  const [healthResult, setHealthResult] = useState<WebPushTestResult | null>(null);
-  const [subscriptionTestResult, setSubscriptionTestResult] = useState<WebPushTestResult | null>(null);
-  const [userIdTestResult, setUserIdTestResult] = useState<WebPushTestResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+const PROJECT_REF = 'vkjrqirvdvjbemsfzxof';
+const FUNCTIONS_URL = `https://${PROJECT_REF}.functions.supabase.co`;
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+
+export const WebPushDeploymentTest: React.FC = () => {
+  const [healthResult, setHealthResult] = useState<any>(null);
+  const [subscriptionTestResult, setSubscriptionTestResult] = useState<any>(null);
+  const [userIdTestResult, setUserIdTestResult] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [subscriptions, setSubscriptions] = useState<any[]>([]);
   const [userIds, setUserIds] = useState<string[]>([]);
 
+  const formatTestResult = (result: any): string => {
+    const status = result.success ? '✅ SUCCESS' : '❌ FAILED';
+    const details = result.data ? JSON.stringify(result.data, null, 2) : result.error;
+    return `${status} (${result.status}) at ${result.timestamp}\n${details}`;
+  };
+
+  const testWebPushHealth = async () => {
+    console.log('🔍 Testing webpush-send health endpoint...');
+    
+    try {
+      const response = await fetch(`${FUNCTIONS_URL}/webpush-send/health`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        }
+      });
+      
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { rawResponse: text };
+      }
+      
+      return {
+        success: response.ok,
+        status: response.status,
+        data,
+        timestamp: new Date().toISOString()
+      };
+      
+    } catch (error: any) {
+      return {
+        success: false,
+        status: 0,
+        error: error?.message || 'Unknown error',
+        timestamp: new Date().toISOString()
+      };
+    }
+  };
+
+  const testWebPushWithSubscriptions = async (subs: any[]) => {
+    console.log('🔍 Testing webpush-send with subscriptions...');
+    
+    const payload = {
+      title: "M1SSION™ Test ✅",
+      body: "Push notification system test - catena blindata ripristinata!",
+      url: "https://m1ssion.eu/home"
+    };
+    
+    try {
+      const response = await fetch(`${FUNCTIONS_URL}/webpush-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          subscriptions: subs,
+          payload
+        })
+      });
+      
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { rawResponse: text };
+      }
+      
+      return {
+        success: response.ok,
+        status: response.status,
+        data,
+        timestamp: new Date().toISOString()
+      };
+      
+    } catch (error: any) {
+      return {
+        success: false,
+        status: 0,
+        error: error?.message || 'Unknown error',
+        timestamp: new Date().toISOString()
+      };
+    }
+  };
+
+  const testWebPushWithUserIds = async (ids: string[]) => {
+    console.log('🔍 Testing webpush-send with user_ids...');
+    
+    const payload = {
+      title: "M1SSION™ User Test ✅",
+      body: "Push notification system test via user_ids - catena blindata ripristinata!",
+      url: "https://m1ssion.eu/home"
+    };
+    
+    try {
+      const response = await fetch(`${FUNCTIONS_URL}/webpush-send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({
+          user_ids: ids,
+          payload
+        })
+      });
+      
+      const text = await response.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        data = { rawResponse: text };
+      }
+      
+      return {
+        success: response.ok,
+        status: response.status,
+        data,
+        timestamp: new Date().toISOString()
+      };
+      
+    } catch (error: any) {
+      return {
+        success: false,
+        status: 0,
+        error: error?.message || 'Unknown error',
+        timestamp: new Date().toISOString()
+      };
+    }
+  };
+
   const loadTestData = async () => {
     try {
-      // Carica subscriptions attive dal database
       const { data: subsData } = await supabase
         .from('push_subscriptions')
         .select('*')
@@ -36,11 +174,11 @@ export const WebPushDeploymentTest = () => {
     try {
       const result = await testWebPushHealth();
       setHealthResult(result);
-    } catch (error) {
+    } catch (error: any) {
       setHealthResult({
         success: false,
         status: 0,
-        error: error instanceof Error ? error.message : 'Errore sconosciuto',
+        error: error?.message || 'Errore sconosciuto',
         timestamp: new Date().toISOString()
       });
     }
@@ -52,11 +190,11 @@ export const WebPushDeploymentTest = () => {
     try {
       const result = await testWebPushWithSubscriptions(subscriptions);
       setSubscriptionTestResult(result);
-    } catch (error) {
+    } catch (error: any) {
       setSubscriptionTestResult({
         success: false,
         status: 0,
-        error: error instanceof Error ? error.message : 'Errore sconosciuto',
+        error: error?.message || 'Errore sconosciuto',
         timestamp: new Date().toISOString()
       });
     }
@@ -68,11 +206,11 @@ export const WebPushDeploymentTest = () => {
     try {
       const result = await testWebPushWithUserIds(userIds);
       setUserIdTestResult(result);
-    } catch (error) {
+    } catch (error: any) {
       setUserIdTestResult({
         success: false,
         status: 0,
-        error: error instanceof Error ? error.message : 'Errore sconosciuto',
+        error: error?.message || 'Errore sconosciuto',
         timestamp: new Date().toISOString()
       });
     }
@@ -88,11 +226,11 @@ export const WebPushDeploymentTest = () => {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     loadTestData();
   }, []);
 
-  const getStatusBadge = (result: WebPushTestResult | null) => {
+  const getStatusBadge = (result: any) => {
     if (!result) return <Badge variant="secondary">Non testato</Badge>;
     return result.success ? 
       <Badge variant="default" className="bg-success">✅ SUCCESS</Badge> : 
