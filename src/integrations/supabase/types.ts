@@ -1477,6 +1477,36 @@ export type Database = {
         }
         Relationships: []
       }
+      map_notes: {
+        Row: {
+          created_at: string
+          id: string
+          importance: string
+          marker_id: string | null
+          text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          importance?: string
+          marker_id?: string | null
+          text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          importance?: string
+          marker_id?: string | null
+          text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       map_points: {
         Row: {
           created_at: string
@@ -2143,6 +2173,7 @@ export type Database = {
           bio: string | null
           birth_date: string | null
           can_access_app: boolean | null
+          choose_plan_seen: boolean
           city: string | null
           country: string | null
           created_at: string
@@ -2155,6 +2186,7 @@ export type Database = {
           full_name: string | null
           id: string
           investigative_style: string | null
+          is_admin: boolean
           is_pre_registered: boolean | null
           language: string | null
           last_cookie_banner_shown: string | null
@@ -2193,6 +2225,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           can_access_app?: boolean | null
+          choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
@@ -2205,6 +2238,7 @@ export type Database = {
           full_name?: string | null
           id: string
           investigative_style?: string | null
+          is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
@@ -2243,6 +2277,7 @@ export type Database = {
           bio?: string | null
           birth_date?: string | null
           can_access_app?: boolean | null
+          choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
@@ -2255,6 +2290,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           investigative_style?: string | null
+          is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
           last_cookie_banner_shown?: string | null
@@ -2281,6 +2317,24 @@ export type Database = {
           updated_at?: string
           username?: string | null
           weekly_hints?: string | null
+        }
+        Relationships: []
+      }
+      push_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -4198,8 +4252,10 @@ export type Database = {
           endpoint: string
           id: string
           is_active: boolean
+          keys: Json | null
           p256dh: string
           platform: string | null
+          provider: string | null
           user_id: string
         }
         Insert: {
@@ -4208,8 +4264,10 @@ export type Database = {
           endpoint: string
           id?: string
           is_active?: boolean
+          keys?: Json | null
           p256dh: string
           platform?: string | null
+          provider?: string | null
           user_id: string
         }
         Update: {
@@ -4218,8 +4276,10 @@ export type Database = {
           endpoint?: string
           id?: string
           is_active?: boolean
+          keys?: Json | null
           p256dh?: string
           platform?: string | null
+          provider?: string | null
           user_id?: string
         }
         Relationships: []
@@ -4388,6 +4448,10 @@ export type Database = {
       }
     }
     Functions: {
+      _gen_unique_agent_code: {
+        Args: { len?: number }
+        Returns: string
+      }
       _upsert_premium_feed_source: {
         Args: {
           p_enabled: boolean
@@ -4523,6 +4587,10 @@ export type Database = {
       count_push_tokens_since: {
         Args: { since: string }
         Returns: number
+      }
+      create_free_subscription: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
       }
       exec_sql: {
         Args: { sql: string }
@@ -4811,6 +4879,10 @@ export type Database = {
         }
         Returns: string
       }
+      mark_choose_plan_seen: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       normalize_feed_url: {
         Args: { input_url: string }
         Returns: string
@@ -4935,6 +5007,10 @@ export type Database = {
         Args: { p_delta: number; p_user_id: string }
         Returns: number
       }
+      upsert_user_position: {
+        Args: { lat: number; lng: number; uid: string }
+        Returns: undefined
+      }
       upsert_webpush_subscription: {
         Args: {
           p_auth: string
@@ -4949,8 +5025,10 @@ export type Database = {
           endpoint: string
           id: string
           is_active: boolean
+          keys: Json | null
           p256dh: string
           platform: string | null
+          provider: string | null
           user_id: string
         }
       }
