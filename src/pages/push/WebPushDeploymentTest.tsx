@@ -10,7 +10,7 @@ export const WebPushDeploymentTest = () => {
   const [subscriptionTestResult, setSubscriptionTestResult] = useState<WebPushTestResult | null>(null);
   const [userIdTestResult, setUserIdTestResult] = useState<WebPushTestResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [subscriptions, setSubscriptions] = useState<any[]>([]);
+  const [subscriptions, setSubscriptions] = useState<Record<string, any>[]>([]);
   const [userIds, setUserIds] = useState<string[]>([]);
 
   const loadTestData = async () => {
