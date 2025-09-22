@@ -79,61 +79,14 @@
     <script type="text/plain" charset="UTF-8" src="https://cdn.cookie-script.com/s/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
     <script type="text/plain" charset="UTF-8" data-cookiescriptreport="report" src="https://report.cookie-script.com/r/2db074620da1ba3a3cc6c19025d1d99d.js"></script>
     
+    <!-- M1SSION™ Cleanup only -->
+    <script src="/sw-cleanup.js" defer></script>
     
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- 🔥 STRIPE GLOBAL SHIM - Previene errori "getStripe is not defined" + Pages.dev ENV -->
-    <script>
-      (function () {
-        // Anti ReferenceError se vecchi chunk chiamano getStripe troppo presto
-        if (!window.getStripe) {
-          window.getStripe = function () { 
-            console.warn('⚠️ getStripe called before initialization - returning null');
-            return null; 
-          };
-        }
-        
-        // Pages.dev ENV propagation per Stripe PK
-        if (window.ENV && window.ENV.VITE_STRIPE_PUBLISHABLE_KEY && !window.STRIPE_PK) {
-          window.STRIPE_PK = window.ENV.VITE_STRIPE_PUBLISHABLE_KEY;
-          console.log('✅ Stripe PK propagated from Pages.dev ENV');
-        }
-        
-        // Debug helper per Pages.dev
-        if (location.hostname.includes('.pages.dev')) {
-          console.log('🌐 Pages.dev environment detected');
-          window.DEBUG_PAGES = true;
-        }
-      })();
-    </script>
-    
-    <!-- © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ -->
-    <!-- Additional Stripe Shim for Enhanced Fallback -->
-    <script>
-      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Stripe Shim Globale
-      window.getStripe = window.getStripe || function() {
-        console.warn('[STRIPE-SHIM] getStripe chiamato prima dell\'inizializzazione - usa getStripeSafe()');
-        return Promise.resolve(null);
-      };
-      
-      // Propaga VITE_STRIPE_PUBLISHABLE_KEY se disponibile  
-      if (!window.__STRIPE_PK__ && typeof window !== 'undefined') {
-        try {
-          // Fallback per Cloudflare Pages - cerca in window.ENV se presente
-          const envKey = window.ENV?.VITE_STRIPE_PUBLISHABLE_KEY;
-          if (envKey && typeof envKey === 'string' && envKey.startsWith('pk_')) {
-            window.__STRIPE_PK__ = envKey;
-            console.log('[STRIPE-SHIM] ✅ PK propagato da window.ENV');
-          }
-        } catch (e) {
-          console.warn('[STRIPE-SHIM] ⚠️ Fallback PK non trovato in window.ENV');
-        }
-      }
-    </script>
     
     <!-- Service Worker Registration (single instance) -->
     <script>

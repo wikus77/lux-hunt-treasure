@@ -7,10 +7,9 @@ import { Badge } from '@/components/ui/badge';
 export const GeoDebugBanner = () => {
   const { isMonitoring, nearbyMarkers, lastCheck, error } = useGeoMarkerAlert();
   
-  // ⚡ PRODUZIONE: Solo se esplicitamente richiesto
-  const showDebug = !import.meta.env.PROD && 
-                   (window.location.hostname === 'localhost' || 
-                    window.location.search.includes('debug=geo'));
+  // Only show in development or with debug flag
+  const showDebug = window.location.hostname === 'localhost' || 
+                   window.location.search.includes('debug=geo');
   
   if (!showDebug) return null;
 

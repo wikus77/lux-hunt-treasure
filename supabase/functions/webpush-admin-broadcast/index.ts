@@ -15,45 +15,26 @@ const cors = (req: Request, init: ResponseInit = {}, body?: BodyInit) => {
   h.set("access-control-allow-origin", allow.includes(origin) ? origin : allow[0]);
   h.set("vary", "origin");
   h.set("access-control-allow-methods", "POST, OPTIONS");
-  h.set("access-control-allow-headers", "authorization, apikey, content-type, x-client-info, x-admin-token");
+  h.set("access-control-allow-headers", "authorization, apikey, content-type, x-client-info");
   return new Response(body, { ...init, headers: h });
 };
 
 const normalize = (ep: string) =>
   ep.replace(/^https:\/\/fcm\.googleapis\.com\/fcm\/send\//, "https://fcm.googleapis.com/wp/");
 
-const json = (b: unknown, s = 200) =>
-  new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return cors(req, { status: 204 });
-  
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } }
-    );
+    const auth = req.headers.get("authorization") ?? "";
+    const token = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    if (!token) return cors(req, { status: 401 }, JSON.stringify({ error: "Missing bearer" }));
 
-    // 1) Utente autenticato via JWT
-    const { data: { user }, error } = await supabase.auth.getUser();
-    if (error || !user) return cors(req, { status: 401 }, JSON.stringify({ error: 'Unauthorized access' }));
+    // verify minimal JWT and pull `sub`
+    const jwtPayload = JSON.parse(atob(token.split(".")[1] || "e30="));
+    const uid = jwtPayload?.sub as string | undefined;
+    const admins = (Deno.env.get("ADMIN_USER_IDS") ?? "").split(",").map(s => s.trim()).filter(Boolean);
+    if (!uid || !admins.includes(uid)) return cors(req, { status: 403 }, JSON.stringify({ error: "Forbidden" }));
 
-    // 2) Deve essere admin (profiles.is_admin) oppure presentare x-admin-token server-side
-    const { data: prof } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    const adminHeader = req.headers.get('x-admin-token');
-    const isAdminHeaderOK = !!adminHeader && adminHeader === Deno.env.get('PUSH_ADMIN_TOKEN');
-
-    if (!(prof?.is_admin || isAdminHeaderOK)) {
-      return cors(req, { status: 401 }, JSON.stringify({ error: 'Unauthorized access' }));
-    }
-
-    // >>> RESTO DELLA LOGICA DI INVIO ESISTENTE <<<
     const { title, body, url, target } = await req.json();
     if (!title || !body) return cors(req, { status: 400 }, JSON.stringify({ error: "Missing title/body" }));
 
@@ -72,8 +53,8 @@ Deno.serve(async (req) => {
       const ids = String(target.user_ids_csv).split(",").map((s)=>s.trim()).filter(Boolean);
       if (ids.length) q = q.in("user_id", ids);
     }
-    const { data: rows, error: dbError } = await q;
-    if (dbError) return cors(req, { status: 500 }, JSON.stringify({ error: dbError.message }));
+    const { data: rows, error } = await q;
+    if (error) return cors(req, { status: 500 }, JSON.stringify({ error: error.message }));
 
     let success = 0, failed = 0, deactivated = 0;
     const details: any[] = [];

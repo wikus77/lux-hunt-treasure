@@ -10,10 +10,7 @@ const PRESERVE_PATTERNS = [
   /console\.warn/,
   /\/\/ KEEP:/,
   /\/\* KEEP:/,
-  /CRITICAL.*console/,
-  /SECURITY.*console/,
-  /Production.*console/,
-  /safeLog/
+  /CRITICAL.*console/
 ];
 
 const REMOVE_PATTERNS = [

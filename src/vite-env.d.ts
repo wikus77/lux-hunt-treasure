@@ -1,5 +1,6 @@
 
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/client" />
 
 // Dichiarazione per Cookie Script
 interface Window {

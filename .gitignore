@@ -31,7 +31,3 @@ dist-ssr
 # Playwright
 playwright-report/
 test-results/
-
-# local only
-.dev.vars
-*.bak

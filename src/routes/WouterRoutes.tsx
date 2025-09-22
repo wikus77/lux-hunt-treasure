@@ -1,37 +1,18 @@
-// M1SSION™ — First Visit Landing Logic & PWA Routing
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// M1SSION™ - Wouter Routes for Capacitor iOS Compatibility
+// 🔐 FIRMATO: Joseph Mulè – CEO NIYVORA KFT™
 
-import React, { useState, useEffect } from "react";
-import { Route, Switch, useLocation } from "wouter";
-
-// Dev tools (conditionally loaded)
-const MarkersHealthcheck = React.lazy(() => import('../pages/dev/MarkersHealthcheck'));
-
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Database-based plan choice tracking instead of localStorage
+import React from "react";
+import { Route, Switch } from "wouter";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import ProtectedRoute from "@/components/auth/WouterProtectedRoute";
 import { IOSSafeAreaOverlay } from "@/components/debug/IOSSafeAreaOverlay";
 import GlobalLayout from "@/components/layout/GlobalLayout";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { useQueryQRRedirect } from "@/hooks/useQueryQRRedirect";
-import { shouldShowLanding, markFirstVisitCompleted } from "@/utils/firstVisitUtils";
-import { M1ssionLoader } from "@/components/ui/M1ssionLoader";
-import { supabase } from "@/integrations/supabase/client";
-
 
 // Static imports for Capacitor iOS compatibility
 import Index from "@/pages/Index";
 import LandingPage from "@/pages/LandingPage";
-
-// Intel module components
-import CoordinateSelector from '@/components/intelligence/CoordinateSelector';
-import ClueJournal from '@/components/intelligence/ClueJournal';
-import ClueArchive from '@/components/intelligence/ClueArchive';
-import GeoRadarTool from '@/components/intelligence/GeoRadarTool';
-import BuzzInterceptor from '@/components/intelligence/BuzzInterceptor';
-import FinalShotPage from '@/components/intelligence/FinalShotPage';
-import IntelModuleHeader from '@/components/intelligence/IntelModuleHeader';
 import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
@@ -53,7 +34,6 @@ import Subscriptions from "@/pages/Subscriptions";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
-import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
@@ -86,73 +66,9 @@ import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
 import FcmTest from "@/pages/FcmTest";
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Import centralizzato
-import { getActiveSubscription } from '@/lib/subscriptions';
-
 const WouterRoutes: React.FC = () => {
-  const { isAuthenticated, isLoading, getCurrentUser } = useUnifiedAuth();
-  const [location, setLocation] = useLocation();
-  const [hasActiveSub, setHasActiveSub] = useState<boolean | null>(null);
-  const [subCheckLoading, setSubCheckLoading] = useState(false);
-  
+  const { isAuthenticated, isLoading } = useUnifiedAuth();
   useQueryQRRedirect();
-
-  // Check active subscription when user is authenticated
-  useEffect(() => {
-    async function checkSubscription() {
-      if (!isAuthenticated || isLoading) {
-        setHasActiveSub(null);
-        return;
-      }
-
-      const user = getCurrentUser();
-      if (!user?.id) {
-        setHasActiveSub(false);
-        return;
-      }
-
-      setSubCheckLoading(true);
-      try {
-        // Check subscription con helper centralizzato
-        const subResult = await getActiveSubscription(supabase, user.id);
-        setHasActiveSub(subResult.hasActive);
-        
-        // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-        // Get user profile per admin check e choose_plan_seen flag
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, choose_plan_seen')
-          .eq('id', user.id)
-          .single();
-        
-        const isAdmin = ['admin','owner'].some(r => profile?.role?.toLowerCase?.().includes(r));
-        
-        // Guard per /choose-plan (mostrare SOLO se: non admin, nessuna sub attiva, e choose_plan_seen = false)
-        if (!isAdmin && !subResult.hasActive && !profile?.choose_plan_seen) {
-          if (location !== '/choose-plan') {
-            setLocation('/choose-plan');
-            return;
-          }
-        }
-        
-        // Non forzare più redirect globali per FREE: consenti navigazione completa
-        // Redirect a /home solo nei casi di ingresso iniziale
-        const initialRoutes = ['/', '/login', '/mission-intro', '/subscription-verify'];
-        if (subResult.plan === 'free' && initialRoutes.includes(location)) {
-          setLocation('/home');
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking subscription:', error);
-        setHasActiveSub(false);
-      } finally {
-        setSubCheckLoading(false);
-      }
-    }
-
-    checkSubscription();
-  }, [isAuthenticated, isLoading, getCurrentUser, location, setLocation]);
 
   const isCapacitorApp = typeof window !== 'undefined' && 
     (window.location.protocol === 'capacitor:' || 
@@ -176,24 +92,14 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
-          {/* Landing page - FIRST VISIT LOGIC IMPLEMENTATION */}
+          {/* Landing page - CRITICAL FIX: Direct LandingPage render */}
           <Route path="/">
-            {isLoading || subCheckLoading ? (
+            {isLoading ? (
               <div className="min-h-screen flex items-center justify-center bg-black">
                 <div className="text-white">🎯 M1SSION™ Loading...</div>
               </div>
             ) : !isAuthenticated ? (
-              (() => {
-                // Check if this is first visit using localStorage
-                const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
-                
-                if (isFirstVisit) {
-                  localStorage.setItem('m1_first_visit_seen', '1');
-                  return <LandingPage />;
-                } else {
-                  return <Login />;
-                }
-              })()
+              <LandingPage />
             ) : (
               <ProtectedRoute>
                 <GlobalLayout><AppHome /></GlobalLayout>
@@ -223,73 +129,6 @@ const WouterRoutes: React.FC = () => {
           <Route path="/intelligence">
             <ProtectedRoute>
               <GlobalLayout><IntelligenceStyledPage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          {/* INTEL — sottorotte esclusive */}
-          <Route path="/intelligence/coordinates">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <div className="min-h-screen w-full overflow-hidden">
-                  <IntelModuleHeader title="Coordinate Selector" />
-                  <CoordinateSelector />
-                </div>
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/intelligence/clue-journal">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <div className="min-h-screen w-full overflow-hidden">
-                  <IntelModuleHeader title="Clue Journal" />
-                  <ClueJournal />
-                </div>
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/intelligence/archive">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <div className="min-h-screen w-full overflow-hidden">
-                  <IntelModuleHeader title="Archivio Indizi" />
-                  <ClueArchive />
-                </div>
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/intelligence/radar">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <div className="min-h-screen w-full overflow-hidden">
-                  <IntelModuleHeader title="Geo Radar" />
-                  <GeoRadarTool />
-                </div>
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/intelligence/interceptor">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <div className="min-h-screen w-full overflow-hidden">
-                  <IntelModuleHeader title="BUZZ Interceptor" />
-                  <BuzzInterceptor />
-                </div>
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/intelligence/final-shot">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <div className="min-h-screen w-full overflow-hidden">
-                  <IntelModuleHeader title="Final Shot" />
-                  <FinalShotPage />
-                </div>
-              </GlobalLayout>
             </ProtectedRoute>
           </Route>
 
@@ -418,39 +257,6 @@ const WouterRoutes: React.FC = () => {
               <SendNotificationPage />
             </ProtectedRoute>
           </Route>
-
-          <Route path="/admin/mission-panel">
-            <ProtectedRoute>
-              <MissionPanelPage />
-            </ProtectedRoute>
-          </Route>
-
-          {/* Push Console routes */}
-          <Route path="/panel/push-admin">
-            <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento console push admin..." /></div>}>
-                {React.createElement(React.lazy(() => import('../pages/push/AdminPushConsolePage')))}
-              </React.Suspense>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/panel/push">
-            <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento console push..." /></div>}>
-                {React.createElement(React.lazy(() => import('../pages/push/UserPushConsolePage')))}
-              </React.Suspense>
-            </ProtectedRoute>
-          </Route>
-
-          {/* Dev diagnostics route - only accessible to admins or in debug mode */}
-          <Route path="/dev/markers-healthcheck">
-            <ProtectedRoute>
-              <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento diagnostica..." /></div>}>
-                <MarkersHealthcheck />
-              </React.Suspense>
-            </ProtectedRoute>
-          </Route>
-
 
           {/* 🔥 PUSH TEST ROUTE - Fixed rendering */}
           <Route path="/push-test">
@@ -585,16 +391,6 @@ const WouterRoutes: React.FC = () => {
             <GlobalLayout><Contact /></GlobalLayout>
           </Route>
 
-          {/* SMOKE TEST - Can be removed at any time */}
-          <Route path="/billing-smoke-test">
-            {React.createElement(React.lazy(() => import('@/pages/BillingSmokeTest')))}
-          </Route>
-
-          {/* DEV SETUP - Stripe Keys Configuration (URL-only access) */}
-          <Route path="/dev-stripe-setup">
-            {React.createElement(React.lazy(() => import('@/pages/DevStripeKeysSetup')))}
-          </Route>
-
           {/* Plan selection route - accessible even without plan selected */}
           <Route path="/choose-plan">
             {isAuthenticated ? (
@@ -622,17 +418,6 @@ const WouterRoutes: React.FC = () => {
           <Route path="/login" component={Login} />
           <Route path="/register" component={Register} />
           <Route path="/auth/reset" component={ResetPasswordPage} />
-
-          {/* Admin Panel route */}
-          <Route path="/admin">
-            <ProtectedRoute>
-              <GlobalLayout>
-                <React.Suspense fallback={<div className="min-h-screen flex items-center justify-center"><M1ssionLoader text="Caricamento pannello admin..." /></div>}>
-                  {React.createElement(React.lazy(() => import('@/pages/Admin')))}
-                </React.Suspense>
-              </GlobalLayout>
-            </ProtectedRoute>
-          </Route>
 
           {/* 404 fallback */}
           <Route>

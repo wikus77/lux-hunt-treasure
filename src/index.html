@@ -19,25 +19,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="M1SSION™">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="apple-touch-startup-image" href="/icon-512.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png">
     
     <!-- Script per reindirizzare HTTP a HTTPS -->
     <script>
       if (window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
         window.location.href = window.location.href.replace('http:', 'https:');
       }
-    </script>
-    
-    <!-- CRITICAL: UN SOLO Stripe Shim Anti-ReferenceError -->
-    <script>
-      (function () {
-        if (!window.getStripe) window.getStripe = function () { return null; };
-        if (window.ENV && window.ENV.VITE_STRIPE_PUBLISHABLE_KEY && !window.STRIPE_PK) {
-          window.STRIPE_PK = window.ENV.VITE_STRIPE_PUBLISHABLE_KEY;
-        }
-      })();
     </script>
     
     <!-- Google tag (gtag.js) - Google Ads -->

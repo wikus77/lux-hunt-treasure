@@ -2,7 +2,6 @@
 // Production Security Wrapper with Enhanced Protection
 
 import React, { useEffect } from 'react';
-import { applySecurityHeaders } from '@/security/csp';
 
 interface ProductionSecurityWrapperProps {
   children: React.ReactNode;
@@ -11,7 +10,7 @@ interface ProductionSecurityWrapperProps {
 export const ProductionSecurityWrapper: React.FC<ProductionSecurityWrapperProps> = ({ children }) => {
   useEffect(() => {
     // Disable right-click context menu in production
-    if (import.meta.env.PROD) {
+    if (process.env.NODE_ENV === 'production') {
       const disableRightClick = (e: MouseEvent) => {
         e.preventDefault();
         return false;
@@ -41,13 +40,15 @@ export const ProductionSecurityWrapper: React.FC<ProductionSecurityWrapperProps>
   }, []);
 
   useEffect(() => {
-    // Apply centralized security headers
-    applySecurityHeaders();
+    // Content Security Policy enforcement
+    const meta = document.createElement('meta');
+    meta.httpEquiv = 'Content-Security-Policy';
+    meta.content = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.stripe.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://api.stripe.com https://*.supabase.co;";
+    document.head.appendChild(meta);
 
-    // Development logging
-    if (import.meta.env.DEV) {
-      console.log('🔒 Security headers applied via centralized CSP configuration');
-    }
+    return () => {
+      document.head.removeChild(meta);
+    };
   }, []);
 
   return <>{children}</>;

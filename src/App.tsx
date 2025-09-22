@@ -2,7 +2,6 @@
 import React from 'react';
 import { Router } from 'wouter';
 import { Toaster } from "./components/ui/sonner";
-import { BadgeAuditReport } from "./components/debug/BadgeAuditReport";
 import PushFrozenNotice from "./banners/PushFrozenNotice";
 import { AuthProvider } from "./contexts/auth/AuthProvider";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -13,7 +12,6 @@ import SkipToContent from "./components/accessibility/SkipToContent";
 import OfflineIndicator from "./components/offline/OfflineIndicator";
 import WouterRoutes from "./routes/WouterRoutes";
 import ProductionSafety from "./components/debug/ProductionSafety";
-import { ProductionSafetyWrapper } from "./components/ProductionSafetyWrapper";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
 // OneSignal rimosso - usando solo FCM
 import { IOSPermissionManager } from "./components/IOSPermissionManager";
@@ -23,8 +21,8 @@ import { useUnifiedAuth } from "./hooks/useUnifiedAuth";
 import BuzzPaymentMonitor from "./components/payment/BuzzPaymentMonitor";
 import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
+
 import LegalOnboarding from "./components/legal/LegalOnboarding";
-import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -41,16 +39,30 @@ function App() {
       timestamp: new Date().toISOString()
     });
     
-    // CSS Variables check (without creating DOM elements to avoid flicker)
-    const styles = getComputedStyle(document.documentElement);
+    // Check if required CSS variables are available
+    const testDiv = document.createElement('div');
+    document.body.appendChild(testDiv);
+    testDiv.style.cssText = 'background: hsl(var(--background)); color: hsl(var(--foreground));';
+    const computedStyle = window.getComputedStyle(testDiv);
     console.log('🍎 [iOS DEBUG] CSS Variables:', {
-      background: styles.getPropertyValue('--background').trim(),
-      color: styles.getPropertyValue('--foreground').trim(),
-      hasBackground: !!styles.getPropertyValue('--background').trim(),
-      hasColor: !!styles.getPropertyValue('--foreground').trim(),
+      background: computedStyle.backgroundColor,
+      color: computedStyle.color,
+      hasBackground: computedStyle.backgroundColor !== 'rgba(0, 0, 0, 0)',
+      hasColor: computedStyle.color !== 'rgba(0, 0, 0, 0)'
     });
+    document.body.removeChild(testDiv);
     
-    // Remove any reload triggers that could cause loops
+    // Apply iOS emergency fallback if CSS variables are broken
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    
+    if (isIOS && isStandalone && (
+      computedStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || 
+      computedStyle.color === 'rgba(0, 0, 0, 0)'
+    )) {
+      console.log('🍎 [iOS DEBUG] Applying emergency fallback for broken CSS variables');
+      document.documentElement.classList.add('ios-pwa-fallback');
+    }
   }, []);
   
   // Initialize PWA stabilizer (prevents reload loops and manages push)
@@ -80,33 +92,28 @@ function App() {
           </div>
         </div>
       }>
-        <ProductionSafetyWrapper>
-          <ProductionSafety>
-            <HelmetProvider>
-              <SkipToContent />
-              <OfflineIndicator />
-              <Router>
+        <ProductionSafety>
+          <HelmetProvider>
+            <SkipToContent />
+            <OfflineIndicator />
+            <Router>
               <SoundProvider>
                 <AuthProvider>
-                  <InterestSignalsProvider>
-                    {/* OneSignal rimosso - usando solo FCM */}
-                    <BuzzPaymentMonitor />
-                    <LegalOnboarding />
-                    <WouterRoutes />
-                    <InstallPrompt />
-                    <IOSPermissionManager />
-                    <AndroidPushSetup className="hidden" />
-                    <PushNotificationSetup className="hidden" />
-                    <XpSystemManager />
-                    <Toaster />
-                    <BadgeAuditReport />
-                  </InterestSignalsProvider>
+                {/* OneSignal rimosso - usando solo FCM */}
+                <BuzzPaymentMonitor />
+                <LegalOnboarding />
+                <WouterRoutes />
+                <InstallPrompt />
+                <IOSPermissionManager />
+                <AndroidPushSetup className="hidden" />
+                <PushNotificationSetup className="hidden" />
+                <XpSystemManager />
+                <Toaster />
                 </AuthProvider>
               </SoundProvider>
             </Router>
           </HelmetProvider>
         </ProductionSafety>
-      </ProductionSafetyWrapper>
       </ErrorBoundary>
     </div>
   );

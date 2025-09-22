@@ -146,10 +146,12 @@ export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }):
   }
   
   try {
-    // BLINDATA: Use main SW registration
-    console.debug('[PUSH] Using BLINDATA main SW registration...');
-    const registration = await navigator.serviceWorker.getRegistration('/') || 
-                         await navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' });
+    // Ensure single SW registration
+    console.debug('[PUSH] Ensuring single SW registration...');
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+      scope: '/',
+      updateViaCache: 'none'
+    });
     
     // Wait for service worker to be ready
     await navigator.serviceWorker.ready;

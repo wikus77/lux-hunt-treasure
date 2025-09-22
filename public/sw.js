@@ -1,58 +1,29 @@
-// M1SSION™ Service Worker - Enhanced with Caching
+// M1SSION™ Service Worker - Unified & Minimal
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
-// MANTIENE importScripts per push chain blindata
+// ATTENZIONE: file unico. Niente importScripts, niente Workbox.
 
-// VINCOLO: importScripts per catena push (NON RIMUOVERE)
-importScripts('sw-push.js');
-
-const CACHE_NAME = 'm1ssion-cache-v1';
-const OFFLINE_URL = '/offline.html';
-
-// Assets to cache immediately (EXCLUDE index.html to prevent white-screen)
-const STATIC_ASSETS = [
-  '/offline.html',
-  '/favicon.ico',
-  '/manifest.json'
-];
-
-const DEBUG_SW = typeof self !== 'undefined' && 
-  (self.location?.search?.includes('qa=1') || false);
-
-const log = (message, data) => {
-  if (DEBUG_SW || !self.registration?.scope?.includes('https://')) {
-    console.log(`🔧 SW: ${message}`, data || '');
-  }
-};
-
-log('M1SSION™ Service Worker loading...');
+console.log('🔧 M1SSION™ Service Worker loading...');
 
 self.addEventListener('install', (event) => {
-  log('Service Worker installing...');
-  
-  // Pre-cache critical assets
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        log('Pre-caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .catch(error => {
-        log('Pre-cache failed', error);
-      })
-      .finally(() => {
-        // Attiva immediatamente senza aspettare
-        self.skipWaiting();
-      })
-  );
+  console.log('🔧 Service Worker installing...');
+  // Attiva immediatamente senza aspettare
+  self.skipWaiting();
 });
 
-// Moved to after navHandler definition
+self.addEventListener('activate', (event) => {
+  console.log('🔧 Service Worker activating...');
+  // Prendi controllo senza distruggere storage
+  event.waitUntil(
+    self.clients.claim().then(() => {
+      console.log('✅ Service Worker activated and controlling all pages');
+    })
+  );
+});
 
 // Update controllato dal main thread
 self.addEventListener('message', (event) => {
   console.log('📨 SW Message received:', event.data);
-  if (event.data && (event.data.type === 'SKIP_WAITING' || event.data.type === 'SW_SKIP_WAITING') && self.skipWaiting) {
-    console.log('🔄 SW: Skipping waiting and activating');
+  if (event.data && event.data.type === 'SKIP_WAITING' && self.skipWaiting) {
     self.skipWaiting();
   }
 });
@@ -110,124 +81,4 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Enable navigation preload for faster first paint
-self.addEventListener('activate', (event) => {
-  log('Service Worker activating...');
-  
-  event.waitUntil(
-    Promise.all([
-      // Clean up old caches
-      caches.keys().then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              log('Deleting old cache', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      }),
-      // Enable navigation preload if available
-      (async () => {
-        if (self.registration.navigationPreload) {
-          await self.registration.navigationPreload.enable();
-          log('Navigation preload enabled');
-        }
-      })()
-    ]).then(() => {
-      // Take control without destroying storage
-      return self.clients.claim();
-    }).then(() => {
-      log('Service Worker activated and controlling all pages');
-    })
-  );
-});
-
-// NetworkFirst strategy for ALL navigation requests - ELIMINATES WHITE SCREEN
-const navHandler = async (event) => {
-  try {
-    // Try navigation preload first
-    const preloadResponse = await event.preloadResponse;
-    if (preloadResponse) {
-      log('Using navigation preload response');
-      return preloadResponse;
-    }
-
-    // Network-first with 10s timeout for navigation requests
-    const ctrl = new AbortController();
-    const timeoutId = setTimeout(() => ctrl.abort(), 10000);
-    
-    try {
-      const networkResponse = await fetch(event.request, { 
-        cache: 'no-cache',
-        signal: ctrl.signal 
-      });
-      clearTimeout(timeoutId);
-      
-      if (networkResponse.ok) {
-        log('Fresh index.html served from network');
-        return networkResponse;
-      }
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      log('Network failed, trying cache fallback:', fetchError.message);
-    }
-
-    // Fallback to offline page only (NO precached index.html)
-    const cache = await caches.open(CACHE_NAME);
-    const offlineResponse = await cache.match(OFFLINE_URL);
-    
-    return offlineResponse || new Response('Offline - Please check connection', { 
-      status: 503,
-      headers: { 'Content-Type': 'text/html' }
-    });
-  } catch (error) {
-    log('NavHandler error:', error.message);
-    return new Response('Navigation Error', { status: 503 });
-  }
-};
-
-// Fetch handler with enhanced caching strategies
-self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-  
-  // Only handle GET requests
-  if (request.method !== 'GET') return;
-  
-  // Skip cache for API calls and dynamic content
-  if (url.pathname.includes('/api/') || 
-      url.pathname.includes('/functions/') ||
-      url.hostname.includes('supabase.co') ||
-      url.hostname.includes('stripe.com')) {
-    return;
-  }
-  
-  // NetworkFirst for ALL navigation requests (index.html) - ANTI WHITE-SCREEN
-  if (request.mode === 'navigate') {
-    event.respondWith(navHandler(event));
-    return;
-  }
-  
-  // Stale-while-revalidate for static assets
-  if (url.pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
-    event.respondWith(
-      caches.open(CACHE_NAME).then(cache => {
-        return cache.match(request).then(response => {
-          const fetchPromise = fetch(request).then(networkResponse => {
-            // Update cache with fresh content
-            if (networkResponse.ok) {
-              cache.put(request, networkResponse.clone());
-            }
-            return networkResponse;
-          });
-          
-          // Return cached version immediately, update in background
-          return response || fetchPromise;
-        });
-      })
-    );
-  }
-});
-
-log('M1SSION™ Service Worker loaded successfully');
+console.log('✅ M1SSION™ Service Worker loaded successfully');

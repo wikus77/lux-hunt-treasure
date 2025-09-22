@@ -3,28 +3,12 @@
 
 import { ensureSWControlled } from './swControl';
 import { base64UrlToUint8Array } from './vapidHelper';
-import { normalizePlatform, endpointHost, type PushPlatform } from './pushPlatform';
 
 export interface WebPushSubscription {
   endpoint: string;
   p256dh: string;
   auth: string;
 }
-
-export interface SafeWebPushResult {
-  subscription: {
-    endpoint: string;
-    keys: {
-      p256dh: string;
-      auth: string;
-    };
-  };
-  platform: string;
-  user_id?: string;
-}
-
-const SAFE = import.meta.env.VITE_PUSH_SAFE_MODE !== '0';
-const ENFORCE = import.meta.env.VITE_PUSH_ENFORCE_PLATFORM === '1';
 
 /**
  * Safely subscribe to Web Push with iOS PWA checks and SW control

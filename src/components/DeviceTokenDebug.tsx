@@ -2,7 +2,6 @@
  * © 2025 Joseph MULÉ – M1SSION™ – Device Token Debug Component
  * Comprehensive testing and debugging for OneSignal push notifications
  */
-"use client";
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';

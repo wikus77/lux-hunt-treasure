@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { motion } from 'framer-motion';
 import { Crown, Zap, Shield, Star } from 'lucide-react';
@@ -15,21 +15,6 @@ import { toast } from 'sonner';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 const plans = [
-  {
-    id: 'free',
-    name: 'Free (Base)',
-    price: '0',
-    icon: <Shield className="w-8 h-8" />,
-    earlyAccess: 'Accesso quando disponibile',
-    features: [
-      '1 indizio a settimana',
-      'Accesso alle missioni quando attive',
-      'Badge Base nel profilo',
-      'Partecipazione al gioco'
-    ],
-    color: 'from-gray-500 to-gray-700',
-    free: true
-  },
   {
     id: 'Silver',
     name: 'Silver',
@@ -97,20 +82,7 @@ const ChoosePlanPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoadingFree, setIsLoadingFree] = useState(false);
   const { getCurrentUser } = useUnifiedAuth();
-  
-  // Prima visita: segna "vista" appena si apre /choose-plan
-  useEffect(() => {
-    const markSeen = async () => {
-      try {
-        await supabase.rpc('mark_choose_plan_seen');
-      } catch (error) {
-        console.warn('Error marking plan as seen:', error);
-      }
-    };
-    markSeen();
-  }, []);
   
   // 🚨 ADMIN BYPASS REMOVED - Handled by ProtectedRoute
   // No redirect needed - WouterProtectedRoute handles admin bypass
@@ -123,38 +95,8 @@ const ChoosePlanPage: React.FC = () => {
     handlePaymentSuccess 
   } = useStripeInAppPayment();
   
-  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  const startFreePlan = async () => {
-    if (isLoadingFree) return;
-    setIsLoadingFree(true);
-    try {
-      const { data, error } = await supabase.rpc('create_free_subscription');
-      console.warn('[FREE][rpc] create_free_subscription ->', { data, error });
-      if (error && !/23505|unique|duplicate|already/i.test(error.message)) {
-        toast.error('Errore temporaneo, riprova');
-        setIsLoadingFree(false);
-        return;
-      }
-      try {
-        await supabase.rpc('mark_choose_plan_seen');
-      } catch (markError) {
-        console.warn('[FREE] mark_choose_plan_seen error (ignoring):', markError);
-      }
-      setLocation('/home');
-    } catch (e) {
-      console.warn('[FREE] unexpected', e);
-      toast.error('Errore temporaneo, riprova');
-      setIsLoadingFree(false);
-    }
-  };
-
   const handlePlanSelection = async (planId: string) => {
     if (isProcessing) return;
-    
-    // Handle FREE plan separately
-    if (planId === 'free') {
-      return startFreePlan();
-    }
     
     setIsProcessing(true);
     setSelectedPlan(planId);
@@ -194,8 +136,8 @@ const ChoosePlanPage: React.FC = () => {
       >
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="plans-title">
-            Scegli il tuo Piano <span className="brand-m1">M1</span><span className="brand-ss">SSION™</span>
+          <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-yellow-400 to-red-500 bg-clip-text text-transparent">
+            Scegli il Tuo Piano M1SSION™
           </h1>
           <p className="text-xl text-gray-300">
             Seleziona il piano di abbonamento per accedere alla missione
@@ -203,7 +145,7 @@ const ChoosePlanPage: React.FC = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="plans-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 max-w-6xl mx-auto">
           {plans.map((plan) => (
             <motion.div
               key={plan.id}
@@ -212,15 +154,19 @@ const ChoosePlanPage: React.FC = () => {
               transition={{ delay: plans.indexOf(plan) * 0.1 }}
               className="relative"
             >
-              <Card className={`plan-card ${plan.popular ? 'gold' : ''} ${plan.premium ? 'titanium' : ''} ${plan.free ? 'free' : ''} bg-gray-900 border-gray-700 h-full ${
+              <Card className={`bg-gray-900 border-gray-700 h-full ${
                 plan.popular ? 'border-yellow-500 border-2' : 
                 plan.premium ? 'border-purple-500 border-2' : ''
               }`}>
                 {plan.popular && (
-                  <div className="ribbon">Più Popolare</div>
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-black">
+                    Più Popolare
+                  </Badge>
                 )}
                 {plan.premium && (
-                  <div className="ribbon">Premium</div>
+                  <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-500 text-white">
+                    Premium
+                  </Badge>
                 )}
                 
                 <CardHeader className="text-center">
@@ -247,20 +193,16 @@ const ChoosePlanPage: React.FC = () => {
                   
                   <Button
                     onClick={() => handlePlanSelection(plan.id)}
-                    disabled={isProcessing || (plan.id === 'free' && isLoadingFree)}
-                    data-testid={plan.id === 'free' ? 'cta-free' : undefined}
-                    className={`w-full mt-6 free-cta ${
-                      selectedPlan === plan.id || (plan.id === 'free' && isLoadingFree) ? 'opacity-50' : ''
+                    disabled={isProcessing}
+                    className={`w-full mt-6 ${
+                      selectedPlan === plan.id ? 'opacity-50' : ''
                     } ${
-                      plan.free ? 'bg-gray-600 hover:bg-gray-700 text-white' :
                       plan.popular ? 'bg-yellow-500 hover:bg-yellow-600 text-black' :
                       plan.premium ? 'bg-purple-500 hover:bg-purple-600' :
                       'bg-white text-black hover:bg-gray-200'
                     }`}
                   >
-                    {plan.id === 'free' && isLoadingFree ? 'Attivazione…' : 
-                     selectedPlan === plan.id ? 'Elaborazione...' : 
-                     plan.free ? 'Inizia Gratis' : 'Seleziona Piano'}
+                    {selectedPlan === plan.id ? 'Elaborazione...' : 'Seleziona Piano'}
                   </Button>
                 </CardContent>
               </Card>

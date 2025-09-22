@@ -68,7 +68,7 @@ serve(async (req) => {
     console.log('💾 [WEBPUSH-UPSERT] Raw body keys:', Object.keys(body));
     
     // Support both old and new payload formats
-    let endpoint: string, p256dh: string, auth: string, platform: string, user_id: string | null;
+    let endpoint: string, p256dh: string, auth: string, platform: string, user_id: string;
     
     if (body.subscription && body.subscription.keys) {
       // New format: { subscription: { endpoint, keys: { p256dh, auth } }, platform, user_id }
@@ -76,21 +76,14 @@ serve(async (req) => {
       p256dh = body.subscription.keys.p256dh;
       auth = body.subscription.keys.auth;
       platform = body.platform || 'web';
-      user_id = body.user_id || null;
-    } else if (body.endpoint && body.keys) {
-      // Alternative format: { endpoint, keys: { p256dh, auth }, platform, user_id }
-      endpoint = body.endpoint;
-      p256dh = body.keys.p256dh;
-      auth = body.keys.auth;
-      platform = body.platform || 'web';
-      user_id = body.user_id || null;
+      user_id = body.user_id;
     } else {
       // Old format: { endpoint, p256dh, auth, platform, user_id }
       endpoint = body.endpoint;
       p256dh = body.p256dh;
       auth = body.auth;
-      platform = body.platform || 'web';
-      user_id = body.user_id || null;
+      platform = body.platform;
+      user_id = body.user_id;
     }
     
     const diagnosticLog = {
@@ -105,19 +98,26 @@ serve(async (req) => {
     console.log('💾 [WEBPUSH-UPSERT] Diagnostic:', diagnosticLog);
     console.log('💾 [WEBPUSH-UPSERT] Is APNs:', endpoint?.includes('web.push.apple.com'));
     
-    // Validate required fields (minimal validation)
+    // Validate required fields
     const missing = [];
-    if (!endpoint || typeof endpoint !== 'string' || endpoint.length === 0) missing.push('endpoint');
-    if (!p256dh || typeof p256dh !== 'string' || p256dh.length === 0) missing.push('p256dh');
-    if (!auth || typeof auth !== 'string' || auth.length === 0) missing.push('auth');
+    if (!endpoint || typeof endpoint !== 'string' || endpoint.length === 0) missing.push('subscription.endpoint');
+    if (!p256dh || typeof p256dh !== 'string' || p256dh.length === 0) missing.push('subscription.keys.p256dh');
+    if (!auth || typeof auth !== 'string' || auth.length === 0) missing.push('subscription.keys.auth');
+    if (!platform || !['web', 'ios', 'android', 'desktop'].includes(platform)) missing.push('platform');
     
     if (missing.length > 0) {
       console.error('❌ [WEBPUSH-UPSERT] Missing/invalid fields:', missing);
       return new Response(JSON.stringify({ 
-        ok: false,
-        error: "MISSING_FIELD",
+        error_code: "MISSING_FIELD",
         missing,
-        hint: "Required: endpoint (https URL), p256dh (string), auth (string)"
+        hint: "Expected: {subscription:{endpoint,keys:{p256dh,auth}}, platform:'web'|'ios'|'android'|'desktop', user_id?}",
+        received: { 
+          hasEndpoint: !!endpoint, 
+          hasP256dh: !!p256dh, 
+          hasAuth: !!auth, 
+          platform: platform || null,
+          hasUserId: !!user_id 
+        }
       }), {
         headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
         status: 400,
@@ -127,31 +127,24 @@ serve(async (req) => {
     // Validate endpoint format
     if (!endpoint.startsWith('https://')) {
       console.error('❌ [WEBPUSH-UPSERT] Invalid endpoint format:', endpoint);
-      return new Response(JSON.stringify({ 
-        ok: false,
-        error: "Endpoint must be HTTPS URL" 
-      }), {
+      return new Response(JSON.stringify({ error: "Endpoint must be HTTPS URL" }), {
         headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
         status: 400,
       });
     }
 
-    // Normalize platform server-side
-    const host = new URL(endpoint).host;
-    const normalizedPlatform = host === 'web.push.apple.com' ? 'web' : (platform || 'desktop');
+    // Normalize platform
+    const normalizedPlatform = (() => {
+      const p = (platform || 'web').toLowerCase();
+      if (['ios', 'android', 'desktop', 'web'].includes(p)) return p;
+      if (p.includes('iphone') || p.includes('ipad')) return 'ios';
+      if (p.includes('android')) return 'android';
+      if (p.includes('mac') || p.includes('windows') || p.includes('linux')) return 'desktop';
+      return 'web';
+    })();
 
-    // Minimal logging (no sensitive data)
-    console.log(JSON.stringify({ 
-      fn: "webpush-upsert", 
-      host, 
-      platform: normalizedPlatform, 
-      hasUser: !!user_id 
-    }, null, 0));
-    
-    // UPSERT idempotent on endpoint
-    const conflictStrategy = user_id 
-      ? "resolution=merge-duplicates,on-conflict=user_id,token" 
-      : "resolution=merge-duplicates,on-conflict=token";
+    // Save in fcm_subscriptions table: token = endpoint, device_info contains keys
+    console.log('💾 [WEBPUSH-UPSERT] Saving to database with normalized platform:', normalizedPlatform);
     
     const resp = await fetch(`${url}/rest/v1/fcm_subscriptions`, {
       method: "POST",
@@ -159,7 +152,7 @@ serve(async (req) => {
         apikey: key,
         Authorization: `Bearer ${key}`,
         "content-type": "application/json",
-        Prefer: conflictStrategy,
+        Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
         user_id,
@@ -167,67 +160,39 @@ serve(async (req) => {
         platform: normalizedPlatform,
         is_active: true,
         device_info: { 
-          host,
+          kind: "WEBPUSH", 
           keys: { p256dh, auth },
-          ua: req.headers.get('user-agent')?.slice(0, 120) || null,
-          timestamp: new Date().toISOString()
+          userAgent: req.headers.get('user-agent') || null,
+          created_at: new Date().toISOString()
         },
       }),
     });
 
-    // Always return 200 for valid subscriptions (even on conflict)
+    const text = await resp.text();
     if (!resp.ok) {
-      const text = await resp.text();
-      console.warn('⚠️ [WEBPUSH-UPSERT] DB response not OK, but continuing:', resp.status, text);
-      
-      // Check if it's a conflict (duplicate) - that's OK
-      if (resp.status === 409 || text.includes('duplicate') || text.includes('conflict')) {
-        console.log('✅ [WEBPUSH-UPSERT] Duplicate subscription (idempotent)');
-        return new Response(JSON.stringify({ 
-          ok: true, 
-          saved: true,
-          endpointHost: host,
-          platform: normalizedPlatform,
-          note: "idempotent_upsert"
-        }), {
-          headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-          status: 200,
-        });
-      }
+      console.error('❌ [WEBPUSH-UPSERT] DB upsert failed:', resp.status, text);
+      return new Response(JSON.stringify({ error: "DB upsert failed", status: resp.status, body: text }), {
+        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
+        status: 500,
+      });
     }
 
-    // Parse response to get ID (if needed)
-    let savedData = null;
-    try {
-      savedData = await resp.json();
-    } catch {
-      // Ignore parse errors
-    }
-    
-    const responseId = Array.isArray(savedData) ? savedData[0]?.id : savedData?.id;
-    
-    console.log('✅ [WEBPUSH-UPSERT] Subscription saved successfully');
+    console.log('✅ [WEBPUSH-UPSERT] Web Push subscription saved successfully');
+    console.log('✅ [WEBPUSH-UPSERT] Saved to DB - user:', user_id, 'platform:', normalizedPlatform, 'is_active: true');
     
     return new Response(JSON.stringify({ 
-      ok: true,
-      saved: true,
-      endpointHost: host,
+      success: true,
       platform: normalizedPlatform,
-      id: responseId || "unknown"
+      endpoint_host: endpoint ? new URL(endpoint).hostname : null
     }), {
       headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
       status: 200,
     });
   } catch (e) {
-    console.error('❌ [WEBPUSH-UPSERT] Unexpected error:', e);
-    // Return 200 even on error to avoid breaking client toggle
-    return new Response(JSON.stringify({ 
-      ok: false,
-      error: "INTERNAL_ERROR",
-      message: e?.message ?? String(e)
-    }), {
+    console.error('❌ [WEBPUSH-UPSERT] Error:', e);
+    return new Response(JSON.stringify({ error: e?.message ?? String(e) }), {
       headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-      status: 200, // Changed from 500 to 200
+      status: 500,
     });
   }
 });

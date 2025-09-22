@@ -29,7 +29,6 @@ const markerIcon = L.icon({
 });
 
 export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) => {
-  const mapRef = useRef<L.Map | null>(null);
   const center = useMemo<[number, number]>(() => {
     if (typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng)) {
       return [lat, lng];
@@ -41,51 +40,8 @@ export const QRInlineMap: React.FC<QRInlineMapProps> = ({ lat, lng, onChange }) 
 
   return (
     <div className="rounded-lg overflow-hidden border border-border">
-      <MapContainer 
-        center={center} 
-        zoom={12} 
-        style={{ 
-          height: 320, 
-          width: '100%',
-          background: 'transparent',
-          willChange: 'transform',
-          transform: 'translateZ(0)'
-        }}
-        zoomControl={true}
-        scrollWheelZoom={true}
-        doubleClickZoom={true}
-        touchZoom={true}
-        boxZoom={true}
-        keyboard={true}
-        dragging={true}
-        zoomAnimation={true}
-        markerZoomAnimation={true}
-        fadeAnimation={true}
-        zoomAnimationThreshold={4}
-        preferCanvas={false}
-        ref={(mapInstance) => {
-          if (mapInstance) {
-            mapRef.current = mapInstance;
-          }
-        }}
-      >
-        <TileLayer 
-          url={tileUrl} 
-          attribution={attribution}
-          maxZoom={18}
-          minZoom={3}
-          keepBuffer={12}
-          updateWhenIdle={true}
-          updateWhenZooming={false}
-          crossOrigin="anonymous"
-          detectRetina={true}
-          tileSize={256}
-          zoomOffset={0}
-          bounds={[[-90, -180], [90, 180]]}
-          noWrap={false}
-          subdomains={['a', 'b', 'c']}
-          errorTileUrl="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII="
-        />
+      <MapContainer center={center} zoom={12} style={{ height: 320, width: '100%' }}>
+        <TileLayer url={tileUrl} attribution={attribution} />
         <ClickHandler onChange={onChange} />
         {typeof lat === 'number' && typeof lng === 'number' && isFinite(lat) && isFinite(lng) && (
           <Marker
