@@ -155,8 +155,7 @@ serve(async (req) => {
       const { data: dbSubs, error: dbError } = await supabase
         .from('push_subscriptions')
         .select('endpoint, p256dh, auth, platform')
-        .in('user_id', user_ids)
-        .eq('is_active', true);
+        .in('user_id', user_ids);
 
       if (dbError) {
         console.error('❌ [WEBPUSH-SEND] Database error:', dbError);
