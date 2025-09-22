@@ -9,15 +9,17 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Bell, Volume2, VolumeX } from 'lucide-react';
+import { Bell, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
 import PushDebugPanel from '@/components/PushDebugPanel';
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
+import NotificationsStatus from '@/components/NotificationsStatus';
+import PushInspector from "@/components/PushInspector";
 
 interface NotificationSettings {
   notifications_enabled: boolean;
   weekly_hints: 'all' | 'only-premium' | 'none';
-  preferred_rewards: string[];
   push_notifications_enabled: boolean;
 }
 
@@ -25,27 +27,38 @@ const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  // Removed useFcm hook - now using UnifiedPushToggle component
+  
+  // Use the proper notification preferences hook
+  const {
+    preferences,
+    resolvedTags,
+    isLoading: prefsLoading,
+    availableCategories,
+    updatePreference,
+    togglePreference,
+    refreshPreferences,
+    hasActivePreferences
+  } = useNotificationPreferences();
   
   const [settings, setSettings] = useState<NotificationSettings>({
     notifications_enabled: true,
     weekly_hints: 'all',
-    preferred_rewards: [],
     push_notifications_enabled: false
   });
 
-  const rewardOptions = [
-    { id: 'luxury', label: 'Luxury & Moda', icon: '💎' },
-    { id: 'tech', label: 'Tecnologia', icon: '📱' },
-    { id: 'viaggi', label: 'Viaggi & Esperienze', icon: '✈️' },
-    { id: 'food', label: 'Food & Beverage', icon: '🍷' },
-    { id: 'sport', label: 'Sport & Fitness', icon: '⚽' },
-    { id: 'cultura', label: 'Arte & Cultura', icon: '🎨' }
-  ];
+  // Category icons mapping - aligned with database categories
+  const categoryIcons: Record<string, string> = {
+    'Luxury & moda': '💎',
+    'Viaggi & esperienze': '✈️',
+    'Sport & fitness': '⚽',
+    'Tecnologia': '📱',
+    'Food & beverage': '🍷',
+    'Arte & cultura': '🎨'
+  };
 
   useEffect(() => {
     loadNotificationSettings();
-  }, [user]); // Simplified dependency
+  }, [user]);
 
   const loadNotificationSettings = async () => {
     if (!user) return;
@@ -53,7 +66,7 @@ const NotificationsSettings: React.FC = () => {
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('notifications_enabled, weekly_hints, preferred_rewards, push_notifications_enabled')
+        .select('notifications_enabled, weekly_hints, push_notifications_enabled')
         .eq('id', user.id)
         .single();
 
@@ -61,7 +74,6 @@ const NotificationsSettings: React.FC = () => {
         setSettings({
           notifications_enabled: profile.notifications_enabled ?? true,
           weekly_hints: (profile.weekly_hints as 'all' | 'only-premium' | 'none') || 'all',
-          preferred_rewards: profile.preferred_rewards || [],
           push_notifications_enabled: profile.push_notifications_enabled ?? false
         });
       }
@@ -82,7 +94,6 @@ const NotificationsSettings: React.FC = () => {
         .update({
           notifications_enabled: updatedSettings.notifications_enabled,
           weekly_hints: updatedSettings.weekly_hints,
-          preferred_rewards: updatedSettings.preferred_rewards,
           push_notifications_enabled: updatedSettings.push_notifications_enabled
         })
         .eq('id', user.id);
@@ -113,15 +124,29 @@ const NotificationsSettings: React.FC = () => {
     await saveSettings({ weekly_hints: value });
   };
 
-  const handleRewardPreferenceChange = async (rewardId: string, checked: boolean) => {
-    const newPreferences = checked
-      ? [...settings.preferred_rewards, rewardId]
-      : settings.preferred_rewards.filter(id => id !== rewardId);
-    
-    await saveSettings({ preferred_rewards: newPreferences });
+  const handleCategoryToggle = async (category: string) => {
+    const success = await togglePreference(category);
+    if (success) {
+      toast({
+        title: "✅ Preferenza aggiornata",
+        description: `Categoria "${category}" ${preferences[category] ? 'disabilitata' : 'abilitata'}.`
+      });
+    } else {
+      toast({
+        title: "❌ Errore",
+        description: "Impossibile aggiornare la preferenza. Riprova.",
+        variant: "destructive"
+      });
+    }
   };
 
-  // Push notifications now handled by UnifiedPushToggle component
+  const handleRefreshPreferences = async () => {
+    await refreshPreferences();
+    toast({
+      title: "🔄 Preferenze aggiornate",
+      description: "Cache delle preferenze aggiornata dal database."
+    });
+  };
 
   return (
     <motion.div
@@ -177,29 +202,48 @@ const NotificationsSettings: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            <Label className="text-white font-medium">Categorie di Interesse</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-white font-medium">Categorie di Interesse per Feed</Label>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleRefreshPreferences}
+                disabled={prefsLoading}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${prefsLoading ? 'animate-spin' : ''}`} />
+                Aggiorna
+              </Button>
+            </div>
             <p className="text-white/70 text-sm">
-              Seleziona le categorie di ricompense che ti interessano di più
+              Seleziona le categorie per ricevere notifiche sui contenuti che ti interessano di più
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              {rewardOptions.map((reward) => (
-                <div key={reward.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={reward.id}
-                    checked={settings.preferred_rewards.includes(reward.id)}
-                    onCheckedChange={(checked) => 
-                      handleRewardPreferenceChange(reward.id, checked as boolean)
-                    }
-                    disabled={loading}
-                    className="border-gray-500"
-                  />
+            {hasActivePreferences && (
+              <div className="text-sm text-green-400 mb-2">
+                ✅ {resolvedTags.length} tag attivi: {resolvedTags.join(', ')}
+              </div>
+            )}
+            <div className="grid grid-cols-1 gap-3">
+              {availableCategories.map((category) => (
+                <div key={category} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
                   <Label 
-                    htmlFor={reward.id} 
-                    className="text-white text-sm flex items-center cursor-pointer"
+                    htmlFor={category} 
+                    className="text-white flex items-center cursor-pointer flex-1"
                   >
-                    <span className="mr-2">{reward.icon}</span>
-                    {reward.label}
+                    <span className="mr-3 text-lg">{categoryIcons[category] || '📱'}</span>
+                    <div>
+                      <div className="font-medium">{category}</div>
+                      {preferences[category] && (
+                        <div className="text-xs text-green-400 mt-1">Attiva</div>
+                      )}
+                    </div>
                   </Label>
+                  <Switch
+                    id={category}
+                    checked={preferences[category] || false}
+                    onCheckedChange={() => handleCategoryToggle(category)}
+                    disabled={prefsLoading || loading}
+                  />
                 </div>
               ))}
             </div>
@@ -208,6 +252,11 @@ const NotificationsSettings: React.FC = () => {
           {/* Push Notifications using UnifiedPushToggle */}
           <div className="border-t border-white/10 pt-4">
             <UnifiedPushToggle className="w-full" />
+            <div className="mt-4">
+              <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
+            </div>
+            {/* Audit read-only */}
+            <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
           </div>
 
           {/* Debug Panel for Push Notifications */}

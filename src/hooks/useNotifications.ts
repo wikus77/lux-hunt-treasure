@@ -1,5 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { syncFromNotice } from "@/utils/appBadge";
+import { updateBadgeState } from "@/utils/badgeDiagnostics";
+import { testBadgeAPI } from "@/utils/pwaBadgeAudit";
+import { syncAppIconBadge } from "@/utils/appIconBadgeSync";
 
 // Tipizzazione
 export interface Notification {
@@ -127,8 +131,39 @@ export function useNotifications() {
       const unreadCount = notifs.filter(n => !n.read).length;
       console.log("📊 NOTIFICATIONS: Total:", notifs.length, "Unread:", unreadCount);
       
+      // PHASE 1 AUDIT: Log unread count changes for tracing
+      if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+        console.log('🔍 UNREAD COUNT CHANGE:', { 
+          prev: unreadCount, 
+          next: unreadCount,
+          source: 'reloadNotifications'
+        });
+      }
+      
       setNotifications(notifs);
       setUnreadCount(unreadCount);
+      
+      // Sync PWA app badge with real-time updates
+      try {
+        await syncAppIconBadge(unreadCount);
+        if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+          console.log('🔍 BADGE SYNC: Updated from Notice counter', unreadCount);
+        }
+      } catch (badgeError) {
+        // Fail silently, don't impact UI
+        if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+          console.warn('🔍 BADGE SYNC: Failed', badgeError);
+        }
+      }
+      
+      // Legacy sync functions (keep existing behavior)
+      syncFromNotice(unreadCount);
+      updateBadgeState(unreadCount);
+      
+      // PHASE 1 AUDIT: Test Badge API when unreadCount > 0
+      if (unreadCount > 0 && import.meta.env.VITE_BADGE_DEBUG === '1') {
+        testBadgeAPI(unreadCount).catch(console.warn);
+      }
       
       loadingTimeoutRef.current = setTimeout(() => {
         setIsLoading(false);
@@ -178,6 +213,16 @@ export function useNotifications() {
       if (saved) {
         setNotifications(updated);
         setUnreadCount(0);
+        
+        // Sync PWA app badge
+        try {
+          await syncAppIconBadge(0);
+        } catch (badgeError) {
+          // Fail silently
+        }
+        syncFromNotice(0);
+        updateBadgeState(0);
+        
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato");
       }
@@ -261,12 +306,23 @@ export function useNotifications() {
       }
     };
     
+    const handleFocus = () => {
+      if (!isInitialLoadRef.current) {
+        console.log("🎯 NOTIFICATIONS: Window focused, syncing badge...");
+        // Re-sync badge on focus in case of inconsistency
+        syncFromNotice(unreadCount);
+        syncAppIconBadge(unreadCount);
+      }
+    };
+    
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
     
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
     };
-  }, [reloadNotifications]);
+  }, [reloadNotifications, unreadCount]);
 
   // Singola notifica come letta
   const markAsRead = useCallback(async (id: string) => {
@@ -290,8 +346,30 @@ export function useNotifications() {
       const saved = saveNotifications(updated);
       
       if (saved) {
+        const newUnreadCount = updated.filter(n => !n.read).length;
+        
+        // PHASE 1 AUDIT: Log unread count changes
+        if (import.meta.env.VITE_BADGE_DEBUG === '1') {
+          console.log('🔍 UNREAD COUNT CHANGE:', { 
+            prev: unreadCount, 
+            next: newUnreadCount,
+            source: 'markAsRead',
+            notificationId: id
+          });
+        }
+        
         setNotifications(updated);
-        setUnreadCount(updated.filter(n => !n.read).length);
+        setUnreadCount(newUnreadCount);
+        
+        // Sync PWA app badge
+        try {
+          await syncAppIconBadge(newUnreadCount);
+        } catch (badgeError) {
+          // Fail silently
+        }
+        syncFromNotice(newUnreadCount);
+        updateBadgeState(newUnreadCount);
+        
         listeners.forEach(fn => fn());
         console.log("✅ Stato locale aggiornato per notifica:", id);
       }
@@ -322,8 +400,19 @@ export function useNotifications() {
       const saved = saveNotifications(updated);
       
       if (saved) {
+        const newUnreadCount = updated.filter(n => !n.read).length;
         setNotifications(updated);
-        setUnreadCount(updated.filter(n => !n.read).length);
+        setUnreadCount(newUnreadCount);
+        
+        // Sync PWA app badge
+        try {
+          await syncAppIconBadge(newUnreadCount);
+        } catch (badgeError) {
+          // Fail silently
+        }
+        syncFromNotice(newUnreadCount);
+        updateBadgeState(newUnreadCount);
+        
         listeners.forEach(fn => fn());
       }
       return saved;
@@ -382,8 +471,19 @@ export function useNotifications() {
       const saved = saveNotifications(updated);
       
       if (saved) {
+        const newUnreadCount = updated.filter(n => !n.read).length;
         setNotifications(updated);
-        setUnreadCount(prev => prev + 1);
+        setUnreadCount(newUnreadCount);
+        
+        // Sync PWA app badge
+        try {
+          await syncAppIconBadge(newUnreadCount);
+        } catch (badgeError) {
+          // Fail silently
+        }
+        syncFromNotice(newUnreadCount);
+        updateBadgeState(newUnreadCount);
+        
         listeners.forEach(fn => fn());
         console.log("✅ UNIQUE Notification added successfully:", newNotification);
       }

@@ -30,7 +30,7 @@ const BottomNavigationComponent = () => {
     },
     { 
       icon: <Map className="h-6 w-6" />, 
-      label: "Mappa", 
+      label: "Map", 
       path: "/map",
       color: "#00D1FF"
     },
@@ -48,13 +48,13 @@ const BottomNavigationComponent = () => {
         <path d="M7 9l5-3 5 3"/>
         <circle cx="12" cy="12" r="2"/>
       </svg>, 
-      label: "Intelligence", 
+      label: "Intel", 
       path: "/intelligence",
       color: "#00D1FF"
     },
     {
       icon: <Mail className="h-6 w-6" />,
-      label: "Notifiche",
+      label: "Notice",
       path: "/notifications",
       badge: unreadCount > 0,
       badgeCount: unreadCount,
