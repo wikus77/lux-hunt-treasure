@@ -59,16 +59,16 @@ function normalizeSubscription(sub: InputSubscription): NormalizedSubscription |
     const endpoint = sub.endpoint;
     const vendorHost = new URL(endpoint).hostname;
     
-    // Handle both formats: {keys:{p256dh,auth}} and {p256dh,auth}
+    // Handle both formats: {endpoint, keys:{p256dh,auth}} and {endpoint, p256dh, auth}
     let p256dh: string | undefined;
     let auth: string | undefined;
     
-    // If sub.keys exists but fields are at top level, copy them
-    if (sub.keys) {
+    // Priority: keys object first, then top-level properties
+    if (sub.keys?.p256dh && sub.keys?.auth) {
       p256dh = sub.keys.p256dh;
       auth = sub.keys.auth;
     } else if (sub.p256dh && sub.auth) {
-      // If top-level, construct keys object
+      // Top-level format
       p256dh = sub.p256dh;
       auth = sub.auth;
     }
@@ -81,6 +81,7 @@ function normalizeSubscription(sub: InputSubscription): NormalizedSubscription |
     const detectedProvider = detectProvider(endpoint);
     const provider = sub.provider || detectedProvider;
     
+    // Always return normalized format with keys object
     return {
       endpoint,
       keys: { p256dh, auth },
@@ -96,8 +97,9 @@ function normalizeSubscription(sub: InputSubscription): NormalizedSubscription |
 // Web Crypto Web Push implementation with VAPID JWT for APNs
 async function sendWebPushNotification(
   subscription: NormalizedSubscription,
-  payload: string
-) {
+  payload: string,
+  dryRun: boolean = false
+): Promise<{ success: boolean; status: number; error?: string; provider: string; endpoint: string }> {
   try {
     const endpointURL = new URL(subscription.endpoint);
     const audience = `${endpointURL.protocol}//${endpointURL.hostname}`;
@@ -121,11 +123,25 @@ async function sendWebPushNotification(
     // Build appropriate headers for each provider
     const headers = buildPushHeaders(endpointURL, vapidJWT, vapidPublicKey);
     
+    // Add standard headers if missing
+    if (!headers['TTL']) headers['TTL'] = '2419200';
+    if (!headers['Urgency']) headers['Urgency'] = 'normal';
+    
     console.log(`🔐 [WEBPUSH-SEND] Sending with VAPID to ${subscription.provider}:`, {
       audience,
       hasVapidJWT: !!vapidJWT,
       headers: Object.keys(headers)
     });
+
+    // Return validation only for dry run
+    if (dryRun) {
+      return {
+        success: true,
+        status: 200,
+        provider: subscription.provider,
+        endpoint: subscription.endpoint.substring(0, 50) + '...'
+      };
+    }
 
     const response = await fetch(subscription.endpoint, {
       method: 'POST',
@@ -133,10 +149,33 @@ async function sendWebPushNotification(
       body: payload
     });
     
-    return response;
+    // Extract response details safely
+    let errorText = '';
+    if (!response.ok) {
+      try {
+        const text = await response.text();
+        errorText = text.length > 200 ? text.substring(0, 200) + '...' : text;
+      } catch {
+        errorText = 'Unable to read response text';
+      }
+    }
+    
+    return {
+      success: response.ok,
+      status: response.status,
+      error: response.ok ? undefined : errorText,
+      provider: subscription.provider,
+      endpoint: subscription.endpoint.substring(0, 50) + '...'
+    };
   } catch (error) {
     console.error(`❌ [WEBPUSH-SEND] VAPID error for ${subscription.provider}:`, error);
-    throw error;
+    return {
+      success: false,
+      status: 500,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      provider: subscription.provider,
+      endpoint: subscription.endpoint.substring(0, 50) + '...'
+    };
   }
 }
 
@@ -330,16 +369,21 @@ serve(async (req) => {
 
     console.log('📦 [WEBPUSH-SEND] Final payload:', notificationPayload);
 
+    // Check for dryRun and debug parameters
+    const url = new URL(req.url);
+    const dryRun = url.searchParams.get('dryRun') === 'true';
+    const debug = url.searchParams.get('debug') === '1';
+
     // Send notifications using Web Crypto
     const results = [];
     for (const sub of normalizedSubs) {
-      try {
-        const endpointHost = sub.vendorHost;
-        const hasP256dh = !!sub.keys.p256dh;
-        const hasAuth = !!sub.keys.auth;
-        const keysAt = sub.keys ? 'object' : 'missing';
-        const providerDetected = sub.provider;
-        
+      const endpointHost = sub.vendorHost;
+      const hasP256dh = !!sub.keys.p256dh;
+      const hasAuth = !!sub.keys.auth;
+      const keysAt = sub.keys ? 'object' : 'missing';
+      const providerDetected = sub.provider;
+      
+      if (debug) {
         console.log(`🚀 [WEBPUSH-SEND] Sending to:`, {
           endpointHost,
           hasP256dh,
@@ -347,33 +391,25 @@ serve(async (req) => {
           keysAt,
           providerDetected
         });
-        
-        const res = await sendWebPushNotification(sub, notificationPayload);
-        
-        console.log(`✅ [WEBPUSH-SEND] Success:`, endpointHost, 'Status:', res.status);
-        results.push({
-          endpoint: sub.endpoint.substring(0, 50) + '...',
-          success: true,
-          status: res.status,
-          provider: sub.provider
-        });
-      } catch (e: any) {
-        console.error(`❌ [WEBPUSH-SEND] Failed for ${sub.vendorHost}:`, e.message);
-        results.push({
-          endpoint: sub.endpoint.substring(0, 50) + '...',
-          success: false,
-          error: e.message,
-          status: e.status || 500,
-          provider: sub.provider
-        });
       }
+      
+      const result = await sendWebPushNotification(sub, notificationPayload, dryRun);
+      
+      // Only log success for actual 2xx responses
+      if (result.success && debug) {
+        console.log(`✅ [WEBPUSH-SEND] Success: ${endpointHost} Status: ${result.status}`);
+      } else if (!result.success && debug) {
+        console.log(`❌ [WEBPUSH-SEND] Failed: ${endpointHost} Status: ${result.status} Error: ${result.error}`);
+      }
+      
+      results.push(result);
     }
 
     const successCount = results.filter(r => r.success).length;
     console.log(`📊 [WEBPUSH-SEND] Summary: ${successCount}/${results.length} notifications sent successfully`);
     
     return new Response(JSON.stringify({ 
-      success: true, 
+      success: successCount > 0, 
       sent: successCount,
       total: results.length,
       results 
