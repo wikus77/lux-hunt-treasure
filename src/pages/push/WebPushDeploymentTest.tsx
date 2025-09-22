@@ -156,8 +156,7 @@ export const WebPushDeploymentTest: React.FC = () => {
     try {
       const { data: subsData } = await (supabase as any)
         .from('push_subscriptions')
-        .select('user_id,endpoint,endpoint_type,is_active')
-        .eq('is_active', true)
+        .select('user_id,endpoint,p256dh,auth,platform')
         .limit(3);
       
       if (subsData) {
