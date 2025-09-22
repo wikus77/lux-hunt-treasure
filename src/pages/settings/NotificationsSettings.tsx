@@ -175,23 +175,29 @@ const NotificationsSettings: React.FC = () => {
                (sub.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'mozilla'),
     };
 
-    // Save to webpush_subscriptions table (with minimal fields)
+    // Save to webpush_subscriptions table
     if (user) {
-      await supabase
+      const { error } = await supabase
         .from('webpush_subscriptions')
         .upsert({
           user_id: user.id,
           endpoint: body.endpoint,
           keys: body.keys,
+          p256dh: body.keys.p256dh || '',
+          auth: body.keys.auth || '',
           platform: body.platform,
           provider: body.provider
-        } as any);
+        });
+
+      if (error) {
+        throw new Error(`Database save failed: ${error.message}`);
+      }
 
       // Show endpoint host in UI
       const endpointHost = new URL(sub.endpoint).hostname;
       toast({
         title: "✅ Push registrato",
-        description: `Endpoint host: ${endpointHost}`
+        description: `Endpoint host: ${endpointHost}, Provider: ${body.provider}`
       });
     }
 
