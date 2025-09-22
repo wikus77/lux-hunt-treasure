@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { canUseNotifications, canUseServiceWorker, isIOSDevice, isPWAMode, detectPushProvider, getPlatformInfo } from '@/utils/push/support';
 
 interface PushSetupProps {
   className?: string;
@@ -17,12 +18,13 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check browser support
-    const supported = 'serviceWorker' in navigator && 'Notification' in window;
+    // Safe feature detection
+    const supported = canUseNotifications() && canUseServiceWorker();
     setIsSupported(supported);
     
     if (supported) {
-      setPermission(Notification.permission);
+      const permission = canUseNotifications() ? Notification.permission : 'denied';
+      setPermission(permission as NotificationPermission);
       checkSubscription();
     }
   }, []);
@@ -38,7 +40,18 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
   };
 
   const requestPermission = async () => {
-    if (!isSupported) {
+    // iOS PWA gating
+    if (isIOSDevice() && !isPWAMode()) {
+      toast({
+        title: "📱 iPhone/iPad",
+        description: "Per le notifiche push devi aggiungere M1SSION alla Home. Tocca il pulsante Condividi e poi 'Aggiungi alla schermata Home'.",
+        variant: "default",
+        duration: 8000
+      });
+      return;
+    }
+
+    if (!canUseNotifications()) {
       toast({
         title: "❌ Non supportato",
         description: "Il tuo browser non supporta le notifiche push.",
@@ -76,6 +89,10 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
 
   const subscribeToNotifications = async () => {
     try {
+      if (!canUseServiceWorker()) {
+        throw new Error('Service Worker not supported');
+      }
+
       const registration = await navigator.serviceWorker.ready;
       
       // Use unified VAPID key from M1SSION™
@@ -86,21 +103,36 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
 
-      // Save subscription to database
+      // Detect provider and platform
+      const provider = detectPushProvider(subscription.endpoint);
+      const platformInfo = getPlatformInfo();
+
+      // Save subscription to push_subscriptions table
       if (user) {
+        const p256dhKey = subscription.getKey('p256dh');
+        const authKey = subscription.getKey('auth');
+        
+        if (!p256dhKey || !authKey) {
+          throw new Error('Failed to get subscription keys');
+        }
+
         const { error } = await supabase
-          .from('device_tokens')
+          .from('push_subscriptions')
           .upsert({
             user_id: user.id,
-            token: JSON.stringify(subscription),
-            device_type: 'web_push',
-            last_used: new Date().toISOString()
+            endpoint: subscription.endpoint,
+            p256dh: btoa(String.fromCharCode(...new Uint8Array(p256dhKey))),
+            auth: btoa(String.fromCharCode(...new Uint8Array(authKey))),
+            platform: platformInfo.platform,
+            provider,
+            updated_at: new Date().toISOString()
           }, {
-            onConflict: 'user_id,token'
+            onConflict: 'endpoint'
           });
 
         if (error) {
           console.error('Error saving push subscription:', error);
+          throw error;
         } else {
           setIsSubscribed(true);
         }
