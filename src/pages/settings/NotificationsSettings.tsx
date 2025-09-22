@@ -16,6 +16,7 @@ import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
 import PushInspector from "@/components/PushInspector";
+import { canUseNotifications, canUseServiceWorker, isIOSDevice, isPWAMode } from '@/utils/push/support';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -27,6 +28,12 @@ const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [pushRegistrationError, setPushRegistrationError] = useState<string | null>(null);
+  
+  // Safe feature detection
+  const isNotificationSupported = canUseNotifications();
+  const isServiceWorkerSupported = canUseServiceWorker();
+  const isIOSNotPWA = isIOSDevice() && !isPWAMode();
   
   // Use the proper notification preferences hook
   const {
@@ -148,6 +155,49 @@ const NotificationsSettings: React.FC = () => {
     });
   };
 
+  const handleRetryPushRegistration = async () => {
+    setPushRegistrationError(null);
+    
+    if (!isNotificationSupported) {
+      setPushRegistrationError("Le notifiche non sono supportate su questo dispositivo/browser.");
+      return;
+    }
+
+    if (isIOSNotPWA) {
+      toast({
+        title: "📱 iPhone/iPad",
+        description: "Per le notifiche push devi aggiungere M1SSION alla Home. Tocca il pulsante Condividi e poi 'Aggiungi alla schermata Home'.",
+        duration: 8000
+      });
+      return;
+    }
+
+    try {
+      if (!isServiceWorkerSupported) {
+        throw new Error('Service Worker non supportato');
+      }
+
+      // Safe permission request
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        throw new Error('Permesso per le notifiche negato');
+      }
+
+      toast({
+        title: "✅ Prova a registrare di nuovo",
+        description: "Usa il pulsante sopra per attivare le notifiche push."
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
+      setPushRegistrationError(errorMessage);
+      toast({
+        title: "❌ Errore registrazione",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -249,14 +299,78 @@ const NotificationsSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* Push Notifications using UnifiedPushToggle */}
+          {/* Push Notifications with iOS PWA Gating */}
           <div className="border-t border-white/10 pt-4">
-            <UnifiedPushToggle className="w-full" />
-            <div className="mt-4">
-              <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
-            </div>
-            {/* Audit read-only */}
-            <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
+            {/* iOS PWA Gating */}
+            {isIOSNotPWA && (
+              <div className="mb-4 p-4 bg-orange-900/20 border border-orange-700/50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">📱</div>
+                  <div>
+                    <h3 className="text-white font-medium mb-2">iPhone/iPad - Aggiungi alla Home</h3>
+                    <p className="text-white/70 text-sm mb-3">
+                      Per abilitare le notifiche push su iOS, devi aggiungere M1SSION alla schermata Home:
+                    </p>
+                    <ol className="text-white/70 text-sm space-y-1 list-decimal list-inside mb-3">
+                      <li>Tocca il pulsante Condividi (📤) in Safari</li>
+                      <li>Seleziona "Aggiungi alla schermata Home"</li>
+                      <li>Conferma e apri M1SSION dalla Home</li>
+                    </ol>
+                    <p className="text-orange-300 text-sm font-medium">
+                      Le notifiche push funzionano solo in modalità PWA su iOS.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Notification Support Warning */}
+            {!isNotificationSupported && (
+              <div className="mb-4 p-4 bg-red-900/20 border border-red-700/50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">❌</div>
+                  <div>
+                    <h3 className="text-white font-medium mb-2">Notifiche non supportate</h3>
+                    <p className="text-white/70 text-sm">
+                      Il tuo browser non supporta le notifiche push. Prova ad aggiornare il browser o usa un browser compatibile.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Push Registration Error */}
+            {pushRegistrationError && (
+              <div className="mb-4 p-4 bg-red-900/20 border border-red-700/50 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">⚠️</div>
+                  <div className="flex-1">
+                    <h3 className="text-white font-medium mb-2">Errore Registrazione Push</h3>
+                    <p className="text-white/70 text-sm mb-3">{pushRegistrationError}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleRetryPushRegistration}
+                      className="text-white border-white/20 hover:bg-white/10"
+                    >
+                      🔄 Riprova registrazione
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Push Toggle (only if supported and not iOS non-PWA) */}
+            {isNotificationSupported && !isIOSNotPWA && (
+              <>
+                <UnifiedPushToggle className="w-full" />
+                <div className="mt-4">
+                  <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
+                </div>
+                {/* Audit read-only */}
+                <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
+              </>
+            )}
           </div>
 
           {/* Debug Panel for Push Notifications */}

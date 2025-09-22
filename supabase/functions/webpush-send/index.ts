@@ -47,27 +47,35 @@ function detectProvider(endpoint: string): string {
   return 'unknown';
 }
 
-function normalizeSubscription(sub: InputSubscription): NormalizedSubscription {
-  const endpoint = sub.endpoint;
-  const vendorHost = new URL(endpoint).hostname;
+function normalizeSubscription(sub: InputSubscription): NormalizedSubscription | null {
+  if (!sub?.endpoint) return null;
   
-  // Handle both formats: {keys:{p256dh,auth}} and {p256dh,auth}
-  const p256dh = sub.keys?.p256dh || sub.p256dh;
-  const auth = sub.keys?.auth || sub.auth;
-  
-  if (!p256dh || !auth) {
-    throw new Error(`Missing keys: p256dh=${!!p256dh}, auth=${!!auth}`);
+  try {
+    const endpoint = sub.endpoint;
+    const vendorHost = new URL(endpoint).hostname;
+    
+    // Handle both formats: {keys:{p256dh,auth}} and {p256dh,auth}
+    const p256dh = sub.keys?.p256dh || sub.p256dh;
+    const auth = sub.keys?.auth || sub.auth;
+    
+    if (!p256dh || !auth) {
+      console.warn(`❌ [WEBPUSH-SEND] Invalid subscription - missing keys: p256dh=${!!p256dh}, auth=${!!auth}`);
+      return null;
+    }
+    
+    const detectedProvider = detectProvider(endpoint);
+    const provider = sub.provider || detectedProvider;
+    
+    return {
+      endpoint,
+      keys: { p256dh, auth },
+      provider,
+      vendorHost
+    };
+  } catch (e) {
+    console.warn(`❌ [WEBPUSH-SEND] Failed to normalize subscription:`, e.message);
+    return null;
   }
-  
-  const detectedProvider = detectProvider(endpoint);
-  const provider = sub.provider || detectedProvider;
-  
-  return {
-    endpoint,
-    keys: { p256dh, auth },
-    provider,
-    vendorHost
-  };
 }
 
 serve(async (req) => {
@@ -169,16 +177,20 @@ serve(async (req) => {
 
       if (dbSubs && dbSubs.length > 0) {
         for (const dbSub of dbSubs) {
-          try {
-            const normalized = normalizeSubscription({
-              endpoint: dbSub.endpoint,
-              p256dh: dbSub.p256dh,
-              auth: dbSub.auth,
-              provider: dbSub.platform
+          const normalized = normalizeSubscription({
+            endpoint: dbSub.endpoint,
+            p256dh: dbSub.p256dh,
+            auth: dbSub.auth,
+            provider: dbSub.platform
+          });
+          if (normalized) {
+            console.log('📡 [WEBPUSH-SEND] DB Subscription normalized:', {
+              endpointHost: normalized.vendorHost,
+              p256dhLen: normalized.keys.p256dh?.length || 0,
+              authLen: normalized.keys.auth?.length || 0,
+              provider: normalized.provider
             });
             normalizedSubs.push(normalized);
-          } catch (e) {
-            console.error(`❌ [WEBPUSH-SEND] Failed to normalize DB subscription: ${e.message}`);
           }
         }
       }
@@ -189,31 +201,30 @@ serve(async (req) => {
       console.log(`🔍 [WEBPUSH-SEND] Processing ${subscriptions.length} direct subscriptions`);
       
       for (const sub of subscriptions) {
-        try {
-          const normalized = normalizeSubscription(sub);
-          console.log('📡 [WEBPUSH-SEND] Subscription details:', {
+        const normalized = normalizeSubscription(sub);
+        if (normalized) {
+          console.log('📡 [WEBPUSH-SEND] Subscription normalized:', {
             endpointHost: normalized.vendorHost,
-            hasP256dh: !!normalized.keys.p256dh,
-            hasAuth: !!normalized.keys.auth,
-            p256dhLength: normalized.keys.p256dh?.length,
-            authLength: normalized.keys.auth?.length,
-            resolvedProvider: normalized.provider
+            p256dhLen: normalized.keys.p256dh?.length || 0,
+            authLen: normalized.keys.auth?.length || 0,
+            provider: normalized.provider
           });
           normalizedSubs.push(normalized);
-        } catch (e) {
-          console.error(`❌ [WEBPUSH-SEND] Failed to normalize subscription: ${e.message}`);
-          return new Response(JSON.stringify({ 
-            error: `Invalid subscription payload: ${e.message}` 
-          }), {
-            headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-            status: 400,
-          });
         }
       }
     }
 
     if (normalizedSubs.length === 0) {
-      return new Response(JSON.stringify({ error: "No valid subscriptions found" }), {
+      return new Response(JSON.stringify({ 
+        error: "INVALID_SUBSCRIPTIONS",
+        message: "No valid subscriptions found", 
+        expectedFormat: {
+          subscriptions: [
+            { endpoint: "https://...", keys: { p256dh: "...", auth: "..." } },
+            { endpoint: "https://...", p256dh: "...", auth: "..." }
+          ]
+        }
+      }), {
         headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
         status: 400,
       });
