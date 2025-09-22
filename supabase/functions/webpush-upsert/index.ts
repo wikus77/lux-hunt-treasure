@@ -83,21 +83,21 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Upsert subscription
+    // Upsert subscription to webpush_subscriptions table
     const { data, error } = await supabase
-      .from('push_subscriptions')
+      .from('webpush_subscriptions')
       .upsert({
         user_id,
         endpoint,
+        keys: {
+          p256dh: keys.p256dh,
+          auth: keys.auth
+        },
         p256dh: keys.p256dh,
         auth: keys.auth,
         platform: platform || 'unknown',
-        endpoint_type: detectedProvider,
-        is_active: true,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'endpoint',
-        ignoreDuplicates: false
+        provider: detectedProvider,
+        is_active: true
       })
       .select()
       .single();

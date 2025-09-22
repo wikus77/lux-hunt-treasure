@@ -16,7 +16,7 @@ import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
 import PushInspector from "@/components/PushInspector";
-import { canUseNotifications, canUseServiceWorker, isIOSDevice, isPWAMode } from '@/utils/push/support';
+import { canUseNotifications, canUseServiceWorker, isIOSDevice, isPWAMode, getPlatformInfo } from '@/utils/push/support';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -29,6 +29,16 @@ const NotificationsSettings: React.FC = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [pushRegistrationError, setPushRegistrationError] = useState<string | null>(null);
+  const [subscriptionData, setSubscriptionData] = useState<{
+    sw?: PushSubscription | null;
+    db?: any;
+    match: boolean;
+  }>({ match: false });
+  
+  // SSR-safe feature detection
+  const canUseNotif = typeof window !== 'undefined' && 'Notification' in window;
+  const canUseSW = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window;
+  const platformInfo = typeof window !== 'undefined' ? getPlatformInfo() : null;
   
   // Safe feature detection
   const isNotificationSupported = canUseNotifications();
@@ -65,6 +75,9 @@ const NotificationsSettings: React.FC = () => {
 
   useEffect(() => {
     loadNotificationSettings();
+    if (user && canUseSW) {
+      updateTelemetry();
+    }
   }, [user]);
 
   const loadNotificationSettings = async () => {
@@ -155,53 +168,114 @@ const NotificationsSettings: React.FC = () => {
     });
   };
 
+  const VAPID_PUBLIC = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
+  
   const subscribeToPush = async () => {
+    if (!canUseSW) {
+      throw new Error('Service Worker non supportato');
+    }
+    
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.subscribe({ 
       userVisibleOnly: true, 
-      applicationServerKey: urlBase64ToUint8Array(
-        import.meta.env.VITE_FIREBASE_VAPID_KEY || 
-        import.meta.env.VITE_FIREBASE_VAPID_PUBLIC_KEY || 
-        import.meta.env.VAPID_PUBLIC_KEY ||
-        'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A'
-      )
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
     });
 
-    const body = {
+    const provider = sub.endpoint.includes('web.push.apple.com') ? 'apns' : 
+                    (sub.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'mozilla');
+    
+    const platform = platformInfo?.platform || 'web';
+
+    const subscriptionData = {
+      user_id: user!.id,
       endpoint: sub.endpoint,
       keys: sub.toJSON()?.keys || {},
-      platform: /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios' : 'web',
-      provider: sub.endpoint.includes('web.push.apple.com') ? 'apns' : 
-               (sub.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'mozilla'),
+      provider,
+      platform
     };
 
-    // Save to webpush_subscriptions table
-    if (user) {
+    // Try Edge Function first (service role), fallback to client
+    try {
+      // Try via webpush-upsert edge function
+      const { data, error } = await supabase.functions.invoke('webpush-upsert', {
+        body: subscriptionData
+      });
+      
+      if (error) throw error;
+      console.log('✅ Subscription saved via Edge Function');
+    } catch (edgeError) {
+      console.warn('⚠️ Edge Function failed, using client:', edgeError);
+      
+      // Fallback to client-side insert
       const { error } = await supabase
         .from('webpush_subscriptions')
         .upsert({
-          user_id: user.id,
-          endpoint: body.endpoint,
-          keys: body.keys,
-          p256dh: body.keys.p256dh || '',
-          auth: body.keys.auth || '',
-          platform: body.platform,
-          provider: body.provider
+          ...subscriptionData,
+          p256dh: subscriptionData.keys.p256dh || '',
+          auth: subscriptionData.keys.auth || ''
         });
 
       if (error) {
         throw new Error(`Database save failed: ${error.message}`);
       }
-
-      // Show endpoint host in UI
-      const endpointHost = new URL(sub.endpoint).hostname;
-      toast({
-        title: "✅ Push registrato",
-        description: `Endpoint host: ${endpointHost}, Provider: ${body.provider}`
-      });
     }
 
+    // Update telemetry
+    await updateTelemetry();
+
+    const endpointHost = new URL(sub.endpoint).hostname;
+    toast({
+      title: "✅ Push registrato",
+      description: `Provider: ${provider}, Platform: ${platform}`
+    });
+
     return sub;
+  };
+  
+  const updateTelemetry = async () => {
+    if (!canUseSW || !user) return;
+    
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const swSub = await reg.pushManager.getSubscription();
+      
+      // Get latest DB subscription
+      const { data: dbSub } = await supabase
+        .from('webpush_subscriptions')
+        .select('endpoint, keys, provider, platform')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      const match = swSub?.endpoint === dbSub?.endpoint;
+      
+      setSubscriptionData({
+        sw: swSub,
+        db: dbSub,
+        match
+      });
+    } catch (error) {
+      console.warn('Telemetry update failed:', error);
+    }
+  };
+  
+  const handleSyncSubscription = async () => {
+    if (!subscriptionData.sw) return;
+    
+    try {
+      await subscribeToPush();
+      toast({
+        title: "🔄 Sincronizzato",
+        description: "Subscription sincronizzata con il database."
+      });
+    } catch (error) {
+      toast({
+        title: "❌ Errore sincronizzazione",
+        description: error instanceof Error ? error.message : 'Errore sconosciuto',
+        variant: "destructive"
+      });
+    }
   };
 
   const urlBase64ToUint8Array = (base64String: string) => {
@@ -222,11 +296,7 @@ const NotificationsSettings: React.FC = () => {
   const handleRetryPushRegistration = async () => {
     setPushRegistrationError(null);
     
-    // Safe feature detection using guards
-    const hasNotificationAPI = canUseNotifications();
-    const hasPushManager = canUseServiceWorker();
-    
-    if (!hasNotificationAPI) {
+    if (!canUseNotif) {
       setPushRegistrationError("Le notifiche non sono supportate su questo dispositivo/browser.");
       toast({
         title: "❌ Non supportato",
@@ -238,34 +308,32 @@ const NotificationsSettings: React.FC = () => {
 
     if (isIOSNotPWA) {
       toast({
-        title: "📱 iPhone/iPad",
-        description: "Per le notifiche push devi aggiungere M1SSION alla Home. Tocca il pulsante Condividi e poi 'Aggiungi alla schermata Home'.",
-        duration: 8000
+        title: "📱 iPhone/iPad - Aggiungi alla Home",
+        description: "Per le notifiche push devi aggiungere M1SSION alla Home. Tocca il pulsante Condividi (📤) e poi 'Aggiungi alla schermata Home'.",
+        duration: 10000
       });
       return;
     }
 
     try {
-      if (!hasPushManager) {
+      if (!canUseSW) {
         throw new Error('Service Worker o PushManager non supportato');
       }
 
-      // Safe permission request with guard
-      if (!hasNotificationAPI) {
-        throw new Error('API Notification non disponibile');
-      }
-      
-      const permission = await Notification.requestPermission();
-      if (permission !== 'granted') {
-        throw new Error('Permesso per le notifiche negato');
+      // Request permission with clear UI
+      if (Notification.permission !== 'granted') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          throw new Error('Permesso per le notifiche negato');
+        }
       }
 
-      // Save subscription to new webpush_subscriptions table
+      // Subscribe and save
       await subscribeToPush();
 
       toast({
-        title: "✅ Prova a registrare di nuovo",
-        description: "Usa il pulsante sopra per attivare le notifiche push."
+        title: "✅ Registrazione completata",
+        description: "Le notifiche push sono ora attive."
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
@@ -447,6 +515,48 @@ const NotificationsSettings: React.FC = () => {
                 <div className="mt-4">
                   <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
                 </div>
+                
+                {/* Telemetry Status */}
+                <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
+                  <h4 className="text-white font-medium mb-3">🔍 Telemetria Push</h4>
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-white/70">SW Endpoint:</span>
+                      <span className="text-white font-mono">
+                        {subscriptionData.sw?.endpoint ? 
+                          new URL(subscriptionData.sw.endpoint).hostname : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-white/70">DB Endpoint:</span>
+                      <span className="text-white font-mono">
+                        {subscriptionData.db?.endpoint ? 
+                          new URL(subscriptionData.db.endpoint).hostname : 'N/A'}
+                      </span>
+                    </div>
+                    
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Status:</span>
+                      <span className={`font-medium ${subscriptionData.match ? 'text-green-400' : 'text-orange-400'}`}>
+                        {subscriptionData.match ? '✅ MATCH' : '❌ NO MATCH'}
+                      </span>
+                    </div>
+                    
+                    {!subscriptionData.match && subscriptionData.sw && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={handleSyncSubscription}
+                        className="w-full mt-2"
+                      >
+                        🔄 Sincronizza
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
                 {/* Audit read-only */}
                 <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
               </>
