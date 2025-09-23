@@ -4255,7 +4255,8 @@ export type Database = {
           keys: Json | null
           p256dh: string
           platform: string | null
-          provider: string | null
+          provider: string
+          updated_at: string
           user_id: string
         }
         Insert: {
@@ -4267,7 +4268,8 @@ export type Database = {
           keys?: Json | null
           p256dh: string
           platform?: string | null
-          provider?: string | null
+          provider: string
+          updated_at?: string
           user_id: string
         }
         Update: {
@@ -4279,7 +4281,8 @@ export type Database = {
           keys?: Json | null
           p256dh?: string
           platform?: string | null
-          provider?: string | null
+          provider?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -5074,7 +5077,8 @@ export type Database = {
           keys: Json | null
           p256dh: string
           platform: string | null
-          provider: string | null
+          provider: string
+          updated_at: string
           user_id: string
         }
       }
