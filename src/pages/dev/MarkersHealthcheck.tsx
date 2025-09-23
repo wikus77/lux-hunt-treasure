@@ -38,7 +38,6 @@ interface CreateMarkersResponse {
 interface RecentMarker {
   id: string;
   title: string;
-  reward_type: string;
   created_at: string;
   lat: number;
   lng: number;
@@ -145,7 +144,7 @@ export default function MarkersHealthcheck() {
       // Get recent markers
       const { data: recentMarkers } = await supabase
         .from('markers')
-        .select('id, title, reward_type, created_at, lat, lng')
+        .select('id, title, created_at, lat, lng')
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -457,7 +456,7 @@ export default function MarkersHealthcheck() {
                           <div className="flex justify-between items-start">
                             <span className="font-mono">{marker.id.slice(0, 8)}...</span>
                             <Badge variant="secondary" className="text-xs">
-                              {marker.reward_type}
+                              MARKER
                             </Badge>
                           </div>
                           <div className="mt-1">

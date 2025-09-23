@@ -14,8 +14,6 @@ interface MarkerData {
   lat: number;
   lng: number;
   active: boolean;
-  reward_type: string;
-  reward_payload: any;
   visible_from: string;
   visible_to: string;
   drop_id?: string;
@@ -151,8 +149,8 @@ const MapMarkers: React.FC = () => {
         .insert({
           marker_id: marker.id,
           user_id: user.id,
-          reward_type: marker.reward_type,
-          reward_data: marker.reward_payload
+          reward_type: 'MARKER',
+          reward_data: { title: marker.title }
         });
 
       if (claimError) {
@@ -169,61 +167,20 @@ const MapMarkers: React.FC = () => {
   };
 
   const awardReward = async (marker: MarkerData, userId: string) => {
-    switch (marker.reward_type) {
-      case 'BUZZ_FREE':
-        const amount = marker.reward_payload?.amount || 1;
-        // TODO: Add buzz credits to user
-        console.log(`🎁 Awarded ${amount} free buzz to user ${userId}`);
-        break;
-        
-      case 'XP_POINTS':
-        const points = marker.reward_payload?.points || 10;
-        await supabase.rpc('award_xp', {
-          p_user_id: userId,
-          p_xp_amount: points
-        });
-        console.log(`🎁 Awarded ${points} XP to user ${userId}`);
-        break;
-        
-      case 'MESSAGE':
-        // Create notification for message
-        await supabase
-          .from('user_notifications')
-          .insert({
-            user_id: userId,
-            type: 'message',
-            title: 'Messaggio M1SSION',
-            message: marker.reward_payload?.text || 'Hai trovato un messaggio segreto!'
-          });
-        break;
-        
-      case 'BADGE':
-        // TODO: Award badge to user
-        console.log(`🎁 Awarded badge ${marker.reward_payload?.badge_id} to user ${userId}`);
-        break;
-        
-      case 'EVENT_TICKET':
-        // TODO: Award event ticket to user
-        console.log(`🎁 Awarded event ticket ${marker.reward_payload?.event_id} to user ${userId}`);
-        break;
+    // Simple marker collection - award basic XP
+    try {
+      await supabase.rpc('award_xp', {
+        p_user_id: userId,
+        p_xp_amount: 10
+      });
+      console.log(`🎁 Awarded 10 XP to user ${userId} for marker ${marker.id}`);
+    } catch (error) {
+      console.error('❌ Error awarding XP:', error);
     }
   };
 
   const getRewardDescription = (marker: MarkerData): string => {
-    switch (marker.reward_type) {
-      case 'BUZZ_FREE':
-        return `${marker.reward_payload?.amount || 1} Buzz Gratuiti`;
-      case 'XP_POINTS':
-        return `${marker.reward_payload?.points || 10} Punti XP`;
-      case 'MESSAGE':
-        return 'Messaggio Segreto';
-      case 'BADGE':
-        return 'Badge Speciale';
-      case 'EVENT_TICKET':
-        return 'Ticket Evento';
-      default:
-        return 'Reward Misterioso';
-    }
+    return `${marker.title} - 10 XP`;
   };
 
   if (loading) {
@@ -236,7 +193,7 @@ const MapMarkers: React.FC = () => {
         <Marker
           key={marker.id}
           position={[marker.lat, marker.lng]}
-          icon={createRewardIcon(marker.reward_type)}
+          icon={createRewardIcon('MARKER')}
           eventHandlers={{
             click: () => handleMarkerClick(marker),
           }}
