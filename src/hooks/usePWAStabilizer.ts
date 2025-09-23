@@ -5,7 +5,7 @@
 
 import { useEffect } from 'react';
 import { runPWACleanupOnce } from '@/lib/pwa/cleanup';
-import { ensureWebPushSubscription } from '@/lib/push/subscribe';
+import { registerPush } from '@/lib/push/register-push';
 import { useAuth } from './use-auth';
 
 /**
@@ -42,9 +42,9 @@ export const usePWAStabilizer = () => {
           console.log('🔔 PWA Stabilizer: Setting up push subscription...');
           
           try {
-            const subscription = await ensureWebPushSubscription();
-            if (subscription) {
-              console.log('✅ PWA Stabilizer: Push subscription established');
+            const result = await registerPush(user.id);
+            if (result) {
+              console.log('✅ PWA Stabilizer: Push subscription established:', result);
             }
           } catch (error) {
             console.error('❌ PWA Stabilizer: Push subscription failed:', error);

@@ -6,7 +6,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { initFcmAndGetToken } from './initFcm';
-import { ensureWebPushSubscription } from './subscribe';
+import { registerPush } from './register-push';
 
 export interface UnifiedPushSubscription {
   type: 'web_push' | 'fcm' | 'native';
@@ -104,7 +104,17 @@ export class UnifiedPushManager {
     console.log('🍎 [iOS] Starting subscription...');
 
     try {
-      const subscription = await ensureWebPushSubscription();
+      // Get user session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('User not authenticated');
+      }
+      
+      const result = await registerPush(session.user.id);
+      
+      // Get the actual subscription after registration
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
       
       return {
         type: 'web_push',
@@ -171,8 +181,17 @@ export class UnifiedPushManager {
       const registration = await navigator.serviceWorker.ready;
       console.log('✅ [Desktop] Service worker ready:', registration);
 
-      console.log('🔧 [Desktop] Calling ensureWebPushSubscription...');
-      const webPushSubscription = await ensureWebPushSubscription();
+      // Get user session for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('User not authenticated');
+      }
+      
+      console.log('🔧 [Desktop] Calling registerPush...');
+      await registerPush(session.user.id);
+      
+      // Get the actual subscription after registration
+      const webPushSubscription = await registration.pushManager.getSubscription();
       console.log('📝 [Desktop] Web Push subscription result:', webPushSubscription);
       
       const result = {

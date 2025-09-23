@@ -3,7 +3,35 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
  */
 
-import { urlB64ToUint8Array, extractSubscriptionKeys, detectPushProvider, getVAPIDPublicKey } from './vapid-utils';
+import { supabase } from '@/integrations/supabase/client';
+
+// VAPID Public Key - use environment variable if available
+const VAPID_PUBLIC_KEY = 'BLQd4od5-KawKR0JkKCT6SqhbZOBOkN_yrDYyNs8rUP0PJ3WmjJxRaMfqfKxhGKUFEGebx8hUAWZqJLSuSFP-Tc';
+
+/**
+ * Convert base64url string to Uint8Array for VAPID
+ */
+function urlB64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+/**
+ * Get VAPID public key
+ */
+export function getVAPIDPublicKey(): string {
+  return VAPID_PUBLIC_KEY;
+}
 
 export interface PushRegistrationPayload {
   user_id: string;
@@ -21,118 +49,114 @@ export interface PushRegistrationPayload {
  * @param userId - Current authenticated user ID
  * @returns PushSubscription object if successful
  */
-export async function registerPush(userId: string): Promise<PushSubscription> {
-  // 1) Get service worker registration
+export async function registerPush(userId: string): Promise<{ endpoint: string; provider: string }> {
+  // 1) Check support
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     throw new Error('Push notifications not supported in this browser');
   }
 
+  // 2) Request permission
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    throw new Error('Permission denied for notifications');
+  }
+
+  // 3) Get service worker registration
   const registration = await navigator.serviceWorker.ready;
-  
-  // 2) Check existing subscription - only unsubscribe if endpoint differs
-  const existingSubscription = await registration.pushManager.getSubscription();
-  
-  // 3) Create new subscription with backend VAPID public key
-  const VAPID_PUBLIC_KEY = getVAPIDPublicKey();
-  console.log('🔑 Using VAPID public key for subscription:', VAPID_PUBLIC_KEY.substring(0, 20) + '...');
-  
-  // If existing subscription with same config, don't recreate
-  if (existingSubscription) {
+
+  // 4) Clean up old subscription
+  const oldSubscription = await registration.pushManager.getSubscription();
+  if (oldSubscription) {
     try {
-      const existingKeys = extractSubscriptionKeys(existingSubscription);
-      const existingProvider = detectPushProvider(existingSubscription.endpoint);
-      
-      // Test if we can reuse existing subscription
-      console.log('🔄 Found existing subscription, checking if reusable...');
-      
-      // For now, always create new to ensure proper backend sync
-      console.log('🧹 Unsubscribing from existing push subscription for fresh setup');
-      await existingSubscription.unsubscribe();
+      await oldSubscription.unsubscribe();
     } catch (error) {
-      console.warn('⚠️ Error checking existing subscription:', error);
-      await existingSubscription.unsubscribe();
+      console.warn('Failed to unsubscribe old subscription:', error);
     }
   }
-  
+
+  // 5) Subscribe with VAPID
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
     applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
   });
 
-  // 4) Extract and normalize subscription data - always extract p256dh/auth as base64url strings
-  const endpoint = subscription.endpoint;
-  const keys = extractSubscriptionKeys(subscription);
-  const provider = detectPushProvider(endpoint);
-
-  console.log('📱 Push subscription created:', {
-    provider,
-    endpointHost: new URL(endpoint).hostname,
-    hasKeys: !!(keys.p256dh && keys.auth),
-    keyLengths: { p256dh: keys.p256dh?.length, auth: keys.auth?.length }
-  });
-
-  // 5) Save to backend via webpush-upsert endpoint with 5 required top-level fields
-  const payload = {
-    user_id: userId,      // REQUIRED
-    endpoint,             // REQUIRED  
-    provider,             // REQUIRED: 'apns'|'fcm'|'webpush'
-    p256dh: keys.p256dh,  // REQUIRED: base64url string
-    auth: keys.auth,      // REQUIRED: base64url string
-    keys                  // OPTIONAL: nested object
+  // 6) Extract keys
+  const getKey = (keyName: 'p256dh' | 'auth'): string => {
+    const key = subscription.getKey(keyName);
+    if (!key) throw new Error(`Missing ${keyName} key`);
+    return btoa(String.fromCharCode(...new Uint8Array(key)));
   };
 
-  // Get current user session for Authorization header (NOT Service Role Key)
-  const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-upsert`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${await getSessionToken()}`, // User JWT, not SRK
-      'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
-    },
-    body: JSON.stringify(payload),
+  // 7) Determine provider
+  const endpoint = subscription.endpoint;
+  const provider = 
+    endpoint.includes('web.push.apple.com') ? 'apns' :
+    endpoint.includes('googleapis.com') ? 'fcm' : 'webpush';
+
+  // 8) Determine platform
+  const platform = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'mobile' : 'desktop';
+
+  // 9) Upsert to database via Edge Function
+  const { error } = await supabase.functions.invoke('webpush-upsert', {
+    body: {
+      user_id: userId,
+      endpoint,
+      provider,
+      p256dh: getKey('p256dh'),
+      auth: getKey('auth'),
+      keys: { 
+        p256dh: getKey('p256dh'), 
+        auth: getKey('auth') 
+      },
+      platform,
+      is_active: true
+    }
   });
 
-  if (!response.ok) {
-    const errorData = await response.text();
-    let errorMessage = `Push registration failed: ${response.status}`;
-    
-    try {
-      const errorJson = JSON.parse(errorData);
-      if (errorJson.missing_fields) {
-        errorMessage += ` - Missing fields: ${errorJson.missing_fields.join(', ')}`;
-      } else if (errorJson.error) {
-        errorMessage += ` - ${errorJson.error}`;
-      }
-    } catch {
-      errorMessage += ` - ${errorData}`;
-    }
-    
-    throw new Error(errorMessage);
+  if (error) {
+    console.error('Failed to save push subscription:', error);
+    throw new Error(`Failed to save push subscription: ${error.message}`);
   }
 
-  const result = await response.json();
-  console.log('✅ Push subscription saved to backend:', result);
+  console.log('✅ Push subscription registered successfully:', { endpoint: endpoint.substring(0, 50) + '...', provider, platform });
 
-  return subscription;
+  return { endpoint, provider };
 }
 
 /**
- * Get session token for authenticated requests
+ * Unregister push notifications
  */
-async function getSessionToken(): Promise<string> {
+export async function unregisterPush(userId: string): Promise<void> {
   try {
-    // This should be imported from your Supabase client
-    const { supabase } = await import('@/integrations/supabase/client');
-    const { data: { session } } = await supabase.auth.getSession();
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
     
-    if (!session?.access_token) {
-      throw new Error('No active session found');
+    if (subscription) {
+      const endpoint = subscription.endpoint;
+      
+      // Unsubscribe from browser
+      await subscription.unsubscribe();
+      
+      // Mark as inactive in database
+      await supabase.functions.invoke('webpush-upsert', {
+        body: {
+          user_id: userId,
+          endpoint,
+          provider: endpoint.includes('web.push.apple.com') ? 'apns' : 
+                   endpoint.includes('googleapis.com') ? 'fcm' : 'webpush',
+          p256dh: '',
+          auth: '',
+          keys: { p256dh: '', auth: '' },
+          platform: 'desktop',
+          is_active: false
+        }
+      });
+      
+      console.log('✅ Push subscription unregistered successfully');
     }
-    
-    return session.access_token;
   } catch (error) {
-    console.error('❌ Error getting session token:', error);
-    throw new Error('Authentication required for push registration');
+    console.error('Failed to unregister push subscription:', error);
+    throw error;
   }
 }
 

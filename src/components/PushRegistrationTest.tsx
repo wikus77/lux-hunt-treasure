@@ -62,7 +62,10 @@ export const PushRegistrationTest: React.FC = () => {
     try {
       console.log('🔔 Starting push registration for user:', user.id);
       
-      const newSubscription = await registerPush(user.id);
+      const result = await registerPush(user.id);
+      // Get the actual subscription after registration
+      const registration = await navigator.serviceWorker.ready;
+      const newSubscription = await registration.pushManager.getSubscription();
       setSubscription(newSubscription);
       setDbStatus('saved');
       

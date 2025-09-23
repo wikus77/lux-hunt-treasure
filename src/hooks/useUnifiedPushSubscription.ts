@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from './use-auth';
-import { ensureWebPushSubscription } from '@/lib/push/subscribe';
+import { registerPush } from '@/lib/push/register-push';
 
 interface PushSubscriptionState {
   isSupported: boolean;
@@ -53,7 +53,11 @@ export const useUnifiedPushSubscription = () => {
       
       try {
         console.log('🔔 [useUnifiedPushSubscription] Auto-subscribing for authenticated user...');
-        const subscription = await ensureWebPushSubscription();
+        const result = await registerPush(user.id);
+        
+        // Get the actual subscription after registration
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
         
         setState(prev => ({
           ...prev,
@@ -61,8 +65,8 @@ export const useUnifiedPushSubscription = () => {
           isLoading: false,
         }));
         
-        if (subscription) {
-          console.log('✅ [useUnifiedPushSubscription] Subscription successful');
+        if (result) {
+          console.log('✅ [useUnifiedPushSubscription] Subscription successful:', result);
         }
       } catch (error) {
         console.error('❌ [useUnifiedPushSubscription] Subscription failed:', error);
@@ -87,8 +91,16 @@ export const useUnifiedPushSubscription = () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      const subscription = await ensureWebPushSubscription();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+      
+      const result = await registerPush(user.id);
       const permission = Notification.permission;
+      
+      // Get the actual subscription after registration
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
       
       setState(prev => ({
         ...prev,
