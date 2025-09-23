@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 import { Send, Users, User, Loader2, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { sendAdminBroadcast } from '@/lib/sendAdminBroadcast';
 
 export function PushConsole() {
   const [title, setTitle] = useState("");
@@ -62,108 +63,40 @@ export function PushConsole() {
     setResult(null);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      
-      if (!token) {
-        toast.error("Authentication required");
-        setLoading(false);
-        return;
-      }
-
-      // Generate invocation ID for correlation
-      const invocationId = crypto.randomUUID();
-
       // Prepare payload for webpush-admin-broadcast
       const targetPayload = target === "all" 
         ? { all: true }
         : { user_ids_csv: userIdsCsv.trim() };
 
-      const webpushPayload = {
+      const payload = {
         title: title.trim(),
         body: body.trim(),
         url: url.trim() || "/",
         target: targetPayload
       };
 
-      // Prepare payload for mirror-push-logtee (different format)
-      const logteeTarget = target === "all" 
-        ? "all" as const
-        : { userIds: userIdsCsv.trim().split(',').map(id => id.trim()).filter(Boolean) };
+      console.log("📤 Sending admin broadcast:", payload);
 
-      const logteePayload = {
-        title: title.trim(),
-        body: body.trim(),
-        url: url.trim() || "/",
-        target: logteeTarget,
-        invocation_id: invocationId
-      };
+      // Use the new helper function that handles JWT automatically
+      const resultData = await sendAdminBroadcast(payload);
+      
+      setResult(resultData);
 
-      console.log("📤 Sending admin broadcast:", webpushPayload);
-      console.log("📋 Logging to TEE:", logteePayload);
-
-      const projectRef = "vkjrqirvdvjbemsfzxof";
-      const headers = {
-        "content-type": "application/json",
-        "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
-        "authorization": `Bearer ${token}`,
-      };
-
-      // Call both functions in parallel with Promise.allSettled
-      const [mainResult, logteeResult] = await Promise.allSettled([
-        fetch(`https://${projectRef}.functions.supabase.co/webpush-admin-broadcast`, {
-          method: "POST",
-          mode: "cors",
-          headers,
-          body: JSON.stringify(webpushPayload),
-        }),
-        fetch(`https://${projectRef}.functions.supabase.co/mirror-push-logtee`, {
-          method: "POST",
-          mode: "cors",
-          headers,
-          body: JSON.stringify(logteePayload),
-        }).catch(err => {
-          console.warn("TEE logging failed (non-blocking):", err);
-          return null;
-        })
-      ]);
-
-      // Process main result (webpush-admin-broadcast)
-      if (mainResult.status === 'fulfilled') {
-        const response = mainResult.value;
-        const json = await response.json().catch(() => ({}));
-        const resultData = { status: response.status, ...json };
-        
-        // Add TEE status to result for debugging
-        if (logteeResult.status === 'fulfilled' && logteeResult.value) {
-          resultData.tee_logged = true;
-        } else {
-          resultData.tee_logged = false;
-          resultData.tee_error = logteeResult.status === 'rejected' ? logteeResult.reason?.message : 'unknown';
-        }
-        
-        setResult(resultData);
-
-        if (response.ok && json.success !== false) {
-          const teeStatus = resultData.tee_logged ? " (logged)" : " (log failed)";
-          toast.success(`✅ Push sent: ${json.success}/${json.total} successful${teeStatus}`);
-        } else {
-          if (response.status === 403) {
-            toast.error("❌ Accesso non autorizzato: aggiungi l'UUID all'elenco ADMIN_USER_IDS");
-          } else {
-            toast.error(`❌ Error: ${json.error || 'Unknown error'}`);
-          }
-        }
+      if (resultData.success !== false) {
+        toast.success(`✅ Push sent: ${resultData.success}/${resultData.total} successful`);
       } else {
-        // Main function failed
-        console.error("Push broadcast error:", mainResult.reason);
-        toast.error(`Network error: ${mainResult.reason?.message || 'Unknown error'}`);
-        setResult({ error: mainResult.reason?.message || 'Unknown error' });
+        toast.error(`❌ Error: ${resultData.error || 'Unknown error'}`);
       }
 
     } catch (error: any) {
       console.error("Push broadcast error:", error);
-      toast.error(`Network error: ${error.message}`);
+      
+      if (error.message.includes('Unauthorized') || error.message.includes('401')) {
+        toast.error("❌ Accesso non autorizzato: verifica di essere admin");
+      } else {
+        toast.error(`❌ Error: ${error.message}`);
+      }
+      
       setResult({ error: error.message });
     } finally {
       setLoading(false);

@@ -7,7 +7,6 @@
 @import './styles/theme.css';
 @import './styles/mobile-optimizations.css';
 @import './styles/ios-safe-area-fixes.css';
-@import './styles/bottom-navigation.css';
 
 @tailwind base;
 @tailwind components;
@@ -78,11 +77,15 @@
 
   @media (max-width: 640px) {
     button, a {
-      @apply touch-manipulation mobile-touch-target;
+      /* was: @apply touch-manipulation mobile-touch-target; */
+      touch-action: manipulation;
+      min-height: 44px;
+      min-width: 44px;
     }
 
     input, select, textarea {
-      @apply text-base mobile-optimized;
+      /* was: @apply text-base mobile-optimized; */
+      font-size: 16px;
     }
 
     .content-section {
@@ -335,6 +338,66 @@
   .badge-secondary {
     @apply bg-white/10 text-white;
   }
+
+  /* ——— M1SSION™ Brand Title ——— */
+  .plans-title { 
+    line-height: 1.15 !important; 
+    @apply text-4xl font-bold mb-4;
+  }
+  .brand-m1 {
+    color: #00E5FF !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    text-shadow: 0 0 8px rgba(0,229,255,.8) !important;
+  }
+  .brand-ss { 
+    color: #FFFFFF !important; 
+    font-weight: 800 !important; 
+  }
+
+  /* ——— Ribbon visibili ——— */
+  .pricing-section, .plans-wrapper, .plans-grid, .plan-card { 
+    overflow: visible !important; 
+  }
+  .plans-grid, 
+  .plans-wrapper, 
+  .pricing-section { 
+    overflow: visible !important; 
+    position: relative; 
+  }
+  .plan-card { 
+    overflow: visible !important; 
+    position: relative; 
+    z-index: 0; 
+  }
+  .plan-card .ribbon {
+    position: absolute;
+    top: -18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    pointer-events: none;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 12px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
+    white-space: nowrap;
+  }
+  .plan-card.gold .ribbon { 
+    background: #FFDD33; 
+    color: #1A1A1A; 
+  }
+  .plan-card.titanium .ribbon { 
+    background: #9B59FF; 
+    color: white; 
+  }
+
+  /* ——— Free button loading ——— */
+  .free-cta[disabled] { 
+    opacity: .6 !important; 
+    cursor: not-allowed !important; 
+  }
 }
 
 @layer utilities {
@@ -394,16 +457,6 @@
 
   .text-gradient-text {
     @apply gradient-text;
-  }
-
-  .mobile-touch-target {
-    @apply min-h-[44px] min-w-[44px];
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mobile-optimized {
-    font-size: 16px; /* Prevent zoom on input focus */
   }
 }
 

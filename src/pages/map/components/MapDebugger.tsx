@@ -26,7 +26,8 @@ const MapDebugger: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  if (process.env.NODE_ENV !== 'development') {
+  // ⚡ PRODUZIONE: Nascondi completamente
+  if (import.meta.env.PROD) {
     return null;
   }
 

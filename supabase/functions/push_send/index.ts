@@ -1,344 +1,330 @@
-/*
- * M1SSION™ Push Send Service - JOSE-powered VAPID JWT
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
- * Zero regressioni. Libreria JOSE ufficiale per firma ECDSA.
- */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SignJWT, importJWK } from 'npm:jose@5.8.0';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const ALLOWED_ORIGINS = [
+  "https://m1ssion.eu",
+  "https://www.m1ssion.eu", 
+  "https://m1ssion.pages.dev",
+  "http://localhost:8788",
+];
 
-// Supabase environment
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-// VAPID secrets (base64url format)
-const VAPID_PUBLIC_KEY = Deno.env.get('VAPID_PUBLIC_KEY')!; // 65 bytes uncompressed
-const VAPID_PRIVATE_KEY = Deno.env.get('VAPID_PRIVATE_KEY')!; // 32 bytes private key
-
-// Utility functions for base64url
-function base64UrlDecode(base64url: string): Uint8Array {
-  const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-  return new Uint8Array(Array.from(atob(base64 + padding), c => c.charCodeAt(0)));
-}
-
-function base64UrlEncode(bytes: Uint8Array): string {
-  const base64 = btoa(String.fromCharCode(...bytes));
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-/**
- * Derive x,y coordinates from VAPID public key (65 bytes uncompressed)
- */
-function deriveXYFromPublic(publicKeyBase64url: string): { x: string; y: string } {
-  const publicKeyBytes = base64UrlDecode(publicKeyBase64url);
-  
-  if (publicKeyBytes.length !== 65 || publicKeyBytes[0] !== 0x04) {
-    throw new Error('Invalid uncompressed public key format');
-  }
-  
-  // Extract x (bytes 1-32) and y (bytes 33-64)  
-  const x = publicKeyBytes.slice(1, 33);
-  const y = publicKeyBytes.slice(33, 65);
-  
+function corsHeaders(req: Request) {
+  const origin = req.headers.get("Origin") ?? "";
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
   return {
-    x: base64UrlEncode(x),
-    y: base64UrlEncode(y)
+    "Access-Control-Allow-Origin": allowOrigin,
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, X-M1-Dropper-Version",
+    "Access-Control-Allow-Credentials": "true",
+    "Vary": "Origin",
   };
 }
 
-/**
- * Classify endpoint type for service-specific headers
- */
-function classifyEndpoint(endpoint: string): string {
-  if (endpoint.includes('web.push.apple.com')) return 'apns';
-  if (endpoint.includes('fcm.googleapis.com')) return 'fcm';
-  return 'generic';
+function handleOptions(req: Request) {
+  return new Response("ok", { status: 200, headers: corsHeaders(req) });
 }
 
-/**
- * Generate dynamic audience for VAPID JWT
- */
-function getAudience(endpoint: string): string {
-  const endpointType = classifyEndpoint(endpoint);
-  
-  switch (endpointType) {
-    case 'apns':
-      return 'https://web.push.apple.com';
-    case 'fcm':
-      return 'https://fcm.googleapis.com';
-    default:
-      // Generic Web Push - extract origin from endpoint
-      try {
-        const url = new URL(endpoint);
-        return `${url.protocol}//${url.hostname}`;
-      } catch {
-        return 'https://web.push.default.com';
-      }
-  }
+interface PushPayload {
+  title: string;
+  body: string;
+  image?: string | null;
+  deepLink?: string | null;
+  badge?: string | null;
 }
 
-/**
- * Generate VAPID JWT using JOSE library with proper ES256 signing
- */
-async function generateVAPIDToken(endpoint: string): Promise<string> {
-  const audience = getAudience(endpoint);
-  const subject = 'mailto:support@m1ssion.com';
-  
-  console.log(`🔐 Generating VAPID JWT for ${classifyEndpoint(endpoint)} with aud: ${audience}`);
-  
-  try {
-    // Derive x,y from public key for JWK
-    const { x, y } = deriveXYFromPublic(VAPID_PUBLIC_KEY);
-    
-    // Create JWK for private key import
-    const jwk: JsonWebKey = {
-      kty: 'EC',
-      crv: 'P-256',
-      d: VAPID_PRIVATE_KEY, // 32 bytes base64url private key
-      x: x,
-      y: y
-    };
-
-    // Import private key as JWK
-    const privateKey = await importJWK(jwk, 'ES256');
-    
-    // Create and sign JWT with JOSE
-    const jwt = await new SignJWT({})
-      .setProtectedHeader({ alg: 'ES256', typ: 'JWT' })
-      .setAudience(audience)
-      .setIssuer(subject)
-      .setSubject(subject)
-      .setExpirationTime('12h')
-      .sign(privateKey);
-
-    console.log(`✅ VAPID JWT generated successfully for ${audience}`);
-    return jwt;
-    
-  } catch (error) {
-    console.error('❌ VAPID JWT generation failed:', error);
-    throw new Error(`VAPID JWT generation failed: ${error.message}`);
-  }
-}
-
-/**
- * Build service-specific headers for push notifications
- */
-function buildPushHeaders(endpointType: string, vapidToken: string): Record<string, string> {
-  const headers: Record<string, string> = {
-    'TTL': '86400', // 24 hours
+interface PushSendRequest {
+  audience: 'all' | 'segment' | 'list';
+  filters?: {
+    segment?: 'winners' | 'active_24h' | 'ios' | 'android' | 'webpush';
+    ids?: string[];
+    emails?: string[];
   };
-
-  switch (endpointType) {
-    case 'apns':
-      // APNs Web Push format
-      headers['Authorization'] = `WebPush ${vapidToken}`;
-      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
-      break;
-      
-    case 'fcm':
-      // FCM VAPID format
-      headers['Authorization'] = `vapid t=${vapidToken}, k=${VAPID_PUBLIC_KEY}`;
-      break;
-      
-    default:
-      // Generic Web Push (similar to APNs)
-      headers['Authorization'] = `WebPush ${vapidToken}`;
-      headers['Crypto-Key'] = `p256ecdsa=${VAPID_PUBLIC_KEY}`;
-  }
-
-  return headers;
+  payload: PushPayload;
 }
 
-/**
- * Send push notification to endpoint
- */
-async function sendPushNotification(endpoint: string, vapidToken: string): Promise<{ success: boolean; status: number; stale?: boolean }> {
-  const endpointType = classifyEndpoint(endpoint);
-  const headers = buildPushHeaders(endpointType, vapidToken);
-  
-  console.log(`📤 Sending to ${endpointType} endpoint: ${endpoint.substring(0, 50)}...`);
-  console.log(`📋 Headers:`, headers);
-  
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers,
-      // No body for no-payload push notification
-    });
-    
-    const success = response.status >= 200 && response.status < 300;
-    const stale = response.status === 404 || response.status === 410;
-    
-    console.log(`📨 Push response: ${response.status} ${response.statusText}`);
-    
-    if (stale) {
-      console.log(`🗑️ Stale endpoint detected: ${response.status}`);
-    }
-    
-    return { success, status: response.status, stale };
-    
-  } catch (error) {
-    console.error(`❌ Push send failed:`, error);
-    return { success: false, status: 500 };
-  }
-}
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const fcmServerKey = Deno.env.get('FCM_SERVER_KEY');
+const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+const vapidContact = Deno.env.get('VAPID_CONTACT');
 
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const url = new URL(req.url);
-  
-  // Health check endpoint
-  if (req.method === 'GET' && url.pathname.endsWith('/health')) {
-    return new Response(JSON.stringify({ ok: true }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
-
-  // Only allow POST requests for push operations
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
+  if (req.method === "OPTIONS") return handleOptions(req);
 
   try {
-    // Verify Service Role Key for security
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ') || authHeader.slice(7) !== SUPABASE_SERVICE_ROLE_KEY) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // Dry-run endpoint for diagnostics
-    if (url.pathname.endsWith('/dry-run')) {
-      const { endpoint } = await req.json();
-      
-      if (!endpoint) {
-        return new Response(JSON.stringify({ error: 'endpoint required' }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-
-      try {
-        const audience = getAudience(endpoint);
-        const { x, y } = deriveXYFromPublic(VAPID_PUBLIC_KEY);
-        const endpointType = classifyEndpoint(endpoint);
-        
-        // Build diagnostic preview (mask sensitive data)
-        const xPreview = x.slice(0, 8) + '...';
-        const yPreview = y.slice(0, 8) + '...';
-        
-        const headerPreview = endpointType === 'apns' 
-          ? { 'Authorization': 'WebPush [JWT_MASKED]', 'Crypto-Key': `p256ecdsa=${VAPID_PUBLIC_KEY.slice(0, 20)}...` }
-          : { 'Authorization': `vapid t=[JWT_MASKED], k=${VAPID_PUBLIC_KEY.slice(0, 20)}...` };
-
-        return new Response(JSON.stringify({
-          ok: true,
-          audience,
-          endpoint_type: endpointType,
-          debug: {
-            x_preview: xPreview,
-            y_preview: yPreview,
-            pub_key_len: VAPID_PUBLIC_KEY.length,
-            priv_key_len: VAPID_PRIVATE_KEY.length,
-            header_preview: headerPreview
-          }
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      } catch (error) {
-        return new Response(JSON.stringify({ 
-          ok: false, 
-          error: `Dry-run failed: ${error.message}` 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-
-    const body = await req.json();
-    const { endpoint, user_id } = body;
-
-    if (!endpoint) {
-      return new Response(JSON.stringify({ error: 'Missing endpoint' }), {
+    // Check for required header
+    const version = req.headers.get('X-M1-Dropper-Version');
+    if (!version || version !== 'v1') {
+      return new Response(JSON.stringify({ 
+        error: 'Missing or invalid X-M1-Dropper-Version header',
+        request_id: crypto.randomUUID()
+      }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+      });
+    }
+    // Auth check
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(JSON.stringify({ ok: false, error: 'Missing authorization' }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
       });
     }
 
-    console.log(`📝 Processing push for user ${user_id} to endpoint: ${endpoint.substring(0, 50)}...`);
-
-    // Generate VAPID token for this endpoint
-    const vapidToken = await generateVAPIDToken(endpoint);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Send push notification
-    const result = await sendPushNotification(endpoint, vapidToken);
+    // Verify JWT and get user
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
-    // If endpoint is stale, optionally clean it up from database
-    if (result.stale && user_id) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      
-      console.log(`🧹 Cleaning stale endpoint for user ${user_id}`);
-      await supabase
-        .from('push_subscriptions')
-        .delete()
-        .eq('endpoint', endpoint)
-        .eq('user_id', user_id);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ ok: false, error: 'Invalid token' }), {
+        status: 401,
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+      });
     }
 
-    const response = {
-      ok: result.success,
-      status: result.status,
-      endpoint_type: classifyEndpoint(endpoint),
-      stale: result.stale || false
-    };
+    // Check admin status
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    console.log(`✅ Push operation completed:`, response);
+    if (!profile || !['admin', 'owner'].some(r => profile.role?.toLowerCase?.().includes(r))) {
+      return new Response(JSON.stringify({ ok: false, error: 'Admin access required' }), {
+        status: 403,
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+      });
+    }
 
-    return new Response(JSON.stringify(response), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    const body: PushSendRequest = await req.json();
+    
+    // Validate required fields
+    if (!body.payload?.title?.trim() || !body.payload?.body?.trim()) {
+      return new Response(JSON.stringify({ ok: false, error: 'Title and body are required' }), {
+        status: 400,
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+      });
+    }
+
+    // Build device query based on audience
+    let fcmQuery = supabase
+      .from('fcm_subscriptions')
+      .select('user_id, token, platform, device_info')
+      .eq('is_active', true);
+
+    let webpushQuery = supabase
+      .from('webpush_subscriptions')
+      .select('user_id, endpoint, p256dh, auth, platform')
+      .eq('is_active', true);
+
+    // Apply filters based on audience
+    if (body.audience === 'segment' && body.filters?.segment) {
+      const segment = body.filters.segment;
+      
+      if (segment === 'active_24h') {
+        const yesterday = new Date();
+        yesterday.setHours(yesterday.getHours() - 24);
+        
+        fcmQuery = fcmQuery.gte('updated_at', yesterday.toISOString());
+        webpushQuery = webpushQuery.gte('updated_at', yesterday.toISOString());
+      } else if (segment === 'ios') {
+        fcmQuery = fcmQuery.eq('platform', 'ios');
+        webpushQuery = webpushQuery.eq('platform', 'ios');
+      } else if (segment === 'android') {
+        fcmQuery = fcmQuery.eq('platform', 'android');
+        webpushQuery = webpushQuery.eq('platform', 'android');
+      } else if (segment === 'webpush') {
+        // Only get webpush subscriptions for this segment
+        fcmQuery = fcmQuery.eq('platform', 'web');
+      } else if (segment === 'winners') {
+        // Get winners from a dedicated table/view if it exists
+        const { data: winners } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'winner'); // Assuming winners have a special role
+        
+        if (winners?.length) {
+          const winnerIds = winners.map(w => w.id);
+          fcmQuery = fcmQuery.in('user_id', winnerIds);
+          webpushQuery = webpushQuery.in('user_id', winnerIds);
+        } else {
+          // No winners, return empty result
+          return new Response(JSON.stringify({ 
+            ok: true, 
+            sent: 0, 
+            failed: 0,
+            message: 'No winners found'
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+          });
+        }
+      }
+    } else if (body.audience === 'list') {
+      if (body.filters?.ids?.length) {
+        fcmQuery = fcmQuery.in('user_id', body.filters.ids);
+        webpushQuery = webpushQuery.in('user_id', body.filters.ids);
+      } else if (body.filters?.emails?.length) {
+        // Get user IDs from emails
+        const { data: userProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .in('email', body.filters.emails);
+        
+        if (userProfiles?.length) {
+          const userIds = userProfiles.map(p => p.id);
+          fcmQuery = fcmQuery.in('user_id', userIds);
+          webpushQuery = webpushQuery.in('user_id', userIds);
+        } else {
+          return new Response(JSON.stringify({ 
+            ok: true, 
+            sent: 0, 
+            failed: 0,
+            message: 'No users found for provided emails'
+          }), {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+          });
+        }
+      }
+    }
+    // For 'all' audience, no additional filters needed
+
+    const { data: devices, error: devicesError } = await fcmQuery;
+    const { data: webpushSubs, error: webpushError } = await webpushQuery;
+
+    if (devicesError || webpushError) {
+      console.error('Database error:', { devicesError, webpushError });
+      return new Response(JSON.stringify({ ok: false, error: 'Database error' }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders(req) },
+      });
+    }
+
+    let sent = 0;
+    let failed = 0;
+
+    const payload = body.payload;
+
+    // Send FCM notifications
+    if (fcmServerKey && devices?.length) {
+      const fcmUrl = 'https://fcm.googleapis.com/fcm/send';
+      
+      for (const device of devices) {
+        try {
+          const fcmPayload = {
+            to: device.token,
+            notification: {
+              title: payload.title,
+              body: payload.body,
+              icon: payload.image || '/icon-192x192.png',
+              badge: payload.badge || '1',
+            },
+            data: {
+              deepLink: payload.deepLink || '/',
+              timestamp: new Date().toISOString(),
+            }
+          };
+
+          const fcmResponse = await fetch(fcmUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `key=${fcmServerKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(fcmPayload),
+          });
+
+          if (fcmResponse.ok) {
+            sent++;
+          } else {
+            failed++;
+            console.log(`FCM failed for token ${device.token.substring(0, 20)}...`);
+          }
+        } catch (error) {
+          failed++;
+          console.error('FCM send error:', error);
+        }
+      }
+    }
+
+    // Send WebPush notifications (only if not targeting specific non-webpush platforms)
+    if (vapidPrivateKey && vapidPublicKey && vapidContact && webpushSubs?.length && 
+        !(body.audience === 'segment' && body.filters?.segment && ['ios', 'android'].includes(body.filters.segment))) {
+      
+      // Import webpush for WebPush API
+      const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
+      
+      webpush.setVapidDetails(
+        vapidContact,
+        vapidPublicKey,
+        vapidPrivateKey
+      );
+
+      for (const sub of webpushSubs) {
+        try {
+          const webpushPayload = {
+            title: payload.title,
+            body: payload.body,
+            icon: payload.image || '/icon-192x192.png',
+            badge: '/icon-192x192.png',
+            data: {
+              deepLink: payload.deepLink || '/',
+              timestamp: new Date().toISOString(),
+            }
+          };
+
+          await webpush.sendNotification(
+            {
+              endpoint: sub.endpoint,
+              keys: {
+                p256dh: sub.p256dh,
+                auth: sub.auth,
+              }
+            },
+            JSON.stringify(webpushPayload)
+          );
+
+          sent++;
+        } catch (error) {
+          failed++;
+          console.error('WebPush send error:', error);
+        }
+      }
+    }
+
+    // Log the send
+    await supabase.from('admin_logs').insert({
+      event_type: 'push_send',
+      user_id: user.id,
+      note: `Push send: "${payload.title}" to ${body.audience}${body.filters?.segment ? `:${body.filters.segment}` : ''} - ${sent}/${sent + failed} sent`,
+      context: 'push_send',
+    });
+
+    return new Response(JSON.stringify({ 
+      ok: true, 
+      sent, 
+      failed,
+      message: `Notification sent to ${sent} devices, ${failed} failed`
+    }), {
+      status: 200,
+      headers: { "Content-Type": "application/json", ...corsHeaders(req) },
     });
 
   } catch (error) {
-    console.error('❌ Push send error:', error);
-    
+    console.error('Push send error:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
-      timestamp: new Date().toISOString()
+      ok: false, 
+      error: error.message || 'Internal server error' 
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { "Content-Type": "application/json", ...corsHeaders(req) },
     });
   }
 });
-
-/*
- * Test script example:
- * 
- * # Health check
- * curl https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send/health
- * 
- * # Send to FCM endpoint
- * curl -X POST https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_send \
- *   -H "Authorization: Bearer YOUR_SERVICE_ROLE_KEY" \
- *   -H "Content-Type: application/json" \
- *   -d '{"endpoint": "https://fcm.googleapis.com/fcm/send/...", "user_id": "test"}'
- * 
- * Expected: 200/201 response for valid endpoints, stale detection for 404/410
- */

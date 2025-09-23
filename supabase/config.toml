@@ -77,3 +77,39 @@ verify_jwt = false
 
 [functions.webpush-admin-broadcast]
 verify_jwt = false
+
+[functions.stripe-create-payment-intent]
+verify_jwt = false
+
+[functions.stripe-mode]
+verify_jwt = false
+
+[functions.create-random-markers]
+verify_jwt = false
+
+[functions.feed-crawler]
+verify_jwt = false
+
+[functions.notifier-engine]
+verify_jwt = false
+
+[functions.handle-buzz-press]
+verify_jwt = false
+
+[functions.handle-buzz-map]
+verify_jwt = false
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.reset-mission]
+verify_jwt = false
+
+[functions.create_qr_code]
+verify_jwt = false
+
+[functions.ensure-agent-code]
+verify_jwt = false
+
+[functions.generate-mission-clues]
+verify_jwt = false

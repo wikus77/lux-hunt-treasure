@@ -1,13 +1,15 @@
 // M1SSION™ Service Worker - Enhanced with Caching
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
-// ATTENZIONE: file unico. Niente importScripts, niente Workbox.
+// MANTIENE importScripts per push chain blindata
+
+// VINCOLO: importScripts per catena push (NON RIMUOVERE)
+importScripts('sw-push.js');
 
 const CACHE_NAME = 'm1ssion-cache-v1';
 const OFFLINE_URL = '/offline.html';
 
-// Assets to cache immediately
+// Assets to cache immediately (EXCLUDE index.html to prevent white-screen)
 const STATIC_ASSETS = [
-  '/',
   '/offline.html',
   '/favicon.ico',
   '/manifest.json'
@@ -44,31 +46,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-self.addEventListener('activate', (event) => {
-  log('Service Worker activating...');
-  
-  event.waitUntil(
-    // Clean up old caches
-    caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames.map(cacheName => {
-            if (cacheName !== CACHE_NAME) {
-              log('Deleting old cache', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(() => {
-        // Prendi controllo senza distruggere storage
-        return self.clients.claim();
-      })
-      .then(() => {
-        log('Service Worker activated and controlling all pages');
-      })
-  );
-});
+// Moved to after navHandler definition
 
 // Update controllato dal main thread
 self.addEventListener('message', (event) => {
@@ -79,7 +57,7 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Safe push event handler
+// Push "tick" (no payload) compatibile con Safari/APNs
 self.addEventListener('push', (event) => {
   console.log('📢 Push notification received:', event);
   
@@ -91,18 +69,18 @@ self.addEventListener('push', (event) => {
   }
   
   const title = data.title || 'M1SSION™';
-  const body = data.body || '';
-  const url = data.url || '/';
+  const body = data.body || 'Hai un nuovo aggiornamento';
+  const screen = (data.data && data.data.screen) || '/';
   
-  console.log('📢 Showing notification:', { title, body, url });
+  console.log('📢 Showing notification:', { title, body, screen });
   
   event.waitUntil(
     self.registration.showNotification(title, {
       body,
-      data: { url },
-      icon: '/icons/icon-192.png',
-      badge: '/icons/badge.png',
-      tag: 'm1ssion-push'
+      data: { screen },
+      badge: '/favicon.ico',
+      icon: '/favicon.ico',
+      tag: 'm1ssion-notification'
     })
   );
 });
@@ -111,14 +89,105 @@ self.addEventListener('notificationclick', (event) => {
   console.log('🔔 Notification clicked:', event);
   
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/';
+  const url = (event.notification.data && event.notification.data.screen) || '/';
   
   event.waitUntil(
-    self.clients.openWindow(url)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then(clients => {
+        // Try to focus existing window
+        for (const client of clients) {
+          if ('focus' in client) {
+            client.navigate(url);
+            return client.focus();
+          }
+        }
+        // Open new window if none found
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(url);
+        }
+        return Promise.resolve();
+      })
   );
 });
 
-// Fetch handler with stale-while-revalidate for static assets
+// Enable navigation preload for faster first paint
+self.addEventListener('activate', (event) => {
+  log('Service Worker activating...');
+  
+  event.waitUntil(
+    Promise.all([
+      // Clean up old caches
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => {
+            if (cacheName !== CACHE_NAME) {
+              log('Deleting old cache', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      }),
+      // Enable navigation preload if available
+      (async () => {
+        if (self.registration.navigationPreload) {
+          await self.registration.navigationPreload.enable();
+          log('Navigation preload enabled');
+        }
+      })()
+    ]).then(() => {
+      // Take control without destroying storage
+      return self.clients.claim();
+    }).then(() => {
+      log('Service Worker activated and controlling all pages');
+    })
+  );
+});
+
+// NetworkFirst strategy for ALL navigation requests - ELIMINATES WHITE SCREEN
+const navHandler = async (event) => {
+  try {
+    // Try navigation preload first
+    const preloadResponse = await event.preloadResponse;
+    if (preloadResponse) {
+      log('Using navigation preload response');
+      return preloadResponse;
+    }
+
+    // Network-first with 10s timeout for navigation requests
+    const ctrl = new AbortController();
+    const timeoutId = setTimeout(() => ctrl.abort(), 10000);
+    
+    try {
+      const networkResponse = await fetch(event.request, { 
+        cache: 'no-cache',
+        signal: ctrl.signal 
+      });
+      clearTimeout(timeoutId);
+      
+      if (networkResponse.ok) {
+        log('Fresh index.html served from network');
+        return networkResponse;
+      }
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      log('Network failed, trying cache fallback:', fetchError.message);
+    }
+
+    // Fallback to offline page only (NO precached index.html)
+    const cache = await caches.open(CACHE_NAME);
+    const offlineResponse = await cache.match(OFFLINE_URL);
+    
+    return offlineResponse || new Response('Offline - Please check connection', { 
+      status: 503,
+      headers: { 'Content-Type': 'text/html' }
+    });
+  } catch (error) {
+    log('NavHandler error:', error.message);
+    return new Response('Navigation Error', { status: 503 });
+  }
+};
+
+// Fetch handler with enhanced caching strategies
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -134,16 +203,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Handle offline fallback
+  // NetworkFirst for ALL navigation requests (index.html) - ANTI WHITE-SCREEN
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .catch(() => {
-          return caches.match(OFFLINE_URL) || 
-                 caches.match('/') ||
-                 new Response('Offline', { status: 503 });
-        })
-    );
+    event.respondWith(navHandler(event));
     return;
   }
   

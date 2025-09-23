@@ -1,0 +1,10 @@
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+# Cloudflare Pages deployment configuration for M1SSION™ PWA
+# This ensures deployment to existing m1ssion-pwa project
+
+name = "m1ssion-pwa"
+compatibility_date = "2024-12-01"
+
+[env.production]
+# Pages environment variables (set via wrangler pages secret)
+# VITE_STRIPE_PUBLISHABLE_KEY = "pk_live_..." (set via wrangler pages secret)

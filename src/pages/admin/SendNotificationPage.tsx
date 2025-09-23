@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
 import { Send, Bell } from 'lucide-react';
+import { sendAdminBroadcast } from '@/lib/sendAdminBroadcast';
 
 const SendNotificationPage: React.FC = () => {
   const [title, setTitle] = useState('');
@@ -26,16 +27,6 @@ const SendNotificationPage: React.FC = () => {
       return;
     }
 
-    // Check if user is admin
-    if (!user || user.email !== 'wikus77@hotmail.it') {
-      toast({
-        title: "❌ Accesso negato",
-        description: "Solo gli admin possono inviare notifiche.",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSending(true);
 
     try {
@@ -43,49 +34,44 @@ const SendNotificationPage: React.FC = () => {
       await supabase
         .from('admin_logs')
         .insert({
-          event_type: 'firebase_push_test',
+          event_type: 'webpush_admin_broadcast',
           note: `Admin Page Send - Title: ${title}, Body: ${body}`,
           context: 'admin_page_notification'
         });
 
-      // Call Firebase edge function to send push notifications
-      const { data, error } = await supabase.functions.invoke('send-firebase-push', {
-        body: {
-          title: title.trim(),
-          body: body.trim(),
-          broadcast: true,
-          additionalData: {
-            url: '/notifications',
-            timestamp: new Date().toISOString(),
-            source: 'admin_page'
-          }
-        }
+      // Use new webpush-admin-broadcast function
+      const data = await sendAdminBroadcast({
+        title: title.trim(),
+        body: body.trim(),
+        url: '/notifications',
+        target: { all: true }
       });
 
-      if (error) {
-        console.error('Error sending Firebase push notification:', error);
+      toast({
+        title: "✅ Push notifica inviata",
+        description: `Inviata a ${data?.success || 0}/${data?.total || 0} dispositivi`,
+      });
+      
+      // Reset form
+      setTitle('');
+      setBody('');
+
+    } catch (error: any) {
+      console.error('Error sending push notification:', error);
+      
+      if (error.message.includes('Unauthorized') || error.message.includes('401')) {
         toast({
-          title: "❌ Errore invio Firebase",
-          description: error.message || "Impossibile inviare la notifica Firebase.",
+          title: "❌ Accesso negato",
+          description: "Solo gli admin possono inviare notifiche.",
           variant: "destructive"
         });
       } else {
         toast({
-          title: "🔥 Notifica Firebase inviata",
-          description: `Inviata a ${data?.sent_count || 0} dispositivi FCM`,
+          title: "❌ Errore invio",
+          description: error.message || "Impossibile inviare la notifica.",
+          variant: "destructive"
         });
-        
-        // Reset form
-        setTitle('');
-        setBody('');
       }
-    } catch (error) {
-      console.error('Error sending Firebase notification:', error);
-      toast({
-        title: "❌ Errore Firebase",
-        description: "Errore durante l'invio della notifica Firebase.",
-        variant: "destructive"
-      });
     } finally {
       setIsSending(false);
     }

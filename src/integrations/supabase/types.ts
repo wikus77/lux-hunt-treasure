@@ -1561,6 +1561,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marker_drops: {
+        Row: {
+          bbox: Json | null
+          created_at: string
+          created_by: string | null
+          created_count: number | null
+          id: string
+          seed: string | null
+          summary: Json
+        }
+        Insert: {
+          bbox?: Json | null
+          created_at?: string
+          created_by?: string | null
+          created_count?: number | null
+          id?: string
+          seed?: string | null
+          summary: Json
+        }
+        Update: {
+          bbox?: Json | null
+          created_at?: string
+          created_by?: string | null
+          created_count?: number | null
+          id?: string
+          seed?: string | null
+          summary?: Json
+        }
+        Relationships: []
+      }
       marker_rewards: {
         Row: {
           created_at: string | null
@@ -1595,9 +1625,12 @@ export type Database = {
         Row: {
           active: boolean
           created_at: string | null
+          drop_id: string | null
           id: string
           lat: number
           lng: number
+          reward_payload: Json | null
+          reward_type: Database["public"]["Enums"]["reward_type"] | null
           title: string
           updated_at: string | null
           visible_from: string | null
@@ -1608,9 +1641,12 @@ export type Database = {
         Insert: {
           active?: boolean
           created_at?: string | null
+          drop_id?: string | null
           id?: string
           lat: number
           lng: number
+          reward_payload?: Json | null
+          reward_type?: Database["public"]["Enums"]["reward_type"] | null
           title: string
           updated_at?: string | null
           visible_from?: string | null
@@ -1621,9 +1657,12 @@ export type Database = {
         Update: {
           active?: boolean
           created_at?: string | null
+          drop_id?: string | null
           id?: string
           lat?: number
           lng?: number
+          reward_payload?: Json | null
+          reward_type?: Database["public"]["Enums"]["reward_type"] | null
           title?: string
           updated_at?: string | null
           visible_from?: string | null
@@ -1631,7 +1670,15 @@ export type Database = {
           zoom_max?: number | null
           zoom_min?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "markers_drop_id_fkey"
+            columns: ["drop_id"]
+            isOneToOne: false
+            referencedRelation: "marker_drops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mission_targets: {
         Row: {
@@ -4252,10 +4299,8 @@ export type Database = {
           endpoint: string
           id: string
           is_active: boolean
-          keys: Json | null
           p256dh: string
           platform: string | null
-          provider: string | null
           user_id: string
         }
         Insert: {
@@ -4264,10 +4309,8 @@ export type Database = {
           endpoint: string
           id?: string
           is_active?: boolean
-          keys?: Json | null
           p256dh: string
           platform?: string | null
-          provider?: string | null
           user_id: string
         }
         Update: {
@@ -4276,10 +4319,8 @@ export type Database = {
           endpoint?: string
           id?: string
           is_active?: boolean
-          keys?: Json | null
           p256dh?: string
           platform?: string | null
-          provider?: string | null
           user_id?: string
         }
         Relationships: []
@@ -4446,52 +4487,6 @@ export type Database = {
         }
         Relationships: []
       }
-      v_webpush_diag: {
-        Row: {
-          created_at: string | null
-          detected_provider: string | null
-          endpoint: string | null
-          endpoint_host: string | null
-          endpoint_type: string | null
-          platform: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          detected_provider?: never
-          endpoint?: string | null
-          endpoint_host?: never
-          endpoint_type?: string | null
-          platform?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          detected_provider?: never
-          endpoint?: string | null
-          endpoint_host?: never
-          endpoint_type?: string | null
-          platform?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      webpush_latest_per_user: {
-        Row: {
-          auth: string | null
-          created_at: string | null
-          endpoint: string | null
-          id: string | null
-          is_active: boolean | null
-          keys: Json | null
-          p256dh: string | null
-          platform: string | null
-          provider: string | null
-          rn: number | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
     }
     Functions: {
       _gen_unique_agent_code: {
@@ -4654,6 +4649,23 @@ export type Database = {
           url: string
         }[]
       }
+      fn_markers_bulk_insert: {
+        Args: { _drop_id?: string; _rows: Json } | { markers: Json }
+        Returns: {
+          id: string
+        }[]
+      }
+      fn_markers_secure_insert: {
+        Args: {
+          p_drop_id: string
+          p_lat: number
+          p_lng: number
+          p_reward_payload?: Json
+          p_reward_type: Database["public"]["Enums"]["reward_type"]
+          p_title: string
+        }
+        Returns: string
+      }
       force_subscription_sync: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -4744,6 +4756,14 @@ export type Database = {
         Returns: {
           week_num: number
           year_num: number
+        }[]
+      }
+      get_drop_stats: {
+        Args: { drop_uuid: string }
+        Returns: {
+          active_count: number
+          reward_type: string
+          total_count: number
         }[]
       }
       get_legal_document: {
@@ -5071,10 +5091,8 @@ export type Database = {
           endpoint: string
           id: string
           is_active: boolean
-          keys: Json | null
           p256dh: string
           platform: string | null
-          provider: string | null
           user_id: string
         }
       }
@@ -5094,6 +5112,12 @@ export type Database = {
     }
     Enums: {
       referral_status: "pending" | "registered"
+      reward_type:
+        | "BUZZ_FREE"
+        | "MESSAGE"
+        | "XP_POINTS"
+        | "EVENT_TICKET"
+        | "BADGE"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5222,6 +5246,13 @@ export const Constants = {
   public: {
     Enums: {
       referral_status: ["pending", "registered"],
+      reward_type: [
+        "BUZZ_FREE",
+        "MESSAGE",
+        "XP_POINTS",
+        "EVENT_TICKET",
+        "BADGE",
+      ],
     },
   },
 } as const

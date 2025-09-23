@@ -14,6 +14,10 @@ export const IOSSafeAreaOverlay: React.FC<IOSSafeAreaOverlayProps> = ({
   visible = false,
   opacity = 0.3
 }) => {
+  // ⚡ PRODUZIONE: Solo se esplicitamente richiesto con ?diag=1
+  if (import.meta.env.PROD && !new URLSearchParams(window.location.search).get('diag')) {
+    return <>{children}</>;
+  }
   const [safeArea, setSafeArea] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
   const [isCapacitor, setIsCapacitor] = useState(false);
 

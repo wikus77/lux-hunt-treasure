@@ -1,0 +1,42 @@
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+name: Guard Bulk Drop
+
+on: [pull_request]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Detect sensitive changes
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | tr '\n' ' ')
+          echo "Changed files: $CHANGED"
+          
+          SENSITIVE=$(echo "$CHANGED" | grep -E "(src/components/admin/BulkMarkerDropComponent.tsx|src/pages/admin/MissionPanelPage.tsx|src/pages/dev/MarkersHealthcheck.tsx|src/routes/WouterRoutes.tsx|supabase/functions/create-random-markers/)")
+          
+          if [ -n "$SENSITIVE" ]; then
+            echo "Sensitive changes detected: $SENSITIVE"
+            if [[ "${{ contains(github.event.pull_request.labels.*.name, 'approved-by-joseph') }}" == "false" ]]; then
+              echo "❌ Sensitive changes detected without Joseph approval label."
+              echo "Required label: 'approved-by-joseph'"
+              exit 1
+            else
+              echo "✅ Joseph approval label found."
+            fi
+          else
+            echo "✅ No sensitive changes detected."
+          fi
+      
+      - name: Security scan
+        run: |
+          echo "Checking for Lovable references..."
+          if grep -r -i "lovable" --exclude-dir=.git --exclude-dir=node_modules .; then
+            echo "❌ Found Lovable references in code"
+            exit 1
+          fi
+          echo "✅ No Lovable references found"
