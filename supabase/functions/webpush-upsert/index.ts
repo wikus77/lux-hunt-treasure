@@ -1,13 +1,20 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
-const ALLOW_ORIGIN = ["https://m1ssion.eu", "https://lovable.dev", "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com"];
+const ALLOW_ORIGIN = [
+  "https://m1ssion.eu", 
+  "https://lovable.dev", 
+  "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com",
+  "https://*.m1ssion.pages.dev"
+];
 
 function corsHeaders(origin: string | null) {
-  const allow = ALLOW_ORIGIN.some(allowed => origin?.includes(allowed.replace('https://', ''))) ? origin! : ALLOW_ORIGIN[0];
+  const allow = ALLOW_ORIGIN.some(allowed => 
+    origin?.includes(allowed.replace('https://', '').replace('*.', ''))
+  ) ? origin! : ALLOW_ORIGIN[0];
   return {
     "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-mi-dropper-version",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 }
@@ -67,31 +74,9 @@ serve(async (req) => {
     const body = await req.json();
     console.log('💾 [WEBPUSH-UPSERT] Raw body keys:', Object.keys(body));
     
-    // Support both old and new payload formats
-    let endpoint: string, p256dh: string, auth: string, platform: string, user_id: string | null;
-    
-    if (body.subscription && body.subscription.keys) {
-      // New format: { subscription: { endpoint, keys: { p256dh, auth } }, platform, user_id }
-      endpoint = body.subscription.endpoint;
-      p256dh = body.subscription.keys.p256dh;
-      auth = body.subscription.keys.auth;
-      platform = body.platform || 'web';
-      user_id = body.user_id || null;
-    } else if (body.endpoint && body.keys) {
-      // Alternative format: { endpoint, keys: { p256dh, auth }, platform, user_id }
-      endpoint = body.endpoint;
-      p256dh = body.keys.p256dh;
-      auth = body.keys.auth;
-      platform = body.platform || 'web';
-      user_id = body.user_id || null;
-    } else {
-      // Old format: { endpoint, p256dh, auth, platform, user_id }
-      endpoint = body.endpoint;
-      p256dh = body.p256dh;
-      auth = body.auth;
-      platform = body.platform || 'web';
-      user_id = body.user_id || null;
-    }
+    // Extract required fields with validation
+    const { user_id, endpoint, provider, p256dh, auth } = body;
+    const platform = body.platform || 'web';
     
     const diagnosticLog = {
       route: 'webpush-upsert',
@@ -107,7 +92,9 @@ serve(async (req) => {
     
     // Validate required fields (minimal validation)
     const missing = [];
+    if (!user_id || typeof user_id !== 'string') missing.push('user_id');
     if (!endpoint || typeof endpoint !== 'string' || endpoint.length === 0) missing.push('endpoint');
+    if (!provider || typeof provider !== 'string') missing.push('provider');
     if (!p256dh || typeof p256dh !== 'string' || p256dh.length === 0) missing.push('p256dh');
     if (!auth || typeof auth !== 'string' || auth.length === 0) missing.push('auth');
     
@@ -117,7 +104,7 @@ serve(async (req) => {
         ok: false,
         error: "MISSING_FIELD",
         missing,
-        hint: "Required: endpoint (https URL), p256dh (string), auth (string)"
+        hint: "Required: user_id, endpoint (https URL), provider, p256dh (string), auth (string)"
       }), {
         headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
         status: 400,
@@ -136,42 +123,36 @@ serve(async (req) => {
       });
     }
 
-    // Normalize platform server-side
-    const host = new URL(endpoint).host;
-    const normalizedPlatform = host === 'web.push.apple.com' ? 'web' : (platform || 'desktop');
-
-    // Minimal logging (no sensitive data)
+    // Save to webpush_subscriptions table with proper structure
+    const host = new URL(endpoint).hostname;
+    
     console.log(JSON.stringify({ 
       fn: "webpush-upsert", 
       host, 
-      platform: normalizedPlatform, 
+      provider,
+      platform,
       hasUser: !!user_id 
     }, null, 0));
     
-    // UPSERT idempotent on endpoint
-    const conflictStrategy = user_id 
-      ? "resolution=merge-duplicates,on-conflict=user_id,token" 
-      : "resolution=merge-duplicates,on-conflict=token";
-    
-    const resp = await fetch(`${url}/rest/v1/fcm_subscriptions`, {
+    const resp = await fetch(`${url}/rest/v1/webpush_subscriptions`, {
       method: "POST",
       headers: {
         apikey: key,
         Authorization: `Bearer ${key}`,
         "content-type": "application/json",
-        Prefer: conflictStrategy,
+        Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
         user_id,
-        token: endpoint,
-        platform: normalizedPlatform,
+        endpoint,
+        provider,
+        p256dh,
+        auth,
+        keys: { p256dh, auth },
+        platform,
         is_active: true,
-        device_info: { 
-          host,
-          keys: { p256dh, auth },
-          ua: req.headers.get('user-agent')?.slice(0, 120) || null,
-          timestamp: new Date().toISOString()
-        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       }),
     });
 
@@ -187,7 +168,8 @@ serve(async (req) => {
           ok: true, 
           saved: true,
           endpointHost: host,
-          platform: normalizedPlatform,
+          provider,
+          platform,
           note: "idempotent_upsert"
         }), {
           headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
@@ -212,7 +194,8 @@ serve(async (req) => {
       ok: true,
       saved: true,
       endpointHost: host,
-      platform: normalizedPlatform,
+      provider,
+      platform,
       id: responseId || "unknown"
     }), {
       headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },

@@ -2,13 +2,20 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import webpush from "npm:web-push@3.6.7";
 
-const ALLOW_ORIGIN = ["https://m1ssion.eu", "https://lovable.dev", "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com"];
+const ALLOW_ORIGIN = [
+  "https://m1ssion.eu", 
+  "https://lovable.dev", 
+  "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com",
+  "https://*.m1ssion.pages.dev"
+];
 
 function corsHeaders(origin: string | null) {
-  const allow = ALLOW_ORIGIN.some(allowed => origin?.includes(allowed.replace('https://', ''))) ? origin! : ALLOW_ORIGIN[0];
+  const allow = ALLOW_ORIGIN.some(allowed => 
+    origin?.includes(allowed.replace('https://', '').replace('*.', ''))
+  ) ? origin! : ALLOW_ORIGIN[0];
   return {
     "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-mi-dropper-version",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 }
@@ -86,7 +93,7 @@ serve(async (req) => {
     const payload = JSON.stringify({
       title: title ?? "M1SSION™",
       body: body ?? "New notification",
-      data: data ?? { url: "/" },
+      targetUrl: data?.url ?? "/",
       icon: "/favicon.ico",
       badge: "/favicon.ico",
     });
@@ -97,18 +104,53 @@ serve(async (req) => {
     
     console.log('🚀 [WEBPUSH-SEND] Sending to:', endpointHost, isApns ? '(APNs/Safari)' : '(Other)');
     
-    const res = await webpush.sendNotification(s as any, payload);
-    
-    console.log('✅ [WEBPUSH-SEND] Notification sent successfully to:', endpointHost);
-    console.log('✅ [WEBPUSH-SEND] Response status:', res.statusCode);
-    if (res.statusCode >= 400) {
-      console.log('⚠️ [WEBPUSH-SEND] Response headers:', res.headers);
+    // Send with proper headers for different providers
+    const options: any = {
+      TTL: 2419200, // 28 days
+      headers: {
+        'Urgency': 'normal'
+      }
+    };
+
+    if (isApns) {
+      // APNs specific headers
+      options.headers['apns-topic'] = 'app.lovable.2716f91b957c47ba91e06f572f3ce00d';
+      options.headers['apns-priority'] = '5'; // Normal priority
     }
-    
-    return new Response(JSON.stringify({ success: true, status: res.statusCode }), {
-      headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-      status: 200,
-    });
+
+    try {
+      const res = await webpush.sendNotification(s as any, payload, options);
+      
+      const success = res.statusCode >= 200 && res.statusCode < 300;
+      
+      if (success) {
+        console.log('✅ [WEBPUSH-SEND] Notification sent successfully to:', endpointHost);
+      } else {
+        console.log('⚠️ [WEBPUSH-SEND] Send failed:', res.statusCode, res.headers);
+      }
+      
+      return new Response(JSON.stringify({ 
+        success, 
+        status: res.statusCode,
+        provider: isApns ? 'apns' : 'other'
+      }), {
+        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
+        status: 200,
+      });
+    } catch (sendError: any) {
+      // Don't throw, return error details
+      console.error('❌ [WEBPUSH-SEND] Send error:', sendError.message);
+      
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error: sendError.message,
+        status: sendError.statusCode || 500,
+        provider: isApns ? 'apns' : 'other'
+      }), {
+        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
+        status: 200, // Always return 200 for API consistency
+      });
+    }
   } catch (e: any) {
     console.error('❌ [WEBPUSH-SEND] Detailed error analysis:');
     console.error('❌ [WEBPUSH-SEND] Error type:', e.constructor.name);
