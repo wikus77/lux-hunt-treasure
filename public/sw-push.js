@@ -1,49 +1,97 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Web Push VAPID Handler for iOS PWA */
+/**
+ * M1SSION™ Push Handler - Robust push event handling for Safari + Chrome
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
+ */
 
-self.addEventListener('install', () => self.skipWaiting?.());
-self.addEventListener('activate', e => e.waitUntil?.(self.clients.claim()));
+console.log('🔔 SW-Push module loaded');
 
-self.addEventListener('push', (evt) => { 
-  let data = {};
-  try { 
-    data = evt.data?.json?.() || {}; 
-  } catch(_) {}
+// Robust push event handler
+self.addEventListener('push', (event) => {
+  console.log('📢 Push event received:', event);
   
-  const title = data.title || 'M1SSION™';
-  const body = data.body || 'Canary received';
-  const options = { 
-    body, 
-    data: data.data || {}, 
-    badge: '/badge.png', 
-    icon: '/icon-192.png' 
-  };
-  
-  evt.waitUntil(self.registration.showNotification(title, options));
-});
-
-self.addEventListener('notificationclick', (event) => {
-  console.log('[SW-PUSH] Notification clicked:', event.notification);
-  event.notification.close();
-  
-  const url = (event.notification.data && event.notification.data.url) || '/';
-  
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
-      // Try to focus existing window
-      for (const client of list) {
-        if (client.url.includes(url) && 'focus' in client) {
-          console.log('[SW-PUSH] Focusing existing client');
-          return client.focus();
+  event.waitUntil((async () => {
+    let data = {};
+    
+    try {
+      // Try to parse as JSON first
+      if (event.data) {
+        const text = event.data.text();
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch {
+            // Fallback: treat as text notification
+            data = { 
+              title: 'M1SSION™', 
+              body: text, 
+              targetUrl: '/' 
+            };
+          }
         }
       }
-      // Open new window
-      console.log('[SW-PUSH] Opening new window for URL:', url);
-      if (clients.openWindow) {
-        return clients.openWindow(url);
+    } catch (error) {
+      console.warn('⚠️ Could not parse push data:', error);
+      data = {
+        title: 'M1SSION™',
+        body: 'Hai un nuovo aggiornamento',
+        targetUrl: '/'
+      };
+    }
+    
+    // Extract notification data with fallbacks
+    const title = data.title || 'M1SSION™';
+    const body = data.body || 'Hai un nuovo aggiornamento';
+    const targetUrl = data.targetUrl || data.url || data.data?.url || '/';
+    
+    console.log('📢 Showing notification:', { title, body, targetUrl });
+    
+    // Show notification
+    await self.registration.showNotification(title, {
+      body,
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/badge.png',
+      data: { targetUrl },
+      tag: 'm1ssion-push',
+      requireInteraction: false
+    });
+  })());
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  console.log('🔔 Notification clicked:', event);
+  
+  event.notification.close();
+  
+  const targetUrl = event.notification.data?.targetUrl || '/';
+  
+  event.waitUntil(
+    self.clients.matchAll({ 
+      type: 'window', 
+      includeUncontrolled: true 
+    }).then(clientList => {
+      // Try to focus existing window and navigate
+      const existingClient = clientList.find(client => 
+        client.url.includes(self.location.origin)
+      );
+      
+      if (existingClient && 'focus' in existingClient) {
+        if ('navigate' in existingClient) {
+          existingClient.navigate(targetUrl);
+        }
+        return existingClient.focus();
       }
+      
+      // Open new window if no existing client
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+      
+      return Promise.resolve();
+    }).catch(error => {
+      console.error('❌ Error handling notification click:', error);
     })
   );
 });
 
-console.log('[SW-PUSH] Web Push VAPID handler loaded');
+console.log('✅ SW-Push handlers registered');

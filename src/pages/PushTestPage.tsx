@@ -7,6 +7,7 @@
 import React from 'react';
 import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
 import { PushNotificationToggle } from '@/components/PushNotificationToggle';
+import { PushRegistrationTest } from '@/components/PushRegistrationTest';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -109,7 +110,10 @@ const PushTestPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Unified Push System */}
+      {/* New Unified Push System */}
+      <PushRegistrationTest />
+
+      {/* Legacy Push Systems */}
       <div className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4">
           <h2 className="text-xl font-semibold flex items-center gap-2">
