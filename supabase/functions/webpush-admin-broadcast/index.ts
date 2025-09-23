@@ -22,43 +22,38 @@ const cors = (req: Request, init: ResponseInit = {}, body?: BodyInit) => {
 const normalize = (ep: string) =>
   ep.replace(/^https:\/\/fcm\.googleapis\.com\/fcm\/send\//, "https://fcm.googleapis.com/wp/");
 
+const json = (b: unknown, s = 200) =>
+  new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return cors(req, { status: 204 });
+  
   try {
-    // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-    // Internal authorization - check required headers
-    const xAdmin = req.headers.get("x-admin-token") ?? "";
-    const apiKey = req.headers.get("apikey") ?? "";
-    const auth = req.headers.get("authorization") ?? "";
-    const bearer = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-    
-    const SERVICE_ROLE_KEY = Deno.env.get("SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const PUSH_ADMIN_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN") || "";
-
-    // Allow if any of these conditions are met:
-    // 1. x-admin-token matches PUSH_ADMIN_TOKEN
-    // 2. apikey matches SERVICE_ROLE_KEY  
-    // 3. Authorization Bearer matches SERVICE_ROLE_KEY
-    const isAuthorized = (
-      (xAdmin && PUSH_ADMIN_TOKEN && xAdmin === PUSH_ADMIN_TOKEN) ||
-      (apiKey && SERVICE_ROLE_KEY && apiKey === SERVICE_ROLE_KEY) ||
-      (bearer && SERVICE_ROLE_KEY && bearer === SERVICE_ROLE_KEY)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } }
     );
 
-    // M1SSION™ diagnostic (no secrets): which auth method matched
-    const usedAuth = (xAdmin && PUSH_ADMIN_TOKEN && xAdmin === PUSH_ADMIN_TOKEN)
-      ? 'x-admin-token'
-      : (apiKey && SERVICE_ROLE_KEY && apiKey === SERVICE_ROLE_KEY)
-      ? 'apikey'
-      : (bearer && SERVICE_ROLE_KEY && bearer === SERVICE_ROLE_KEY)
-      ? 'bearer'
-      : 'none';
-    console.log('[M1SSION] webpush-admin-broadcast auth_method=' + usedAuth);
+    // 1) Utente autenticato via JWT
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return cors(req, { status: 401 }, JSON.stringify({ error: 'Unauthorized access' }));
 
-    if (!isAuthorized) {
-      return cors(req, { status: 401 }, JSON.stringify({ error: "Unauthorized access" }));
+    // 2) Deve essere admin (profiles.is_admin) oppure presentare x-admin-token server-side
+    const { data: prof } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const adminHeader = req.headers.get('x-admin-token');
+    const isAdminHeaderOK = !!adminHeader && adminHeader === Deno.env.get('PUSH_ADMIN_TOKEN');
+
+    if (!(prof?.is_admin || isAdminHeaderOK)) {
+      return cors(req, { status: 401 }, JSON.stringify({ error: 'Unauthorized access' }));
     }
 
+    // >>> RESTO DELLA LOGICA DI INVIO ESISTENTE <<<
     const { title, body, url, target } = await req.json();
     if (!title || !body) return cors(req, { status: 400 }, JSON.stringify({ error: "Missing title/body" }));
 
@@ -77,8 +72,8 @@ Deno.serve(async (req) => {
       const ids = String(target.user_ids_csv).split(",").map((s)=>s.trim()).filter(Boolean);
       if (ids.length) q = q.in("user_id", ids);
     }
-    const { data: rows, error } = await q;
-    if (error) return cors(req, { status: 500 }, JSON.stringify({ error: error.message }));
+    const { data: rows, error: dbError } = await q;
+    if (dbError) return cors(req, { status: 500 }, JSON.stringify({ error: dbError.message }));
 
     let success = 0, failed = 0, deactivated = 0;
     const details: any[] = [];

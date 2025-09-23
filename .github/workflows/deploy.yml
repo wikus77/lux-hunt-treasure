@@ -1,8 +1,9 @@
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 name: Deploy to Cloudflare Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ production ]
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch: {}
@@ -18,15 +19,26 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: |
-          export VITE_PWA_VERSION=$(date +%Y%m%d%H%M%S)
+          export VITE_BUILD_ID="v$(date +%Y%m%d%H%M%S)"
+          export VITE_PWA_VERSION="$VITE_BUILD_ID"
+          echo "🔧 Build variables: VITE_BUILD_ID=$VITE_BUILD_ID VITE_PWA_VERSION=$VITE_PWA_VERSION"
           npm run build
+          # Verify versioned SW was generated
+          if [ ! -f dist/sw-app-*.js ]; then
+            echo "❌ ERROR: Versioned SW file not found in dist/"
+            ls -la dist/sw-* || echo "No SW files found"
+            exit 1
+          fi
+          echo "✅ Versioned SW files generated:"
+          ls -la dist/sw-app-*
       - name: Deploy with Wrangler
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN:  ${{ secrets.CF_API_TOKEN }}
           CF_PROJECT_NAME:       ${{ secrets.CF_PROJECT_NAME }}
         run: |
-          npx wrangler pages project create "${CF_PROJECT_NAME:-m1ssion-pwa}" --production-branch main || true
+          # Always use existing project, don't create new ones
+          npx wrangler pages project list | grep "${CF_PROJECT_NAME:-m1ssion-pwa}" || echo "Project ${CF_PROJECT_NAME:-m1ssion-pwa} not found!"
           BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
           npx wrangler pages deploy dist \
             --project-name "${CF_PROJECT_NAME:-m1ssion-pwa}" \

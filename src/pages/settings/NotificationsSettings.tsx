@@ -16,7 +16,6 @@ import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
 import PushInspector from "@/components/PushInspector";
-import { canUseNotifications, canUseServiceWorker, isIOSDevice, isPWAMode, getPlatformInfo } from '@/utils/push/support';
 
 interface NotificationSettings {
   notifications_enabled: boolean;
@@ -28,22 +27,6 @@ const NotificationsSettings: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [pushRegistrationError, setPushRegistrationError] = useState<string | null>(null);
-  const [subscriptionData, setSubscriptionData] = useState<{
-    sw?: PushSubscription | null;
-    db?: any;
-    match: boolean;
-  }>({ match: false });
-  
-  // SSR-safe feature detection
-  const canUseNotif = typeof window !== 'undefined' && 'Notification' in window;
-  const canUseSW = typeof navigator !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window;
-  const platformInfo = typeof window !== 'undefined' ? getPlatformInfo() : null;
-  
-  // Safe feature detection
-  const isNotificationSupported = canUseNotifications();
-  const isServiceWorkerSupported = canUseServiceWorker();
-  const isIOSNotPWA = isIOSDevice() && !isPWAMode();
   
   // Use the proper notification preferences hook
   const {
@@ -75,9 +58,6 @@ const NotificationsSettings: React.FC = () => {
 
   useEffect(() => {
     loadNotificationSettings();
-    if (user && canUseSW) {
-      updateTelemetry();
-    }
   }, [user]);
 
   const loadNotificationSettings = async () => {
@@ -166,184 +146,6 @@ const NotificationsSettings: React.FC = () => {
       title: "🔄 Preferenze aggiornate",
       description: "Cache delle preferenze aggiornata dal database."
     });
-  };
-
-  const VAPID_PUBLIC = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
-  
-  const subscribeToPush = async () => {
-    if (!canUseSW) {
-      throw new Error('Service Worker non supportato');
-    }
-    
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.subscribe({ 
-      userVisibleOnly: true, 
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
-    });
-
-    const provider = sub.endpoint.includes('web.push.apple.com') ? 'apns' : 
-                    (sub.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 'mozilla');
-    
-    const platform = platformInfo?.platform || 'web';
-
-    const subscriptionData = {
-      user_id: user!.id,
-      endpoint: sub.endpoint,
-      keys: sub.toJSON()?.keys || {},
-      provider,
-      platform
-    };
-
-    // Try Edge Function first (service role), fallback to client
-    try {
-      // Try via webpush-upsert edge function
-      const { data, error } = await supabase.functions.invoke('webpush-upsert', {
-        body: subscriptionData
-      });
-      
-      if (error) throw error;
-      console.log('✅ Subscription saved via Edge Function');
-    } catch (edgeError) {
-      console.warn('⚠️ Edge Function failed, using client:', edgeError);
-      
-      // Fallback to client-side insert
-      const { error } = await supabase
-        .from('webpush_subscriptions')
-        .upsert({
-          ...subscriptionData,
-          p256dh: subscriptionData.keys.p256dh || '',
-          auth: subscriptionData.keys.auth || ''
-        });
-
-      if (error) {
-        throw new Error(`Database save failed: ${error.message}`);
-      }
-    }
-
-    // Update telemetry
-    await updateTelemetry();
-
-    const endpointHost = new URL(sub.endpoint).hostname;
-    toast({
-      title: "✅ Push registrato",
-      description: `Provider: ${provider}, Platform: ${platform}`
-    });
-
-    return sub;
-  };
-  
-  const updateTelemetry = async () => {
-    if (!canUseSW || !user) return;
-    
-    try {
-      const reg = await navigator.serviceWorker.ready;
-      const swSub = await reg.pushManager.getSubscription();
-      
-      // Get latest DB subscription
-      const { data: dbSub } = await supabase
-        .from('webpush_subscriptions')
-        .select('endpoint, keys, provider, platform')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      const match = swSub?.endpoint === dbSub?.endpoint;
-      
-      setSubscriptionData({
-        sw: swSub,
-        db: dbSub,
-        match
-      });
-    } catch (error) {
-      console.warn('Telemetry update failed:', error);
-    }
-  };
-  
-  const handleSyncSubscription = async () => {
-    if (!subscriptionData.sw) return;
-    
-    try {
-      await subscribeToPush();
-      toast({
-        title: "🔄 Sincronizzato",
-        description: "Subscription sincronizzata con il database."
-      });
-    } catch (error) {
-      toast({
-        title: "❌ Errore sincronizzazione",
-        description: error instanceof Error ? error.message : 'Errore sconosciuto',
-        variant: "destructive"
-      });
-    }
-  };
-
-  const urlBase64ToUint8Array = (base64String: string) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
-
-  const handleRetryPushRegistration = async () => {
-    setPushRegistrationError(null);
-    
-    if (!canUseNotif) {
-      setPushRegistrationError("Le notifiche non sono supportate su questo dispositivo/browser.");
-      toast({
-        title: "❌ Non supportato",
-        description: "Le notifiche push non sono supportate su questo dispositivo/browser.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (isIOSNotPWA) {
-      toast({
-        title: "📱 iPhone/iPad - Aggiungi alla Home",
-        description: "Per le notifiche push devi aggiungere M1SSION alla Home. Tocca il pulsante Condividi (📤) e poi 'Aggiungi alla schermata Home'.",
-        duration: 10000
-      });
-      return;
-    }
-
-    try {
-      if (!canUseSW) {
-        throw new Error('Service Worker o PushManager non supportato');
-      }
-
-      // Request permission with clear UI
-      if (Notification.permission !== 'granted') {
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          throw new Error('Permesso per le notifiche negato');
-        }
-      }
-
-      // Subscribe and save
-      await subscribeToPush();
-
-      toast({
-        title: "✅ Registrazione completata",
-        description: "Le notifiche push sono ora attive."
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Errore sconosciuto';
-      setPushRegistrationError(errorMessage);
-      toast({
-        title: "❌ Errore registrazione",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    }
   };
 
   return (
@@ -447,126 +249,22 @@ const NotificationsSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* Push Notifications with iOS PWA Gating */}
+          {/* Push Notifications using UnifiedPushToggle */}
           <div className="border-t border-white/10 pt-4">
-            {/* iOS PWA Gating */}
-            {isIOSNotPWA && (
-              <div className="mb-4 p-4 bg-orange-900/20 border border-orange-700/50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">📱</div>
-                  <div>
-                    <h3 className="text-white font-medium mb-2">iPhone/iPad - Aggiungi alla Home</h3>
-                    <p className="text-white/70 text-sm mb-3">
-                      Per abilitare le notifiche push su iOS, devi aggiungere M1SSION alla schermata Home:
-                    </p>
-                    <ol className="text-white/70 text-sm space-y-1 list-decimal list-inside mb-3">
-                      <li>Tocca il pulsante Condividi (📤) in Safari</li>
-                      <li>Seleziona "Aggiungi alla schermata Home"</li>
-                      <li>Conferma e apri M1SSION dalla Home</li>
-                    </ol>
-                    <p className="text-orange-300 text-sm font-medium">
-                      Le notifiche push funzionano solo in modalità PWA su iOS.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Notification Support Warning */}
-            {!isNotificationSupported && (
-              <div className="mb-4 p-4 bg-red-900/20 border border-red-700/50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">❌</div>
-                  <div>
-                    <h3 className="text-white font-medium mb-2">Notifiche non supportate</h3>
-                    <p className="text-white/70 text-sm">
-                      Il tuo browser non supporta le notifiche push. Prova ad aggiornare il browser o usa un browser compatibile.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Push Registration Error */}
-            {pushRegistrationError && (
-              <div className="mb-4 p-4 bg-red-900/20 border border-red-700/50 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <div className="text-2xl">⚠️</div>
-                  <div className="flex-1">
-                    <h3 className="text-white font-medium mb-2">Errore Registrazione Push</h3>
-                    <p className="text-white/70 text-sm mb-3">{pushRegistrationError}</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={handleRetryPushRegistration}
-                      className="text-white border-white/20 hover:bg-white/10"
-                    >
-                      🔄 Riprova registrazione
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Push Toggle (only if supported and not iOS non-PWA) */}
-            {isNotificationSupported && !isIOSNotPWA && (
-              <>
-                <UnifiedPushToggle className="w-full" />
-                <div className="mt-4">
-                  <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
-                </div>
-                
-                {/* Telemetry Status */}
-                <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
-                  <h4 className="text-white font-medium mb-3">🔍 Telemetria Push</h4>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-white/70">SW Endpoint:</span>
-                      <span className="text-white font-mono">
-                        {subscriptionData.sw?.endpoint ? 
-                          new URL(subscriptionData.sw.endpoint).hostname : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-white/70">DB Endpoint:</span>
-                      <span className="text-white font-mono">
-                        {subscriptionData.db?.endpoint ? 
-                          new URL(subscriptionData.db.endpoint).hostname : 'N/A'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Status:</span>
-                      <span className={`font-medium ${subscriptionData.match ? 'text-green-400' : 'text-orange-400'}`}>
-                        {subscriptionData.match ? '✅ MATCH' : '❌ NO MATCH'}
-                      </span>
-                    </div>
-                    
-                    {!subscriptionData.match && subscriptionData.sw && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={handleSyncSubscription}
-                        className="w-full mt-2"
-                      >
-                        🔄 Sincronizza
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Audit read-only */}
-                <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
-              </>
-            )}
+            <UnifiedPushToggle className="w-full" />
+            <div className="mt-4">
+              <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
+            </div>
+            {/* Audit read-only */}
+            <PushInspector userId={"495246c1-9154-4f01-a428-7f37fe230180"} />
           </div>
 
-          {/* Debug Panel for Push Notifications */}
-          <div className="border-t border-white/10 pt-4">
-            <PushDebugPanel />
-          </div>
+          {/* Debug Panel for Push Notifications - Solo development */}
+          {import.meta.env.DEV && !(window as any).__M1_PROD_MODE__ && (
+            <div className="border-t border-white/10 pt-4">
+              <PushDebugPanel />
+            </div>
+          )}
         </CardContent>
       </Card>
 

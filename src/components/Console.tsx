@@ -1,4 +1,6 @@
 // M1SSION™ - Console Component for iOS Capacitor
+"use client";
+
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

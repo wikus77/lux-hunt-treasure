@@ -1,4 +1,4 @@
-
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // © 2025 Joseph MULÉ – M1SSION™ – Tutti i diritti riservati
 // M1SSION™ - Stripe Payment Hook - RESET COMPLETO 17/07/2025
 
@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
+import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
 
 interface PaymentResult {
   success: boolean;
@@ -29,6 +30,20 @@ export const useStripePayment = () => {
     if (!user) {
       console.warn('🚨 STRIPE BLOCK: No authenticated user');
       toast.error('Devi essere loggato per effettuare acquisti');
+      return false;
+    }
+
+    // Verify Stripe mode alignment (client pk_* vs server sk_*)
+    try {
+      await PaymentErrorHandler.retryWithBackoff(async () => {
+        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+        if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
+        
+        const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
+        assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+      });
+    } catch (e) {
+      await PaymentErrorHandler.handlePaymentError(e, 'stripe_mode_check');
       return false;
     }
 
@@ -105,6 +120,21 @@ export const useStripePayment = () => {
   const processSubscription = async (plan: string, paymentMethod?: string): Promise<void> => {
     if (!user) {
       toast.error('Devi essere loggato per effettuare acquisti');
+      return;
+    }
+
+    // Verify Stripe mode alignment (client pk_* vs server sk_*)
+    try {
+      await PaymentErrorHandler.retryWithBackoff(async () => {
+        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
+        if (modeErr) throw new Error(`Mode check failed: ${modeErr.message}`);
+        
+        const { assertPkMatchesMode } = await import('@/lib/stripe/guard');
+        assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
+      });
+    } catch (e) {
+      await PaymentErrorHandler.handlePaymentError(e, 'stripe_mode_check');
+      setLoading(false);
       return;
     }
 

@@ -104,6 +104,7 @@
     "rimraf": "^6.0.1",
     "rollup-plugin-visualizer": "^6.0.3",
     "sonner": "^1.5.0",
+    "stripe": "^14.25.0",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "terser": "^5.43.1",
@@ -111,6 +112,7 @@
     "uuid": "^11.1.0",
     "vaul": "^0.9.3",
     "vite-bundle-analyzer": "^1.2.3",
+    "vite-plugin-checker": "^0.7.2",
     "web-push": "^3.6.7",
     "wouter": "^3.7.1",
     "zod": "^3.23.8",
@@ -134,7 +136,6 @@
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.19",
-    "vite-tsconfig-paths": "^5.1.4"
+    "vite": "^5.4.19"
   }
 }

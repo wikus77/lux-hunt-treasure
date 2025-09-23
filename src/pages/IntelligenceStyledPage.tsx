@@ -23,12 +23,19 @@ import {
   Activity,
   Database
 } from 'lucide-react';
-import UnifiedHeader from '@/components/layout/UnifiedHeader';
-import BottomNavigation from '@/components/layout/BottomNavigation';
 import { useLocation } from 'wouter';
 
 const IntelligenceStyledPage: React.FC = () => {
   const [, setLocation] = useLocation();
+  const INTEL_ROUTES: Record<string, string> = {
+    coordinates: '/intelligence/coordinates',
+    journal: '/intelligence/clue-journal',
+    archive: '/intelligence/archive',
+    radar: '/intelligence/radar',
+    interceptor: '/intelligence/interceptor',
+    finalshot: '/intelligence/final-shot',
+    finalshotmap: '/intelligence/final-shot'
+  };
 
   const intelligenceModules = [
     {
@@ -96,11 +103,19 @@ const IntelligenceStyledPage: React.FC = () => {
     }
   };
 
+  const openModule = (moduleId: string, status?: string) => {
+    if (status && status !== 'Disponibile') {
+      // Non navigare se il modulo è bloccato
+      return;
+    }
+    
+    const path = INTEL_ROUTES[moduleId];
+    if (path) setLocation(path);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
-      <UnifiedHeader />
-      
-      <main className="pt-16 pb-20 px-4">
+      <main className="pt-4 pb-20 px-4">
         <div className="max-w-lg mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center space-x-4 mb-6">
@@ -160,7 +175,20 @@ const IntelligenceStyledPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3">
               {intelligenceModules.map((module) => (
-                <div key={module.id} className="glass-card p-4 bg-background/20 border-0">
+                 <div 
+                  key={module.id} 
+                  className="glass-card p-4 bg-background/20 border-0 cursor-pointer hover:bg-background/30 transition-all duration-200"
+                  onClick={() => openModule(module.id, module.status)}
+                  onKeyDown={(e) => {
+                    if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                      e.preventDefault();
+                      openModule(module.id);
+                    }
+                  }}
+                  tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                  role="button"
+                  aria-label={`Accedi a ${module.name}`}
+                >
                   <div className="flex items-start space-x-3">
                     <div className="p-2 rounded-lg bg-primary/20 flex-shrink-0">
                       <module.icon className="h-5 w-5 text-primary" />
@@ -182,7 +210,20 @@ const IntelligenceStyledPage: React.FC = () => {
                           variant="outline" 
                           className="h-7 text-xs"
                           disabled={module.status !== 'Disponibile'}
-                          onClick={() => setLocation('/intelligence')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (module.status === 'Disponibile') openModule(module.id);
+                          }}
+                          onKeyDown={(e) => {
+                            if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              openModule(module.id);
+                            }
+                          }}
+                          tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                          role="button"
+                          aria-label={`Apri ${module.name}`}
                         >
                           {module.status === 'Disponibile' ? 'Accedi' : 'Bloccato'}
                         </Button>
@@ -257,7 +298,16 @@ const IntelligenceStyledPage: React.FC = () => {
               <Button
                 variant="outline"
                 className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
-                onClick={() => setLocation('/intelligence')}
+                onClick={() => openModule('coordinates')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openModule('coordinates');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Apri Intelligence Panel"
               >
                 <div className="flex items-center space-x-2">
                   <Brain className="h-4 w-4 text-primary" />
@@ -269,7 +319,16 @@ const IntelligenceStyledPage: React.FC = () => {
               <Button
                 variant="outline"
                 className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
-                onClick={() => setLocation('/intelligence?tab=finalshotmap')}
+                onClick={() => openModule('finalshotmap')}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openModule('finalshotmap');
+                  }
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label="Apri Final Shot Mappa"
               >
                 <div className="flex items-center space-x-2">
                   <Crosshair className="h-4 w-4 text-red-400" />
@@ -281,8 +340,6 @@ const IntelligenceStyledPage: React.FC = () => {
           </Card>
         </div>
       </main>
-
-      <BottomNavigation />
     </div>
   );
 };
