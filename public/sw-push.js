@@ -10,47 +10,42 @@ self.addEventListener('push', (event) => {
   console.log('📢 Push event received:', event);
   
   event.waitUntil((async () => {
-    let data = {};
+    let notificationData = {
+      title: 'M1SSION™',
+      body: 'Hai un nuovo aggiornamento',
+      url: '/'
+    };
     
     try {
-      // Try to parse as JSON first
       if (event.data) {
         const text = event.data.text();
         if (text) {
           try {
-            data = JSON.parse(text);
+            // Try to parse as JSON first
+            const data = JSON.parse(text);
+            notificationData = {
+              title: data.title || notificationData.title,
+              body: data.body || notificationData.body,
+              url: data.url || data.targetUrl || data.data?.url || notificationData.url
+            };
           } catch {
             // Fallback: treat as text notification
-            data = { 
-              title: 'M1SSION™', 
-              body: text, 
-              targetUrl: '/' 
-            };
+            notificationData.body = text;
           }
         }
       }
     } catch (error) {
       console.warn('⚠️ Could not parse push data:', error);
-      data = {
-        title: 'M1SSION™',
-        body: 'Hai un nuovo aggiornamento',
-        targetUrl: '/'
-      };
     }
     
-    // Extract notification data with fallbacks
-    const title = data.title || 'M1SSION™';
-    const body = data.body || 'Hai un nuovo aggiornamento';
-    const targetUrl = data.targetUrl || data.url || data.data?.url || '/';
-    
-    console.log('📢 Showing notification:', { title, body, targetUrl });
+    console.log('📢 Showing notification:', notificationData);
     
     // Show notification
-    await self.registration.showNotification(title, {
-      body,
+    await self.registration.showNotification(notificationData.title, {
+      body: notificationData.body,
       icon: '/icons/icon-192x192.png',
       badge: '/icons/badge.png',
-      data: { targetUrl },
+      data: { url: notificationData.url },
       tag: 'm1ssion-push',
       requireInteraction: false
     });
@@ -63,7 +58,7 @@ self.addEventListener('notificationclick', (event) => {
   
   event.notification.close();
   
-  const targetUrl = event.notification.data?.targetUrl || '/';
+  const targetUrl = event.notification.data?.url || '/';
   
   event.waitUntil(
     self.clients.matchAll({ 
