@@ -1,216 +1,92 @@
-// © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
+/*
+ * M1SSION™ Web Push Subscription Upsert
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
+ */
+
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const ALLOW_ORIGIN = [
-  "https://m1ssion.eu", 
-  "https://lovable.dev", 
-  "https://2716f91b-957c-47ba-91e0-6f572f3ce00d.lovableproject.com",
-  "https://*.m1ssion.pages.dev"
-];
-
-function corsHeaders(origin: string | null) {
-  const allow = ALLOW_ORIGIN.some(allowed => 
-    origin?.includes(allowed.replace('https://', '').replace('*.', ''))
-  ) ? origin! : ALLOW_ORIGIN[0];
+function getCorsHeaders(request: Request): Record<string, string> {
+  const origin = request.headers.get('origin');
+  const allowedOrigins = ['https://m1ssion.eu', /^https:\/\/.*\.m1ssion\.pages\.dev$/, /^https:\/\/.*\.lovable\.dev$/];
+  
+  let allowOrigin = 'https://m1ssion.eu';
+  if (origin) {
+    const isAllowed = allowedOrigins.some(allowed => typeof allowed === 'string' ? allowed === origin : allowed.test(origin));
+    if (isAllowed) allowOrigin = origin;
+  }
+  
   return {
-    "Access-Control-Allow-Origin": allow,
-    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-mi-dropper-version",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'content-type, authorization, apikey, x-client-info, x-mi-dropper-version',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin'
   };
 }
 
 serve(async (req) => {
-  const origin = req.headers.get("Origin");
-  console.log('💾 [WEBPUSH-UPSERT] Request received:', req.method);
-  console.log('💾 [WEBPUSH-UPSERT] Origin:', origin);
+  const corsHeaders = getCorsHeaders(req);
   
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders(req.headers.get("Origin")), status: 204 });
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: corsHeaders });
   }
-
-  const url = Deno.env.get("SUPABASE_URL");
-  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  
-  // Check VAPID secrets availability
-  const hasVapidPub = !!Deno.env.get("VAPID_PUBLIC_KEY");
-  const hasVapidPriv = !!Deno.env.get("VAPID_PRIVATE_KEY");
-  const hasVapidSubject = !!Deno.env.get("VAPID_SUBJECT");
-  
-  console.log('🔑 [WEBPUSH-UPSERT] Environment check:', {
-    hasSupabaseUrl: !!url,
-    hasServiceKey: !!key,
-    hasVapidPub,
-    hasVapidPriv, 
-    hasVapidSubject
-  });
-  
-  // Push Guard Runtime Check
-  console.log('🔒 [PUSH-GUARD] ENABLED - webpush-upsert protected');
-  if (!hasVapidPub || !hasVapidPriv || !hasVapidSubject) {
-    const missing = [];
-    if (!hasVapidPub) missing.push('VAPID_PUBLIC_KEY');
-    if (!hasVapidPriv) missing.push('VAPID_PRIVATE_KEY');
-    if (!hasVapidSubject) missing.push('VAPID_SUBJECT');
-    
-    console.error('🔒 [PUSH-GUARD] Missing required secrets:', missing);
-    return new Response(JSON.stringify({ 
-      error: `PUSH_GUARD_MISSING_SECRET: ${missing.join(', ')}`,
-      guard_status: 'ENABLED'
-    }), {
-      headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-      status: 500,
-    });
-  }
-  
-  if (!url || !key) {
-    console.error('❌ [WEBPUSH-UPSERT] Missing Supabase env');
-    return new Response(JSON.stringify({ error: "Missing Supabase env" }), {
-      headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-      status: 500,
-    });
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
   try {
     const body = await req.json();
-    console.log('💾 [WEBPUSH-UPSERT] Raw body keys:', Object.keys(body));
-    
-    // Extract required fields with validation
-    const { user_id, endpoint, provider, p256dh, auth } = body;
-    const platform = body.platform || 'web';
-    
-    const diagnosticLog = {
-      route: 'webpush-upsert',
-      endpointHost: endpoint ? new URL(endpoint).hostname : null,
-      hasP256dh: !!p256dh,
-      hasAuth: !!auth,
-      platform: platform || null,
-      user_id: user_id || null,
-      ua: req.headers.get('user-agent')?.substring(0, 50) || null
-    };
-    console.log('💾 [WEBPUSH-UPSERT] Diagnostic:', diagnosticLog);
-    console.log('💾 [WEBPUSH-UPSERT] Is APNs:', endpoint?.includes('web.push.apple.com'));
-    
-    // Validate required fields (minimal validation)
-    const missing = [];
-    if (!user_id || typeof user_id !== 'string') missing.push('user_id');
-    if (!endpoint || typeof endpoint !== 'string' || endpoint.length === 0) missing.push('endpoint');
-    if (!provider || typeof provider !== 'string') missing.push('provider');
-    if (!p256dh || typeof p256dh !== 'string' || p256dh.length === 0) missing.push('p256dh');
-    if (!auth || typeof auth !== 'string' || auth.length === 0) missing.push('auth');
-    
-    if (missing.length > 0) {
-      console.error('❌ [WEBPUSH-UPSERT] Missing/invalid fields:', missing);
-      return new Response(JSON.stringify({ 
-        ok: false,
-        error: "MISSING_FIELD",
-        missing,
-        hint: "Required: user_id, endpoint (https URL), provider, p256dh (string), auth (string)"
-      }), {
-        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-        status: 400,
-      });
-    }
+    const { user_id, endpoint, provider, p256dh, auth, keys } = body;
 
-    // Validate endpoint format
-    if (!endpoint.startsWith('https://')) {
-      console.error('❌ [WEBPUSH-UPSERT] Invalid endpoint format:', endpoint);
-      return new Response(JSON.stringify({ 
-        ok: false,
-        error: "Endpoint must be HTTPS URL" 
-      }), {
-        headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-        status: 400,
-      });
-    }
-
-    // Save to webpush_subscriptions table with proper structure
-    const host = new URL(endpoint).hostname;
-    
-    console.log(JSON.stringify({ 
-      fn: "webpush-upsert", 
-      host, 
-      provider,
-      platform,
-      hasUser: !!user_id 
-    }, null, 0));
-    
-    const resp = await fetch(`${url}/rest/v1/webpush_subscriptions`, {
-      method: "POST",
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        "content-type": "application/json",
-        Prefer: "resolution=merge-duplicates",
-      },
-      body: JSON.stringify({
-        user_id,
-        endpoint,
-        provider,
-        p256dh,
-        auth,
-        keys: { p256dh, auth },
-        platform,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }),
-    });
-
-    // Always return 200 for valid subscriptions (even on conflict)
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.warn('⚠️ [WEBPUSH-UPSERT] DB response not OK, but continuing:', resp.status, text);
+    // Validation: 400 if missing top-level required fields
+    if (!user_id || !endpoint || !provider || !p256dh || !auth) {
+      const missing = [];
+      if (!user_id) missing.push('user_id');
+      if (!endpoint) missing.push('endpoint');
+      if (!provider) missing.push('provider');
+      if (!p256dh) missing.push('p256dh');
+      if (!auth) missing.push('auth');
       
-      // Check if it's a conflict (duplicate) - that's OK
-      if (resp.status === 409 || text.includes('duplicate') || text.includes('conflict')) {
-        console.log('✅ [WEBPUSH-UPSERT] Duplicate subscription (idempotent)');
-        return new Response(JSON.stringify({ 
-          ok: true, 
-          saved: true,
-          endpointHost: host,
-          provider,
-          platform,
-          note: "idempotent_upsert"
-        }), {
-          headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-          status: 200,
-        });
-      }
+      return new Response(JSON.stringify({ error: `Missing required fields: ${missing.join(', ')}`, missing_fields: missing }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Parse response to get ID (if needed)
-    let savedData = null;
-    try {
-      savedData = await resp.json();
-    } catch {
-      // Ignore parse errors
+    if (!['apns', 'fcm', 'webpush'].includes(provider)) {
+      return new Response(JSON.stringify({ error: 'Invalid provider. Must be: apns, fcm, webpush' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-    
-    const responseId = Array.isArray(savedData) ? savedData[0]?.id : savedData?.id;
-    
-    console.log('✅ [WEBPUSH-UPSERT] Subscription saved successfully');
-    
-    return new Response(JSON.stringify({ 
-      ok: true,
-      saved: true,
-      endpointHost: host,
-      provider,
-      platform,
-      id: responseId || "unknown"
-    }), {
-      headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-      status: 200,
+
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } }
     });
-  } catch (e) {
-    console.error('❌ [WEBPUSH-UPSERT] Unexpected error:', e);
-    // Return 200 even on error to avoid breaking client toggle
-    return new Response(JSON.stringify({ 
-      ok: false,
-      error: "INTERNAL_ERROR",
-      message: e?.message ?? String(e)
-    }), {
-      headers: { "content-type": "application/json", ...corsHeaders(req.headers.get("Origin")) },
-      status: 200, // Changed from 500 to 200
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user || user.id !== user_id) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const userAgent = req.headers.get('user-agent') || '';
+    const platform = userAgent.toLowerCase().includes('mobile') ? 'mobile' : 'desktop';
+
+    // Deactivate old subscriptions for same user+provider
+    await supabase.from('webpush_subscriptions').update({ is_active: false }).eq('user_id', user_id).eq('provider', provider).neq('endpoint', endpoint);
+
+    const { data, error } = await supabase.from('webpush_subscriptions').upsert({
+      user_id, endpoint, provider, p256dh, auth, keys: keys || { p256dh, auth }, platform, is_active: true, updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id,endpoint' }).select().single();
+
+    if (error) {
+      return new Response(JSON.stringify({ error: 'Database error: ' + error.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    return new Response(JSON.stringify({ ok: true, subscription: data, provider, platform, saved_at: new Date().toISOString() }), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
+
+  } catch (error) {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

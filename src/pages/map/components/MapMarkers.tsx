@@ -7,7 +7,6 @@ interface DbMarker {
   lat: number;
   lng: number;
   title: string;
-  reward_type?: string;
   active?: boolean;
   visible_from?: string | null;
   visible_to?: string | null;
@@ -31,7 +30,7 @@ const MapMarkers: React.FC = () => {
       try {
         const { data, error } = await supabase
           .from('markers')
-          .select('id, lat, lng, title, reward_type, active, visible_from, visible_to')
+          .select('id, lat, lng, title, active, visible_from, visible_to')
           .eq('active', true)
           .limit(2000);
         if (error) throw error;
