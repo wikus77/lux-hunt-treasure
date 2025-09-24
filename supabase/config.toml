@@ -94,7 +94,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.handle-buzz-press]
-verify_jwt = false
+verify_jwt = true
 
 [functions.handle-buzz-map]
 verify_jwt = false
