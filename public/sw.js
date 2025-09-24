@@ -29,7 +29,10 @@ log('M1SSION™ Service Worker loading...');
 self.addEventListener('install', (event) => {
   log('Service Worker installing...');
   
-  // Pre-cache critical assets
+  // SKIP_WAITING immediately to prevent blocking
+  self.skipWaiting();
+  
+  // Pre-cache critical assets (non-blocking)
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -37,11 +40,9 @@ self.addEventListener('install', (event) => {
         return cache.addAll(STATIC_ASSETS);
       })
       .catch(error => {
-        log('Pre-cache failed', error);
-      })
-      .finally(() => {
-        // Attiva immediatamente senza aspettare
-        self.skipWaiting();
+        log('Pre-cache failed (non-critical)', error);
+        // Don't fail install if cache fails
+        return Promise.resolve();
       })
   );
 });
@@ -114,9 +115,12 @@ self.addEventListener('notificationclick', (event) => {
 self.addEventListener('activate', (event) => {
   log('Service Worker activating...');
   
+  // Take control immediately to prevent blocking
+  self.clients.claim();
+  
   event.waitUntil(
     Promise.all([
-      // Clean up old caches
+      // Clean up old caches (background task)
       caches.keys().then(cacheNames => {
         return Promise.all(
           cacheNames.map(cacheName => {
@@ -126,18 +130,22 @@ self.addEventListener('activate', (event) => {
             }
           })
         );
+      }).catch(error => {
+        log('Cache cleanup failed (non-critical)', error);
+        return Promise.resolve();
       }),
       // Enable navigation preload if available
       (async () => {
-        if (self.registration.navigationPreload) {
-          await self.registration.navigationPreload.enable();
-          log('Navigation preload enabled');
+        try {
+          if (self.registration.navigationPreload) {
+            await self.registration.navigationPreload.enable();
+            log('Navigation preload enabled');
+          }
+        } catch (error) {
+          log('Navigation preload failed (non-critical)', error);
         }
       })()
     ]).then(() => {
-      // Take control without destroying storage
-      return self.clients.claim();
-    }).then(() => {
       log('Service Worker activated and controlling all pages');
     })
   );

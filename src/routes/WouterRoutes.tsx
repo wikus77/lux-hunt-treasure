@@ -97,7 +97,7 @@ const WouterRoutes: React.FC = () => {
   
   useQueryQRRedirect();
 
-  // Check active subscription when user is authenticated
+  // Check active subscription when user is authenticated - NON BLOCKING with fail-open
   useEffect(() => {
     async function checkSubscription() {
       if (!isAuthenticated || isLoading) {
@@ -111,14 +111,23 @@ const WouterRoutes: React.FC = () => {
         return;
       }
 
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+      // FAIL-OPEN: Background loading with timeout
       setSubCheckLoading(true);
+      
+      const timeoutId = setTimeout(() => {
+        console.warn('[BOOT] Subscription check timeout - proceeding with fail-open');
+        setHasActiveSub(false);
+        setSubCheckLoading(false);
+      }, 3000);
+      
       try {
         // Check subscription con helper centralizzato
         const subResult = await getActiveSubscription(supabase, user.id);
+        clearTimeout(timeoutId);
         setHasActiveSub(subResult.hasActive);
         
-        // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-        // Get user profile per admin check e choose_plan_seen flag
+        // Get user profile per admin check e choose_plan_seen flag (non-blocking)
         const { data: profile } = await supabase
           .from('profiles')
           .select('role, choose_plan_seen')
@@ -127,29 +136,28 @@ const WouterRoutes: React.FC = () => {
         
         const isAdmin = ['admin','owner'].some(r => profile?.role?.toLowerCase?.().includes(r));
         
-        // Guard per /choose-plan (mostrare SOLO se: non admin, nessuna sub attiva, e choose_plan_seen = false)
-        if (!isAdmin && !subResult.hasActive && !profile?.choose_plan_seen) {
-          if (location !== '/choose-plan') {
-            setLocation('/choose-plan');
-            return;
-          }
+        // SOFT Guard: Suggest /choose-plan ONLY if needed, but don't force
+        if (!isAdmin && !subResult.hasActive && !profile?.choose_plan_seen && location === '/') {
+          setLocation('/choose-plan');
+          return;
         }
         
-        // Non forzare più redirect globali per FREE: consenti navigazione completa
-        // Redirect a /home solo nei casi di ingresso iniziale
+        // Soft redirect home for initial routes only
         const initialRoutes = ['/', '/login', '/mission-intro', '/subscription-verify'];
         if (subResult.plan === 'free' && initialRoutes.includes(location)) {
           setLocation('/home');
           return;
         }
       } catch (error) {
-        console.error('Error checking subscription:', error);
+        console.error('[BOOT] Subscription check error - failing open:', error);
+        clearTimeout(timeoutId);
         setHasActiveSub(false);
       } finally {
         setSubCheckLoading(false);
       }
     }
 
+    // Non-blocking call - app can render while this runs
     checkSubscription();
   }, [isAuthenticated, isLoading, getCurrentUser, location, setLocation]);
 
@@ -175,27 +183,43 @@ const WouterRoutes: React.FC = () => {
         <Switch>
           {/* ✅ QR routes - redirected to main app with marker rewards popup */}
 
-          {/* Landing page - FIRST VISIT LOGIC IMPLEMENTATION */}
+          {/* Landing page - FAIL-OPEN FIRST VISIT LOGIC */}
           <Route path="/">
-            {isLoading || subCheckLoading ? (
-              <div className="min-h-screen flex items-center justify-center bg-black">
-                <div className="text-white">🎯 M1SSION™ Loading...</div>
+            {isLoading ? (
+              <div className="min-h-screen flex items-center justify-center bg-background">
+                <div className="text-center space-y-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-muted-foreground font-orbitron">Inizializzazione M1SSION™...</p>
+                </div>
               </div>
             ) : !isAuthenticated ? (
               (() => {
-                // Check if this is first visit using localStorage
-                const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
-                
-                if (isFirstVisit) {
-                  localStorage.setItem('m1_first_visit_seen', '1');
-                  return <LandingPage />;
-                } else {
+                try {
+                  // Check if this is first visit using localStorage
+                  const isFirstVisit = !localStorage.getItem('m1_first_visit_seen');
+                  
+                  if (isFirstVisit) {
+                    localStorage.setItem('m1_first_visit_seen', '1');
+                    return <LandingPage />;
+                  } else {
+                    return <Login />;
+                  }
+                } catch (error) {
+                  console.error('[BOOT] Landing page error, showing login:', error);
                   return <Login />;
                 }
               })()
             ) : (
               <ProtectedRoute>
-                <GlobalLayout><AppHome /></GlobalLayout>
+                <GlobalLayout>
+                  {/* Render home immediately even if subscription check is pending */}
+                  <AppHome />
+                  {subCheckLoading && (
+                    <div className="fixed top-4 right-4 bg-background/80 backdrop-blur-sm border rounded-lg p-2">
+                      <div className="text-xs text-muted-foreground">Verifica piano...</div>
+                    </div>
+                  )}
+                </GlobalLayout>
               </ProtectedRoute>
             )}
           </Route>

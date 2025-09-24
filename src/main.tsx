@@ -362,7 +362,7 @@ const renderApp = () => {
   }
   
   try {
-    console.log("✅ Creating React root with enhanced configuration");
+    console.log("[BOOT] Creating React root with fail-open configuration");
     const root = ReactDOM.createRoot(rootElement);
     
     // Enhanced app rendering with PWA Loading Guard to prevent black screen
@@ -372,7 +372,10 @@ const renderApp = () => {
           <div className="min-h-screen bg-background flex items-center justify-center">
             <div className="text-center space-y-4">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground font-orbitron">Caricamento M1SSION™...</p>
+              <p className="text-muted-foreground font-orbitron">Inizializzazione M1SSION™...</p>
+              <div className="text-xs text-muted-foreground">
+                Se il caricamento si blocca, ricarica la pagina
+              </div>
             </div>
           </div>
         }>
@@ -406,9 +409,9 @@ const renderApp = () => {
       setTimeout(hideSplashScreen, 1000);
     }
   } catch (error) {
-    console.error("💥 CRITICAL ERROR RENDERING APP:", error);
+    console.error("[BOOT] CRITICAL ERROR RENDERING APP:", error);
     
-    // Enhanced error display with better styling
+    // Enhanced error display with fail-open approach
     if (rootElement) {
       const errorDiv = document.createElement('div');
       errorDiv.style.cssText = `
@@ -426,8 +429,8 @@ const renderApp = () => {
       errorDiv.innerHTML = `
         <h1 style="color: #ff4444; margin-bottom: 20px;">🚨 ERRORE CRITICO DI SISTEMA</h1>
         <p style="margin-bottom: 20px; max-width: 500px;">
-          Si è verificato un errore durante il caricamento dell'applicazione M1SSION. 
-          Riprova tra qualche istante o contatta il supporto.
+          L'applicazione M1SSION™ ha riscontrato un errore critico. 
+          Usa i bottoni sotto per riavviare l'app.
         </p>
         <div style="margin-top: 20px;">
           <button 
@@ -443,7 +446,7 @@ const renderApp = () => {
               font-size: 16px;
             "
           >
-            🔄 Ricarica Applicazione
+            🔄 Ricarica App
           </button>
           <button 
             onclick="localStorage.clear(); sessionStorage.clear(); window.location.reload();" 
@@ -458,12 +461,16 @@ const renderApp = () => {
               font-size: 16px;
             "
           >
-            🧹 Reset Completo
+            🔨 Reset Completo
           </button>
         </div>
-        <p style="margin-top: 20px; font-size: 12px; color: #888;">
-          Error: ${error?.message || 'Unknown error'}
-        </p>
+        <details style="margin-top: 20px; max-width: 600px; text-align: left;">
+          <summary style="cursor: pointer; margin-bottom: 10px; color: #aaa;">Dettagli tecnici</summary>
+          <pre style="background: #111; padding: 10px; border-radius: 4px; overflow: auto; font-size: 12px;">${error?.stack || error?.message || String(error)}</pre>
+        </details>
+        <div style="margin-top: 30px; font-size: 12px; color: #666;">
+          M1SSION™ © 2025 Joseph MULÉ – NIYVORA KFT™
+        </div>
       `;
       rootElement.appendChild(errorDiv);
     }
