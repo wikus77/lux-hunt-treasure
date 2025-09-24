@@ -7,6 +7,7 @@ import { useAuthContext } from '@/contexts/auth';
 import { useSearchAreasLogic } from './useSearchAreasLogic';
 import { MapMarker } from '@/components/maps/types';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
+import { useBuzzApi } from '@/hooks/buzz/useBuzzApi';
 
 // UUID di fallback per sviluppo - SOLUZIONE DEFINITIVA
 const DEVELOPER_UUID = "00000000-0000-4000-a000-000000000000";
@@ -330,28 +331,57 @@ export const useNewMapPage = () => {
     }
   };
 
-  // FIXED: Handle BUZZ button click con validazione user ID
-  const handleBuzz = useCallback(() => {
+  // FIXED: Handle BUZZ button click con validazione user ID e API call
+  const { callBuzzApi } = useBuzzApi();
+  
+  const handleBuzz = useCallback(async () => {
     const validUserId = getValidUserId();
     
-    // ALWAYS allow BUZZ with valid UUID
-    const isDevMode = validUserId === DEVELOPER_UUID;
-    if (isDevMode) {
-      toast.info("Modalità sviluppatore: generazione BUZZ simulata", {
-        description: "Area creata con ID sviluppatore"
-      });
-    }
+    console.log('[BUZZ-MAP] Processing BUZZ MAP request for user:', validUserId);
+    
+    try {
+      // Get map center for coordinates
+      let mapCenter: { lat: number; lng: number } | undefined;
+      if ((window as any).leafletMap) {
+        const map = (window as any).leafletMap;
+        const center = map.getCenter();
+        mapCenter = { lat: center.lat, lng: center.lng };
+        console.log('[BUZZ-MAP] Using map center:', mapCenter);
+      } else {
+        // Default to Rome if no map center available
+        mapCenter = { lat: 41.9028, lng: 12.4964 };
+        console.log('[BUZZ-MAP] Using default center (Rome):', mapCenter);
+      }
 
-    const activeArea = currentWeekAreas.length > 0 ? currentWeekAreas[0] : null;
-    if (activeArea) {
-      toast.success(`Area BUZZ MAPPA attiva: ${activeArea.radius_km.toFixed(1)} km`, {
-        description: "L'area è già visibile sulla mappa"
+      // Call the buzz API with generateMap: true
+      const response = await callBuzzApi({
+        userId: validUserId,
+        generateMap: true,
+        coordinates: mapCenter
       });
-      console.log('📏 Messaggio popup con raggio ESATTO da Supabase:', activeArea.radius_km.toFixed(1), 'km');
-    } else {
-      toast.info("Premi BUZZ MAPPA per generare una nuova area di ricerca!");
+
+      if (response.success) {
+        console.log('[BUZZ-MAP] BUZZ MAP generated successfully:', response);
+        
+        if (response.map_area) {
+          toast.success(`✅ BUZZ MAPPA creata!`, {
+            description: `Area di ${response.map_area.radius_km}km generata`
+          });
+          
+          // Reload areas to show the new one
+          await reloadAreas();
+        } else {
+          toast.success('✅ BUZZ MAP completato con successo!');
+        }
+      } else {
+        console.error('[BUZZ-MAP] API error:', response.errorMessage);
+        toast.error(response.errorMessage || 'Errore durante la generazione BUZZ MAP');
+      }
+    } catch (error) {
+      console.error('[BUZZ-MAP] Exception during BUZZ MAP:', error);
+      toast.error('Errore imprevisto durante BUZZ MAP');
     }
-  }, [getValidUserId, currentWeekAreas]);
+  }, [getValidUserId, callBuzzApi, reloadAreas]);
 
   // Request user location
   const requestLocationPermission = () => {

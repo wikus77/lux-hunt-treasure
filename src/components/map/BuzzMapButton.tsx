@@ -155,27 +155,21 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       setIsProcessing(true);
 
       try {
-        // Decrement counter locally for wikus77@hotmail.it
-        const next = Math.max(0, buzzOverride.free_remaining - 1);
-        localStorage.setItem('freeBuzzRemaining', String(next));
-        setBuzzOverride(prev => ({ ...prev, free_remaining: next }));
-
-        // FREE BUZZ successful - increment generation without validation/payment
-        const incrementSuccess = await incrementGeneration();
-        if (!incrementSuccess) {
-          // Rollback the local counter on failure
-          localStorage.setItem('freeBuzzRemaining', String(buzzOverride.free_remaining));
-          setBuzzOverride(prev => ({ ...prev, free_remaining: buzzOverride.free_remaining }));
-          toast.error('Errore validazione BUZZ', {
-            description: 'Impossibile procedere con il BUZZ. Riprova.'
-          });
-          setIsProcessing(false);
-          return;
+        // Call the actual buzz API with FREE override - this will consume the free buzz properly
+        console.info('[FREE-OVERRIDE] Calling buzz API for FREE BUZZ MAP');
+        
+        // Get map center for coordinates
+        let mapCenter: [number, number] | undefined;
+        if ((window as any).leafletMap) {
+          const map = (window as any).leafletMap;
+          const center = map.getCenter();
+          mapCenter = [center.lat, center.lng];
         }
-
-        // Directly call success handler without payment
-        console.info('[FREE-OVERRIDE] FREE BUZZ successful, bypassing payment. Remaining:', next);
-        await handleBuzzMapPaymentSuccess('free_buzz_override');
+        
+        // Call the buzz API directly instead of bypassing it
+        await onBuzzPress();
+        
+        console.info('[FREE-OVERRIDE] FREE BUZZ API call completed successfully');
         return;
         
       } catch (error) {
