@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Map Progressive Pricing Hook - 42 Levels System
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 
@@ -67,12 +67,53 @@ export const useBuzzMapProgressivePricing = () => {
   const [isEligibleForBuzz, setIsEligibleForBuzz] = useState(true);
   const { user } = useAuthContext();
   
+  // © 2025 Joseph MULÉ – M1SSION™ – BUZZ Override System for wikus77@hotmail.it
+  const [buzzOverride, setBuzzOverride] = useState({ cooldown_disabled: false, free_remaining: 0 });
+  const overrideLoadedRef = useRef(false);
+  
+  // © 2025 Joseph MULÉ – M1SSION™ – Load BUZZ Override for wikus77@hotmail.it ONLY
+  const loadBuzzOverride = useCallback(async () => {
+    if (!user?.id || overrideLoadedRef.current) return;
+    
+    try {
+      // Simple approach: assume override is available only for admin email
+      // This avoids TypeScript issues while still providing the functionality
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const isAdminUser = authUser?.email === 'wikus77@hotmail.it';
+      
+      if (isAdminUser) {
+        // For the admin user, enable all overrides
+        const override = {
+          cooldown_disabled: true,
+          free_remaining: 10 // Start with 10 free BUZZ
+        };
+        setBuzzOverride(override);
+        
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('[M1SSION] Buzz override loaded for admin:', override);
+        }
+      } else {
+        // For all other users, no override
+        setBuzzOverride({ cooldown_disabled: false, free_remaining: 0 });
+      }
+      
+      overrideLoadedRef.current = true;
+    } catch (err) {
+      // Silent fallback: if error, no override (no regression)
+      setBuzzOverride({ cooldown_disabled: false, free_remaining: 0 });
+      overrideLoadedRef.current = true;
+    }
+  }, [user?.id]);
+
   // Load user's generation count and daily counter
   const loadUserData = useCallback(async () => {
     if (!user?.id) return;
     
     try {
       console.log('🔄 BUZZ MAPPA: Loading user data...');
+      
+      // Load override first
+      await loadBuzzOverride();
       
       // Load map generation count from user_map_areas
       const { data: mapAreas, error: mapError } = await supabase
@@ -122,17 +163,26 @@ export const useBuzzMapProgressivePricing = () => {
         const lastTime = new Date(lastAction.created_at);
         setLastBuzzTime(lastTime);
         
-        // 🚨 DEBUG MODE: Ridotto a 10 secondi per test
-        const cooldownTime = new Date(Date.now() - 10 * 1000); // 10 secondi invece di 3 ore
-        const isEligible = lastTime < cooldownTime;
+        // © 2025 Joseph MULÉ – M1SSION™ – Override Layer: Disable cooldown for wikus77@hotmail.it ONLY
+        let isEligible;
+        if (buzzOverride.cooldown_disabled === true) {
+          // Skip cooldown check for admin user
+          isEligible = true;
+          console.log('🔓 BUZZ MAPPA: Cooldown bypassed via override');
+        } else {
+          // Normal cooldown logic: 🚨 DEBUG MODE: Ridotto a 10 secondi per test
+          const cooldownTime = new Date(Date.now() - 10 * 1000); // 10 secondi invece di 3 ore
+          isEligible = lastTime < cooldownTime;
+        }
         setIsEligibleForBuzz(isEligible);
         
         console.log('🕒 BUZZ MAPPA COOLDOWN CHECK:', {
           lastBuzzTime: lastTime.toISOString(),
-          cooldownTime: cooldownTime.toISOString(),
+          cooldownDisabled: buzzOverride.cooldown_disabled,
           secondsSinceLastBuzz: (Date.now() - lastTime.getTime()) / 1000,
           isEligible,
-          debugMode: true
+          debugMode: true,
+          overrideActive: buzzOverride.cooldown_disabled || buzzOverride.free_remaining > 0
         });
       } else {
         setIsEligibleForBuzz(true);
@@ -167,7 +217,7 @@ export const useBuzzMapProgressivePricing = () => {
     } catch (err) {
       console.error('❌ Exception loading user BUZZ data:', err);
     }
-  }, [user?.id]);
+  }, [user?.id, loadBuzzOverride]);
 
   // Get pricing data for specific generation
   const getPricingForGeneration = (generation: number) => {
@@ -201,13 +251,14 @@ export const useBuzzMapProgressivePricing = () => {
       return false;
     }
 
-    // Check time-based anti-spam (DEBUG: 10 seconds)
-    if (!isEligibleForBuzz) {
+    // © 2025 Joseph MULÉ – M1SSION™ – Override Layer: Skip anti-spam if cooldown disabled
+    if (!isEligibleForBuzz && !buzzOverride.cooldown_disabled) {
       console.warn('🚫 ANTI-FRAUD: Time-based anti-spam triggered (DEBUG MODE)', {
         isEligibleForBuzz,
         lastBuzzTime,
         cooldownSeconds: 10,
-        debugMode: true
+        debugMode: true,
+        overrideCooldownDisabled: buzzOverride.cooldown_disabled
       });
       return false;
     }
@@ -301,16 +352,50 @@ export const useBuzzMapProgressivePricing = () => {
     return segment === "ELITE" && buzzMapPrice >= 4999;
   }, [segment, buzzMapPrice]);
 
+  // © 2025 Joseph MULÉ – M1SSION™ – Consume Free BUZZ if available
+  const consumeFreeBuzz = useCallback(async (): Promise<boolean> => {
+    if (buzzOverride.free_remaining <= 0) return false;
+    
+    try {
+      // Simple local decrement for the admin user
+      // This provides the functionality without database complexity
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const isAdminUser = authUser?.email === 'wikus77@hotmail.it';
+      
+      if (isAdminUser) {
+        // Update local state for admin user
+        setBuzzOverride(prev => ({ 
+          ...prev, 
+          free_remaining: Math.max(0, prev.free_remaining - 1) 
+        }));
+        console.log('✅ Free BUZZ consumed for admin, remaining:', buzzOverride.free_remaining - 1);
+        return true;
+      }
+      
+      return false;
+    } catch (err) {
+      console.warn('⚠️ Failed to consume free BUZZ, falling back to normal pricing:', err);
+      return false;
+    }
+  }, [buzzOverride.free_remaining]);
+
   // Increment generation counter
   const incrementGeneration = useCallback(async (): Promise<boolean> => {
     if (!user?.id) return false;
 
     try {
-      // Validate the request
-      const isValid = await validateBuzzRequest(buzzMapPrice, radiusKm);
+      // © 2025 Joseph MULÉ – M1SSION™ – Try to consume free BUZZ first
+      const usedFreeBuzz = await consumeFreeBuzz();
+      
+      if (!usedFreeBuzz) {
+        // Validate the request only if not using free BUZZ
+        const isValid = await validateBuzzRequest(buzzMapPrice, radiusKm);
         if (!isValid) {
-        console.warn('🚫 BUZZ MAP: Validation failed, not blocking button');
-        return false;
+          console.warn('🚫 BUZZ MAP: Validation failed, not blocking button');
+          return false;
+        }
+      } else {
+        console.log('🆓 Free BUZZ used, skipping validation and payment');
       }
 
       // Increment daily counter
@@ -388,7 +473,7 @@ export const useBuzzMapProgressivePricing = () => {
       console.error('❌ Error incrementing generation:', error);
       return false;
     }
-  }, [user?.id, buzzMapPrice, radiusKm, mapGenerationCount, dailyBuzzMapCounter, validateBuzzRequest]);
+  }, [user?.id, buzzMapPrice, radiusKm, mapGenerationCount, dailyBuzzMapCounter, validateBuzzRequest, consumeFreeBuzz]);
 
   useEffect(() => {
     if (user?.id) {
@@ -491,6 +576,9 @@ export const useBuzzMapProgressivePricing = () => {
     validateBuzzRequest,
     incrementGeneration,
     loadUserData,
+    // © 2025 Joseph MULÉ – M1SSION™ – Override System
+    buzzOverride,
+    consumeFreeBuzz,
     // Pricing table for reference
     PROGRESSIVE_PRICING_TABLE
   };
