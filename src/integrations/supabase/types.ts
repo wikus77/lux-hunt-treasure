@@ -62,6 +62,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_buzz_overrides: {
+        Row: {
+          cooldown_disabled: boolean
+          created_at: string
+          expires_at: string | null
+          free_quota: number
+          free_used: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cooldown_disabled?: boolean
+          created_at?: string
+          expires_at?: string | null
+          free_quota?: number
+          free_used?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cooldown_disabled?: boolean
+          created_at?: string
+          expires_at?: string | null
+          free_quota?: number
+          free_used?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_logs: {
         Row: {
           context: string | null
@@ -4625,6 +4655,10 @@ export type Database = {
         Args: { p_credit_type: string; p_user_id: string }
         Returns: boolean
       }
+      consume_free_buzz: {
+        Args: Record<PropertyKey, never>
+        Returns: Database["public"]["CompositeTypes"]["consume_free_buzz_result"]
+      }
       count_distinct_push_tokens: {
         Args: Record<PropertyKey, never>
         Returns: number
@@ -4722,6 +4756,14 @@ export type Database = {
       get_authenticated_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_buzz_override: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          cooldown_disabled: boolean
+          expires_at: string
+          free_remaining: number
+        }[]
       }
       get_current_game_week: {
         Args: Record<PropertyKey, never>
@@ -4928,6 +4970,10 @@ export type Database = {
         }
         Returns: string
       }
+      lookup_user_id_by_email: {
+        Args: { p_email: string }
+        Returns: string
+      }
       mark_choose_plan_seen: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5100,7 +5146,11 @@ export type Database = {
       referral_status: "pending" | "registered"
     }
     CompositeTypes: {
-      [_ in never]: never
+      consume_free_buzz_result: {
+        ok: boolean | null
+        free_remaining: number | null
+        message: string | null
+      }
     }
   }
 }
