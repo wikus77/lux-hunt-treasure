@@ -25,6 +25,13 @@ serve(async (req) => {
   }
 
   try {
+    // Security controls for FREE Override system
+    const ENABLE_FREE_OVERRIDE = Deno.env.get("FREE_OVERRIDE_ENABLE") === "1";
+    const url = new URL(req.url);
+    const DRY_RUN = url.searchParams.get("dryRun") === "true";
+    
+    console.log('[FREE-OVERRIDE-SECURITY]', { enable: ENABLE_FREE_OVERRIDE, dryRun: DRY_RUN });
+
     // Initialize Supabase client with service role
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -89,15 +96,23 @@ serve(async (req) => {
 
     let hasFreeOverride = false;
     let freeRemaining = 0;
+    const isFreeRequest = !body.sessionId && !body.prizeId && userId === '495246c1-9154-4f01-a428-7f37fe230180';
 
-    if (!overrideError && overrideData) {
+    // Security check: Se richiesta FREE ma feature disabilitata → forza flusso paid
+    if (isFreeRequest && !ENABLE_FREE_OVERRIDE) {
+      console.log('[FREE-OVERRIDE-SECURITY] FREE request detected but feature disabled, forcing paid flow');
+      // Comportati come flusso paid normale - nessun bypass, nessun errore speciale
+      hasFreeOverride = false;
+    } else if (!overrideError && overrideData && ENABLE_FREE_OVERRIDE) {
       console.log('[BUZZ-PRESS] Override RPC result:', overrideData);
       if (overrideData.free_remaining > 0) {
         hasFreeOverride = true;
         freeRemaining = overrideData.free_remaining;
         console.log('[FREE-OVERRIDE] Active override found:', { 
           freeRemaining, 
-          cooldownDisabled: overrideData.cooldown_disabled 
+          cooldownDisabled: overrideData.cooldown_disabled,
+          enableFlag: ENABLE_FREE_OVERRIDE,
+          dryRun: DRY_RUN
         });
       }
     } else {
@@ -130,6 +145,21 @@ serve(async (req) => {
       console.log('[BUZZ-PRESS] Processing BUZZ MAP generation');
       
       if (hasFreeOverride) {
+        // DRY RUN: test senza scrivere su DB
+        if (DRY_RUN) {
+          console.log('[FREE-OVERRIDE] DRY RUN mode - not consuming free buzz or creating map area');
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              mode: "free", 
+              dryRun: true,
+              freeRemaining: freeRemaining,
+              message: "Dry run successful - enable FREE_OVERRIDE_ENABLE and remove dryRun to activate"
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         // Consume FREE buzz using user context
         console.log('[FREE-OVERRIDE] Consuming free buzz...');
         const { data: consumeResult, error: consumeError } = await supabaseAnon
@@ -193,6 +223,22 @@ serve(async (req) => {
       console.log('[BUZZ-PRESS] Processing normal BUZZ clue generation');
       
       if (hasFreeOverride) {
+        // DRY RUN: test senza scrivere su DB
+        if (DRY_RUN) {
+          console.log('[FREE-OVERRIDE] DRY RUN mode - not consuming free buzz');
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              mode: "free", 
+              dryRun: true,
+              freeRemaining: freeRemaining,
+              clue_text: "DRY RUN - Cerca vicino alle antiche mura della città",
+              message: "Dry run successful - enable FREE_OVERRIDE_ENABLE and remove dryRun to activate"
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
         // Consume FREE buzz using user context
         console.log('[FREE-OVERRIDE] Consuming free buzz...');
         const { data: consumeResult, error: consumeError } = await supabaseAnon
