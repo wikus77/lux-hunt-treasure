@@ -36,7 +36,8 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     validateBuzzRequest,
     incrementGeneration,
     // © 2025 Joseph MULÉ – M1SSION™ – Override System
-    buzzOverride
+    buzzOverride,
+    setBuzzOverride
   } = useBuzzMapProgressivePricing();
   const { 
     processBuzzPayment, 
@@ -154,7 +155,27 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       setIsProcessing(true);
 
       try {
-        // Try to consume free BUZZ first
+        // Try to consume free BUZZ via direct RPC call
+        const { data: consumeResult, error: consumeError } = await supabase.rpc('consume_free_buzz' as any);
+        
+        if (consumeError || !consumeResult?.ok) {
+          console.warn('[FREE-OVERRIDE] Free BUZZ consumption failed:', consumeError || consumeResult?.message);
+          toast.error('Errore temporaneo', {
+            description: 'Problema con FREE BUZZ, procedendo con pagamento normale.'
+          });
+          setIsProcessing(false);
+          // Fall back to regular payment flow below
+          await processBuzzMapPaymentStripe();
+          return;
+        }
+
+        // Update local override state
+        setBuzzOverride(prev => ({ 
+          ...prev, 
+          free_remaining: consumeResult.free_remaining || 0 
+        }));
+
+        // FREE BUZZ successful - increment generation without validation/payment
         const incrementSuccess = await incrementGeneration();
         if (!incrementSuccess) {
           toast.error('Errore validazione BUZZ', {
@@ -164,8 +185,8 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           return;
         }
 
-        // FREE BUZZ successful - directly call success handler without payment
-        console.info('[FREE-OVERRIDE] FREE BUZZ successful, bypassing payment');
+        // Directly call success handler without payment
+        console.info('[FREE-OVERRIDE] FREE BUZZ successful, bypassing payment. Remaining:', consumeResult.free_remaining);
         await handleBuzzMapPaymentSuccess('free_buzz_override');
         return;
         
@@ -177,7 +198,11 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       }
     }
 
-    // Regular payment flow for non-FREE BUZZ
+    // Regular payment flow for non-FREE BUZZ - use separate function to avoid confusion
+    await processBuzzMapPaymentStripe();
+  };
+
+  const processBuzzMapPaymentStripe = async () => {
     // 🧠 SAVE MAP STATE BEFORE PAYMENT (CRITICAL FOR RESTORATION)
     if ((window as any).leafletMap) {
       const map = (window as any).leafletMap;

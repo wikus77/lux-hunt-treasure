@@ -369,7 +369,7 @@ export const useBuzzMapProgressivePricing = () => {
     try {
       console.log('[FREE-OVERRIDE] Attempting to consume free BUZZ, remaining:', buzzOverride.free_remaining);
       
-      // Call RPC to consume one free BUZZ (type-safe approach)
+      // Call RPC to consume one free BUZZ (returns the result object)
       const { data, error } = await supabase.rpc('consume_free_buzz' as any);
       
       if (error) {
@@ -377,17 +377,22 @@ export const useBuzzMapProgressivePricing = () => {
         return false;
       }
       
-      if (data === true) {
+      // The function returns a result object: { ok: boolean, free_remaining: number, message: string }
+      if (data && data.ok === true) {
         // Update local state to reflect consumed BUZZ
         setBuzzOverride(prev => ({ 
           ...prev, 
-          free_remaining: Math.max(0, prev.free_remaining - 1) 
+          free_remaining: data.free_remaining || Math.max(0, prev.free_remaining - 1) 
         }));
-        console.info('[FREE-OVERRIDE] Free BUZZ consumed successfully, remaining:', buzzOverride.free_remaining - 1);
+        console.info('[FREE-OVERRIDE] Free BUZZ consumed successfully:', {
+          ok: data.ok,
+          remaining: data.free_remaining,
+          message: data.message
+        });
         return true;
       }
       
-      console.warn('[FREE-OVERRIDE] consume_free_buzz returned false');
+      console.warn('[FREE-OVERRIDE] consume_free_buzz failed:', data?.message || 'unknown reason');
       return false;
     } catch (err) {
       console.warn('[FREE-OVERRIDE] Exception consuming free BUZZ, falling back to normal pricing:', err);
@@ -594,6 +599,7 @@ export const useBuzzMapProgressivePricing = () => {
     loadUserData,
     // © 2025 Joseph MULÉ – M1SSION™ – Override System
     buzzOverride,
+    setBuzzOverride,
     consumeFreeBuzz,
     // Pricing table for reference
     PROGRESSIVE_PRICING_TABLE
