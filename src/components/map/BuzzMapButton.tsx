@@ -34,7 +34,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     needsCostWarning,
     isEliteMaxPrice,
     validateBuzzRequest,
-    incrementGeneration 
+    incrementGeneration,
+    // © 2025 Joseph MULÉ – M1SSION™ – Override System
+    buzzOverride
   } = useBuzzMapProgressivePricing();
   const { 
     processBuzzPayment, 
@@ -254,8 +256,16 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
             boxShadow: segment === "ELITE" ? '0 0 30px rgba(123, 46, 255, 0.7)' : '0 0 20px rgba(0, 209, 255, 0.5)',
           }}
         >
-          <div className="flex flex-col items-center">
-            <span className="text-sm text-white font-bold">{formatPrice(buzzMapPrice)}</span>
+          <div className="flex flex-col items-center relative">
+            {/* © 2025 Joseph MULÉ – M1SSION™ – Free Badge for Override */}
+            {buzzOverride.free_remaining > 0 && (
+              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">
+                FREE {buzzOverride.free_remaining}
+              </div>
+            )}
+            <span className="text-sm text-white font-bold">
+              {buzzOverride.free_remaining > 0 ? 'FREE' : formatPrice(buzzMapPrice)}
+            </span>
             <span className="text-xs text-white/80">BUZZ MAPPA · {radiusKm}km</span>
             {segment !== "Entry" && (
               <span className="text-xs text-white/60 font-medium">{segment}</span>
