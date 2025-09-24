@@ -78,7 +78,8 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       return;
     }
 
-    if (!isEligibleForBuzz) {
+    // © 2025 Joseph MULÉ – M1SSION™ – Skip cooldown check if override active
+    if (!isEligibleForBuzz && !buzzOverride.cooldown_disabled) {
       toast.error('Attendi prima del prossimo BUZZ', {
         description: 'Devi attendere almeno 3 ore tra i BUZZ per sicurezza.'
       });
@@ -132,6 +133,51 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
   };
 
   const processBuzzMapPayment = async () => {
+    // © 2025 Joseph MULÉ – M1SSION™ – Check for FREE BUZZ first
+    if (buzzOverride.free_remaining > 0) {
+      console.info('[FREE-OVERRIDE] Attempting FREE BUZZ map');
+      
+      // 🧠 SAVE MAP STATE BEFORE FREE BUZZ
+      if ((window as any).leafletMap) {
+        const map = (window as any).leafletMap;
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        
+        localStorage.setItem("map_state_before_buzz", JSON.stringify({
+          center: { lat: center.lat, lng: center.lng },
+          zoom: zoom
+        }));
+        
+        console.log('💾 Map state saved before FREE BUZZ:', { center, zoom });
+      }
+
+      setIsProcessing(true);
+
+      try {
+        // Try to consume free BUZZ first
+        const incrementSuccess = await incrementGeneration();
+        if (!incrementSuccess) {
+          toast.error('Errore validazione BUZZ', {
+            description: 'Impossibile procedere con il BUZZ. Riprova.'
+          });
+          setIsProcessing(false);
+          return;
+        }
+
+        // FREE BUZZ successful - directly call success handler without payment
+        console.info('[FREE-OVERRIDE] FREE BUZZ successful, bypassing payment');
+        await handleBuzzMapPaymentSuccess('free_buzz_override');
+        return;
+        
+      } catch (error) {
+        console.error('[FREE-OVERRIDE] Error during FREE BUZZ:', error);
+        toast.error('Errore durante FREE BUZZ');
+        setIsProcessing(false);
+        return;
+      }
+    }
+
+    // Regular payment flow for non-FREE BUZZ
     // 🧠 SAVE MAP STATE BEFORE PAYMENT (CRITICAL FOR RESTORATION)
     if ((window as any).leafletMap) {
       const map = (window as any).leafletMap;
@@ -249,7 +295,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
         <Button
           onClick={handleBuzzMapPress}
-          disabled={!isAuthenticated || isProcessing || loading || !isEligibleForBuzz || dailyBuzzMapCounter >= 3}
+          disabled={!isAuthenticated || isProcessing || loading || (!isEligibleForBuzz && !buzzOverride.cooldown_disabled) || dailyBuzzMapCounter >= 3}
           className="h-16 px-6 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
           style={{
             background: getSegmentColor(),
@@ -273,7 +319,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           </div>
         </Button>
         
-        {(!isEligibleForBuzz || dailyBuzzMapCounter >= 3) && (
+        {((!isEligibleForBuzz && !buzzOverride.cooldown_disabled) || dailyBuzzMapCounter >= 3) && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs text-red-400 whitespace-nowrap">
             {dailyBuzzMapCounter >= 3 ? 'Limite giornaliero raggiunto' : 'Attendere 3h dal precedente'}
           </div>
