@@ -71,8 +71,8 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       return;
     }
 
-    // Anti-fraud checks
-    if (dailyBuzzMapCounter >= 3) {
+    // Anti-fraud checks - bypass for wikus77@hotmail.it with override
+    if (dailyBuzzMapCounter >= 3 && !(user?.email === 'wikus77@hotmail.it' && buzzOverride.free_remaining > 0)) {
       toast.error('Limite giornaliero raggiunto', {
         description: 'Massimo 3 BUZZ MAPPA al giorno per sicurezza.'
       });
@@ -308,7 +308,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50">
         <Button
           onClick={handleBuzzMapPress}
-          disabled={!isAuthenticated || isProcessing || loading || (!isEligibleForBuzz && !buzzOverride.cooldown_disabled) || dailyBuzzMapCounter >= 3}
+          disabled={!isAuthenticated || isProcessing || loading || (!isEligibleForBuzz && !buzzOverride.cooldown_disabled) || (dailyBuzzMapCounter >= 3 && !(user?.email === 'wikus77@hotmail.it' && buzzOverride.free_remaining > 0))}
           className="h-16 px-6 rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95"
           style={{
             background: getSegmentColor(),
@@ -332,9 +332,9 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
           </div>
         </Button>
         
-        {((!isEligibleForBuzz && !buzzOverride.cooldown_disabled) || dailyBuzzMapCounter >= 3) && (
+        {((!isEligibleForBuzz && !buzzOverride.cooldown_disabled) || (dailyBuzzMapCounter >= 3 && !(user?.email === 'wikus77@hotmail.it' && buzzOverride.free_remaining > 0))) && (
           <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs text-red-400 whitespace-nowrap">
-            {dailyBuzzMapCounter >= 3 ? 'Limite giornaliero raggiunto' : 'Attendere 3h dal precedente'}
+            {(dailyBuzzMapCounter >= 3 && !(user?.email === 'wikus77@hotmail.it' && buzzOverride.free_remaining > 0)) ? 'Limite giornaliero raggiunto' : 'Attendere 3h dal precedente'}
           </div>
         )}
       </div>
