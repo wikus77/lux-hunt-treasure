@@ -155,29 +155,17 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
       setIsProcessing(true);
 
       try {
-        // Try to consume free BUZZ via direct RPC call
-        const { data: consumeResult, error: consumeError } = await supabase.rpc('consume_free_buzz' as any);
-        
-        if (consumeError || !consumeResult?.ok) {
-          console.warn('[FREE-OVERRIDE] Free BUZZ consumption failed:', consumeError || consumeResult?.message);
-          toast.error('Errore temporaneo', {
-            description: 'Problema con FREE BUZZ, procedendo con pagamento normale.'
-          });
-          setIsProcessing(false);
-          // Fall back to regular payment flow below
-          await processBuzzMapPaymentStripe();
-          return;
-        }
-
-        // Update local override state
-        setBuzzOverride(prev => ({ 
-          ...prev, 
-          free_remaining: consumeResult.free_remaining || 0 
-        }));
+        // Decrement counter locally for wikus77@hotmail.it
+        const next = Math.max(0, buzzOverride.free_remaining - 1);
+        localStorage.setItem('freeBuzzRemaining', String(next));
+        setBuzzOverride(prev => ({ ...prev, free_remaining: next }));
 
         // FREE BUZZ successful - increment generation without validation/payment
         const incrementSuccess = await incrementGeneration();
         if (!incrementSuccess) {
+          // Rollback the local counter on failure
+          localStorage.setItem('freeBuzzRemaining', String(buzzOverride.free_remaining));
+          setBuzzOverride(prev => ({ ...prev, free_remaining: buzzOverride.free_remaining }));
           toast.error('Errore validazione BUZZ', {
             description: 'Impossibile procedere con il BUZZ. Riprova.'
           });
@@ -186,7 +174,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
         }
 
         // Directly call success handler without payment
-        console.info('[FREE-OVERRIDE] FREE BUZZ successful, bypassing payment. Remaining:', consumeResult.free_remaining);
+        console.info('[FREE-OVERRIDE] FREE BUZZ successful, bypassing payment. Remaining:', next);
         await handleBuzzMapPaymentSuccess('free_buzz_override');
         return;
         
