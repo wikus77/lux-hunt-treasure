@@ -29,6 +29,13 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
     async function fetchRealPlan() {
       const user = getCurrentUser();
       if (user?.id) {
+        // © 2025 Joseph MULÉ – M1SSION™ – Check for FREE override to bypass access block for wikus77@hotmail.it
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user?.email === 'wikus77@hotmail.it') {
+          console.info('[FREE-OVERRIDE] Access block bypassed for wikus77@hotmail.it');
+          return null; // Allow access
+        }
+        
         const result = await getActiveSubscription(supabase, user.id);
         const plan = result.plan || 'free';
         setRealPlanName(plan);
@@ -37,21 +44,6 @@ const AccessBlockedView: React.FC<AccessBlockedViewProps> = ({
         if (plan === 'free' && window.location.pathname !== '/choose-plan') {
           navigate('/home', { replace: true });
           return;
-        }
-        
-        // © 2025 Joseph MULÉ – M1SSION™ – Check for BUZZ override to bypass access block
-        try {
-          const { data: overrideData } = await supabase.rpc('get_buzz_override' as any);
-          if (overrideData && Array.isArray(overrideData) && overrideData.length > 0) {
-            const override = overrideData[0] as any;
-            if (override.cooldown_disabled || override.free_remaining > 0) {
-              console.info('[FREE-OVERRIDE] Access block bypassed due to active override');
-              navigate('/home', { replace: true });
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn('[FREE-OVERRIDE] Could not check override, proceeding with normal access check:', err);
         }
       }
     }

@@ -71,39 +71,40 @@ export const useBuzzMapProgressivePricing = () => {
   const [buzzOverride, setBuzzOverride] = useState({ cooldown_disabled: false, free_remaining: 0, expires_at: null });
   const overrideLoadedRef = useRef(false);
   
-  // © 2025 Joseph MULÉ – M1SSION™ – Load BUZZ Override from DB via RPC
+  // © 2025 Joseph MULÉ – M1SSION™ – Load BUZZ Override - Hardcoded for wikus77@hotmail.it
   const loadBuzzOverride = useCallback(async () => {
     if (!user?.id || overrideLoadedRef.current) return;
     
     try {
       console.log('[FREE-OVERRIDE] Loading override for user:', user.id);
       
-      // Call RPC to get override data (type-safe approach)
-      const { data, error } = await supabase.rpc('get_buzz_override' as any);
-      
-      if (error) {
-        console.warn('[FREE-OVERRIDE] RPC error, using defaults:', error);
+      // Get current user data
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.warn('[FREE-OVERRIDE] User auth error:', userError);
         setBuzzOverride({ cooldown_disabled: false, free_remaining: 0, expires_at: null });
-      } else if (data && Array.isArray(data) && data.length > 0) {
-        const override = data[0] as any;
-        const parsedOverride = {
-          cooldown_disabled: !!override.cooldown_disabled,
-          free_remaining: override.free_remaining || 0,
-          expires_at: override.expires_at
-        };
+        overrideLoadedRef.current = true;
+        return;
+      }
+      
+      // Hardcode override for wikus77@hotmail.it
+      if (userData.user?.email === 'wikus77@hotmail.it') {
+        const storedRemaining = localStorage.getItem('freeBuzzRemaining');
+        const freeRemaining = storedRemaining ? parseInt(storedRemaining) : 10;
         
-        // Check if override is expired
-        if (parsedOverride.expires_at && new Date() > new Date(parsedOverride.expires_at)) {
-          console.log('[FREE-OVERRIDE] Override expired, disabling');
-          setBuzzOverride({ cooldown_disabled: false, free_remaining: 0, expires_at: null });
-        } else {
-          setBuzzOverride(parsedOverride);
-          if (parsedOverride.cooldown_disabled || parsedOverride.free_remaining > 0) {
-            console.info('[FREE-OVERRIDE] Override active:', parsedOverride);
-          }
-        }
+        setBuzzOverride({
+          cooldown_disabled: true,
+          free_remaining: freeRemaining,
+          expires_at: '2025-10-08T23:59:59Z'
+        });
+        
+        console.info('[FREE-OVERRIDE] Local override active for wikus77@hotmail.it:', {
+          cooldown_disabled: true,
+          free_remaining: freeRemaining,
+          expires_at: '2025-10-08T23:59:59Z'
+        });
       } else {
-        // No override found for this user
+        // No override for other users
         setBuzzOverride({ cooldown_disabled: false, free_remaining: 0, expires_at: null });
       }
       
@@ -362,37 +363,34 @@ export const useBuzzMapProgressivePricing = () => {
     return segment === "ELITE" && buzzMapPrice >= 4999;
   }, [segment, buzzMapPrice]);
 
-  // © 2025 Joseph MULÉ – M1SSION™ – Consume Free BUZZ via RPC
+  // © 2025 Joseph MULÉ – M1SSION™ – Consume Free BUZZ locally for wikus77@hotmail.it
   const consumeFreeBuzz = useCallback(async (): Promise<boolean> => {
     if (buzzOverride.free_remaining <= 0) return false;
     
     try {
       console.log('[FREE-OVERRIDE] Attempting to consume free BUZZ, remaining:', buzzOverride.free_remaining);
       
-      // Call RPC to consume one free BUZZ (returns the result object)
-      const { data, error } = await supabase.rpc('consume_free_buzz' as any);
-      
-      if (error) {
-        console.warn('[FREE-OVERRIDE] RPC consume_free_buzz failed:', error);
-        return false;
-      }
-      
-      // The function returns a result object: { ok: boolean, free_remaining: number, message: string }
-      if (data && data.ok === true) {
-        // Update local state to reflect consumed BUZZ
+      // Get current user for email check
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user?.email === 'wikus77@hotmail.it') {
+        // Consume locally for wikus77@hotmail.it
+        const newRemaining = Math.max(0, buzzOverride.free_remaining - 1);
+        localStorage.setItem('freeBuzzRemaining', String(newRemaining));
+        
         setBuzzOverride(prev => ({ 
           ...prev, 
-          free_remaining: data.free_remaining || Math.max(0, prev.free_remaining - 1) 
+          free_remaining: newRemaining 
         }));
-        console.info('[FREE-OVERRIDE] Free BUZZ consumed successfully:', {
-          ok: data.ok,
-          remaining: data.free_remaining,
-          message: data.message
+        
+        console.info('[FREE-OVERRIDE] Free BUZZ consumed locally:', {
+          ok: true,
+          remaining: newRemaining,
+          message: 'Local consumption for wikus77@hotmail.it'
         });
         return true;
       }
       
-      console.warn('[FREE-OVERRIDE] consume_free_buzz failed:', data?.message || 'unknown reason');
+      console.warn('[FREE-OVERRIDE] Free BUZZ only available for wikus77@hotmail.it');
       return false;
     } catch (err) {
       console.warn('[FREE-OVERRIDE] Exception consuming free BUZZ, falling back to normal pricing:', err);
