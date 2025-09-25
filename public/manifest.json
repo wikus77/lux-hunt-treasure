@@ -28,5 +28,6 @@
     }
   ],
   "categories": ["games", "entertainment"],
-  "lang": "it"
+  "lang": "it",
+  "prefer_related_applications": false
 }
