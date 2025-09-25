@@ -39,7 +39,7 @@ export const useBuzzMapPricingNew = () => {
       
       setGeneration(currentGeneration);
       
-      // Calculate price and radius for NEXT generation
+      // Calculate price and radius for NEXT level (currentGeneration + 1)
       const nextPrice = calculateNextBuzzMapPrice(currentGeneration);
       const nextRadius = calculateNextBuzzMapRadius(currentGeneration);
       
