@@ -1,4 +1,6 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import React from 'react';
 import LocationButton from './LocationButton';
 import SearchAreaButton from './SearchAreaButton';

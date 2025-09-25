@@ -128,6 +128,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           whileTap={{ scale: isAuthenticated ? 0.9 : 1 }}
           aria-label="BUZZ MAP"
           animate={{
+            scale: [1, 1.06, 1],
             boxShadow: [
               "0 0 20px rgba(147, 51, 234, 0.4)",
               "0 0 40px rgba(147, 51, 234, 0.8)", 
@@ -135,6 +136,11 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
             ]
           }}
           transition={{
+            scale: {
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut"
+            },
             boxShadow: {
               duration: 2,
               repeat: Infinity,
