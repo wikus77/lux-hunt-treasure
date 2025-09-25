@@ -57,13 +57,21 @@ serve(async (req) => {
     logStep("Request body", body);
     
     const { 
-      amount, 
+      amount: bodyAmount, 
+      amountCents,
       currency = 'eur', 
       payment_type,
       plan,
       description,
       metadata = {}
     } = body;
+
+    // Handle both amount and amountCents parameters
+    const amount = bodyAmount ?? amountCents;
+    
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+      throw new Error("Missing required param: amount.");
+    }
 
     // Check if customer exists
     let customerId;
@@ -123,6 +131,7 @@ serve(async (req) => {
       success: true,
       payment_intent_id: paymentIntent.id,
       client_secret: paymentIntent.client_secret,
+      clientSecret: paymentIntent.client_secret, // For compatibility
       status: paymentIntent.status,
       amount: amount / 100,
       currency: currency,
