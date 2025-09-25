@@ -40,7 +40,7 @@ const MapControls: React.FC<MapControlsProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* CRITICAL: Use BuzzMapButtonSecure component that ALWAYS requires payment */}
+{/* M1SSION™ SECURE: Use BuzzMapButtonSecure component that ALWAYS requires payment */}
       <BuzzMapButtonSecure 
         onBuzzPress={handleBuzz} 
         mapCenter={mapCenter}
