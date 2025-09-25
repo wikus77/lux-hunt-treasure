@@ -40,15 +40,15 @@ export const useBuzzMapPricingNew = () => {
       setGeneration(currentGeneration);
       
       // Calculate price and radius for NEXT level (currentGeneration + 1)
-      const nextPrice = calculateNextBuzzMapPrice(currentGeneration);
+      const nextPriceData = calculateNextBuzzMapPrice(currentGeneration);
       const nextRadius = calculateNextBuzzMapRadius(currentGeneration);
       
-      setPrice(nextPrice);
+      setPrice(nextPriceData.priceEur);
       setRadius(nextRadius);
 
       console.log('🎯 BUZZ MAP Pricing loaded:', { 
         currentGeneration, 
-        nextPrice, 
+        nextPriceData, 
         nextRadius 
       });
 
