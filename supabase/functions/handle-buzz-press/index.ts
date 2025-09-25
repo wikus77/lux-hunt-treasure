@@ -181,10 +181,10 @@ serve(async (req) => {
         .from('user_map_areas')
         .insert({
           user_id: userId,
-          center_lat: mapCenter.lat,
-          center_lng: mapCenter.lng,
+          lat: mapCenter.lat,
+          lng: mapCenter.lng,
           radius_km: radius,
-          week_number: currentWeek
+          week: currentWeek
         })
         .select()
         .single();

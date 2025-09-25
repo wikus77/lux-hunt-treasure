@@ -3658,6 +3658,8 @@ export type Database = {
       }
       user_map_areas: {
         Row: {
+          center_lat: number | null
+          center_lng: number | null
           clue_id: string | null
           created_at: string
           id: string
@@ -3668,6 +3670,8 @@ export type Database = {
           week: number
         }
         Insert: {
+          center_lat?: number | null
+          center_lng?: number | null
           clue_id?: string | null
           created_at?: string
           id?: string
@@ -3678,6 +3682,8 @@ export type Database = {
           week: number
         }
         Update: {
+          center_lat?: number | null
+          center_lng?: number | null
           clue_id?: string | null
           created_at?: string
           id?: string
