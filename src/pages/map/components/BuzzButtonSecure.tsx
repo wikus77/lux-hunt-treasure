@@ -1,4 +1,5 @@
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
@@ -76,10 +77,10 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
           ) : (
             <>
               <span className="text-xs text-white/90 font-bold">
-                XP: {xpStatus.map_xp_progress}/250
+                BUZZ MAPPA
               </span>
               <span className="text-xs text-white/70 leading-none mt-1">
-                BUZZ MAP
+                500km
               </span>
             </>
           )}
