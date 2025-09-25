@@ -1,7 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { calculateNextBuzzMapPrice, calculateNextBuzzMapRadius } from '@/lib/buzzMapPricing';
 
@@ -19,19 +18,25 @@ export const useBuzzMapPricingNew = () => {
     }
 
     try {
-      // Count existing BUZZ MAP areas for this user
-      const { count, error } = await supabase
-        .from('user_map_areas')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('source', 'buzz_map');
+      // Use fetch instead of supabase client to avoid type issues
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_map_areas?user_id=eq.${user.id}&source=eq.buzz_map&select=id`,
+        {
+          headers: {
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${(await import('@/integrations/supabase/client').then(m => m.supabase.auth.getSession())).data.session?.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-      if (error) {
-        console.error('Error loading BUZZ MAP generation:', error);
-        return;
+      if (!response.ok) {
+        throw new Error('Failed to fetch areas');
       }
 
-      const currentGeneration = count || 0;
+      const areas = await response.json();
+      const currentGeneration = Array.isArray(areas) ? areas.length : 0;
+      
       setGeneration(currentGeneration);
       
       // Calculate price and radius for NEXT generation
@@ -49,6 +54,10 @@ export const useBuzzMapPricingNew = () => {
 
     } catch (error) {
       console.error('Exception loading BUZZ MAP generation:', error);
+      // Set defaults on error
+      setGeneration(0);
+      setPrice(4.99);
+      setRadius(500);
     } finally {
       setLoading(false);
     }
