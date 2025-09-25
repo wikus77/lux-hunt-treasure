@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Handle BUZZ Press Edge Function
-// Supports both normal BUZZ and BUZZ FREE override system
+// AUDIT & FIX "FREE 10" SENZA TOCCARE LA LOGICA PAID
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
@@ -23,160 +23,151 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let user: any = null;
+  let step = 'init';
+
   try {
-    // Security controls for FREE Override system
-    const ENABLE_FREE_OVERRIDE = Deno.env.get("FREE_OVERRIDE_ENABLE") === "1";
-    const url = new URL(req.url);
-    const DRY_RUN = url.searchParams.get("dryRun") === "true";
-    
-    console.log('[FREE-OVERRIDE-SECURITY]', { enable: ENABLE_FREE_OVERRIDE, dryRun: DRY_RUN });
+    // KILL-SWITCH per FREE override system
+    const ENABLE = Deno.env.get("FREE_OVERRIDE_ENABLE") === "1";
+    console.info('[FREE-OVERRIDE-SECURITY]', { enable: ENABLE, dryRun: false });
 
-    // Initialize Supabase client with service role
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
-    // Get JWT token and validate user
+    // Get JWT token
+    step = 'auth';
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('[BUZZ-PRESS] No authorization header');
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step });
       return new Response(
-        JSON.stringify({ success: false, error: 'Unauthorized' }),
+        JSON.stringify({ success: false, code: 'not_authenticated' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
       );
     }
 
-    // Create client with user's JWT for RLS policies
-    const supabaseAnon = createClient(
-      supabaseUrl, 
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      {
-        global: {
-          headers: {
-            Authorization: authHeader,
-          },
-        },
-      }
-    );
+    // Create user client for RLS operations
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Validate user authentication
+    const { data: userData, error: userError } = await userClient.auth.getUser();
+    if (userError || !userData?.user) {
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step, error: userError?.message });
+      return new Response(
+        JSON.stringify({ success: false, code: 'not_authenticated' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      );
+    }
+
+    user = userData.user;
+    console.info('[BUZZ] auth-success', { user_id: user.id });
 
     // Parse request body
+    step = 'parse';
     let body: BuzzRequest;
     try {
       body = await req.json();
+      console.info('[BUZZ] body-received', { 
+        lat: body.coordinates?.lat, 
+        lng: body.coordinates?.lng, 
+        generateMap: body.generateMap,
+        hasSessionId: !!body.sessionId,
+        hasPrizeId: !!body.prizeId
+      });
     } catch (error) {
-      console.error('[BUZZ-PRESS] Invalid JSON body:', error);
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 400, code: 'invalid_body', user_id: user.id, step });
       return new Response(
-        JSON.stringify({ success: false, error: 'Invalid request body' }),
+        JSON.stringify({ success: false, code: 'invalid_body' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
     const { userId, generateMap, coordinates } = body;
 
-    console.log('[BUZZ-PRESS] Processing request:', {
-      userId,
-      generateMap,
-      hasCoordinates: !!coordinates,
-      timestamp: new Date().toISOString()
-    });
-
     // Validate required fields
-    if (!userId) {
+    if (!userId || userId !== user.id) {
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'user_mismatch', user_id: user.id, step });
       return new Response(
-        JSON.stringify({ success: false, error: 'Missing userId' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        JSON.stringify({ success: false, code: 'user_mismatch' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
 
-    // Check for BUZZ FREE override using user context
-    console.log('[BUZZ-PRESS] Checking for FREE override...');
-    const { data: overrideData, error: overrideError } = await supabaseAnon
-      .rpc('get_buzz_override');
-
-    let hasFreeOverride = false;
-    let freeRemaining = 0;
-    const isFreeRequest = !body.sessionId && !body.prizeId && userId === '495246c1-9154-4f01-a428-7f37fe230180';
-
-    // Security check: Se richiesta FREE ma feature disabilitata → forza flusso paid
-    if (isFreeRequest && !ENABLE_FREE_OVERRIDE) {
-      console.log('[FREE-OVERRIDE-SECURITY] FREE request detected but feature disabled, forcing paid flow');
-      // Comportati come flusso paid normale - nessun bypass, nessun errore speciale
-      hasFreeOverride = false;
-    } else if (!overrideError && overrideData && ENABLE_FREE_OVERRIDE) {
-      console.log('[BUZZ-PRESS] Override RPC result:', overrideData);
-      if (overrideData.free_remaining > 0) {
-        hasFreeOverride = true;
-        freeRemaining = overrideData.free_remaining;
-        console.log('[FREE-OVERRIDE] Active override found:', { 
-          freeRemaining, 
-          cooldownDisabled: overrideData.cooldown_disabled,
-          enableFlag: ENABLE_FREE_OVERRIDE,
-          dryRun: DRY_RUN
-        });
+    // Check for FREE override
+    step = 'free-check';
+    console.info('[BUZZ] free-check', { user_id: user.id, enable: ENABLE });
+    
+    let freeOverride = null;
+    if (ENABLE) {
+      const { data: overrideData, error: overrideError } = await userClient.rpc('get_buzz_override');
+      if (!overrideError && overrideData && overrideData.free_remaining > 0) {
+        freeOverride = overrideData;
+        console.info('[BUZZ] free-available', { user_id: user.id, remaining: freeOverride.free_remaining });
       }
-    } else {
-      console.log('[BUZZ-PRESS] No override or error:', overrideError);
     }
 
-    // If no FREE override, require payment validation (paid flow)
-    if (!hasFreeOverride) {
-      console.log('[BUZZ-PRESS] No FREE override, payment validation required');
+    // Determine if this is FREE or PAID request
+    const isFreeRequest = !body.sessionId && !body.prizeId;
+    const shouldUseFree = freeOverride && isFreeRequest && ENABLE;
+
+    if (!shouldUseFree) {
+      console.info('[BUZZ] no-free-override', { user_id: user.id, enable: ENABLE, hasOverride: !!freeOverride, isFreeRequest });
       
-      // Check if this is a bypass attempt (no payment tokens provided)
-      if (!body.sessionId && !body.prizeId) {
-        console.error('[BUZZ-PRESS] Bypass attempt rejected - no payment info provided');
+      // Check if this is a bypass attempt (no payment info provided)
+      if (isFreeRequest) {
+        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'bypass_rejected', user_id: user.id, step });
         return new Response(
-          JSON.stringify({ success: false, error: 'bypass_rejected', code: 'PAYMENT_REQUIRED' }),
+          JSON.stringify({ success: false, code: 'bypass_rejected' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
         );
       }
+      
+      // TODO: Validate payment (sessionId/prizeId) here for PAID flow
+      // For now, continuing as if payment is valid
     }
 
     let result;
     
     if (generateMap) {
       // Handle BUZZ MAP generation
-      console.log('[BUZZ-PRESS] Processing BUZZ MAP generation');
+      step = 'map-generation';
       
-      if (hasFreeOverride) {
-        // DRY RUN: test senza scrivere su DB
-        if (DRY_RUN) {
-          console.log('[FREE-OVERRIDE] DRY RUN mode - not consuming free buzz or creating map area');
+      if (shouldUseFree) {
+        // Consume FREE buzz
+        step = 'free-consume';
+        const { data: consumeResult, error: consumeError } = await userClient.rpc('consume_free_buzz');
+        
+        if (consumeError || !consumeResult?.success) {
+          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 409, code: 'consume_failed', user_id: user.id, step, error: consumeError?.message });
           return new Response(
-            JSON.stringify({ 
-              success: true, 
-              mode: "free", 
-              dryRun: true,
-              freeRemaining: freeRemaining,
-              message: "Dry run successful - enable FREE_OVERRIDE_ENABLE and remove dryRun to activate"
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ success: false, code: 'consume_failed' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
           );
         }
 
-        // Consume FREE buzz using user context
-        console.log('[FREE-OVERRIDE] Consuming free buzz...');
-        const { data: consumeResult, error: consumeError } = await supabaseAnon
-          .rpc('consume_free_buzz');
-          
-        if (consumeError || !consumeResult?.success) {
-          console.error('[FREE-OVERRIDE] Failed to consume free buzz:', consumeError);
+        if (consumeResult.remaining === 0) {
+          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'no_free_remaining', user_id: user.id, step });
           return new Response(
-            JSON.stringify({ success: false, error: 'Failed to consume free buzz' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            JSON.stringify({ success: false, code: 'no_free_remaining' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
           );
         }
         
-        console.log('[FREE-OVERRIDE] Successfully consumed free buzz, remaining:', consumeResult.remaining);
+        console.info('[BUZZ] free-consumed', { user_id: user.id, left: consumeResult.remaining });
       }
 
-      // Generate map area
+      // RIUSA LA STESSA ROUTINE DEL PAID - Generate map area
+      step = 'create-area';
       const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
       const radius = Math.max(5, 500 * Math.pow(0.7, 0)); // Start with 500km radius
       const currentWeek = Math.ceil((Date.now() - new Date('2025-01-20').getTime()) / (7 * 24 * 60 * 60 * 1000));
       
-      // Insert user_map_areas record using service role for guaranteed write
-      const { data: mapAreaData, error: mapAreaError } = await supabase
+      // Use service role for guaranteed write (same as paid flow)
+      const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: mapAreaData, error: mapAreaError } = await serviceClient
         .from('user_map_areas')
         .insert({
           user_id: userId,
@@ -189,15 +180,16 @@ serve(async (req) => {
         .single();
 
       if (mapAreaError) {
-        console.error('[BUZZ-PRESS] Error creating map area:', mapAreaError);
+        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: mapAreaError.message });
         return new Response(
-          JSON.stringify({ success: false, error: 'Failed to create map area' }),
+          JSON.stringify({ success: false, code: 'internal_error' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         );
       }
 
-      console.log('[BUZZ-PRESS] Map area created successfully:', mapAreaData);
+      console.info('[BUZZ] area-created', { user_id: user.id, area_id: mapAreaData.id, mode: shouldUseFree ? 'free' : 'paid' });
 
+      // STESSA RESPONSE SHAPE DEL PAID
       result = {
         success: true,
         map_area: {
@@ -209,47 +201,39 @@ serve(async (req) => {
         lat: mapCenter.lat,
         lng: mapCenter.lng,
         radius_km: radius,
-        generation_number: 1
+        generation_number: 1,
+        mode: shouldUseFree ? 'free' : 'paid' // Solo aggiunta, non rimuove campi
       };
 
     } else {
       // Handle normal BUZZ clue generation
-      console.log('[BUZZ-PRESS] Processing normal BUZZ clue generation');
+      step = 'clue-generation';
       
-      if (hasFreeOverride) {
-        // DRY RUN: test senza scrivere su DB
-        if (DRY_RUN) {
-          console.log('[FREE-OVERRIDE] DRY RUN mode - not consuming free buzz');
+      if (shouldUseFree) {
+        // Consume FREE buzz
+        step = 'free-consume';
+        const { data: consumeResult, error: consumeError } = await userClient.rpc('consume_free_buzz');
+        
+        if (consumeError || !consumeResult?.success) {
+          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 409, code: 'consume_failed', user_id: user.id, step, error: consumeError?.message });
           return new Response(
-            JSON.stringify({ 
-              success: true, 
-              mode: "free", 
-              dryRun: true,
-              freeRemaining: freeRemaining,
-              clue_text: "DRY RUN - Cerca vicino alle antiche mura della città",
-              message: "Dry run successful - enable FREE_OVERRIDE_ENABLE and remove dryRun to activate"
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            JSON.stringify({ success: false, code: 'consume_failed' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
           );
         }
 
-        // Consume FREE buzz using user context
-        console.log('[FREE-OVERRIDE] Consuming free buzz...');
-        const { data: consumeResult, error: consumeError } = await supabaseAnon
-          .rpc('consume_free_buzz');
-          
-        if (consumeError || !consumeResult?.success) {
-          console.error('[FREE-OVERRIDE] Failed to consume free buzz:', consumeError);
+        if (consumeResult.remaining === 0) {
+          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'no_free_remaining', user_id: user.id, step });
           return new Response(
-            JSON.stringify({ success: false, error: 'Failed to consume free buzz' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+            JSON.stringify({ success: false, code: 'no_free_remaining' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
           );
         }
         
-        console.log('[FREE-OVERRIDE] Successfully consumed free buzz, remaining:', consumeResult.remaining);
+        console.info('[BUZZ] free-consumed', { user_id: user.id, left: consumeResult.remaining });
       }
 
-      // Generate clue (simplified for now)
+      // Generate clue (simplified for now - TODO: integrate with actual clue generation)
       const sampleClues = [
         "Cerca vicino alle antiche mura della città",
         "Il tesoro si nasconde dove l'acqua scorre",
@@ -259,18 +243,16 @@ serve(async (req) => {
       
       const randomClue = sampleClues[Math.floor(Math.random() * sampleClues.length)];
       
+      // STESSA RESPONSE SHAPE DEL PAID
       result = {
         success: true,
         clue_text: randomClue,
-        buzz_cost: hasFreeOverride ? 0 : 1.99
+        buzz_cost: shouldUseFree ? 0 : 1.99,
+        mode: shouldUseFree ? 'free' : 'paid' // Solo aggiunta, non rimuove campi
       };
     }
 
-    console.log('[BUZZ-PRESS] Operation completed successfully:', { 
-      generateMap, 
-      hasFreeOverride,
-      userId: userId.substring(0, 8) + '...' // Log partial ID for privacy
-    });
+    console.info('[BUZZ] success', { user_id: user.id, generateMap, mode: shouldUseFree ? 'free' : 'paid' });
 
     return new Response(
       JSON.stringify(result),
@@ -278,10 +260,10 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[BUZZ-PRESS] Unexpected error:', error);
+    console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user?.id, step, error: error.message });
     return new Response(
-      JSON.stringify({ success: false, error: 'Internal server error' }),
+      JSON.stringify({ success: false, code: 'internal_error' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
-});
+})
