@@ -1,8 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Unified Native Push Notifications Hook (iOS + Android)
+// PWA Push Notifications Hook (replaces Capacitor implementation)
 
 import { useState, useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
 import { useAndroidPushNotifications } from './useAndroidPushNotifications';
 import { useIOSPushNotifications } from './useIOSPushNotifications';
 
@@ -17,7 +16,9 @@ interface UnifiedPushState {
 }
 
 export const useNativePushNotifications = () => {
-  const platform = Capacitor.getPlatform();
+  // Detect platform using user agent since we're in PWA mode
+  const platform = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? 'ios' : 
+                  /Android/i.test(navigator.userAgent) ? 'android' : 'web';
   
   const androidPush = useAndroidPushNotifications();
   const iosPush = useIOSPushNotifications();
@@ -38,7 +39,7 @@ export const useNativePushNotifications = () => {
         isSupported: androidPush.isSupported,
         isRegistered: androidPush.isRegistered,
         token: androidPush.token,
-        permission: androidPush.permission,
+        permission: androidPush.permission === 'default' ? 'prompt' : androidPush.permission as 'granted' | 'denied' | 'prompt',
         isLoading: androidPush.isLoading,
         error: androidPush.error,
         platform: 'android'
@@ -48,15 +49,15 @@ export const useNativePushNotifications = () => {
         isSupported: iosPush.isSupported,
         isRegistered: iosPush.isRegistered,
         token: iosPush.token,
-        permission: iosPush.permission,
+        permission: iosPush.permission === 'default' ? 'prompt' : iosPush.permission as 'granted' | 'denied' | 'prompt',
         isLoading: iosPush.isLoading,
         error: iosPush.error,
         platform: 'ios'
       });
     } else {
-      // Web platform - no native push support
+      // Web platform - PWA push support
       setUnifiedState({
-        isSupported: false,
+        isSupported: 'serviceWorker' in navigator && 'PushManager' in window,
         isRegistered: false,
         token: null,
         permission: null,
@@ -67,7 +68,7 @@ export const useNativePushNotifications = () => {
     }
   }, [
     platform,
-    // FIXED: Only depend on primitive values to prevent infinite loops
+    // Only depend on primitive values to prevent infinite loops
     androidPush.isSupported, androidPush.isRegistered, androidPush.token, 
     androidPush.permission, androidPush.isLoading, androidPush.error,
     iosPush.isSupported, iosPush.isRegistered, iosPush.token,
