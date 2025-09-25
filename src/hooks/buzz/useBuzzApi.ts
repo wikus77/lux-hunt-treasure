@@ -113,6 +113,13 @@ export function useBuzzApi() {
       // 🚨 CRITICAL: Handle edge function deploy/existence issues
       if (error) {
         console.error("❌ EDGE FUNCTION ERROR:", error);
+        
+        // Check if it's a 429 Daily Quota Exceeded error
+        if (error.message?.includes('daily_quota_exceeded') || error.message?.includes('429')) {
+          toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
+          return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
+        }
+        
         toast.error(`Edge function error: ${error.message}`);
         return { success: false, error: true, errorMessage: `Edge function error: ${error.message}` };
       }
@@ -125,6 +132,26 @@ export function useBuzzApi() {
       
       if (!data.success) {
         console.error("❌ EDGE FUNCTION RETURNED FAILURE:", data?.error || "Unknown error");
+        
+        // Handle specific error codes from the edge function
+        if (data?.code === 'daily_quota_exceeded') {
+          toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
+          return { 
+            success: false, 
+            error: true,
+            errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte."
+          };
+        }
+        
+        if (data?.code === 'payment_required') {
+          toast.error("Pagamento richiesto per utilizzare BUZZ MAPPA.");
+          return { 
+            success: false, 
+            error: true,
+            errorMessage: "Pagamento richiesto per utilizzare BUZZ MAPPA."
+          };
+        }
+        
         toast.error(`Errore salvataggio indizio: ${data?.errorMessage || data?.error || "Unknown error"}`);
         return { 
           success: false, 

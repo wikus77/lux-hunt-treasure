@@ -16,10 +16,6 @@ serve(async (req) => {
   let step = 'init';
 
   try {
-    // KILL-SWITCH per FREE override system
-    const ENABLE = Deno.env.get("FREE_OVERRIDE_ENABLE") === "1";
-    console.info('[FREE-OVERRIDE-SECURITY]', { enable: ENABLE, dryRun: false });
-
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -76,71 +72,62 @@ serve(async (req) => {
       );
     }
 
-    // Check for FREE override
-    step = 'free-check';
-    console.info('[BUZZ] free-check', { user_id: user.id, enable: ENABLE });
+    // Check daily quota FIRST (before any other logic)
+    step = 'daily-quota-check';
+    const { data: todayCount, error: countError } = await userClient.rpc('buzz_today_count', { p_user_id: user.id });
     
-    let freeOverride = null;
-    if (ENABLE) {
-      const { data: overrideData, error: overrideError } = await userClient.rpc('get_buzz_override');
-      if (!overrideError && overrideData && overrideData.free_remaining > 0) {
-        freeOverride = overrideData;
-        console.info('[BUZZ] free-available', { user_id: user.id, remaining: freeOverride.free_remaining });
-      }
+    if (countError) {
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: countError.message });
+      return new Response(
+        JSON.stringify({ success: false, code: 'internal_error' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
     }
 
-    // Determine if this is FREE or PAID request
-    const isFreeRequest = !body.sessionId && !body.prizeId;
-    const shouldUseFree = freeOverride && isFreeRequest && ENABLE;
+    if (todayCount >= 5) {
+      // Calculate next reset time (midnight Europe/Rome)
+      const now = new Date();
+      const tomorrow = new Date(now);
+      tomorrow.setUTCDate(now.getUTCDate() + 1);
+      
+      // Set to midnight Europe/Rome (UTC+1 in winter, UTC+2 in summer)
+      // Approximation: use UTC+1 for simplicity
+      const resetAt = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 0, 0, 0);
+      resetAt.setTime(resetAt.getTime() - (60 * 60 * 1000)); // Adjust for Europe/Rome timezone
+      
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 429, code: 'daily_quota_exceeded', user_id: user.id, step, count: todayCount });
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          code: 'daily_quota_exceeded',
+          reset_at_iso: resetAt.toISOString(),
+          current_count: todayCount,
+          max_daily: 5
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+      );
+    }
 
-    if (!shouldUseFree) {
-      console.info('[BUZZ] no-free-override', { user_id: user.id, enable: ENABLE, hasOverride: !!freeOverride, isFreeRequest });
-      
-      // Check if this is a bypass attempt (no payment info provided)
-      if (isFreeRequest) {
-        const errorCode = !freeOverride || (freeOverride.free_remaining === 0) ? 'no_free_remaining' : 'bypass_rejected';
-        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: errorCode, user_id: user.id, step });
-        return new Response(
-          JSON.stringify({ success: false, code: errorCode }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-        );
-      }
-      
-      // TODO: Validate payment (sessionId/prizeId) here for PAID flow
-      // For now, continuing as if payment is valid
+    // Check if this is a bypass attempt (no payment info provided)
+    // NOW WE REQUIRE PAYMENT INFO - NO MORE FREE PATH
+    if (!body.sessionId && !body.prizeId) {
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'payment_required', user_id: user.id, step });
+      return new Response(
+        JSON.stringify({ success: false, code: 'payment_required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
     }
 
     let result: any;
     
     if (generateMap) {
-      // Handle BUZZ MAP generation
-      step = 'map-generation';
+      // Handle BUZZ MAP generation - PAID ONLY
+      step = 'map-generation-paid';
       
-      if (shouldUseFree) {
-        // Consume FREE buzz
-        step = 'free-consume';
-        const { data: consumeResult, error: consumeError } = await userClient.rpc('consume_free_buzz');
-        
-        if (consumeError || !consumeResult?.success) {
-          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 409, code: 'consume_failed', user_id: user.id, step, error: consumeError?.message });
-          return new Response(
-            JSON.stringify({ success: false, code: 'consume_failed' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
-          );
-        }
+      // TODO: Validate payment (sessionId/prizeId) here for PAID flow
+      // For now, continuing as if payment is valid
 
-        if (consumeResult.remaining === 0) {
-          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'no_free_remaining', user_id: user.id, step });
-          return new Response(
-            JSON.stringify({ success: false, code: 'no_free_remaining' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-          );
-        }
-        
-        console.info('[BUZZ] free-consumed', { user_id: user.id, left: consumeResult.remaining });
-      }
-
-      // RIUSA LA STESSA ROUTINE DEL PAID - Generate map area
+      // Generate map area using PAID logic
       step = 'create-area';
       const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
       const radiusKm = Math.max(5, 500 * Math.pow(0.7, 0)); // Start with 500km radius
@@ -168,13 +155,13 @@ serve(async (req) => {
         );
       }
 
-      console.info('[BUZZ] area-created', { user_id: user.id, area_id: area.id, mode: shouldUseFree ? 'free' : 'paid' });
+      console.info('[BUZZ] area-created', { user_id: user.id, area_id: area.id, mode: 'paid' });
 
-      // ESATTAMENTE LO STESSO SHAPE DEL PAID FLOW
+      // PAID FLOW RESPONSE SHAPE
       result = {
         success: true,
         type: 'buzz_map',
-        mode: shouldUseFree ? 'free' : 'paid',
+        mode: 'paid',
         area: {
           id: area.id,
           center_lat: area.center_lat,
@@ -184,44 +171,16 @@ serve(async (req) => {
         lat: mapCenter.lat,
         lng: mapCenter.lng,
         radius_km: radiusKm,
-        generation_number: 1
+        generation_number: 1,
+        daily_presses: todayCount + 1  // Optional field showing current daily count
       };
 
-      // Add free_remaining if this is a free request
-      if (shouldUseFree) {
-        const { data: updatedOverride } = await userClient.rpc('get_buzz_override');
-        if (updatedOverride) {
-          result.free_remaining = updatedOverride.free_remaining;
-        }
-      }
-
     } else {
-      // Handle normal BUZZ clue generation
-      step = 'clue-generation';
+      // Handle normal BUZZ clue generation - PAID ONLY
+      step = 'clue-generation-paid';
       
-      if (shouldUseFree) {
-        // Consume FREE buzz
-        step = 'free-consume';
-        const { data: consumeResult, error: consumeError } = await userClient.rpc('consume_free_buzz');
-        
-        if (consumeError || !consumeResult?.success) {
-          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 409, code: 'consume_failed', user_id: user.id, step, error: consumeError?.message });
-          return new Response(
-            JSON.stringify({ success: false, code: 'consume_failed' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
-          );
-        }
-
-        if (consumeResult.remaining === 0) {
-          console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'no_free_remaining', user_id: user.id, step });
-          return new Response(
-            JSON.stringify({ success: false, code: 'no_free_remaining' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-          );
-        }
-        
-        console.info('[BUZZ] free-consumed', { user_id: user.id, left: consumeResult.remaining });
-      }
+      // TODO: Validate payment (sessionId/prizeId) here for PAID flow
+      // For now, continuing as if payment is valid
 
       // Generate clue (simplified for now - TODO: integrate with actual clue generation)
       const sampleClues = [
@@ -233,23 +192,37 @@ serve(async (req) => {
       
       const randomClue = sampleClues[Math.floor(Math.random() * sampleClues.length)];
       
-      // STESSA RESPONSE SHAPE DEL PAID
+      // PAID RESPONSE SHAPE
       result = {
         success: true,
         clue_text: randomClue,
-        buzz_cost: shouldUseFree ? 0 : 1.99,
-        mode: shouldUseFree ? 'free' : 'paid' // Solo aggiunta, non rimuove campi
+        buzz_cost: 1.99,
+        mode: 'paid',
+        daily_presses: todayCount + 1  // Optional field showing current daily count
       };
     }
 
-    console.info('[BUZZ] success', { user_id: user.id, generateMap, mode: shouldUseFree ? 'free' : 'paid' });
+    // Increment daily counter AFTER successful operation
+    step = 'increment-daily-count';
+    const { data: newCount, error: incError } = await userClient.rpc('inc_buzz_today', { p_user_id: user.id });
+    
+    if (incError) {
+      console.error('[HANDLE-BUZZ-PRESS] WARNING: Failed to increment daily count', { user_id: user.id, error: incError.message });
+      // Don't fail the request, just log the warning
+    } else {
+      console.info('[BUZZ] daily-count-incremented', { user_id: user.id, new_count: newCount });
+      // Update the result with the actual new count
+      result.daily_presses = newCount;
+    }
+
+    console.info('[BUZZ] success', { user_id: user.id, generateMap, mode: 'paid' });
 
     return new Response(
       JSON.stringify(result),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user?.id, step, error: String(error?.message || error) });
     return new Response(
       JSON.stringify({ success: false, code: 'internal_error' }),
