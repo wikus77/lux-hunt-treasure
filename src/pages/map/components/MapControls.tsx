@@ -2,7 +2,7 @@
 import React from 'react';
 import LocationButton from './LocationButton';
 import SearchAreaButton from './SearchAreaButton';
-import BuzzMapButtonPaidOnly from '@/components/map/BuzzMapButtonPaidOnly';
+import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import MapInstructionsOverlay from './MapInstructionsOverlay';
 import HelpDialog from '../HelpDialog';
 
@@ -40,8 +40,8 @@ const MapControls: React.FC<MapControlsProps> = ({
         isAddingSearchArea={isAddingSearchArea} 
       />
 
-      {/* CRITICAL: Use BuzzMapButtonPaidOnly component that ALWAYS requires payment */}
-      <BuzzMapButtonPaidOnly 
+      {/* CRITICAL: Use BuzzMapButtonSecure component that ALWAYS requires payment */}
+      <BuzzMapButtonSecure 
         onBuzzPress={handleBuzz} 
         mapCenter={mapCenter}
         onAreaGenerated={onAreaGenerated}
