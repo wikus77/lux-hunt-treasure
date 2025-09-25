@@ -1,3 +1,4 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
@@ -85,15 +86,19 @@ serve(async (req) => {
     }
 
     if (todayCount >= 5) {
-      // Calculate next reset time (midnight Europe/Rome)
+      // Calculate next reset time (midnight Europe/Rome) - DST-aware  
       const now = new Date();
       const tomorrow = new Date(now);
       tomorrow.setUTCDate(now.getUTCDate() + 1);
+      tomorrow.setUTCHours(0, 0, 0, 0);
       
-      // Set to midnight Europe/Rome (UTC+1 in winter, UTC+2 in summer)
-      // Approximation: use UTC+1 for simplicity
-      const resetAt = new Date(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate(), 0, 0, 0);
-      resetAt.setTime(resetAt.getTime() - (60 * 60 * 1000)); // Adjust for Europe/Rome timezone
+      // Apply Europe/Rome offset dynamically (UTC+1 winter, UTC+2 summer)
+      const tempDate = new Date(tomorrow);
+      tempDate.setMonth(6); // July to check DST
+      const isDST = tempDate.getTimezoneOffset() < now.getTimezoneOffset();
+      const romeOffset = isDST ? -2 : -1; // Negative because we need to subtract from UTC
+      
+      const resetAt = new Date(tomorrow.getTime() + (romeOffset * 60 * 60 * 1000));
       
       console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 429, code: 'daily_quota_exceeded', user_id: user.id, step, count: todayCount });
       return new Response(
