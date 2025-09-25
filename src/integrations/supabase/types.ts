@@ -3666,6 +3666,7 @@ export type Database = {
           lat: number
           lng: number
           radius_km: number
+          source: string | null
           user_id: string
           week: number
         }
@@ -3678,6 +3679,7 @@ export type Database = {
           lat: number
           lng: number
           radius_km: number
+          source?: string | null
           user_id: string
           week: number
         }
@@ -3690,6 +3692,7 @@ export type Database = {
           lat?: number
           lng?: number
           radius_km?: number
+          source?: string | null
           user_id?: string
           week?: number
         }
