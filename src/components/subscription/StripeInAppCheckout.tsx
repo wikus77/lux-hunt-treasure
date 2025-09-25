@@ -65,8 +65,11 @@ const CheckoutForm: React.FC<{
         
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
-            amountCents: config.amount, // Already in cents
+            amount: config.amount, // Send as 'amount' to match server expectation
             currency: config.currency || 'eur',
+            payment_type: config.type,
+            plan: config.plan || config.type,
+            description: config.description,
             metadata: {
               user_id: user.id,
               plan: config.plan || config.type,
@@ -92,9 +95,14 @@ const CheckoutForm: React.FC<{
           return;
         }
 
-        if (data?.clientSecret) {
-          setClientSecret(data.clientSecret);
+        const clientSecretValue = data?.client_secret ?? data?.clientSecret;
+        if (clientSecretValue) {
+          setClientSecret(clientSecretValue);
           console.log('✅ M1SSION™ Payment intent created successfully');
+        } else {
+          console.error('❌ M1SSION™ No client secret received:', data);
+          toast.error('Errore nella configurazione del pagamento');
+          return;
         }
       } catch (error) {
         console.error('❌ M1SSION™ Payment intent failed:', error);
