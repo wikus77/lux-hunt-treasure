@@ -49,7 +49,7 @@ export const useNativePushNotifications = () => {
         isSupported: iosPush.isSupported,
         isRegistered: iosPush.isRegistered,
         token: iosPush.token,
-        permission: iosPush.permission === 'default' ? 'prompt' : iosPush.permission as 'granted' | 'denied' | 'prompt',
+        permission: iosPush.permission as 'granted' | 'denied' | 'prompt',
         isLoading: iosPush.isLoading,
         error: iosPush.error,
         platform: 'ios'
