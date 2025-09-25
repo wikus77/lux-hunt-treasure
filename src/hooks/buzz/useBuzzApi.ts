@@ -71,11 +71,12 @@ export function useBuzzApi() {
         hasSession: !!sessionData?.session,
         hasUser: !!sessionData?.session?.user,
         userId: sessionData?.session?.user?.id,
-        sessionError: sessionError?.message
+        sessionError: sessionError?.message,
+        hasToken: !!sessionData?.session?.access_token
       });
       
-      if (!sessionData?.session) {
-        console.error('❌ No active session found');
+      if (!sessionData?.session?.access_token) {
+        console.error('❌ No active session or access token found');
         return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
       }
       
@@ -83,13 +84,18 @@ export function useBuzzApi() {
       console.log('🚨 EDGE FUNCTION CALL START:', {
         function: 'handle-buzz-press',
         payload,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        hasToken: !!sessionData.session.access_token
       });
       
-      // 🚨 CRITICAL: Call edge function with verified session
+      // 🚨 CRITICAL: Call edge function with verified session and explicit auth header
       console.log('🔐 Calling edge function with authenticated user...');
       const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
-        body: payload
+        body: payload,
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json'
+        }
       });
       
       // 🚨 DEBUG: Post edge function call

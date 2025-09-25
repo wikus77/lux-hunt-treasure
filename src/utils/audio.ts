@@ -1,5 +1,5 @@
 // Utility per gestire audio in ambiente Capacitor iOS
-import { Capacitor } from '@capacitor/core';
+import { Capacitor } from '@/lib/capacitor-compat';
 
 interface AudioMap {
   [key: string]: string;
