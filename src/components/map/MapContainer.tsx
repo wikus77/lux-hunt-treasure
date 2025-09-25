@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import './leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './MapControls';
-import BuzzMapButton from '@/components/map/BuzzMapButton';
+import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
 import MapZoomControls from './MapZoomControls';
 import HelpDialog from './HelpDialog';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
@@ -279,7 +279,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
       
       {/* BUZZ Button - only show if we have a valid location */}
       {mapCenter && (
-        <BuzzMapButton 
+        <BuzzMapButtonSecure 
           onBuzzPress={handleBuzz}
           mapCenter={mapCenter}
           onAreaGenerated={(lat, lng, radius) => {
