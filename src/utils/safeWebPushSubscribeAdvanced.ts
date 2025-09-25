@@ -102,7 +102,7 @@ export async function safeWebPushSubscribe(input: SafeWebPushInput): Promise<Saf
     // 8) Subscribe to push
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey
+      applicationServerKey: applicationServerKey as unknown as BufferSource
     });
 
     // 9) Extract keys

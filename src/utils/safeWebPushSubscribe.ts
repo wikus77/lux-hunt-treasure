@@ -103,7 +103,7 @@ export async function subscribeWebPush(vapidPublic: string): Promise<WebPushSubs
     console.log('[WEBPUSH-SUBSCRIBE] Creating new push subscription...');
     const subscription = await registration.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey
+      applicationServerKey: applicationServerKey as unknown as BufferSource
     });
 
     // 9) Extract keys and format response

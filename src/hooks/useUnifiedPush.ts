@@ -135,7 +135,7 @@ export const useUnifiedPush = () => {
           const applicationServerKey = urlBase64ToUint8Array(vapidKey);
           const subscription = await swReg.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey
+            applicationServerKey: applicationServerKey as unknown as BufferSource
           });
 
           const keys = subscription.toJSON().keys;

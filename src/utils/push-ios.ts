@@ -82,7 +82,7 @@ export async function enableWebPushIOS(vapidPublicKey: string): Promise<any | nu
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey
+        applicationServerKey: applicationServerKey as unknown as BufferSource
       });
     } else {
       console.log('[PUSH-IOS] Using existing push subscription');

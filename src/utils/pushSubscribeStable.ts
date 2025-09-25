@@ -89,7 +89,7 @@ export async function pushSubscribeStable(): Promise<StableSubscriptionResult> {
     
     subscription = await pm.subscribe({
       userVisibleOnly: true,
-      applicationServerKey
+      applicationServerKey: applicationServerKey as unknown as BufferSource
     });
     
     console.info('[STABLE-PUSH] New subscription created');

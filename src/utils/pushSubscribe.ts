@@ -146,7 +146,7 @@ export async function subscribeToPush(options: SubscribeOptions = {}): Promise<S
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey
+        applicationServerKey: applicationServerKey as unknown as BufferSource
       });
       
       log('✅ Push subscription created');
