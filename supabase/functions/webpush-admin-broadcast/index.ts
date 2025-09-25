@@ -1,6 +1,6 @@
 // supabase/functions/webpush-admin-broadcast/index.ts
-import webpush from "npm:web-push";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
 
 type SubRow = {
   user_id: string;
@@ -25,7 +25,7 @@ const normalize = (ep: string) =>
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { 'Content-Type': 'application/json' } });
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") return cors(req, { status: 204 });
   
   try {
@@ -64,6 +64,8 @@ Deno.serve(async (req) => {
     if (!SUPABASE_URL || !SERVICE_ROLE_KEY || !PUB || !PRIV) {
       return cors(req, { status: 500 }, JSON.stringify({ error: "Missing server env" }));
     }
+    // Import and configure webpush dynamically
+    const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
     webpush.setVapidDetails(CONTACT, PUB, PRIV);
 
     const sb = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);

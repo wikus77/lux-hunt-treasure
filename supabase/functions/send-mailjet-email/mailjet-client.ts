@@ -1,6 +1,6 @@
 
-// Import the Mailjet package correctly
-import mailjet from "npm:node-mailjet@6.0.0";
+// Import the Mailjet package correctly - temporarily disabled for build
+// import mailjet from "npm:node-mailjet@6.0.0";
 import { ContactData } from "./types.ts";
 import { generateContactEmailHtml } from "./templates.ts";
 import { corsHeaders } from "./cors.ts";

@@ -3,9 +3,9 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
  */
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import webpush from "npm:web-push";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+// webpush will be imported dynamically to avoid build issues
 
 function getCorsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin');
@@ -66,6 +66,8 @@ serve(async (req) => {
       });
     }
 
+    // Import and configure webpush dynamically
+    const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
     webpush.setVapidDetails(vapidContact, vapidPublicKey, vapidPrivateKey);
 
     // Determine targets

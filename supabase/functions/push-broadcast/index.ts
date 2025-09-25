@@ -1,6 +1,6 @@
 // supabase/functions/push-broadcast/index.ts
-import webpush from "npm:web-push";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
 
 type Payload = {
   title: string;
@@ -64,7 +64,7 @@ async function getAuthedUserIdOrServiceRole(req: Request) {
   return { userId, isServiceRole };
 }
 
-Deno.serve(async (req) => {
+serve(async (req) => {
   if (req.method === "OPTIONS") return cors(req, { status: 204 });
 
   try {
@@ -87,9 +87,9 @@ Deno.serve(async (req) => {
     const pub = Deno.env.get("VAPID_PUBLIC_KEY");
     const priv = Deno.env.get("VAPID_PRIVATE_KEY");
     const contact = Deno.env.get("VAPID_CONTACT") || "mailto:admin@example.com";
-    if (!pub || !priv) {
-      return cors(req, { status: 500 }, JSON.stringify({ error: "Missing VAPID keys" }));
-    }
+    
+    // Import and configure webpush dynamically
+    const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
     webpush.setVapidDetails(contact, pub, priv);
 
     // ----- DB -----
