@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
-import { useBuzzPricing } from '@/hooks/useBuzzPricing';
+import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
 import { useStripeInAppPayment } from '@/hooks/useStripeInAppPayment';
 import { supabase } from '@/integrations/supabase/client';
 import StripeInAppCheckout from '@/components/subscription/StripeInAppCheckout';
@@ -21,7 +21,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   onAreaGenerated
 }) => {
   const { isAuthenticated, user } = useAuthContext();
-  const { calculateBuzzMapPrice } = useBuzzPricing(user?.id);
+  const { price: currentPrice, radius: currentRadius, loading: pricingLoading } = useBuzzMapPricingNew();
   const { 
     processBuzzPayment, 
     showCheckout, 
@@ -31,8 +31,6 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     loading 
   } = useStripeInAppPayment();
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  const currentPrice = calculateBuzzMapPrice();
 
   const handleBuzzMapPress = async () => {
     if (!isAuthenticated) {
@@ -120,7 +118,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         <motion.button
           className="relative rounded-full shadow-lg transition-all duration-300 bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95"
           onClick={handleBuzzMapPress}
-          disabled={!isAuthenticated || isProcessing || loading}
+          disabled={!isAuthenticated || isProcessing || loading || pricingLoading}
           style={{
             width: '88px', // +10% from 80px
             height: '88px', // +10% from 80px
@@ -158,7 +156,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
               BUZZ MAP
             </span>
             <span className="text-xs text-white/80 leading-none mt-0.5">
-              500km · €{currentPrice.toFixed(2)}
+              {currentRadius}km · €{currentPrice.toFixed(2)}
             </span>
           </div>
         </motion.button>

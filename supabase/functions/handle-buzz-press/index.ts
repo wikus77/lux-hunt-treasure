@@ -132,10 +132,48 @@ serve(async (req) => {
       // TODO: Validate payment (sessionId/prizeId) here for PAID flow
       // For now, continuing as if payment is valid
 
-      // Generate map area using PAID logic
+      // Generate map area using NEW PRICING TABLE logic
       step = 'create-area';
       const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
-      const radiusKm = Math.max(5, 500 * Math.pow(0.7, 0)); // Start with 500km radius
+      
+      // Calculate generation based on existing areas
+      const { count: existingAreas, error: countError } = await userClient
+        .from('user_map_areas')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('source', 'buzz_map');
+      
+      if (countError) {
+        console.error('[HANDLE-BUZZ-PRESS] Error counting existing areas:', countError);
+        throw new Error('Error counting existing areas');
+      }
+      
+      const generation = existingAreas || 0;
+      
+      // Apply pricing table - Official BUZZ MAP pricing table
+      const pricingTable = [
+        { generation: 0, radiusKm: 500, priceEur: 4.99 },
+        { generation: 1, radiusKm: 450, priceEur: 8.99 },
+        { generation: 2, radiusKm: 405, priceEur: 8.99 },
+        { generation: 3, radiusKm: 365, priceEur: 10.99 },
+        { generation: 4, radiusKm: 329, priceEur: 12.99 },
+        { generation: 5, radiusKm: 295, priceEur: 14.99 },
+        { generation: 6, radiusKm: 265, priceEur: 16.99 },
+        { generation: 7, radiusKm: 240, priceEur: 19.99 },
+        { generation: 8, radiusKm: 216, priceEur: 29.99 },
+        { generation: 9, radiusKm: 195, priceEur: 44.99 },
+        { generation: 10, radiusKm: 175, priceEur: 69.99 },
+        { generation: 11, radiusKm: 155, priceEur: 99.99 },
+        { generation: 12, radiusKm: 140, priceEur: 129.99 },
+        { generation: 13, radiusKm: 126, priceEur: 149.99 },
+      ];
+      
+      // Get pricing for current generation (cap at max)
+      const pricing = generation >= pricingTable.length 
+        ? pricingTable[pricingTable.length - 1] 
+        : pricingTable[generation];
+      
+      const radiusKm = Math.max(5, pricing.radiusKm); // Ensure minimum 5km
       
       // Use service role for guaranteed write (same as paid flow)
       const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -176,7 +214,7 @@ serve(async (req) => {
         lat: mapCenter.lat,
         lng: mapCenter.lng,
         radius_km: radiusKm,
-        generation_number: 1,
+        generation_number: generation + 1,
         daily_presses: todayCount + 1  // Optional field showing current daily count
       };
 

@@ -16,7 +16,7 @@ const BillingSmokeTest = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/stripe-create-payment-intent', {
+      const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ const BillingSmokeTest = () => {
               <div className="text-sm text-muted-foreground">
                 <p><strong>Test Amount:</strong> €10.00</p>
                 <p><strong>Currency:</strong> EUR</p>
-                <p><strong>Endpoint:</strong> stripe-create-payment-intent</p>
+                <p><strong>Endpoint:</strong> create-payment-intent</p>
               </div>
               
               <Button 
