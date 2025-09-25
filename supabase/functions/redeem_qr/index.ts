@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
-import 'jsr:@supabase/functions-js/edge-runtime.d.ts'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const OK=(o:string|null)=> allow(o)?o:'https://www.m1ssion.eu';
 function allow(o:string|null){ if(!o) return false; try{ const {hostname}=new URL(o); return [
@@ -8,7 +8,7 @@ function allow(o:string|null){ if(!o) return false; try{ const {hostname}=new UR
 const C=(o:string|null)=>({'Access-Control-Allow-Origin':OK(o),'Vary':'Origin','Access-Control-Allow-Methods':'POST,OPTIONS','Access-Control-Allow-Headers':'authorization,apikey,content-type,x-client-info','Access-Control-Max-Age':'86400'});
 const sub=(h:string|null)=>{ const m=h?.match(/^Bearer\s+(.+)$/i); if(!m) return null; try{ return JSON.parse(atob(m[1].split('.')[1]||''))?.sub||null; }catch{return null;} };
 
-Deno.serve(async(req)=>{
+serve(async(req)=>{
   const origin=req.headers.get('origin'); try{ console.log(JSON.stringify({tag:'M1QR',fn:'redeem_qr',method:req.method,origin})) }catch{}
   if(req.method==='OPTIONS') return new Response(null,{status:204,headers:C(origin)});
 

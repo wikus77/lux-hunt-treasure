@@ -1,7 +1,7 @@
 
 // Mailjet client initialization utility
 
-import mailjet from "npm:node-mailjet@6.0.0";
+// import mailjet from "npm:node-mailjet@6.0.0"; // Temporarily disabled for build
 
 export interface MailjetClientResult {
   client?: any;
