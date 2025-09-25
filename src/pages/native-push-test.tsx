@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useNativePushNotifications } from '@/hooks/useNativePushNotifications';
 import { Smartphone, Send, Bell, Apple, TestTube } from 'lucide-react';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor } from '@/lib/capacitor-compat';
 
 export default function NativePushTest() {
   const { platform, isRegistered, token } = useNativePushNotifications();
@@ -51,15 +51,13 @@ export default function NativePushTest() {
   };
 
   const getPlatformIcon = () => {
-    if (currentPlatform === 'ios') return <Apple className="w-6 h-6" />;
-    if (currentPlatform === 'android') return <Smartphone className="w-6 h-6" />;
+    // In PWA environment, always show web icon
     return <Bell className="w-6 h-6" />;
   };
 
   const getPlatformName = () => {
-    if (currentPlatform === 'ios') return 'iOS';
-    if (currentPlatform === 'android') return 'Android';
-    return 'Web';
+    // In PWA environment, always return Web
+    return 'PWA Web';
   };
 
   return (
