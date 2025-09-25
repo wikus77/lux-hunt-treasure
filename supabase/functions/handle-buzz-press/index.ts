@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { BUZZ_MAP_LEVELS } from '../_shared/buzzMapPricing.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -152,10 +153,10 @@ serve(async (req) => {
       
       // Calculate level and pricing using 60-level table
       const level = Math.min(existingAreasCount + 1, 60);
-      const levelData: BuzzMapLevel = BUZZ_MAP_LEVELS[level - 1];
+      const levelData = BUZZ_MAP_LEVELS[level - 1];
       const radiusKm = Math.max(0.5, levelData.radiusKm); // Enforce minimum 0.5km radius
-      const priceEur = levelData.priceEur;
-      const priceCents = Math.round(priceEur * 100);
+      const priceCents = levelData.priceCents;
+      const priceEur = priceCents / 100;
       
       console.info('[BUZZ] pricing-calculated', { 
         existingAreasCount,
