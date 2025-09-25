@@ -119,22 +119,17 @@ serve(async (req) => {
       console.log('[BUZZ-PRESS] No override or error:', overrideError);
     }
 
-    // If no FREE override, validate payment requirement
+    // If no FREE override, require payment validation (paid flow)
     if (!hasFreeOverride) {
-      // For now, allow bypass for the specific user for testing
-      if (userId === '495246c1-9154-4f01-a428-7f37fe230180') {
-        console.log('[BUZZ-PRESS] Allowing bypass for test user');
-      } else {
-        console.log('[BUZZ-PRESS] No FREE override, payment validation required');
-        
-        // Check if this is a bypass attempt
-        if (!body.sessionId && !body.prizeId) {
-          console.error('[BUZZ-PRESS] Tentativo di bypass rilevato - no payment info');
-          return new Response(
-            JSON.stringify({ success: false, error: 'Tentativo di bypass rilevato. Operazione bloccata.' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-          );
-        }
+      console.log('[BUZZ-PRESS] No FREE override, payment validation required');
+      
+      // Check if this is a bypass attempt (no payment tokens provided)
+      if (!body.sessionId && !body.prizeId) {
+        console.error('[BUZZ-PRESS] Bypass attempt rejected - no payment info provided');
+        return new Response(
+          JSON.stringify({ success: false, error: 'bypass_rejected', code: 'PAYMENT_REQUIRED' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        );
       }
     }
 
