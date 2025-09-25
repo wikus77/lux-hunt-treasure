@@ -228,12 +228,10 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   return (
     <div className="relative flex flex-col items-center space-y-6">
       <BuzzButton
-        currentPrice={dailyUsed || !hasFreeBuzz ? currentPriceEur : 0}
+        currentPrice={currentPriceEur}
         isBlocked={isBlocked}
         buzzing={buzzing}
         onClick={handleAction}
-        freeAvailable={hasFreeBuzz && !dailyUsed}
-        freeCount={totalRemaining}
       />
       
       <ShockwaveAnimation show={showShockwave} />

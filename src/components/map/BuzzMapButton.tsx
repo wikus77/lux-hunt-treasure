@@ -72,7 +72,7 @@ const BuzzMapButton: React.FC<BuzzMapButtonProps> = ({
     }
 
     // Anti-fraud checks - bypass for wikus77@hotmail.it with override
-    if (dailyBuzzMapCounter >= 3 && !(user?.email === 'wikus77@hotmail.it' && buzzOverride.free_remaining > 0)) {
+    if (dailyBuzzMapCounter >= 5) {
       toast.error('Limite giornaliero raggiunto', {
         description: 'Massimo 3 BUZZ MAPPA al giorno per sicurezza.'
       });

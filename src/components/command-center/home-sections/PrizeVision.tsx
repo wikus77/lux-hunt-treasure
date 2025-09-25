@@ -3,7 +3,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
 // Original M1SSION Prize Image - DO NOT REPLACE OR MODIFY
-const missionPrizeImage = "/lovable-uploads/cab8b024-6f12-46ce-a51e-c211dc2c91eb.png";
+const missionPrizeImage = "/src/assets/placeholder-image.png";
 
 interface PrizeVisionProps {
   progress: number;
