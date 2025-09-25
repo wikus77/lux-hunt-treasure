@@ -1,23 +1,21 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Android Push Notifications Hook
+// PWA Push Notifications Hook (replaces Android Capacitor implementation)
 
 import { useState, useEffect } from 'react';
-import { PushNotifications } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface AndroidPushState {
+interface PWAPushState {
   isSupported: boolean;
   isRegistered: boolean;
   token: string | null;
-  permission: 'granted' | 'denied' | 'prompt' | null;
+  permission: 'granted' | 'denied' | 'default' | null;
   isLoading: boolean;
   error: string | null;
 }
 
 export const useAndroidPushNotifications = () => {
-  const [state, setState] = useState<AndroidPushState>({
+  const [state, setState] = useState<PWAPushState>({
     isSupported: false,
     isRegistered: false,
     token: null,
@@ -26,64 +24,34 @@ export const useAndroidPushNotifications = () => {
     error: null
   });
 
-  const isAndroid = Capacitor.getPlatform() === 'android';
+  const isAndroid = /Android/i.test(navigator.userAgent);
 
   useEffect(() => {
-    const initializeAndroidPush = async () => {
-      if (!isAndroid) {
-        setState(prev => ({ ...prev, isSupported: false }));
+    const initializePWAPush = async () => {
+      // Check if service worker and push manager are supported
+      const isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+      
+      setState(prev => ({ ...prev, isSupported }));
+      
+      if (!isSupported) {
+        console.log('❌ Push notifications not supported in this browser');
         return;
       }
 
-      setState(prev => ({ ...prev, isSupported: true, isLoading: true }));
+      setState(prev => ({ ...prev, isLoading: true }));
 
       try {
-        // Check permission status
-        const permResult = await PushNotifications.checkPermissions();
+        // Check current permission status
+        const permission = await Notification.requestPermission();
         setState(prev => ({ 
           ...prev, 
-          permission: permResult.receive as 'granted' | 'denied' | 'prompt'
+          permission: permission as 'granted' | 'denied' | 'default',
+          isLoading: false
         }));
 
-        // Setup listeners
-        await PushNotifications.addListener('registration', (token) => {
-          console.log('🔔 Android Push token received:', token.value);
-          setState(prev => ({ 
-            ...prev, 
-            token: token.value, 
-            isRegistered: true,
-            isLoading: false 
-          }));
-          saveTokenToSupabase(token.value);
-        });
-
-        await PushNotifications.addListener('registrationError', (error) => {
-          console.error('❌ Android Push registration error:', error);
-          setState(prev => ({ 
-            ...prev, 
-            error: error.error, 
-            isLoading: false 
-          }));
-          toast.error('Errore registrazione notifiche Android');
-        });
-
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('📱 Push notification received:', notification);
-          toast.success(notification.body || 'Nuova notifica M1SSION');
-        });
-
-        await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('👆 Push notification action performed:', notification);
-          // Handle notification tap
-        });
-
-        // If permission already granted, register immediately
-        if (permResult.receive === 'granted') {
-          await PushNotifications.register();
-        }
-
+        console.log('📱 PWA Push permission status:', permission);
       } catch (error: any) {
-        console.error('❌ Android push initialization error:', error);
+        console.error('❌ PWA push initialization error:', error);
         setState(prev => ({ 
           ...prev, 
           error: error.message, 
@@ -92,32 +60,54 @@ export const useAndroidPushNotifications = () => {
       }
     };
 
-    initializeAndroidPush();
-  }, [isAndroid]);
+    initializePWAPush();
+  }, []);
 
   const requestPermissionAndRegister = async () => {
-    if (!isAndroid) {
-      toast.error('Notifiche push disponibili solo su Android');
+    if (!state.isSupported) {
+      toast.error('❌ Push notifications not supported');
       return false;
     }
 
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      // Request permission
-      const permResult = await PushNotifications.requestPermissions();
+      // Request notification permission
+      const permission = await Notification.requestPermission();
       setState(prev => ({ 
         ...prev, 
-        permission: permResult.receive as 'granted' | 'denied' | 'prompt'
+        permission: permission as 'granted' | 'denied' | 'default'
       }));
 
-      if (permResult.receive === 'granted') {
-        // Register for push notifications
-        await PushNotifications.register();
-        toast.success('✅ Notifiche push Android attivate!');
+      if (permission === 'granted') {
+        // Get service worker registration
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Subscribe to push notifications
+        const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+        if (!vapidKey) {
+          throw new Error('VAPID public key not configured');
+        }
+
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: vapidKey
+        });
+
+        // Save subscription to Supabase
+        await saveSubscriptionToSupabase(subscription);
+        
+        setState(prev => ({ 
+          ...prev, 
+          isRegistered: true,
+          token: JSON.stringify(subscription),
+          isLoading: false 
+        }));
+        
+        toast.success('✅ Push notifications enabled!');
         return true;
       } else {
-        toast.error('❌ Permessi notifiche negati');
+        toast.error('❌ Push notification permission denied');
         setState(prev => ({ ...prev, isLoading: false }));
         return false;
       }
@@ -128,12 +118,12 @@ export const useAndroidPushNotifications = () => {
         error: error.message, 
         isLoading: false 
       }));
-      toast.error('Errore richiesta permessi');
+      toast.error('❌ Error enabling push notifications');
       return false;
     }
   };
 
-  const saveTokenToSupabase = async (token: string) => {
+  const saveSubscriptionToSupabase = async (subscription: PushSubscription) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -142,12 +132,13 @@ export const useAndroidPushNotifications = () => {
         .from('push_tokens')
         .upsert({
           user_id: user.id,
-          token: token,
-          platform: 'android',
-          endpoint_type: 'fcm',
+          token: JSON.stringify(subscription),
+          platform: isAndroid ? 'android' : 'web',
+          endpoint_type: 'web_push',
           device_info: {
-            platform: Capacitor.getPlatform(),
-            userAgent: navigator.userAgent
+            platform: 'web',
+            userAgent: navigator.userAgent,
+            endpoint: subscription.endpoint
           },
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -155,12 +146,12 @@ export const useAndroidPushNotifications = () => {
         });
 
       if (error) {
-        console.error('❌ Error saving push token:', error);
+        console.error('❌ Error saving push subscription:', error);
       } else {
-        console.log('✅ Push token saved to Supabase');
+        console.log('✅ Push subscription saved to Supabase');
       }
     } catch (error) {
-      console.error('❌ Error in saveTokenToSupabase:', error);
+      console.error('❌ Error in saveSubscriptionToSupabase:', error);
     }
   };
 

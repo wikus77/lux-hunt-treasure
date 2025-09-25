@@ -6,7 +6,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
 import './styles/toast-animations.css';
@@ -386,28 +385,8 @@ const renderApp = () => {
     
     console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
     
-    // Hide Capacitor splash screen only if actually in Capacitor environment
-    const hideSplashScreen = async () => {
-      try {
-        // STRICT CHECK: Only run if actually in Capacitor environment
-        if (typeof window !== 'undefined' && 
-            window.location.protocol === 'capacitor:' && 
-            (window as any).Capacitor?.SplashScreen) {
-          console.log("🔄 Hiding Capacitor splash screen...");
-          await SplashScreen.hide();
-          console.log("✅ Capacitor splash screen hidden successfully");
-        } else {
-          console.log("✅ Not Capacitor environment, skipping splash screen hide");
-        }
-      } catch (error) {
-        console.warn("⚠️ Could not hide splash screen:", error);
-      }
-    };
-    
-    // Hide splash screen only in Capacitor
-    if (typeof window !== 'undefined' && window.location.protocol === 'capacitor:') {
-      setTimeout(hideSplashScreen, 1000);
-    }
+    // PWA splash screen is handled via CSS and PWA manifest
+    console.log("✅ PWA mode - no splash screen management needed");
   } catch (error) {
     console.error("[BOOT] CRITICAL ERROR RENDERING APP:", error);
     
