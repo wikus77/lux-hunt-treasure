@@ -156,7 +156,7 @@ serve(async (req) => {
       const levelData = BUZZ_MAP_LEVELS[level - 1];
       const radiusKm = Math.max(0.5, levelData.radiusKm); // Enforce minimum 0.5km radius
       const priceCents = levelData.priceCents;
-      const priceEur = priceCents / 100;
+      const priceEur = levelData.priceEur;
       
       console.info('[BUZZ] pricing-calculated', { 
         existingAreasCount,

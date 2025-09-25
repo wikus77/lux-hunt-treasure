@@ -66,10 +66,12 @@ serve(async (req) => {
       metadata = {}
     } = body;
 
-    // Support both amount and amountCents for backward compatibility
-    const amount = bodyAmount ?? amountCents;
+    // Support both amount and amountCents for backward compatibility  
+    const amount = typeof bodyAmount === 'number' ? bodyAmount 
+                 : typeof amountCents === 'number' ? amountCents 
+                 : 0;
     
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
+    if (!amount || amount <= 0) {
       throw new Error("Missing required param: amount.");
     }
 
