@@ -1,9 +1,17 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React from "react";
-import { motion } from "framer-motion";
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
-// Original M1SSION Prize Image - DO NOT REPLACE OR MODIFY
-const missionPrizeImage = "/src/assets/placeholder-image.png";
+
+// M1SSION Prize Images Collection - 5 Images Carousel
+const missionPrizeImages = [
+  "/assets/mission-prize-luxury-forest.jpg",
+  "/assets/mission-prize-watch.jpg", 
+  "/assets/mission-prize-jewelry.jpg",
+  "/assets/mission-prize-tech.jpg",
+  "/assets/mission-prize-fashion.jpg"
+];
 
 interface PrizeVisionProps {
   progress: number;
@@ -11,6 +19,19 @@ interface PrizeVisionProps {
 }
 
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isSwipeTransition, setIsSwipeTransition] = useState(false);
+
+  const handleSwipeLeft = () => {
+    if (isSwipeTransition) return;
+    setIsSwipeTransition(true);
+    
+    setTimeout(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % missionPrizeImages.length);
+      setIsSwipeTransition(false);
+    }, 150);
+  };
+
   return (
     <GradientBox className="w-full">
       <div className="p-4 border-b border-white/10 flex justify-between items-center">
@@ -22,17 +43,38 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
         </h2>
         <div className="flex items-center space-x-2">
           <span className="text-xs text-white/70">Visibilità: {progress}%</span>
+          <span className="text-xs text-white/50">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
         </div>
       </div>
       
       <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-        {/* Luxury Forest Background Image */}
-        <div className="relative w-full h-full">
-          <img 
-            src={missionPrizeImage}
-            alt="M1SSION Lusso Foresta"
-            className="w-full h-full object-cover rounded-lg shadow-lg"
-          />
+        {/* Swipeable Image Container */}
+        <div 
+          className="relative w-full h-full cursor-pointer"
+          onClick={handleSwipeLeft}
+          onTouchStart={handleSwipeLeft}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentImageIndex}
+              className="absolute inset-0"
+              initial={{ opacity: 0, x: 50 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -50 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <img 
+                src={missionPrizeImages[currentImageIndex]}
+                alt={`M1SSION Prize ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover rounded-lg shadow-lg"
+              />
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Swipe Indicator */}
+          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-medium">
+            Tocca per il prossimo →
+          </div>
           
           {/* Disclaimer Overlay */}
           <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">

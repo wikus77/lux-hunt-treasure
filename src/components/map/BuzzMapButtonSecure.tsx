@@ -55,7 +55,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         return;
       }
 
-      // Start payment flow
+      // Start payment flow - Always paid, no exceptions
       const priceInCents = Math.round(currentPrice * 100);
       await processBuzzPayment(priceInCents, true); // true = is BUZZ MAP
       
@@ -109,6 +109,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
 
   return (
     <>
+      {/* M1SSION™ BUZZ MAP Button - Centered Bottom, +10% Size, Pulsating Animation */}
       <motion.div 
         className="fixed left-1/2 transform -translate-x-1/2 z-50"
         style={{ 
@@ -126,12 +127,31 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           }}
           whileTap={{ scale: isAuthenticated ? 0.9 : 1 }}
           aria-label="BUZZ MAP"
+          animate={{
+            boxShadow: [
+              "0 0 20px rgba(147, 51, 234, 0.4)",
+              "0 0 40px rgba(147, 51, 234, 0.8)", 
+              "0 0 20px rgba(147, 51, 234, 0.4)"
+            ]
+          }}
+          transition={{
+            boxShadow: {
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }
+          }}
         >
           <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
-            <span className="text-sm text-white font-bold leading-none">
+            {/* M1SSION Branding */}
+            <span className="text-sm font-bold leading-none">
+              <span className="text-[#00D9FF]">M1</span>
+              <span className="text-white">SSION</span>
+            </span>
+            <span className="text-xs text-white font-bold leading-none mt-1">
               BUZZ MAP
             </span>
-            <span className="text-xs text-white/80 leading-none mt-1">
+            <span className="text-xs text-white/80 leading-none mt-0.5">
               500km · €{currentPrice.toFixed(2)}
             </span>
           </div>
