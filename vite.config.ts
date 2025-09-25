@@ -28,11 +28,6 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    // Checker temporaneamente disabilitato durante build per permettere esecuzione script qualità
-    // checker({
-    //   typescript: true,
-    //   eslint: { lintCommand: 'eslint "src/**/*.{ts,tsx}"' }
-    // }),
     mode === 'development' && componentTagger(),
     mode === 'production' && visualizer({
       filename: 'dist/bundle-analysis.html',
@@ -40,14 +35,7 @@ export default defineConfig(({ mode }) => ({
       gzipSize: true,
       brotliSize: true,
     }),
-    // Post-build: Copy custom SW to override any generated ones
-    mode === 'production' && {
-      name: 'copy-custom-sw',
-      closeBundle() {
-        execSync('node scripts/copy-sw.cjs', { stdio: 'inherit' });
-      }
-    },
-  ].filter(Boolean),
+  ].filter(Boolean) as any,
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

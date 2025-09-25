@@ -77,7 +77,7 @@ export async function registerPush(userId: string): Promise<{ endpoint: string; 
   // 5) Subscribe with VAPID
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY),
+    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
   });
 
   // 6) Extract keys

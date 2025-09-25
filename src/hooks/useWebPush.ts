@@ -136,7 +136,7 @@ export function useWebPush(): UseWebPushResult {
       // Create new subscription
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey)
+        applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) as unknown as BufferSource
       });
 
       console.log('[useWebPush] Push subscription created:', subscription.endpoint);

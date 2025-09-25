@@ -177,7 +177,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
         console.log('🍎 iOS PWA: subscribing with VAPID Web Push');
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey
+          applicationServerKey: applicationServerKey as unknown as BufferSource
         });
       } else {
         // Desktop: Try Firebase first, fallback to W3C
@@ -192,28 +192,28 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
             
             if (token) {
               // Also create W3C subscription for consistency
-              subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey
-              });
+            subscription = await registration.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: applicationServerKey as unknown as BufferSource
+            });
               console.log('🔥 Firebase + W3C subscription created');
             } else {
               throw new Error('Firebase token generation failed');
             }
           } catch (firebaseError) {
             console.warn('🔥 Firebase failed, using W3C fallback:', firebaseError);
-            subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey
-            });
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: applicationServerKey as unknown as BufferSource
+          });
           }
         } else {
           // W3C Push API (standard)
           console.log('📱 Desktop: using W3C Push API');
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey
-          });
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: applicationServerKey as unknown as BufferSource
+        });
         }
       }
 
