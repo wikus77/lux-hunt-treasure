@@ -1,20 +1,9 @@
-// © 2025 Joseph MULÉ – M1SSION™ – Handle BUZZ Press Edge Function
-// AUDIT & FIX "FREE 10" SENZA TOCCARE LA LOGICA PAID
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-interface BuzzRequest {
-  userId: string;
-  generateMap: boolean;
-  coordinates?: { lat: number; lng: number };
-  prizeId?: string;
-  sessionId?: string;
 }
 
 serve(async (req) => {
@@ -40,7 +29,7 @@ serve(async (req) => {
     step = 'auth';
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step });
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step, error: 'Auth session missing!' });
       return new Response(
         JSON.stringify({ success: false, code: 'not_authenticated' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
@@ -55,7 +44,7 @@ serve(async (req) => {
     // Validate user authentication
     const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError || !userData?.user) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step, error: userError?.message });
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step, error: userError?.message || 'Auth session missing!' });
       return new Response(
         JSON.stringify({ success: false, code: 'not_authenticated' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
@@ -67,23 +56,14 @@ serve(async (req) => {
 
     // Parse request body
     step = 'parse';
-    let body: BuzzRequest;
-    try {
-      body = await req.json();
-      console.info('[BUZZ] body-received', { 
-        lat: body.coordinates?.lat, 
-        lng: body.coordinates?.lng, 
-        generateMap: body.generateMap,
-        hasSessionId: !!body.sessionId,
-        hasPrizeId: !!body.prizeId
-      });
-    } catch (error) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 400, code: 'invalid_body', user_id: user.id, step });
-      return new Response(
-        JSON.stringify({ success: false, code: 'invalid_body' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+    const body = await req.json();
+    console.info('[BUZZ] body-received', { 
+      lat: body.coordinates?.lat, 
+      lng: body.coordinates?.lng, 
+      generateMap: body.generateMap,
+      hasSessionId: !!body.sessionId,
+      hasPrizeId: !!body.prizeId
+    });
 
     const { userId, generateMap, coordinates } = body;
 
@@ -130,7 +110,7 @@ serve(async (req) => {
       // For now, continuing as if payment is valid
     }
 
-    let result;
+    let result: any;
     
     if (generateMap) {
       // Handle BUZZ MAP generation
@@ -164,7 +144,6 @@ serve(async (req) => {
       step = 'create-area';
       const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
       const radiusKm = Math.max(5, 500 * Math.pow(0.7, 0)); // Start with 500km radius
-      const currentWeek = Math.ceil((Date.now() - new Date('2025-01-20').getTime()) / (7 * 24 * 60 * 60 * 1000));
       
       // Use service role for guaranteed write (same as paid flow)
       const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -209,7 +188,7 @@ serve(async (req) => {
       };
 
       // Add free_remaining if this is a free request
-      if (shouldUseFree && freeOverride) {
+      if (shouldUseFree) {
         const { data: updatedOverride } = await userClient.rpc('get_buzz_override');
         if (updatedOverride) {
           result.free_remaining = updatedOverride.free_remaining;
@@ -271,7 +250,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user?.id, step, error: error.message });
+    console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user?.id, step, error: String(error?.message || error) });
     return new Response(
       JSON.stringify({ success: false, code: 'internal_error' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
