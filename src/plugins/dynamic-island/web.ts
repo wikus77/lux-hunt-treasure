@@ -1,5 +1,5 @@
 
-import { WebPlugin } from '@capacitor/core';
+import { WebPlugin } from '@/lib/capacitor-compat';
 import type { DynamicIslandPlugin } from './definitions';
 
 export class DynamicIslandWeb extends WebPlugin implements DynamicIslandPlugin {

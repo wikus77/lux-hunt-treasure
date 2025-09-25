@@ -1,10 +1,8 @@
 
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin } from '@/lib/capacitor-compat';
 import type { DynamicIslandPlugin } from './definitions';
 
-const DynamicIsland = registerPlugin<DynamicIslandPlugin>('DynamicIsland', {
-  web: () => import('./web').then(m => new m.DynamicIslandWeb()),
-});
+const DynamicIsland = registerPlugin();
 
 export * from './definitions';
 export { DynamicIsland };

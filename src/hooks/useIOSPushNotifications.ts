@@ -1,9 +1,8 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// iOS Push Notifications Hook
+// iOS Push Notifications Hook (PWA Compatible)
 
 import { useState, useEffect } from 'react';
-import { PushNotifications } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
+import { PushNotifications, Capacitor } from '@/lib/capacitor-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -26,74 +25,14 @@ export const useIOSPushNotifications = () => {
     error: null
   });
 
-  const isIOS = Capacitor.getPlatform() === 'ios';
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   useEffect(() => {
-    const initializeIOSPush = async () => {
-      if (!isIOS) {
-        setState(prev => ({ ...prev, isSupported: false }));
-        return;
-      }
-
-      setState(prev => ({ ...prev, isSupported: true, isLoading: true }));
-
-      try {
-        // Check permission status
-        const permResult = await PushNotifications.checkPermissions();
-        setState(prev => ({ 
-          ...prev, 
-          permission: permResult.receive as 'granted' | 'denied' | 'prompt'
-        }));
-
-        // Setup listeners
-        await PushNotifications.addListener('registration', (token) => {
-          console.log('🍎 iOS Push token received:', token.value);
-          setState(prev => ({ 
-            ...prev, 
-            token: token.value, 
-            isRegistered: true,
-            isLoading: false 
-          }));
-          saveTokenToSupabase(token.value);
-        });
-
-        await PushNotifications.addListener('registrationError', (error) => {
-          console.error('❌ iOS Push registration error:', error);
-          setState(prev => ({ 
-            ...prev, 
-            error: error.error, 
-            isLoading: false 
-          }));
-          toast.error('Errore registrazione notifiche iOS');
-        });
-
-        await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-          console.log('📱 iOS Push notification received:', notification);
-          toast.success(notification.body || 'Nuova notifica M1SSION');
-        });
-
-        await PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
-          console.log('👆 iOS Push notification action performed:', notification);
-          // Handle notification tap
-        });
-
-        // If permission already granted, register immediately
-        if (permResult.receive === 'granted') {
-          await PushNotifications.register();
-        }
-
-      } catch (error: any) {
-        console.error('❌ iOS push initialization error:', error);
-        setState(prev => ({ 
-          ...prev, 
-          error: error.message, 
-          isLoading: false 
-        }));
-      }
-    };
-
-    initializeIOSPush();
-  }, [isIOS]);
+    // PWA environment - iOS push notifications not available
+    if (typeof window !== 'undefined') {
+      setState(prev => ({ ...prev, isSupported: false }));
+    }
+  }, []);
 
   const requestPermissionAndRegister = async () => {
     if (!isIOS) {
@@ -104,7 +43,7 @@ export const useIOSPushNotifications = () => {
     setState(prev => ({ ...prev, isLoading: true }));
 
     try {
-      // Request permission
+      // Request permission (stub in PWA)
       const permResult = await PushNotifications.requestPermissions();
       setState(prev => ({ 
         ...prev, 
@@ -112,7 +51,6 @@ export const useIOSPushNotifications = () => {
       }));
 
       if (permResult.receive === 'granted') {
-        // Register for push notifications
         await PushNotifications.register();
         toast.success('✅ Notifiche push iOS attivate!');
         return true;
@@ -146,7 +84,7 @@ export const useIOSPushNotifications = () => {
           platform: 'ios',
           endpoint_type: 'apns',
           device_info: {
-            platform: Capacitor.getPlatform(),
+            platform: 'web',
             userAgent: navigator.userAgent
           },
           created_at: new Date().toISOString(),
