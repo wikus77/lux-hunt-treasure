@@ -4572,6 +4572,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      buzz_today_count: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       calculate_access_start_date: {
         Args: { plan_name: string }
         Returns: string
@@ -4892,6 +4896,10 @@ export type Database = {
       }
       haversine_m: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      inc_buzz_today: {
+        Args: { p_user_id: string }
         Returns: number
       }
       increment_buzz_counter: {

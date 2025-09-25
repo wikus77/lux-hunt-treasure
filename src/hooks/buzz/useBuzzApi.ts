@@ -120,6 +120,12 @@ export function useBuzzApi() {
           return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
         }
         
+        // Check for specific status codes
+        if (error.details?.includes('daily_quota_exceeded') || error.code === 'daily_quota_exceeded') {
+          toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
+          return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
+        }
+        
         toast.error(`Edge function error: ${error.message}`);
         return { success: false, error: true, errorMessage: `Edge function error: ${error.message}` };
       }
