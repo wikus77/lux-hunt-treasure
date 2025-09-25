@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuthContext } from '@/contexts/auth';
 import { calculateNextBuzzMapPrice, calculateNextBuzzMapRadius } from '@/lib/buzzMapPricing';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useBuzzMapPricingNew = () => {
   const { user } = useAuthContext();
@@ -18,25 +19,24 @@ export const useBuzzMapPricingNew = () => {
     }
 
     try {
-      // Use fetch instead of supabase client to avoid type issues
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_map_areas?user_id=eq.${user.id}&source=eq.buzz_map&select=id`,
-        {
-          headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${(await import('@/integrations/supabase/client').then(m => m.supabase.auth.getSession())).data.session?.access_token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch areas');
+      // Use authenticated Supabase client directly - NO MORE import.meta.env.VITE_* dependencies
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        throw new Error('User not authenticated');
       }
 
-      const areas = await response.json();
+      // Count existing buzz map areas for this user using simpler approach
+      const { data: areas, error } = await (supabase as any)
+        .from('user_map_areas')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('source', 'buzz_map');
+
+      if (error) {
+        throw error;
+      }
+
       const currentGeneration = Array.isArray(areas) ? areas.length : 0;
-      
       setGeneration(currentGeneration);
       
       // Calculate price and radius for NEXT level (currentGeneration + 1)
@@ -48,13 +48,14 @@ export const useBuzzMapPricingNew = () => {
 
       console.log('🎯 BUZZ MAP Pricing loaded:', { 
         currentGeneration, 
-        nextPriceData, 
+        nextLevel: nextPriceData.level,
+        nextPrice: nextPriceData.priceEur,
         nextRadius 
       });
 
     } catch (error) {
       console.error('Exception loading BUZZ MAP generation:', error);
-      // Set defaults on error
+      // Set defaults on error (Level 1)
       setGeneration(0);
       setPrice(4.99);
       setRadius(500);
