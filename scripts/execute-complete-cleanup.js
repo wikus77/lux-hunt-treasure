@@ -5,9 +5,9 @@ const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
 
-console.log('🛡️ M1SSION™ - COMPLETE SYSTEM HARDENING...\n');
+console.log('🧹 M1SSION™ - Executing COMPLETE cleanup...\n');
 
-// Find all files to clean
+// Find all files to process
 const files = glob.sync('src/**/*.{js,jsx,ts,tsx}', { 
   ignore: ['**/node_modules/**', '**/dist/**'] 
 });
@@ -20,64 +20,41 @@ files.forEach(file => {
     let newContent = content;
     let fileChanges = 0;
 
-    // Remove ALL FREE-related patterns (complete list)
+    // Remove FREE-related patterns ONLY from BUZZ MAP components, preserve FREE for BUZZ
     const freePatterns = [
+      // Only remove FREE from BUZZ MAP related files
       /free_remaining\s*[:=][^,};\n]*/g,
       /FREE_OVERRIDE[^,};\n]*/g,
       /consume_free_buzz[^,};\n]*/g,
-      /consumeFreeBuzz[^,};\n]*/g,
-      /hasFreeBuzz[^,};\n]*/g,
-      /freeAvailable[^,};\n]*/g,
       /buzzOverride\.free_remaining[^,};\n]*/g,
-      /FREE\s+\d+/g,
-      /'FREE'/g,
-      /"FREE"/g,
-      /overrideFree[^,};\n]*/g,
-      /redeemFreeBuzz[^,};\n]*/g,
-      /processedFree[^,};\n]*/g,
-      /removeFreeQueryParams[^,};\n]*/g,
-      /\?free=1/g,
-      /&free=1/g,
-      /free=1&/g,
-      /isFree[^,};\n]*/g,
-      /FREE_\w+/g,
-      /BUZZ_FREE/g,
-      /buzz_free/g,
-      /'free'/g,
-      /"free"/g,
-      /FREE BUZZ/g,
-      /Free BUZZ/g,
-      /GRATIS/g,
-      /gratuito/g,
-      /Gratuiti/g,
-      /GRATUITO/g,
-      /Plan.*Free/g,
-      /tier.*free/g,
-      /\.free[^a-zA-Z]/g
+      /overrideFree[^,};\n]*/g
     ];
 
-    freePatterns.forEach(pattern => {
-      const matches = newContent.match(pattern);
-      if (matches) {
-        fileChanges += matches.length;
-        newContent = newContent.replace(pattern, '');
-      }
-    });
+    // Only apply FREE removal to BUZZ MAP files, not general BUZZ files
+    if (file.includes('BuzzMap') || file.includes('buzz-map')) {
+      freePatterns.forEach(pattern => {
+        const matches = newContent.match(pattern);
+        if (matches) {
+          fileChanges += matches.length;
+          newContent = newContent.replace(pattern, '');
+        }
+      });
+    }
 
-    // Clean up Lovable references
+    // Replace Lovable image paths and references
     const lovablePatterns = [
-      /\/lovable-uploads\//g,
-      /lovable/gi,
-      /Lovable/g
+      { pattern: /\/lovable-uploads\//g, replacement: '/assets/' },
+      { pattern: /lovable\.app/gi, replacement: 'M1SSION.app' },
+      { pattern: /lovableproject\.com/gi, replacement: 'M1SSION.com' },
+      { pattern: /Lovable/g, replacement: 'M1SSION' },
+      { pattern: /LOVABLE/g, replacement: 'M1SSION' }
     ];
 
-    lovablePatterns.forEach(pattern => {
+    lovablePatterns.forEach(({ pattern, replacement }) => {
       const matches = newContent.match(pattern);
       if (matches) {
         fileChanges += matches.length;
-        newContent = newContent.replace(/\/lovable-uploads\//g, '/assets/');
-        newContent = newContent.replace(/lovable/gi, 'M1SSION');
-        newContent = newContent.replace(/Lovable/g, 'M1SSION');
+        newContent = newContent.replace(pattern, replacement);
       }
     });
 
@@ -99,4 +76,4 @@ files.forEach(file => {
   }
 });
 
-console.log(`\n🎯 M1SSION™ - Complete cleanup: ${totalChanges} issues fixed across ${files.length} files!`);
+console.log(`\n🎯 M1SSION™ - Fixed ${totalChanges} issues across ${files.length} files!`);

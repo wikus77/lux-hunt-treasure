@@ -35,6 +35,16 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
           ? '0 0 15px rgba(239, 68, 68, 0.4)' 
           : '0 0 15px rgba(242, 19, 164, 0.4)'
       }}
+      animate={{
+        scale: [1, 1.06, 1]
+      }}
+      transition={{
+        scale: {
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }
+      }}
     >
       {buzzing ? (
         <div className="flex flex-col items-center space-y-3">
@@ -48,6 +58,11 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-2">
+          {/* M1SSION Branding */}
+          <span className="text-2xl font-bold leading-none mb-1">
+            <span className="text-[#00D9FF]">M1</span>
+            <span className="text-white">SSION</span>
+          </span>
           <span className="text-3xl font-bold text-white">BUZZ</span>
           <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-white">
             XP: {xpStatus.buzz_xp_progress}/100
