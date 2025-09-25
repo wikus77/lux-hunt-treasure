@@ -52,7 +52,7 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Parse request body
+    // Parse request body with compatibility for amount/amountCents
     const body = await req.json();
     logStep("Request body", body);
     
@@ -66,7 +66,7 @@ serve(async (req) => {
       metadata = {}
     } = body;
 
-    // Handle both amount and amountCents parameters
+    // Support both amount and amountCents for backward compatibility
     const amount = bodyAmount ?? amountCents;
     
     if (!amount || typeof amount !== 'number' || amount <= 0) {

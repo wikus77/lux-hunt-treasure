@@ -1,80 +1,89 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 M1SSION™ – NIYVORA KFT™
 
 import { useState, useEffect } from 'react';
-import { useAuthContext } from '@/contexts/auth';
-import { calculateNextBuzzMapPrice, calculateNextBuzzMapRadius } from '@/lib/buzzMapPricing';
 import { supabase } from '@/integrations/supabase/client';
+import { BUZZ_MAP_LEVELS, type BuzzMapLevel } from '@/lib/buzzMapPricing';
 
-export const useBuzzMapPricingNew = () => {
-  const { user } = useAuthContext();
-  const [generation, setGeneration] = useState(0);
-  const [price, setPrice] = useState(4.99);
-  const [radius, setRadius] = useState(500);
+export function useBuzzMapPricingNew(userId?: string) {
   const [loading, setLoading] = useState(true);
-
-  const loadGeneration = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Use authenticated Supabase client directly - NO MORE import.meta.env.VITE_* dependencies
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user?.id) {
-        throw new Error('User not authenticated');
-      }
-
-      // Count existing buzz map areas for this user using simpler approach
-      const { data: areas, error } = await (supabase as any)
-        .from('user_map_areas')
-        .select('id')
-        .eq('user_id', session.user.id)
-        .eq('source', 'buzz_map');
-
-      if (error) {
-        throw error;
-      }
-
-      const currentGeneration = Array.isArray(areas) ? areas.length : 0;
-      setGeneration(currentGeneration);
-      
-      // Calculate price and radius for NEXT level (currentGeneration + 1)
-      const nextPriceData = calculateNextBuzzMapPrice(currentGeneration);
-      const nextRadius = calculateNextBuzzMapRadius(currentGeneration);
-      
-      setPrice(nextPriceData.priceEur);
-      setRadius(nextRadius);
-
-      console.log('🎯 BUZZ MAP Pricing loaded:', { 
-        currentGeneration, 
-        nextLevel: nextPriceData.level,
-        nextPrice: nextPriceData.priceEur,
-        nextRadius 
-      });
-
-    } catch (error) {
-      console.error('Exception loading BUZZ MAP generation:', error);
-      // Set defaults on error (Level 1)
-      setGeneration(0);
-      setPrice(4.99);
-      setRadius(500);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [nextLevel, setNextLevel] = useState(1);
+  const [nextRadiusKm, setNextRadiusKm] = useState(500);
+  const [nextPriceEur, setNextPriceEur] = useState(4.99);
 
   useEffect(() => {
-    if (user) {
-      loadGeneration();
-    }
-  }, [user]);
+    let killed = false;
+    
+    const loadPricing = async () => {
+      setLoading(true);
+      
+      try {
+        if (!userId) {
+          // Default to level 1 when no user
+          const defaultLevel = BUZZ_MAP_LEVELS[0];
+          if (!killed) {
+            setNextLevel(1);
+            setNextRadiusKm(Math.max(0.5, defaultLevel.radiusKm));
+            setNextPriceEur(defaultLevel.priceEur);
+          }
+        } else {
+          // Count existing buzz map areas using exact count
+          const { count, error } = await supabase
+            .from('user_map_areas')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+            .eq('source', 'buzz_map');
 
-  return {
-    generation,
-    price,
-    radius,
-    loading,
-    reloadGeneration: loadGeneration
+          if (error) {
+            throw error;
+          }
+
+          // Calculate next level (1-60)
+          const nextLvl = Math.min((count ?? 0) + 1, 60);
+          const levelData: BuzzMapLevel = BUZZ_MAP_LEVELS[nextLvl - 1];
+          
+          if (!killed) {
+            setNextLevel(nextLvl);
+            setNextRadiusKm(Math.max(0.5, levelData.radiusKm));
+            setNextPriceEur(levelData.priceEur);
+          }
+
+          console.log('🎯 BUZZ MAP Pricing loaded:', { 
+            existingAreas: count ?? 0,
+            nextLevel: nextLvl,
+            nextRadiusKm: Math.max(0.5, levelData.radiusKm),
+            nextPriceEur: levelData.priceEur
+          });
+        }
+      } catch (error) {
+        console.error('Exception loading BUZZ MAP pricing:', error);
+        // Set defaults on error (Level 1)
+        if (!killed) {
+          setNextLevel(1);
+          setNextRadiusKm(500);
+          setNextPriceEur(4.99);
+        }
+      } finally {
+        if (!killed) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadPricing();
+    
+    return () => { 
+      killed = true; 
+    };
+  }, [userId]);
+
+  return { 
+    loading, 
+    nextLevel, 
+    nextRadiusKm, 
+    nextPriceEur,
+    // Backward compatibility
+    generation: nextLevel - 1,
+    price: nextPriceEur,
+    radius: nextRadiusKm
   };
-};
+}
