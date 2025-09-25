@@ -22,9 +22,10 @@ export async function enableWebPush() {
   const vapid = "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o";
   if (!vapid) throw new Error('VAPID key mancante');
 
+  const key = b64ToUint8Array(vapid);
   const sub = await reg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: b64ToUint8Array(vapid),
+    applicationServerKey: key as unknown as BufferSource,
   });
 
   const body = await (async () => {

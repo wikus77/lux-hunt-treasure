@@ -44,7 +44,7 @@ export async function subscribeWebPushAndSave({
   // Subscribe
   const sub = await swReg.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: appServerKey,
+    applicationServerKey: appServerKey as unknown as BufferSource,
   })
 
   const payload: WebPushSubscriptionPayload = {
