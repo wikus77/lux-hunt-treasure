@@ -118,9 +118,10 @@ serve(async (req) => {
       
       // Check if this is a bypass attempt (no payment info provided)
       if (isFreeRequest) {
-        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'bypass_rejected', user_id: user.id, step });
+        const errorCode = !freeOverride || (freeOverride.free_remaining === 0) ? 'no_free_remaining' : 'bypass_rejected';
+        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: errorCode, user_id: user.id, step });
         return new Response(
-          JSON.stringify({ success: false, code: 'bypass_rejected' }),
+          JSON.stringify({ success: false, code: errorCode }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
         );
       }
@@ -162,48 +163,58 @@ serve(async (req) => {
       // RIUSA LA STESSA ROUTINE DEL PAID - Generate map area
       step = 'create-area';
       const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
-      const radius = Math.max(5, 500 * Math.pow(0.7, 0)); // Start with 500km radius
+      const radiusKm = Math.max(5, 500 * Math.pow(0.7, 0)); // Start with 500km radius
       const currentWeek = Math.ceil((Date.now() - new Date('2025-01-20').getTime()) / (7 * 24 * 60 * 60 * 1000));
       
       // Use service role for guaranteed write (same as paid flow)
       const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
-      const { data: mapAreaData, error: mapAreaError } = await serviceClient
+      const { data: area, error: insErr } = await serviceClient
         .from('user_map_areas')
         .insert({
-          user_id: userId,
-          lat: mapCenter.lat,
-          lng: mapCenter.lng,
-          radius_km: radius,
-          week: currentWeek
+          user_id: user.id,
+          center_lat: mapCenter.lat,
+          center_lng: mapCenter.lng,
+          radius_km: radiusKm,
+          source: 'buzz_map',
+          created_at: new Date().toISOString()
         })
         .select()
         .single();
 
-      if (mapAreaError) {
-        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: mapAreaError.message });
+      if (insErr) {
+        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: insErr.message });
         return new Response(
           JSON.stringify({ success: false, code: 'internal_error' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
         );
       }
 
-      console.info('[BUZZ] area-created', { user_id: user.id, area_id: mapAreaData.id, mode: shouldUseFree ? 'free' : 'paid' });
+      console.info('[BUZZ] area-created', { user_id: user.id, area_id: area.id, mode: shouldUseFree ? 'free' : 'paid' });
 
-      // STESSA RESPONSE SHAPE DEL PAID
+      // ESATTAMENTE LO STESSO SHAPE DEL PAID FLOW
       result = {
         success: true,
-        map_area: {
-          lat: mapCenter.lat,
-          lng: mapCenter.lng,
-          radius_km: radius,
-          week: currentWeek
+        type: 'buzz_map',
+        mode: shouldUseFree ? 'free' : 'paid',
+        area: {
+          id: area.id,
+          center_lat: area.center_lat,
+          center_lng: area.center_lng,
+          radius_km: area.radius_km
         },
         lat: mapCenter.lat,
         lng: mapCenter.lng,
-        radius_km: radius,
-        generation_number: 1,
-        mode: shouldUseFree ? 'free' : 'paid' // Solo aggiunta, non rimuove campi
+        radius_km: radiusKm,
+        generation_number: 1
       };
+
+      // Add free_remaining if this is a free request
+      if (shouldUseFree && freeOverride) {
+        const { data: updatedOverride } = await userClient.rpc('get_buzz_override');
+        if (updatedOverride) {
+          result.free_remaining = updatedOverride.free_remaining;
+        }
+      }
 
     } else {
       // Handle normal BUZZ clue generation
