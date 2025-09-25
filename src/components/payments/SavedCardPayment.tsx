@@ -101,10 +101,10 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         // Don't block payment on mode check failure
       }
 
-      // 🔥 FIXED: Use create-payment-intent with 'amount' parameter (not amountCents)
+      // Use 'amount' parameter to match server expectation  
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: {
-          amount: config.amount, // Send as 'amount' to match server expectation
+          amount: config.amount, // Use 'amount', not 'amountCents'
           currency: config.currency || 'eur',
           payment_type: config.type,
           plan: config.plan || config.type,
@@ -126,17 +126,17 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         return;
       }
 
-      const clientSecretValue = data?.client_secret ?? data?.clientSecret;
-      if (clientSecretValue && savedCard?.stripe_pm_id) {
+      const clientSecret = data?.client_secret ?? data?.clientSecret;
+      if (clientSecret && savedCard?.stripe_pm_id) {
         console.log('✅ M1SSION™ Payment intent created, confirming with saved payment method');
         
-        // 🔥 FIXED: Use stripe.confirmCardPayment instead of redirect
+        // Use stripe.confirmCardPayment with saved payment method
         const stripe = await (await import('@/lib/stripeFallback')).getStripeSafe();
         if (!stripe) {
           throw new Error('Stripe non inizializzato');
         }
         
-        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecretValue, {
+        const { error: confirmError, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
           payment_method: savedCard.stripe_pm_id
         });
         
