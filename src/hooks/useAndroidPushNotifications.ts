@@ -89,9 +89,21 @@ export const useAndroidPushNotifications = () => {
           throw new Error('VAPID public key not configured');
         }
 
+        // Convert VAPID key to proper format
+        const vapidKeyArray = (() => {
+          const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4);
+          const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
+          const rawData = atob(base64);
+          const outputArray = new Uint8Array(rawData.length);
+          for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+          }
+          return outputArray;
+        })();
+
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: vapidKey
+          applicationServerKey: vapidKeyArray as unknown as BufferSource
         });
 
         // Save subscription to Supabase

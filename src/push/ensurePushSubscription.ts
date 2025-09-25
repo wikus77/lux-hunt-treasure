@@ -22,9 +22,10 @@ export async function ensurePushSubscription() {
   const { publicKey } = await vapidRes.json();
   if (!publicKey) throw new Error('VAPID publicKey missing');
   
+  const key = b64uToUint8(publicKey);
   const sub = await reg.pushManager.subscribe({ 
     userVisibleOnly: true, 
-    applicationServerKey: b64uToUint8(publicKey) 
+    applicationServerKey: key as unknown as BufferSource 
   });
   
   // Detect endpoint_type for logging
