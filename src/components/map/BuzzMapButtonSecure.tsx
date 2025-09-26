@@ -1,7 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Lock, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthContext } from '@/contexts/auth';
 import { useBuzzMapPricingNew } from '@/hooks/useBuzzMapPricingNew';
@@ -21,7 +22,13 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
   onAreaGenerated
 }) => {
   const { isAuthenticated, user } = useAuthContext();
-  const { price: currentPrice, radius: currentRadius, loading: pricingLoading } = useBuzzMapPricingNew();
+  const { 
+    nextLevel, 
+    nextRadiusKm, 
+    nextPriceEur, 
+    loading: pricingLoading 
+  } = useBuzzMapPricingNew(user?.id);
+  
   const { 
     processBuzzPayment, 
     showCheckout, 
@@ -30,7 +37,52 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     paymentConfig,
     loading 
   } = useStripeInAppPayment();
+  
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
+
+  // Get current geolocation
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        setCurrentLocation([position.coords.latitude, position.coords.longitude]);
+      },
+      (error) => {
+        console.warn('Geolocation error:', error);
+        // Fallback to map center or Rome coordinates
+        if (mapCenter) {
+          setCurrentLocation(mapCenter);
+        } else {
+          setCurrentLocation([41.9028, 12.4964]); // Rome fallback
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [mapCenter]);
+
+  const getCoordinates = (): [number, number] => {
+    // Priority: current GPS location > map center > last known position > Rome fallback
+    if (currentLocation) return currentLocation;
+    if (mapCenter && mapCenter[0] && mapCenter[1]) return mapCenter;
+    
+    // Check localStorage for last known position
+    const lastPos = localStorage.getItem('lastKnownPosition');
+    if (lastPos) {
+      try {
+        const parsed = JSON.parse(lastPos);
+        if (parsed.lat && parsed.lng) return [parsed.lat, parsed.lng];
+      } catch (e) {
+        console.warn('Failed to parse last known position:', e);
+      }
+    }
+    
+    // Rome fallback
+    return [41.9028, 12.4964];
+  };
 
   const handleBuzzMapPress = async () => {
     if (!isAuthenticated) {
@@ -38,23 +90,24 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       return;
     }
 
-    if (!mapCenter || !mapCenter[0] || !mapCenter[1]) {
-      toast.error('Centro mappa non disponibile');
+    const coordinates = getCoordinates();
+    if (!coordinates || !coordinates[0] || !coordinates[1]) {
+      toast.error('Posizione necessaria per BUZZ MAP');
       return;
     }
+
+    // Save current position for future fallback
+    localStorage.setItem('lastKnownPosition', JSON.stringify({
+      lat: coordinates[0],
+      lng: coordinates[1],
+      timestamp: Date.now()
+    }));
 
     setIsProcessing(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        toast.error('Devi accedere per usare BUZZ MAP.');
-        setIsProcessing(false);
-        return;
-      }
-
       // Start payment flow - Always paid, no exceptions
-      const priceInCents = Math.round(currentPrice * 100);
+      const priceInCents = Math.round(nextPriceEur * 100);
       await processBuzzPayment(priceInCents, true); // true = is BUZZ MAP
       
     } catch (error: any) {
@@ -75,15 +128,17 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
     try {
       await handlePaymentSuccess(paymentIntentId);
       
-      // Call edge function with correct body format
+      const coordinates = getCoordinates();
+      
+      // Call edge function with correct body format that server expects
       const { data: { session } } = await supabase.auth.getSession();
       const { data, error } = await supabase.functions.invoke('handle-buzz-press', {
         body: {
           userId: user?.id,
           generateMap: true,
           coordinates: {
-            lat: mapCenter![0],
-            lng: mapCenter![1]
+            lat: coordinates[0],
+            lng: coordinates[1]
           },
           sessionId: paymentIntentId
         },
@@ -92,12 +147,32 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Handle buzz press error:', error);
+        throw error;
+      }
 
       if (data?.success) {
-        toast.success('🎯 BUZZ MAP generato con successo!');
-        onAreaGenerated?.(mapCenter![0], mapCenter![1], data.radius_km || 0.5);
+        // Show success toast with detailed info as requested
+        const level = data.level || nextLevel;
+        const radius_km = data.radius_km || nextRadiusKm / 1000;
+        const price_eur = data.price_eur || nextPriceEur;
+        
+        toast.success(`BUZZ creato · Livello ${level} · ${radius_km}km · €${price_eur.toFixed(2)}`);
+        
+        onAreaGenerated?.(coordinates[0], coordinates[1], radius_km);
         onBuzzPress();
+        
+        // Dispatch success event for other components
+        window.dispatchEvent(new CustomEvent('paymentIntentSucceeded', {
+          detail: { 
+            paymentIntentId,
+            level,
+            radius_km,
+            price_eur,
+            coordinates
+          }
+        }));
       }
     } catch (error) {
       console.error('Error in post-payment processing:', error);
@@ -147,17 +222,23 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
           }}
         >
           <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
-            {/* M1SSION Branding */}
-            <span className="text-sm font-bold leading-none">
-              <span className="text-[#00D9FF]">M1</span>
-              <span className="text-white">SSION</span>
-            </span>
-            <span className="text-xs text-white font-bold leading-none mt-1">
-              BUZZ MAP
-            </span>
-            <span className="text-xs text-white/80 leading-none mt-0.5">
-              {currentRadius}km · €{currentPrice.toFixed(2)}
-            </span>
+            {isProcessing || loading ? (
+              <Lock className="text-white animate-pulse" size={24} />
+            ) : (
+              <>
+                {/* M1SSION Branding */}
+                <span className="text-sm font-bold leading-none">
+                  <span className="text-[#00D9FF]">M1</span>
+                  <span className="text-white">SSION</span>
+                </span>
+                <span className="text-xs text-white font-bold leading-none mt-1">
+                  BUZZ MAP
+                </span>
+                <span className="text-xs text-white/80 leading-none mt-0.5">
+                  {(nextRadiusKm / 1000).toFixed(1)}km · €{nextPriceEur.toFixed(2)}
+                </span>
+              </>
+            )}
           </div>
         </motion.button>
       </motion.div>
