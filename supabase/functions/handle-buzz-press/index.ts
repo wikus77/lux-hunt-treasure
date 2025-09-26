@@ -137,12 +137,11 @@ serve(async (req) => {
       step = 'create-area';
       const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
       
-      // Count existing buzz map areas for this user using exact count
+      // Count existing buzz map areas for this user
       const { count, error: countError } = await userClient
         .from('user_map_areas')
         .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('source', 'buzz_map');
+        .eq('user_id', user.id);
       
       if (countError) {
         console.error('[HANDLE-BUZZ-PRESS] Error counting existing areas:', countError);
@@ -151,12 +150,12 @@ serve(async (req) => {
       
       const existingAreasCount = count || 0;
       
-      // Calculate level and pricing using 60-level table
-      const level = Math.min(existingAreasCount + 1, 60);
+      // Calculate level using 60-level table with clamp
+      const level = Math.max(1, Math.min(existingAreasCount + 1, 60));
       const levelData = BUZZ_MAP_LEVELS[level - 1];
       const radiusKm = Math.max(0.5, levelData.radiusKm); // Enforce minimum 0.5km radius
       const priceCents = levelData.priceCents;
-      const priceEur = levelData.priceEur;
+      const priceEur = Math.round(priceCents / 100 * 100) / 100; // Convert cents to EUR with 2 decimals
       
       console.info('[BUZZ] pricing-calculated', { 
         existingAreasCount,
@@ -166,20 +165,57 @@ serve(async (req) => {
         priceCents
       });
       
-      // Use service role for guaranteed write (same as paid flow)
+      // Use service role for guaranteed write
       const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
-      const { data: area, error: insErr } = await serviceClient
-        .from('user_map_areas')
-        .insert({
-          user_id: user.id,
-          center_lat: mapCenter.lat,
-          center_lng: mapCenter.lng,
-          radius_km: radiusKm,
-          source: 'buzz_map',
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+      
+      // Try insert with source first, fallback without source if column doesn't exist
+      let area;
+      let insErr;
+      
+      try {
+        const { data, error } = await serviceClient
+          .from('user_map_areas')
+          .insert({
+            user_id: user.id,
+            center_lat: mapCenter.lat,
+            center_lng: mapCenter.lng,
+            radius_km: radiusKm,
+            level: level,
+            price_eur: priceEur,
+            source: 'buzz_map',
+            created_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        area = data;
+        insErr = error;
+      } catch (error: any) {
+        // If source column doesn't exist, try insert without source
+        if (error?.message?.includes('column "source" does not exist') || 
+            error?.code === '42703') {
+          console.info('[BUZZ] source column not found, retrying without source');
+          
+          const { data, error: fallbackError } = await serviceClient
+            .from('user_map_areas')
+            .insert({
+              user_id: user.id,
+              center_lat: mapCenter.lat,
+              center_lng: mapCenter.lng,
+              radius_km: radiusKm,
+              level: level,
+              price_eur: priceEur,
+              created_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+          
+          area = data;
+          insErr = fallbackError;
+        } else {
+          throw error;
+        }
+      }
 
       if (insErr) {
         console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: insErr.message });
@@ -194,12 +230,12 @@ serve(async (req) => {
       // PAID FLOW RESPONSE SHAPE
       result = {
         success: true,
-        mode: 'paid',
-        message: 'BUZZ MAP area generated successfully!',
         level: level,
         radius_km: radiusKm,
         price_eur: priceEur,
         price_cents: priceCents,
+        mode: 'paid',
+        message: 'BUZZ MAP area generated successfully!',
         area: {
           id: area.id,
           center_lat: area.center_lat,
