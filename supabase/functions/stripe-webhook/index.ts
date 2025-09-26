@@ -1,223 +1,235 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Stripe Webhook Handler - Sistema Abbonamenti M1SSION™
+// Stripe Webhook Handler - Payment Intent Events for BUZZ MAP
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[M1SSION-WEBHOOK] ${step}${detailsStr}`);
+  console.log(`[M1SSION-STRIPE-WEBHOOK] ${step}${detailsStr}`);
+};
+
+const logError = (step: string, error: any) => {
+  const errorDetails = {
+    message: error?.message || 'Unknown error',
+    code: error?.code,
+    type: error?.type,
+    stack: error?.stack
+  };
+  console.error(`[M1SSION-STRIPE-WEBHOOK] ❌ ${step}`, errorDetails);
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+  // No CORS handling needed for webhooks
+  if (req.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
   }
 
   try {
-    logStep("🚀 M1SSION™ Webhook Started");
+    logStep("🚀 Stripe webhook received");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    // Get environment variables
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     
-    if (!stripeKey || !webhookSecret) {
-      throw new Error("STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET non configurati");
+    if (!stripeSecretKey || !webhookSecret) {
+      logError("Configuration missing", { 
+        hasStripeKey: !!stripeSecretKey, 
+        hasWebhookSecret: !!webhookSecret 
+      });
+      return new Response("Configuration error", { status: 500 });
     }
-    logStep("✅ Stripe keys verificate");
 
+    // Determine Stripe mode from secret key
+    const stripeMode = stripeSecretKey.startsWith('sk_live_') ? 'live' : 'test';
+    logStep("🔧 Stripe mode detected", { mode: stripeMode });
+
+    // Initialize Stripe
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: "2023-10-16" });
+    
+    // Initialize Supabase client
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    // Get request body and signature
+    let body: string;
+    try {
+      body = await req.text();
+    } catch (error: any) {
+      logError("Failed to read request body", error);
+      return new Response("Invalid request body", { status: 400 });
+    }
     
-    const body = await req.text();
     const signature = req.headers.get("stripe-signature");
-    
     if (!signature) {
-      throw new Error("Missing stripe-signature header");
+      logError("Missing stripe-signature header", {});
+      return new Response("Missing stripe-signature header", { status: 400 });
     }
 
+    // Verify webhook signature
     let event: Stripe.Event;
-    
     try {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-      logStep("✅ Webhook signature verified", { type: event.type });
-    } catch (err) {
-      logStep("❌ Webhook signature verification failed", { error: err.message });
-      return new Response(`Webhook Error: ${err.message}`, { status: 400 });
+      logStep("✅ Webhook signature verified", { 
+        eventType: event.type, 
+        eventId: event.id,
+        mode: stripeMode
+      });
+    } catch (error: any) {
+      logError("Webhook signature verification failed", error);
+      return new Response(`Webhook signature verification failed: ${error?.message || 'Unknown error'}`, { status: 400 });
     }
 
-    // Handle checkout.session.completed
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
-      
-      logStep("💳 Checkout session completed", {
-        sessionId: session.id,
-        customerId: session.customer,
-        paymentStatus: session.payment_status,
-        amountTotal: session.amount_total
-      });
-
-      // Process webhook completion
-      const success = await supabaseClient.rpc('process_stripe_webhook_completed', {
-        p_session_id: session.id,
-        p_stripe_customer_id: session.customer as string,
-        p_payment_status: session.payment_status,
-        p_amount_total: session.amount_total
-      });
-
-      if (success.error) {
-        logStep("❌ Error processing webhook", { error: success.error });
-        return new Response("Error processing webhook", { status: 500 });
-      }
-
-      logStep("✅ Webhook processed successfully", { sessionId: session.id });
-    }
-
-    // Handle payment_intent.succeeded (CRITICAL FOR DB SYNC)
+    // Handle payment_intent.succeeded
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       
       logStep("💰 Payment intent succeeded", {
         paymentIntentId: paymentIntent.id,
-        customerId: paymentIntent.customer,
-        amount: paymentIntent.amount
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        mode: stripeMode,
+        eventId: event.id,
+        metadata: paymentIntent.metadata
       });
 
-      // Find session by payment intent and update profile directly
-      if (paymentIntent.metadata?.session_id) {
-        const sessionId = paymentIntent.metadata.session_id;
-        
-        // Get session from database
-        const { data: sessionData } = await supabaseClient
-          .from('checkout_sessions')
-          .select('*')
-          .eq('session_id', sessionId)
-          .single();
-        
-        if (sessionData) {
-          // Force profile update
-          const { error: profileError } = await supabaseClient
-            .from('profiles')
-            .update({
-              subscription_tier: sessionData.tier,
-              tier: sessionData.tier,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', sessionData.user_id);
-          
-          logStep("✅ Profile force updated after payment", { 
-            userId: sessionData.user_id, 
-            tier: sessionData.tier,
-            error: profileError 
-          });
+      // Extract user information from metadata
+      const userId = paymentIntent.metadata?.user_id;
+      const userEmail = paymentIntent.metadata?.email;
+      const paymentType = paymentIntent.metadata?.payment_type;
+      
+      if (userId) {
+        try {
+          // Log successful payment to audit table
+          const { error: auditError } = await supabaseClient
+            .from('admin_logs')
+            .insert({
+              event_type: 'buzz_map_payment_ok',
+              user_id: userId,
+              note: `Payment intent succeeded: ${paymentIntent.id}`,
+              context: JSON.stringify({
+                payment_intent_id: paymentIntent.id,
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+                payment_type: paymentType,
+                stripe_mode: stripeMode,
+                event_id: event.id
+              })
+            });
+
+          if (auditError) {
+            logError("Failed to log payment success to audit", auditError);
+          } else {
+            logStep("✅ Payment success logged to audit", { userId, paymentIntentId: paymentIntent.id });
+          }
+
+          // Optionally: Send notification or update user balance here
+          // Example: Update user credits for buzz map
+          if (paymentType === 'buzz_map') {
+            logStep("🎯 BUZZ MAP payment confirmed", { 
+              userId, 
+              amount: paymentIntent.amount,
+              paymentIntentId: paymentIntent.id 
+            });
+          }
+
+        } catch (error: any) {
+          logError("Error processing payment success", error);
+        }
+      } else {
+        logStep("⚠️ Payment succeeded but no user_id in metadata", { 
+          paymentIntentId: paymentIntent.id,
+          metadata: paymentIntent.metadata 
+        });
+      }
+    }
+
+    // Handle payment_intent.payment_failed
+    else if (event.type === 'payment_intent.payment_failed') {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      
+      logStep("❌ Payment intent failed", {
+        paymentIntentId: paymentIntent.id,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
+        mode: stripeMode,
+        eventId: event.id,
+        lastPaymentError: paymentIntent.last_payment_error,
+        metadata: paymentIntent.metadata
+      });
+
+      // Extract user information from metadata
+      const userId = paymentIntent.metadata?.user_id;
+      const paymentType = paymentIntent.metadata?.payment_type;
+      
+      if (userId) {
+        try {
+          // Log failed payment to audit table
+          const { error: auditError } = await supabaseClient
+            .from('admin_logs')
+            .insert({
+              event_type: 'payment_failed',
+              user_id: userId,
+              note: `Payment intent failed: ${paymentIntent.id}`,
+              context: JSON.stringify({
+                payment_intent_id: paymentIntent.id,
+                amount: paymentIntent.amount,
+                currency: paymentIntent.currency,
+                payment_type: paymentType,
+                stripe_mode: stripeMode,
+                event_id: event.id,
+                failure_reason: paymentIntent.last_payment_error?.message || 'Unknown error'
+              })
+            });
+
+          if (auditError) {
+            logError("Failed to log payment failure to audit", auditError);
+          } else {
+            logStep("✅ Payment failure logged to audit", { userId, paymentIntentId: paymentIntent.id });
+          }
+
+        } catch (error: any) {
+          logError("Error processing payment failure", error);
         }
       }
     }
 
-    // Handle subscription updates
-    if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.created') {
-      const subscription = event.data.object as Stripe.Subscription;
-      
-      logStep("🔄 Subscription updated", {
-        subscriptionId: subscription.id,
-        customerId: subscription.customer,
-        status: subscription.status
+    // Handle other event types (optional for future extension)
+    else {
+      logStep("ℹ️ Unhandled event type", { 
+        eventType: event.type, 
+        eventId: event.id,
+        mode: stripeMode 
       });
-
-      // Update subscription status in database
-      const { error } = await supabaseClient
-        .from('subscriptions')
-        .update({
-          status: subscription.status,
-          current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: subscription.cancel_at_period_end,
-          updated_at: new Date().toISOString()
-        })
-        .eq('stripe_subscription_id', subscription.id);
-
-      if (error) {
-        logStep("❌ Error updating subscription", { error });
-      } else {
-        logStep("✅ Subscription updated successfully");
-
-        // Force immediate sync to profile
-        await supabaseClient
-          .from('profiles')
-          .update({ 
-            subscription_tier: subscription.metadata?.tier || 'Base',
-            tier: subscription.metadata?.tier || 'Base',
-            updated_at: new Date().toISOString()
-          })
-          .eq('stripe_customer_id', subscription.customer as string);
-
-        logStep("✅ Profile tier synced from subscription update");
-      }
     }
 
-    // Handle subscription cancellation
-    if (event.type === 'customer.subscription.deleted') {
-      const subscription = event.data.object as Stripe.Subscription;
-      
-      logStep("🗑️ Subscription canceled", {
-        subscriptionId: subscription.id,
-        customerId: subscription.customer
-      });
-
-      // Find user by customer ID and reset to Base
-      const { data: subscriptions } = await supabaseClient
-        .from('subscriptions')
-        .select('user_id')
-        .eq('stripe_subscription_id', subscription.id)
-        .limit(1);
-
-      if (subscriptions && subscriptions.length > 0) {
-        const userId = subscriptions[0].user_id;
-        
-        // Update subscription to canceled
-        await supabaseClient
-          .from('subscriptions')
-          .update({ status: 'canceled' })
-          .eq('stripe_subscription_id', subscription.id);
-
-        // Reset user to Base plan
-        await supabaseClient
-          .from('profiles')
-          .update({ 
-            subscription_tier: 'Base',
-            tier: 'Base'
-          })
-          .eq('id', userId);
-
-        logStep("✅ User reset to Base plan", { userId });
-      }
-    }
-
-    return new Response(JSON.stringify({ received: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Always respond 200 OK to prevent Stripe retries (except for signature failures)
+    return new Response(JSON.stringify({ 
+      received: true, 
+      eventId: event.id,
+      eventType: event.type,
+      mode: stripeMode,
+      timestamp: new Date().toISOString()
+    }), {
+      headers: { "Content-Type": "application/json" },
       status: 200,
     });
 
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("❌ ERRORE WEBHOOK", { message: errorMessage });
+  } catch (error: any) {
+    logError("Webhook processing error", error);
     
+    // Return 200 even for processing errors to prevent Stripe retries
+    // Only signature verification errors should return 400
     return new Response(JSON.stringify({ 
-      error: errorMessage,
+      error: "Internal processing error",
       timestamp: new Date().toISOString()
     }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      headers: { "Content-Type": "application/json" },
+      status: 200,
     });
   }
 });
