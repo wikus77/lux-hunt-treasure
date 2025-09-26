@@ -28,17 +28,10 @@ serve(async (req) => {
   try {
     const sk = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
     const mode = getStripeModeFromKey(sk);
-    const keyPrefix = sk ? sk.substring(0, 8) + "..." : "none";
-    const hasKey = sk.length > 0;
     
-    console.info(`🔧 [STRIPE-MODE] Detected mode: ${mode}, keyPrefix: ${keyPrefix}, hasKey: ${hasKey}`);
+    console.info(`🔧 [STRIPE-MODE] Detected mode: ${mode}`);
     
-    const response = {
-      mode,
-      keyPrefix,
-      hasKey,
-      timestamp: new Date().toISOString()
-    };
+    const response = { mode };
     
     return new Response(
       JSON.stringify(response), 
@@ -50,13 +43,9 @@ serve(async (req) => {
   } catch (error) {
     console.error(`❌ [STRIPE-MODE] Error:`, error);
     return new Response(
-      JSON.stringify({ 
-        error: "Internal server error",
-        mode: "unknown",
-        hasKey: false
-      }), 
+      JSON.stringify({ mode: "unknown" }), 
       { 
-        status: 500, 
+        status: 200, 
         headers: { "content-type": "application/json", ...corsHeaders }
       }
     );
