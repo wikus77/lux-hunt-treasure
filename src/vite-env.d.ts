@@ -33,12 +33,20 @@ declare module "*.webp" {
   export default src;
 }
 
-// Browser timer compatibility
+// Browser timer compatibility for NodeJS.Timeout
 declare global {
   namespace NodeJS {
-    interface Timeout {}
+    interface Timeout extends number {}
   }
 }
+
+// Process environment for browser compatibility
+declare const process: {
+  env: {
+    NODE_ENV: string;
+    [key: string]: string | undefined;
+  };
+};
 
 // Dichiarazione per Cookie Script
 interface Window {
