@@ -25,11 +25,9 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-unused-vars": "off",
       "@typescript-eslint/no-explicit-any": "off",
-      "@typescript-eslint/no-namespace": "off", // Allow NodeJS namespace declarations
-      "@typescript-eslint/no-var-requires": "off", // Allow require() calls
-      "@typescript-eslint/ban-ts-comment": "off", // Allow @ts-ignore comments
+      "@typescript-eslint/no-namespace": "off",
+      "no-undef": "off",
       "no-empty": "off",
-      "no-undef": "off", // TypeScript handles this
     },
   }
 );
