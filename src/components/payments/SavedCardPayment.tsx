@@ -90,39 +90,42 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
 
       console.log('🔧 M1SSION™ Using Stripe mode:', stripeMode);
 
-      // Create payment intent with mode validation
+      // Call the correct edge function with the exact body format
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: {
-          amount: config.amount,
-          currency: config.currency || 'eur',
-          payment_type: config.type,
-          plan: config.plan || config.type,
-          description: config.description,
-          mode: stripeMode, // Send detected mode
-          metadata: {
-            user_id: user.id,
-            plan: config.plan || config.type,
-            payment_type: config.type,
-            description: config.description,
-            source: 'M1SSION_PWA_SAVED_CARD',
-            ...config.metadata
-          }
+          amount: config.amount, // Already in cents
+          currency: 'eur',
+          payment_type: 'buzz_map',
+          plan: 'one_time'
         }
       });
 
       if (error) {
         console.error('❌ M1SSION™ Payment error:', error);
-        if (error.message?.includes('mismatch')) {
-          toast.error(`Errore di configurazione Stripe: ${error.message}`);
+        
+        // Handle specific error codes
+        if (error.code === 'not_authenticated' || error.message?.includes('401')) {
+          toast.error('Devi accedere per usare questa funzione.');
+          // TODO: Open login modal
+          return;
+        } else if (error.code === 'card_declined') {
+          toast.error(`Carta rifiutata: ${error.message}`);
+          return;
         } else {
-          toast.error('Errore nel pagamento');
+          toast.error(`Errore pagamento: ${error.message || 'Errore sconosciuto'} (${error.code || 'unknown'})`);
+          return;
         }
-        return;
       }
 
-      const clientSecret = data?.client_secret ?? data?.clientSecret;
+      // Read client_secret from server response (always prefer client_secret over clientSecret)
+      const clientSecret = data?.client_secret || data?.clientSecret;
       if (clientSecret && savedCard?.stripe_pm_id) {
-        console.log('✅ M1SSION™ Payment intent created for mode:', data?.mode, 'PI:', data?.payment_intent_id);
+        console.debug('✅ M1SSION™ Payment intent created:', {
+          functionName: 'create-payment-intent',
+          amount: config.amount,
+          mode: data?.mode,
+          paymentIntentId: data?.paymentIntentId || data?.payment_intent_id
+        });
         
         // Use stripe.confirmCardPayment with saved payment method
         const stripe = await (await import('@/lib/stripeFallback')).getStripeSafe();
@@ -141,6 +144,12 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
         
         if (paymentIntent?.status === 'succeeded') {
           console.log('✅ M1SSION™ Payment succeeded');
+          
+          // Dispatch success event
+          window.dispatchEvent(new CustomEvent('paymentIntentSucceeded', {
+            detail: { paymentIntentId: paymentIntent.id }
+          }));
+          
           onSuccess(paymentIntent.id);
         } else if (paymentIntent?.status === 'requires_action') {
           console.log('🔄 M1SSION™ Payment requires additional action');

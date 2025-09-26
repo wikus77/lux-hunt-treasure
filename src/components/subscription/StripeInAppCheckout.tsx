@@ -51,45 +51,46 @@ const CheckoutForm: React.FC<{
 
         console.log('🔧 M1SSION™ Using Stripe mode:', stripeMode);
         
+        // Call the correct edge function with the exact body format
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
-            amount: config.amount,
-            currency: config.currency || 'eur',
-            payment_type: config.type,
-            plan: config.plan || config.type,
-            description: config.description,
-            mode: stripeMode, // Send detected mode
-            metadata: {
-              user_id: user.id,
-              plan: config.plan || config.type,
-              payment_type: config.type,
-              description: config.description,
-              source: 'M1SSION_PWA_CHECKOUT',
-              ...config.metadata
-            }
+            amount: config.amount, // Already in cents
+            currency: 'eur',
+            payment_type: 'buzz_map',
+            plan: 'one_time'
           }
         });
 
         if (error) {
           console.error('❌ M1SSION™ Payment intent error:', error);
-          if (error.message?.includes('mismatch')) {
-            toast.error(`Errore di configurazione Stripe: ${error.message}`);
-          } else if (error.message?.includes('405')) {
-            toast.error('Endpoint pagamento non disponibile (405).');
-          } else if (error.message?.includes('401')) {
+          
+          // Handle specific error codes
+          if (error.code === 'not_authenticated' || error.message?.includes('401')) {
             toast.error('Devi accedere per usare questa funzione.');
-          } else if (error.message?.includes('403')) {
-            toast.error('Completa il pagamento e riprova.');
+            // TODO: Open login modal
+            return;
+          } else if (error.code === 'card_declined') {
+            toast.error(`Carta rifiutata: ${error.message}`);
+            return;
+          } else if (error.message?.includes('mismatch')) {
+            toast.error(`Errore configurazione Stripe: ${error.message}`);
+            return;
           } else {
-            toast.error('Errore nella creazione del pagamento');
+            toast.error(`Errore pagamento: ${error.message || 'Errore sconosciuto'} (${error.code || 'unknown'})`);
+            return;
           }
-          return;
         }
 
-        const clientSecretValue = data?.client_secret ?? data?.clientSecret;
+        // Read client_secret from server response (always prefer client_secret over clientSecret)
+        const clientSecretValue = data?.client_secret || data?.clientSecret;
         if (clientSecretValue) {
           setClientSecret(clientSecretValue);
-          console.log('✅ M1SSION™ Payment intent created for mode:', data?.mode, 'PI:', data?.payment_intent_id);
+          console.debug('✅ M1SSION™ Payment intent created:', {
+            functionName: 'create-payment-intent',
+            amount: config.amount,
+            mode: data?.mode,
+            paymentIntentId: data?.paymentIntentId || data?.payment_intent_id
+          });
         } else {
           console.error('❌ M1SSION™ No client secret received:', data);
           toast.error('Errore nella configurazione del pagamento');
@@ -137,11 +138,18 @@ const CheckoutForm: React.FC<{
 
       if (error) {
         console.error('❌ M1SSION™ Payment failed:', error);
-        toast.error(`Pagamento fallito: ${error.message}`);
+        const errorCode = error.code || 'unknown';
+        const errorMessage = error.message || 'Errore sconosciuto';
+        toast.error(`Pagamento fallito: ${errorMessage} (${errorCode})`);
       } else if (paymentIntent.status === 'succeeded') {
         console.log('✅ M1SSION™ Payment succeeded:', paymentIntent.id);
         
-        // Call parent success handler with payment intent ID
+        // Dispatch success event
+        window.dispatchEvent(new CustomEvent('paymentIntentSucceeded', {
+          detail: { paymentIntentId: paymentIntent.id }
+        }));
+        
+        // Call parent success handler
         onSuccess(paymentIntent.id);
       }
     } catch (error) {
