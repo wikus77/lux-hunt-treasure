@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ArrowRight } from "lucide-react";
-// Import M1SSION PRIZE hero images
+// Import M1SSION PRIZE hero images - Real luxury assets
 const heroImages = [
   "/assets/m1ssion-prize/hero-forest-watch.png",
   "/assets/m1ssion-prize/hero-forest-lambo.png", 
