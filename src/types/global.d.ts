@@ -1,44 +1,25 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Global type definitions for M1SSION™
-
 /// <reference types="vite/client" />
 /// <reference types="node" />
 
-// Asset module declarations
-declare module "*.svg" {
-  const src: string;
-  export default src;
-}
-
-declare module "*.png" {
-  const src: string;
-  export default src;
-}
-
-declare module "*.jpg" {
-  const src: string;
-  export default src;
-}
-
-declare module "*.jpeg" {
-  const src: string;
-  export default src;
-}
-
-declare module "*.mp4" {
-  const src: string;
-  export default src;
-}
-
-declare module "*.webp" {
-  const src: string;
-  export default src;
-}
-
-// Browser timeout compatibility  
-type BrowserTimeout = number;
+declare module "*.svg" { const src: string; export default src; }
+declare module "*.png" { const src: string; export default src; }
+declare module "*.jpg" { const src: string; export default src; }
+declare module "*.jpeg" { const src: string; export default src; }
+declare module "*.webp" { const src: string; export default src; }
+declare module "*.mp4" { const src: string; export default src; }
 
 declare global {
+  // Compat browser per timer usati come NodeJS.Timeout
+  interface Window { }
+  // Se qualche codice tipizza i timer come NodeJS.Timeout in frontend,
+  // questa estensione evita i conflitti tipici con DOM:
+  namespace NodeJS { interface Timeout extends Number {} }
+  type BrowserTimeout = number;
+
+  // Se esiste codice che fa guard su process.env (solo typing, non runtime):
+  // eslint-disable-next-line no-var
+  var process: { env: Record<string,string|undefined> };
+
   interface Navigator {
     standalone?: boolean;
   }
@@ -61,20 +42,5 @@ declare global {
     OneSignalInitialized?: boolean;
     plausible?: (event: string, options?: { props?: Record<string, any> }) => void;
   }
-
-  // Browser-compatible timer types for NodeJS.Timeout compatibility
-  namespace NodeJS {
-    interface Timeout extends number {}
-    interface Timer extends number {}
-  }
-
-  // Environment variables for browser compatibility
-  const process: {
-    env: {
-      NODE_ENV: string;
-      [key: string]: string | undefined;
-    };
-  };
 }
-
 export {};
