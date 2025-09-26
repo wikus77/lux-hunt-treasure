@@ -13,6 +13,13 @@ export function getStripe(): Promise<Stripe | null> {
     if (!pk) {
       throw new Error('Missing VITE_STRIPE_PUBLISHABLE_KEY');
     }
+    
+    // Ensure we're using LIVE key (pk_live_...)
+    if (!pk.startsWith('pk_live_')) {
+      console.warn('⚠️ VITE_STRIPE_PUBLISHABLE_KEY is not a LIVE key:', pk.substring(0, 10) + '...');
+    }
+    
+    console.debug('🔑 Using Stripe publishable key:', pk.substring(0, 10) + '...');
     stripePromise = loadStripe(pk as string);
   }
   return stripePromise;

@@ -77,17 +77,13 @@ export function useStripeMode(): UseStripeModeResult {
 }
 
 export function getPublishableKeyForMode(mode: StripeMode): string {
-  // Get from environment variables
-  const testKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_TEST || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
-  const liveKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY_LIVE || '';
+  // Always use LIVE publishable key as requested
+  const liveKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '';
   
-  switch (mode) {
-    case 'live':
-      return liveKey || testKey; // Fallback to test if live not available
-    case 'test':
-      return testKey;
-    default:
-      // Default to test for safety
-      return testKey;
+  // Ensure we're using LIVE key (pk_live_...)
+  if (liveKey && !liveKey.startsWith('pk_live_')) {
+    console.warn('⚠️ VITE_STRIPE_PUBLISHABLE_KEY is not a LIVE key:', liveKey.substring(0, 10) + '...');
   }
+  
+  return liveKey;
 }
