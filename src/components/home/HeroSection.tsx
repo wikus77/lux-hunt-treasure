@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 import { ParallaxImage } from "@/components/ui/parallax-image";
 import { MagneticButton } from "@/components/ui/magnetic-button";
 import { ArrowRight } from "lucide-react";
-import lussoForestImage from "@/assets/media/20250729_0829_LussoNellaForesta.png";
+// Import M1SSION PRIZE hero images
+const heroImages = [
+  "/assets/m1ssion-prize/hero-forest-watch.png",
+  "/assets/m1ssion-prize/hero-forest-lambo.png", 
+  "/assets/m1ssion-prize/hero-forest-lambo-porsche.png",
+  "/assets/m1ssion-prize/treasure-forest-car.png"
+];
 
 const stagger = {
   hidden: {},
@@ -22,20 +28,35 @@ const fadeSlideUp = {
 };
 
 const HeroSection = () => {
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
+
+  // Auto-rotate hero images every 8 seconds
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prev => (prev + 1) % heroImages.length);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section 
       className="min-h-screen w-full relative flex items-center justify-center overflow-hidden py-24 px-4"
       data-scroll-section
     >
-      {/* Luxury Forest Background Image */}
+      {/* M1SSION PRIZE Hero Background with Rotator */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <img 
-          src={lussoForestImage}
-          alt="Luxury sports car in mystical forest"
-          className="w-full h-full object-cover"
+          src={heroImages[currentImageIndex]}
+          alt="M1SSION PRIZE luxury assets - Image for illustrative purposes only"
+          className="w-full h-full object-cover transition-opacity duration-1000"
         />
         {/* Dark overlay to maintain text readability */}
         <div className="absolute inset-0 bg-black/40 bg-gradient-to-b from-black/30 via-black/40 to-black/60" />
+        
+        {/* Image disclaimer overlay */}
+        <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded text-xs text-white/80">
+          Image for illustrative purposes only
+        </div>
         
         {/* Static dots for atmosphere */}
         {[...Array(10)].map((_, i) => (
