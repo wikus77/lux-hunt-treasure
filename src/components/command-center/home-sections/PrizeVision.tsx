@@ -4,13 +4,12 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
 
-// M1SSION Prize Images Collection - 5 Images Carousel
+// M1SSION PRIZE - real assets from public/assets/m1ssion-prize
 const missionPrizeImages = [
-  "/assets/mission-prize-luxury-forest.jpg",
-  "/assets/mission-prize-watch.jpg", 
-  "/assets/mission-prize-jewelry.jpg",
-  "/assets/mission-prize-tech.jpg",
-  "/assets/mission-prize-fashion.jpg"
+  "/assets/m1ssion-prize/hero-forest-watch.png",
+  "/assets/m1ssion-prize/hero-forest-lambo.png",
+  "/assets/m1ssion-prize/hero-forest-lambo-porsche.png",
+  "/assets/m1ssion-prize/treasure-forest-car.png"
 ];
 
 interface PrizeVisionProps {
