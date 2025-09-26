@@ -56,21 +56,18 @@ serve(async (req) => {
     step = 'parse';
     const body = await req.json();
     console.info('[BUZZ] body-received', { 
-      lat: body.coordinates?.lat, 
-      lng: body.coordinates?.lng, 
-      generateMap: body.generateMap,
-      hasSessionId: !!body.sessionId,
-      hasPrizeId: !!body.prizeId
+      lat: body.lat, 
+      lng: body.lng
     });
 
-    const { userId, generateMap, coordinates } = body;
+    const { lat, lng } = body;
 
     // Validate required fields
-    if (!userId || userId !== user.id) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'user_mismatch', user_id: user.id, step });
+    if (typeof lat !== 'number' || typeof lng !== 'number') {
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 400, code: 'invalid_coordinates', user_id: user.id, step });
       return new Response(
-        JSON.stringify({ success: false, code: 'user_mismatch' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        JSON.stringify({ success: false, code: 'invalid_coordinates' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
 
@@ -114,164 +111,83 @@ serve(async (req) => {
       );
     }
 
-    // Check if this is a bypass attempt (no payment info provided)
-    // NOW WE REQUIRE PAYMENT INFO - NO MORE FREE PATH
-    if (!body.sessionId && !body.prizeId) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 403, code: 'payment_required', user_id: user.id, step });
+    // Generate BUZZ MAP area using current coordinates and pricing table
+    step = 'create-area';
+    
+    // Count existing buzz map areas for this user with source='buzz_map'
+    const { count, error: countError } = await userClient
+      .from('user_map_areas')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('source', 'buzz_map');
+    
+    if (countError) {
+      console.error('[HANDLE-BUZZ-PRESS] Error counting existing areas:', countError);
+      throw new Error('Error counting existing areas');
+    }
+    
+    const existingAreasCount = count || 0;
+    
+    // Calculate level using 60-level table with clamp
+    const level = Math.max(1, Math.min(existingAreasCount + 1, 60));
+    const levelData = BUZZ_MAP_LEVELS[level - 1];
+    const radiusKm = Math.max(0.5, levelData.radiusKm); // Enforce minimum 0.5km radius
+    const priceCents = levelData.priceCents;
+    const priceEur = Math.round(priceCents / 100 * 100) / 100; // Convert cents to EUR with 2 decimals
+    
+    console.info('[BUZZ] pricing-calculated', { 
+      existingAreasCount,
+      level,
+      radiusKm,
+      priceEur,
+      priceCents
+    });
+    
+    // Use service role for guaranteed write
+    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Insert new area with source='buzz_map'
+    const { data: area, error: insErr } = await serviceClient
+      .from('user_map_areas')
+      .insert({
+        user_id: user.id,
+        center_lat: lat,
+        center_lng: lng,
+        radius_km: radiusKm,
+        level: level,
+        price_eur: priceEur,
+        source: 'buzz_map',
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insErr) {
+      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: insErr.message });
       return new Response(
-        JSON.stringify({ success: false, code: 'payment_required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        JSON.stringify({ success: false, code: 'internal_error' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
 
-    let result: any;
-    
-    if (generateMap) {
-      // Handle BUZZ MAP generation - PAID ONLY
-      step = 'map-generation-paid';
-      
-      // TODO: Validate payment (sessionId/prizeId) here for PAID flow
-      // For now, continuing as if payment is valid
+    console.info('[BUZZ] area-created', { user_id: user.id, area_id: area.id });
 
-      // Generate map area using NEW PRICING TABLE logic
-      step = 'create-area';
-      const mapCenter = coordinates || { lat: 41.9028, lng: 12.4964 }; // Default to Rome
-      
-      // Count existing buzz map areas for this user
-      const { count, error: countError } = await userClient
-        .from('user_map_areas')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-      
-      if (countError) {
-        console.error('[HANDLE-BUZZ-PRESS] Error counting existing areas:', countError);
-        throw new Error('Error counting existing areas');
-      }
-      
-      const existingAreasCount = count || 0;
-      
-      // Calculate level using 60-level table with clamp
-      const level = Math.max(1, Math.min(existingAreasCount + 1, 60));
-      const levelData = BUZZ_MAP_LEVELS[level - 1];
-      const radiusKm = Math.max(0.5, levelData.radiusKm); // Enforce minimum 0.5km radius
-      const priceCents = levelData.priceCents;
-      const priceEur = Math.round(priceCents / 100 * 100) / 100; // Convert cents to EUR with 2 decimals
-      
-      console.info('[BUZZ] pricing-calculated', { 
-        existingAreasCount,
-        level,
-        radiusKm,
-        priceEur,
-        priceCents
-      });
-      
-      // Use service role for guaranteed write
-      const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
-      
-      // Try insert with source first, fallback without source if column doesn't exist
-      let area;
-      let insErr;
-      
-      try {
-        const { data, error } = await serviceClient
-          .from('user_map_areas')
-          .insert({
-            user_id: user.id,
-            center_lat: mapCenter.lat,
-            center_lng: mapCenter.lng,
-            radius_km: radiusKm,
-            level: level,
-            price_eur: priceEur,
-            source: 'buzz_map',
-            created_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-        
-        area = data;
-        insErr = error;
-      } catch (error: any) {
-        // If source column doesn't exist, try insert without source
-        if (error?.message?.includes('column "source" does not exist') || 
-            error?.code === '42703') {
-          console.info('[BUZZ] source column not found, retrying without source');
-          
-          const { data, error: fallbackError } = await serviceClient
-            .from('user_map_areas')
-            .insert({
-              user_id: user.id,
-              center_lat: mapCenter.lat,
-              center_lng: mapCenter.lng,
-              radius_km: radiusKm,
-              level: level,
-              price_eur: priceEur,
-              created_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-          
-          area = data;
-          insErr = fallbackError;
-        } else {
-          throw error;
-        }
-      }
-
-      if (insErr) {
-        console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: insErr.message });
-        return new Response(
-          JSON.stringify({ success: false, code: 'internal_error' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        );
-      }
-
-      console.info('[BUZZ] area-created', { user_id: user.id, area_id: area.id, mode: 'paid' });
-
-      // PAID FLOW RESPONSE SHAPE
-      result = {
-        success: true,
-        level: level,
-        radius_km: radiusKm,
-        price_eur: priceEur,
-        price_cents: priceCents,
-        mode: 'paid',
-        message: 'BUZZ MAP area generated successfully!',
-        area: {
-          id: area.id,
-          center_lat: area.center_lat,
-          center_lng: area.center_lng,
-          radius_km: area.radius_km
-        },
-        generation_number: existingAreasCount + 1,
-        daily_presses: todayCount + 1
-      };
-
-    } else {
-      // Handle normal BUZZ clue generation - PAID ONLY
-      step = 'clue-generation-paid';
-      
-      // TODO: Validate payment (sessionId/prizeId) here for PAID flow
-      // For now, continuing as if payment is valid
-
-      // Generate clue (simplified for now - TODO: integrate with actual clue generation)
-      const sampleClues = [
-        "Cerca vicino alle antiche mura della città",
-        "Il tesoro si nasconde dove l'acqua scorre",
-        "Guarda verso il cielo, ma non dimenticare la terra",
-        "Tra le pietre del passato si cela il futuro"
-      ];
-      
-      const randomClue = sampleClues[Math.floor(Math.random() * sampleClues.length)];
-      
-      // PAID RESPONSE SHAPE
-      result = {
-        success: true,
-        clue_text: randomClue,
-        buzz_cost: 1.99,
-        mode: 'paid',
-        daily_presses: todayCount + 1  // Optional field showing current daily count
-      };
-    }
+    const result = {
+      success: true,
+      level: level,
+      radius_km: radiusKm,
+      price_eur: priceEur,
+      price_cents: priceCents,
+      message: 'BUZZ MAP area generated successfully!',
+      area: {
+        id: area.id,
+        center_lat: area.center_lat,
+        center_lng: area.center_lng,
+        radius_km: area.radius_km
+      },
+      generation_number: existingAreasCount + 1,
+      daily_presses: todayCount + 1
+    };
 
     // Increment daily counter AFTER successful operation
     step = 'increment-daily-count';

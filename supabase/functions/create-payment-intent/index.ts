@@ -90,7 +90,7 @@ serve(async (req) => {
       if (payload.iss === "supabase" && payload.role === "service_role" && body._adminSmoke === true) {
         logStep("Service role authentication with admin smoke test");
         userId = 'admin-smoke';
-        email = 'admin@local';
+        email = body.email || 'wikus77@hotmail.it'; // Use email from body, default to wikus77@hotmail.it
         authType = 'service-role';
       } else {
         // Regular user authentication
