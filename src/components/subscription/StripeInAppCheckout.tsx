@@ -17,7 +17,7 @@ import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import SavedCardPayment from '@/components/payments/SavedCardPayment';
 import { PaymentErrorHandler } from '@/utils/paymentErrorHandler';
-import { assertPkMatchesMode } from '@/lib/stripe/guard';
+import { useStripeMode } from '@/hooks/useStripeMode';
 
 // Initialize Stripe using fallback for better compatibility
 import { getStripeSafe } from '@/lib/stripeFallback';
@@ -39,6 +39,7 @@ const CheckoutForm: React.FC<{
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string>('');
   const { user } = useAuthContext();
+  const { mode: stripeMode, loading: modeLoading } = useStripeMode();
 
   // Create payment intent when component mounts
   useEffect(() => {
@@ -48,34 +49,22 @@ const CheckoutForm: React.FC<{
       try {
         console.log('🔥 M1SSION™ Creating payment intent for:', config.type, config);
 
-        // Guard: Ensure client pk_* matches server sk_* mode
-        try {
-          await PaymentErrorHandler.retryWithBackoff(async () => {
-            const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-            if (modeErr) {
-              console.warn('❌ stripe-mode check failed, proceeding with payment:', modeErr.message);
-              return; // Don't block the payment
-            }
-            assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-          });
-        } catch (e) {
-          console.warn('❌ stripe-mode check failed, proceeding with payment:', e);
-          // Don't block payment on mode check failure
-        }
+        console.log('🔧 M1SSION™ Using Stripe mode:', stripeMode);
         
         const { data, error } = await supabase.functions.invoke('create-payment-intent', {
           body: {
-            amount: config.amount, // Send as 'amount' to match server expectation
+            amount: config.amount,
             currency: config.currency || 'eur',
             payment_type: config.type,
             plan: config.plan || config.type,
             description: config.description,
+            mode: stripeMode, // Send detected mode
             metadata: {
               user_id: user.id,
               plan: config.plan || config.type,
               payment_type: config.type,
               description: config.description,
-              source: 'M1SSION_PWA',
+              source: 'M1SSION_PWA_CHECKOUT',
               ...config.metadata
             }
           }
@@ -83,7 +72,9 @@ const CheckoutForm: React.FC<{
 
         if (error) {
           console.error('❌ M1SSION™ Payment intent error:', error);
-          if (error.message?.includes('405')) {
+          if (error.message?.includes('mismatch')) {
+            toast.error(`Errore di configurazione Stripe: ${error.message}`);
+          } else if (error.message?.includes('405')) {
             toast.error('Endpoint pagamento non disponibile (405).');
           } else if (error.message?.includes('401')) {
             toast.error('Devi accedere per usare questa funzione.');
@@ -98,7 +89,7 @@ const CheckoutForm: React.FC<{
         const clientSecretValue = data?.client_secret ?? data?.clientSecret;
         if (clientSecretValue) {
           setClientSecret(clientSecretValue);
-          console.log('✅ M1SSION™ Payment intent created successfully');
+          console.log('✅ M1SSION™ Payment intent created for mode:', data?.mode, 'PI:', data?.payment_intent_id);
         } else {
           console.error('❌ M1SSION™ No client secret received:', data);
           toast.error('Errore nella configurazione del pagamento');
@@ -133,16 +124,7 @@ const CheckoutForm: React.FC<{
     try {
       console.log('🚀 M1SSION™ Processing payment...');
 
-      // Guard again at confirmation time
-      try {
-        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-        if (!modeErr) {
-          assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-        }
-      } catch (e) {
-        console.warn('❌ stripe-mode check failed at confirmation, proceeding:', e);
-        // Don't block payment on mode check failure
-      }
+      console.log('🚀 M1SSION™ Confirming payment with mode:', stripeMode);
 
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {

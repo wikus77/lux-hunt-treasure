@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BUZZ_MAP_LEVELS } from "@/lib/buzzMapPricing";
+import { BUZZ_MAP_LEVELS, calculateNextBuzzMapPrice } from "@/lib/buzzMapPricing";
 
 export function useBuzzMapPricingNew(userId?: string) {
   const [loading, setLoading] = useState(true);
@@ -23,12 +23,12 @@ export function useBuzzMapPricingNew(userId?: string) {
             .select("id", { count: "exact", head: true })
             .eq("user_id", userId)
             .eq("source", "buzz_map");
-          const lvl = Math.min((count ?? 0) + 1, 60);
-          const d = BUZZ_MAP_LEVELS[lvl - 1];
+          // Use shared pricing calculation
+          const pricing = calculateNextBuzzMapPrice(count ?? 0);
           if (!off) { 
-            setLevel(lvl); 
-            setRadius(Math.max(0.5, d.radiusKm)); 
-            setPrice(d.priceEur); 
+            setLevel(pricing.level); 
+            setRadius(pricing.radiusKm); 
+            setPrice(pricing.priceEur); 
           }
         }
       } catch (error) {
