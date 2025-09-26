@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { PaymentConfig } from '@/hooks/useStripeInAppPayment';
 import AddCardDialog from './AddCardDialog';
-import { assertPkMatchesMode } from '@/lib/stripe/guard';
+import { useStripeMode } from '@/hooks/useStripeMode';
 // 🔥 FIX CRITICO: Rimuovo import diretto per prevenire "getStripe is not defined"
 // Uso dynamic import da stripeFallback che gestisce gli errori
 
@@ -40,6 +40,7 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
   const [showAddCard, setShowAddCard] = useState(false);
   const [useManualEntry, setUseManualEntry] = useState(false);
   const { user } = useAuthContext();
+  const { mode: stripeMode, loading: modeLoading } = useStripeMode();
 
   // Load saved default card
   useEffect(() => {
@@ -87,34 +88,23 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
     try {
       console.log('🚀 M1SSION™ Processing payment with saved card:', savedCard.stripe_pm_id);
 
-      // Guard: Ensure client pk_* matches server sk_* mode
-      try {
-        const { data: modeData, error: modeErr } = await supabase.functions.invoke('stripe-mode');
-        if (modeErr) {
-          console.warn('Stripe mode introspection failed', modeErr);
-          // Don't block payment on mode check failure
-        } else {
-          assertPkMatchesMode((modeData as any)?.mode as 'live' | 'test' | 'unknown');
-        }
-      } catch (e) {
-        console.warn('Stripe mode check failed, proceeding with payment:', e);
-        // Don't block payment on mode check failure
-      }
+      console.log('🔧 M1SSION™ Using Stripe mode:', stripeMode);
 
-      // Use 'amount' parameter to match server expectation  
+      // Create payment intent with mode validation
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
         body: {
-          amount: config.amount, // Use 'amount', not 'amountCents'
+          amount: config.amount,
           currency: config.currency || 'eur',
           payment_type: config.type,
           plan: config.plan || config.type,
           description: config.description,
+          mode: stripeMode, // Send detected mode
           metadata: {
             user_id: user.id,
             plan: config.plan || config.type,
             payment_type: config.type,
             description: config.description,
-            source: 'M1SSION_PWA',
+            source: 'M1SSION_PWA_SAVED_CARD',
             ...config.metadata
           }
         }
@@ -122,13 +112,17 @@ const SavedCardPayment: React.FC<SavedCardPaymentProps> = ({
 
       if (error) {
         console.error('❌ M1SSION™ Payment error:', error);
-        toast.error('Errore nel pagamento');
+        if (error.message?.includes('mismatch')) {
+          toast.error(`Errore di configurazione Stripe: ${error.message}`);
+        } else {
+          toast.error('Errore nel pagamento');
+        }
         return;
       }
 
       const clientSecret = data?.client_secret ?? data?.clientSecret;
       if (clientSecret && savedCard?.stripe_pm_id) {
-        console.log('✅ M1SSION™ Payment intent created, confirming with saved payment method');
+        console.log('✅ M1SSION™ Payment intent created for mode:', data?.mode, 'PI:', data?.payment_intent_id);
         
         // Use stripe.confirmCardPayment with saved payment method
         const stripe = await (await import('@/lib/stripeFallback')).getStripeSafe();
