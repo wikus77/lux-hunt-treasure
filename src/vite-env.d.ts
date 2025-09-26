@@ -1,5 +1,44 @@
 
 /// <reference types="vite/client" />
+/// <reference types="node" />
+
+// Asset type declarations
+declare module "*.svg" {
+  const src: string;
+  export default src;
+}
+
+declare module "*.png" {
+  const src: string;
+  export default src;
+}
+
+declare module "*.jpg" {
+  const src: string;
+  export default src;
+}
+
+declare module "*.jpeg" {
+  const src: string;
+  export default src;
+}
+
+declare module "*.mp4" {
+  const src: string;
+  export default src;
+}
+
+declare module "*.webp" {
+  const src: string;
+  export default src;
+}
+
+// Browser timer compatibility
+declare global {
+  namespace NodeJS {
+    interface Timeout {}
+  }
+}
 
 // Dichiarazione per Cookie Script
 interface Window {
@@ -35,6 +74,14 @@ interface ImportMetaEnv {
   readonly VITE_VAPID_PUBLIC_KEY: string;
   readonly VITE_PWA_VERSION: string;
 }
+
+// Process environment for browser compatibility
+declare const process: {
+  env: {
+    NODE_ENV: string;
+    [key: string]: string | undefined;
+  };
+};
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;

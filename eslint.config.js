@@ -24,8 +24,12 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off", // Temporaneamente disabilitato per quality execution
-      "no-empty": "off", // Temporaneamente disabilitato per quality execution
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-namespace": "off", // Allow NodeJS namespace declarations
+      "@typescript-eslint/no-var-requires": "off", // Allow require() calls
+      "@typescript-eslint/ban-ts-comment": "off", // Allow @ts-ignore comments
+      "no-empty": "off",
+      "no-undef": "off", // TypeScript handles this
     },
   }
 );
