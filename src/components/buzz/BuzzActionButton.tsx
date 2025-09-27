@@ -222,7 +222,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     });
     
     try {
-      // First handle payment success via hook (this already shows clue_text toast)
+      // 🔥 FIXED: Only handle payment success (which already shows clue_text toast)
+      // DO NOT call handleBuzz() again as it would create race condition with toast
       await handlePaymentSuccess(paymentIntentId);
       
       // Update BUZZ counter after successful payment
