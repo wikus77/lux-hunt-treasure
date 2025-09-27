@@ -113,7 +113,9 @@ serve(async (req) => {
       logStep('✅ BUZZ action logged successfully');
     }
 
-    // Handle BUZZ MAP area creation if applicable
+    // Generate clue text for standard BUZZ or handle BUZZ MAP area creation
+    let clue_text = '';
+    
     if (is_buzz_map) {
       logStep('🗺️ BUZZ MAP: Processing area generation after payment');
       
@@ -135,6 +137,65 @@ serve(async (req) => {
       } else {
         logStep('✅ BUZZ MAP area generation queued');
       }
+    } else {
+      // Handle standard BUZZ clue generation
+      logStep('🔍 BUZZ STANDARD: Generating clue after payment');
+      
+      // Get current week to determine which clue to give
+      const getCurrentWeek = () => {
+        const gameStartDate = new Date('2025-07-17T00:00:00.000Z');
+        const now = new Date();
+        const diffTime = now.getTime() - gameStartDate.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.max(1, Math.min(Math.ceil(diffDays / 7), 4));
+      };
+      
+      const currentWeek = getCurrentWeek();
+      logStep('📅 Current week calculated', { currentWeek });
+      
+      // Get clue from prize_clues table for current week
+      const { data: clues, error: clueError } = await supabaseClient
+        .from('prize_clues')
+        .select('title_it, description_it, week')
+        .eq('clue_type', 'regular')
+        .eq('week', currentWeek)
+        .limit(1);
+      
+      if (clueError) {
+        logStep('⚠️ Error fetching clue', clueError);
+        clue_text = `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString('it-IT')}) - BUZZ ${Date.now()}`;
+      } else if (clues && clues.length > 0) {
+        const clue = clues[0];
+        clue_text = `${clue.title_it}: ${clue.description_it}`;
+        logStep('✅ Clue generated from database', { clue_text });
+      } else {
+        // Fallback clue if no clue found for current week
+        clue_text = `Cerca dove l'innovazione italiana splende (${new Date().toLocaleTimeString('it-IT')}) - BUZZ ${Date.now()}`;
+        logStep('⚠️ No clue found, using fallback', { clue_text });
+      }
+      
+      // Save clue notification to user_notifications
+      const { error: notificationError } = await supabaseClient
+        .from('user_notifications')
+        .insert({
+          user_id: user_id,
+          type: 'buzz',
+          title: '🎯 Nuovo Indizio BUZZ!',
+          message: clue_text,
+          metadata: {
+            source: 'buzz_purchase',
+            payment_intent_id,
+            amount,
+            week: currentWeek,
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+      if (notificationError) {
+        logStep('⚠️ Error saving notification', notificationError);
+      } else {
+        logStep('✅ Buzz notification saved successfully');
+      }
     }
 
     logStep('🎉 M1SSION™ BUZZ Payment Success Processing Complete');
@@ -143,7 +204,8 @@ serve(async (req) => {
       success: true,
       message: 'BUZZ payment processed successfully',
       payment_intent_id,
-      is_buzz_map
+      is_buzz_map,
+      clue_text: clue_text || undefined
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
