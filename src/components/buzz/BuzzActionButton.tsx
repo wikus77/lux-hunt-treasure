@@ -94,15 +94,32 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
           metadata: { free: true, source: 'qr_reward_or_xp_reward' }
         }
       });
+      
       if (hbpsErr) {
-        console.warn('handle-buzz-payment-success warning', hbpsErr);
+        console.error('handle-buzz-payment-success error', hbpsErr);
+        toast.error('Errore durante l\'uso del BUZZ gratuito');
+        return;
       }
 
-      // 3) Run the usual BUZZ success flow (generate clue, UI, counters)
+      // 3) Show clue if received from backend, or proceed with normal flow
+      if (hbps?.clue_text) {
+        toast.success(hbps.clue_text, {
+          duration: 4000,
+          position: 'top-center',
+          style: { 
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+            color: 'white',
+            fontWeight: 'bold'
+          }
+        });
+      } else {
+        toast.success('BUZZ gratuito utilizzato!');
+      }
+
+      // 4) Update counters and success callback
       await updateDailyBuzzCounter();
-      await handleBuzz();
       onSuccess();
-      toast.success('BUZZ gratuito utilizzato!');
     } catch (e) {
       console.error('redeemFreeBuzz exception', e);
       toast.error('Errore durante il riscatto gratuito');
@@ -205,20 +222,16 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     });
     
     try {
-      // First handle payment success via hook
+      // First handle payment success via hook (this already shows clue_text toast)
       await handlePaymentSuccess(paymentIntentId);
       
       // Update BUZZ counter after successful payment
       await updateDailyBuzzCounter();
       
-      // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ - Execute BUZZ logic after successful payment
-      console.log('🧬 M1SSION™ POST-PAYMENT BUZZ: Executing BUZZ action after payment');
-      await handleBuzz();
-      
       // Finally call parent success callback
       onSuccess();
       
-      toast.success('🎉 BUZZ acquistato ed eseguito con successo!');
+      console.log('✅ M1SSION™ BUZZ: Payment processing completed successfully');
     } catch (error) {
       console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
       toast.error('Errore nella finalizzazione BUZZ');

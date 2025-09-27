@@ -161,7 +161,7 @@ export const useStripeInAppPayment = () => {
       // Handle different payment types
       if (paymentConfig?.type === 'buzz' || paymentConfig?.type === 'buzz_map') {
         // Handle BUZZ payment completion
-        await supabase.functions.invoke('handle-buzz-payment-success', {
+        const { data: buzzResponse, error: buzzError } = await supabase.functions.invoke('handle-buzz-payment-success', {
           body: {
             payment_intent_id: paymentIntentId,
             user_id: user?.id,
@@ -171,7 +171,26 @@ export const useStripeInAppPayment = () => {
           }
         });
 
-        toast.success(`🎉 ${paymentConfig.type === 'buzz_map' ? 'Area BUZZ' : 'BUZZ'} acquistato con successo!`);
+        if (buzzError) {
+          console.error('❌ BUZZ payment success error:', buzzError);
+          toast.error('Errore nella finalizzazione BUZZ');
+        } else {
+          // Show clue text if available for standard BUZZ, or success message for BUZZ MAP
+          if (paymentConfig.type === 'buzz' && buzzResponse?.clue_text) {
+            toast.success(buzzResponse.clue_text, {
+              duration: 4000,
+              position: 'top-center',
+              style: { 
+                zIndex: 9999,
+                background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+                color: 'white',
+                fontWeight: 'bold'
+              }
+            });
+          } else {
+            toast.success(`🎉 ${paymentConfig.type === 'buzz_map' ? 'Area BUZZ' : 'BUZZ'} acquistato con successo!`);
+          }
+        }
       } else if (paymentConfig?.type === 'subscription') {
         // Handle subscription payment completion  
         await supabase.functions.invoke('handle-payment-success', {
