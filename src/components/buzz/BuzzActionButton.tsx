@@ -225,12 +225,21 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // 🔥 FIXED: Get result from payment success to check if clue_text was displayed
       const result = await handlePaymentSuccess(paymentIntentId);
       
-      // If no clue_text was shown, display fallback message
-      if (result.ok && !result.clue_text) {
-        toast.success('Pagamento riuscito — indizio in arrivo nelle notifiche', {
-          duration: 3000,
-          position: 'top-center'
-        });
+      // 🔥 FIXED: Skip handleBuzz() call if clue was already processed by handle-buzz-payment-success
+      if (result.ok && result.skipFollowUpBuzzPress) {
+        console.log('🎯 M1SSION™ BUZZ: Skipping handleBuzz() - clue already processed by payment success');
+        
+        // If no clue_text was shown, display fallback message
+        if (!result.clue_text) {
+          toast.success('Pagamento riuscito — indizio in arrivo nelle notifiche', {
+            duration: 3000,
+            position: 'top-center'
+          });
+        }
+      } else {
+        // Legacy fallback: call handleBuzz() only if payment success didn't handle the clue
+        console.log('⚠️ M1SSION™ BUZZ: Falling back to handleBuzz() call');
+        await handleBuzz(/* context: { source: 'paid' } */);
       }
       
       // Update BUZZ counter after successful payment
@@ -240,7 +249,8 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       onSuccess();
       
       console.log('✅ M1SSION™ BUZZ: Payment processing completed successfully', {
-        clueTextShown: !!result.clue_text
+        clueTextShown: !!result.clue_text,
+        skippedFollowUp: !!result.skipFollowUpBuzzPress
       });
     } catch (error) {
       console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
