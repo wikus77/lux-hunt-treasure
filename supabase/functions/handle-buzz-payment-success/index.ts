@@ -174,7 +174,7 @@ serve(async (req) => {
         logStep('⚠️ No clue found, using fallback', { clue_text });
       }
       
-      // Save clue notification to user_notifications
+      // Save clue notification to user_notifications  
       const { error: notificationError } = await supabaseClient
         .from('user_notifications')
         .insert({
@@ -187,6 +187,7 @@ serve(async (req) => {
             payment_intent_id,
             amount,
             week: currentWeek,
+            clue_text: clue_text, // 🔥 FIXED: Add clue_text to metadata for frontend toast compatibility
             timestamp: new Date().toISOString()
           }
         });
