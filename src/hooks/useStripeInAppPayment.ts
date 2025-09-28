@@ -175,16 +175,19 @@ export const useStripeInAppPayment = () => {
           console.error('❌ BUZZ payment success error:', buzzError);
           toast.error('Errore nella finalizzazione BUZZ');
         } else {
-          // Show clue text if available for standard BUZZ, or success message for BUZZ MAP
+          // 🔥 FIXED: Show clue text for standard BUZZ, ensure it displays properly
           if (paymentConfig.type === 'buzz' && buzzResponse?.clue_text) {
+            console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', buzzResponse.clue_text);
             toast.success(buzzResponse.clue_text, {
-              duration: 4000,
+              duration: 5000, // Increased duration for better visibility
               position: 'top-center',
               style: { 
                 zIndex: 9999,
                 background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
                 color: 'white',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                fontSize: '14px',
+                padding: '12px 16px'
               }
             });
           } else {
