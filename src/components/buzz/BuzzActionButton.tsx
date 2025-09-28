@@ -222,9 +222,16 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     });
     
     try {
-      // 🔥 FIXED: Only handle payment success (which already shows clue_text toast)
-      // DO NOT call handleBuzz() again as it would create race condition with toast
-      await handlePaymentSuccess(paymentIntentId);
+      // 🔥 FIXED: Get result from payment success to check if clue_text was displayed
+      const result = await handlePaymentSuccess(paymentIntentId);
+      
+      // If no clue_text was shown, display fallback message
+      if (result.ok && !result.clue_text) {
+        toast.success('Pagamento riuscito — indizio in arrivo nelle notifiche', {
+          duration: 3000,
+          position: 'top-center'
+        });
+      }
       
       // Update BUZZ counter after successful payment
       await updateDailyBuzzCounter();
@@ -232,7 +239,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // Finally call parent success callback
       onSuccess();
       
-      console.log('✅ M1SSION™ BUZZ: Payment processing completed successfully');
+      console.log('✅ M1SSION™ BUZZ: Payment processing completed successfully', {
+        clueTextShown: !!result.clue_text
+      });
     } catch (error) {
       console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
       toast.error('Errore nella finalizzazione BUZZ');

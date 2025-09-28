@@ -15,9 +15,10 @@ interface UseBuzzHandlerProps {
   currentPrice: number;
   onSuccess: () => void;
   hasFreeBuzz?: boolean; // 🔥 ADDED: Flag to indicate if user has free buzz
+  context?: { source?: string }; // 🔥 ADDED: Context to avoid post-payment toast duplication
 }
 
-export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false }: UseBuzzHandlerProps) {
+export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, context }: UseBuzzHandlerProps) {
   const [buzzing, setBuzzing] = useState(false);
   const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
@@ -120,17 +121,21 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false }:
         radius_generated: 0 // Regular BUZZ has no radius
       });
       
-      // ✅ TOAST SUCCESS CON CLUE_TEXT REALE
-      toast.success(buzzResult.clue_text, {
-        duration: 4000,
-        position: 'top-center',
-        style: { 
-          zIndex: 9999,
-          background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-          color: 'white',
-          fontWeight: 'bold'
-        }
-      });
+      // ✅ TOAST SUCCESS CON CLUE_TEXT REALE (only if not from post-payment context)
+      if (context?.source !== 'paid') {
+        toast.success(buzzResult.clue_text, {
+          duration: 4000,
+          position: 'top-center',
+          style: { 
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+            color: 'white',
+            fontWeight: 'bold'
+          }
+        });
+      } else {
+        console.log('🔇 M1SSION™ SKIP TOAST: Post-payment context detected, toast already handled by Stripe flow');
+      }
       
       // Success callback
       onSuccess();

@@ -151,7 +151,7 @@ export const useStripeInAppPayment = () => {
     }
   };
 
-  const handlePaymentSuccess = async (paymentIntentId: string) => {
+  const handlePaymentSuccess = async (paymentIntentId: string): Promise<{ ok: boolean; clue_text?: string }> => {
     console.log('✅ M1SSION™ STRIPE SUCCESS: Payment completed', { 
       paymentIntentId, 
       type: paymentConfig?.type 
@@ -174,24 +174,39 @@ export const useStripeInAppPayment = () => {
         if (buzzError) {
           console.error('❌ BUZZ payment success error:', buzzError);
           toast.error('Errore nella finalizzazione BUZZ');
+          return { ok: false };
         } else {
-          // 🔥 FIXED: Show clue text for standard BUZZ, ensure it displays properly
-          if (paymentConfig.type === 'buzz' && buzzResponse?.clue_text) {
-            console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', buzzResponse.clue_text);
-            toast.success(buzzResponse.clue_text, {
-              duration: 5000, // Increased duration for better visibility
-              position: 'top-center',
-              style: { 
-                zIndex: 9999,
-                background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-                color: 'white',
-                fontWeight: 'bold',
-                fontSize: '14px',
-                padding: '12px 16px'
-              }
-            });
+          // 🔥 FIXED: Extract clue_text and show toast for standard BUZZ
+          let clueText = '';
+          if (paymentConfig.type === 'buzz') {
+            // Try multiple clue_text sources from the response
+            clueText = buzzResponse?.clue_text || 
+                      buzzResponse?.metadata?.clue_text || 
+                      buzzResponse?.message || '';
+            
+            if (clueText) {
+              console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', clueText);
+              toast.success(clueText, {
+                duration: 5000, // Increased duration for better visibility
+                position: 'top-center',
+                style: { 
+                  zIndex: 9999,
+                  background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  padding: '12px 16px'
+                }
+              });
+              return { ok: true, clue_text: clueText };
+            } else {
+              console.warn('⚠️ M1SSION™ No clue_text found in response');
+              toast.success('🎉 BUZZ acquistato con successo!');
+              return { ok: true };
+            }
           } else {
-            toast.success(`🎉 ${paymentConfig.type === 'buzz_map' ? 'Area BUZZ' : 'BUZZ'} acquistato con successo!`);
+            toast.success(`🎉 Area BUZZ acquistata con successo!`);
+            return { ok: true };
           }
         }
       } else if (paymentConfig?.type === 'subscription') {
@@ -205,13 +220,16 @@ export const useStripeInAppPayment = () => {
         });
 
         toast.success(`🎉 Abbonamento ${paymentConfig.plan} attivato!`);
+        return { ok: true };
       }
 
       setShowCheckout(false);
       setPaymentConfig(null);
+      return { ok: true };
     } catch (error) {
       console.error('❌ M1SSION™ STRIPE: Error handling payment success', error);
       toast.error('Errore nella finalizzazione del pagamento');
+      return { ok: false };
     }
   };
 
