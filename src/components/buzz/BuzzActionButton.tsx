@@ -83,20 +83,17 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         return;
       }
 
-      // 2) Notify backend pipeline like a successful payment (free branch)
-      const freeIntentId = `FREE_${uuidv4()}`;
-      const { data: hbps, error: hbpsErr } = await supabase.functions.invoke('handle-buzz-payment-success', {
+      // 2) Use handle-buzz-press instead for free BUZZ (no paymentIntentId needed)
+      const { data: hbps, error: hbpsErr } = await supabase.functions.invoke('handle-buzz-press', {
         body: {
-          payment_intent_id: freeIntentId,
           user_id: user.id,
-          amount: 0,
-          is_buzz_map: false,
+          generateMap: false,
           metadata: { free: true, source: 'qr_reward_or_xp_reward' }
         }
       });
       
       if (hbpsErr) {
-        console.error('handle-buzz-payment-success error', hbpsErr);
+        console.error('handle-buzz-press error', hbpsErr);
         toast.error('Errore durante l\'uso del BUZZ gratuito');
         return;
       }

@@ -33,7 +33,7 @@ interface BuzzApiResponse {
 }
 
 export function useBuzzApi() {
-  const callBuzzApi = async ({ userId, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
+  const handleBuzzPress = async ({ userId, generateMap, coordinates, prizeId, sessionId }: BuzzApiParams): Promise<BuzzApiResponse> => {
     try {
       if (!userId) {
         console.error("UserId mancante nella chiamata API");
@@ -47,7 +47,7 @@ export function useBuzzApi() {
         return { success: false, error: true, errorMessage: "ID utente non valido" };
       }
 
-      // CRITICAL: Build correct payload for unified backend logic
+      // Build correct payload for unified backend logic
       const payload: any = { 
         userId, 
         generateMap 
@@ -65,7 +65,7 @@ export function useBuzzApi() {
       
       console.log(`📡 Calling handle-buzz-press with unified payload:`, payload);
       
-      // 🚨 CRITICAL: Check user session before calling edge function
+      // Check user session before calling edge function
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       console.log('🔐 SESSION CHECK:', {
         hasSession: !!sessionData?.session,
@@ -80,15 +80,7 @@ export function useBuzzApi() {
         return { success: false, error: true, errorMessage: "Sessione non valida. Effettua l'accesso nuovamente." };
       }
       
-      // 🚨 DEBUG: Pre edge function call
-      console.log('🚨 EDGE FUNCTION CALL START:', {
-        function: 'handle-buzz-press',
-        payload,
-        timestamp: new Date().toISOString(),
-        hasToken: !!sessionData.session.access_token
-      });
-      
-      // 🚨 CRITICAL: Call edge function with verified session and explicit auth header
+      // Call edge function with verified session and explicit auth header
       console.log('🔐 Calling edge function with authenticated user...');
       const { data, error } = await supabase.functions.invoke("handle-buzz-press", {
         body: payload,
@@ -98,7 +90,6 @@ export function useBuzzApi() {
         }
       });
       
-      // 🚨 DEBUG: Post edge function call
       console.log('🚨 EDGE FUNCTION CALL RESULT:', {
         hasData: !!data,
         hasError: !!error,
@@ -106,34 +97,69 @@ export function useBuzzApi() {
         dataError: data?.error,
         errorMessage: error?.message,
         fullData: data,
-        fullError: error,
-        rawResponse: { data, error }
+        fullError: error
       });
       
-      // 🚨 CRITICAL: Handle edge function deploy/existence issues
+      // Handle edge function errors
       if (error) {
-        console.error("❌ EDGE FUNCTION ERROR:", error);
+        console.warn("⚠️ EDGE FUNCTION ERROR:", error);
         
-        // Check if it's a 429 Daily Quota Exceeded error
+        // Check specific error types
         if (error.message?.includes('daily_quota_exceeded') || error.message?.includes('429')) {
           toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
           return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
         }
         
-        // Check for specific status codes
         if (error.details?.includes('daily_quota_exceeded') || error.code === 'daily_quota_exceeded') {
           toast.error("Hai raggiunto il limite giornaliero di 5 BUZZ. Riprova dopo mezzanotte.");
           return { success: false, error: true, errorMessage: "Limite giornaliero raggiunto. Riprova dopo mezzanotte." };
         }
         
-        toast.error(`Edge function error: ${error.message}`);
-        return { success: false, error: true, errorMessage: `Edge function error: ${error.message}` };
+        // Generic error handling - show friendly message
+        console.warn('BUZZ edge function error:', error.message);
+        toast.error('Non sono riuscito a generare l\'indizio, riprova fra poco.');
+        return { success: false, error: true, errorMessage: 'Non sono riuscito a generare l\'indizio, riprova fra poco.' };
+      }
+
+      // Handle successful response
+      if (data?.success) {
+        console.log("✅ handle-buzz-press success:", data);
+        
+        // Show clue toast immediately if available
+        if (data.clue_text) {
+          toast.success(data.clue_text, {
+            duration: 5000,
+            position: 'top-center',
+            style: { 
+              zIndex: 9999,
+              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+              color: 'white',
+              fontWeight: 'bold'
+            }
+          });
+        } else {
+          toast.success('BUZZ processed successfully');
+        }
+
+        return { 
+          success: true, 
+          clue_text: data.clue_text,
+          buzz_cost: data.buzz_cost,
+          radius_km: data.radius_km,
+          lat: data.lat,
+          lng: data.lng,
+          generation_number: data.generation_number,
+          map_area: data.map_area,
+          precision: data.precision,
+          canGenerateMap: data.canGenerateMap,
+          remainingMapGenerations: data.remainingMapGenerations
+        };
       }
       
       if (!data) {
         console.error("❌ EDGE FUNCTION RETURNED NULL DATA");
-        toast.error("Edge function returned no data");
-        return { success: false, error: true, errorMessage: "Edge function returned no data" };
+        toast.error('Operazione non riuscita. Riprova tra poco.');
+        return { success: false, error: true, errorMessage: "Operazione non riuscita. Riprova tra poco." };
       }
       
       if (!data.success) {
@@ -158,11 +184,11 @@ export function useBuzzApi() {
           };
         }
         
-        toast.error(`Errore salvataggio indizio: ${data?.errorMessage || data?.error || "Unknown error"}`);
+        toast.error('Operazione non riuscita. Riprova tra poco.');
         return { 
           success: false, 
           error: true,
-          errorMessage: data?.errorMessage || data?.error || "Errore durante l'elaborazione dell'indizio" 
+          errorMessage: 'Operazione non riuscita. Riprova tra poco.' 
         };
       }
       
@@ -183,9 +209,10 @@ export function useBuzzApi() {
       };
     } catch (error) {
       console.error("Errore generale nella chiamata API buzz:", error);
-      return { success: false, error: true, errorMessage: "Si è verificato un errore nella comunicazione con il server" };
+      toast.error('Operazione non riuscita. Riprova tra poco.');
+      return { success: false, error: true, errorMessage: "Operazione non riuscita. Riprova tra poco." };
     }
   };
 
-  return { callBuzzApi };
+  return { callBuzzApi: handleBuzzPress };
 }
