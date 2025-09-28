@@ -151,7 +151,7 @@ export const useStripeInAppPayment = () => {
     }
   };
 
-  const handlePaymentSuccess = async (paymentIntentId: string): Promise<{ ok: boolean; clue_text?: string }> => {
+  const handlePaymentSuccess = async (paymentIntentId: string): Promise<{ ok: boolean; clue_text?: string; skipFollowUpBuzzPress?: boolean }> => {
     console.log('✅ M1SSION™ STRIPE SUCCESS: Payment completed', { 
       paymentIntentId, 
       type: paymentConfig?.type 
@@ -186,8 +186,9 @@ export const useStripeInAppPayment = () => {
             
             if (clueText) {
               console.log('🎯 M1SSION™ SHOWING CLUE TOAST:', clueText);
-              toast.success(clueText, {
-                duration: 5000, // Increased duration for better visibility
+              toast.success(`🎯 Nuovo indizio BUZZ!`, {
+                description: clueText,
+                duration: 5000,
                 position: 'top-center',
                 style: { 
                   zIndex: 9999,
@@ -198,11 +199,11 @@ export const useStripeInAppPayment = () => {
                   padding: '12px 16px'
                 }
               });
-              return { ok: true, clue_text: clueText };
+              return { ok: true, clue_text: clueText, skipFollowUpBuzzPress: true };
             } else {
               console.warn('⚠️ M1SSION™ No clue_text found in response');
               toast.success('🎉 BUZZ acquistato con successo!');
-              return { ok: true };
+              return { ok: true, skipFollowUpBuzzPress: true };
             }
           } else {
             toast.success(`🎉 Area BUZZ acquistata con successo!`);

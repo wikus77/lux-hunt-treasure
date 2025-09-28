@@ -15,7 +15,7 @@ interface UseBuzzHandlerProps {
   currentPrice: number;
   onSuccess: () => void;
   hasFreeBuzz?: boolean; // 🔥 ADDED: Flag to indicate if user has free buzz
-  context?: { source?: string }; // 🔥 ADDED: Context to avoid post-payment toast duplication
+  context?: { source?: string; skipServerBuzzPress?: boolean }; // 🔥 ADDED: Context to avoid post-payment toast duplication
 }
 
 export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, context }: UseBuzzHandlerProps) {
@@ -31,8 +31,15 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
     console.log('🚀 BUZZ PRESSED - Start handleBuzz - RESET COMPLETO 17/07/2025', { 
       user: !!user, 
       currentPrice,
+      context,
       timestamp: new Date().toISOString()
     });
+    
+    // 🔥 FIXED: Skip server call if context indicates post-payment already handled
+    if (context?.skipServerBuzzPress) {
+      console.log('🔇 M1SSION™ SKIP BUZZ API: Post-payment context detected, server call already handled');
+      return;
+    }
     
     if (!user) {
       console.log('❌ BUZZ FAILED - Missing user');
