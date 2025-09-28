@@ -160,6 +160,13 @@ export const useStripeInAppPayment = () => {
     try {
       // Handle different payment types
       if (paymentConfig?.type === 'buzz' || paymentConfig?.type === 'buzz_map') {
+        // Validate paymentIntentId before calling handle-buzz-payment-success
+        if (!paymentIntentId) {
+          console.error('❌ Missing paymentIntentId for buzz payment success');
+          toast.error('Pagamento completato, ma manca il riferimento del pagamento. Aggiorna e riprova.');
+          return { ok: false };
+        }
+
         // Handle BUZZ payment completion
         const { data: buzzResponse, error: buzzError } = await supabase.functions.invoke('handle-buzz-payment-success', {
           body: {
@@ -173,10 +180,16 @@ export const useStripeInAppPayment = () => {
 
         if (buzzError) {
           console.error('❌ BUZZ payment success error:', buzzError);
-          toast.error('Errore nella finalizzazione BUZZ');
+          
+          // Handle specific errors with friendly messages
+          if (buzzError.message?.includes('Missing paymentIntentId')) {
+            toast.error('Pagamento ok ma manca il riferimento. Aggiorna e riprova.');
+          } else {
+            toast.error('Operazione non riuscita. Riprova tra poco.');
+          }
           return { ok: false };
         } else {
-          // 🔥 FIXED: Extract clue_text and show toast for standard BUZZ
+          // Extract clue_text and show toast for standard BUZZ
           let clueText = '';
           if (paymentConfig.type === 'buzz') {
             // Try multiple clue_text sources from the response
