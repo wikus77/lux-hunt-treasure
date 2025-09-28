@@ -1,7 +1,6 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// © 2025 M1SSION™ – Handle BUZZ Press Edge Function
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
-import { BUZZ_MAP_LEVELS } from '../_shared/buzzMapPricing.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,206 +13,115 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  let user: any = null;
-  let step = 'init';
-
   try {
+    console.log('🎯 [HANDLE-BUZZ-PRESS] Function started');
+
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get JWT token
-    step = 'auth';
+    // Get user from JWT
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step, error: 'Auth session missing!' });
-      return new Response(
-        JSON.stringify({ success: false, code: 'not_authenticated' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
+      throw new Error('Missing authorization header');
     }
 
-    // Create user client for RLS operations
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } }
-    });
-
-    // Validate user authentication
-    const { data: userData, error: userError } = await userClient.auth.getUser();
-    if (userError || !userData?.user) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 401, code: 'not_authenticated', user_id: null, step, error: userError?.message || 'Auth session missing!' });
-      return new Response(
-        JSON.stringify({ success: false, code: 'not_authenticated' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
-      );
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    if (userError || !user) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Auth error:', userError);
+      throw new Error('Unauthorized');
     }
 
-    user = userData.user;
-    console.info('[BUZZ] auth-success', { user_id: user.id });
+    console.log('👤 [HANDLE-BUZZ-PRESS] User authenticated:', user.id);
 
-    // Parse request body
-    step = 'parse';
-    const body = await req.json();
-    console.info('[BUZZ] body-received', { 
-      lat: body.lat, 
-      lng: body.lng
-    });
+    // Generate random clue text (same logic as other functions)
+    const clueTexts = [
+      "Cerca dove l'innovazione italiana splende più forte...",
+      "L'indizio si nasconde tra i corridoi del progresso...", 
+      "Segui le tracce della tecnologia che ha cambiato il mondo...",
+      "Nel cuore della ricerca italiana troverai la chiave...",
+      "Dove la scienza incontra l'arte, là troverai la risposta...",
+      "L'indizio danza tra le onde dell'innovazione...",
+      "Cerca nei luoghi dove il futuro prende forma..."
+    ];
+    
+    const clueText = clueTexts[Math.floor(Math.random() * clueTexts.length)];
 
-    const { lat, lng } = body;
-
-    // Validate required fields
-    if (typeof lat !== 'number' || typeof lng !== 'number') {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 400, code: 'invalid_coordinates', user_id: user.id, step });
-      return new Response(
-        JSON.stringify({ success: false, code: 'invalid_coordinates' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
-
-    // Check daily quota FIRST (before any other logic)
-    step = 'daily-quota-check';
-    const { data: todayCount, error: countError } = await userClient.rpc('buzz_today_count', { p_user_id: user.id });
-    
-    if (countError) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: countError.message });
-      return new Response(
-        JSON.stringify({ success: false, code: 'internal_error' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
-    }
-
-    if (todayCount >= 5) {
-      // Calculate next reset time (midnight Europe/Rome) - DST-aware  
-      const now = new Date();
-      const tomorrow = new Date(now);
-      tomorrow.setUTCDate(now.getUTCDate() + 1);
-      tomorrow.setUTCHours(0, 0, 0, 0);
-      
-      // Apply Europe/Rome offset dynamically (UTC+1 winter, UTC+2 summer)
-      const tempDate = new Date(tomorrow);
-      tempDate.setMonth(6); // July to check DST
-      const isDST = tempDate.getTimezoneOffset() < now.getTimezoneOffset();
-      const romeOffset = isDST ? -2 : -1; // Negative because we need to subtract from UTC
-      
-      const resetAt = new Date(tomorrow.getTime() + (romeOffset * 60 * 60 * 1000));
-      
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 429, code: 'daily_quota_exceeded', user_id: user.id, step, count: todayCount });
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          code: 'daily_quota_exceeded',
-          reset_at_iso: resetAt.toISOString(),
-          current_count: todayCount,
-          max_daily: 5
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
-      );
-    }
-
-    // Generate BUZZ MAP area using current coordinates and pricing table
-    step = 'create-area';
-    
-    // Count existing buzz map areas for this user with source='buzz_map'
-    const { count, error: countError } = await userClient
-      .from('user_map_areas')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .eq('source', 'buzz_map');
-    
-    if (countError) {
-      console.error('[HANDLE-BUZZ-PRESS] Error counting existing areas:', countError);
-      throw new Error('Error counting existing areas');
-    }
-    
-    const existingAreasCount = count || 0;
-    
-    // Calculate level using 60-level table with clamp
-    const level = Math.max(1, Math.min(existingAreasCount + 1, 60));
-    const levelData = BUZZ_MAP_LEVELS[level - 1];
-    const radiusKm = Math.max(0.5, levelData.radiusKm); // Enforce minimum 0.5km radius
-    const priceCents = levelData.priceCents;
-    const priceEur = Math.round(priceCents / 100 * 100) / 100; // Convert cents to EUR with 2 decimals
-    
-    console.info('[BUZZ] pricing-calculated', { 
-      existingAreasCount,
-      level,
-      radiusKm,
-      priceEur,
-      priceCents
-    });
-    
-    // Use service role for guaranteed write
-    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
-    
-    // Insert new area with source='buzz_map'
-    const { data: area, error: insErr } = await serviceClient
-      .from('user_map_areas')
+    // Log the BUZZ action
+    const { error: logError } = await supabase
+      .from('buzz_logs')
       .insert({
         user_id: user.id,
-        center_lat: lat,
-        center_lng: lng,
-        radius_km: radiusKm,
-        level: level,
-        price_eur: priceEur,
-        source: 'buzz_map',
-        created_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+        action: 'buzz_press',
+        metadata: {
+          clue_text: clueText,
+          source: 'handle_buzz_press',
+          timestamp: new Date().toISOString()
+        }
+      });
 
-    if (insErr) {
-      console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user.id, step, error: insErr.message });
-      return new Response(
-        JSON.stringify({ success: false, code: 'internal_error' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+    if (logError) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Log error:', logError);
+    } else {
+      console.log('✅ [HANDLE-BUZZ-PRESS] BUZZ logged successfully');
     }
 
-    console.info('[BUZZ] area-created', { user_id: user.id, area_id: area.id });
+    // Create notification
+    const { error: notificationError } = await supabase
+      .from('user_notifications')
+      .insert({
+        user_id: user.id,
+        type: 'buzz',
+        title: '🎯 Nuovo Indizio BUZZ!',
+        message: clueText,
+        metadata: {
+          clue_text: clueText,
+          source: 'buzz_press'
+        }
+      });
 
-    const result = {
+    if (notificationError) {
+      console.error('❌ [HANDLE-BUZZ-PRESS] Notification error:', notificationError);
+    } else {
+      console.log('✅ [HANDLE-BUZZ-PRESS] Notification created successfully');
+    }
+
+    const response = {
       success: true,
-      level: level,
-      radius_km: radiusKm,
-      price_eur: priceEur,
-      price_cents: priceCents,
-      message: 'BUZZ MAP area generated successfully!',
-      area: {
-        id: area.id,
-        center_lat: area.center_lat,
-        center_lng: area.center_lng,
-        radius_km: area.radius_km
-      },
-      generation_number: existingAreasCount + 1,
-      daily_presses: todayCount + 1
+      clue_text: clueText,
+      message: 'BUZZ processed successfully'
     };
 
-    // Increment daily counter AFTER successful operation
-    step = 'increment-daily-count';
-    const { data: newCount, error: incError } = await userClient.rpc('inc_buzz_today', { p_user_id: user.id });
-    
-    if (incError) {
-      console.error('[HANDLE-BUZZ-PRESS] WARNING: Failed to increment daily count', { user_id: user.id, error: incError.message });
-      // Don't fail the request, just log the warning
-    } else {
-      console.info('[BUZZ] daily-count-incremented', { user_id: user.id, new_count: newCount });
-      // Update the result with the actual new count
-      result.daily_presses = newCount;
-    }
-
-    console.info('[BUZZ] success', { user_id: user.id, generateMap, mode: 'paid' });
+    console.log('🎉 [HANDLE-BUZZ-PRESS] Function completed successfully:', response);
 
     return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify(response),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
 
-  } catch (error: any) {
-    console.error('[HANDLE-BUZZ-PRESS] FAIL', { status: 500, code: 'internal_error', user_id: user?.id, step, error: String(error?.message || error) });
+  } catch (error) {
+    console.error('❌ [HANDLE-BUZZ-PRESS] Function error:', error);
+    
     return new Response(
-      JSON.stringify({ success: false, code: 'internal_error' }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     );
   }
-})
+});

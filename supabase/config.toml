@@ -96,6 +96,9 @@ verify_jwt = false
 [functions.handle-buzz-press]
 verify_jwt = true
 
+[functions.handle-buzz-payment-success]
+verify_jwt = true
+
 [functions.handle-buzz-map]
 verify_jwt = false
 
