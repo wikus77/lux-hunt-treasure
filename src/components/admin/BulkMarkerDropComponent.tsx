@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { createBulkMarkers, type MarkerDistribution } from '@/utils/markerApi';
+import { createBulkMarkers, type Distribution } from '@/utils/markerApi';
 
 // Build-time hash calculation for integrity verification
 const calculateCodeHash = () => {
@@ -36,9 +36,10 @@ const calculateCodeHash = () => {
 };
 
 interface RewardDistribution {
-  type: 'Message' | 'Buzz Free' | 'XP Points';
-  quantity: number;
-  message?: string;
+  type: 'message' | 'buzz_free' | 'xp_points';
+  count: number;
+  text?: string;
+  points?: number;
 }
 
 interface BoundingBox {
@@ -52,9 +53,9 @@ export const BulkMarkerDropComponent: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [distributions, setDistributions] = useState<RewardDistribution[]>([
-    { type: 'Buzz Free', quantity: 1 }
+    { type: 'buzz_free', count: 1 }
   ]);
-  const [visibility, setVisibility] = useState({ hours: 24 });
+  const [visibilityHours, setVisibilityHours] = useState(24);
   const [bbox, setBbox] = useState<BoundingBox | null>(null);
   const [response, setResponse] = useState<any>(null);
   const [userRole, setUserRole] = useState<string>('');
@@ -119,13 +120,28 @@ export const BulkMarkerDropComponent: React.FC = () => {
       return;
     }
 
-    // Validate Message types have message text
-    const messageDistributions = distributions.filter(d => d.type === 'Message');
-    for (const dist of messageDistributions) {
-      if (!dist.message || dist.message.trim().length === 0) {
+    // Validate Message types have text and XP Points have points
+    for (const dist of distributions) {
+      if (dist.type === 'message' && (!dist.text || dist.text.trim().length === 0)) {
         toast({
           title: "Errore",
-          description: "Tutti i marker di tipo 'Message' devono avere un messaggio",
+          description: "Tutti i marker di tipo 'Message' devono avere un testo",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (dist.type === 'xp_points' && (!dist.points || dist.points < 1)) {
+        toast({
+          title: "Errore", 
+          description: "I marker XP Points devono avere almeno 1 punto",
+          variant: "destructive"
+        });
+        return;
+      }
+      if (dist.count < 1) {
+        toast({
+          title: "Errore",
+          description: "Tutti i marker devono avere quantità >= 1",
           variant: "destructive"
         });
         return;
@@ -137,16 +153,15 @@ export const BulkMarkerDropComponent: React.FC = () => {
 
     try {
       // Convert to API format
-      const apiDistributions: MarkerDistribution[] = distributions.map(dist => ({
-        type: dist.type,
-        quantity: dist.quantity,
-        ...(dist.message && { message: dist.message }),
-        visibility_hours: visibility.hours
-      }));
+      const apiDistributions: Distribution[] = distributions.map(dist => {
+        if (dist.type === 'message') return { type: 'message', count: dist.count, text: dist.text! };
+        if (dist.type === 'xp_points') return { type: 'xp_points', count: dist.count, points: dist.points! };
+        return { type: 'buzz_free', count: dist.count };
+      });
 
       const result = await createBulkMarkers({
         distributions: apiDistributions,
-        visibility_hours: visibility.hours
+        visibilityHours
       });
 
       setResponse(result);
@@ -177,7 +192,7 @@ export const BulkMarkerDropComponent: React.FC = () => {
   };
 
   const addDistribution = () => {
-    setDistributions([...distributions, { type: 'Buzz Free', quantity: 1 }]);
+    setDistributions([...distributions, { type: 'buzz_free', count: 1 }]);
   };
 
   const removeDistribution = (index: number) => {
@@ -264,9 +279,9 @@ export const BulkMarkerDropComponent: React.FC = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Buzz Free">Buzz Free</SelectItem>
-                        <SelectItem value="Message">Message</SelectItem>
-                        <SelectItem value="XP Points">XP Points</SelectItem>
+                        <SelectItem value="buzz_free">Buzz Free</SelectItem>
+                        <SelectItem value="message">Message</SelectItem>
+                        <SelectItem value="xp_points">XP Points</SelectItem>
                       </SelectContent>
                     </Select>
                     
@@ -274,11 +289,23 @@ export const BulkMarkerDropComponent: React.FC = () => {
                       type="number"
                       min="1"
                       max="100"
-                      value={dist.quantity}
-                      onChange={(e) => updateDistribution(index, 'quantity', parseInt(e.target.value) || 1)}
+                      value={dist.count}
+                      onChange={(e) => updateDistribution(index, 'count', parseInt(e.target.value) || 1)}
                       className="w-24"
                       placeholder="Qty"
                     />
+                    
+                    {dist.type === 'xp_points' && (
+                      <Input
+                        type="number"
+                        min="1"
+                        max="1000"
+                        value={dist.points || 10}
+                        onChange={(e) => updateDistribution(index, 'points', parseInt(e.target.value) || 10)}
+                        className="w-24"
+                        placeholder="XP"
+                      />
+                    )}
                     
                     <Button
                       onClick={() => removeDistribution(index)}
@@ -290,19 +317,19 @@ export const BulkMarkerDropComponent: React.FC = () => {
                     </Button>
                   </div>
                   
-                  {dist.type === 'Message' && (
+                  {dist.type === 'message' && (
                     <div>
                       <Label htmlFor={`message-${index}`} className="text-sm">Messaggio</Label>
                       <Textarea
                         id={`message-${index}`}
-                        value={dist.message || ''}
-                        onChange={(e) => updateDistribution(index, 'message', e.target.value)}
+                        value={dist.text || ''}
+                        onChange={(e) => updateDistribution(index, 'text', e.target.value)}
                         placeholder="Inserisci il messaggio per questo marker..."
                         className="min-h-[80px]"
                         maxLength={500}
                       />
                       <div className="text-xs text-gray-500 mt-1">
-                        {(dist.message || '').length}/500 caratteri
+                        {(dist.text || '').length}/500 caratteri
                       </div>
                     </div>
                   )}
@@ -324,8 +351,8 @@ export const BulkMarkerDropComponent: React.FC = () => {
               id="visibility"
               type="number"
               min="1"
-              value={visibility.hours}
-              onChange={(e) => setVisibility({ hours: parseInt(e.target.value) || 24 })}
+              value={visibilityHours}
+              onChange={(e) => setVisibilityHours(parseInt(e.target.value) || 24)}
               className="w-32"
             />
           </div>
