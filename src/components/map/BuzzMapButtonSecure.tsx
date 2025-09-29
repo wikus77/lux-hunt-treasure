@@ -234,7 +234,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
                   BUZZ MAP
                 </span>
                 <span className="text-xs text-white/80 leading-none mt-0.5">
-                  {(nextRadiusKm / 1000).toFixed(1)}km · €{nextPriceEur.toFixed(2)}
+                  {Math.round(nextRadiusKm)}km · €{nextPriceEur.toFixed(2)}
                 </span>
               </>
             )}
