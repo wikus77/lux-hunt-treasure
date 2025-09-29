@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Users, AlertTriangle, RefreshCw, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -176,6 +177,33 @@ const UsersRealtimePanel: React.FC = () => {
     };
   }, [fetchData]);
 
+  // Handle user deletion
+  const handleDeleteUser = useCallback(async (userId: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { user_id: userId }
+      });
+
+      if (error || !data?.success) {
+        throw new Error(data?.error || error?.message || 'Delete failed');
+      }
+
+      // Optimistic update - remove user from local state
+      setProfiles(prev => prev.filter(profile => profile.id !== userId));
+      setTotalCount(prev => Math.max(0, prev - 1));
+      
+      toast.success('Utente cancellato con successo');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Errore sconosciuto';
+      console.error('Error deleting user:', err);
+      toast.error(`Errore nella cancellazione: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   // Format date helper
   const formatDate = (dateString?: string): string => {
     if (!dateString) return 'Data non disponibile';
@@ -233,12 +261,13 @@ const UsersRealtimePanel: React.FC = () => {
                     <TableHead className="text-foreground">Referral Code</TableHead>
                     <TableHead className="text-foreground">User ID</TableHead>
                     <TableHead className="text-foreground">Data Iscrizione</TableHead>
+                    <TableHead className="text-foreground">Azioni</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {profiles.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                         Nessun utente trovato
                       </TableCell>
                     </TableRow>
@@ -262,6 +291,38 @@ const UsersRealtimePanel: React.FC = () => {
                         </TableCell>
                         <TableCell className="text-sm text-foreground">
                           {formatDate(profile.created_at)}
+                        </TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                className="h-8 px-2"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Cancella
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Conferma cancellazione utente</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Sei sicuro di voler cancellare l'utente "{getDisplayName(profile)}"? 
+                                  Questa azione è irreversibile e eliminerà l'utente sia da auth.users che da public.profiles.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteUser(profile.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Cancella utente
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </TableCell>
                       </TableRow>
                     ))
