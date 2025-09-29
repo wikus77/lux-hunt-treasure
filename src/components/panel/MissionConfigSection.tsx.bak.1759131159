@@ -1,7 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 
 import React, { useState, useEffect } from 'react';
-import { updateMissionViaFetch } from '@/utils/updateMissionViaFetch';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -84,8 +83,19 @@ export const MissionConfigSection: React.FC = () => {
         throw new Error('Sessione non trovata');
       }
 
-      const result = await updateMissionViaFetch(supabase, missionData);
+      const response = await supabase.functions.invoke('update-mission', {
+        body: { missionData },
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
+      if (response.error) {
+        throw new Error(response.error.message || 'Errore durante il salvataggio');
+      }
+
+      const result = response.data;
       
       if (result.success) {
         toast.success('✅ MISSIONE AGGIORNATA', {
