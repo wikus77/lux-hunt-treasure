@@ -130,17 +130,16 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
       
       const coordinates = getCoordinates();
       
-      // Call edge function with correct body format that server expects
+      // Call payment success handler for BUZZ MAP
       const { data: { session } } = await supabase.auth.getSession();
-      const { data, error } = await supabase.functions.invoke('handle-buzz-press', {
+      const { data, error } = await supabase.functions.invoke('handle-buzz-payment-success', {
         body: {
-          userId: user?.id,
-          generateMap: true,
+          paymentIntentId: paymentIntentId,
+          isBuzzMap: true,
           coordinates: {
             lat: coordinates[0],
             lng: coordinates[1]
-          },
-          sessionId: paymentIntentId
+          }
         },
         headers: {
           Authorization: `Bearer ${session?.access_token}`
