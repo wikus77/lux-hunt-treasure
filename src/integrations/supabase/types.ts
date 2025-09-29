@@ -3664,7 +3664,9 @@ export type Database = {
           created_at: string
           id: string
           lat: number
+          level: number | null
           lng: number
+          price_eur: number | null
           radius_km: number
           source: string | null
           user_id: string
@@ -3677,7 +3679,9 @@ export type Database = {
           created_at?: string
           id?: string
           lat: number
+          level?: number | null
           lng: number
+          price_eur?: number | null
           radius_km: number
           source?: string | null
           user_id: string
@@ -3690,7 +3694,9 @@ export type Database = {
           created_at?: string
           id?: string
           lat?: number
+          level?: number | null
           lng?: number
+          price_eur?: number | null
           radius_km?: number
           source?: string | null
           user_id?: string
