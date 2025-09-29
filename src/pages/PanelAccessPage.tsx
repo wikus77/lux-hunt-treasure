@@ -18,6 +18,7 @@ import { QRControlPanel } from '@/components/admin/QRControlPanel';
 import { M1ssionDebugTest } from './M1ssionDebugTest';
 import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import BulkMarkerDropComponent from '@/components/admin/BulkMarkerDropComponent';
+import UsersRealtimePanel from '@/components/panel/UsersRealtimePanel';
 import { useLocation } from 'wouter';
 import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
 
@@ -452,6 +453,25 @@ const PanelAccessPage = () => {
                     <h3 className="font-semibold text-white">Mission Config</h3>
                     <p className="text-gray-400 text-sm">Configurazione parametri missione</p>
                   </div>
+                </div>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="glass-card p-4 border border-purple-500/30 cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-purple-600 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Utenti (Realtime)</h3>
+                    <p className="text-gray-400 text-sm">Lista utenti con aggiornamenti in tempo reale</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  <UsersRealtimePanel />
                 </div>
               </motion.div>
 
