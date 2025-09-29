@@ -507,6 +507,22 @@ const PanelAccessPage = () => {
                 </div>
               </motion.div>
 
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView('bulk-marker-drop')}
+                className="glass-card p-4 border border-blue-500/30 cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Map className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Bulk Marker Drop</h3>
+                    <p className="text-gray-400 text-sm">Distribuzione massiva marker sulla mappa</p>
+                  </div>
+                </div>
+              </motion.div>
 
               {isAdmin && (
                 <>
