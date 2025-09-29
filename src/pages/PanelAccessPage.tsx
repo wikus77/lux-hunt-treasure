@@ -459,6 +459,7 @@ const PanelAccessPage = () => {
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => setLocation('/panel-users')}
                 className="glass-card p-4 border border-purple-500/30 cursor-pointer group"
               >
                 <div className="flex items-center gap-3">
@@ -466,12 +467,9 @@ const PanelAccessPage = () => {
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">Utenti (Realtime)</h3>
+                    <h3 className="font-semibold text-white">Users (Realtime)</h3>
                     <p className="text-gray-400 text-sm">Lista utenti con aggiornamenti in tempo reale</p>
                   </div>
-                </div>
-                <div className="mt-4">
-                  <UsersRealtimePanel />
                 </div>
               </motion.div>
 

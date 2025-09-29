@@ -56,6 +56,7 @@ import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import PanelUsersPage from "@/pages/PanelUsersPage";
 import PushTest from "@/pages/debug/PushTest";
 import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
@@ -539,6 +540,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/panel-access">
             <ProtectedRoute>
               <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel-users">
+            <ProtectedRoute>
+              <PanelUsersPage />
             </ProtectedRoute>
           </Route>
 
