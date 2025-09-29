@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { createBulkMarkers, type MarkerDistribution } from '@/utils/markerApi';
 
 // Build-time hash calculation for integrity verification
 const calculateCodeHash = () => {
@@ -34,8 +36,9 @@ const calculateCodeHash = () => {
 };
 
 interface RewardDistribution {
-  type: string;
-  count: number;
+  type: 'Message' | 'Buzz Free' | 'XP Points';
+  quantity: number;
+  message?: string;
 }
 
 interface BoundingBox {
@@ -49,7 +52,7 @@ export const BulkMarkerDropComponent: React.FC = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [distributions, setDistributions] = useState<RewardDistribution[]>([
-    { type: 'BUZZ_FREE', count: 1 }
+    { type: 'Buzz Free', quantity: 1 }
   ]);
   const [visibility, setVisibility] = useState({ hours: 24 });
   const [bbox, setBbox] = useState<BoundingBox | null>(null);
@@ -107,16 +110,6 @@ export const BulkMarkerDropComponent: React.FC = () => {
       return;
     }
 
-    // Security gate: block if missing required headers
-    if (!securityHeaders.version || !securityHeaders.codeHash) {
-      toast({
-        title: "Errore Sicurezza",
-        description: "Header di versione e checksum richiesti",
-        variant: "destructive"
-      });
-      return;
-    }
-
     if (!distributions.length) {
       toast({
         title: "Errore",
@@ -126,87 +119,56 @@ export const BulkMarkerDropComponent: React.FC = () => {
       return;
     }
 
+    // Validate Message types have message text
+    const messageDistributions = distributions.filter(d => d.type === 'Message');
+    for (const dist of messageDistributions) {
+      if (!dist.message || dist.message.trim().length === 0) {
+        toast({
+          title: "Errore",
+          description: "Tutti i marker di tipo 'Message' devono avere un messaggio",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
     setIsLoading(true);
     setResponse(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No session found');
-      }
+      // Convert to API format
+      const apiDistributions: MarkerDistribution[] = distributions.map(dist => ({
+        type: dist.type,
+        quantity: dist.quantity,
+        ...(dist.message && { message: dist.message }),
+        visibility_hours: visibility.hours
+      }));
 
-      const SUPABASE_URL = "https://vkjrqirvdvjbemsfzxof.supabase.co";
-      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
-
-      const payload = {
-        distributions,
-        visibility,
-        ...(bbox && { bbox })
-      };
-
-      const url = `${SUPABASE_URL}/functions/v1/create-random-markers?debug=1`;
-      
-      const requestStart = Date.now();
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'apikey': ANON_KEY,
-          'Content-Type': 'application/json',
-          'X-M1-Dropper-Version': securityHeaders.version,
-          'X-M1-Code-Hash': securityHeaders.codeHash,
-          'Origin': window.location.origin
-        },
-        body: JSON.stringify(payload)
+      const result = await createBulkMarkers({
+        distributions: apiDistributions,
+        visibility_hours: visibility.hours
       });
 
-      const requestEnd = Date.now();
-      const responseText = await response.text();
-      
-      let parsedResponse: any;
-      try {
-        parsedResponse = JSON.parse(responseText);
-      } catch {
-        parsedResponse = null;
-      }
+      setResponse(result);
 
-      const diagnostic = {
-        httpStatus: response.status,
-        request_id: response.headers.get('x-request-id') || 'unknown',
-        duration_ms: requestEnd - requestStart,
-        headers: Object.fromEntries(response.headers.entries()),
-        rawResponse: responseText,
-        parsedResponse
-      };
-
-      setResponse(diagnostic);
-
-      if (response.ok) {
-        const isPartial = response.status === 207;
-        toast({
-          title: isPartial ? "Successo Parziale" : "Successo",
-          description: `Creati ${parsedResponse?.created || 'N/A'} marker${isPartial ? ` (${parsedResponse?.partial_failures || 0} fallimenti)` : ''}`,
-          variant: isPartial ? "default" : "default"
-        });
-      } else {
-        toast({
-          title: "Errore",
-          description: `Errore ${response.status}: ${parsedResponse?.error || responseText}`,
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Successo",
+        description: `Creati ${result.created || 0} marker`,
+        variant: "default"
+      });
 
     } catch (error) {
       console.error('Submit error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Errore sconosciuto';
+      
       setResponse({
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: errorMsg,
         timestamp: new Date().toISOString()
       });
       
       toast({
         title: "Errore",
-        description: error instanceof Error ? error.message : 'Errore sconosciuto',
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
@@ -215,7 +177,7 @@ export const BulkMarkerDropComponent: React.FC = () => {
   };
 
   const addDistribution = () => {
-    setDistributions([...distributions, { type: 'BUZZ_FREE', count: 1 }]);
+    setDistributions([...distributions, { type: 'Buzz Free', quantity: 1 }]);
   };
 
   const removeDistribution = (index: number) => {
@@ -292,38 +254,58 @@ export const BulkMarkerDropComponent: React.FC = () => {
             <Label className="text-base font-medium">Distributions</Label>
             <div className="space-y-2 mt-2">
               {distributions.map((dist, index) => (
-                <div key={index} className="flex items-center gap-2 p-3 border rounded">
-                  <Select
-                    value={dist.type}
-                    onValueChange={(value) => updateDistribution(index, 'type', value)}
-                  >
-                    <SelectTrigger className="w-48">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="BUZZ_FREE">Buzz Free</SelectItem>
-                      <SelectItem value="MESSAGE">Message</SelectItem>
-                      <SelectItem value="XP_POINTS">XP Points</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div key={index} className="space-y-2 p-3 border rounded">
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={dist.type}
+                      onValueChange={(value) => updateDistribution(index, 'type', value as RewardDistribution['type'])}
+                    >
+                      <SelectTrigger className="w-48">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Buzz Free">Buzz Free</SelectItem>
+                        <SelectItem value="Message">Message</SelectItem>
+                        <SelectItem value="XP Points">XP Points</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={dist.quantity}
+                      onChange={(e) => updateDistribution(index, 'quantity', parseInt(e.target.value) || 1)}
+                      className="w-24"
+                      placeholder="Qty"
+                    />
+                    
+                    <Button
+                      onClick={() => removeDistribution(index)}
+                      variant="destructive"
+                      size="sm"
+                      disabled={distributions.length <= 1}
+                    >
+                      Remove
+                    </Button>
+                  </div>
                   
-                  <Input
-                    type="number"
-                    min="0"
-                    value={dist.count}
-                    onChange={(e) => updateDistribution(index, 'count', parseInt(e.target.value) || 0)}
-                    className="w-24"
-                    placeholder="Count"
-                  />
-                  
-                  <Button
-                    onClick={() => removeDistribution(index)}
-                    variant="destructive"
-                    size="sm"
-                    disabled={distributions.length <= 1}
-                  >
-                    Remove
-                  </Button>
+                  {dist.type === 'Message' && (
+                    <div>
+                      <Label htmlFor={`message-${index}`} className="text-sm">Messaggio</Label>
+                      <Textarea
+                        id={`message-${index}`}
+                        value={dist.message || ''}
+                        onChange={(e) => updateDistribution(index, 'message', e.target.value)}
+                        placeholder="Inserisci il messaggio per questo marker..."
+                        className="min-h-[80px]"
+                        maxLength={500}
+                      />
+                      <div className="text-xs text-gray-500 mt-1">
+                        {(dist.message || '').length}/500 caratteri
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
