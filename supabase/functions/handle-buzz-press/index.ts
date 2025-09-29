@@ -2,6 +2,7 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
 import { corsHeaders } from '../_shared/cors.ts'
+import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -33,7 +34,99 @@ serve(async (req) => {
 
     console.log('👤 [HANDLE-BUZZ-PRESS] User authenticated:', user.id);
 
-    // Generate random clue text (same logic as other functions)
+    // Parse request body to check if this is BUZZ MAP
+    const body = await req.json();
+    const { generateMap, coordinates, sessionId } = body;
+    
+    // Handle BUZZ MAP flow
+    if (generateMap && coordinates) {
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] Processing BUZZ MAP generation');
+      
+      // Count existing buzz map areas to determine level
+      const { count, error: countError } = await supabase
+        .from('user_map_areas')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('source', 'buzz_map');
+        
+      if (countError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error counting map areas:', countError);
+        throw new Error('Failed to count existing areas');
+      }
+      
+      const currentCount = count ?? 0;
+      const level = Math.min(currentCount + 1, 60);
+      const buzzLevel = getBuzzLevelFromCount(currentCount);
+      
+      console.log('🗺️ [HANDLE-BUZZ-PRESS] Creating BUZZ MAP area:', {
+        level,
+        radiusKm: buzzLevel.radiusKm,
+        priceCents: buzzLevel.priceCents,
+        coordinates
+      });
+      
+      // Create the map area
+      const { data: mapArea, error: mapError } = await supabase
+        .from('user_map_areas')
+        .insert({
+          user_id: user.id,
+          lat: coordinates.lat,
+          lng: coordinates.lng,
+          center_lat: coordinates.lat,
+          center_lng: coordinates.lng,
+          radius_km: buzzLevel.radiusKm,
+          source: 'buzz_map',
+          level: level,
+          price_eur: buzzLevel.priceCents / 100,
+          week: Math.ceil(Date.now() / (7 * 24 * 60 * 60 * 1000))
+        })
+        .select()
+        .single();
+        
+      if (mapError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error creating map area:', mapError);
+        throw new Error('Failed to create map area');
+      }
+      
+      // Log the action
+      const { error: actionError } = await supabase
+        .from('buzz_map_actions')
+        .insert({
+          user_id: user.id,
+          clue_count: level,
+          cost_eur: buzzLevel.priceCents / 100,
+          radius_generated: buzzLevel.radiusKm
+        });
+        
+      if (actionError) {
+        console.error('❌ [HANDLE-BUZZ-PRESS] Error logging action:', actionError);
+      }
+      
+      const response = {
+        success: true,
+        level: level,
+        radius_km: buzzLevel.radiusKm,
+        price_eur: buzzLevel.priceCents / 100,
+        coordinates: coordinates,
+        area_id: mapArea.id,
+        message: 'BUZZ MAP area created successfully'
+      };
+      
+      console.log('🎉 [HANDLE-BUZZ-PRESS] BUZZ MAP completed:', response);
+      
+      return new Response(
+        JSON.stringify(response),
+        { 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json' 
+          },
+          status: 200
+        }
+      );
+    }
+
+    // Generate random clue text (regular BUZZ logic)
     const clueTexts = [
       "Cerca dove l'innovazione italiana splende più forte...",
       "L'indizio si nasconde tra i corridoi del progresso...", 
