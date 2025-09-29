@@ -44,26 +44,33 @@ serve(async (req) => {
       throw new Error('Unauthorized access - invalid email hash');
     }
 
+    // Calculate super admin status
+    const isSuperAdmin = emailHash === AUTHORIZED_EMAIL_HASH;
+
     // Get client info
     const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown';
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
-    // Check rate limiting
-    const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-      ip_addr: clientIP,
-      api_endpoint: '/update-mission',
-      max_requests: 10,
-      window_minutes: 5
-    });
-
-    if (rateLimitError || !rateLimitResult) {
-      await supabase.rpc('block_ip', {
+    // Check rate limiting (skip for super admin)
+    if (!isSuperAdmin) {
+      const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
         ip_addr: clientIP,
-        block_duration_minutes: 15,
-        block_reason: 'rate_limit_exceeded_update_mission'
+        api_endpoint: '/update-mission',
+        max_requests: 10,
+        window_minutes: 5
       });
-      
-      throw new Error('Rate limit exceeded');
+
+      if (rateLimitError || !rateLimitResult) {
+        await supabase.rpc('block_ip', {
+          ip_addr: clientIP,
+          block_duration_minutes: 15,
+          block_reason: 'rate_limit_exceeded_update_mission'
+        });
+        
+        throw new Error('Rate limit exceeded');
+      }
+    } else {
+      console.log('🔓 [update-mission] rate-limit BYPASS for super-admin');
     }
 
     const { missionData } = await req.json();
