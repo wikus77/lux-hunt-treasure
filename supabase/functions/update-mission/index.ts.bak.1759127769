@@ -47,8 +47,7 @@ const corsHeaders = {
 const AUTHORIZED_EMAIL_HASH = '9e0aefd8ff5e2879549f1bfddb3975372f9f4281ea9f9120ef90278763653c52';
 
 serve(async (req) => {
-  let stage='start';
-if (req.method === 'OPTIONS') {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -64,7 +63,6 @@ if (req.method === 'OPTIONS') {
     }
 
     const jwt = authHeader.replace('Bearer ', '');
-    stage='auth:getUser';
     const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
     
     if (userError || !user) {
@@ -88,7 +86,6 @@ if (emailHash !== AUTHORIZED_EMAIL_HASH) {
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
     // Check rate limiting
-    stage='rateLimit:check';
     const { data: rateLimitResult, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
       ip_addr: clientIP,
       api_endpoint: '/update-mission',
@@ -103,15 +100,13 @@ if (emailHash !== AUTHORIZED_EMAIL_HASH) {
         block_reason: 'rate_limit_exceeded_update_mission'
       });
       
-      if (!isSuper) throw new Error('Rate limit exceeded');
+      throw new Error('Rate limit exceeded');
     }
 
-    stage='parse:body';
     const rawBody = await req.json();
 const missionData = safeGetMissionData(rawBody);
 if (!missionData) { return new Response(JSON.stringify({ success:false, error: 'Invalid body format' }), { status: 400, headers: corsHeaders }); }
 // Validate required fields
-    stage='validate:fields';
     const requiredFields = ['city', 'country', 'street', 'street_number', 'prize_type', 'prize_color', 'prize_material', 'prize_category'];
     const missingFields = requiredFields.filter(field => !missionData[field] || missionData[field].trim() === '');
     
@@ -174,11 +169,17 @@ if (!missionData) { return new Response(JSON.stringify({ success:false, error: '
     });
 
   } catch (error) {
-    console.error("update-mission error at", stage, error);
-    const msg = (error && error.message) ? error.message : String(error);
-    return new Response(
-      JSON.stringify({ success:false, error: msg, stage, stack: (error && error.stack) || null }),
-      { status: 500, headers: corsHeaders }
-    );
+    console.error('❌ UPDATE MISSION ERROR:', error);
+    
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    }), {
+      status: error.message.includes('Unauthorized') ? 403 : 
+             error.message.includes('Rate limit') ? 429 : 
+             error.message.includes('Missing required') ? 400 : 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
 });

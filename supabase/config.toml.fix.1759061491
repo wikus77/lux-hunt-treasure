@@ -1,0 +1,15 @@
+[project]
+id = "vkjrqirvdvjbemsfzxof"
+
+[api]
+enabled = true
+
+[db]
+enabled = true
+
+[functions]
+[functions.handle-buzz-press]
+verify_jwt = { enabled = true }
+
+[functions.handle-buzz-payment-success]
+verify_jwt = { enabled = true }

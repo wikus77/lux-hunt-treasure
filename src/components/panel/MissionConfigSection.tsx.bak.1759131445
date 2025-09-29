@@ -85,7 +85,7 @@ export const MissionConfigSection: React.FC = () => {
       }
 
       const result = await updateMissionViaFetch(supabase, missionData);
-
+const result = response.data;
       
       if (result.success) {
         toast.success('✅ MISSIONE AGGIORNATA', {
