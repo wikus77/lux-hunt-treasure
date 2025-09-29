@@ -34,7 +34,7 @@ export async function createBulkMarkers(
   if (!session) throw new Error('Nessuna sessione');
   
   const accessToken = session.access_token;
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bulk-marker-drop`;
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-random-markers`;
   
   const res = await fetch(url, {
     method: 'POST',

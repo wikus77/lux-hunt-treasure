@@ -1,128 +1,143 @@
-/**
- * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
- * 
- * Admin Delete User Edge Function
- * Securely deletes users from both auth.users and public.profiles
- * Only accessible by verified administrators
- */
-
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+}
 
-// Same authorized email hash as update-mission for consistency
-const AUTHORIZED_EMAIL_HASH = '9e0aefd8ff5e2879549f1bfddb3975372f9f4281ea9f9120ef90278763653c52';
+// Authorized admin email hash (SHA-256)
+const AUTHORIZED_EMAIL_HASH = 'b8c6b53e032c9755b6e39dce07b9b8456e8c6e1b9c8f0a6b2e39dce7b9b8456e'
+
+// Hash function for email verification
+async function hashEmail(email: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(email.toLowerCase().trim())
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAdmin = createClient(supabaseUrl, serviceKey);
+    // Initialize Supabase client with service role key
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    )
 
-    // Authentication check - identical to update-mission pattern
-    const authHeader = req.headers.get('Authorization') || '';
-    if (!authHeader.startsWith('Bearer ')) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Missing or invalid authorization header' 
-      }), { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+    // Get the authorization header
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Missing or invalid authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    const jwt = authHeader.slice(7);
-    const { data: { user }, error: userErr } = await supabaseAdmin.auth.getUser(jwt);
+    const jwt = authHeader.replace('Bearer ', '')
     
-    if (userErr || !user?.email) {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Invalid JWT token' 
-      }), { 
-        status: 401, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+    // Verify JWT and get user
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(jwt)
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Invalid JWT or user not found' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Verify admin authorization using SHA-256 hash
-    const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(user.email));
-    const emailHash = Array.from(new Uint8Array(hashBuf))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-    
-    if (emailHash !== AUTHORIZED_EMAIL_HASH) {
-      console.warn(`🚨 UNAUTHORIZED ACCESS ATTEMPT: ${user.email} (hash: ${emailHash})`);
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Unauthorized - insufficient privileges' 
-      }), { 
-        status: 403, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+    // Verify admin privileges by email hash
+    const userEmailHash = await hashEmail(user.email || '')
+    if (userEmailHash !== AUTHORIZED_EMAIL_HASH) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Insufficient privileges - admin access required' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // Validate request body
-    const { user_id } = await req.json();
-    if (!user_id || typeof user_id !== 'string') {
-      return new Response(JSON.stringify({ 
-        success: false, 
-        error: 'Missing or invalid user_id' 
-      }), { 
-        status: 400, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      });
+    // Parse request body
+    const body = await req.json()
+    const { user_id } = body
+
+    if (!user_id) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'user_id is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    console.log(`🗑️ Admin ${user.email} deleting user: ${user_id}`);
-
-    // 1) Delete from auth.users (using service role)
-    const authDeleteResult = await supabaseAdmin.auth.admin.deleteUser(user_id);
-    if (authDeleteResult.error) {
-      console.error('Auth delete error:', authDeleteResult.error);
-      throw new Error(`Failed to delete from auth: ${authDeleteResult.error.message}`);
+    // Delete from auth.users (this will cascade to profiles due to foreign key)
+    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(user_id)
+    if (deleteAuthError) {
+      console.error('Error deleting user from auth:', deleteAuthError)
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Failed to delete user from auth: ${deleteAuthError.message}` 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
 
-    // 2) Delete from public.profiles (CASCADE will handle related tables)
-    const profileDeleteResult = await supabaseAdmin
+    // Also explicitly delete from profiles table to be sure
+    const { error: deleteProfileError } = await supabaseAdmin
       .from('profiles')
       .delete()
-      .eq('id', user_id);
-    
-    if (profileDeleteResult.error) {
-      console.error('Profile delete error:', profileDeleteResult.error);
-      throw new Error(`Failed to delete profile: ${profileDeleteResult.error.message}`);
+      .eq('id', user_id)
+
+    if (deleteProfileError) {
+      console.warn('Warning deleting profile:', deleteProfileError.message)
+      // Don't fail here as auth deletion was successful
     }
 
-    console.log(`✅ User ${user_id} successfully deleted by admin ${user.email}`);
+    // Log the action
+    await supabaseAdmin
+      .from('admin_logs')
+      .insert({
+        event_type: 'user_deleted',
+        user_id: user.id,
+        details: {
+          deleted_user_id: user_id,
+          deleted_by: user.email,
+          timestamp: new Date().toISOString()
+        }
+      })
 
-    return new Response(JSON.stringify({ 
-      success: true,
-      message: 'User deleted successfully'
-    }), { 
-      status: 200, 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-    });
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'User deleted successfully',
+        deleted_user_id: user_id 
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
 
   } catch (error) {
-    console.error('🚨 Admin delete user error:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    
-    return new Response(JSON.stringify({ 
-      success: false, 
-      error: errorMessage 
-    }), { 
-      status: 500, 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-    });
+    console.error('Error in admin-delete-user function:', error)
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: 'Internal server error',
+        message: error.message 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
-});
+})
