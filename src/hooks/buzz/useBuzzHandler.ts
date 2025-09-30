@@ -113,11 +113,33 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         full_response: buzzResult
       });
       
-      // ✅ VERIFICA CLUE_TEXT VALIDO
-      if (!buzzResult?.clue_text || buzzResult.clue_text.trim() === '') {
-        console.error('❌ CLUE_TEXT NON VALIDO:', buzzResult);
-        toast.error('❌ Indizio non ricevuto dal server');
-        return;
+      // ✅ GET CLUE TEXT - with fallback if not in response
+      let clueText = buzzResult?.clue_text?.trim() || '';
+      
+      // 🔥 FALLBACK: If no clue_text in response, fetch latest clue from DB
+      if (!clueText) {
+        console.log('⚠️ M1SSION™ FALLBACK: No clue_text in response, fetching from DB...');
+        try {
+          const { data: latestClue, error: clueError } = await supabase
+            .from('user_notifications')
+            .select('message')
+            .eq('user_id', user.id)
+            .eq('type', 'buzz')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+          
+          if (!clueError && latestClue?.message) {
+            clueText = latestClue.message;
+            console.log('✅ M1SSION™ FALLBACK: Got clue from DB:', clueText);
+          } else {
+            console.error('❌ M1SSION™ FALLBACK: No clue found in DB', clueError);
+            clueText = 'Indizio generato! Controlla le notifiche.';
+          }
+        } catch (fallbackError) {
+          console.error('❌ M1SSION™ FALLBACK: Error fetching clue', fallbackError);
+          clueText = 'Indizio generato! Controlla le notifiche.';
+        }
       }
       
       // Log the buzz action
@@ -128,21 +150,17 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         radius_generated: 0 // Regular BUZZ has no radius
       });
       
-      // ✅ TOAST SUCCESS CON CLUE_TEXT REALE (only if not from post-payment context)
-      if (context?.source !== 'paid') {
-        toast.success(buzzResult.clue_text, {
-          duration: 4000,
-          position: 'top-center',
-          style: { 
-            zIndex: 9999,
-            background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-            color: 'white',
-            fontWeight: 'bold'
-          }
-        });
-      } else {
-        console.log('🔇 M1SSION™ SKIP TOAST: Post-payment context detected, toast already handled by Stripe flow');
-      }
+      // ✅ ALWAYS SHOW TOAST with clue text
+      toast.success(clueText, {
+        duration: 4000,
+        position: 'top-center',
+        style: { 
+          zIndex: 9999,
+          background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+          color: 'white',
+          fontWeight: 'bold'
+        }
+      });
       
       // Success callback
       onSuccess();
