@@ -226,13 +226,43 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       if (result.ok && result.skipFollowUpBuzzPress) {
         console.log('🎯 M1SSION™ BUZZ: Skipping handleBuzz() - clue already processed by payment success');
         
-        // If no clue_text was shown, display fallback message
-        if (!result.clue_text) {
-          toast.success('Pagamento riuscito — indizio in arrivo nelle notifiche', {
-            duration: 3000,
-            position: 'top-center'
-          });
+        // 🔥 ALWAYS show toast with clue - with fallback if not present
+        let clueText = result.clue_text?.trim() || '';
+        
+        if (!clueText) {
+          console.log('⚠️ M1SSION™ FALLBACK: No clue_text in payment result, fetching from DB...');
+          try {
+            const { data: latestClue, error: clueError } = await supabase
+              .from('user_notifications')
+              .select('message')
+              .eq('user_id', user!.id)
+              .eq('type', 'buzz')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            if (!clueError && latestClue?.message) {
+              clueText = latestClue.message;
+              console.log('✅ M1SSION™ FALLBACK: Got clue from DB:', clueText);
+            } else {
+              clueText = 'Indizio generato! Controlla le notifiche.';
+            }
+          } catch {
+            clueText = 'Indizio generato! Controlla le notifiche.';
+          }
         }
+        
+        // Show toast with clue
+        toast.success(clueText, {
+          duration: 4000,
+          position: 'top-center',
+          style: { 
+            zIndex: 9999,
+            background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+            color: 'white',
+            fontWeight: 'bold'
+          }
+        });
       } else {
         // Legacy fallback: call handleBuzz() only if payment success didn't handle the clue
         console.log('⚠️ M1SSION™ BUZZ: Falling back to handleBuzz() call');
