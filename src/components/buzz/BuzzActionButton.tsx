@@ -1,6 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ - BUZZ Action Button with Progressive Pricing & Universal Stripe In-App Payment
 import React, { useEffect, useRef } from 'react';
+
+// --- BUZZ TOAST GLOBAL LOCK (shared) ---
+const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
+(globalThis as any).__buzzToastLock = __buzz;
 import { useBuzzHandler } from '@/hooks/buzz/useBuzzHandler';
 import { BuzzButton } from './BuzzButton';
 import { ShockwaveAnimation } from './ShockwaveAnimation';
@@ -175,7 +179,9 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         await updateDailyBuzzCounter();
         await handleBuzz();
         onSuccess();
-        toast.success('BUZZ gratuito utilizzato!');
+        if (!__buzz.shown) {
+          toast.success('BUZZ gratuito utilizzato!');
+        }
         return;
       } else {
         console.error('🔴 M1SSION™ FREE BUZZ: Failed to consume grant');
@@ -261,7 +267,7 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
         
         console.info({ step: 'buzz-toast', data, error, tenMinutesAgo });
         
-        if (data?.message) {
+        if (data?.message && !__buzz.shown) {
           toast.success(data.message, {
             duration: 4000,
             position: 'top-center',

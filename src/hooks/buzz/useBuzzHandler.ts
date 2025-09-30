@@ -11,6 +11,20 @@ import { useAbuseProtection } from './useAbuseProtection';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
 
+// --- BUZZ TOAST GLOBAL LOCK (shared) ---
+const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
+(globalThis as any).__buzzToastLock = __buzz;
+
+function buzzToastOnce(fn: 'success'|'error', msg: string, opts?: any) {
+  const now = Date.now();
+  // 2s di finestra anti-rimbalzo
+  if (!__buzz.shown || now - __buzz.t > 2000) {
+    __buzz.shown = true; __buzz.t = now;
+    (toast as any)[fn]?.(msg, opts);
+    setTimeout(() => { __buzz.shown = false; }, 2000);
+  }
+}
+
 interface UseBuzzHandlerProps {
   currentPrice: number;
   onSuccess: () => void;
@@ -170,8 +184,8 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         });
         
         // Show clue toast if fresh notification available
-        if (isDataFresh && data.message && !buzzToastShown) {
-          toast.success(data.message, {
+        if (isDataFresh && data?.message) {
+          buzzToastOnce('success', data.message, {
             duration: 4000,
             position: 'top-center',
             style: { 
@@ -186,7 +200,7 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         
         // Only show error toast if no clue was shown and there was an error
         if (hadError && !buzzToastShown) {
-          toast.error('Non sono riuscito a generare l\'indizio, riprova fra poco.');
+          buzzToastOnce('error', "Non sono riuscito a generare l'indizio, riprova fra poco.");
         }
         
         if (!data) {
