@@ -300,12 +300,18 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
            mission.status === 'draft' ? 0 : 100;
   };
 
-  // Extract project ref from Supabase URL
+  // Extract project ref from env or Supabase URL
   const getProjectRef = () => {
-    const supabaseUrl = "https://vkjrqirvdvjbemsfzxof.supabase.co";
-    const match = supabaseUrl.match(/https:\/\/(.+)\.supabase\.co/);
-    return match ? match[1] : null;
+    const fromEnv = import.meta.env.VITE_SUPABASE_PROJECT_REF?.trim();
+    if (fromEnv) return fromEnv;
+    const url = import.meta.env.VITE_SUPABASE_URL || '';
+    const m = url.match(/^https?:\/\/([a-z0-9]+)\.supabase\.co/i);
+    return m ? m[1] : '';
   };
+
+  // Generate Supabase table editor URL with public schema
+  const supaTableUrl = (table: 'missions' | 'mission_prizes' | 'prize_categories' | 'user_mission_registrations') =>
+    `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/public/${table}`;
 
   // Calculate published/live missions count
   const getPublishedCount = () => {
@@ -544,46 +550,38 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                   {getProjectRef() && (
                     <>
                       <Button 
-                        onClick={() => {
-                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/missions`;
-                          window.open(url, '_blank');
-                        }}
+                        onClick={() => window.open(supaTableUrl('missions'), '_blank', 'noopener')}
                         variant="outline"
                         size="sm"
                         className="text-xs"
+                        data-testid="btn-missions-table"
                       >
                         Missions Table
                       </Button>
                       <Button 
-                        onClick={() => {
-                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/mission_prizes`;
-                          window.open(url, '_blank');
-                        }}
+                        onClick={() => window.open(supaTableUrl('mission_prizes'), '_blank', 'noopener')}
                         variant="outline"
                         size="sm"
                         className="text-xs"
+                        data-testid="btn-mission-prizes-table"
                       >
                         Mission Prizes
                       </Button>
                       <Button 
-                        onClick={() => {
-                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/prize_categories`;
-                          window.open(url, '_blank');
-                        }}
+                        onClick={() => window.open(supaTableUrl('prize_categories'), '_blank', 'noopener')}
                         variant="outline"
                         size="sm"
                         className="text-xs"
+                        data-testid="btn-prize-categories-table"
                       >
                         Prize Categories
                       </Button>
                       <Button 
-                        onClick={() => {
-                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/user_mission_registrations`;
-                          window.open(url, '_blank');
-                        }}
+                        onClick={() => window.open(supaTableUrl('user_mission_registrations'), '_blank', 'noopener')}
                         variant="outline"
                         size="sm"
                         className="text-xs"
+                        data-testid="btn-user-registrations-table"
                       >
                         User Registrations
                       </Button>
