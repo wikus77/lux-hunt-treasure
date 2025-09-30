@@ -190,6 +190,10 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   };
 
   const handleDeleteMission = async (mission: Mission) => {
+    if (!confirm(`Sei sicuro di voler eliminare la missione "${mission.title}"?`)) {
+      return;
+    }
+    
     try {
       const { error } = await supabase
         .from('missions')
@@ -634,6 +638,20 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                     <div className="text-2xl font-bold text-yellow-400">{missions.filter(m => m.status === 'archived').length}</div>
                     <div className="text-sm text-gray-400">Archiviate</div>
                   </div>
+                </div>
+                <div className="mt-4 text-center">
+                  <Button 
+                    onClick={() => {
+                      const ref = 'vkjrqirvdvjbemsfzxof';
+                      const url = `https://supabase.com/dashboard/project/${ref}/editor/table/missions`;
+                      window.open(url, '_blank');
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Missions Table
+                  </Button>
                 </div>
               </CardContent>
             </Card>

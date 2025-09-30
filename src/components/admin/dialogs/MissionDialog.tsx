@@ -170,7 +170,7 @@ export const MissionDialog = ({
                 Stato
               </Label>
               <Select
-                value={missionData.status}
+                value={missionData.status || undefined}
                 onValueChange={(value) => setMissionData({...missionData, status: value})}
               >
                 <SelectTrigger className="col-span-3">
@@ -244,7 +244,7 @@ export const MissionDialog = ({
                 Premio
               </Label>
               <Select
-                value={missionData.prize_id || ""}
+                value={missionData.prize_id || undefined}
                 onValueChange={(value) => setMissionData({...missionData, prize_id: value || null})}
               >
                 <SelectTrigger className="col-span-3">
