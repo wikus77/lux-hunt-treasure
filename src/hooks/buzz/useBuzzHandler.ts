@@ -113,54 +113,12 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         full_response: buzzResult
       });
       
-      // ✅ GET CLUE TEXT - with fallback if not in response
-      let clueText = buzzResult?.clue_text?.trim() || '';
-      
-      // 🔥 FALLBACK: If no clue_text in response, fetch latest clue from DB
-      if (!clueText) {
-        console.log('⚠️ M1SSION™ FALLBACK: No clue_text in response, fetching from DB...');
-        try {
-          const { data: latestClue, error: clueError } = await supabase
-            .from('user_notifications')
-            .select('title, message')
-            .eq('user_id', user.id)
-            .in('type', ['buzz', 'buzz_free'])
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          if (!clueError && latestClue?.message) {
-            clueText = latestClue.message;
-            console.log('✅ M1SSION™ FALLBACK: Got clue from DB:', clueText);
-          } else if (!latestClue) {
-            clueText = 'Nessun nuovo indizio';
-          } else {
-            clueText = 'Indizio generato! Controlla le notifiche.';
-          }
-        } catch (fallbackError) {
-          console.error('❌ M1SSION™ FALLBACK: Error fetching clue', fallbackError);
-          clueText = 'Indizio generato! Controlla le notifiche.';
-        }
-      }
-      
       // Log the buzz action
       await supabase.from('buzz_map_actions').insert({
         user_id: user.id,
         cost_eur: currentPrice,
         clue_count: 1,
         radius_generated: 0 // Regular BUZZ has no radius
-      });
-      
-      // ✅ ALWAYS SHOW TOAST with clue text
-      toast.success(clueText, {
-        duration: 4000,
-        position: 'top-center',
-        style: { 
-          zIndex: 9999,
-          background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-          color: 'white',
-          fontWeight: 'bold'
-        }
       });
       
       // Success callback
@@ -180,6 +138,40 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       toast.error('Errore imprevisto durante BUZZ');
     } finally {
       setBuzzing(false);
+      
+      // 🔥 ALWAYS fetch and show clue toast in finally block (even on error)
+      try {
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+          .from('user_notifications')
+          .select('id,type,title,message,metadata,created_at')
+          .eq('user_id', user.id)
+          .eq('is_deleted', false)
+          .in('type', ['buzz', 'buzz_free'])
+          .gte('created_at', tenMinutesAgo)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        console.info({ step: 'buzz-toast', data, error, tenMinutesAgo });
+        
+        if (data?.message) {
+          toast.success(data.message, {
+            duration: 4000,
+            position: 'top-center',
+            style: { 
+              zIndex: 9999,
+              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+              color: 'white',
+              fontWeight: 'bold'
+            }
+          });
+        } else if (!data) {
+          console.info('No fresh notification in last 10 minutes');
+        }
+      } catch (toastError) {
+        console.error('Error fetching toast notification:', toastError);
+      }
     }
   };
 
