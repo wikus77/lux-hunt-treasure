@@ -311,7 +311,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
 
   // Generate Supabase table editor URL with public schema
   const supaTableUrl = (table: 'missions' | 'mission_prizes' | 'prize_categories' | 'user_mission_registrations') =>
-    `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/public/${table}`;
+    `https://supabase.com/dashboard/project/${getProjectRef()}/database/tables/public/${table}`;
 
   // Calculate published/live missions count
   const getPublishedCount = () => {
