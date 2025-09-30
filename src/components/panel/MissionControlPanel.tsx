@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { MissionDialog } from '@/components/admin/dialogs/MissionDialog';
 import { Spinner } from '@/components/ui/spinner';
 import { MissionConfig } from './MissionConfig';
+import { MissionUsers } from './missions/MissionUsers';
+import { MissionPrizes } from './missions/MissionPrizes';
 
 interface Mission {
   id: string;
@@ -40,6 +42,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   const [showMissionConfig, setShowMissionConfig] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [participantCounts, setParticipantCounts] = useState<Record<string, number>>({});
+  const [selectedMissionIdForTabs, setSelectedMissionIdForTabs] = useState<string | null>(null);
 
   useEffect(() => {
     fetchMissions();
@@ -219,64 +222,18 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
     setShowMissionConfig(true);
   };
 
+  const handleMissionCardClick = (mission: Mission) => {
+    setSelectedMissionIdForTabs(mission.id);
+    // Auto-switch to users tab when selecting a mission
+    if (activeTab === 'missions') {
+      setActiveTab('users');
+    }
+  };
+
   const handleMissionUpdate = (updatedMission: Mission) => {
     setMissions(prev => prev.map(m => m.id === updatedMission.id ? updatedMission : m));
     setSelectedMission(updatedMission);
   };
-
-  const users = [
-    {
-      id: 1,
-      email: "user1@example.com",
-      role: "user",
-      status: "active",
-      joinDate: "2024-01-10",
-      missions: 3
-    },
-    {
-      id: 2,
-      email: "dev@example.com",
-      role: "developer",
-      status: "active",
-      joinDate: "2023-11-15",
-      missions: 15
-    },
-    {
-      id: 3,
-      email: "admin@example.com",
-      role: "admin",
-      status: "active",
-      joinDate: "2023-10-01",
-      missions: 25
-    }
-  ];
-
-  const rewards = [
-    {
-      id: 1,
-      title: "Premio Oro",
-      type: "virtual",
-      value: "100 crediti",
-      awarded: 12,
-      available: true
-    },
-    {
-      id: 2,
-      title: "Badge Esploratore",
-      type: "achievement",
-      value: "Riconoscimento",
-      awarded: 45,
-      available: true
-    },
-    {
-      id: 3,
-      title: "Accesso VIP",
-      type: "access",
-      value: "30 giorni",
-      awarded: 5,
-      available: false
-    }
-  ];
 
   const tabs = [
     { id: 'missions', label: 'Missioni', icon: Target, color: 'text-[#4361ee]' },
@@ -291,19 +248,6 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       case 'draft': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'developer': return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'user': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
-  };
-
-  const handleAction = (action: string, item?: any) => {
-    toast.info(`Azione "${action}" eseguita${item ? ` per ${item.title || item.email}` : ''}`);
   };
 
   const getParticipantCount = (mission: Mission) => {
@@ -424,7 +368,12 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                         <motion.div
                           key={mission.id}
                           whileHover={{ scale: 1.01 }}
-                          className="glass-card p-4 border border-white/20"
+                          className={`glass-card p-4 border cursor-pointer transition-colors ${
+                            selectedMissionIdForTabs === mission.id 
+                              ? 'border-[#4361ee] bg-[#4361ee]/10' 
+                              : 'border-white/20'
+                          }`}
+                          onClick={() => handleMissionCardClick(mission)}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
@@ -455,7 +404,10 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => openMissionConfig(mission)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openMissionConfig(mission);
+                                }}
                                 className="text-gray-400 hover:text-white"
                                 title="Visualizza dettagli missione"
                               >
@@ -464,7 +416,10 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleDeleteMission(mission)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMission(mission);
+                                }}
                                 className="text-red-400 hover:text-red-300"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -480,131 +435,11 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
             )}
 
             {activeTab === 'users' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-white">Gestione Utenti</h2>
-                  <Button 
-                    onClick={() => handleAction('Invita utente')}
-                    className="bg-gradient-to-r from-[#7209b7] to-[#4361ee] hover:opacity-90"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Invita Utente
-                  </Button>
-                </div>
-                
-                <div className="grid gap-4">
-                  {users.map((user) => (
-                    <motion.div
-                      key={user.id}
-                      whileHover={{ scale: 1.01 }}
-                      className="glass-card p-4 border border-white/20"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-[#7209b7] to-[#4361ee] flex items-center justify-center">
-                            <Users className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-white">{user.email}</h3>
-                            <div className="flex items-center gap-4 text-sm text-gray-400">
-                              <span>{user.missions} missioni</span>
-                              <span>Registrato: {user.joinDate}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Badge className={getRoleColor(user.role)}>
-                            {user.role}
-                          </Badge>
-                          <Badge className={getStatusColor(user.status)}>
-                            {user.status}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleAction('Visualizza profilo', user)}
-                            className="text-gray-400 hover:text-white"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleAction('Gestisci', user)}
-                            className="text-gray-400 hover:text-white"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+              <MissionUsers selectedMissionId={selectedMissionIdForTabs} />
             )}
 
             {activeTab === 'rewards' && (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold text-white">Gestione Premi</h2>
-                  <Button 
-                    onClick={() => handleAction('Crea nuovo premio')}
-                    className="bg-gradient-to-r from-green-500 to-blue-600 hover:opacity-90"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nuovo Premio
-                  </Button>
-                </div>
-                
-                <div className="grid gap-4">
-                  {rewards.map((reward) => (
-                    <motion.div
-                      key={reward.id}
-                      whileHover={{ scale: 1.01 }}
-                      className="glass-card p-4 border border-white/20"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-green-500 to-blue-600 flex items-center justify-center">
-                            <Award className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-white">{reward.title}</h3>
-                            <div className="flex items-center gap-4 text-sm text-gray-400">
-                              <span>Tipo: {reward.type}</span>
-                              <span>Valore: {reward.value}</span>
-                              <span>Assegnati: {reward.awarded}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Badge className={reward.available ? getStatusColor('active') : getStatusColor('draft')}>
-                            {reward.available ? 'Disponibile' : 'Non disponibile'}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleAction('Modifica', reward)}
-                            className="text-gray-400 hover:text-white"
-                          >
-                            <Settings className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleAction('Elimina', reward)}
-                            className="text-red-400 hover:text-red-300"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
+              <MissionPrizes selectedMissionId={selectedMissionIdForTabs} />
             )}
           </motion.div>
 

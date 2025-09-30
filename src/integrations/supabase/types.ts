@@ -1666,6 +1666,57 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_prizes: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          mission_id: string
+          status: string
+          title: string
+          value_text: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          mission_id: string
+          status?: string
+          title: string
+          value_text?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          mission_id?: string
+          status?: string
+          title?: string
+          value_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_prizes_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "prize_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_prizes_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_targets: {
         Row: {
           created_at: string
@@ -2107,6 +2158,27 @@ export type Database = {
           referral_code?: string | null
           referrer?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      prize_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
         }
         Relationships: []
       }
