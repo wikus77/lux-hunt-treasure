@@ -234,16 +234,18 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
           try {
             const { data: latestClue, error: clueError } = await supabase
               .from('user_notifications')
-              .select('message')
+              .select('title, message')
               .eq('user_id', user!.id)
-              .eq('type', 'buzz')
+              .in('type', ['buzz', 'buzz_free'])
               .order('created_at', { ascending: false })
               .limit(1)
-              .single();
+              .maybeSingle();
             
             if (!clueError && latestClue?.message) {
               clueText = latestClue.message;
               console.log('✅ M1SSION™ FALLBACK: Got clue from DB:', clueText);
+            } else if (!latestClue) {
+              clueText = 'Nessun nuovo indizio';
             } else {
               clueText = 'Indizio generato! Controlla le notifiche.';
             }
