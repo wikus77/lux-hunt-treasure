@@ -35,3 +35,7 @@ test-results/
 # local only
 .dev.vars
 *.bak
+
+# Supabase temp/backup
+supabase/.temp/
+supabase/config.toml.bak.*
