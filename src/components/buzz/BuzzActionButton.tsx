@@ -225,46 +225,6 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
       // 🔥 FIXED: Skip handleBuzz() call if clue was already processed by handle-buzz-payment-success
       if (result.ok && result.skipFollowUpBuzzPress) {
         console.log('🎯 M1SSION™ BUZZ: Skipping handleBuzz() - clue already processed by payment success');
-        
-        // 🔥 ALWAYS show toast with clue - with fallback if not present
-        let clueText = result.clue_text?.trim() || '';
-        
-        if (!clueText) {
-          console.log('⚠️ M1SSION™ FALLBACK: No clue_text in payment result, fetching from DB...');
-          try {
-            const { data: latestClue, error: clueError } = await supabase
-              .from('user_notifications')
-              .select('title, message')
-              .eq('user_id', user!.id)
-              .in('type', ['buzz', 'buzz_free'])
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle();
-            
-            if (!clueError && latestClue?.message) {
-              clueText = latestClue.message;
-              console.log('✅ M1SSION™ FALLBACK: Got clue from DB:', clueText);
-            } else if (!latestClue) {
-              clueText = 'Nessun nuovo indizio';
-            } else {
-              clueText = 'Indizio generato! Controlla le notifiche.';
-            }
-          } catch {
-            clueText = 'Indizio generato! Controlla le notifiche.';
-          }
-        }
-        
-        // Show toast with clue
-        toast.success(clueText, {
-          duration: 4000,
-          position: 'top-center',
-          style: { 
-            zIndex: 9999,
-            background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-            color: 'white',
-            fontWeight: 'bold'
-          }
-        });
       } else {
         // Legacy fallback: call handleBuzz() only if payment success didn't handle the clue
         console.log('⚠️ M1SSION™ BUZZ: Falling back to handleBuzz() call');
@@ -284,6 +244,40 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
     } catch (error) {
       console.error('❌ M1SSION™ PROGRESSIVE BUZZ: Error in post-payment processing', error);
       toast.error('Errore nella finalizzazione BUZZ');
+    } finally {
+      // 🔥 ALWAYS fetch and show clue toast in finally block (even on error)
+      try {
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+        const { data, error } = await supabase
+          .from('user_notifications')
+          .select('id,type,title,message,metadata,created_at')
+          .eq('user_id', user!.id)
+          .eq('is_deleted', false)
+          .in('type', ['buzz', 'buzz_free'])
+          .gte('created_at', tenMinutesAgo)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        console.info({ step: 'buzz-toast', data, error, tenMinutesAgo });
+        
+        if (data?.message) {
+          toast.success(data.message, {
+            duration: 4000,
+            position: 'top-center',
+            style: { 
+              zIndex: 9999,
+              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
+              color: 'white',
+              fontWeight: 'bold'
+            }
+          });
+        } else if (!data) {
+          console.info('No fresh notification in last 10 minutes');
+        }
+      } catch (toastError) {
+        console.error('Error fetching toast notification:', toastError);
+      }
     }
   };
 
