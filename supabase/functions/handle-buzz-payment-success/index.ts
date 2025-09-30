@@ -34,9 +34,11 @@ serve(async (req) => {
 
     console.log('👤 [HANDLE-BUZZ-PAYMENT-SUCCESS] User authenticated:', user.id);
 
-    // Parse request body
+    // Parse request body - handle both camelCase and snake_case
     const body = await req.json();
-    const { paymentIntentId, isBuzzMap, coordinates } = body;
+    const paymentIntentId = body.paymentIntentId ?? body.payment_intent_id;
+    const isBuzzMap = body.isBuzzMap ?? body.is_buzz_map;
+    const coordinates = body.coordinates ?? body.coords ?? null;
 
     if (!paymentIntentId) {
       throw new Error('Missing paymentIntentId');
@@ -45,7 +47,27 @@ serve(async (req) => {
     console.log('💳 [HANDLE-BUZZ-PAYMENT-SUCCESS] Processing payment:', paymentIntentId, 'isBuzzMap:', isBuzzMap);
     
     // Handle BUZZ MAP payment success
-    if (isBuzzMap && coordinates) {
+    if (isBuzzMap === true) {
+      if (!coordinates || !coordinates.lat || !coordinates.lng) {
+        // Log missing coordinates but isBuzzMap is true
+        const { error: logError } = await supabase
+          .from('buzz_logs')
+          .insert({
+            user_id: user.id,
+            action: 'buzz_map_area_failed',
+            step: 'payment_completed',
+            details: {
+              payment_intent_id: paymentIntentId,
+              reason: 'missing_coordinates',
+              coordinates: coordinates,
+              timestamp: new Date().toISOString()
+            }
+          });
+          
+        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] BUZZ MAP payment but missing coordinates:', coordinates);
+        throw new Error('BUZZ MAP payment requires valid coordinates');
+      }
+
       console.log('🗺️ [HANDLE-BUZZ-PAYMENT-SUCCESS] Processing BUZZ MAP payment');
       
       // Count existing buzz map areas to determine level (server-side validation)
@@ -99,18 +121,40 @@ serve(async (req) => {
         throw new Error('Failed to create map area');
       }
       
-      // Log the action
+      // Log the action in buzz_map_actions
       const { error: actionError } = await supabase
         .from('buzz_map_actions')
         .insert({
           user_id: user.id,
-          clue_count: level,
+          clue_count: 0, // BUZZ MAP doesn't generate clues, only areas
           cost_eur: buzzLevel.priceCents / 100,
           radius_generated: buzzLevel.radiusKm
         });
         
       if (actionError) {
-        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error logging action:', actionError);
+        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error logging buzz_map_actions:', actionError);
+      }
+      
+      // Log in buzz_logs for comprehensive tracking
+      const { error: buzzLogError } = await supabase
+        .from('buzz_logs')
+        .insert({
+          user_id: user.id,
+          action: 'buzz_map_area_created',
+          step: 'payment_completed',
+          details: {
+            level: level,
+            radius_km: buzzLevel.radiusKm,
+            price_eur: buzzLevel.priceCents / 100,
+            payment_intent_id: paymentIntentId,
+            coordinates: coordinates,
+            area_id: mapArea.id,
+            timestamp: new Date().toISOString()
+          }
+        });
+        
+      if (buzzLogError) {
+        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error logging buzz_logs:', buzzLogError);
       }
       
       // Create success notification
@@ -135,6 +179,7 @@ serve(async (req) => {
       
       const response = {
         success: true,
+        type: "buzz_map",
         level: level,
         radius_km: buzzLevel.radiusKm,
         price_eur: buzzLevel.priceCents / 100,
