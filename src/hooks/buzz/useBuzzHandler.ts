@@ -47,6 +47,10 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       return;
     }
     
+    // 🔥 Toast deduplication flags
+    let hadError = false;
+    let buzzToastShown = false;
+    
     try {
       setBuzzing(true);
       setShowShockwave(true);
@@ -135,7 +139,8 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
       
     } catch (err) {
       console.error('❌ Error in handleBuzz - RESET COMPLETO 17/07/2025:', err);
-      toast.error('Errore imprevisto durante BUZZ');
+      // Don't show error toast yet - will check for clue notification first
+      hadError = true;
     } finally {
       setBuzzing(false);
       
@@ -144,18 +149,28 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
         const { data, error } = await supabase
           .from('user_notifications')
-          .select('id,type,title,message,metadata,created_at')
+          .select('id,type,title,message,metadata,created_at,is_deleted')
           .eq('user_id', user.id)
-          .eq('is_deleted', false)
           .in('type', ['buzz', 'buzz_free'])
-          .gte('created_at', tenMinutesAgo)
+          .is('is_deleted', false)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
         
-        console.info({ step: 'buzz-toast', data, error, tenMinutesAgo });
+        // Validate 10-minute freshness window
+        const isDataFresh = data && new Date(data.created_at).getTime() >= (Date.now() - 10 * 60 * 1000);
         
-        if (data?.message) {
+        console.info({ 
+          step: 'buzz-toast', 
+          hadError, 
+          buzzToastShown, 
+          dataExists: !!data, 
+          isDataFresh,
+          error 
+        });
+        
+        // Show clue toast if fresh notification available
+        if (isDataFresh && data.message && !buzzToastShown) {
           toast.success(data.message, {
             duration: 4000,
             position: 'top-center',
@@ -166,11 +181,23 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
               fontWeight: 'bold'
             }
           });
-        } else if (!data) {
+          buzzToastShown = true;
+        }
+        
+        // Only show error toast if no clue was shown and there was an error
+        if (hadError && !buzzToastShown) {
+          toast.error('Non sono riuscito a generare l\'indizio, riprova fra poco.');
+        }
+        
+        if (!data) {
           console.info('No fresh notification in last 10 minutes');
         }
       } catch (toastError) {
         console.error('Error fetching toast notification:', toastError);
+        // Show error toast only if no clue was shown
+        if (hadError && !buzzToastShown) {
+          toast.error('Errore imprevisto durante BUZZ');
+        }
       }
     }
   };
