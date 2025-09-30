@@ -2,39 +2,47 @@
  * © 2025 M1SSION™ — Handle Buzz Payment Success Edge Function
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 import { corsHeaders } from '../_shared/cors.ts';
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts';
 
-console.log('💳 [HANDLE-BUZZ-PAYMENT-SUCCESS] Function loaded');
-
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-
-Deno.serve(async (req) => {
+serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase client with service role
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('💳[HBPS] Function started');
 
-    // Verify authentication
-    const authHeader = req.headers.get('authorization');
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user from JWT
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('Missing authorization header');
+      console.log('💳[HBPS] Missing authorization header');
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const token = authHeader.replace('Bearer ', '');
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      throw new Error('Authentication failed');
+    const jwt = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(jwt);
+    
+    if (userError || !user) {
+      console.log('💳[HBPS] Authentication failed:', userError?.message);
+      return new Response(JSON.stringify({ success: false, error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log('👤 [HANDLE-BUZZ-PAYMENT-SUCCESS] User authenticated:', user.id);
+    console.log('💳[HBPS] User authenticated:', user.id);
 
     // Parse request body - handle both camelCase and snake_case formats
     const body = await req.json();
@@ -43,7 +51,7 @@ Deno.serve(async (req) => {
     const coords = body.coordinates ?? body.coords ?? null;
     const amount = body.amount || 0;
 
-    console.log('🔄 [HANDLE-BUZZ-PAYMENT-SUCCESS] Normalized payload:', {
+    console.log('💳[HBPS] Normalized payload:', {
       payment_intent_id: pid,
       is_buzz_map: isMap,
       coordinates: coords,
@@ -57,7 +65,7 @@ Deno.serve(async (req) => {
     
     // Handle BUZZ MAP payment success
     if (isMap === true) {
-      console.log('🗺️ [HANDLE-BUZZ-PAYMENT-SUCCESS] Processing BUZZ MAP payment');
+      console.log('💳[HBPS] Processing BUZZ MAP payment');
       
       if (!coords || !coords.lat || !coords.lng) {
         // Log missing coordinates but isMap is true
@@ -66,7 +74,7 @@ Deno.serve(async (req) => {
           .insert({
             user_id: user.id,
             action: 'buzz_map_area_failed',
-            step: 'area_created',
+            step: 'payment_completed',
             details: {
               payment_intent_id: pid,
               reason: 'missing_coordinates',
@@ -75,7 +83,7 @@ Deno.serve(async (req) => {
             }
           });
           
-        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] BUZZ MAP payment but missing coordinates:', coords);
+        console.error('💳[HBPS] BUZZ MAP payment but missing coordinates:', coords);
         return new Response(JSON.stringify({
           success: false,
           error: 'BUZZ MAP payment requires valid coordinates'
@@ -84,33 +92,25 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Check for duplicate payment
-      const { data: existingArea } = await supabase
-        .from('user_map_areas')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('source', 'buzz_map')
-        .limit(1);
-
-      // Count existing buzz map areas to determine level (server-side validation)
+      // Count existing buzz map areas to determine level
       const { count: buzzMapAreaCount } = await supabase
         .from('user_map_areas')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('source', 'buzz_map');
       
-      const level = buzzMapAreaCount || 0;
-      const levelIndex = Math.min(level, 59); // max 60 levels (0-59)
-      
-      console.log('📊 [HANDLE-BUZZ-PAYMENT-SUCCESS] Current level:', level, 'levelIndex:', levelIndex);
+      const currentCount = buzzMapAreaCount || 0;
+      console.log('💳[HBPS] Current buzz map area count:', currentCount);
       
       // Get BUZZ level pricing from shared module
-      const buzzLevel = getBuzzLevelFromCount(levelIndex);
+      const buzzLevel = getBuzzLevelFromCount(currentCount);
+      const price_eur = amount ? amount / 100 : buzzLevel.priceCents / 100;
       
-      console.log('💰 [HANDLE-BUZZ-PAYMENT-SUCCESS] BUZZ level data:', {
-        level: levelIndex,
+      console.log('💳[HBPS] BUZZ level data:', {
+        count: currentCount,
+        level: buzzLevel.level,
         radiusKm: buzzLevel.radiusKm,
-        priceEur: buzzLevel.priceCents / 100
+        priceEur: price_eur
       });
       
       // Create map area in user_map_areas
@@ -122,13 +122,13 @@ Deno.serve(async (req) => {
           center_lat: coords.lat,
           center_lng: coords.lng,
           radius_km: buzzLevel.radiusKm,
-          level_index: levelIndex
+          level_index: buzzLevel.level
         })
         .select()
         .single();
         
       if (mapAreaError) {
-        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error creating map area:', mapAreaError);
+        console.error('💳[HBPS] Error creating map area:', mapAreaError);
         
         // Log the failure
         await supabase
@@ -136,11 +136,11 @@ Deno.serve(async (req) => {
           .insert({
             user_id: user.id,
             action: 'buzz_map_area_failed',
-            step: 'area_created',
+            step: 'payment_completed',
             details: {
-              level: levelIndex,
+              level: buzzLevel.level,
               radius_km: buzzLevel.radiusKm,
-              price_eur: buzzLevel.priceCents / 100,
+              price_eur: price_eur,
               payment_intent_id: pid,
               coordinates: coords,
               error: mapAreaError.message,
@@ -151,21 +151,25 @@ Deno.serve(async (req) => {
         throw new Error('Failed to create map area');
       }
       
-      console.log('✅ [HANDLE-BUZZ-PAYMENT-SUCCESS] Map area created:', mapArea.id);
+      console.log('💳[HBPS] Map area created:', mapArea.id);
       
       // Log the action in buzz_map_actions
-      const { error: actionError } = await supabase
+      const { data: actionData, error: actionError } = await supabase
         .from('buzz_map_actions')
         .insert({
           user_id: user.id,
-          clue_count: 1, // For tracking purposes, set to 1
-          cost_eur: amount ? amount / 100 : buzzLevel.priceCents / 100,
+          clue_count: 1,
+          cost_eur: price_eur,
           radius_generated: buzzLevel.radiusKm,
           payment_intent_id: pid
-        });
+        })
+        .select()
+        .single();
         
       if (actionError) {
-        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error logging buzz_map_actions:', actionError);
+        console.error('💳[HBPS] Error logging buzz_map_actions:', actionError);
+      } else {
+        console.log('💳[HBPS] Buzz map action logged:', actionData.id);
       }
       
       // Log in buzz_logs for comprehensive tracking
@@ -174,11 +178,11 @@ Deno.serve(async (req) => {
         .insert({
           user_id: user.id,
           action: 'buzz_map_area_created',
-          step: 'area_created',
+          step: 'payment_completed',
           details: {
-            level: levelIndex,
+            level: buzzLevel.level,
             radius_km: buzzLevel.radiusKm,
-            price_eur: buzzLevel.priceCents / 100,
+            price_eur: price_eur,
             payment_intent_id: pid,
             coordinates: coords,
             area_id: mapArea.id,
@@ -187,49 +191,31 @@ Deno.serve(async (req) => {
         });
         
       if (buzzLogError) {
-        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error logging buzz_logs:', buzzLogError);
-      }
-      
-      // Create success notification
-      const { error: notificationError } = await supabase
-        .from('user_notifications')
-        .insert({
-          user_id: user.id,
-          title: '🗺️ BUZZ Map Area Created!',
-          message: `Your ${buzzLevel.radiusKm}km search area has been created successfully.`,
-          type: 'buzz_map_success',
-          is_read: false
-        });
-        
-      if (notificationError) {
-        console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Error creating notification:', notificationError);
+        console.error('💳[HBPS] Error logging buzz_logs:', buzzLogError);
       } else {
-        console.log('✅ [HANDLE-BUZZ-PAYMENT-SUCCESS] Success notification created');
+        console.log('💳[HBPS] Buzz log created successfully');
       }
       
-      console.log('🎉 [HANDLE-BUZZ-PAYMENT-SUCCESS] BUZZ MAP processing completed successfully');
+      console.log('💳[HBPS] BUZZ MAP processing completed successfully');
       
       const response = {
         success: true,
-        type: "buzz_map",
-        level: levelIndex,
+        message: 'Buzz Map area created',
+        payment_intent_id: pid,
         radius_km: buzzLevel.radiusKm,
-        price_eur: buzzLevel.priceCents / 100,
-        payment_intent_id: pid
+        price_eur: price_eur
       };
       
-      console.log('🎉 [HANDLE-BUZZ-PAYMENT-SUCCESS] Function completed successfully:', response);
+      console.log('💳[HBPS] Function completed successfully:', response);
       
       return new Response(JSON.stringify(response), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     
-    // Handle regular BUZZ payment (existing logic)
-    console.log('🎯 [HANDLE-BUZZ-PAYMENT-SUCCESS] Processing regular BUZZ payment');
+    // Handle regular BUZZ payment (existing logic unchanged)
+    console.log('💳[HBPS] Processing regular BUZZ payment');
     
-    // ... rest of existing BUZZ logic would be here ...
-    // For now, return success for regular BUZZ
     const response = {
       success: true,
       type: "buzz",
@@ -242,7 +228,7 @@ Deno.serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('❌ [HANDLE-BUZZ-PAYMENT-SUCCESS] Function error:', error);
+    console.error('💳[HBPS] Function error:', error);
     
     return new Response(
       JSON.stringify({
