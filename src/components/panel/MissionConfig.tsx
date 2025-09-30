@@ -322,9 +322,8 @@ export const MissionConfig: React.FC<MissionConfigProps> = ({ mission, onBack, o
                   </CardTitle>
                   <Button
                     onClick={() => {
-                      // Navigate to Prizes tab in Mission Control
+                      // Navigate back and parent will handle switching to prizes tab
                       onBack();
-                      // The parent will handle switching to prizes tab
                     }}
                     variant="outline"
                     size="sm"

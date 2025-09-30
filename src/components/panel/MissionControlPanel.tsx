@@ -250,13 +250,44 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
     { id: 'rewards', label: 'Premi', icon: Award, color: 'text-green-400' }
   ];
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'completed': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'draft': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+  // Calculate mission status badge based on dates and status
+  const getMissionStatusBadge = (mission: Mission): { label: string; color: string } => {
+    const now = new Date();
+    const startDate = mission.start_date ? new Date(mission.start_date) : null;
+    const endDate = mission.end_date ? new Date(mission.end_date) : null;
+
+    // Completed if end date has passed
+    if (endDate && now >= endDate) {
+      return { label: 'Completata', color: 'bg-blue-500/20 text-blue-400 border-blue-500/30' };
     }
+
+    // Live if scheduled/published and within date range
+    if ((mission.status === 'scheduled' || mission.status === 'published') && 
+        startDate && now >= startDate && (!endDate || now < endDate)) {
+      return { label: 'Live', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
+    }
+
+    // Scheduled if status is scheduled and start date is in future
+    if (mission.status === 'scheduled' && startDate && now < startDate) {
+      return { label: 'Programmata', color: 'bg-orange-500/20 text-orange-400 border-orange-500/30' };
+    }
+
+    // Draft
+    if (mission.status === 'draft') {
+      return { label: 'Bozza', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' };
+    }
+
+    // Archived
+    if (mission.status === 'archived') {
+      return { label: 'Archiviata', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
+    }
+
+    // Published (default)
+    if (mission.status === 'published') {
+      return { label: 'Pubblicata', color: 'bg-green-500/20 text-green-400 border-green-500/30' };
+    }
+
+    return { label: mission.status, color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' };
   };
 
   const getParticipantCount = (mission: Mission) => {
@@ -276,12 +307,22 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
     return match ? match[1] : null;
   };
 
-  // Calculate published missions count
+  // Calculate published/live missions count
   const getPublishedCount = () => {
-    return missions.filter(m => 
-      m.status === 'published' || 
-      (m.status === 'scheduled' && m.start_date && new Date(m.start_date) <= new Date())
-    ).length;
+    const now = new Date();
+    return missions.filter(m => {
+      const startDate = m.start_date ? new Date(m.start_date) : null;
+      const endDate = m.end_date ? new Date(m.end_date) : null;
+      
+      // Count as published if:
+      // - status is 'published' OR
+      // - status is 'scheduled' or 'published' AND within date range (start_date <= now < end_date)
+      return (
+        m.status === 'published' || 
+        ((m.status === 'scheduled' || m.status === 'published') && 
+         startDate && now >= startDate && (!endDate || now < endDate))
+      );
+    }).length;
   };
 
   const formatDateRange = (mission: Mission) => {
@@ -418,13 +459,14 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                             </div>
                             
                             <div className="flex items-center gap-2">
-                              <Badge className={getStatusColor(mission.status)}>
-                                {mission.status === 'published' ? 'Pubblicata' :
-                                 mission.status === 'draft' ? 'Bozza' :
-                                 mission.status === 'scheduled' ? 'Programmata' :
-                                 mission.status === 'archived' ? 'Archiviata' :
-                                 mission.status}
-                              </Badge>
+                              {(() => {
+                                const statusBadge = getMissionStatusBadge(mission);
+                                return (
+                                  <Badge className={statusBadge.color}>
+                                    {statusBadge.label}
+                                  </Badge>
+                                );
+                              })()}
                               <Button
                                 size="sm"
                                 variant="ghost"
