@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { MissionDialog } from '@/components/admin/dialogs/MissionDialog';
 import { Spinner } from '@/components/ui/spinner';
+import { MissionConfig } from './MissionConfig';
 
 interface Mission {
   id: string;
@@ -17,6 +18,12 @@ interface Mission {
   status: string;
   created_at: string | null;
   updated_at: string | null;
+  prize_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  prize_description: string | null;
+  prize_value: string | null;
+  prize_image_url: string | null;
 }
 
 interface MissionControlPanelProps {
@@ -30,12 +37,15 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [currentMission, setCurrentMission] = useState<Mission | null>(null);
+  const [showMissionConfig, setShowMissionConfig] = useState(false);
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [participantCounts, setParticipantCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchMissions();
     
-    // Real-time subscription
-    const channel = supabase
+    // Real-time subscription for missions
+    const missionsChannel = supabase
       .channel('missions-changes')
       .on('postgres_changes', {
         event: '*',
@@ -46,8 +56,21 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       })
       .subscribe();
 
+    // Real-time subscription for participant counts
+    const participantsChannel = supabase
+      .channel('participants-changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'user_mission_registrations'
+      }, () => {
+        loadParticipantCounts();
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(missionsChannel);
+      supabase.removeChannel(participantsChannel);
     };
   }, []);
 
@@ -61,12 +84,39 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
 
       if (error) throw error;
       setMissions(data || []);
+      
+      // Load participant counts after missions are loaded
+      if (data) {
+        loadParticipantCounts();
+      }
     } catch (error: any) {
       toast.error("Errore nel caricamento delle missioni", {
         description: error.message
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadParticipantCounts = async () => {
+    try {
+      const counts: Record<string, number> = {};
+      
+      for (const mission of missions) {
+        const { count, error } = await supabase
+          .from('user_mission_registrations')
+          .select('*', { count: 'exact', head: true })
+          .eq('mission_id', mission.id)
+          .eq('status', 'active');
+
+        if (!error) {
+          counts[mission.id] = count || 0;
+        }
+      }
+      
+      setParticipantCounts(counts);
+    } catch (error) {
+      console.error('Error loading participant counts:', error);
     }
   };
 
@@ -83,7 +133,13 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
           title: missionData.title,
           description: missionData.description || null,
           publication_date: missionData.publication_date || null,
-          status: missionData.status || 'draft'
+          status: missionData.status || 'draft',
+          start_date: missionData.start_date || null,
+          end_date: missionData.end_date || null,
+          prize_id: missionData.prize_id || null,
+          prize_description: missionData.prize_description || null,
+          prize_value: missionData.prize_value || null,
+          prize_image_url: missionData.prize_image_url || null
         });
 
       if (error) throw error;
@@ -108,7 +164,16 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       const { error } = await supabase
         .from('missions')
         .update({
-          ...missionData,
+          title: missionData.title,
+          description: missionData.description,
+          publication_date: missionData.publication_date,
+          status: missionData.status,
+          start_date: missionData.start_date,
+          end_date: missionData.end_date,
+          prize_id: missionData.prize_id,
+          prize_description: missionData.prize_description,
+          prize_value: missionData.prize_value,
+          prize_image_url: missionData.prize_image_url,
           updated_at: new Date().toISOString()
         })
         .eq('id', currentMission.id);
@@ -143,6 +208,16 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   const openEditDialog = (mission: Mission) => {
     setCurrentMission(mission);
     setIsEditDialogOpen(true);
+  };
+
+  const openMissionConfig = (mission: Mission) => {
+    setSelectedMission(mission);
+    setShowMissionConfig(true);
+  };
+
+  const handleMissionUpdate = (updatedMission: Mission) => {
+    setMissions(prev => prev.map(m => m.id === updatedMission.id ? updatedMission : m));
+    setSelectedMission(updatedMission);
   };
 
   const users = [
@@ -228,8 +303,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   };
 
   const getParticipantCount = (mission: Mission) => {
-    // This would be calculated from user mission participation in real app
-    return Math.floor(Math.random() * 200) + 50;
+    return participantCounts[mission.id] || 0;
   };
 
   const getCompletionPercent = (mission: Mission) => {
@@ -239,12 +313,27 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
   };
 
   const formatDateRange = (mission: Mission) => {
-    if (!mission.publication_date) return "Data non definita";
-    const startDate = new Date(mission.publication_date).toLocaleDateString('it-IT');
-    // Calculate end date (example: 30 days from start)
-    const endDate = new Date(new Date(mission.publication_date).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('it-IT');
-    return `${startDate} - ${endDate}`;
+    if (mission.start_date && mission.end_date) {
+      const startDate = new Date(mission.start_date).toLocaleDateString('it-IT');
+      const endDate = new Date(mission.end_date).toLocaleDateString('it-IT');
+      return `${startDate} - ${endDate}`;
+    } else if (mission.publication_date) {
+      const startDate = new Date(mission.publication_date).toLocaleDateString('it-IT');
+      const endDate = new Date(new Date(mission.publication_date).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('it-IT');
+      return `${startDate} - ${endDate}`;
+    }
+    return "Date non definite";
   };
+
+  if (showMissionConfig && selectedMission) {
+    return (
+      <MissionConfig
+        mission={selectedMission}
+        onBack={() => setShowMissionConfig(false)}
+        onUpdate={handleMissionUpdate}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818] p-4">
@@ -362,8 +451,9 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => openEditDialog(mission)}
+                                onClick={() => openMissionConfig(mission)}
                                 className="text-gray-400 hover:text-white"
+                                title="Visualizza dettagli missione"
                               >
                                 <Eye className="w-4 h-4" />
                               </Button>
