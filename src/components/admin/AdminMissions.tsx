@@ -27,6 +27,12 @@ interface Mission {
   status: string;
   created_at: string | null;
   updated_at: string | null;
+  prize_id: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  prize_description: string | null;
+  prize_value: string | null;
+  prize_image_url: string | null;
 }
 
 export const AdminMissions = () => {

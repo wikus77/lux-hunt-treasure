@@ -1700,8 +1700,14 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          end_date: string | null
           id: string
+          prize_description: string | null
+          prize_id: string | null
+          prize_image_url: string | null
+          prize_value: string | null
           publication_date: string | null
+          start_date: string | null
           status: string
           title: string
           updated_at: string | null
@@ -1709,8 +1715,14 @@ export type Database = {
         Insert: {
           created_at?: string | null
           description?: string | null
+          end_date?: string | null
           id?: string
+          prize_description?: string | null
+          prize_id?: string | null
+          prize_image_url?: string | null
+          prize_value?: string | null
           publication_date?: string | null
+          start_date?: string | null
           status?: string
           title: string
           updated_at?: string | null
@@ -1718,13 +1730,27 @@ export type Database = {
         Update: {
           created_at?: string | null
           description?: string | null
+          end_date?: string | null
           id?: string
+          prize_description?: string | null
+          prize_id?: string | null
+          prize_image_url?: string | null
+          prize_value?: string | null
           publication_date?: string | null
+          start_date?: string | null
           status?: string
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "missions_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       monthly_missions: {
         Row: {
