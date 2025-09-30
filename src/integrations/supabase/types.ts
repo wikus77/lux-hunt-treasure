@@ -1712,6 +1712,13 @@ export type Database = {
             foreignKeyName: "mission_prizes_mission_id_fkey"
             columns: ["mission_id"]
             isOneToOne: false
+            referencedRelation: "mission_status_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_prizes_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
             referencedRelation: "missions"
             referencedColumns: ["id"]
           },
@@ -4567,6 +4574,65 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_status_v: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string | null
+          is_live: boolean | null
+          prize_description: string | null
+          prize_id: string | null
+          prize_image_url: string | null
+          prize_value: string | null
+          publication_date: string | null
+          start_date: string | null
+          status: string | null
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_live?: never
+          prize_description?: string | null
+          prize_id?: string | null
+          prize_image_url?: string | null
+          prize_value?: string | null
+          publication_date?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_live?: never
+          prize_description?: string | null
+          prize_id?: string | null
+          prize_image_url?: string | null
+          prize_value?: string | null
+          publication_date?: string | null
+          start_date?: string | null
+          status?: string | null
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "missions_prize_id_fkey"
+            columns: ["prize_id"]
+            isOneToOne: false
+            referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_latest_webpush_subscription: {
         Row: {
           created_at: string | null
@@ -5228,6 +5294,10 @@ export type Database = {
       upsert_notification_counter: {
         Args: { p_delta: number; p_user_id: string }
         Returns: number
+      }
+      upsert_prize_category: {
+        Args: { cat_name: string }
+        Returns: string
       }
       upsert_user_position: {
         Args: { lat: number; lng: number; uid: string }
