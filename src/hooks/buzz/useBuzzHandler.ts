@@ -184,22 +184,15 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         });
         
         // Show clue toast if fresh notification available
-        if (isDataFresh && data?.message) {
+        if (isDataFresh && data?.message && !buzzToastShown) {
           buzzToastOnce('success', data.message, {
             duration: 4000,
             position: 'top-center',
-            style: { 
-              zIndex: 9999,
-              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
-              color: 'white',
-              fontWeight: 'bold'
+            style: {
+              background: 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)'
             }
           });
-          buzzToastShown = true;
-        }
-        
-        // Only show error toast if no clue was shown and there was an error
-        if (hadError && !buzzToastShown) {
+        } else if (hadError && !buzzToastShown) {
           buzzToastOnce('error', "Non sono riuscito a generare l'indizio, riprova fra poco.");
         }
         
