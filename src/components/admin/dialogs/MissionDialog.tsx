@@ -243,15 +243,15 @@ export const MissionDialog = ({
               <Label htmlFor="prize_id" className="text-right">
                 Premio
               </Label>
-              <Select
+               <Select
                 value={missionData.prize_id || undefined}
-                onValueChange={(value) => setMissionData({...missionData, prize_id: value || null})}
+                onValueChange={(value) => setMissionData({...missionData, prize_id: value === 'none' ? null : value})}
               >
                 <SelectTrigger className="col-span-3">
                   <SelectValue placeholder="Seleziona premio (opzionale)" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Nessun premio</SelectItem>
+                 <SelectContent>
+                  <SelectItem value="none">Nessun premio</SelectItem>
                   {prizes.map((prize) => (
                     <SelectItem key={prize.id} value={prize.id}>
                       {prize.name || "Premio senza nome"}

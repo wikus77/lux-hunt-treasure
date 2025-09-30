@@ -642,8 +642,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                 <div className="mt-4 text-center">
                   <Button 
                     onClick={() => {
-                      const ref = 'vkjrqirvdvjbemsfzxof';
-                      const url = `https://supabase.com/dashboard/project/${ref}/editor/table/missions`;
+                      const url = `https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/editor/table/missions`;
                       window.open(url, '_blank');
                     }}
                     variant="outline"
