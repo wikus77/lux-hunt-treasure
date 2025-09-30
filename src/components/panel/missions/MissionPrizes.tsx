@@ -168,30 +168,13 @@ export const MissionPrizes: React.FC<MissionPrizesProps> = ({ selectedMissionId 
     try {
       let categoryId = formData.category_id || null;
 
-      // Create new category if needed
+      // Create new category if needed using upsert function
       if (formData.newCategoryName.trim()) {
-        const { data: newCategory, error: catError } = await supabase
-          .from('prize_categories')
-          .insert({ name: formData.newCategoryName.trim() })
-          .select()
-          .single();
+        const { data: categoryIdData, error: categoryError } = await supabase
+          .rpc('upsert_prize_category', { cat_name: formData.newCategoryName.trim() });
 
-        if (catError) {
-          // Check if category already exists
-          const { data: existing } = await supabase
-            .from('prize_categories')
-            .select('id')
-            .eq('name', formData.newCategoryName.trim())
-            .single();
-          
-          if (existing) {
-            categoryId = existing.id;
-          } else {
-            throw catError;
-          }
-        } else {
-          categoryId = newCategory.id;
-        }
+        if (categoryError) throw categoryError;
+        categoryId = categoryIdData;
       }
 
       const prizeData = {
@@ -368,13 +351,12 @@ export const MissionPrizes: React.FC<MissionPrizesProps> = ({ selectedMissionId 
               <Label htmlFor="category">Categoria</Label>
               <Select
                 value={formData.category_id || undefined}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value === 'new' ? '' : value })}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleziona o crea categoria" />
+                  <SelectValue placeholder="Seleziona categoria esistente" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">+ Nuova categoria</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id}>
                       {cat.name}
@@ -384,15 +366,16 @@ export const MissionPrizes: React.FC<MissionPrizesProps> = ({ selectedMissionId 
               </Select>
             </div>
 
-            {(formData.category_id === '' || formData.category_id === 'new') && (
-              <div>
-                <Label htmlFor="newCategory">Nome nuova categoria</Label>
+            {!formData.category_id && (
+               <div>
+                <Label htmlFor="newCategory">O crea nuova categoria</Label>
                 <Input
                   id="newCategory"
                   value={formData.newCategoryName}
                   onChange={(e) => setFormData({ ...formData, newCategoryName: e.target.value })}
                   placeholder="es. Elettronica, Viaggi, Esperienze..."
                 />
+                <p className="text-xs text-gray-500 mt-1">Se inserisci un nome qui, verrà creata una nuova categoria</p>
               </div>
             )}
 
