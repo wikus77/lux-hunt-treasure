@@ -575,6 +575,7 @@ export type Database = {
           cost_eur: number
           created_at: string
           id: string
+          payment_intent_id: string | null
           radius_generated: number
           user_id: string
         }
@@ -583,6 +584,7 @@ export type Database = {
           cost_eur: number
           created_at?: string
           id?: string
+          payment_intent_id?: string | null
           radius_generated: number
           user_id: string
         }
@@ -591,6 +593,7 @@ export type Database = {
           cost_eur?: number
           created_at?: string
           id?: string
+          payment_intent_id?: string | null
           radius_generated?: number
           user_id?: string
         }
@@ -3665,6 +3668,7 @@ export type Database = {
           id: string
           lat: number
           level: number | null
+          level_index: number | null
           lng: number
           price_eur: number | null
           radius_km: number
@@ -3680,6 +3684,7 @@ export type Database = {
           id?: string
           lat: number
           level?: number | null
+          level_index?: number | null
           lng: number
           price_eur?: number | null
           radius_km: number
@@ -3695,6 +3700,7 @@ export type Database = {
           id?: string
           lat?: number
           level?: number | null
+          level_index?: number | null
           lng?: number
           price_eur?: number | null
           radius_km?: number
