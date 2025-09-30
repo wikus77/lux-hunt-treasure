@@ -130,7 +130,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
         return;
       }
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('missions')
         .insert({
           title: missionData.title,
@@ -143,9 +143,18 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
           prize_description: missionData.prize_description || null,
           prize_value: missionData.prize_value || null,
           prize_image_url: missionData.prize_image_url || null
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
+      
+      // Auto-select the newly created mission
+      if (data) {
+        setSelectedMissionIdForTabs(data.id);
+        setActiveTab('users'); // Switch to users tab
+      }
+      
       toast.success("Missione creata con successo");
       setIsCreateDialogOpen(false);
     } catch (error: any) {
@@ -258,6 +267,21 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
     // This would be calculated from actual mission progress in real app
     return mission.status === 'published' ? Math.floor(Math.random() * 100) + 1 :
            mission.status === 'draft' ? 0 : 100;
+  };
+
+  // Extract project ref from Supabase URL
+  const getProjectRef = () => {
+    const supabaseUrl = "https://vkjrqirvdvjbemsfzxof.supabase.co";
+    const match = supabaseUrl.match(/https:\/\/(.+)\.supabase\.co/);
+    return match ? match[1] : null;
+  };
+
+  // Calculate published missions count
+  const getPublishedCount = () => {
+    return missions.filter(m => 
+      m.status === 'published' || 
+      (m.status === 'scheduled' && m.start_date && new Date(m.start_date) <= new Date())
+    ).length;
   };
 
   const formatDateRange = (mission: Mission) => {
@@ -458,7 +482,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                     <div className="text-sm text-gray-400">Missioni Totali</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-green-400">{missions.filter(m => m.status === 'published').length}</div>
+                    <div className="text-2xl font-bold text-green-400">{getPublishedCount()}</div>
                     <div className="text-sm text-gray-400">Missioni Pubblicate</div>
                   </div>
                   <div>
@@ -474,18 +498,55 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
                     <div className="text-sm text-gray-400">Archiviate</div>
                   </div>
                 </div>
-                <div className="mt-4 text-center">
-                  <Button 
-                    onClick={() => {
-                      const url = `https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/editor/table/missions`;
-                      window.open(url, '_blank');
-                    }}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    Missions Table
-                  </Button>
+                <div className="mt-4 text-center space-x-2">
+                  {getProjectRef() && (
+                    <>
+                      <Button 
+                        onClick={() => {
+                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/missions`;
+                          window.open(url, '_blank');
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        Missions Table
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/mission_prizes`;
+                          window.open(url, '_blank');
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        Mission Prizes
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/prize_categories`;
+                          window.open(url, '_blank');
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        Prize Categories
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          const url = `https://supabase.com/dashboard/project/${getProjectRef()}/editor/table/user_mission_registrations`;
+                          window.open(url, '_blank');
+                        }}
+                        variant="outline"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        User Registrations
+                      </Button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>

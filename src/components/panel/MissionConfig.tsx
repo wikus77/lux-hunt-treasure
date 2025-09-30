@@ -89,9 +89,7 @@ export const MissionConfig: React.FC<MissionConfigProps> = ({ mission, onBack, o
           status: editData.status,
           start_date: editData.start_date,
           end_date: editData.end_date,
-          prize_description: editData.prize_description,
-          prize_value: editData.prize_value,
-          prize_image_url: editData.prize_image_url,
+          // Prize fields removed - managed only in Prizes tab
           updated_at: new Date().toISOString()
         })
         .eq('id', mission.id);
@@ -314,65 +312,52 @@ export const MissionConfig: React.FC<MissionConfigProps> = ({ mission, onBack, o
               </CardContent>
             </Card>
 
-            {/* Prize Details */}
+            {/* Prize Details - Read Only */}
             <Card className="glass-card border-white/20">
               <CardHeader>
-                <CardTitle className="text-white flex items-center gap-2">
-                  <Award className="w-5 h-5 text-[#4361ee]" />
-                  Dettagli Premio
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Award className="w-5 h-5 text-[#4361ee]" />
+                    Dettagli Premio (Solo Lettura)
+                  </CardTitle>
+                  <Button
+                    onClick={() => {
+                      // Navigate to Prizes tab in Mission Control
+                      onBack();
+                      // The parent will handle switching to prizes tab
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    Gestisci Premi
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-gray-300">Descrizione Premio</Label>
-                    {isEditing ? (
-                      <Textarea
-                        value={editData.prize_description || ""}
-                        onChange={(e) => setEditData({...editData, prize_description: e.target.value})}
-                        className="mt-1"
-                        rows={2}
-                      />
-                    ) : (
-                      <p className="text-white">{mission.prize_description || "Nessun premio definito"}</p>
-                    )}
+                    <p className="text-white">{mission.prize_description || "Nessun premio definito"}</p>
+                    <p className="text-xs text-gray-500 mt-1">I premi vengono gestiti dal tab Premi nel Mission Control</p>
                   </div>
                   
                   <div>
                     <Label className="text-gray-300">Valore Premio</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.prize_value || ""}
-                        onChange={(e) => setEditData({...editData, prize_value: e.target.value})}
-                        className="mt-1"
-                      />
-                    ) : (
-                      <p className="text-white">{mission.prize_value || "Non specificato"}</p>
-                    )}
+                    <p className="text-white">{mission.prize_value || "Non specificato"}</p>
                   </div>
                 </div>
                 
-                {(mission.prize_image_url || isEditing) && (
+                {mission.prize_image_url && (
                   <div>
                     <Label className="text-gray-300">Immagine Premio</Label>
-                    {isEditing ? (
-                      <Input
-                        value={editData.prize_image_url || ""}
-                        onChange={(e) => setEditData({...editData, prize_image_url: e.target.value})}
-                        className="mt-1"
-                        placeholder="URL immagine"
+                    <div className="mt-2">
+                      <img 
+                        src={mission.prize_image_url} 
+                        alt="Premio" 
+                        className="w-32 h-32 object-cover rounded-lg border border-white/20"
                       />
-                    ) : mission.prize_image_url ? (
-                      <div className="mt-2">
-                        <img 
-                          src={mission.prize_image_url} 
-                          alt="Premio" 
-                          className="w-32 h-32 object-cover rounded-lg border border-white/20"
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-gray-400 mt-1">Nessuna immagine</p>
-                    )}
+                    </div>
                   </div>
                 )}
               </CardContent>
