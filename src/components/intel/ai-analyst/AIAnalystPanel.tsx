@@ -179,7 +179,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
               <div className="text-center text-white/40 py-12">
                 {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
                 <p className="text-lg mb-2">Norah Intelligence Ready</p>
-                <p className="text-sm">Use quick chips above or type your query below.</p>
+                <p className="text-sm">Scrivi in linguaggio naturale. Chiedi qualsiasi cosa su M1SSION.</p>
               </div>
             ) : (
               <>

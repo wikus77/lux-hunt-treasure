@@ -200,28 +200,43 @@ export function generateReply(
       return reply + '\n\n💡 **Posso aiutarti a verificare se i segnali convergono**, senza rivelare nulla di proibito.';
     }
 
-    // v5: Multi-intent handling
+    // v6: Multi-intent handling - risposte più ricche + CTA pratica
     if (intentResult.multiIntents && intentResult.multiIntents.length >= 2) {
       console.log('[NORAH-v5] Multi-intent response');
-      let multiReply = `${toneModifier.prefix}${getEmpathyIntro(ctx)} Rispondo a entrambe le tue domande:\n\n`;
+      let multiReply = `${toneModifier.prefix}${getEmpathyIntro(ctx)} Rispondo a tutto:\n\n`;
       
       intentResult.multiIntents.slice(0, 2).forEach((pi, idx) => {
         const faqKey = pi.intent.replace('about_', '');
         const faqEntry = norahKB?.faq?.[faqKey as keyof typeof norahKB.faq];
         if (faqEntry && Array.isArray(faqEntry.a) && faqEntry.a.length > 0) {
-          const answer = faqEntry.a[0].split('.')[0] + '.'; // First sentence only
-          multiReply += `${idx + 1}. **${pi.fragment}**: ${answer}\n`;
+          // v6: Take first 2 sentences instead of 1 for clarity
+          const sentences = faqEntry.a[0].split('.').filter((s: string) => s.trim().length > 0);
+          const answer = sentences.slice(0, 2).join('. ') + '.';
+          multiReply += `**${idx + 1}. ${pi.fragment}**\n${answer}\n\n`;
         }
       });
       
       const nba = nextBestAction(ctx, phase, sentiment);
-      multiReply += `\n**Prossimo passo**: ${nba.steps[0]}`;
+      multiReply += `💡 **Ora fai questo**: ${nba.steps[0]}`;
       return multiReply + maybeAddFriendNudge();
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-    // v4.2: Enhanced retention responses - frustration + time constraints + confusion
+    // v6: Enhanced retention + PRICING clarity - NO echo, tone adaptive
     const lowerInput = (userInput || '').toLowerCase();
+    
+    // v6: Priority 1 - BUZZ pricing detection (must be FIRST)
+    const pricingSignals = ['si paga', 'è gratis', 'prezzo', 'costa', 'pagare', 'free', 'gratis', 'quanto costa'];
+    const hasPricingQuery = pricingSignals.some(sig => lowerInput.includes(sig));
+    
+    if (hasPricingQuery) {
+      const pricingResponses = [
+        `${getEmpathyIntro(ctx)} BUZZ è completamente **gratuito**. Zero costi per raccogliere indizi. Vai su BUZZ ora e inizia!`,
+        `${getEmpathyIntro(ctx)} Tranquillo, BUZZ **non costa nulla**! È gratis per tutti. Premi BUZZ e parti subito.`,
+        `${getEmpathyIntro(ctx)} **BUZZ è gratis al 100%**. Nessun costo per gli indizi. Vai su BUZZ e inizia la caccia!`
+      ];
+      return selectVariation(pricingResponses, seed) + maybeAddFriendNudge();
+    }
     
     // Detect confusion/lost signals - v4.2: expanded
     const confusionSignals = ['non ho capito niente', 'nn capito niente', 'nn capito', 'boh', 'non capisco', 'niente', 'aiuto non capisco'];
@@ -262,8 +277,14 @@ export function generateReply(
       return selectVariation(retentionResponses, seed) + maybeAddFriendNudge();
     }
     
-    // Unknown/Help fallback with smart contextual suggestions
+    // v6: Unknown/Help fallback - Tone adaptive, NO echo, coach-friendly
     if (intent === 'unknown' || intent === 'help') {
+      const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+      const clues = ctx?.stats?.clues || 0;
+      
+      // Apply tone modifier based on sentiment
+      let reply = `${toneModifier.prefix}${getEmpathyIntro(ctx)} `;
+      
       // Check if user mentioned known keywords but intent was missed
       const knownKeywords = ['mission', 'm1ssion', 'buzz', 'finalshot', 'fs', 'mappa', 'piani', 'abbo', 'pattern', 'decode'];
       const foundKeyword = knownKeywords.find(kw => lowerInput.includes(kw));
@@ -272,38 +293,43 @@ export function generateReply(
         // Redirect to most likely intent based on keyword
         if (['mission', 'm1ssion'].some(k => lowerInput.includes(k))) {
           const missionOptions = norahKB?.faq?.mission?.a || ['M1SSION™ è un gioco di intelligence e ricerca del premio.'];
-          return selectVariation(missionOptions, seed);
+          reply += selectVariation(missionOptions, seed);
+          reply += getCoachCTA(ctx);
+          return reply + maybeAddFriendNudge();
         }
         if (['finalshot', 'fs'].some(k => lowerInput.includes(k))) {
           const fsOptions = norahKB?.faq?.finalshot?.a || ['Final Shot: tentativo finale per vincere (max 2 al giorno).'];
-          return selectVariation(fsOptions, seed);
+          reply += selectVariation(fsOptions, seed);
+          reply += getCoachCTA(ctx);
+          return reply + maybeAddFriendNudge();
         }
         if (['piani', 'abbo'].some(k => lowerInput.includes(k))) {
           const planOptions = norahKB?.faq?.subscriptions?.a || ['Vai su Abbonamenti per vedere i piani disponibili.'];
-          return selectVariation(planOptions, seed);
+          reply += selectVariation(planOptions, seed);
+          return reply + maybeAddFriendNudge();
         }
       }
       
-      const options = norahKB?.guardrails?.unknown || [
-        'Non ho capito. Prova: Mission, BUZZ, Final Shot, indizi, pattern, piani.'
+      // v6: NO rigid commands, friendly suggestions instead
+      const helpOptions = [
+        `Posso aiutarti con: Mission (cos'è il gioco), BUZZ (indizi), Final Shot (colpo finale), piani (abbonamenti). Cosa ti serve?`,
+        `Ti spiego: Mission, BUZZ, Final Shot, piani, regole. Di cosa parliamo?`,
+        `Sono qui per: spiegare Mission, aiutarti con BUZZ, chiarire Final Shot, mostrare i piani. Dove iniziamo?`
       ];
-      let reply = selectVariation(options, seed);
+      reply += selectVariation(helpOptions, seed);
       
-      // Add contextual suggestions based on agent state
-      const clues = ctx?.stats?.clues || 0;
-      const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
-      
+      // Add contextual CTA based on agent state
       if (ctx?.agent?.code === 'AG-UNKNOWN') {
         reply += `\n\n⚠️ Profilo non sincronizzato. Prova a ricaricare la pagina.`;
       } else if (clues === 0) {
-        reply += `\n\n🎯 ${agentName}, inizia con BUZZ per raccogliere indizi.`;
+        reply += `\n\n💡 ${agentName}, ti consiglio: inizia con BUZZ per raccogliere i primi indizi.`;
       } else if (clues < 8) {
-        reply += `\n\n🎯 ${agentName}, hai ${clues} indizi. Continua con BUZZ o prova BUZZ Map.`;
+        reply += `\n\n💡 ${agentName}, hai ${clues} indizi. Prosegui con BUZZ o esplora BUZZ Map.`;
       } else {
-        reply += `\n\n🎯 ${agentName}, con ${clues} indizi puoi analizzare pattern o valutare Final Shot.`;
+        reply += `\n\n💡 ${agentName}, con ${clues} indizi puoi cercare pattern o valutare Final Shot.`;
       }
       
-      return reply;
+      return reply + maybeAddFriendNudge();
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
@@ -345,9 +371,10 @@ export function generateReply(
       return reply;
     }
 
-    // Fallback for unhandled intents
-    const fallback = `Agente ${ctx?.agent?.code || 'N/D'}, non ho una risposta specifica. Chiedi di BUZZ, Final Shot, indizi, pattern o regole.`;
-    return fallback + getCoachCTA(ctx) + getEngagementHook(intent);
+    // v6: Fallback - Coach-friendly, NO rigid commands
+    const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+    const fallback = `${getEmpathyIntro(ctx)} ${agentName}, posso aiutarti con: Mission, BUZZ, Final Shot, pattern, regole. Cosa ti serve?`;
+    return fallback + getCoachCTA(ctx) + maybeAddFriendNudge();
   } catch (error) {
     console.error('[NORAH-v4] Reply generation error:', error);
     return 'Sistemi occupati, riprova tra un momento.';

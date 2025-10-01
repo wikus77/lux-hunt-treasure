@@ -59,7 +59,7 @@ export function generateFollowUpReply(
   const nba = nextBestAction(ctx, phase, sentiment);
   const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
 
-  // Friendly intro
+  // Friendly intro - v6: più naturale
   const intros = [
     `Ok ${agentName}, ecco il prossimo passo:`,
     `Bene! Il prossimo step è questo:`,
@@ -68,12 +68,21 @@ export function generateFollowUpReply(
     `Chiaro, passiamo a:`
   ];
 
+  const closers = [
+    '\n\nVai così!',
+    '\n\nProcedi pure.',
+    '\n\nFammi sapere come va.',
+    '\n\nCi siamo!',
+    '\n\nSei sulla strada giusta.'
+  ];
+
   const intro = intros[Math.floor(Math.random() * intros.length)];
+  const closer = closers[Math.floor(Math.random() * closers.length)];
 
   // Format steps as bullet list
   const stepsList = nba.steps
     .map((step, idx) => `${idx + 1}. ${step}`)
     .join('\n');
 
-  return `${intro}\n\n**${nba.title}**\n\n${stepsList}\n\nCi stai?`;
+  return `${intro}\n\n**${nba.title}**\n\n${stepsList}${closer}`;
 }
