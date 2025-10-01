@@ -27,20 +27,21 @@ const DIACRITICS_MAP: Record<string, string> = {
   'ñ': 'n', 'ç': 'c', 'ß': 'ss'
 };
 
-// Common synonyms and typos
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Common synonyms and typos - Extended for better coverage
 const SYNONYMS: Record<string, string[]> = {
-  'finalshot': ['final shot', 'fs', 'finalshoot', 'final shoot', 'finale shot'],
-  'mission': ['m1ssion', 'misione', 'missione', 'misión'],
-  'buzz': ['buz', 'bus', 'buss'],
-  'buzzmap': ['buzz map', 'buz map', 'mappa buzz', 'map buzz', 'buz mappa'],
-  'abbonamento': ['abbo', 'piano', 'pricing', 'subscription', 'abbonamenti', 'piani'],
-  'indizio': ['clue', 'indizi', 'clues', 'indizi', 'hint'],
+  'finalshot': ['final shot', 'fs', 'finalshoot', 'final shoot', 'finale shot', 'colpo finale'],
+  'mission': ['m1ssion', 'misione', 'missione', 'misión', 'm1', 'gioco mission', 'gioco m1ssion'],
+  'buzz': ['buz', 'bus', 'buss', 'indizi', 'clue'],
+  'buzzmap': ['buzz map', 'buz map', 'mappa buzz', 'map buzz', 'buz mappa', 'mappa', 'tasto mappa'],
+  'abbonamento': ['abbo', 'piano', 'pricing', 'subscription', 'abbonamenti', 'piani', 'plans', 'plan'],
+  'indizio': ['clue', 'indizi', 'clues', 'hint', 'hints'],
   'probabilità': ['prob', 'probability', 'chance', 'probabilita'],
-  'pattern': ['patterns', 'schema', 'schemi'],
+  'pattern': ['patterns', 'schema', 'schemi', 'correlazione'],
   'decodifica': ['decode', 'decod', 'decipher', 'decifra'],
-  'aiuto': ['help', 'aiutami', 'aiutare', 'assistenza'],
+  'aiuto': ['help', 'aiutami', 'aiutare', 'assistenza', 'inizio', 'iniziare', 'come si fa', 'cosa posso fare'],
   'progress': ['progresso', 'avanzamento', 'stato'],
-  'mentor': ['mentore', 'guida', 'coach'],
+  'mentor': ['mentore', 'guida', 'coach', 'consiglio', 'suggerimento'],
   'leaderboard': ['classifica', 'ranking', 'leader'],
   'community': ['comunità', 'comunita'],
   'privacy': ['privata', 'dati', 'sicurezza']

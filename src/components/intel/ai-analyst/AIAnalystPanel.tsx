@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Activity } from 'lucide-react';
 import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
+import { type AgentContextData } from '@/intel/ai/context/agentContext';
 
 export interface AIAnalystPanelProps {
   // Support both 'open' and 'isOpen' for compatibility
@@ -18,6 +19,7 @@ export interface AIAnalystPanelProps {
   audioLevel: number;
   ttsEnabled: boolean;
   onToggleTTS: () => void;
+  agentContext?: AgentContextData | null;
 }
 
 const QUICK_CHIPS: Array<{ label: string; mode: AnalystMode }> = [
@@ -48,7 +50,8 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     status, 
     audioLevel, 
     ttsEnabled, 
-    onToggleTTS 
+    onToggleTTS,
+    agentContext
   } = props;
   
   const [input, setInput] = useState('');
@@ -119,7 +122,12 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] bg-clip-text text-transparent">
                   NORAH AI
                 </h2>
-                <p className="text-sm text-white/60 mt-1">Intelligence Analysis System</p>
+                <p className="text-sm text-white/60 mt-1">
+                  {agentContext?.agentCode && agentContext.agentCode !== 'AG-UNKNOWN' 
+                    ? `Norah Intelligence Ready • Agente ${agentContext.agentCode}`
+                    : 'Intelligence Analysis System'
+                  }
+                </p>
               </div>
               
               {/* VU Meter */}

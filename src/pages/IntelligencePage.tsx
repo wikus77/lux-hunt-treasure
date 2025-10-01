@@ -162,6 +162,7 @@ const IntelligencePage: React.FC = () => {
         audioLevel={audioLevel}
         ttsEnabled={ttsEnabled}
         onToggleTTS={toggleTTS}
+        agentContext={agentContext}
       />
       
       {/* Bottom Navigation */}

@@ -76,25 +76,60 @@ function setCachedAgent(code: string, nickname: string | null) {
 }
 
 export async function buildNorahContext(): Promise<NorahContext> {
+  // Try cache first for fast fallback
+  const cached = getCachedAgent();
+  
   try {
     const { data, error } = await supabase.functions.invoke('get-norah-context', {
       method: 'GET'
     });
 
-    if (error) throw error;
-
-    // Cache agent code for future fast access
-    if (data?.agent?.code && data.agent.code !== 'AG-UNKNOWN') {
-      setCachedAgent(data.agent.code, data.agent.nickname);
+    if (error) {
+      console.warn('[Norah] Edge function error:', error);
+      
+      // Use cache if available on 401/403/500
+      if (cached) {
+        console.log('[Norah] Using cached agent due to edge error');
+        return {
+          agent: { code: cached.code, nickname: cached.nickname },
+          mission: null,
+          stats: { clues: 0, buzz_today: 0, finalshot_today: 0 },
+          clues: [],
+          finalshot_recent: [],
+          recent_msgs: []
+        };
+      }
+      
+      throw error;
     }
 
-    return data as NorahContext;
+    // Normalize and ensure no undefined fields
+    const normalized: NorahContext = {
+      agent: {
+        code: data?.agent?.code || cached?.code || 'AG-UNKNOWN',
+        nickname: data?.agent?.nickname || cached?.nickname || null
+      },
+      mission: data?.mission || null,
+      stats: {
+        clues: data?.stats?.clues || 0,
+        buzz_today: data?.stats?.buzz_today || 0,
+        finalshot_today: data?.stats?.finalshot_today || 0
+      },
+      clues: data?.clues || [],
+      finalshot_recent: data?.finalshot_recent || [],
+      recent_msgs: data?.recent_msgs || []
+    };
+
+    // Cache agent code for future fast access
+    if (normalized.agent.code && normalized.agent.code !== 'AG-UNKNOWN') {
+      setCachedAgent(normalized.agent.code, normalized.agent.nickname);
+    }
+
+    return normalized;
   } catch (error) {
     console.error('[Norah] Context build failed:', error);
     
-    // Try to use cached agent if available
-    const cached = getCachedAgent();
-    
+    // Fallback to cache or safe defaults
     return {
       agent: cached 
         ? { code: cached.code, nickname: cached.nickname }
