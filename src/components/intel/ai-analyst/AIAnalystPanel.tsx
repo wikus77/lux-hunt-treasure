@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Activity } from 'lucide-react';
 import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
+import FinalShotQuickAccess from './FinalShotQuickAccess';
 
 export interface AIAnalystPanelProps {
   isOpen: boolean;
@@ -179,31 +180,43 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({
                 <Activity className="w-16 h-16 mx-auto mb-4 opacity-40" />
                 <p className="text-lg mb-2">🎯 Intelligence Analyst Ready</p>
                 <p className="text-sm">Use quick chips above or type your query below.</p>
+                
+                {/* Final Shot Quick Access - Always visible */}
+                <div className="mt-8">
+                  <FinalShotQuickAccess />
+                </div>
               </div>
             ) : (
-              messages.map((message, index) => (
-                <div
-                  key={index}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+              <>
+                {messages.map((message, index) => (
                   <div
-                    className={`max-w-[80%] p-4 rounded-2xl ${
-                      message.role === 'user'
-                        ? 'bg-gradient-to-br from-[#F213A4]/20 to-[#0EA5E9]/20 border border-[#F213A4]/30'
-                        : 'bg-white/5 border border-white/10'
-                    }`}
+                    key={index}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className="text-sm text-white/90 whitespace-pre-wrap leading-relaxed">
-                      {message.content}
-                    </div>
-                    {message.metadata && message.metadata.cluesAnalyzed !== undefined && (
-                      <div className="mt-2 text-xs text-white/40">
-                        {message.metadata.cluesAnalyzed} indizi analizzati • {message.metadata.mode}
+                    <div
+                      className={`max-w-[80%] p-4 rounded-2xl ${
+                        message.role === 'user'
+                          ? 'bg-gradient-to-br from-[#F213A4]/20 to-[#0EA5E9]/20 border border-[#F213A4]/30'
+                          : 'bg-white/5 border border-white/10'
+                      }`}
+                    >
+                      <div className="text-sm text-white/90 whitespace-pre-wrap leading-relaxed">
+                        {message.content}
                       </div>
-                    )}
+                      {message.metadata && message.metadata.cluesAnalyzed !== undefined && (
+                        <div className="mt-2 text-xs text-white/40">
+                          {message.metadata.cluesAnalyzed} indizi analizzati • {message.metadata.mode}
+                        </div>
+                      )}
+                    </div>
                   </div>
+                ))}
+                
+                {/* Final Shot Quick Access after messages */}
+                <div className="pt-4">
+                  <FinalShotQuickAccess />
                 </div>
-              ))
+              </>
             )}
             
             {isProcessing && (
