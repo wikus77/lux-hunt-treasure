@@ -9,7 +9,6 @@ export type SentimentLabel =
   | 'excited';    // Positive, engaged
 
 /**
- * PATCH v6.1: Added sarcasm detection
  * Detect user sentiment from input text (Italian-focused)
  */
 export function detectSentiment(input: string): SentimentLabel {
@@ -18,31 +17,6 @@ export function detectSentiment(input: string): SentimentLabel {
   }
 
   const lower = input.toLowerCase().trim();
-
-  // PATCH v6.1: Sarcasm detection (priority 0 - treat as frustrated/confused)
-  const sarcasmPatterns = [
-    'ah sì certo',
-    'ah si certo',
-    'bravissimo',
-    'fantastico davvero',
-    'che bello',
-    'magnifico',
-    'ottimo lavoro'
-  ];
-
-  // Detect sarcasm: short phrases with "positive" words + punctuation
-  for (const pattern of sarcasmPatterns) {
-    if (lower.includes(pattern) && lower.length < 50) {
-      console.log('[Sentiment] Detected: sarcasm (mapped to frustrated)');
-      return 'frustrated';
-    }
-  }
-
-  // Ellipsis + "positive" words = likely sarcastic
-  if (lower.includes('...') && (lower.includes('perfetto') || lower.includes('chiaro'))) {
-    console.log('[Sentiment] Detected: sarcasm via ellipsis');
-    return 'confused';
-  }
 
   // Frustrated signals (priority 1 - retention risk)
   const frustratedPatterns = [

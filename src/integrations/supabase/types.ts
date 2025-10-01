@@ -2106,7 +2106,6 @@ export type Database = {
           content: string
           context: Json | null
           created_at: string | null
-          episodic_summary: string | null
           id: string
           intent: string | null
           role: string
@@ -2116,7 +2115,6 @@ export type Database = {
           content: string
           context?: Json | null
           created_at?: string | null
-          episodic_summary?: string | null
           id?: string
           intent?: string | null
           role: string
@@ -2126,7 +2124,6 @@ export type Database = {
           content?: string
           context?: Json | null
           created_at?: string | null
-          episodic_summary?: string | null
           id?: string
           intent?: string | null
           role?: string
