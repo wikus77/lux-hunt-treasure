@@ -24,8 +24,9 @@ import {
   Database
 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import RoundMicButton from '@/components/intel/ai-analyst/RoundMicButton';
+import IntelStage from '@/components/intel/ai-analyst/IntelStage';
 import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
+import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
 
 // Keyboard shortcut handler
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -45,32 +46,42 @@ const useKeyboardShortcut = (key: string, callback: () => void) => {
 };
 
 const IntelligenceStyledPage: React.FC = () => {
-const [, setLocation] = useLocation();
-  const [showAIAnalyst, setShowAIAnalyst] = useState(false);
-  const [aiEnabled, setAiEnabled] = useState(true);
+  const [, setLocation] = useLocation();
+  const [panelOpen, setPanelOpen] = useState(false);
+  
+  // AI Analyst hook
+  const {
+    messages,
+    isProcessing,
+    status,
+    currentMode,
+    clues,
+    ttsEnabled,
+    audioLevel,
+    sendMessage,
+    toggleTTS
+  } = useIntelAnalyst();
 
-  // Feature flag: URL ?intel_ai=0/1 or localStorage INTEL_AI_FLAG; default true
-  useEffect(() => {
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const q = params.get('intel_ai');
-      if (q === '0' || q === '1') {
-        setAiEnabled(q === '1');
-        localStorage.setItem('INTEL_AI_FLAG', q);
-        return;
-      }
-      const stored = localStorage.getItem('INTEL_AI_FLAG');
-      if (stored === '0' || stored === '1') setAiEnabled(stored === '1');
-      else setAiEnabled(true);
-    } catch {
-      setAiEnabled(true);
+  // Feature flag: URL ?intel_ai=1 or localStorage m1_ai_enabled=true; default true
+  const [aiEnabled, setAiEnabled] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlFlag = params.get('intel_ai') === '1';
+    const storageFlag = localStorage.getItem('m1_ai_enabled') === 'true';
+    const result = urlFlag || storageFlag;
+    
+    // Auto-enable by default for new stage experience
+    if (!urlFlag && storageFlag === null) {
+      localStorage.setItem('m1_ai_enabled', 'true');
+      return true;
     }
-  }, []);
+    
+    return result;
+  });
   
   // Keyboard shortcut: A to open/close AI Analyst
   useKeyboardShortcut('a', () => {
     if (aiEnabled) {
-      setShowAIAnalyst(prev => !prev);
+      setPanelOpen(prev => !prev);
     }
   });
   const INTEL_ROUTES: Record<string, string> = {
@@ -159,6 +170,42 @@ const [, setLocation] = useLocation();
     if (path) setLocation(path);
   };
 
+  // New Stage UI when AI enabled
+  if (aiEnabled) {
+    return (
+      <>
+        {/* Full Stage when panel closed */}
+        {!panelOpen && (
+          <IntelStage
+            status={status}
+            audioLevel={audioLevel}
+            isActive={panelOpen}
+            onOrbClick={() => setPanelOpen(true)}
+            onMicToggle={toggleTTS}
+            micEnabled={ttsEnabled}
+            ttsEnabled={ttsEnabled}
+          />
+        )}
+        
+        {/* Panel overlays stage when open */}
+        <AIAnalystPanel 
+          isOpen={panelOpen}
+          onClose={() => setPanelOpen(false)}
+          messages={messages}
+          isProcessing={isProcessing}
+          onSendMessage={(msg, mode) => sendMessage(msg, mode)}
+          currentMode={currentMode}
+          cluesCount={clues.length}
+          status={status}
+          audioLevel={audioLevel}
+          ttsEnabled={ttsEnabled}
+          onToggleTTS={toggleTTS}
+        />
+      </>
+    );
+  }
+
+  // Legacy UI when AI disabled
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       <main className="pt-4 pb-20 px-4">
@@ -175,96 +222,15 @@ const [, setLocation] = useLocation();
             </Button>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                {aiEnabled ? 'M1SSION Intelligence / Analyst' : 'Intelligence Panel'}
+                Intelligence Panel
               </h1>
               <p className="text-muted-foreground">
-                {aiEnabled ? 'AI-powered tactical intelligence analysis' : 'Strumenti di analisi tattica'}
+                Strumenti di analisi tattica
               </p>
             </div>
           </div>
 
-          {/* NEW UI: AI Analyst Mode */}
-          {aiEnabled && (
-            <>
-              {/* AI Analyst Hero */}
-              <Card className="glass-card border-0 bg-black/70 backdrop-blur-xl border-2 border-[#F213A4]/30 shadow-[0_0_30px_rgba(242,19,164,0.2)]">
-                <CardHeader className="text-center pb-4">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#F213A4]/20 to-[#0EA5E9]/10 mb-4 mx-auto">
-                    <Brain className="h-10 w-10 text-[#F213A4]" />
-                  </div>
-                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] bg-clip-text text-transparent">
-                    AI ANALYST
-                  </CardTitle>
-                  <p className="text-sm text-white/60 mt-2">
-                    Intelligence analysis, classification, and tactical support
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-sm text-white/80 space-y-2">
-                    <p className="mb-3">
-                      Click the round button below to activate the AI Analyst. The system provides:
-                    </p>
-                    <div className="grid gap-2">
-                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
-                        <span className="text-[#F213A4] font-bold">1.</span>
-                        <span>Analyze and classify your collected clues</span>
-                      </div>
-                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
-                        <span className="text-[#F213A4] font-bold">2.</span>
-                        <span>Detect patterns and correlations between intel</span>
-                      </div>
-                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
-                        <span className="text-[#F213A4] font-bold">3.</span>
-                        <span>Decode basic ciphers (Caesar, Base64, ASCII)</span>
-                      </div>
-                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
-                        <span className="text-[#F213A4] font-bold">4.</span>
-                        <span>Assess tactical probabilities and risks</span>
-                      </div>
-                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
-                        <span className="text-[#F213A4] font-bold">5.</span>
-                        <span>Provide strategic guidance without spoilers</span>
-                      </div>
-                    </div>
-                    <p className="mt-3 text-white/50 text-xs italic">
-                      ⚠️ The Analyst never reveals solutions, only strategic insights.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Final Shot Card */}
-              <Card className="glass-card border-0 bg-black/70 backdrop-blur-xl border-2 border-cyan-500/30 shadow-[0_0_30px_rgba(14,165,233,0.2)]">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                    <Crosshair className="w-6 h-6 text-cyan-400" />
-                    FINAL SHOT
-                  </CardTitle>
-                  <p className="text-sm text-white/60 mt-1">
-                    Interactive map for final coordinate selection
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-between bg-background/50 border-cyan-500/30 hover:bg-cyan-500/10"
-                    onClick={() => openModule('finalshotmap')}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Crosshair className="h-4 w-4 text-cyan-400" />
-                      <span>Open Final Shot Map</span>
-                    </div>
-                    →
-                  </Button>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {/* LEGACY UI: Original Intelligence Panel */}
-          {!aiEnabled && (
-            <>
-              {/* Intelligence Overview */}
+          {/* Intelligence Overview */}
               <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
                 <CardHeader className="text-center pb-4">
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400/20 to-cyan-400/10 mb-4 mx-auto">
@@ -467,23 +433,8 @@ const [, setLocation] = useLocation();
                   </Button>
                 </CardContent>
               </Card>
-            </>
-          )}
         </div>
       </main>
-
-      {/* AI Analyst Components (only when enabled) */}
-      {aiEnabled && (
-        <>
-          <RoundMicButton 
-            onClick={() => setShowAIAnalyst(true)}
-            isActive={showAIAnalyst}
-          />
-          {showAIAnalyst && (
-            <AIAnalystPanel onClose={() => setShowAIAnalyst(false)} />
-          )}
-        </>
-      )}
     </div>
   );
 };
