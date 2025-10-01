@@ -31,14 +31,14 @@ const QUICK_CHIPS: Array<{ label: string; mode: AnalystMode }> = [
   { label: 'Mentore', mode: 'guide' }
 ];
 
-// PATCH v6.1: Dynamic placeholders from NBA
+// v4: Placeholder telegrafici per input brevi
 const PLACEHOLDERS = [
-  "Scrivi in linguaggio naturale (es. non ho capito final shot)",
   "finalshot?",
   "buzz map",
   "piani?",
   "come inizio?",
-  "si paga il buzz?"
+  "cosa è mission?",
+  "aiuto"
 ];
 
 const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => { 

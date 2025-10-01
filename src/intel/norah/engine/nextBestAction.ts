@@ -175,36 +175,16 @@ export function computeNBA(
 }
 
 /**
- * PATCH v6.1: Timezone-aware + Streak-based NBA
  * Get predictive action based on time of day and user progress
  */
-export function getPredictiveAction(ctx: NorahContext, userOffset = 0): NBAResult | null {
-  // PATCH v6.1: Calculate user's local hour (UTC + offset from client)
-  const nowUTC = new Date();
-  const userHour = (nowUTC.getUTCHours() + userOffset + 24) % 24;
-  const dayOfWeek = nowUTC.getDay(); // 0=Sunday, 6=Saturday
-
+export function getPredictiveAction(ctx: NorahContext): NBAResult | null {
+  const hour = new Date().getHours();
   const clues = ctx?.stats?.clues || 0;
   const buzzToday = ctx?.stats?.buzz_today || 0;
-  // PATCH v6.1: streak_days may not exist yet, handle gracefully
-  const streakDays = (ctx?.stats as any)?.streak_days || 0;
-
-  // PATCH v6.1: Streak-based NBA (priority 0)
-  if (streakDays >= 5 && buzzToday === 0) {
-    return {
-      title: `🔥 Streak di ${streakDays} giorni: Non romperlo!`,
-      steps: [
-        `Hai una serie di ${streakDays} giorni consecutivi`,
-        'Fai almeno 1 BUZZ oggi per mantenerlo',
-        'Ogni giorno conta per il tuo progresso'
-      ],
-      reason: 'High streak + no buzz today',
-      priority: 'high'
-    };
-  }
+  const dayOfWeek = new Date().getDay(); // 0=Sunday, 6=Saturday
 
   // Morning (8-11) + no BUZZ today
-  if (userHour >= 8 && userHour < 11 && buzzToday === 0) {
+  if (hour >= 8 && hour < 11 && buzzToday === 0) {
     return {
       title: 'Mattina perfetta per BUZZ ☀️',
       steps: [
@@ -218,7 +198,7 @@ export function getPredictiveAction(ctx: NorahContext, userOffset = 0): NBAResul
   }
 
   // Evening (19-22) + good clue collection (5+)
-  if (userHour >= 19 && userHour < 22 && clues >= 5) {
+  if (hour >= 19 && hour < 22 && clues >= 5) {
     return {
       title: 'Serata ideale per analisi 🌙',
       steps: [
@@ -231,22 +211,8 @@ export function getPredictiveAction(ctx: NorahContext, userOffset = 0): NBAResul
     };
   }
 
-  // PATCH v6.1: Weekend competitive variant
+  // Weekend + low activity
   if ((dayOfWeek === 0 || dayOfWeek === 6) && buzzToday === 0 && clues < 8) {
-    // Check if user is advanced (clues >= 4) for competitive variant
-    if (clues >= 4) {
-      return {
-        title: 'Weekend: Momento competitivo 🏆',
-        steps: [
-          'Weekend = altri agenti attivi',
-          'Fai 2-3 BUZZ per mantenere vantaggio',
-          'Analizza indizi e avanza ipotesi'
-        ],
-        reason: 'Weekend + competitive mode',
-        priority: 'medium'
-      };
-    }
-
     return {
       title: 'Weekend: momento perfetto 🎯',
       steps: [

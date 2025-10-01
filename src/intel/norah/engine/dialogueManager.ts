@@ -78,7 +78,6 @@ export function getPhase(
 }
 
 /**
- * PATCH v6.1: Enhanced consecutive follow-up handling
  * Determine next best action based on phase and context
  */
 export function nextBestAction(
