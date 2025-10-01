@@ -1,19 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Panel
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Activity } from 'lucide-react';
-import { type AnalystMode, type AnalystStatus } from '@/hooks/useIntelAnalyst';
+import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
-
-export interface AnalystMessage {
-  id?: string;
-  role: 'user' | 'analyst';
-  content: string;
-  ts?: number;
-  metadata?: {
-    cluesAnalyzed?: number;
-    mode?: string;
-  };
-}
 
 export interface AIAnalystPanelProps {
   isOpen: boolean;
