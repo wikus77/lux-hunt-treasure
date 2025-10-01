@@ -1,11 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // NORAH Spell Checker - Damerau-Levenshtein + M1SSION domain dictionary
 
-// M1SSION domain-specific dictionary
+// M1SSION domain-specific dictionary + slang/typos
 const M1SSION_DICT: Set<string> = new Set([
-  'norah', 'mission', 'm1ssion', 'm1', 'mssn',
-  'finalshot', 'final', 'shot', 'fs',
-  'buzz', 'buzzmap', 'buz', 'mappa',
+  'norah', 'mission', 'm1ssion', 'm1', 'mssn', 'misison', 'missione',
+  'finalshot', 'final', 'shot', 'fs', 'finalshoot', 'finale',
+  'buzz', 'buzzmap', 'buz', 'bus', 'mappa',
   'indizi', 'indizio', 'clue', 'clues',
   'pattern', 'patterns', 'schema',
   'probabilita', 'probability', 'prob',
@@ -16,8 +16,27 @@ const M1SSION_DICT: Set<string> = new Set([
   'mentor', 'mentore', 'guida', 'coach',
   'progress', 'progresso', 'avanzamento',
   'decode', 'decodifica', 'decifra',
-  'coordinate', 'luogo', 'posto', 'premio'
+  'coordinate', 'luogo', 'posto', 'premio',
+  // Slang/typos IT
+  'nn', 'xke', 'ke', 'cmq', 'anke', 'xo', 'pk', 'qnd', 'dv',
+  'capito', 'capisco', 'piace', 'vado', 'cosa', 'come', 'che',
+  'non', 'dove', 'quando', 'perche', 'perché', 'quindi'
 ]);
+
+// Slang/typo expansion map
+const SLANG_MAP: Record<string, string> = {
+  'nn': 'non',
+  'xke': 'perche',
+  'xkè': 'perche',
+  'ke': 'che',
+  'cmq': 'comunque',
+  'anke': 'anche',
+  'xo': 'pero',
+  'pk': 'perche',
+  'qnd': 'quando',
+  'dv': 'dove',
+  'pke': 'perche'
+};
 
 // Damerau-Levenshtein distance (supports transposition)
 function damerauLevenshtein(a: string, b: string): number {
@@ -80,9 +99,17 @@ export function correctSpelling(word: string): string {
   return bestMatch;
 }
 
-// Correct phrase (word by word)
-export function correctPhrase(text: string): string {
+// Expand slang before spell correction
+export function expandSlang(text: string): string {
   const words = text.toLowerCase().trim().split(/\s+/);
+  const expanded = words.map(w => SLANG_MAP[w] || w);
+  return expanded.join(' ');
+}
+
+// Correct phrase (slang expansion + word-by-word spell check)
+export function correctPhrase(text: string): string {
+  const slangExpanded = expandSlang(text);
+  const words = slangExpanded.toLowerCase().trim().split(/\s+/);
   const corrected = words.map(w => correctSpelling(w));
   return corrected.join(' ');
 }

@@ -10,7 +10,7 @@ const recentVariations: string[] = [];
 const MAX_RECENT = 3;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4: Empathy/Tone Layer - Pre-incipit variabili
+// v4.1: Empathy/Tone Layer - Expanded to 12+ variants
 const EMPATHY_INTROS = [
   'Capito, {nickname}!',
   'Ottima mossa, agente {code}.',
@@ -19,7 +19,11 @@ const EMPATHY_INTROS = [
   'Vediamo insieme.',
   'Ok, analizziamo.',
   'Bene!',
-  'D\'accordo.'
+  'D\'accordo.',
+  'Capisco, {nickname}.',
+  'Roger, agente {code}.',
+  'Interessante.',
+  'Procediamo.'
 ];
 
 function getEmpathyIntro(ctx: NorahContext): string {
@@ -133,10 +137,25 @@ export function generateReply(
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+    // v4.1: Retention-friendly responses for frustration/off-ramp
+    const lowerInput = (userInput || '').toLowerCase();
+    
+    // Detect frustration/off-ramp signals
+    const frustrationSignals = ['non mi piace', 'me ne vado', 'abbandono', 'inutile', 'difficile', 'troppo', 'basta'];
+    const hasFrustration = frustrationSignals.some(sig => lowerInput.includes(sig));
+    
+    if (hasFrustration) {
+      const retentionResponses = [
+        `${getEmpathyIntro(ctx)} Capisco che possa sembrare complesso. Ti lascio 3 dritte veloci: 1) BUZZ per indizi, 2) BUZZ Map per vedere l'area, 3) Final Shot quando sei sicuro. Proviamo insieme?`,
+        `${getEmpathyIntro(ctx)} M1SSION richiede metodo, non fortuna. Ti aiuto passo-passo: iniziamo con 2-3 BUZZ oggi, poi analizziamo insieme. Ci stai?`,
+        `${getEmpathyIntro(ctx)} Non mollare ora! Ti mostro il percorso più semplice: BUZZ → analisi → Final Shot. Ti seguo per 60 secondi?`
+      ];
+      return selectVariation(retentionResponses, seed);
+    }
+    
     // Unknown/Help fallback with smart contextual suggestions
     if (intent === 'unknown' || intent === 'help') {
       // Check if user mentioned known keywords but intent was missed
-      const lowerInput = (userInput || '').toLowerCase();
       const knownKeywords = ['mission', 'm1ssion', 'buzz', 'finalshot', 'fs', 'mappa', 'piani', 'abbo', 'pattern', 'decode'];
       const foundKeyword = knownKeywords.find(kw => lowerInput.includes(kw));
       
