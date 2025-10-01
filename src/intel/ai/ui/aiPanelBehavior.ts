@@ -20,10 +20,10 @@ export async function composeReply(options: ReplyOptions): Promise<string> {
     const norahCtx = await buildNorahContext();
     
     // Route intent
-    const { intent } = routeIntent(userText);
+    const intentResult = routeIntent(userText);
     
     // Generate natural reply
-    const reply = generateReply(intent, norahCtx, userText);
+    const reply = generateReply(intentResult, norahCtx, userText);
     
     return reply;
   } catch (error) {

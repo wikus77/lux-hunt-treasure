@@ -41,12 +41,12 @@ export function useNorah() {
       setContext(ctx);
 
       // Route intent
-      const { intent } = routeIntent(userInput);
+      const intentResult = routeIntent(userInput);
 
       // Generate reply based on intent
       let reply = '';
       
-      switch (intent) {
+      switch (intentResult.intent) {
         case 'mentor':
           reply = generateMentorAdvice(ctx);
           break;
@@ -57,14 +57,14 @@ export function useNorah() {
           reply = estimateProbability(ctx);
           break;
         default:
-          reply = generateReply(intent, ctx, userInput);
+          reply = generateReply(intentResult, ctx, userInput);
       }
 
       // Add Norah response
       const norahMsg: NorahMessage = {
         role: 'norah',
         content: reply,
-        intent,
+        intent: intentResult.intent,
         timestamp: Date.now()
       };
       addMessage(norahMsg);
