@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Activity } from 'lucide-react';
 import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
-import FinalShotQuickAccess from './FinalShotQuickAccess';
 
 export interface AIAnalystPanelProps {
   // Support both 'open' and 'isOpen' for compatibility
@@ -185,11 +184,6 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 <Activity className="w-16 h-16 mx-auto mb-4 opacity-40" />
                 <p className="text-lg mb-2">🎯 Intelligence Analyst Ready</p>
                 <p className="text-sm">Use quick chips above or type your query below.</p>
-                
-                {/* Final Shot Quick Access - Always visible */}
-                <div className="mt-8">
-                  <FinalShotQuickAccess />
-                </div>
               </div>
             ) : (
               <>
@@ -201,14 +195,14 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                     <div
                       className={`max-w-[80%] p-4 rounded-2xl ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-br from-[#F213A4]/20 to-[#0EA5E9]/20 border border-[#F213A4]/30'
-                          : 'bg-white/5 border border-white/10'
+                          ? 'bg-primary/20 border border-primary/30 text-white'
+                          : 'bg-white/5 border border-white/10 text-white/90'
                       }`}
                     >
-                      <div className="text-sm text-white/90 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
                         {message.content}
-                      </div>
-                      {message.metadata && message.metadata.cluesAnalyzed !== undefined && (
+                      </p>
+                      {message.metadata && (
                         <div className="mt-2 text-xs text-white/40">
                           {message.metadata.cluesAnalyzed} indizi analizzati • {message.metadata.mode}
                         </div>
@@ -216,11 +210,6 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                     </div>
                   </div>
                 ))}
-                
-                {/* Final Shot Quick Access after messages */}
-                <div className="pt-4">
-                  <FinalShotQuickAccess />
-                </div>
               </>
             )}
             

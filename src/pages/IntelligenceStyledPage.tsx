@@ -28,7 +28,7 @@ import AiOrbStage from '@/components/intel/ui/AiOrbStage';
 import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
 import { useMicLevel } from '@/components/intel/hooks/useMicLevel';
-import FinalShotQuickAccess from '@/components/intel/ai-analyst/FinalShotQuickAccess';
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { setupRealtimeSubscriptions } from '@/intelligence/context/realtime';
 
@@ -208,20 +208,6 @@ const IntelligenceStyledPage: React.FC = () => {
           ttsEnabled={ttsEnabled}
           onToggleTTS={toggleTTS}
         />
-        
-        {/* Final Shot card below when panel open */}
-        {panelOpen && (
-          <div style={{ 
-            position: 'fixed',
-            bottom: '100px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 25,
-            width: 'min(90vw, 400px)'
-          }}>
-            <FinalShotQuickAccess />
-          </div>
-        )}
       </>
     );
   }
