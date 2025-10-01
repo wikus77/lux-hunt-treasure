@@ -122,10 +122,11 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
 };
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4: Fuzzy threshold lowered for better tolerance
-const FUZZY_THRESHOLD = 0.40;
+// PATCH v6.1: Increased FUZZY_THRESHOLD to 0.55 to reduce false positives
+const FUZZY_THRESHOLD = 0.55;
 const HIGH_CONFIDENCE_THRESHOLD = 0.75;
 
+// PATCH v6.1: Added defensive checks for null/undefined
 export function routeIntent(input: string): IntentResult {
   if (!input || typeof input !== 'string') {
     return { intent: 'unknown', confidence: 0.1 };

@@ -23,7 +23,7 @@ const M1SSION_DICT: Set<string> = new Set([
   'non', 'dove', 'quando', 'perche', 'perché', 'quindi'
 ]);
 
-// Slang/typo expansion map - v6: extended with boh, xkè variants
+// PATCH v6.1: Extended SLANG_MAP with cm, qls, tvb variants
 const SLANG_MAP: Record<string, string> = {
   'nn': 'non',
   'xke': 'perche',
@@ -39,6 +39,7 @@ const SLANG_MAP: Record<string, string> = {
   'dv': 'dove',
   'pke': 'perche',
   'qlcs': 'qualcosa',
+  'qls': 'qualcosa',
   'qlc': 'qualche',
   'nn so': 'non so',
   'pls': 'per favore',
@@ -47,7 +48,9 @@ const SLANG_MAP: Record<string, string> = {
   'raga': 'ragazzo',
   'boh': 'non so',
   'nn capito': 'non capito',
-  'nn ho': 'non ho'
+  'nn ho': 'non ho',
+  'cm': 'come',
+  'tvb': 'ti voglio bene'
 };
 
 // Damerau-Levenshtein distance (supports transposition)
