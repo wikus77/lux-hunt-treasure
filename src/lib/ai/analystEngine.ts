@@ -361,79 +361,100 @@ const humanize = (text: string, seed: number): string => {
   return `${output}\n\n${closing}`;
 };
 
-export const generateReply = (context: AnalystContext): { content: string } => {
-  const { mode, clues, userText, userId, timestamp } = context;
-  const seed = hashSeed((userId || 'anon') + timestamp.toString());
-  
-  // Special intents
-  const lowerText = userText.toLowerCase();
-  
-  // "Parlami di M1SSION"
-  if (lowerText.includes('parlami di m1ssion') || lowerText.includes('cos\'è m1ssion')) {
-    return { content: selectVariant(MISSION_INFO, seed) };
-  }
-  
-  // "Quante probabilità di vincere ho?"
-  if (lowerText.includes('probabilità di vincere') || lowerText.includes('chance di vincere')) {
-    const probability = clues.length === 0 ? 'Bassa' 
-      : clues.length < 3 ? 'In crescita' 
-      : clues.length < 6 ? 'Promettente' 
-      : 'Solida';
-    
-    const advice = clues.length < 3 
-      ? 'Raccogli altri 2-3 indizi chiave per aumentare la confidenza.'
-      : 'Hai una base buona: ora cerca i collegamenti tra i temi ricorrenti.';
-    
-    return {
-      content: humanize(
-        `Con ${clues.length} indizi, la tua probabilità è **${probability}**. ${advice}`,
-        seed
-      )
-    };
-  }
-  
-  // Guard against spoiler requests
-  if (checkSpoilerRequest(userText)) {
-    const guardRails = [
-      'Non posso rivelare luogo o coordinate, ma posso stringere le ipotesi: raccogli ancora 1-2 indizi su pattern ricorrenti e rianalizziamo. Ti va?',
-      'Il mio compito è guidarti, non svelarti la soluzione. Però posso dirti che c\'è un tema dominante nei tuoi ultimi clue — vuoi che te lo evidenzi?',
-      'Niente spoiler: è parte del gioco. Ma se mi dici quale area ti sembra più coerente, posso confermare se sei sulla strada giusta.'
-    ];
-    return { content: selectVariant(guardRails, seed) };
-  }
-  
-  // No clues scenario
-  if (clues.length === 0) {
-    const noCluesMessages = [
-      'Al momento non hai indizi nel database. Recuperane almeno 3-5 per permettermi un\'analisi significativa — usa BUZZ per sbloccare nuovi frammenti.',
-      'Nessun indizio disponibile: ti serve materiale per lavorare. Vai su BUZZ, raccogli qualche clue fresco, e torniamo qui per analizzarli insieme.',
-      'Zero indizi = zero analisi. Sblocca 3-4 frammenti con BUZZ o Map, poi torno operativo. Nel frattempo, tieni pronta la mente critica.'
-    ];
-    return { content: selectVariant(noCluesMessages, seed) };
-  }
+// NEW ENGINE INTEGRATION
+import { analystReply as newEngineReply } from './engine';
 
-  // Mode-specific responses with humanization
-  let response: string;
+export const generateReply = async (context: AnalystContext): Promise<{ content: string }> => {
+  const { mode, clues, userText, userId, timestamp } = context;
   
-  switch (mode) {
-    case 'classify':
-      response = classifyClues(clues, seed);
-      break;
-    case 'decode':
-      response = decodeClues(clues, userText, seed);
-      break;
-    case 'assess':
-      response = assessProbability(clues, seed);
-      break;
-    case 'guide':
-      response = provideMentorship(clues, seed);
-      break;
-    case 'analyze':
-    default:
-      response = analyzeClues(clues, seed);
+  // Use new engine with explicit mode mapping
+  const modeMap: Record<AnalystMode, any> = {
+    'analyze': 'patterns',
+    'classify': 'classify',
+    'decode': 'decode',
+    'assess': 'probability',
+    'guide': 'mentor'
+  };
+  
+  try {
+    const content = await newEngineReply(userText, modeMap[mode]);
+    return { content };
+  } catch (error) {
+    console.error('New engine failed, falling back to legacy:', error);
+    
+    // Fallback to legacy implementation
+    const seed = hashSeed((userId || 'anon') + timestamp.toString());
+    
+    // Special intents
+    const lowerText = userText.toLowerCase();
+    
+    // "Parlami di M1SSION"
+    if (lowerText.includes('parlami di m1ssion') || lowerText.includes('cos\'è m1ssion')) {
+      return { content: selectVariant(MISSION_INFO, seed) };
+    }
+    
+    // "Quante probabilità di vincere ho?"
+    if (lowerText.includes('probabilità di vincere') || lowerText.includes('chance di vincere')) {
+      const probability = clues.length === 0 ? 'Bassa' 
+        : clues.length < 3 ? 'In crescita' 
+        : clues.length < 6 ? 'Promettente' 
+        : 'Solida';
+      
+      const advice = clues.length < 3 
+        ? 'Raccogli altri 2-3 indizi chiave per aumentare la confidenza.'
+        : 'Hai una base buona: ora cerca i collegamenti tra i temi ricorrenti.';
+      
+      return {
+        content: humanize(
+          `Con ${clues.length} indizi, la tua probabilità è **${probability}**. ${advice}`,
+          seed
+        )
+      };
+    }
+    
+    // Guard against spoiler requests
+    if (checkSpoilerRequest(userText)) {
+      const guardRails = [
+        'Non posso rivelare luogo o coordinate, ma posso stringere le ipotesi: raccogli ancora 1-2 indizi su pattern ricorrenti e rianalizziamo. Ti va?',
+        'Il mio compito è guidarti, non svelarti la soluzione. Però posso dirti che c\'è un tema dominante nei tuoi ultimi clue — vuoi che te lo evidenzi?',
+        'Niente spoiler: è parte del gioco. Ma se mi dici quale area ti sembra più coerente, posso confermare se sei sulla strada giusta.'
+      ];
+      return { content: selectVariant(guardRails, seed) };
+    }
+    
+    // No clues scenario
+    if (clues.length === 0) {
+      const noCluesMessages = [
+        'Al momento non hai indizi nel database. Recuperane almeno 3-5 per permettermi un\'analisi significativa — usa BUZZ per sbloccare nuovi frammenti.',
+        'Nessun indizio disponibile: ti serve materiale per lavorare. Vai su BUZZ, raccogli qualche clue fresco, e torniamo qui per analizzarli insieme.',
+        'Zero indizi = zero analisi. Sblocca 3-4 frammenti con BUZZ o Map, poi torno operativo. Nel frattempo, tieni pronta la mente critica.'
+      ];
+      return { content: selectVariant(noCluesMessages, seed) };
+    }
+
+    // Mode-specific responses with humanization
+    let response: string;
+  
+    switch (mode) {
+      case 'classify':
+        response = classifyClues(clues, seed);
+        break;
+      case 'decode':
+        response = decodeClues(clues, userText, seed);
+        break;
+      case 'assess':
+        response = assessProbability(clues, seed);
+        break;
+      case 'guide':
+        response = provideMentorship(clues, seed);
+        break;
+      case 'analyze':
+      default:
+        response = analyzeClues(clues, seed);
+    }
+  
+    return { content: humanize(response, seed) };
   }
-  
-  return { content: humanize(response, seed) };
 };
 
 // Analysis functions with templates
