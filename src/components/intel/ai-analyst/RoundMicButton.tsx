@@ -1,18 +1,18 @@
-// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Button
+// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Round Button
 import React from 'react';
-import { Bot } from 'lucide-react';
+import { Mic, Waves } from 'lucide-react';
 
-interface AIAnalystButtonProps {
+interface RoundMicButtonProps {
   onClick: () => void;
   isActive: boolean;
 }
 
-const AIAnalystButton: React.FC<AIAnalystButtonProps> = ({ onClick, isActive }) => {
+const RoundMicButton: React.FC<RoundMicButtonProps> = ({ onClick, isActive }) => {
   return (
     <button
       onClick={onClick}
       className={`
-        fixed top-24 right-6 z-50
+        fixed bottom-24 right-6 z-50
         w-16 h-16 rounded-full
         bg-gradient-to-br from-[#F213A4] via-[#FF4D4D] to-[#0EA5E9]
         shadow-[0_0_30px_rgba(242,19,164,0.6)]
@@ -23,9 +23,13 @@ const AIAnalystButton: React.FC<AIAnalystButtonProps> = ({ onClick, isActive }) 
       `}
       aria-label="Open AI Analyst"
     >
-      <Bot className="w-8 h-8 text-white" />
+      {isActive ? (
+        <Waves className="w-8 h-8 text-white animate-pulse" />
+      ) : (
+        <Mic className="w-8 h-8 text-white" />
+      )}
     </button>
   );
 };
 
-export default AIAnalystButton;
+export default RoundMicButton;

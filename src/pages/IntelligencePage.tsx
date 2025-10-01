@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { Brain, Target } from 'lucide-react';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import FinalShotPage from '@/components/intelligence/FinalShotPage';
-import AIAnalystButton from '@/components/intel/AIAnalystButton';
-import AIAnalystPanel from '@/components/intel/AIAnalystPanel';
+import RoundMicButton from '@/components/intel/ai-analyst/RoundMicButton';
+import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+
+// Feature flag for old Intel modules
+const SHOW_OLD_INTEL = false;
 
 const IntelligencePage: React.FC = () => {
   const [showAIAnalyst, setShowAIAnalyst] = useState(false);
@@ -49,10 +52,10 @@ const IntelligencePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Two-Section Layout: AI Analyst + Final Shot */}
+        {/* New Intel Layout: AI Analyst Info + Final Shot */}
         <div className="space-y-6 py-6">
           
-          {/* Section A: AI Analyst */}
+          {/* Section A: AI Analyst Overview */}
           <div className="bg-black/70 backdrop-blur-xl rounded-2xl p-6 border-2 border-[#F213A4]/30 shadow-[0_0_30px_rgba(242,19,164,0.2)]">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -61,17 +64,38 @@ const IntelligencePage: React.FC = () => {
                   AI ANALYST
                 </h2>
                 <p className="text-sm text-white/60 mt-1">
-                  Intelligence analysis, classification, and decoding support
+                  Intelligence analysis, classification, and tactical support
                 </p>
               </div>
             </div>
             <div className="text-sm text-white/80 mb-4">
-              <p>
-                • Analyze and classify your collected clues<br />
-                • Detect patterns and correlations<br />
-                • Decode basic ciphers (Caesar, Base64, ASCII)<br />
-                • Assess probability and tactical risks<br />
-                • Receive guidance without spoilers
+              <p className="mb-3">
+                Click the round button below to activate the AI Analyst. The system provides:
+              </p>
+              <div className="grid gap-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-[#F213A4] font-bold">1.</span>
+                  <span>Analyze and classify your collected clues</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[#F213A4] font-bold">2.</span>
+                  <span>Detect patterns and correlations between intel</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[#F213A4] font-bold">3.</span>
+                  <span>Decode basic ciphers (Caesar, Base64, ASCII patterns)</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[#F213A4] font-bold">4.</span>
+                  <span>Assess probability and tactical risks</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[#F213A4] font-bold">5.</span>
+                  <span>Provide strategic guidance without spoilers</span>
+                </div>
+              </div>
+              <p className="mt-3 text-white/50 text-xs italic">
+                Note: The Analyst never reveals solutions, only strategic insights.
               </p>
             </div>
           </div>
@@ -96,12 +120,19 @@ const IntelligencePage: React.FC = () => {
             </div>
           </div>
 
+          {/* Old Intel modules - hidden by feature flag */}
+          {SHOW_OLD_INTEL && (
+            <div className="space-y-4">
+              {/* Old modules would go here if SHOW_OLD_INTEL is true */}
+            </div>
+          )}
+
         </div>
         </div>
       </div>
       
-      {/* AI Analyst Floating Button */}
-      <AIAnalystButton 
+      {/* AI Analyst Round Floating Button */}
+      <RoundMicButton 
         onClick={() => setShowAIAnalyst(true)}
         isActive={showAIAnalyst}
       />

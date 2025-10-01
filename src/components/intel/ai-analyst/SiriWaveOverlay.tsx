@@ -1,26 +1,26 @@
-// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Siri-like Wave Effect
+// © 2025 Joseph MULÉ – M1SSION™ - Siri-like Edge Glow Effect
 import React, { useEffect, useRef } from 'react';
 
-interface AIAnalystWaveProps {
+interface SiriWaveOverlayProps {
   energy: number; // 0-1 range
   isActive: boolean;
 }
 
-const AIAnalystWave: React.FC<AIAnalystWaveProps> = ({ energy, isActive }) => {
-  const canvasRef = useRef<HTMLDivElement>(null);
+const SiriWaveOverlay: React.FC<SiriWaveOverlayProps> = ({ energy, isActive }) => {
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!overlayRef.current) return;
     
     // Update CSS custom property for energy level
-    canvasRef.current.style.setProperty('--voice-energy', String(energy));
+    overlayRef.current.style.setProperty('--voice-energy', String(energy));
   }, [energy]);
 
   if (!isActive) return null;
 
   return (
     <div
-      ref={canvasRef}
+      ref={overlayRef}
       className="fixed inset-0 pointer-events-none z-40"
       style={{
         background: `
@@ -39,4 +39,4 @@ const AIAnalystWave: React.FC<AIAnalystWaveProps> = ({ energy, isActive }) => {
   );
 };
 
-export default AIAnalystWave;
+export default SiriWaveOverlay;
