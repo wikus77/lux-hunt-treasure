@@ -4,7 +4,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,31 @@ import {
   Database
 } from 'lucide-react';
 import { useLocation } from 'wouter';
+import RoundMicButton from '@/components/intel/ai-analyst/RoundMicButton';
+import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 
 const IntelligenceStyledPage: React.FC = () => {
-  const [, setLocation] = useLocation();
+const [, setLocation] = useLocation();
+  const [showAIAnalyst, setShowAIAnalyst] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
+
+  // Feature flag: URL ?intel_ai=0/1 or localStorage INTEL_AI_FLAG; default true
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get('intel_ai');
+      if (q === '0' || q === '1') {
+        setAiEnabled(q === '1');
+        localStorage.setItem('INTEL_AI_FLAG', q);
+        return;
+      }
+      const stored = localStorage.getItem('INTEL_AI_FLAG');
+      if (stored === '0' || stored === '1') setAiEnabled(stored === '1');
+      else setAiEnabled(true);
+    } catch {
+      setAiEnabled(true);
+    }
+  }, []);
   const INTEL_ROUTES: Record<string, string> = {
     coordinates: '/intelligence/coordinates',
     journal: '/intelligence/clue-journal',
@@ -165,126 +187,130 @@ const IntelligenceStyledPage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Intelligence Modules */}
-          <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
-                <Shield className="h-5 w-5 text-blue-400" />
-                Moduli Intelligence
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {intelligenceModules.map((module) => (
-                 <div 
-                  key={module.id} 
-                  className="glass-card p-4 bg-background/20 border-0 cursor-pointer hover:bg-background/30 transition-all duration-200"
-                  onClick={() => openModule(module.id, module.status)}
-                  onKeyDown={(e) => {
-                    if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
-                      e.preventDefault();
-                      openModule(module.id);
-                    }
-                  }}
-                  tabIndex={module.status === 'Disponibile' ? 0 : -1}
-                  role="button"
-                  aria-label={`Accedi a ${module.name}`}
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="p-2 rounded-lg bg-primary/20 flex-shrink-0">
-                      <module.icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-foreground">{module.name}</h3>
-                        <Badge className={getStatusColor(module.status)}>
-                          {module.status}
-                        </Badge>
+          {/* Intelligence Modules (legacy) */}
+          {!aiEnabled && (
+            <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-400" />
+                  Moduli Intelligence
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {intelligenceModules.map((module) => (
+                   <div 
+                    key={module.id} 
+                    className="glass-card p-4 bg-background/20 border-0 cursor-pointer hover:bg-background/30 transition-all duration-200"
+                    onClick={() => openModule(module.id, module.status)}
+                    onKeyDown={(e) => {
+                      if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                        e.preventDefault();
+                        openModule(module.id);
+                      }
+                    }}
+                    tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                    role="button"
+                    aria-label={`Accedi a ${module.name}`}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="p-2 rounded-lg bg-primary/20 flex-shrink-0">
+                        <module.icon className="h-5 w-5 text-primary" />
                       </div>
-                      <p className="text-sm text-muted-foreground/80 mb-2">{module.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-xs font-medium ${getLevelColor(module.level)}`}>
-                          {module.level}
-                        </span>
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="h-7 text-xs"
-                          disabled={module.status !== 'Disponibile'}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (module.status === 'Disponibile') openModule(module.id);
-                          }}
-                          onKeyDown={(e) => {
-                            if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
-                              e.preventDefault();
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-foreground">{module.name}</h3>
+                          <Badge className={getStatusColor(module.status)}>
+                            {module.status}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground/80 mb-2">{module.description}</p>
+                        <div className="flex items-center justify-between">
+                          <span className={`text-xs font-medium ${getLevelColor(module.level)}`}>
+                            {module.level}
+                          </span>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7 text-xs"
+                            disabled={module.status !== 'Disponibile'}
+                            onClick={(e) => {
                               e.stopPropagation();
-                              openModule(module.id);
-                            }
-                          }}
-                          tabIndex={module.status === 'Disponibile' ? 0 : -1}
-                          role="button"
-                          aria-label={`Apri ${module.name}`}
-                        >
-                          {module.status === 'Disponibile' ? 'Accedi' : 'Bloccato'}
-                        </Button>
+                              if (module.status === 'Disponibile') openModule(module.id);
+                            }}
+                            onKeyDown={(e) => {
+                              if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                openModule(module.id);
+                              }
+                            }}
+                            tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                            role="button"
+                            aria-label={`Apri ${module.name}`}
+                          >
+                            {module.status === 'Disponibile' ? 'Accedi' : 'Bloccato'}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Intelligence Stats */}
-          <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
-                <Activity className="h-5 w-5 text-purple-400" />
-                Statistiche Intelligence
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="glass-card p-4 bg-background/20 border-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Eye className="h-4 w-4 text-blue-400" />
-                    <span className="text-sm font-medium">Analisi Completate</span>
+          {/* Intelligence Stats (legacy) */}
+          {!aiEnabled && (
+            <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+              <CardHeader>
+                <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-purple-400" />
+                  Statistiche Intelligence
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="glass-card p-4 bg-background/20 border-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4 text-blue-400" />
+                      <span className="text-sm font-medium">Analisi Completate</span>
+                    </div>
+                    <span className="text-sm text-blue-400 font-medium">47</span>
                   </div>
-                  <span className="text-sm text-blue-400 font-medium">47</span>
                 </div>
-              </div>
-              
-              <div className="glass-card p-4 bg-background/20 border-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-green-400" />
-                    <span className="text-sm font-medium">Indizi Raccolti</span>
+                
+                <div className="glass-card p-4 bg-background/20 border-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-green-400" />
+                      <span className="text-sm font-medium">Indizi Raccolti</span>
+                    </div>
+                    <span className="text-sm text-green-400 font-medium">124</span>
                   </div>
-                  <span className="text-sm text-green-400 font-medium">124</span>
                 </div>
-              </div>
-              
-              <div className="glass-card p-4 bg-background/20 border-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Target className="h-4 w-4 text-yellow-400" />
-                    <span className="text-sm font-medium">Precisione Media</span>
+                
+                <div className="glass-card p-4 bg-background/20 border-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Target className="h-4 w-4 text-yellow-400" />
+                      <span className="text-sm font-medium">Precisione Media</span>
+                    </div>
+                    <span className="text-sm text-yellow-400 font-medium">87.3%</span>
                   </div>
-                  <span className="text-sm text-yellow-400 font-medium">87.3%</span>
                 </div>
-              </div>
-              
-              <div className="glass-card p-4 bg-background/20 border-0">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Radar className="h-4 w-4 text-cyan-400" />
-                    <span className="text-sm font-medium">Scansioni Radar</span>
+                
+                <div className="glass-card p-4 bg-background/20 border-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Radar className="h-4 w-4 text-cyan-400" />
+                      <span className="text-sm font-medium">Scansioni Radar</span>
+                    </div>
+                    <span className="text-sm text-cyan-400 font-medium">31</span>
                   </div>
-                  <span className="text-sm text-cyan-400 font-medium">31</span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Quick Actions */}
           <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
@@ -295,26 +321,28 @@ const IntelligenceStyledPage: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button
-                variant="outline"
-                className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
-                onClick={() => openModule('coordinates')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    openModule('coordinates');
-                  }
-                }}
-                tabIndex={0}
-                role="button"
-                aria-label="Apri Intelligence Panel"
-              >
-                <div className="flex items-center space-x-2">
-                  <Brain className="h-4 w-4 text-primary" />
-                  <span>Apri Intelligence Panel</span>
-                </div>
-                →
-              </Button>
+              {aiEnabled && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
+                  onClick={() => setShowAIAnalyst(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowAIAnalyst(true);
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label="Apri AI Analyst"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Brain className="h-4 w-4 text-primary" />
+                    <span>Apri AI Analyst</span>
+                  </div>
+                  →
+                </Button>
+              )}
               
               <Button
                 variant="outline"
