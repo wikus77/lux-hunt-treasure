@@ -1,0 +1,114 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userId = user.id;
+
+    // Parallel queries for maximum performance
+    const [
+      profileResult,
+      missionResult,
+      cluesResult,
+      buzzResult,
+      finalshotResult,
+      messagesResult
+    ] = await Promise.all([
+      supabase.from('agent_profiles').select('*').eq('user_id', userId).single(),
+      supabase.from('agent_missions').select('*').eq('user_id', userId).order('updated_at', { ascending: false }).limit(1).single(),
+      supabase.from('agent_clues').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
+      supabase.from('agent_buzz_actions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
+      supabase.from('agent_finalshot_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
+      supabase.from('norah_messages').select('role, content, intent, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10)
+    ]);
+
+    // Fallback to profiles table for agent_code if agent_profiles doesn't exist
+    let agentCode = 'AG-UNKNOWN';
+    let nickname = null;
+    
+    if (profileResult.data) {
+      agentCode = profileResult.data.agent_code;
+      nickname = profileResult.data.nickname;
+    } else {
+      const fallbackProfile = await supabase.from('profiles').select('agent_code').eq('id', userId).single();
+      if (fallbackProfile.data?.agent_code) {
+        agentCode = fallbackProfile.data.agent_code;
+      }
+    }
+
+    // Calculate today's stats
+    const today = new Date().toISOString().split('T')[0];
+    const buzzToday = (buzzResult.data || []).filter(b => 
+      b.created_at.startsWith(today)
+    ).length;
+    const finalshotToday = (finalshotResult.data || []).filter(f => 
+      f.created_at.startsWith(today)
+    ).length;
+
+    const context = {
+      agent: {
+        code: agentCode,
+        nickname: nickname || null
+      },
+      mission: missionResult.data ? {
+        id: missionResult.data.mission_id,
+        progress: missionResult.data.progress
+      } : null,
+      stats: {
+        clues: cluesResult.data?.length || 0,
+        buzz_today: buzzToday,
+        finalshot_today: finalshotToday
+      },
+      clues: (cluesResult.data || []).map(c => ({
+        clue_id: c.clue_id,
+        meta: c.meta,
+        created_at: c.created_at
+      })),
+      finalshot_recent: (finalshotResult.data || []).map(f => ({
+        result: f.result,
+        created_at: f.created_at
+      })),
+      recent_msgs: (messagesResult.data || []).reverse().slice(-6).map(m => ({
+        role: m.role,
+        content: m.content,
+        intent: m.intent
+      }))
+    };
+
+    return new Response(JSON.stringify(context), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (error) {
+    console.error('Error in get-norah-context:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});

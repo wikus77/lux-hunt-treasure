@@ -1,50 +1,33 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// AI Panel Behavior - Compose contextual replies (Norah v1.0)
+// AI Panel Behavior - Using NORAH Engine
 
-import { routeIntent } from '../brain/intentRouter';
-import { composeReply as composeNorahReply } from '../brain/naturalComposer';
-import type { AgentContextData } from '../context/agentContext';
-import type { ClueItem } from '../context/realtimeClues';
-import type { NorahContext } from '@/intel/context/schema';
+import { routeIntent } from '@/intel/norah/engine/intentRouter';
+import { buildNorahContext } from '@/intel/norah/engine/contextBuilder';
+import { generateReply } from '@/intel/norah/engine/replyGenerator';
 
 export interface ReplyOptions {
   mode: string;
   userText: string;
-  context: AgentContextData;
-  clues: ClueItem[];
+  context?: any;
+  clues?: any[];
 }
 
-export function composeReply(options: ReplyOptions): string {
-  const { userText, context, clues } = options;
+export async function composeReply(options: ReplyOptions): Promise<string> {
+  const { userText } = options;
   
-  // Build Norah context from agent context
-  const norahCtx: NorahContext = {
-    agentCode: context.agentCode,
-    displayName: context.displayName,
-    mission: context.currentWeek 
-      ? { id: 'current', name: 'M1SSION', week: context.currentWeek }
-      : null,
-    clues: clues.map(c => ({
-      id: c.id,
-      text: c.title || c.description || '',
-      created_at: new Date().toISOString()
-    })),
-    stats: {
-      cluesTotal: context.cluesCount,
-      recentCount: clues.length,
-      buzzToday: 0
-    },
-    plan: context.planType 
-      ? { tier: context.planType as any }
-      : null,
-    updatedAt: Date.now()
-  };
-  
-  // Route intent
-  const intent = routeIntent(userText, norahCtx);
-  
-  // Compose natural reply
-  const reply = composeNorahReply(intent, norahCtx);
-  
-  return reply;
+  try {
+    // Build Norah context from Supabase
+    const norahCtx = await buildNorahContext();
+    
+    // Route intent
+    const { intent } = routeIntent(userText);
+    
+    // Generate natural reply
+    const reply = generateReply(intent, norahCtx, userText);
+    
+    return reply;
+  } catch (error) {
+    console.error('[NORAH] Reply generation failed:', error);
+    return 'Errore di comunicazione. Riprova tra poco.';
+  }
 }

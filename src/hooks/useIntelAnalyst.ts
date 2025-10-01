@@ -121,7 +121,7 @@ export const useIntelAnalyst = () => {
     // Use V2 panel behavior if context available
     let response: string;
     if (agentContext) {
-      response = composeReply({
+      response = await composeReply({
         mode,
         userText: content,
         context: agentContext,

@@ -102,8 +102,9 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       {/* Panel */}
       <div className="fixed inset-4 md:inset-8 z-50 flex items-center justify-center">
         <div 
-          className="w-full max-w-4xl h-full max-h-[800px] bg-black/90 backdrop-blur-xl rounded-2xl flex flex-col"
+          className="w-full max-w-4xl h-full max-h-[800px] bg-black/90 backdrop-blur-xl flex flex-col"
           style={{
+            borderRadius: '20px',
             border: '2px solid transparent',
             backgroundClip: 'padding-box',
             boxShadow: '0 0 40px rgba(242, 19, 164, 0.3), 0 0 80px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(242, 19, 164, 0.05)',
@@ -116,7 +117,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
             <div className="flex items-center gap-4">
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] bg-clip-text text-transparent">
-                  M1SSION AI Analyst
+                  NORAH AI
                 </h2>
                 <p className="text-sm text-white/60 mt-1">Intelligence Analysis System</p>
               </div>

@@ -119,3 +119,6 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.get-norah-context]
+verify_jwt = true
