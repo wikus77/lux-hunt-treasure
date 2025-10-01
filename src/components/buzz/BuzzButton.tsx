@@ -60,9 +60,10 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-2">
-          <span className="text-4xl font-bold text-[#00D9FF] tracking-wider" style={{ textShadow: '0 0 20px rgba(0, 217, 255, 0.6)' }}>
-            BUZZ
-          </span>
+          <h1 className="text-4xl font-orbitron font-bold">
+            <span className="text-[#00ffff]">BU</span>
+            <span className="text-white">ZZ</span>
+          </h1>
           <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-white">
             XP: {xpStatus.buzz_xp_progress}/100
           </div>
