@@ -29,6 +29,8 @@ import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
 import { useMicLevel } from '@/components/intel/hooks/useMicLevel';
 import FinalShotQuickAccess from '@/components/intel/ai-analyst/FinalShotQuickAccess';
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import { setupRealtimeSubscriptions } from '@/intelligence/context/realtime';
 
 // Keyboard shortcut handler
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -47,13 +49,13 @@ const useKeyboardShortcut = (key: string, callback: () => void) => {
   }, [key, callback]);
 };
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 const IntelligenceStyledPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [panelOpen, setPanelOpen] = useState(false);
   
   // Set up realtime subscriptions on mount
   useEffect(() => {
-    const { setupRealtimeSubscriptions } = require('@/intelligence/context/realtime');
     const cleanup = setupRealtimeSubscriptions();
     return cleanup;
   }, []);
@@ -227,7 +229,7 @@ const IntelligenceStyledPage: React.FC = () => {
   // Legacy UI when AI disabled
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
-      <main className="pt-4 pb-20 px-4">
+      <main className="pt-4 pb-20 px-4" data-build="intel-esm-001">
         <div className="max-w-lg mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center space-x-4 mb-6">
