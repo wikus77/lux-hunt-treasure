@@ -1,11 +1,32 @@
 // © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Panel
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Activity } from 'lucide-react';
-import { useIntelAnalyst, type AnalystMode } from '@/hooks/useIntelAnalyst';
+import { type AnalystMode, type AnalystStatus } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
 
-interface AIAnalystPanelProps {
+export interface AnalystMessage {
+  id?: string;
+  role: 'user' | 'analyst';
+  content: string;
+  ts?: number;
+  metadata?: {
+    cluesAnalyzed?: number;
+    mode?: string;
+  };
+}
+
+export interface AIAnalystPanelProps {
+  isOpen: boolean;
   onClose: () => void;
+  messages: AnalystMessage[];
+  isProcessing: boolean;
+  onSendMessage: (msg: string, mode: AnalystMode) => Promise<void>;
+  currentMode: AnalystMode;
+  cluesCount?: number;
+  status: AnalystStatus;
+  audioLevel: number;
+  ttsEnabled: boolean;
+  onToggleTTS: () => void;
 }
 
 const QUICK_CHIPS: Array<{ label: string; mode: AnalystMode }> = [
@@ -24,8 +45,18 @@ const PLACEHOLDERS = [
   "Quali sono le probabilità?"
 ];
 
-const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
-  const { messages, isProcessing, status, sendMessage, ttsEnabled, toggleTTS, audioLevel } = useIntelAnalyst();
+const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ 
+  isOpen,
+  onClose, 
+  messages, 
+  isProcessing, 
+  onSendMessage,
+  currentMode,
+  status, 
+  audioLevel, 
+  ttsEnabled, 
+  onToggleTTS 
+}) => {
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,14 +75,14 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
 
   const handleSend = (mode: AnalystMode = 'analyze') => {
     if (input.trim()) {
-      sendMessage(input, mode);
+      onSendMessage(input, mode);
       setInput('');
     }
   };
 
   const handleQuickAction = (mode: AnalystMode) => {
     const message = mode === 'decode' ? 'decode' : `Esegui ${mode}`;
-    sendMessage(message, mode);
+    onSendMessage(message, mode);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -60,6 +91,8 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
       handleSend();
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <>
@@ -113,7 +146,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
             
             <div className="flex items-center gap-2">
               <button
-                onClick={toggleTTS}
+                onClick={onToggleTTS}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   ttsEnabled 
                     ? 'bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] text-white' 

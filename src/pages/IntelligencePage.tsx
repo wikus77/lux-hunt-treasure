@@ -7,12 +7,24 @@ import FinalShotPage from '@/components/intelligence/FinalShotPage';
 import RoundMicButton from '@/components/intel/ai-analyst/RoundMicButton';
 import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
 
 // Feature flag for old Intel modules
 const SHOW_OLD_INTEL = false;
 
 const IntelligencePage: React.FC = () => {
   const [showAIAnalyst, setShowAIAnalyst] = useState(false);
+  const { 
+    messages, 
+    isProcessing, 
+    status, 
+    sendMessage, 
+    currentMode,
+    clues,
+    ttsEnabled, 
+    toggleTTS, 
+    audioLevel 
+  } = useIntelAnalyst();
 
   useEffect(() => {
     console.log('🧠 Intel Page mounted - AI Analyst + Final Shot');
@@ -138,9 +150,19 @@ const IntelligencePage: React.FC = () => {
       />
 
       {/* AI Analyst Panel */}
-      {showAIAnalyst && (
-        <AIAnalystPanel onClose={() => setShowAIAnalyst(false)} />
-      )}
+      <AIAnalystPanel 
+        isOpen={showAIAnalyst}
+        onClose={() => setShowAIAnalyst(false)}
+        messages={messages}
+        isProcessing={isProcessing}
+        onSendMessage={sendMessage}
+        currentMode={currentMode}
+        cluesCount={clues.length}
+        status={status}
+        audioLevel={audioLevel}
+        ttsEnabled={ttsEnabled}
+        onToggleTTS={toggleTTS}
+      />
       
       {/* Bottom Navigation */}
       <div 
