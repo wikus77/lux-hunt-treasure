@@ -181,8 +181,8 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {messages.length === 0 ? (
               <div className="text-center text-white/40 py-12">
-                <Activity className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                <p className="text-lg mb-2">🎯 Intelligence Analyst Ready</p>
+                {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
+                <p className="text-lg mb-2">Norah Intelligence Ready</p>
                 <p className="text-sm">Use quick chips above or type your query below.</p>
               </div>
             ) : (

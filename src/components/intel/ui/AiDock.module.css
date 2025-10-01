@@ -1,11 +1,18 @@
 /* © 2025 Joseph MULÉ – M1SSION™ - AI Dock Styles */
 
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 .dockContainer {
   position: fixed;
-  bottom: 32px;
+  bottom: calc(env(safe-area-inset-bottom) + 88px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
+}
+
+@media (min-width: 1024px) {
+  .dockContainer {
+    bottom: 88px;
+  }
 }
 
 .dock {
