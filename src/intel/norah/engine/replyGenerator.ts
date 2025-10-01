@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Reply Generator - Natural varied responses with enhanced context
+// Norah Reply Generator v4 - Persona + Coach + Empathy
 
 import type { NorahIntent } from './intentRouter';
 import type { NorahContext } from './contextBuilder';
@@ -8,6 +8,59 @@ import norahKB from '../kb/norahKB.it.json';
 // Recent variations cache (cooldown)
 const recentVariations: string[] = [];
 const MAX_RECENT = 3;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v4: Empathy/Tone Layer - Pre-incipit variabili
+const EMPATHY_INTROS = [
+  'Capito, {nickname}!',
+  'Ottima mossa, agente {code}.',
+  'Perfetto!',
+  'Ci sono!',
+  'Vediamo insieme.',
+  'Ok, analizziamo.',
+  'Bene!',
+  'D\'accordo.'
+];
+
+function getEmpathyIntro(ctx: NorahContext): string {
+  const intro = EMPATHY_INTROS[Math.floor(Math.random() * EMPATHY_INTROS.length)];
+  return intro
+    .replace('{nickname}', ctx?.agent?.nickname || 'agente')
+    .replace('{code}', ctx?.agent?.code || 'N/D');
+}
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v4: Mentor/Coach Layer - CTA dinamiche basate su progressione
+function getCoachCTA(ctx: NorahContext): string {
+  const clues = ctx?.stats?.clues || 0;
+  
+  if (clues === 0) {
+    return '\n\n💡 **Prossimo passo**: Apri BUZZ e raccogli 2-3 indizi oggi. Poi torniamo qui per analizzarli insieme.';
+  }
+  
+  if (clues >= 1 && clues <= 3) {
+    return '\n\n💡 **Suggerimento**: Hai i primi indizi. Continua con BUZZ per averne almeno 4-5, poi possiamo cercare pattern interessanti.';
+  }
+  
+  if (clues >= 4 && clues <= 7) {
+    return '\n\n💡 **Ottimo ritmo!** Ora posso cercare pattern e correlazioni nei tuoi indizi. Vuoi che analizzi tutto?';
+  }
+  
+  if (clues >= 8) {
+    return '\n\n💡 **Fase avanzata**: Hai abbastanza dati. Se i segnali convergono, valuta Final Shot (max 2/giorno). Vuoi che verifichi la coerenza prima?';
+  }
+  
+  return '';
+}
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v4: Engagement Hooks - Proposta utile per domande generiche
+function getEngagementHook(intent: NorahIntent): string {
+  if (intent === 'help' || intent === 'unknown') {
+    return '\n\n✅ **Ti preparo una checklist rapida?** Dimmi cosa ti serve: buzz, final shot, regole, piani.';
+  }
+  return '';
+}
 
 // Seed-based pseudo-random selection for variety
 function selectVariation(options: string[], seed: string): string {
@@ -60,7 +113,8 @@ function interpolate(text: string, ctx: NorahContext): string {
   }
 }
 
-// Enhanced reply with contextual awareness
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v4: Enhanced reply with empathy, coach CTA, engagement hooks
 export function generateReply(
   intent: NorahIntent,
   ctx: NorahContext,
@@ -69,12 +123,13 @@ export function generateReply(
   try {
     const seed = `${ctx?.agent?.code || 'default'}_${Date.now()}_${userInput?.length || 0}`;
     
-    console.debug('[NORAH] Generating reply:', { intent, seed });
+    console.log('[NORAH-v4] Generating reply:', { intent, seed });
     
     // Guard-rail: spoiler
     if (intent === 'no_spoiler') {
       const options = norahKB?.guardrails?.no_spoiler || ['Non posso rivelare questa informazione.'];
-      return selectVariation(options, seed);
+      const reply = selectVariation(options, seed);
+      return reply + '\n\n💡 **Posso aiutarti a verificare se i segnali convergono**, senza rivelare nulla di proibito.';
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
@@ -124,6 +179,9 @@ export function generateReply(
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+    // v4: Add empathy intro (already filtered no_spoiler/unknown/help above)
+    let reply = getEmpathyIntro(ctx) + ' ';
+    
     // FAQ-based responses with context enrichment - Map intents to KB keys
     const intentToKbKey: Record<string, string> = {
       'about_mission': 'mission',
@@ -140,36 +198,27 @@ export function generateReply(
     const faqEntry = norahKB?.faq?.[kbKey as keyof typeof norahKB.faq];
     if (faqEntry && Array.isArray(faqEntry.a) && faqEntry.a.length > 0) {
       const raw = selectVariation(faqEntry.a, seed);
-      let reply = interpolate(raw, ctx);
+      reply += interpolate(raw, ctx);
       
-      // Add contextual suffix for specific intents
-      const clues = ctx?.stats?.clues || 0;
+      // v4: Add Coach CTA
+      reply += getCoachCTA(ctx);
       
-      if (intent === 'progress' && clues > 0) {
-        const phase = clues >= 8 ? 'pronto per analisi avanzate' : 'ancora in fase di raccolta dati';
-        reply += `\n\nCon ${clues} indizi sei ${phase}.`;
-      }
-      
-      if (intent === 'mentor') {
-        if (clues < 3) {
-          reply += `\n\nPriorità: accumula almeno ${3 - clues} indizi in più.`;
-        } else if (clues >= 8) {
-          reply += `\n\nCon ${clues} indizi puoi iniziare analisi avanzate.`;
-        } else {
-          reply += `\n\nCon ${clues} indizi continua a raccogliere, punta a 8-10.`;
-        }
-      }
+      // v4: Add engagement hook
+      reply += getEngagementHook(intent);
       
       // Apply modulators for natural variation
       reply = addModulators(reply, seed);
+      
+      console.log('[NORAH-v4] Reply with persona/coach/engagement:', { intent, hasCoachCTA: true });
       
       return reply;
     }
 
     // Fallback for unhandled intents
-    return `Agente ${ctx?.agent?.code || 'N/D'}, non ho una risposta specifica. Chiedi di BUZZ, Final Shot, indizi, pattern o regole.`;
+    const fallback = `Agente ${ctx?.agent?.code || 'N/D'}, non ho una risposta specifica. Chiedi di BUZZ, Final Shot, indizi, pattern o regole.`;
+    return fallback + getCoachCTA(ctx) + getEngagementHook(intent);
   } catch (error) {
-    console.error('[NORAH] Reply generation error:', error);
+    console.error('[NORAH-v4] Reply generation error:', error);
     return 'Sistemi occupati, riprova tra un momento.';
   }
 }
