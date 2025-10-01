@@ -1,0 +1,24 @@
+/* © 2025 Joseph MULÉ – M1SSION™ - AI Orb Stage Styles */
+
+.stage {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: #000000;
+  overflow: hidden;
+}
+
+.gradientOverlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+  background: radial-gradient(circle at 50% 40%, rgba(0, 229, 255, 0.08), transparent 70%);
+}
+
+.orbContainer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

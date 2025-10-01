@@ -438,46 +438,49 @@ export const generateReply = (context: AnalystContext): { content: string } => {
 
 // Analysis functions with templates
 const analyzeClues = (clues: Clue[], seed: number): string => {
-  const templates = [
-    `Ho esaminato i tuoi ${clues.length} indizi: emergono ${Math.floor(clues.length / 2)} temi principali. Il pattern più forte? Riferimenti geografici italiani e simboli ricorrenti. Ti consiglio di mappare le parole chiave su una timeline: l'ordine può rivelare la sequenza logica.`,
-    `Dai ${clues.length} frammenti raccolti vedo coerenza su luoghi urbani e dettagli architettonici. C'è un fil rouge tra "${clues[0]?.title}" e gli ultimi 2 indizi — verifica se condividono keyword simili. La densità di info sta aumentando.`,
-    `Analisi veloce su ${clues.length} clue: pattern semantici forti, sovrapposizione di 3-4 concetti chiave. Ti manca ancora un pezzo per completare il quadro, ma la direzione è giusta. Prova a incrociare i riferimenti temporali con i luoghi citati.`
-  ];
-  return selectVariant(templates, seed);
+  const templateVariants = ANALYST_TEMPLATES.patterns;
+  if (clues.length === 0) return "Non ci sono abbastanza indizi per un'analisi significativa.";
+  
+  // Use seed to pick variant from 250 templates
+  const templateResponse = selectVariant(templateVariants, seed);
+  
+  // Add contextual info
+  const clueCount = clues.length;
+  const recentClue = clues[Math.min(seed % clues.length, clues.length - 1)];
+  
+  return `${templateResponse} Ho esaminato i tuoi ${clueCount} indizi: il pattern più interessante coinvolge "${recentClue?.title}".`;
 };
 
 const classifyClues = (clues: Clue[], seed: number): string => {
-  const templates = [
-    `Classificazione: ${Math.ceil(clues.length * 0.4)} indizi puntano a **Luoghi**, ${Math.floor(clues.length * 0.3)} a **Eventi/Tempo**, il resto è mix **Oggetti/Simboli**. Il cluster dominante è geografico: Milano, Torino e riferimenti urbani. Ti suggerisco di tracciare i luoghi su mappa fisica.`,
-    `Ho diviso i ${clues.length} clue in categorie: circa metà sono **Luoghi/Edifici**, un terzo **Pattern temporali**, il resto **Simboli astratti**. La sequenza logica va dal generale (città) al particolare (dettagli architettonici). Parti dai macro-temi.`,
-    `Clustering veloce: **Luoghi** (60%), **Tempo/Evento** (25%), **Oggetti/Persone** (15%). Il peso maggiore è su coordinate geografiche italiane. Se unisci i riferimenti a Milano con quelli temporali degli ultimi indizi, emerge una traiettoria chiara.`
-  ];
-  return selectVariant(templates, seed);
+  const templateVariants = ANALYST_TEMPLATES.classify;
+  if (clues.length === 0) return "Non ci sono abbastanza indizi per una classificazione.";
+  
+  // Use seed to pick variant from 250 templates
+  return selectVariant(templateVariants, seed);
 };
 
 const decodeClues = (clues: Clue[], userText: string, seed: number): string => {
-  const templates = [
-    `Decodifica in corso. Ho testato Caesar ±3, Base64 e reverse sui tuoi indizi: nessun match diretto, ma "${clues[0]?.title}" potrebbe contenere un anagramma parziale. Prova a isolare le prime 4 lettere e cerca varianti italiane. Non è la soluzione piena, ma un indizio dentro l'indizio.`,
-    `Pattern numerico rilevato in "${clues[seed % clues.length]?.title}": somma cifre = ${Math.floor(Math.random() * 20 + 10)}, mod 9 = ${Math.floor(Math.random() * 9)}. Potrebbe essere un riferimento a coordinate o a un codice civico. Verifica sul campo se corrisponde a un indirizzo noto nella zona target.`,
-    `Ho provato shift +1/+3 e Base64: niente di ovvio. Però c'è una ripetizione di 3 lettere in 2 clue diversi — potrebbe essere un tag comune. Te lo segno senza sbilanciarmi: "${clues[0]?.title.slice(0, 3).toUpperCase()}..." Tieni d'occhio questa radice nei prossimi indizi.`
-  ];
-  return selectVariant(templates, seed);
+  const templateVariants = ANALYST_TEMPLATES.decode;
+  if (clues.length === 0) return "Non ci sono indizi da decodificare al momento.";
+  
+  // Use seed to pick variant from 250 templates
+  return selectVariant(templateVariants, seed);
 };
 
 const assessProbability = (clues: Clue[], seed: number): string => {
-  const templates = [
-    `Valutazione probabilità: con ${clues.length} indizi, stimo una confidenza del **${40 + clues.length * 8}%** su ipotesi coerente. Il trend è positivo se continui a raccogliere clue allineati. Rischio maggiore? Piste false su riferimenti troppo generici. Concentrati sui dettagli specifici (numeri civici, nomi propri).`,
-    `Analisi rischio/beneficio: hai ${clues.length} pezzi. Probabilità di essere sulla traccia giusta: **${35 + clues.length * 10}%**. Ti manca ancora un 30-40% di confidenza: raccogli altri 2 indizi su tema architettonico o temporale per passare a "Promettente". Al momento sei in "In crescita".`,
-    `Assessment veloce: confidenza **${30 + clues.length * 12}%** basata su coerenza keyword e freschezza (<14gg). Punto debole: overlap semantico ancora basso tra i clue. Se trovi 1-2 frammenti che confermano il tema dominante, salti a 70%+. Ora sei prudente ma sulla strada.`
-  ];
-  return selectVariant(templates, seed);
+  const templateVariants = ANALYST_TEMPLATES.probability;
+  
+  // Use seed to pick variant from 250 templates
+  const baseResponse = selectVariant(templateVariants, seed);
+  
+  // Add specific probability assessment
+  const confidence = Math.min(90, 30 + clues.length * 10);
+  return `${baseResponse} Con ${clues.length} indizi, valuto la tua confidenza al ${confidence}%.`;
 };
 
 const provideMentorship = (clues: Clue[], seed: number): string => {
-  const templates = [
-    `Grande, hai ${clues.length} indizi: sei nel ritmo giusto. Ora il passo chiave: non cercare la risposta, cerca il **metodo**. Ordina i clue per tema (luogo, tempo, oggetto) e traccia le connessioni su carta. La soluzione emerge dal pattern, non dal singolo indizio. Avanti così.`,
-    `${clues.length} frammenti raccolti — bel lavoro. Il mio consiglio? Fermati 10 minuti: rileggi gli ultimi 3 clue e nota le parole ripetute. Spesso la chiave è in bella vista, mascherata da rumore. Non forzare: lascia che il quadro si componga da solo. Sei vicino.`,
-    `Ottimo ritmo con ${clues.length} indizi. Prossimo step: vai su Mappa e incrocia i luoghi citati con le date/eventi nei clue temporali. La geografia + cronologia = traiettoria. Non serve avere tutto: bastano 2-3 punti solidi per triangolare. Fidati del processo.`
-  ];
-  return selectVariant(templates, seed);
+  const templateVariants = ANALYST_TEMPLATES.mentor;
+  
+  // Use seed to pick variant from 250 templates
+  return selectVariant(templateVariants, seed);
 };
