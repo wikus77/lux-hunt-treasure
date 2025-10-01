@@ -194,49 +194,47 @@ function getEmpathyIntro(ctx: NorahContext, sentiment?: SentimentLabel): string 
   return intros[Math.floor(Math.random() * intros.length)];
 }
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4.2: Mentor/Coach Layer - CTA dinamiche con più varietà
+/**
+ * Get coach-style CTA based on context (v6: more varied, predictive)
+ */
 function getCoachCTA(ctx: NorahContext): string {
   const clues = ctx?.stats?.clues || 0;
-  const seed = Date.now();
+  const buzzToday = ctx?.stats?.buzz_today || 0;
   
-  if (clues === 0) {
-    const ctas = [
-      '\n\n💡 **Prossimo passo**: Apri BUZZ e raccogli 2-3 indizi oggi. Poi torniamo qui per analizzarli insieme.',
-      '\n\n💡 **Start**: Fai BUZZ subito per ottenere i primi 2-3 indizi. Ogni dato conta.',
-      '\n\n💡 **Primo step**: BUZZ ora, prendi 2-3 indizi, poi analizziamo insieme il quadro.'
-    ];
-    return ctas[seed % ctas.length];
+  // Try predictive action first
+  const predictive = getPredictiveAction(ctx);
+  if (predictive && Math.random() < 0.4) {
+    return `\n\n💡 **${predictive.title}**\n${predictive.steps[0]}`;
   }
-  
-  if (clues >= 1 && clues <= 3) {
+
+  // Phase-based CTAs
+  if (buzzToday === 0) {
     const ctas = [
-      '\n\n💡 **Suggerimento**: Hai i primi indizi. Continua con BUZZ per averne almeno 4-5, poi possiamo cercare pattern interessanti.',
-      '\n\n💡 **Fase raccolta**: Buon inizio! Continua con BUZZ fino a 5-6 indizi per vedere pattern.',
-      '\n\n💡 **Prosegui**: Ancora BUZZ! Target: 5-6 indizi totali prima di analizzare pattern.'
+      '\n\n💡 **Primo step:** Apri BUZZ (tab in basso) e prendi 1 indizio.',
+      '\n\n💡 **Inizia ora:** Vai su BUZZ, è veloce. 30 secondi e hai il primo dato.',
+      '\n\n💡 **Facciamo subito:** BUZZ → 1 indizio → poi torna qui.'
     ];
-    return ctas[seed % ctas.length];
+    return ctas[Math.floor(Math.random() * ctas.length)];
   }
-  
-  if (clues >= 4 && clues <= 7) {
-    const ctas = [
-      '\n\n💡 **Ottimo ritmo!** Ora posso cercare pattern e correlazioni nei tuoi indizi. Vuoi che analizzi tutto?',
-      '\n\n💡 **Fase intermedia**: Hai dati solidi. Posso cercare pattern e convergenze ora.',
-      '\n\n💡 **Pronti per analisi**: Con questi indizi posso trovare correlazioni. Proseguiamo?'
-    ];
-    return ctas[seed % ctas.length];
+
+  if (clues < 3) {
+    return '\n\n💡 **Continua:** Fai ancora 2 BUZZ oggi, accumula dati.';
   }
-  
+
+  if (clues >= 3 && clues < 8) {
+    return '\n\n💡 **Ottimo ritmo:** Altri 2-3 indizi e puoi iniziare l\'analisi.';
+  }
+
   if (clues >= 8) {
-    const ctas = [
-      '\n\n💡 **Fase avanzata**: Hai abbastanza dati. Se i segnali convergono, valuta Final Shot (max 2/giorno). Vuoi che verifichi la coerenza prima?',
-      '\n\n💡 **Pronto per Final Shot**: Con questi indizi puoi valutare. Vuoi che controlli coerenze prima?',
-      '\n\n💡 **Fase finale**: Dati solidi! Analizza pattern, poi considera Final Shot (2 al giorno max).'
+    const advancedCTAs = [
+      '\n\n💡 **Prossimo livello:** Cerca pattern negli indizi o usa BUZZ Map.',
+      '\n\n💡 **Hai abbastanza dati:** Incrocia gli indizi, trova convergenze.',
+      '\n\n💡 **Ora analizza:** BUZZ Map ti mostra l\'area basata sui tuoi dati.'
     ];
-    return ctas[seed % ctas.length];
+    return advancedCTAs[Math.floor(Math.random() * advancedCTAs.length)];
   }
-  
-  return '';
+
+  return '\n\n💡 **Keep going:** Ogni indizio ti avvicina.';
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
