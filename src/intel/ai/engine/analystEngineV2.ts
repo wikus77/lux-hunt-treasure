@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Analyst Engine V2 - Humanized, contextual, anti-spoiler
+// Analyst Engine V3 - Natural, contextual, anti-spoiler intelligence
 
 import { FAQ_IT } from '@/intelligence/engine/faq.it';
 import type { AgentContextData } from '../context/agentContext';
@@ -14,9 +14,11 @@ export type Intent =
   | 'mentor'
   | 'faq'
   | 'identity'
+  | 'progress'
   | 'unknown';
 
-// Natural language components
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Natural language components - expanded for variety
 const OPENERS = [
   'Ok',
   'Ricevuto',
@@ -24,7 +26,12 @@ const OPENERS = [
   'Capito',
   'Bene',
   'Chiaro',
-  'Vediamo'
+  'Vediamo',
+  'Fatto',
+  'D\'accordo',
+  'Certamente',
+  'Certo',
+  'Senz\'altro'
 ];
 
 const HEDGES = [
@@ -33,7 +40,12 @@ const HEDGES = [
   'sembra che',
   'potrebbe essere',
   'in genere',
-  'di solito'
+  'di solito',
+  'verosimilmente',
+  'a quanto pare',
+  'secondo l\'analisi',
+  'dai dati raccolti',
+  'in base agli indizi'
 ];
 
 const TRANSITIONS = [
@@ -42,7 +54,11 @@ const TRANSITIONS = [
   'Allora',
   'Intanto',
   'A questo punto',
-  'Dunque'
+  'Dunque',
+  'In pratica',
+  'Sostanzialmente',
+  'Di fatto',
+  'Concretamente'
 ];
 
 const CLOSERS = [
@@ -50,38 +66,68 @@ const CLOSERS = [
   'Proviamo una decodifica veloce?',
   'Ti serve altro?',
   'Continuiamo?',
-  "Qualcos'altro?"
+  "Qualcos'altro?",
+  'Serve qualche altra analisi?',
+  'Vai avanti con BUZZ?',
+  'Ti aiuto con altro?',
+  'Procediamo?',
+  'Che faccio?'
 ];
 
-// Intent detection
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Tone styles for variety
+type ToneStyle = 'calm' | 'tactical' | 'direct';
+
+const TONE_MODIFIERS: Record<ToneStyle, { prefix: string; style: string }> = {
+  calm: {
+    prefix: 'Tranquillo',
+    style: 'riflessivo e analitico'
+  },
+  tactical: {
+    prefix: 'Ok agente',
+    style: 'operativo e preciso'
+  },
+  direct: {
+    prefix: 'Chiaro',
+    style: 'diretto ed efficace'
+  }
+};
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Intent detection with Italian keywords
 export function routeIntent(input: string): Intent {
   const lower = input.toLowerCase();
   
-  if (/\b(missione?|m1ssion|cos[' ]è|spiegami)\b/i.test(lower)) {
+  if (/\b(missione?|m1ssion|cos[' ]è|spiegami|descrivi)\b/i.test(lower)) {
     return 'describe_mission';
   }
-  if (/\b(chi sono|agente|codice|identifico|profilo)\b/i.test(lower)) {
+  if (/\b(chi sono|agente|codice|identifico|profilo|mio)\b/i.test(lower)) {
     return 'identity';
   }
-  if (/\b(probabilit[aà]|chance|possibilit[aà]|vincere)\b/i.test(lower)) {
+  if (/\b(progress[oi]|avanzamento|stato|punto|dove sono)\b/i.test(lower)) {
+    return 'progress';
+  }
+  if (/\b(probabilit[aà]|chance|possibilit[aà]|vincere|riuscir[eò])\b/i.test(lower)) {
     return 'probability_check';
   }
-  if (/\b(classifica|organizza|ordina|categori[ez])\b/i.test(lower)) {
+  if (/\b(classifica|organizza|ordina|categori[ez]|raggruppa)\b/i.test(lower)) {
     return 'classify';
   }
-  if (/\b(pattern|ricorren[zti]|ripet[eo]|sequenz)\b/i.test(lower)) {
+  if (/\b(pattern|ricorren[zti]|ripet[eo]|sequenz|comun[ei])\b/i.test(lower)) {
     return 'patterns';
   }
-  if (/\b(decod|decifrare?|interpretare?|base64|caesar)\b/i.test(lower)) {
+  if (/\b(decod|decifrare?|interpretare?|base64|caesar|cripto)\b/i.test(lower)) {
     return 'decode';
   }
-  if (/\b(mentore?|strategia|consigli?|aiut)\b/i.test(lower)) {
+  if (/\b(mentore?|strategia|consigli?|aiut|suggerim)\b/i.test(lower)) {
     return 'mentor';
   }
   
-  // Check FAQ match
+  // Check FAQ match (more lenient)
   for (const question of Object.keys(FAQ_IT)) {
-    if (lower.includes(question.toLowerCase().slice(0, 10))) {
+    const qLower = question.toLowerCase();
+    const shortQ = qLower.slice(0, Math.min(15, qLower.length));
+    if (lower.includes(shortQ)) {
       return 'faq';
     }
   }
@@ -102,13 +148,19 @@ function hasSpoilerRisk(input: string): boolean {
   return forbidden.some(pattern => pattern.test(input));
 }
 
-// Humanizer
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Humanizer with variety and null-safety
 function pickRandom<T>(arr: T[], seed: number): T {
-  return arr[seed % arr.length];
+  if (!arr || arr.length === 0) return '' as T;
+  return arr[Math.abs(seed) % arr.length];
 }
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Null-safe string helper
+function getToneStyle(seed: number): ToneStyle {
+  const styles: ToneStyle[] = ['calm', 'tactical', 'direct'];
+  return styles[Math.abs(seed) % styles.length];
+}
+
+// Null-safe string helpers
 function safeStr(v: unknown, fallback = ''): string {
   return (typeof v === 'string' ? v : fallback);
 }
@@ -118,30 +170,59 @@ function nonEmpty(v: string | undefined, fallback: string): string {
   return s.length ? s : fallback;
 }
 
-function composeNaturalReply(base: string | undefined, seed: number, context: AgentContextData): string {
-  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  // Null safety guardrails
-  const template = nonEmpty(base, 'Ricevuto. Prova a essere più specifico: posso classificare indizi, cercare pattern, decodificare frammenti o stimare probabilità.');
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Natural reply composer with tone, variety, and full null-safety
+function composeNaturalReply(
+  base: string | undefined, 
+  seed: number, 
+  context: AgentContextData,
+  skipCloser = false
+): string {
+  // Null safety - ensure we have a valid template
+  const template = nonEmpty(
+    base, 
+    'Ricevuto. Prova a essere più specifico: posso classificare indizi, cercare pattern, decodificare frammenti o stimare probabilità.'
+  );
+  
   const agent = nonEmpty(context.agentCode, 'Agente');
+  const tone = getToneStyle(seed);
   
+  // Select components based on seed
   const opener = pickRandom(OPENERS, seed);
-  const closer = pickRandom(CLOSERS, seed + 1);
+  const closer = skipCloser ? '' : ` ${pickRandom(CLOSERS, seed + 1)}`;
   
-  // Add hedge occasionally
-  const hedge = seed % 3 === 0 ? `${pickRandom(HEDGES, seed + 2)}, ` : '';
+  // Add hedge occasionally (33% chance)
+  const shouldHedge = Math.abs(seed) % 3 === 0;
+  const hedge = shouldHedge ? `${pickRandom(HEDGES, seed + 2)}, ` : '';
   
-  // Interpolate {{agentCode}} and {{cluesCount}} with safe replace
+  // Add transition occasionally (25% chance)
+  const shouldTransition = Math.abs(seed) % 4 === 0;
+  const transition = shouldTransition ? `${pickRandom(TRANSITIONS, seed + 3)}. ` : '';
+  
+  // Safe interpolation with try-catch
   let reply = template;
   try {
-    reply = reply
-      .replace(/\{\{agentCode\}\}/g, agent)
-      .replace(/\{\{cluesCount\}\}/g, String(context.cluesCount || 0));
+    if (typeof reply === 'string') {
+      reply = reply
+        .replace(/\{\{agentCode\}\}/g, agent)
+        .replace(/\{\{cluesCount\}\}/g, String(context.cluesCount || 0))
+        .replace(/\{\{displayName\}\}/g, context.displayName || agent);
+    }
   } catch (err) {
     console.error('[composeNaturalReply] Replace error:', err);
-    reply = template;
+    reply = template; // fallback to original
   }
   
-  return `${opener}, ${agent}. ${hedge}${reply} ${closer}`;
+  // Ensure reply is string
+  if (typeof reply !== 'string') {
+    reply = 'Ricevuto. Chiedi pure.';
+  }
+  
+  // Compose with tone prefix occasionally (50% chance)
+  const useTonePrefix = Math.abs(seed) % 2 === 0;
+  const tonePrefix = useTonePrefix ? `${TONE_MODIFIERS[tone].prefix}. ` : '';
+  
+  return `${tonePrefix}${opener}, ${agent}. ${transition}${hedge}${reply}${closer}`.trim();
 }
 
 // Classification
@@ -269,13 +350,44 @@ function provideMentor(context: AgentContextData): string {
   return 'Sei su una buona traiettoria. Ora cerca pattern, classifica, e valuta coerenza. La strategia batte sempre la fretta.';
 }
 
-// Main generate function
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Progress assessment
+function assessProgress(context: AgentContextData, clues: ClueItem[]): string {
+  const count = context.cluesCount || clues.length;
+  
+  if (count === 0) {
+    return 'Ancora nessun indizio raccolto. Inizia con BUZZ per muovere i primi passi.';
+  }
+  
+  if (count < 3) {
+    return `Hai ${count} indizi. Sei all'inizio del percorso. Continua a raccogliere segnali prima di tentare analisi approfondite.`;
+  }
+  
+  if (count < 6) {
+    return `Con ${count} indizi stai costruendo una base solida. Cerca coerenza tra i segnali prima di prendere decisioni.`;
+  }
+  
+  return `${count} indizi raccolti. Ottimo lavoro. Ora puoi permetterti analisi incrociate e stime di probabilità più affidabili.`;
+}
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Main generate function with enhanced null-safety and context awareness
 export function generateAnalystReply(
   prompt: string,
   context: AgentContextData,
   clues: ClueItem[],
   seed: number
 ): string {
+  // Input validation
+  if (!prompt || typeof prompt !== 'string') {
+    return composeNaturalReply(
+      'Non ho ricevuto la tua richiesta. Riprova.',
+      seed,
+      context,
+      true
+    );
+  }
+  
   // Anti-spoiler check
   if (hasSpoilerRisk(prompt)) {
     return composeNaturalReply(
@@ -286,69 +398,83 @@ export function generateAnalystReply(
   }
   
   const intent = routeIntent(prompt);
-  
   let baseReply: string;
   
-  switch (intent) {
-    case 'describe_mission':
-      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-      const missionFAQ = FAQ_IT["Cos'è M1SSION?"];
-      baseReply = missionFAQ && missionFAQ.length > 0 
-        ? pickRandom(missionFAQ, seed)
-        : "M1SSION è un'esperienza di caccia al tesoro intelligente che combina realtà e digital.";
-      break;
-      
-    case 'identity':
-      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-      if (context.agentCode === 'AG-GUEST') {
-        baseReply = 'Non ho il tuo codice agente, ma possiamo procedere comunque.';
-      } else {
-        const identityFAQ = FAQ_IT["Che agente sono io?"];
-        baseReply = identityFAQ && identityFAQ.length > 0
-          ? pickRandom(identityFAQ, seed)
-          : `Sei l'agente ${context.agentCode}, parte della rete M1SSION.`;
-      }
-      break;
-      
-    case 'probability_check':
-      baseReply = assessProbability(clues);
-      break;
-      
-    case 'classify':
-      baseReply = classifyClues(clues);
-      break;
-      
-    case 'patterns':
-      baseReply = findPatterns(clues);
-      break;
-      
-    case 'decode':
-      const textMatch = prompt.match(/['"](.+?)['"]/);
-      baseReply = textMatch 
-        ? attemptDecode(textMatch[1])
-        : 'Dammi il testo tra virgolette per provare a decodificarlo.';
-      break;
-      
-    case 'mentor':
-      baseReply = provideMentor(context);
-      break;
-      
-    case 'faq':
-      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-      // Find closest FAQ match with null safety
-      const faqKey = Object.keys(FAQ_IT).find(q => 
-        prompt.toLowerCase().includes(q.toLowerCase().slice(0, 10))
-      );
-      if (faqKey && FAQ_IT[faqKey] && FAQ_IT[faqKey].length > 0) {
-        baseReply = pickRandom(FAQ_IT[faqKey], seed);
-      } else {
-        baseReply = 'Posso aiutarti con: analisi indizi, pattern, decodifiche, strategie. Cosa ti serve?';
-      }
-      break;
-      
-    default:
-      baseReply = 'Posso aiutarti con: classificazione, pattern, decodifiche, probabilità, strategia. Cosa ti interessa?';
+  try {
+    switch (intent) {
+      case 'describe_mission':
+        // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+        const missionFAQ = FAQ_IT?.["Cos'è M1SSION?"];
+        baseReply = (missionFAQ && missionFAQ.length > 0)
+          ? pickRandom(missionFAQ, seed)
+          : "M1SSION è un'esperienza di caccia al tesoro intelligente che combina realtà e digital. Raccogli indizi, analizza pattern, trova il tesoro.";
+        break;
+        
+      case 'identity':
+        // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+        if (context.agentCode === 'AG-GUEST' || context.agentCode === 'AG-UNKNOWN') {
+          baseReply = 'Non ho ancora il tuo codice agente, ma possiamo procedere comunque con l\'analisi.';
+        } else {
+          const identityFAQ = FAQ_IT?.["Che agente sono io?"];
+          const faqReply = (identityFAQ && identityFAQ.length > 0)
+            ? pickRandom(identityFAQ, seed)
+            : `Sei l'agente {{agentCode}}, parte della rete M1SSION.`;
+          baseReply = faqReply.includes('{{agentCode}}') 
+            ? faqReply 
+            : `Sei l'agente {{agentCode}}. ${faqReply}`;
+        }
+        break;
+        
+      case 'progress':
+        baseReply = assessProgress(context, clues);
+        break;
+        
+      case 'probability_check':
+        baseReply = assessProbability(clues);
+        break;
+        
+      case 'classify':
+        baseReply = classifyClues(clues);
+        break;
+        
+      case 'patterns':
+        baseReply = findPatterns(clues);
+        break;
+        
+      case 'decode':
+        const textMatch = prompt.match(/['"](.+?)['"]/);
+        baseReply = textMatch 
+          ? attemptDecode(textMatch[1])
+          : 'Dammi il testo tra virgolette (es: "ABC123") per provare a decodificarlo.';
+        break;
+        
+      case 'mentor':
+        baseReply = provideMentor(context);
+        break;
+        
+      case 'faq':
+        // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+        // Find closest FAQ match with null safety
+        const faqKey = Object.keys(FAQ_IT || {}).find(q => {
+          const shortQ = q.toLowerCase().slice(0, Math.min(15, q.length));
+          return prompt.toLowerCase().includes(shortQ);
+        });
+        
+        if (faqKey && FAQ_IT?.[faqKey] && FAQ_IT[faqKey].length > 0) {
+          baseReply = pickRandom(FAQ_IT[faqKey], seed);
+        } else {
+          baseReply = 'Posso aiutarti con: analisi indizi, pattern, decodifiche, strategie. Cosa ti serve?';
+        }
+        break;
+        
+      default:
+        baseReply = 'Posso aiutarti con: classificazione indizi, ricerca pattern, decodifiche, stime di probabilità, strategia. Cosa ti interessa?';
+    }
+  } catch (err) {
+    console.error('[generateAnalystReply] Error in intent handler:', err);
+    baseReply = 'Richiesta ricevuta. Riformula o dammi più dettagli per aiutarti meglio.';
   }
   
+  // Final composition with null-safety
   return composeNaturalReply(baseReply, seed, context);
 }
