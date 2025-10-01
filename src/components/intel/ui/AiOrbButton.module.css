@@ -1,0 +1,177 @@
+/* © 2025 Joseph MULÉ – M1SSION™ - AI Orb Button Styles */
+
+.orbContainer {
+  position: relative;
+  width: min(320px, 56vw);
+  height: min(320px, 56vw);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.orbContainer:hover {
+  transform: scale(1.05);
+}
+
+.orbContainer:active {
+  transform: scale(0.95);
+}
+
+/* Outer rotating glow ring */
+.outerGlow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(242, 19, 164, 0.4),
+    rgba(0, 229, 255, 0.4),
+    rgba(242, 19, 164, 0.4)
+  );
+  filter: blur(40px);
+  opacity: 0.6;
+  animation: spin 20s linear infinite;
+}
+
+.outerGlow.listening {
+  animation: spin 8s linear infinite;
+  opacity: 0.8;
+}
+
+.outerGlow.thinking {
+  animation: spin 12s linear infinite, pulse 2s ease-in-out infinite;
+  opacity: 0.7;
+}
+
+.outerGlow.speaking {
+  animation: spin 10s linear infinite;
+  opacity: 0.75;
+}
+
+/* Middle blur layer */
+.middleLayer {
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(242, 19, 164, 0.3));
+  backdrop-filter: blur(20px);
+  filter: blur(20px);
+  opacity: 0.7;
+}
+
+/* Inner core */
+.innerCore {
+  position: absolute;
+  inset: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.4), rgba(242, 19, 164, 0.4));
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.9);
+  transition: transform 0.2s ease-out, box-shadow 0.3s ease-out;
+  box-shadow: 
+    inset 0 0 60px rgba(0, 229, 255, 0.2),
+    inset 0 0 30px rgba(242, 19, 164, 0.2),
+    0 0 80px rgba(0, 229, 255, 0.3),
+    0 0 40px rgba(242, 19, 164, 0.2);
+}
+
+.innerCore.listening {
+  box-shadow: 
+    inset 0 0 60px rgba(0, 229, 255, 0.3),
+    inset 0 0 30px rgba(242, 19, 164, 0.3),
+    0 0 100px rgba(0, 229, 255, 0.5),
+    0 0 50px rgba(242, 19, 164, 0.4);
+}
+
+.innerCore.thinking {
+  box-shadow: 
+    inset 0 0 60px rgba(0, 229, 255, 0.4),
+    inset 0 0 30px rgba(242, 19, 164, 0.4),
+    0 0 100px rgba(0, 229, 255, 0.6),
+    0 0 50px rgba(242, 19, 164, 0.5);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.innerCore.speaking {
+  box-shadow: 
+    inset 0 0 60px rgba(0, 229, 255, 0.35),
+    inset 0 0 30px rgba(242, 19, 164, 0.35),
+    0 0 90px rgba(0, 229, 255, 0.5),
+    0 0 45px rgba(242, 19, 164, 0.4);
+}
+
+.orbContainer:hover .innerCore {
+  transform: scale(1.05);
+}
+
+.orbContainer:active .innerCore {
+  transform: scale(0.95);
+}
+
+/* Idle pulsating ring */
+.idleRing {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 229, 255, 0.3);
+  animation: ping 3s cubic-bezier(0, 0, 0.2, 1) infinite;
+  opacity: 0.5;
+}
+
+/* Icon animations */
+.icon {
+  width: 80px;
+  height: 80px;
+  transition: transform 0.2s ease-out;
+}
+
+.icon.spinning {
+  animation: spin 2s linear infinite;
+}
+
+.icon.pulsing {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Accessibility */
+.orbContainer:focus-visible {
+  outline: 2px solid rgba(0, 229, 255, 0.6);
+  outline-offset: 4px;
+  border-radius: 50%;
+}

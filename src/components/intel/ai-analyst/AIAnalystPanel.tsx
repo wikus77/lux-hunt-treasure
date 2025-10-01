@@ -6,7 +6,9 @@ import AIEdgeGlow from './SiriWaveOverlay';
 import FinalShotQuickAccess from './FinalShotQuickAccess';
 
 export interface AIAnalystPanelProps {
-  isOpen: boolean;
+  // Support both 'open' and 'isOpen' for compatibility
+  open?: boolean;
+  isOpen?: boolean;
   onClose: () => void;
   messages: AnalystMessage[];
   isProcessing: boolean;
@@ -35,18 +37,21 @@ const PLACEHOLDERS = [
   "Quali sono le probabilità?"
 ];
 
-const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ 
-  isOpen,
-  onClose, 
-  messages, 
-  isProcessing, 
-  onSendMessage,
-  currentMode,
-  status, 
-  audioLevel, 
-  ttsEnabled, 
-  onToggleTTS 
-}) => {
+const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => { 
+  // Handle both 'open' and 'isOpen' for backward compatibility
+  const isOpen = props.open ?? props.isOpen ?? false;
+  const {
+    onClose, 
+    messages, 
+    isProcessing, 
+    onSendMessage,
+    currentMode,
+    status, 
+    audioLevel, 
+    ttsEnabled, 
+    onToggleTTS 
+  } = props;
+  
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);

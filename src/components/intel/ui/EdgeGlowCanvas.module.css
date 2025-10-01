@@ -1,0 +1,30 @@
+/* © 2025 Joseph MULÉ – M1SSION™ - Edge Glow Canvas Styles */
+
+.edgeGlowCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.breathing {
+  animation: breathe 3s ease-in-out infinite;
+}

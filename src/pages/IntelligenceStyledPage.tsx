@@ -24,9 +24,11 @@ import {
   Database
 } from 'lucide-react';
 import { useLocation } from 'wouter';
-import IntelStage from '@/components/intel/ai-analyst/IntelStage';
+import AiOrbStage from '@/components/intel/ui/AiOrbStage';
 import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
+import { useMicLevel } from '@/components/intel/hooks/useMicLevel';
+import FinalShotQuickAccess from '@/components/intel/ai-analyst/FinalShotQuickAccess';
 
 // Keyboard shortcut handler
 const useKeyboardShortcut = (key: string, callback: () => void) => {
@@ -62,21 +64,16 @@ const IntelligenceStyledPage: React.FC = () => {
     toggleTTS
   } = useIntelAnalyst();
 
-  // Feature flag: URL ?intel_ai=1 or localStorage m1_ai_enabled=true; default true
-  const [aiEnabled, setAiEnabled] = useState(() => {
+  // Feature flag: URL ?intel_ai=1 or default ON
+  const aiEnabled = (() => {
     const params = new URLSearchParams(window.location.search);
-    const urlFlag = params.get('intel_ai') === '1';
-    const storageFlag = localStorage.getItem('m1_ai_enabled') === 'true';
-    const result = urlFlag || storageFlag;
-    
-    // Auto-enable by default for new stage experience
-    if (!urlFlag && storageFlag === null) {
-      localStorage.setItem('m1_ai_enabled', 'true');
-      return true;
-    }
-    
-    return result;
-  });
+    const urlFlag = params.get('intel_ai');
+    // If ?intel_ai=0 explicitly set, disable; otherwise default ON
+    return urlFlag === '0' ? false : true;
+  })();
+  
+  // Microphone level hook
+  const { level: micLevel } = useMicLevel(panelOpen && ttsEnabled);
   
   // Keyboard shortcut: A to open/close AI Analyst
   useKeyboardShortcut('a', () => {
@@ -176,14 +173,13 @@ const IntelligenceStyledPage: React.FC = () => {
       <>
         {/* Full Stage when panel closed */}
         {!panelOpen && (
-          <IntelStage
+          <AiOrbStage
             status={status}
-            audioLevel={audioLevel}
-            isActive={panelOpen}
+            audioLevel={micLevel || audioLevel}
             onOrbClick={() => setPanelOpen(true)}
-            onMicToggle={toggleTTS}
             micEnabled={ttsEnabled}
-            ttsEnabled={ttsEnabled}
+            onMicToggle={toggleTTS}
+            onMoreClick={() => setPanelOpen(true)}
           />
         )}
         
@@ -197,10 +193,24 @@ const IntelligenceStyledPage: React.FC = () => {
           currentMode={currentMode}
           cluesCount={clues.length}
           status={status}
-          audioLevel={audioLevel}
+          audioLevel={micLevel || audioLevel}
           ttsEnabled={ttsEnabled}
           onToggleTTS={toggleTTS}
         />
+        
+        {/* Final Shot card below when panel open */}
+        {panelOpen && (
+          <div style={{ 
+            position: 'fixed',
+            bottom: '100px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 25,
+            width: 'min(90vw, 400px)'
+          }}>
+            <FinalShotQuickAccess />
+          </div>
+        )}
       </>
     );
   }
