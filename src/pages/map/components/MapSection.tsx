@@ -58,7 +58,7 @@ const MapSection: React.FC<MapSectionProps> = ({
       <div className="text-center mb-6">
         <h1 className="text-2xl font-orbitron font-bold mb-1">
           <span className="text-[#00ffff]">BUZZ</span>
-          <span className="text-white"> MAPPA</span>
+          <span className="text-white"> MAP</span>
         </h1>
         <h2 className="text-base text-white/80 font-medium">Mappa Operativa</h2>
       </div>
