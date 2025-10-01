@@ -1,9 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// AI Panel Behavior - Compose contextual replies
+// AI Panel Behavior - Compose contextual replies (Norah v1.0)
 
-import { generateAnalystReply, routeIntent } from '../engine/analystEngineV2';
+import { routeIntent } from '../brain/intentRouter';
+import { composeReply as composeNorahReply } from '../brain/naturalComposer';
 import type { AgentContextData } from '../context/agentContext';
 import type { ClueItem } from '../context/realtimeClues';
+import type { NorahContext } from '@/intel/context/schema';
 
 export interface ReplyOptions {
   mode: string;
@@ -15,15 +17,34 @@ export interface ReplyOptions {
 export function composeReply(options: ReplyOptions): string {
   const { userText, context, clues } = options;
   
-  // Generate seed for variety
-  const seed = Date.now() ^ context.agentCode.charCodeAt(0);
+  // Build Norah context from agent context
+  const norahCtx: NorahContext = {
+    agentCode: context.agentCode,
+    displayName: context.displayName,
+    mission: context.currentWeek 
+      ? { id: 'current', name: 'M1SSION', week: context.currentWeek }
+      : null,
+    clues: clues.map(c => ({
+      id: c.id,
+      text: c.title || c.description || '',
+      created_at: new Date().toISOString()
+    })),
+    stats: {
+      cluesTotal: context.cluesCount,
+      recentCount: clues.length,
+      buzzToday: 0
+    },
+    plan: context.planType 
+      ? { tier: context.planType as any }
+      : null,
+    updatedAt: Date.now()
+  };
   
-  // Use V2 engine
-  const reply = generateAnalystReply(userText, context, clues, seed);
+  // Route intent
+  const intent = routeIntent(userText, norahCtx);
   
-  // Ensure max 3-6 sentences
-  const sentences = reply.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const limited = sentences.slice(0, 6).join('. ') + '.';
+  // Compose natural reply
+  const reply = composeNorahReply(intent, norahCtx);
   
-  return limited;
+  return reply;
 }
