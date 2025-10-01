@@ -39,7 +39,7 @@ const SYNONYMS: Record<string, string[]> = {
   'probabilità': ['prob', 'probability', 'chance', 'probabilita'],
   'pattern': ['patterns', 'schema', 'schemi', 'correlazione'],
   'decodifica': ['decode', 'decod', 'decipher', 'decifra'],
-  'help': ['aiuto', 'inizio', 'iniziare', 'inizia', 'come', 'cosa', 'aiutami', 'aiutare', 'assistenza', 'come si fa', 'cosa posso fare'],
+  'help': ['aiuto', 'inizio', 'iniziare', 'inizia', 'come', 'cosa', 'aiutami', 'aiutare', 'assistenza', 'come si fa', 'cosa posso fare', 'spiega', 'come faccio', 'come fare'],
   'progress': ['progresso', 'avanzamento', 'stato'],
   'mentor': ['mentore', 'guida', 'coach', 'consiglio', 'suggerimento'],
   'leaderboard': ['classifica', 'ranking', 'leader'],

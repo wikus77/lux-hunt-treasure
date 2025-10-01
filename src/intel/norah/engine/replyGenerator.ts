@@ -1,16 +1,20 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Reply Generator v4 - Persona + Coach + Empathy
+// Norah Reply Generator v5 - Dialogue Manager + Multi-Intent + Sentiment
 
-import type { NorahIntent } from './intentRouter';
+import type { NorahIntent, IntentResult } from './intentRouter';
 import type { NorahContext } from './contextBuilder';
 import norahKB from '../kb/norahKB.it.json';
+import { getPhase, nextBestAction, getPhaseContext, type NorahPhase } from './dialogueManager';
+import { detectSentiment, getToneModifier, type SentimentLabel } from './sentiment';
+import { isFollowUp, generateFollowUpReply } from './followUp';
+import { type ParsedIntent } from './multiIntent';
 
 // Recent variations cache (cooldown) - v4.2: increased to 4
 const recentVariations: string[] = [];
 const MAX_RECENT = 4;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4.2: Empathy/Tone Layer - Expanded to 16 variants
+// v5: Empathy/Tone Layer - Expanded to 20 variants
 const EMPATHY_INTROS = [
   'Capito, {nickname}!',
   'Ottima mossa, agente {code}.',
@@ -27,7 +31,11 @@ const EMPATHY_INTROS = [
   'Chiaro, {nickname}.',
   'Ok agente {code}!',
   'Bene, vediamo.',
-  'Ricevuto!'
+  'Ricevuto!',
+  '{nickname}, perfetto.',
+  'Ok {code}, ci siamo.',
+  'Bene così!',
+  'Roger!'
 ];
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
@@ -160,22 +168,55 @@ function interpolate(text: string, ctx: NorahContext): string {
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4: Enhanced reply with empathy, coach CTA, engagement hooks
+// v5: Enhanced reply with DM, multi-intent, sentiment, follow-up
 export function generateReply(
-  intent: NorahIntent,
+  intentResult: IntentResult,
   ctx: NorahContext,
   userInput: string
 ): string {
   try {
     const seed = `${ctx?.agent?.code || 'default'}_${Date.now()}_${userInput?.length || 0}`;
+    const intent = intentResult.intent;
     
-    console.log('[NORAH-v4] Generating reply:', { intent, seed });
+    console.log('[NORAH-v5] Generating reply:', { intent, seed });
+
+    // v5: Phase detection via DM
+    const phase = getPhase(ctx, userInput, [intent]);
+    const sentiment = detectSentiment(userInput);
+    const toneModifier = getToneModifier(sentiment);
     
+    console.log('[NORAH-v5] DM State:', { phase, sentiment });
+    
+    // v5: Priority 1 - Follow-up query detection
+    if (isFollowUp(userInput)) {
+      console.log('[NORAH-v5] Follow-up detected');
+      return generateFollowUpReply(ctx, phase, userInput);
+    }
+
     // Guard-rail: spoiler
     if (intent === 'no_spoiler') {
       const options = norahKB?.guardrails?.no_spoiler || ['Non posso rivelare questa informazione.'];
       const reply = selectVariation(options, seed);
       return reply + '\n\n💡 **Posso aiutarti a verificare se i segnali convergono**, senza rivelare nulla di proibito.';
+    }
+
+    // v5: Multi-intent handling
+    if (intentResult.multiIntents && intentResult.multiIntents.length >= 2) {
+      console.log('[NORAH-v5] Multi-intent response');
+      let multiReply = `${toneModifier.prefix}${getEmpathyIntro(ctx)} Rispondo a entrambe le tue domande:\n\n`;
+      
+      intentResult.multiIntents.slice(0, 2).forEach((pi, idx) => {
+        const faqKey = pi.intent.replace('about_', '');
+        const faqEntry = norahKB?.faq?.[faqKey as keyof typeof norahKB.faq];
+        if (faqEntry && Array.isArray(faqEntry.a) && faqEntry.a.length > 0) {
+          const answer = faqEntry.a[0].split('.')[0] + '.'; // First sentence only
+          multiReply += `${idx + 1}. **${pi.fragment}**: ${answer}\n`;
+        }
+      });
+      
+      const nba = nextBestAction(ctx, phase, sentiment);
+      multiReply += `\n**Prossimo passo**: ${nba.steps[0]}`;
+      return multiReply + maybeAddFriendNudge();
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
