@@ -25,7 +25,7 @@ const PLACEHOLDERS = [
 ];
 
 const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
-  const { messages, isProcessing, status, sendMessage } = useIntelAnalyst();
+  const { messages, isProcessing, status, sendMessage, ttsEnabled, toggleTTS, audioLevel } = useIntelAnalyst();
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
       />
       
       {/* Siri Edge Glow */}
-      <AIEdgeGlow status={status} isActive={true} />
+      <AIEdgeGlow status={status} isActive={true} audioLevel={audioLevel} />
       
       {/* Panel */}
       <div className="fixed inset-4 md:inset-8 z-50 flex items-center justify-center">
@@ -100,11 +100,10 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
                   {[...Array(5)].map((_, i) => (
                     <div
                       key={i}
-                      className="w-1 bg-gradient-to-t from-[#00E5FF] to-[#F213A4] rounded-full animate-pulse"
+                      className="w-1 bg-gradient-to-t from-[#00E5FF] to-[#F213A4] rounded-full"
                       style={{
-                        height: `${12 + Math.random() * 20}px`,
-                        animationDelay: `${i * 100}ms`,
-                        animationDuration: '600ms'
+                        height: `${12 + (ttsEnabled ? audioLevel * 30 : Math.random() * 20)}px`,
+                        transition: 'height 100ms ease-out'
                       }}
                     />
                   ))}
@@ -112,12 +111,24 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
               )}
             </div>
             
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-            >
-              <X className="w-6 h-6 text-white/80" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={toggleTTS}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  ttsEnabled 
+                    ? 'bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] text-white' 
+                    : 'bg-white/10 text-white/60 hover:bg-white/20'
+                }`}
+              >
+                {ttsEnabled ? '🔊 TTS ON' : '🔇 TTS OFF'}
+              </button>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6 text-white/80" />
+              </button>
+            </div>
           </div>
           
           {/* Quick Action Chips */}

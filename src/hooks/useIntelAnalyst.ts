@@ -1,9 +1,9 @@
-// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Hook
-import { useState, useCallback, useEffect } from 'react';
+// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Hook with Audio/TTS
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { buildAnalystPrompt, caesarShift, tryBase64Decode, anagramHints, analyzeNumericPattern } from '@/lib/ai/aiAnalystPrompt';
+import { generateReply, type AnalystMode } from '@/lib/ai/analystEngine';
 
-export type AnalystMode = 'analyze' | 'classify' | 'decode' | 'assess' | 'guide';
+export type { AnalystMode };
 export type AnalystStatus = 'idle' | 'thinking' | 'speaking';
 
 interface Message {
@@ -30,11 +30,24 @@ export const useIntelAnalyst = () => {
   const [currentMode, setCurrentMode] = useState<AnalystMode>('analyze');
   const [clues, setClues] = useState<Clue[]>([]);
   const [isLoadingClues, setIsLoadingClues] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [audioLevel, setAudioLevel] = useState(0);
+  
+  const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const userIdRef = useRef<string | undefined>(undefined);
 
-  // Load clues on mount
+  // Load clues and user ID on mount
   useEffect(() => {
     loadClues();
+    loadUserId();
   }, []);
+
+  const loadUserId = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      userIdRef.current = user.id;
+    }
+  };
 
   const loadClues = async () => {
     setIsLoadingClues(true);
@@ -69,6 +82,35 @@ export const useIntelAnalyst = () => {
     }
   };
 
+  const speakText = useCallback((text: string) => {
+    if (!ttsEnabled || !('speechSynthesis' in window)) return;
+    
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+    
+    // Create new utterance
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'it-IT';
+    utterance.rate = 0.95;
+    utterance.pitch = 1.0;
+    
+    // Simulate audio level during speech
+    let intervalId: NodeJS.Timeout;
+    utterance.onstart = () => {
+      intervalId = setInterval(() => {
+        setAudioLevel(Math.random() * 0.8 + 0.2); // 0.2-1.0
+      }, 100);
+    };
+    
+    utterance.onend = () => {
+      clearInterval(intervalId);
+      setAudioLevel(0);
+    };
+    
+    speechSynthesisRef.current = utterance;
+    window.speechSynthesis.speak(utterance);
+  }, [ttsEnabled]);
+
   const sendMessage = useCallback(async (content: string, mode: AnalystMode = 'analyze') => {
     if (!content.trim() || isProcessing) return;
 
@@ -85,97 +127,26 @@ export const useIntelAnalyst = () => {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Simulate thinking delay
+    // Thinking delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
     setStatus('speaking');
 
-    // Build AI response based on mode and context
-    let responseContent = '';
-    
-    // Check if asking for solution (guardrail)
-    const lowerContent = content.toLowerCase();
-    if (lowerContent.includes("dov'è") || lowerContent.includes("dove si trova") || 
-        lowerContent.includes("qual è il premio") || lowerContent.includes("coordinate")) {
-      responseContent = "⚠️ Non posso rivelare la soluzione o coordinate esatte.\n\nPosso però aiutarti ad analizzare le piste disponibili e suggerirti pattern da investigare.\n\nProva a chiedermi di classificare gli indizi o cercare correlazioni.";
-    } else if (clues.length === 0) {
-      responseContent = "📚 **Nessun Indizio Disponibile**\n\nPer iniziare l'analisi, devi raccogliere indizi tramite:\n\n• BUZZ: scansiona la mappa\n• Eventi settimanali\n• Missioni speciali\n• Codici QR\n\nRaccogli almeno 3-5 indizi per permettermi un'analisi significativa.";
-    } else {
-      switch (mode) {
-        case 'analyze':
-          const recent = clues.slice(0, 5);
-          const keywords = recent.map(c => c.title).join(', ');
-          responseContent = `🔍 **Analisi ${clues.length} Indizi**\n\n• Pattern chiave: ${keywords}\n• Coerenza temporale: indizi raccolti negli ultimi giorni\n• Clustering tematico: rilevo correlazioni tra "${recent[0]?.title}" e altri\n• Probabilità pista valida: 60-75%\n\nConsiglio: verifica sovrapposizioni geografiche tra gli indizi più recenti.`;
-          break;
-        
-        case 'classify':
-          const locationClues = clues.filter(c => 
-            c.description.toLowerCase().includes('via') || 
-            c.description.toLowerCase().includes('coord') ||
-            c.description.toLowerCase().includes('gps')
-          ).length;
-          const prizeClues = clues.filter(c => 
-            c.description.toLowerCase().includes('premio') ||
-            c.description.toLowerCase().includes('colore') ||
-            c.description.toLowerCase().includes('materiale')
-          ).length;
-          
-          responseContent = `📊 **Classificazione ${clues.length} Indizi**\n\n• Indizi di Luogo: ~${locationClues} (${Math.round(locationClues/clues.length*100)}%)\n• Indizi di Premio: ~${prizeClues} (${Math.round(prizeClues/clues.length*100)}%)\n• Altri/Ambigui: ${clues.length - locationClues - prizeClues}\n\nFocus: concentrati prima sui "${locationClues > prizeClues ? 'luoghi' : 'premi'}" per restringere il campo.`;
-          break;
-        
-        case 'decode':
-          const textToAnalyze = content.trim();
-          let decodeHints: string[] = [];
-          
-          if (textToAnalyze.length > 0 && textToAnalyze !== 'decode' && textToAnalyze !== 'decodifica') {
-            // Try Caesar shifts
-            decodeHints.push(`🔐 **Tentativi Decodifica**\n\nInput: "${textToAnalyze}"\n`);
-            decodeHints.push(`• Caesar +1: ${caesarShift(textToAnalyze, 1)}`);
-            decodeHints.push(`• Caesar +3: ${caesarShift(textToAnalyze, 3)}`);
-            decodeHints.push(`• Caesar -1: ${caesarShift(textToAnalyze, -1)}`);
-            
-            const b64 = tryBase64Decode(textToAnalyze);
-            if (b64) decodeHints.push(`• Base64: ${b64}`);
-            
-            if (textToAnalyze.length <= 10) {
-              const anagrams = anagramHints(textToAnalyze);
-              decodeHints.push(`\n**Anagrammi:**`);
-              anagrams.forEach(hint => decodeHints.push(`• ${hint}`));
-            }
-            
-            const numPatterns = analyzeNumericPattern(textToAnalyze);
-            if (numPatterns.length > 0 && numPatterns[0] !== "Nessun pattern numerico rilevato") {
-              decodeHints.push(`\n**Pattern Numerici:**`);
-              numPatterns.forEach(hint => decodeHints.push(`• ${hint}`));
-            }
-            
-            responseContent = decodeHints.join('\n');
-          } else {
-            responseContent = `🔐 **Decodifica Pattern**\n\nInvia un testo/codice dopo "decode" per analizzarlo.\n\nEsempi:\n• "decode KHOOR" (Caesar)\n• "decode SGVsbG8=" (Base64)\n• "decode ROMA" (Anagrammi)\n• "decode 41.9028 12.4964" (Coordinate)\n\nMaximo 10 caratteri per anagrammi.`;
-          }
-          break;
-        
-        case 'assess':
-          const oldestDate = clues.length > 0 ? new Date(clues[clues.length - 1].created_at) : new Date();
-          const newestDate = clues.length > 0 ? new Date(clues[0].created_at) : new Date();
-          const daysDiff = Math.floor((newestDate.getTime() - oldestDate.getTime()) / (1000 * 60 * 60 * 24));
-          
-          responseContent = `📈 **Valutazione CIA**\n\nDataset: ${clues.length} indizi raccolti in ${daysDiff} giorni\n\n**Probabilità Piste:**\n• Alta affidabilità (70-85%): indizi recenti coerenti\n• Media affidabilità (50-70%): indizi con sovrapposizioni parziali\n• Bassa affidabilità (20-50%): dati contraddittori o isolati\n\n⚠️ Disclaimer: stime basate su pattern, non certezze. Verifica sul campo.`;
-          break;
-        
-        case 'guide':
-          const progress = Math.min(clues.length * 10, 100);
-          responseContent = `🎯 **Mentore M1SSION**\n\nAgente, il tuo progresso è al ${progress}%.\n\n• Ogni indizio ti avvicina alla verità\n• La perseveranza è la tua migliore alleata\n• Non lasciare che i dubbi ti fermino\n• Il premio attende chi ha pazienza\n\nLa missione continua. Avanti!`;
-          break;
-      }
-    }
+    // Use deterministic engine
+    const response = generateReply({
+      mode,
+      clues,
+      userText: content,
+      userId: userIdRef.current,
+      timestamp: Date.now()
+    });
 
-    // Simulate streaming delay
+    // Simulate streaming
     await new Promise(resolve => setTimeout(resolve, 1200));
     
     const analystMessage: Message = {
       role: 'analyst',
-      content: responseContent,
+      content: response.content,
       timestamp: new Date(),
       metadata: { 
         mode,
@@ -185,13 +156,25 @@ export const useIntelAnalyst = () => {
     
     setMessages(prev => {
       const newMessages = [...prev, analystMessage];
-      // Keep only last 12 messages (6 turns) for context
-      return newMessages.slice(-12);
+      return newMessages.slice(-12); // Keep last 6 turns
     });
+    
+    // TTS if enabled
+    if (ttsEnabled) {
+      speakText(response.content);
+    }
     
     setStatus('idle');
     setIsProcessing(false);
-  }, [clues, isProcessing]);
+  }, [clues, isProcessing, ttsEnabled, speakText]);
+
+  const toggleTTS = useCallback(() => {
+    setTtsEnabled(prev => !prev);
+    if (ttsEnabled && speechSynthesisRef.current) {
+      window.speechSynthesis.cancel();
+      setAudioLevel(0);
+    }
+  }, [ttsEnabled]);
 
   return {
     messages,
@@ -200,8 +183,11 @@ export const useIntelAnalyst = () => {
     currentMode,
     clues,
     isLoadingClues,
+    ttsEnabled,
+    audioLevel,
     sendMessage,
     clearMessages: () => setMessages([]),
-    refreshClues: loadClues
+    refreshClues: loadClues,
+    toggleTTS
   };
 };
