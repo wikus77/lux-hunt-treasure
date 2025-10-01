@@ -1,8 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Intent Router v4 - Pipeline: normalize → spell → synonyms → fuzzy
+// Norah Intent Router v5 - Pipeline: normalize → spell → synonyms → fuzzy → multi-intent
 
 import { normalize, expandSynonyms, fuzzyScore } from './textNormalize';
 import { correctPhrase } from './spell';
+import { isMultiIntent, detectMultiIntents, type ParsedIntent } from './multiIntent';
 
 export type NorahIntent = 
   | 'about_mission'
@@ -30,6 +31,7 @@ export interface IntentResult {
   intent: NorahIntent;
   confidence: number;
   slots?: Record<string, any>;
+  multiIntents?: ParsedIntent[]; // v5: multi-intent support
 }
 
 // Spoiler guard patterns (priorità massima)
@@ -131,6 +133,19 @@ export function routeIntent(input: string): IntentResult {
 
   const rawNormalized = input.toLowerCase().trim();
 
+  // v5: Multi-intent detection (priority check before single routing)
+  if (isMultiIntent(input)) {
+    const multiIntents = detectMultiIntents(input);
+    if (multiIntents.length >= 2) {
+      console.log('[NORAH-v5] Multi-intent detected:', multiIntents);
+      return {
+        intent: 'help', // Use help as umbrella for multi-intent
+        confidence: 0.85,
+        multiIntents
+      };
+    }
+  }
+
   // Guard-rail: spoiler check first
   for (const pattern of SPOILER_PATTERNS) {
     if (pattern.test(rawNormalized)) {
@@ -200,7 +215,7 @@ export function routeIntent(input: string): IntentResult {
     return { intent: topIntent, confidence };
   }
 
-  // v4.2: Intelligent fallback - re-route based on keywords + synonyms
+  // v5: Enhanced fallback - more synonyms for help intent
   const keywordMap: Record<string, NorahIntent> = {
     'mission': 'about_mission',
     'm1ssion': 'about_mission',
@@ -212,7 +227,9 @@ export function routeIntent(input: string): IntentResult {
     'aiuto': 'help',
     'spiega': 'help',
     'come si fa': 'help',
-    'come faccio': 'help'
+    'come faccio': 'help',
+    'come fare': 'help',
+    'spiegami': 'help'
   };
   
   for (const [keyword, intent] of Object.entries(keywordMap)) {
