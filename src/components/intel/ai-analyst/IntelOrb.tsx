@@ -1,6 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ - Giant Orb (Siri-style)
 import React from 'react';
-import { Waves, Activity, Loader2 } from 'lucide-react';
 import { AnalystStatus } from '@/hooks/useIntelAnalyst';
 
 interface IntelOrbProps {
@@ -10,6 +9,7 @@ interface IntelOrbProps {
 }
 
 const IntelOrb: React.FC<IntelOrbProps> = ({ status, audioLevel, onClick }) => {
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
   const getAnimation = () => {
     switch (status) {
       case 'thinking':
@@ -21,16 +21,7 @@ const IntelOrb: React.FC<IntelOrbProps> = ({ status, audioLevel, onClick }) => {
     }
   };
 
-  const getIcon = () => {
-    switch (status) {
-      case 'thinking':
-        return <Loader2 className="w-20 h-20 animate-spin" />;
-      case 'speaking':
-        return <Waves className="w-20 h-20 animate-pulse" />;
-      default:
-        return <Activity className="w-20 h-20" />;
-    }
-  };
+  // Icon removed for clean orb look
 
   const orbScale = status === 'speaking' && audioLevel > 0 
     ? 1 + (audioLevel * 0.15) 
@@ -74,6 +65,7 @@ const IntelOrb: React.FC<IntelOrbProps> = ({ status, audioLevel, onClick }) => {
       />
 
       {/* Inner core */}
+      {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
       <div 
         className="absolute inset-8 rounded-full bg-gradient-to-br from-cyan-400/40 to-pink-400/40 backdrop-blur-2xl border border-white/10 flex items-center justify-center text-white/90 transition-transform group-hover:scale-105 group-active:scale-95"
         style={{
@@ -85,7 +77,7 @@ const IntelOrb: React.FC<IntelOrbProps> = ({ status, audioLevel, onClick }) => {
           `
         }}
       >
-        {getIcon()}
+        {/* Icon removed - clean orb look */}
       </div>
 
       {/* Pulsating ring animation for idle */}

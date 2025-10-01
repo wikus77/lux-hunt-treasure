@@ -107,19 +107,41 @@ function pickRandom<T>(arr: T[], seed: number): T {
   return arr[seed % arr.length];
 }
 
-function composeNaturalReply(base: string, seed: number, context: AgentContextData): string {
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Null-safe string helper
+function safeStr(v: unknown, fallback = ''): string {
+  return (typeof v === 'string' ? v : fallback);
+}
+
+function nonEmpty(v: string | undefined, fallback: string): string {
+  const s = safeStr(v, '').trim();
+  return s.length ? s : fallback;
+}
+
+function composeNaturalReply(base: string | undefined, seed: number, context: AgentContextData): string {
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  // Null safety guardrails
+  const template = nonEmpty(base, 'Ricevuto. Prova a essere più specifico: posso classificare indizi, cercare pattern, decodificare frammenti o stimare probabilità.');
+  const agent = nonEmpty(context.agentCode, 'Agente');
+  
   const opener = pickRandom(OPENERS, seed);
   const closer = pickRandom(CLOSERS, seed + 1);
   
   // Add hedge occasionally
   const hedge = seed % 3 === 0 ? `${pickRandom(HEDGES, seed + 2)}, ` : '';
   
-  // Interpolate {{agentCode}} and {{cluesCount}}
-  let reply = base
-    .replace(/\{\{agentCode\}\}/g, context.agentCode)
-    .replace(/\{\{cluesCount\}\}/g, String(context.cluesCount));
+  // Interpolate {{agentCode}} and {{cluesCount}} with safe replace
+  let reply = template;
+  try {
+    reply = reply
+      .replace(/\{\{agentCode\}\}/g, agent)
+      .replace(/\{\{cluesCount\}\}/g, String(context.cluesCount || 0));
+  } catch (err) {
+    console.error('[composeNaturalReply] Replace error:', err);
+    reply = template;
+  }
   
-  return `${opener}, ${context.agentCode}. ${hedge}${reply} ${closer}`;
+  return `${opener}, ${agent}. ${hedge}${reply} ${closer}`;
 }
 
 // Classification
@@ -269,13 +291,23 @@ export function generateAnalystReply(
   
   switch (intent) {
     case 'describe_mission':
-      baseReply = pickRandom(FAQ_IT["Cos'è M1SSION?"], seed);
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+      const missionFAQ = FAQ_IT["Cos'è M1SSION?"];
+      baseReply = missionFAQ && missionFAQ.length > 0 
+        ? pickRandom(missionFAQ, seed)
+        : "M1SSION è un'esperienza di caccia al tesoro intelligente che combina realtà e digital.";
       break;
       
     case 'identity':
-      baseReply = context.agentCode === 'AG-GUEST'
-        ? 'Non ho il tuo codice agente, ma possiamo procedere comunque.'
-        : pickRandom(FAQ_IT["Che agente sono io?"], seed);
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+      if (context.agentCode === 'AG-GUEST') {
+        baseReply = 'Non ho il tuo codice agente, ma possiamo procedere comunque.';
+      } else {
+        const identityFAQ = FAQ_IT["Che agente sono io?"];
+        baseReply = identityFAQ && identityFAQ.length > 0
+          ? pickRandom(identityFAQ, seed)
+          : `Sei l'agente ${context.agentCode}, parte della rete M1SSION.`;
+      }
       break;
       
     case 'probability_check':
@@ -302,13 +334,16 @@ export function generateAnalystReply(
       break;
       
     case 'faq':
-      // Find closest FAQ match
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+      // Find closest FAQ match with null safety
       const faqKey = Object.keys(FAQ_IT).find(q => 
         prompt.toLowerCase().includes(q.toLowerCase().slice(0, 10))
       );
-      baseReply = faqKey 
-        ? pickRandom(FAQ_IT[faqKey], seed)
-        : 'Posso aiutarti con: analisi indizi, pattern, decodifiche, strategie. Cosa ti serve?';
+      if (faqKey && FAQ_IT[faqKey] && FAQ_IT[faqKey].length > 0) {
+        baseReply = pickRandom(FAQ_IT[faqKey], seed);
+      } else {
+        baseReply = 'Posso aiutarti con: analisi indizi, pattern, decodifiche, strategie. Cosa ti serve?';
+      }
       break;
       
     default:
