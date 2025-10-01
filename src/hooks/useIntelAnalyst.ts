@@ -6,6 +6,10 @@ interface AnalystMessage {
   role: 'user' | 'analyst';
   content: string;
   timestamp: number;
+  metadata?: {
+    probability?: string;
+    risk?: string;
+  };
 }
 
 interface UseIntelAnalystReturn {
@@ -21,7 +25,7 @@ export const useIntelAnalyst = (): UseIntelAnalystReturn => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [voiceEnergy, setVoiceEnergy] = useState(0);
 
-  const analyzeInput = useCallback((input: string): string => {
+  const analyzeInput = useCallback((input: string): { response: string; metadata?: { probability?: string; risk?: string } } => {
     const lower = input.toLowerCase();
 
     // Gentle refusal for location/prize requests
@@ -36,7 +40,8 @@ export const useIntelAnalyst = (): UseIntelAnalystReturn => {
       lower.includes('what is') ||
       lower.includes('soluzione')
     ) {
-      return `⚠️ **TACTICAL CONSTRAINT**
+      return {
+        response: `⚠️ **TACTICAL CONSTRAINT**
 
 I cannot provide explicit locations, coordinates, addresses, or prize details. This would compromise mission integrity.
 
@@ -46,12 +51,15 @@ I cannot provide explicit locations, coordinates, addresses, or prize details. T
 • Cross-reference decoded fragments
 • Assess probability clusters
 
-Would you like me to classify your current clues or perform pattern analysis instead?`;
+Would you like me to classify your current clues or perform pattern analysis instead?`,
+        metadata: { probability: 'N/A', risk: 'N/A' }
+      };
     }
 
     // Classification request
     if (lower.includes('classif') || lower.includes('categor') || lower.includes('organiz')) {
-      return `📊 **CLUE CLASSIFICATION**
+      return {
+        response: `📊 **CLUE CLASSIFICATION**
 
 **Tactical Categories:**
 • **LOCATION**: Geographical hints, landmarks, city references
@@ -65,12 +73,15 @@ Would you like me to classify your current clues or perform pattern analysis ins
 • **MEDIUM CONFIDENCE**: Single-source validation
 • **LOW CONFIDENCE**: Ambiguous or contradictory data
 
-Request specific clue analysis for detailed classification.`;
+Request specific clue analysis for detailed classification.`,
+        metadata: { probability: '70-80%', risk: 'Low' }
+      };
     }
 
     // Analysis request
     if (lower.includes('analy') || lower.includes('summary') || lower.includes('riassun')) {
-      return `🔍 **INTELLIGENCE SUMMARY**
+      return {
+        response: `🔍 **INTELLIGENCE SUMMARY**
 
 **Current Mission Status:**
 • Clue collection: Active
@@ -88,7 +99,9 @@ Request specific clue analysis for detailed classification.`;
 • Perform pattern analysis on specific data
 • Decode suspected encrypted content
 
-Probability of successful mission completion increases with systematic analysis.`;
+Probability of successful mission completion increases with systematic analysis.`,
+        metadata: { probability: '65-75%', risk: 'Moderate' }
+      };
     }
 
     // Decoding request
@@ -98,7 +111,8 @@ Probability of successful mission completion increases with systematic analysis.
       lower.includes('cipher') ||
       lower.includes('decode')
     ) {
-      return `🔐 **DECODING PROTOCOL**
+      return {
+        response: `🔐 **DECODING PROTOCOL**
 
 **Available Techniques:**
 • **Caesar Cipher**: Shift ±1-25 positions
@@ -111,12 +125,15 @@ Probability of successful mission completion increases with systematic analysis.
 Input: "NJTTJPO"
 → Caesar -1: "MISSION" ✓
 
-Provide suspected encoded text for analysis. I'll apply systematic decoding techniques and report results.`;
+Provide suspected encoded text for analysis. I'll apply systematic decoding techniques and report results.`,
+        metadata: { probability: '50-60%', risk: 'Medium' }
+      };
     }
 
     // Probability/risk request
     if (lower.includes('probab') || lower.includes('risk') || lower.includes('chance')) {
-      return `📈 **PROBABILITY ASSESSMENT**
+      return {
+        response: `📈 **PROBABILITY ASSESSMENT**
 
 **Mission Success Factors:**
 • **Data Quality**: MEDIUM → More clues needed for HIGH confidence
@@ -131,7 +148,9 @@ Provide suspected encoded text for analysis. I'll apply systematic decoding tech
 **CIA-Style Assessment:**
 "Current intelligence suggests multiple viable leads. Recommend systematic elimination of low-probability zones before final shot attempt. Confidence level: 60-70%."
 
-Continue gathering intelligence to reduce uncertainty margin.`;
+Continue gathering intelligence to reduce uncertainty margin.`,
+        metadata: { probability: '60-70%', risk: 'Moderate' }
+      };
     }
 
     // Mentor/motivational
@@ -141,7 +160,8 @@ Continue gathering intelligence to reduce uncertainty margin.`;
       lower.includes('aiut') ||
       lower.includes('difficult')
     ) {
-      return `💪 **TACTICAL GUIDANCE**
+      return {
+        response: `💪 **TACTICAL GUIDANCE**
 
 **Remember, Agent:**
 Every great operative faces obstacles. Your systematic approach shows professional discipline.
@@ -160,11 +180,14 @@ Every great operative faces obstacles. Your systematic approach shows profession
 **M1SSION Principle:**
 "The best agents don't rush to conclusions. They let the intelligence reveal itself through careful analysis."
 
-You have the skills. Trust your training. 🎯`;
+You have the skills. Trust your training. 🎯`,
+        metadata: { probability: 'N/A', risk: 'N/A' }
+      };
     }
 
     // Default: General guidance
-    return `👤 **AI ANALYST READY**
+    return {
+      response: `👤 **AI ANALYST READY**
 
 **Capabilities:**
 • Clue analysis and classification
@@ -185,7 +208,9 @@ You have the skills. Trust your training. 🎯`;
 ✓ Assess probabilities and risks
 ✓ Provide tactical guidance
 
-Ask me to "classify clues", "analyze patterns", "decode [text]", or "assess probability".`;
+Ask me to "classify clues", "analyze patterns", "decode [text]", or "assess probability".`,
+      metadata: { probability: 'N/A', risk: 'N/A' }
+    };
   }, []);
 
   const simulateVoiceEnergy = useCallback(() => {
@@ -230,12 +255,13 @@ Ask me to "classify clues", "analyze patterns", "decode [text]", or "assess prob
     
     await new Promise((resolve) => setTimeout(resolve, delay));
 
-    const response = analyzeInput(text);
+    const { response, metadata } = analyzeInput(text);
     const analystMsg: AnalystMessage = {
       id: `analyst-${Date.now()}`,
       role: 'analyst',
       content: response,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      metadata
     };
 
     setMessages((prev) => [...prev, analystMsg]);
