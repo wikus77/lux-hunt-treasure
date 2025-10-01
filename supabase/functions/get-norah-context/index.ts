@@ -8,27 +8,41 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  const startTime = Date.now();
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    console.log('[NORAH-CTX] Start - method:', req.method);
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const authHeader = req.headers.get('Authorization')!;
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error('[NORAH-CTX] Missing Authorization header');
+      return new Response(JSON.stringify({ error: 'Missing authorization', stage: 'auth_header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('[NORAH-CTX] Auth error:', authError?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized', stage: 'auth_user' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const userId = user.id;
+    console.log('[NORAH-CTX] Authenticated user:', userId);
 
     // Parallel queries for maximum performance
     const [
@@ -47,25 +61,28 @@ serve(async (req) => {
       supabase.from('norah_messages').select('role, content, intent, created_at').eq('user_id', userId).order('created_at', { ascending: false }).limit(10)
     ]);
 
-    // Fallback to profiles table for agent_code if agent_profiles doesn't exist
+    // Resolve agent_code with fallback chain
     let agentCode = 'AG-UNKNOWN';
     let nickname = null;
     
     if (profileResult.data) {
       agentCode = profileResult.data.agent_code;
       nickname = profileResult.data.nickname;
+      console.log('[NORAH-CTX] Agent from agent_profiles:', agentCode);
     } else {
+      console.log('[NORAH-CTX] agent_profiles empty, fallback to profiles');
       const fallbackProfile = await supabase.from('profiles').select('agent_code, full_name').eq('id', userId).maybeSingle();
+      
+      if (fallbackProfile.error) {
+        console.error('[NORAH-CTX] Fallback profiles query error:', fallbackProfile.error);
+      }
+      
       if (fallbackProfile.data?.agent_code) {
         agentCode = fallbackProfile.data.agent_code;
         nickname = fallbackProfile.data.full_name;
-        
-        // Auto-populate agent_profiles for future use
-        await supabase.from('agent_profiles').upsert({
-          user_id: userId,
-          agent_code: agentCode,
-          nickname: nickname
-        }, { onConflict: 'user_id' });
+        console.log('[NORAH-CTX] Agent from profiles:', agentCode);
+      } else {
+        console.warn('[NORAH-CTX] No agent_code found in profiles, using AG-UNKNOWN');
       }
     }
 
@@ -108,13 +125,20 @@ serve(async (req) => {
       }))
     };
 
+    const elapsed = Date.now() - startTime;
+    console.log('[NORAH-CTX] Success - elapsed:', elapsed, 'ms, agent:', agentCode);
+
     return new Response(JSON.stringify(context), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Error in get-norah-context:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const elapsed = Date.now() - startTime;
+    console.error('[NORAH-CTX] Error after', elapsed, 'ms:', error);
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Internal server error',
+      stage: 'exception'
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -42,19 +42,28 @@ const SPOILER_PATTERNS = [
   /\bpremi[oa]\b.*\bdov[eè]\b/i
 ];
 
-// Single-word/short-query direct mapping
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Single-word/short-query direct mapping - Extended
 const SINGLE_WORD_MAP: Record<string, NorahIntent> = {
   'mission': 'about_mission',
   'm1ssion': 'about_mission',
+  'm1': 'about_mission',
   'buzz': 'about_buzz',
+  'indizi': 'about_buzz',
   'finalshot': 'about_finalshot',
   'fs': 'about_finalshot',
+  'finale': 'about_finalshot',
   'mappa': 'buzz_map',
   'map': 'buzz_map',
+  'buzzmap': 'buzz_map',
   'abbonamenti': 'plans',
   'abbo': 'plans',
+  'piani': 'plans',
+  'piano': 'plans',
   'prezzi': 'plans',
   'pricing': 'plans',
+  'plans': 'plans',
+  'plan': 'plans',
   'probabilità': 'probability',
   'prob': 'probability',
   'pattern': 'pattern',
@@ -64,6 +73,8 @@ const SINGLE_WORD_MAP: Record<string, NorahIntent> = {
   'aiuto': 'help',
   'help': 'help',
   'aiutami': 'help',
+  'inizio': 'help',
+  'iniziare': 'help',
   'regole': 'rules',
   'rules': 'rules',
   'classifica': 'leaderboard',
@@ -105,7 +116,8 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
   unknown: []
 };
 
-const FUZZY_THRESHOLD = 0.55;
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+const FUZZY_THRESHOLD = 0.45; // Reduced for better tolerance
 const HIGH_CONFIDENCE_THRESHOLD = 0.75;
 
 export function routeIntent(input: string): IntentResult {

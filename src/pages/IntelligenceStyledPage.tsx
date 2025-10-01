@@ -205,6 +205,7 @@ const IntelligenceStyledPage: React.FC = () => {
           cluesCount={clues.length}
           status={status}
           audioLevel={micLevel || audioLevel}
+          agentContext={agentContext}
           ttsEnabled={ttsEnabled}
           onToggleTTS={toggleTTS}
         />

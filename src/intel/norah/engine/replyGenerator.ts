@@ -77,28 +77,67 @@ export function generateReply(
       return selectVariation(options, seed);
     }
 
-    // Unknown fallback with hints
+    // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+    // Unknown/Help fallback with smart contextual suggestions
     if (intent === 'unknown' || intent === 'help') {
+      // Check if user mentioned known keywords but intent was missed
+      const lowerInput = (userInput || '').toLowerCase();
+      const knownKeywords = ['mission', 'm1ssion', 'buzz', 'finalshot', 'fs', 'mappa', 'piani', 'abbo', 'pattern', 'decode'];
+      const foundKeyword = knownKeywords.find(kw => lowerInput.includes(kw));
+      
+      if (foundKeyword) {
+        // Redirect to most likely intent based on keyword
+        if (['mission', 'm1ssion'].some(k => lowerInput.includes(k))) {
+          const missionOptions = norahKB?.faq?.mission?.a || ['M1SSION™ è un gioco di intelligence e ricerca del premio.'];
+          return selectVariation(missionOptions, seed);
+        }
+        if (['finalshot', 'fs'].some(k => lowerInput.includes(k))) {
+          const fsOptions = norahKB?.faq?.finalshot?.a || ['Final Shot: tentativo finale per vincere (max 2 al giorno).'];
+          return selectVariation(fsOptions, seed);
+        }
+        if (['piani', 'abbo'].some(k => lowerInput.includes(k))) {
+          const planOptions = norahKB?.faq?.subscriptions?.a || ['Vai su Abbonamenti per vedere i piani disponibili.'];
+          return selectVariation(planOptions, seed);
+        }
+      }
+      
       const options = norahKB?.guardrails?.unknown || [
-        'Non ho capito. Prova con: Mission, BUZZ, Final Shot, indizi, pattern.'
+        'Non ho capito. Prova: Mission, BUZZ, Final Shot, indizi, pattern, piani.'
       ];
       let reply = selectVariation(options, seed);
       
-      // Add contextual suggestions
+      // Add contextual suggestions based on agent state
       const clues = ctx?.stats?.clues || 0;
-      if (clues === 0) {
-        reply += '\n\n🎯 Suggerimento: inizia con BUZZ per raccogliere indizi.';
+      const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+      
+      if (ctx?.agent?.code === 'AG-UNKNOWN') {
+        reply += `\n\n⚠️ Profilo non sincronizzato. Prova a ricaricare la pagina.`;
+      } else if (clues === 0) {
+        reply += `\n\n🎯 ${agentName}, inizia con BUZZ per raccogliere indizi.`;
       } else if (clues < 8) {
-        reply += '\n\n🎯 Suggerimento: hai ' + clues + ' indizi, continua con BUZZ o prova BUZZ Map.';
+        reply += `\n\n🎯 ${agentName}, hai ${clues} indizi. Continua con BUZZ o prova BUZZ Map.`;
       } else {
-        reply += '\n\n🎯 Suggerimento: con ' + clues + ' indizi puoi analizzare pattern o considerare Final Shot.';
+        reply += `\n\n🎯 ${agentName}, con ${clues} indizi puoi analizzare pattern o valutare Final Shot.`;
       }
       
       return reply;
     }
 
-    // FAQ-based responses with context enrichment
-    const faqEntry = norahKB?.faq?.[intent as keyof typeof norahKB.faq];
+    // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+    // FAQ-based responses with context enrichment - Map intents to KB keys
+    const intentToKbKey: Record<string, string> = {
+      'about_mission': 'mission',
+      'about_buzz': 'buzz',
+      'about_finalshot': 'finalshot',
+      'buzz_map': 'buzz_map',
+      'plans': 'subscriptions',
+      'leaderboard': 'leaderboard',
+      'community': 'community',
+      'data_privacy': 'data_privacy'
+    };
+    
+    const kbKey = intentToKbKey[intent] || intent;
+    const faqEntry = norahKB?.faq?.[kbKey as keyof typeof norahKB.faq];
     if (faqEntry && Array.isArray(faqEntry.a) && faqEntry.a.length > 0) {
       const raw = selectVariation(faqEntry.a, seed);
       let reply = interpolate(raw, ctx);
