@@ -34,6 +34,22 @@ export function isMultiIntent(input: string): boolean {
 }
 
 /**
+ * Intent priority for multi-intent sorting
+ */
+const INTENT_PRIORITY: Record<string, number> = {
+  'about_m1ssion': 10,
+  'about_buzz': 9,
+  'about_buzz_map': 8,
+  'about_finalshot': 7,
+  'about_subscriptions': 6,
+  'help': 5,
+  'mentor': 4,
+  'progress': 3,
+  'pattern': 2,
+  'unknown': 0
+};
+
+/**
  * Split input into intent fragments and route each
  */
 export function detectMultiIntents(input: string): ParsedIntent[] {
@@ -43,9 +59,9 @@ export function detectMultiIntents(input: string): ParsedIntent[] {
 
   const lower = input.toLowerCase().trim();
 
-  // Split on common separators
+  // Split on common separators (added "/" support)
   const fragments = lower
-    .split(/\s+e\s+|\s+e\s+poi\s+|,\s+|;\s+|\s+&\s+|\s+più\s+|\s+anche\s+/i)
+    .split(/\s+e\s+|\s+e\s+poi\s+|,\s+|;\s+|\s+&\s+|\s+più\s+|\s+anche\s+|\/|\s+o\s+/i)
     .map(f => f.trim())
     .filter(f => f.length > 0);
 
@@ -86,8 +102,13 @@ export function detectMultiIntents(input: string): ParsedIntent[] {
     }
   }
 
+  // Sort by priority, then confidence
   const finalIntents = Array.from(unique.values())
-    .sort((a, b) => b.confidence - a.confidence)
+    .sort((a, b) => {
+      const priorityDiff = (INTENT_PRIORITY[b.intent] || 0) - (INTENT_PRIORITY[a.intent] || 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      return b.confidence - a.confidence;
+    })
     .slice(0, 3); // Max 3 intents
 
   console.log('[MultiIntent] Detected intents:', finalIntents);

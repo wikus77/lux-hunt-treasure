@@ -175,6 +175,60 @@ export function computeNBA(
 }
 
 /**
+ * Get predictive action based on time of day and user progress
+ */
+export function getPredictiveAction(ctx: NorahContext): NBAResult | null {
+  const hour = new Date().getHours();
+  const clues = ctx?.stats?.clues || 0;
+  const buzzToday = ctx?.stats?.buzz_today || 0;
+  const dayOfWeek = new Date().getDay(); // 0=Sunday, 6=Saturday
+
+  // Morning (8-11) + no BUZZ today
+  if (hour >= 8 && hour < 11 && buzzToday === 0) {
+    return {
+      title: 'Mattina perfetta per BUZZ ☀️',
+      steps: [
+        'Inizia la giornata con un indizio fresco',
+        'Apri BUZZ e prendi il primo dato',
+        'Hai tutta la giornata per analizzarlo'
+      ],
+      reason: 'Morning + no buzz today',
+      priority: 'high'
+    };
+  }
+
+  // Evening (19-22) + good clue collection (5+)
+  if (hour >= 19 && hour < 22 && clues >= 5) {
+    return {
+      title: 'Serata ideale per analisi 🌙',
+      steps: [
+        'Hai tempo per studiare gli indizi con calma',
+        'Incrocia i dati, cerca pattern',
+        'Usa BUZZ Map per visualizzare convergenze'
+      ],
+      reason: 'Evening + enough clues for analysis',
+      priority: 'medium'
+    };
+  }
+
+  // Weekend + low activity
+  if ((dayOfWeek === 0 || dayOfWeek === 6) && buzzToday === 0 && clues < 8) {
+    return {
+      title: 'Weekend: momento perfetto 🎯',
+      steps: [
+        'Hai più tempo libero per M1SSION',
+        'Fai 2-3 BUZZ e accumula dati',
+        'Analizza con calma, senza fretta'
+      ],
+      reason: 'Weekend + low activity',
+      priority: 'medium'
+    };
+  }
+
+  return null;
+}
+
+/**
  * Get 3 alternative actions for UI pill suggestions
  */
 export function getAlternatives(
