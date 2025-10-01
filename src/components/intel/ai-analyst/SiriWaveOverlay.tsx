@@ -4,9 +4,10 @@ import React, { useEffect } from 'react';
 interface AIEdgeGlowProps {
   status: 'idle' | 'thinking' | 'speaking';
   isActive: boolean;
+  audioLevel?: number; // 0-1 for TTS volume visualization
 }
 
-const AIEdgeGlow: React.FC<AIEdgeGlowProps> = ({ status, isActive }) => {
+const AIEdgeGlow: React.FC<AIEdgeGlowProps> = ({ status, isActive, audioLevel = 0 }) => {
   useEffect(() => {
     if (isActive) {
       document.body.classList.add('ai-active');
@@ -26,10 +27,19 @@ const AIEdgeGlow: React.FC<AIEdgeGlowProps> = ({ status, isActive }) => {
       case 'thinking':
         return 'aiGlowThink 2s ease-in-out infinite';
       case 'speaking':
-        return 'aiGlowSpeak 1.2s ease-in-out infinite';
+        return audioLevel > 0 
+          ? `aiGlowSpeak ${0.8 + (1 - audioLevel) * 0.4}s ease-in-out infinite` 
+          : 'aiGlowSpeak 1.2s ease-in-out infinite';
       default:
         return 'aiGlowIdle 4s ease-in-out infinite';
     }
+  };
+
+  const getOpacity = () => {
+    if (status === 'speaking' && audioLevel > 0) {
+      return 0.4 + audioLevel * 0.4; // 0.4-0.8 based on audio
+    }
+    return 1;
   };
 
   return (
@@ -56,7 +66,9 @@ const AIEdgeGlow: React.FC<AIEdgeGlowProps> = ({ status, isActive }) => {
         className="fixed inset-0 pointer-events-none z-40"
         style={{
           animation: getAnimation(),
-          willChange: 'opacity'
+          opacity: getOpacity(),
+          willChange: 'opacity',
+          transition: 'opacity 100ms ease-out'
         }}
       >
         {/* Edge glow layer */}
