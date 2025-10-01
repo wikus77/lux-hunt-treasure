@@ -2,8 +2,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { generateReply, type AnalystMode } from '@/lib/ai/analystEngine';
-import { getAgentContext, subscribeToContext, type AgentContext } from '@/intelligence/context/aiContext';
-import { generateNaturalResponse, detectIntent } from '@/intelligence/engine/naturalResponder';
+import { getAgentContext as getOldContext } from '@/intelligence/context/aiContext';
+import { getAgentContext, clearContextCache, type AgentContextData } from '@/intel/ai/context/agentContext';
+import { useRealtimeIntel } from '@/intel/ai/context/realtimeClues';
+import { composeReply } from '@/intel/ai/ui/aiPanelBehavior';
 
 export type { AnalystMode };
 export type AnalystStatus = 'idle' | 'thinking' | 'speaking';
@@ -34,26 +36,25 @@ export const useIntelAnalyst = () => {
   const [isLoadingClues, setIsLoadingClues] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
-  const [agentContext, setAgentContext] = useState<AgentContext | null>(null);
+  const [agentContext, setAgentContext] = useState<AgentContextData | null>(null);
   
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const userIdRef = useRef<string | undefined>(undefined);
 
-  // Load context and clues on mount
+  // Use realtime intel hook
+  const { clues: realtimeClues, loading: realtimeLoading } = useRealtimeIntel();
+
+  // Load context and user on mount
   useEffect(() => {
-    loadClues();
     loadUserId();
     loadAgentContext();
-    
-    // Subscribe to context updates
-    const unsubscribe = subscribeToContext((ctx) => {
-      if (ctx) {
-        setAgentContext(ctx);
-      }
-    });
-    
-    return unsubscribe;
   }, []);
+
+  // Sync realtime clues to local clues
+  useEffect(() => {
+    setClues(realtimeClues as any);
+    setIsLoadingClues(realtimeLoading);
+  }, [realtimeClues, realtimeLoading]);
 
   const loadAgentContext = async () => {
     const ctx = await getAgentContext();
@@ -64,39 +65,6 @@ export const useIntelAnalyst = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       userIdRef.current = user.id;
-    }
-  };
-
-  const loadClues = async () => {
-    setIsLoadingClues(true);
-    try {
-      // Try view first
-      const { data: viewData, error: viewError } = await supabase
-        .from('v_user_intel_clues')
-        .select('id, title, description, created_at')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (!viewError && viewData) {
-        setClues(viewData);
-        setIsLoadingClues(false);
-        return;
-      }
-
-      // Fallback to clues table
-      const { data: cluesData, error: cluesError } = await supabase
-        .from('clues')
-        .select('id, title, description, created_at')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (!cluesError && cluesData) {
-        setClues(cluesData);
-      }
-    } catch (error) {
-      console.error('Error loading clues:', error);
-    } finally {
-      setIsLoadingClues(false);
     }
   };
 
@@ -150,18 +118,14 @@ export const useIntelAnalyst = () => {
 
     setStatus('speaking');
 
-    // Try natural responder if context is available
+    // Use V2 panel behavior if context available
     let response: string;
     if (agentContext) {
-      const intent = detectIntent(content);
-      const seed = Date.now() ^ (userIdRef.current?.charCodeAt(0) || 0);
-      
-      response = generateNaturalResponse({
-        prompt: content,
-        intent,
+      response = composeReply({
+        mode,
+        userText: content,
         context: agentContext,
-        clues,
-        seed
+        clues: realtimeClues as any
       });
     } else {
       // Fallback to existing engine
@@ -200,7 +164,7 @@ export const useIntelAnalyst = () => {
     
     setStatus('idle');
     setIsProcessing(false);
-  }, [clues, isProcessing, ttsEnabled, speakText, agentContext]);
+  }, [realtimeClues, isProcessing, ttsEnabled, speakText, agentContext]);
 
   const toggleTTS = useCallback(() => {
     setTtsEnabled(prev => !prev);
@@ -222,7 +186,7 @@ export const useIntelAnalyst = () => {
     agentContext,
     sendMessage,
     clearMessages: () => setMessages([]),
-    refreshClues: loadClues,
+    refreshClues: () => clearContextCache(),
     toggleTTS
   };
 };
