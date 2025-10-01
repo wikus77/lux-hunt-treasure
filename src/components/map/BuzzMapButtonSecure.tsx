@@ -190,22 +190,42 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         }}
       >
         <motion.button
-          className="relative rounded-full shadow-lg transition-all duration-300 bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95"
+          className="relative rounded-full transition-all duration-300 bg-gradient-to-br from-purple-500 to-red-500 hover:scale-110 active:scale-95"
           onClick={handleBuzzMapPress}
           disabled={!isAuthenticated || isProcessing || loading || pricingLoading}
           style={{
-            width: '88px', // +10% from 80px
-            height: '88px', // +10% from 80px
+            width: '96px', // +10% from original 88px
+            height: '96px', // +10% from original 88px
+            border: '2px solid rgba(255, 255, 255, 0.2)',
+            boxShadow: `
+              inset 0 -8px 20px rgba(0, 0, 0, 0.4),
+              inset 0 8px 20px rgba(255, 255, 255, 0.1),
+              inset -8px 0 20px rgba(147, 51, 234, 0.3),
+              inset 8px 0 20px rgba(239, 68, 68, 0.3),
+              0 0 40px rgba(147, 51, 234, 0.4),
+              0 0 20px rgba(239, 68, 68, 0.3),
+              0 15px 40px rgba(0, 0, 0, 0.6),
+              0 8px 20px rgba(0, 0, 0, 0.4)
+            `,
           }}
-          whileTap={{ scale: isAuthenticated ? 0.9 : 1 }}
+          whileTap={{ 
+            scale: isAuthenticated ? 0.9 : 1,
+          }}
+          whileHover={{
+            boxShadow: `
+              inset 0 -10px 25px rgba(0, 0, 0, 0.5),
+              inset 0 10px 25px rgba(255, 255, 255, 0.15),
+              inset -10px 0 25px rgba(147, 51, 234, 0.4),
+              inset 10px 0 25px rgba(239, 68, 68, 0.4),
+              0 0 60px rgba(147, 51, 234, 0.6),
+              0 0 30px rgba(239, 68, 68, 0.5),
+              0 20px 50px rgba(0, 0, 0, 0.7),
+              0 10px 25px rgba(0, 0, 0, 0.5)
+            `,
+          }}
           aria-label="BUZZ MAP"
           animate={{
             scale: [1, 1.06, 1],
-            boxShadow: [
-              "0 0 20px rgba(147, 51, 234, 0.4)",
-              "0 0 40px rgba(147, 51, 234, 0.8)", 
-              "0 0 20px rgba(147, 51, 234, 0.4)"
-            ]
           }}
           transition={{
             scale: {
@@ -213,27 +233,17 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
               repeat: Infinity,
               ease: "easeInOut"
             },
-            boxShadow: {
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }
           }}
         >
           <div className="absolute top-0 left-0 w-full h-full rounded-full flex flex-col items-center justify-center">
             {isProcessing || loading ? (
-              <Lock className="text-white animate-pulse" size={24} />
+              <Lock className="text-white animate-pulse" size={28} />
             ) : (
               <>
-                {/* M1SSION Branding */}
-                <span className="text-sm font-bold leading-none">
-                  <span className="text-[#00D9FF]">M1</span>
-                  <span className="text-white">SSION</span>
-                </span>
-                <span className="text-xs text-white font-bold leading-none mt-1">
+                <span className="text-sm text-white font-bold leading-none">
                   BUZZ MAP
                 </span>
-                <span className="text-xs text-white/80 leading-none mt-0.5">
+                <span className="text-xs text-white/90 leading-none mt-1">
                   {Math.round(nextRadiusKm)}km · €{nextPriceEur.toFixed(2)}
                 </span>
               </>
