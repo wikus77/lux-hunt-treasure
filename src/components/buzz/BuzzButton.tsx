@@ -26,14 +26,16 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
       whileTap={{ scale: 0.97 }}
       disabled={isBlocked || buzzing}
       onClick={onClick}
-      className="relative w-48 h-48 rounded-full text-lg font-semibold text-white tracking-wide shadow-lg z-20"
+      className="relative w-48 h-48 rounded-full text-lg font-semibold text-white tracking-wide z-20"
       style={{
         background: isBlocked 
           ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' 
           : 'linear-gradient(135deg, #F213A4 0%, #FF4D4D 100%)',
         boxShadow: isBlocked 
-          ? '0 0 15px rgba(239, 68, 68, 0.4)' 
-          : '0 0 15px rgba(242, 19, 164, 0.4)'
+          ? '0 8px 30px rgba(239, 68, 68, 0.6), 0 4px 15px rgba(239, 68, 68, 0.4), inset 0 -8px 20px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.2)' 
+          : '0 8px 30px rgba(242, 19, 164, 0.6), 0 4px 15px rgba(255, 77, 77, 0.4), inset 0 -8px 20px rgba(0, 0, 0, 0.3), inset 0 2px 10px rgba(255, 255, 255, 0.2)',
+        transform: 'translateZ(0)',
+        border: '2px solid rgba(255, 255, 255, 0.1)'
       }}
       animate={{
         scale: [1, 1.06, 1]
@@ -58,12 +60,9 @@ export const BuzzButton: React.FC<BuzzButtonProps> = ({
         </div>
       ) : (
         <div className="flex flex-col items-center space-y-2">
-          {/* M1SSION Branding */}
-          <span className="text-2xl font-bold leading-none mb-1">
-            <span className="text-[#00D9FF]">M1</span>
-            <span className="text-white">SSION</span>
+          <span className="text-4xl font-bold text-[#00D9FF] tracking-wider" style={{ textShadow: '0 0 20px rgba(0, 217, 255, 0.6)' }}>
+            BUZZ
           </span>
-          <span className="text-3xl font-bold text-white">BUZZ</span>
           <div className="text-sm font-medium bg-white/20 px-3 py-1 rounded-full backdrop-blur-sm text-white">
             XP: {xpStatus.buzz_xp_progress}/100
           </div>
