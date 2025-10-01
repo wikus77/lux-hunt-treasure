@@ -1,5 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Intent Router - IT keyword matching
+// Norah Intent Router - Fuzzy NLU with normalization
+
+import { normalize, expandSynonyms, fuzzyScore } from './textNormalize';
 
 export type NorahIntent = 
   | 'about_mission'
@@ -16,6 +18,10 @@ export type NorahIntent =
   | 'progress'
   | 'help'
   | 'smalltalk'
+  | 'plans'
+  | 'leaderboard'
+  | 'community'
+  | 'data_privacy'
   | 'no_spoiler'
   | 'unknown';
 
@@ -36,125 +42,160 @@ const SPOILER_PATTERNS = [
   /\bpremi[oa]\b.*\bdov[eè]\b/i
 ];
 
-// Intent patterns
-const INTENT_PATTERNS: Record<NorahIntent, RegExp[]> = {
-  about_mission: [
-    /cos['\s]?è\s+m1ssion/i,
-    /parlami\s+di\s+m1ssion/i,
-    /come\s+funziona\s+m1ssion/i,
-    /spiega.*m1ssion/i
-  ],
-  about_buzz: [
-    /cos['\s]?è\s+(il\s+)?buzz/i,
-    /come\s+funziona.*buzz/i,
-    /buzz.*serve/i,
-    /come\s+ottengo\s+indizi/i
-  ],
-  about_finalshot: [
-    /final\s+shot/i,
-    /colpo\s+finale/i,
-    /come\s+(vinco|si\s+vince)/i,
-    /tentativo\s+finale/i
-  ],
-  buzz_map: [
-    /buzz\s+map/i,
-    /mappa\s+buzz/i,
-    /dove.*buzz\s+map/i,
-    /tasto.*buzz\s+map/i
-  ],
-  rules: [
-    /regole/i,
-    /come\s+si\s+gioca/i,
-    /istruzioni/i,
-    /tutorial/i
-  ],
-  decode: [
-    /decodific[ao]/i,
-    /decifr[ao]/i,
-    /traduc[oi].*indizio/i,
-    /cosa\s+significa/i
-  ],
-  classify: [
-    /classifica.*indizi/i,
-    /categori[ae].*indizi/i,
-    /organizza.*indizi/i
-  ],
-  probability: [
-    /probabilit[àa]/i,
-    /chance/i,
-    /possibilit[àa]/i,
-    /quanto.*probabile/i
-  ],
-  pattern: [
-    /pattern/i,
-    /trova.*pattern/i,
-    /correlazion[ie]/i,
-    /collegament[oi]/i
-  ],
-  mentor: [
-    /consig[lh]i[oa]/i,
-    /strategi[ae]/i,
-    /suggeriment[oi]/i,
-    /come\s+procedo/i
-  ],
-  profile: [
-    /chi\s+sono/i,
-    /mio\s+codice/i,
-    /agent.*code/i,
-    /profilo/i
-  ],
-  progress: [
-    /progress[io]/i,
-    /stato/i,
-    /quanti\s+indizi/i,
-    /dove\s+sono/i
-  ],
-  help: [
-    /aiuto/i,
-    /cosa\s+puoi/i,
-    /come\s+mi\s+aiuti/i,
-    /comandi/i,
-    /cosa.*chieder[eti]/i,
-    /per\s+aiutarmi/i
-  ],
-  smalltalk: [
-    /^ciao$/i,
-    /buongiorno/i,
-    /buonasera/i,
-    /come\s+va/i,
-    /grazie/i,
-    /hey/i
-  ],
+// Single-word/short-query direct mapping
+const SINGLE_WORD_MAP: Record<string, NorahIntent> = {
+  'mission': 'about_mission',
+  'm1ssion': 'about_mission',
+  'buzz': 'about_buzz',
+  'finalshot': 'about_finalshot',
+  'fs': 'about_finalshot',
+  'mappa': 'buzz_map',
+  'map': 'buzz_map',
+  'abbonamenti': 'plans',
+  'abbo': 'plans',
+  'prezzi': 'plans',
+  'pricing': 'plans',
+  'probabilità': 'probability',
+  'prob': 'probability',
+  'pattern': 'pattern',
+  'decodifica': 'decode',
+  'decode': 'decode',
+  'decod': 'decode',
+  'aiuto': 'help',
+  'help': 'help',
+  'aiutami': 'help',
+  'regole': 'rules',
+  'rules': 'rules',
+  'classifica': 'leaderboard',
+  'leaderboard': 'leaderboard',
+  'progress': 'progress',
+  'stato': 'progress',
+  'mentor': 'mentor',
+  'mentore': 'mentor',
+  'consiglio': 'mentor',
+  'profilo': 'profile',
+  'profile': 'profile',
+  'privacy': 'data_privacy',
+  'dati': 'data_privacy',
+  'community': 'community',
+  'comunità': 'community'
+};
+
+// Intent trigger keywords for fuzzy matching
+const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
+  about_mission: ['mission', 'm1ssion', 'missione', 'gioco', 'funziona', 'cosa è'],
+  about_buzz: ['buzz', 'indizi', 'clue', 'segnale', 'invia'],
+  about_finalshot: ['finalshot', 'final shot', 'fs', 'colpo finale', 'tentativo finale', 'vincere'],
+  buzz_map: ['buzz map', 'buz map', 'mappa buzz', 'mappa', 'tasto mappa'],
+  rules: ['regole', 'istruzioni', 'tutorial', 'come gioca'],
+  decode: ['decodifica', 'decode', 'decifra', 'traduc', 'significa'],
+  classify: ['classifica indizi', 'categoria', 'organizza'],
+  probability: ['probabilità', 'prob', 'chance', 'possibilità'],
+  pattern: ['pattern', 'schema', 'correlazione', 'collegamento'],
+  mentor: ['consiglio', 'strategia', 'suggerimento', 'come procedo', 'mentore'],
+  profile: ['chi sono', 'codice', 'agent code', 'profilo'],
+  progress: ['progress', 'stato', 'quanti indizi', 'avanzamento'],
+  plans: ['abbonamento', 'abbo', 'piano', 'pricing', 'subscription', 'prezzi'],
+  leaderboard: ['classifica', 'ranking', 'leader'],
+  community: ['community', 'comunità'],
+  data_privacy: ['privacy', 'dati', 'sicurezza', 'privata'],
+  help: ['aiuto', 'help', 'cosa puoi', 'aiutami', 'comandi'],
+  smalltalk: ['ciao', 'buongiorno', 'buonasera', 'grazie', 'hey'],
   no_spoiler: [],
   unknown: []
 };
 
+const FUZZY_THRESHOLD = 0.55;
+const HIGH_CONFIDENCE_THRESHOLD = 0.75;
+
 export function routeIntent(input: string): IntentResult {
-  const normalized = input.toLowerCase().trim();
+  if (!input || typeof input !== 'string') {
+    return { intent: 'unknown', confidence: 0.1 };
+  }
+
+  const rawNormalized = input.toLowerCase().trim();
 
   // Guard-rail: spoiler check first
   for (const pattern of SPOILER_PATTERNS) {
-    if (pattern.test(normalized)) {
+    if (pattern.test(rawNormalized)) {
+      console.debug('[NORAH] Spoiler guard triggered');
       return { intent: 'no_spoiler', confidence: 1.0 };
     }
   }
 
-  // Match intent patterns
-  for (const [intentKey, patterns] of Object.entries(INTENT_PATTERNS)) {
-    const intent = intentKey as NorahIntent;
-    if (intent === 'no_spoiler' || intent === 'unknown') continue;
+  // Normalize and expand
+  const tokens = normalize(input);
+  const expandedTokens = expandSynonyms(tokens);
+  
+  console.debug('[NORAH] Intent routing:', { input, tokens, expandedTokens });
 
-    for (const pattern of patterns) {
-      if (pattern.test(normalized)) {
-        return { intent, confidence: 0.9 };
-      }
+  // Single-word check
+  if (tokens.length === 1) {
+    const singleWord = tokens[0];
+    if (SINGLE_WORD_MAP[singleWord]) {
+      console.debug('[NORAH] Single-word match:', singleWord, '→', SINGLE_WORD_MAP[singleWord]);
+      return { intent: SINGLE_WORD_MAP[singleWord], confidence: 0.95 };
     }
   }
 
-  // Default: unknown or help fallback
-  if (normalized.includes('?')) {
-    return { intent: 'help', confidence: 0.4 };
+  // Fuzzy scoring across all intents
+  const scores: Array<{ intent: NorahIntent; score: number }> = [];
+
+  for (const [intentKey, triggers] of Object.entries(INTENT_TRIGGERS)) {
+    const intent = intentKey as NorahIntent;
+    if (intent === 'no_spoiler' || intent === 'unknown') continue;
+
+    let maxScore = 0;
+
+    for (const trigger of triggers) {
+      const triggerTokens = normalize(trigger);
+      
+      // Token overlap score
+      const overlap = expandedTokens.filter(t => triggerTokens.includes(t)).length;
+      const overlapScore = overlap / Math.max(triggerTokens.length, 1);
+
+      // Fuzzy string match
+      const fuzzy = fuzzyScore(rawNormalized, trigger);
+
+      // Combined
+      const score = Math.max(overlapScore * 0.6 + fuzzy * 0.4, fuzzy);
+      
+      if (score > maxScore) {
+        maxScore = score;
+      }
+    }
+
+    if (maxScore > 0) {
+      scores.push({ intent, score: maxScore });
+    }
   }
 
+  // Sort by score
+  scores.sort((a, b) => b.score - a.score);
+
+  console.debug('[NORAH] Intent scores:', scores.slice(0, 3));
+
+  // Top match
+  if (scores.length > 0 && scores[0].score >= FUZZY_THRESHOLD) {
+    const topIntent = scores[0].intent;
+    const confidence = scores[0].score >= HIGH_CONFIDENCE_THRESHOLD ? 0.9 : 0.7;
+    console.debug('[NORAH] Intent routed:', topIntent, 'confidence:', confidence);
+    return { intent: topIntent, confidence };
+  }
+
+  // Ambiguous or low confidence → help with suggestions
+  if (scores.length > 0 && scores[0].score >= 0.35) {
+    console.debug('[NORAH] Low confidence, defaulting to help');
+    return { 
+      intent: 'help', 
+      confidence: 0.5,
+      slots: { 
+        suggestedIntents: scores.slice(0, 3).map(s => s.intent)
+      }
+    };
+  }
+
+  // Unknown
+  console.debug('[NORAH] No intent match, unknown');
   return { intent: 'unknown', confidence: 0.1 };
 }
