@@ -51,6 +51,13 @@ const IntelligenceStyledPage: React.FC = () => {
   const [, setLocation] = useLocation();
   const [panelOpen, setPanelOpen] = useState(false);
   
+  // Set up realtime subscriptions on mount
+  useEffect(() => {
+    const { setupRealtimeSubscriptions } = require('@/intelligence/context/realtime');
+    const cleanup = setupRealtimeSubscriptions();
+    return cleanup;
+  }, []);
+  
   // AI Analyst hook
   const {
     messages,
@@ -60,6 +67,7 @@ const IntelligenceStyledPage: React.FC = () => {
     clues,
     ttsEnabled,
     audioLevel,
+    agentContext,
     sendMessage,
     toggleTTS
   } = useIntelAnalyst();
@@ -180,6 +188,7 @@ const IntelligenceStyledPage: React.FC = () => {
             micEnabled={ttsEnabled}
             onMicToggle={toggleTTS}
             onMoreClick={() => setPanelOpen(true)}
+            onFinalShotClick={() => setLocation('/intelligence/final-shot')}
           />
         )}
         

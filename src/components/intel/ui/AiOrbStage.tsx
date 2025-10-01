@@ -12,6 +12,7 @@ interface AiOrbStageProps {
   micEnabled: boolean;
   onMicToggle: () => void;
   onMoreClick?: () => void;
+  onFinalShotClick?: () => void;
 }
 
 const AiOrbStage: React.FC<AiOrbStageProps> = ({
@@ -20,7 +21,8 @@ const AiOrbStage: React.FC<AiOrbStageProps> = ({
   onOrbClick,
   micEnabled,
   onMicToggle,
-  onMoreClick
+  onMoreClick,
+  onFinalShotClick
 }) => {
   return (
     <div className={styles.stage}>
@@ -48,6 +50,7 @@ const AiOrbStage: React.FC<AiOrbStageProps> = ({
         micEnabled={micEnabled}
         onMicToggle={onMicToggle}
         onMoreClick={onMoreClick}
+        onFinalShotClick={onFinalShotClick}
       />
     </div>
   );
