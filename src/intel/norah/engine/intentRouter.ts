@@ -75,6 +75,8 @@ const SINGLE_WORD_MAP: Record<string, NorahIntent> = {
   'aiutami': 'help',
   'inizio': 'help',
   'iniziare': 'help',
+  'inizia': 'help',
+  'abbonamento': 'plans',
   'regole': 'rules',
   'rules': 'rules',
   'classifica': 'leaderboard',
