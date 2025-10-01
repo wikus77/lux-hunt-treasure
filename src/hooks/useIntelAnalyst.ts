@@ -132,8 +132,8 @@ export const useIntelAnalyst = () => {
 
     setStatus('speaking');
 
-    // Use deterministic engine
-    const response = generateReply({
+    // Use deterministic engine (now async)
+    const response = await generateReply({
       mode,
       clues,
       userText: content,
