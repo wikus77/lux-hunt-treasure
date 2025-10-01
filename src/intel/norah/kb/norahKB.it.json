@@ -1,117 +1,335 @@
 {
   "faq": {
     "mission": {
-      "q": ["cos'è m1ssion", "parlami di m1ssion", "come funziona m1ssion", "spiega m1ssion"],
+      "q": ["cos'è m1ssion", "parlami di m1ssion", "come funziona m1ssion", "spiega m1ssion", "che gioco è", "mission cosa"],
       "a": [
         "M1SSION è un gioco di intelligence geolocalizzato. Raccogli indizi tramite BUZZ, analizzali e localizza il premio con il Final Shot.",
         "M1SSION ti sfida a trovare un premio reale nascosto in città. Usa BUZZ per ottenere indizi, correlali e indovina la posizione finale.",
-        "È un'esperienza di caccia al tesoro high-tech: indizi crittografati, geofencing, Final Shot ad alta precisione. Il premio è reale."
+        "È un'esperienza di caccia al tesoro high-tech: indizi crittografati, geofencing, Final Shot ad alta precisione. Il premio è reale.",
+        "M1SSION combina intelligence, geolocalizzazione e analisi dati. Ogni settimana un nuovo premio da trovare, ogni indizio è un pezzo del puzzle.",
+        "Un gioco di ricerca e deduzione: accumuli dati tramite BUZZ, li analizzi, trovi pattern, restringi l'area e infine spari il Final Shot.",
+        "M1SSION è la tua missione settimanale: usa strumenti di intelligence per scoprire dove si nasconde il premio. Vince chi deduce meglio.",
+        "Pensa a una caccia al tesoro moderna: no mappe stampate, solo dati crittografati e strumenti digitali. BUZZ, analisi, Final Shot.",
+        "È un gioco strategico: più indizi hai, più precisa è la tua analisi. Non è fortuna, è metodo.",
+        "M1SSION trasforma il tuo telefono in uno strumento da agente: raccogli intelligence, decifri pattern, esegui il colpo finale.",
+        "Ogni settimana una nuova missione, un nuovo premio, nuovi indizi. L'obiettivo: essere più smart degli altri agenti."
       ]
     },
     "buzz": {
-      "q": ["cos'è il buzz", "come funziona buzz", "buzz a cosa serve", "come ottengo indizi"],
+      "q": ["cos'è il buzz", "come funziona buzz", "buzz a cosa serve", "come ottengo indizi", "buzz serve", "che fa buzz"],
       "a": [
         "BUZZ è il tuo strumento per ottenere indizi. Ogni BUZZ rilascia un nuovo frammento di informazione sulla posizione del premio.",
         "Usa BUZZ per richiedere indizi. Più BUZZ fai, più informazioni accumuli. Correlale per capire dove cercare.",
-        "BUZZ genera indizi in tempo reale basati su diversi layer: geografici, temporali, semantici. È il tuo radar."
+        "BUZZ genera indizi in tempo reale basati su diversi layer: geografici, temporali, semantici. È il tuo radar.",
+        "Ogni BUZZ ti dà un indizio: può essere un toponimo, una coordinata parziale, un riferimento storico, un vincolo temporale.",
+        "BUZZ è la fonte di dati primaria. Accumula almeno 8-10 indizi prima di tentare il Final Shot: più dati = più precisione.",
+        "Pensa a BUZZ come a una richiesta di intelligence: premi il tasto e ricevi un nuovo frammento da analizzare.",
+        "BUZZ lavora su algoritmi multi-layer: geografia, storia, toponimi, coordinate. Non ripete mai lo stesso indizio.",
+        "È il tuo alleato principale: ogni BUZZ riduce l'incertezza e restringe l'area di ricerca.",
+        "BUZZ costa poco, ma il suo valore è enorme: senza indizi, il Final Shot è solo fortuna cieca.",
+        "Strategia: fai BUZZ regolarmente, non sprecare giorni senza raccogliere dati. Più ne hai, meglio è."
       ]
     },
     "buzz_map": {
-      "q": ["buzz map", "mappa buzz", "dove trovo buzz map", "tasto buzz map"],
+      "q": ["buzz map", "mappa buzz", "dove trovo buzz map", "tasto buzz map", "dove è buzz map", "come si usa buzz map"],
       "a": [
         "La BUZZ Map è nella sezione Map del menu principale. Ti mostra un'area di ricerca calcolata in base ai tuoi indizi.",
         "Vai su Map → BUZZ Map per vedere la zona suggerita. È un aiuto visivo basato sui pattern che hai raccolto.",
-        "BUZZ Map converte i tuoi indizi in un perimetro geografico. Non è la risposta finale, ma restringe il campo."
+        "BUZZ Map converte i tuoi indizi in un perimetro geografico. Non è la risposta finale, ma restringe il campo.",
+        "Trovi BUZZ Map nel menu Map, in basso. Ti mostra il perimetro calcolato dagli indizi. Usala per orientarti.",
+        "BUZZ Map ti dà un'area di ricerca basata su correlazione degli indizi. Più precisi i dati, più ristretta l'area.",
+        "È uno strumento visivo: prende tutti i tuoi indizi e li traduce in una mappa con un raggio di probabilità.",
+        "Menu Map → BUZZ Map: lì vedi il cerchio di ricerca. Studia la zona, incrocia con i toponimi che hai, poi decidi.",
+        "BUZZ Map è la visualizzazione degli indizi: se hai coordinate parziali, toponimi e vincoli, li mappa tutti insieme.",
+        "Non è magica: ti dà solo quello che i tuoi indizi suggeriscono. Se hai pochi dati, l'area sarà ampia.",
+        "Usa BUZZ Map per confermare ipotesi: se tutti gli indizi puntano a una zona, la mappa lo mostrerà chiaramente."
       ]
     },
     "finalshot": {
-      "q": ["cos'è il final shot", "final shot come funziona", "colpo finale", "come vinco"],
+      "q": ["cos'è il final shot", "final shot come funziona", "colpo finale", "come vinco", "final shot regole", "quanti tentativi"],
       "a": [
         "Il Final Shot è il tentativo finale: inserisci le coordinate esatte. Se sei entro il raggio di tolleranza, vinci.",
         "Quando sei sicuro, vai su Final Shot e punta la posizione. Hai 2 tentativi al giorno, usali con strategia.",
-        "Final Shot richiede precisione. Analizza tutti gli indizi, incrocia i dati e poi spara la tua risposta."
+        "Final Shot richiede precisione. Analizza tutti gli indizi, incrocia i dati e poi spara la tua risposta.",
+        "È il momento decisivo: hai raccolto indizi, analizzato pattern, verificato coerenze. Ora punta la coordinata e spara.",
+        "Due tentativi al giorno. Se sbagli, aspetti domani. Per questo: BUZZ Map, analisi, verifica, poi Final Shot.",
+        "Final Shot non ammette errori: se spari a caso, sprechi i tentativi. Meglio aspettare e avere certezze.",
+        "Regola base: non sparare mai senza almeno 8-10 indizi. Più dati hai, più alta la probabilità di centrare.",
+        "Il Final Shot è il tuo colpo definitivo: punta, spara, vinci o aspetti domani. Non c'è margine di errore.",
+        "Strategia: prima raccogli tutti i dati, poi analizza, poi verifica con BUZZ Map, infine Final Shot.",
+        "Vinci se sei entro il raggio di tolleranza (pochi metri). Per questo serve precisione assoluta, non approssimazioni."
       ]
     },
     "rules": {
-      "q": ["regole", "come si gioca", "istruzioni", "tutorial"],
+      "q": ["regole", "come si gioca", "istruzioni", "tutorial", "regole del gioco", "come funziona"],
       "a": [
         "Regole: raccogli indizi con BUZZ, analizza i pattern, individua la zona con BUZZ Map, spara il Final Shot quando sei sicuro.",
         "Gioca così: BUZZ per indizi → analisi → correlazione → Final Shot. Hai limiti giornalieri su BUZZ e Final Shot.",
-        "Le regole sono semplici: più indizi hai, più precise sono le tue ipotesi. Non sprecare Final Shot senza analisi."
+        "Le regole sono semplici: più indizi hai, più precise sono le tue ipotesi. Non sprecare Final Shot senza analisi.",
+        "Ogni settimana una missione: raccogli dati, trova il premio. BUZZ = dati, analisi = strategia, Final Shot = vittoria.",
+        "Il gioco è fatto di fasi: raccolta (BUZZ), analisi (pattern), visualizzazione (BUZZ Map), esecuzione (Final Shot).",
+        "Limiti giornalieri: BUZZ ha un tetto (varia per piano), Final Shot 2 tentativi al giorno. Gestisci bene le risorse.",
+        "Obiettivo: trovare il premio prima degli altri. Chi spara per primo e azzecca, vince.",
+        "Regola d'oro: non sparare mai a caso. Raccogli dati, analizza, incrocia, verifica, poi spara.",
+        "M1SSION premia il metodo: chi accumula indizi e li analizza bene vince. Chi spara a caso perde tentativi.",
+        "Ogni missione dura una settimana. Hai 7 giorni per raccogliere dati e trovare il premio. Sfrutta ogni giorno."
       ]
     },
     "help": {
-      "q": ["aiuto", "cosa puoi fare", "come mi aiuti", "comandi", "cosa ti posso chiedere per aiutarmi"],
+      "q": ["aiuto", "cosa puoi fare", "come mi aiuti", "comandi", "cosa ti posso chiedere per aiutarmi", "help", "norah aiuto"],
       "a": [
         "Posso aiutarti a: classificare indizi, trovare pattern, decodificare messaggi, valutare probabilità, spiegarti meccaniche di gioco.",
         "Chiedi: 'analizza i miei indizi', 'trova pattern', 'decodifica questo', 'probabilità zona X', 'cos'è il BUZZ', 'stato missione'.",
-        "Sono qui per: guidarti nelle strategie, interpretare dati, spiegare il gioco. Fai domande specifiche e ti rispondo."
+        "Sono qui per: guidarti nelle strategie, interpretare dati, spiegare il gioco. Fai domande specifiche e ti rispondo.",
+        "Dimmi cosa serve: spiegazione regole, analisi indizi, consigli strategici, decodifica messaggi, valutazione probabilità.",
+        "Puoi chiedermi qualsiasi cosa su M1SSION: meccaniche, strategie, interpretazione dati, consigli tattici.",
+        "Esempi: 'Cos'è BUZZ Map?', 'Quanti indizi servono?', 'Trova pattern nei miei dati', 'Decodifica questo indizio'.",
+        "Sono il tuo assistente: non ti do spoiler, ma ti aiuto a usare al meglio gli strumenti e capire i dati.",
+        "Chiedi spiegazioni, strategie, interpretazioni. Non chiedermi coordinate dirette: quelle devi trovarle tu.",
+        "Posso spiegarti tutto su M1SSION, ma non rivelarti il premio. Il mio ruolo è guidarti, non darti la risposta.",
+        "Usa NORAH per: capire meglio il gioco, migliorare la tua strategia, interpretare indizi complessi, valutare ipotesi."
       ]
     },
     "decode": {
-      "q": ["decodifica", "decifra", "traduci indizio", "cosa significa"],
+      "q": ["decodifica", "decifra", "traduci indizio", "cosa significa", "decode", "decodifica questo"],
       "a": [
         "Dammi l'indizio e provo a decodificarlo. Cerco pattern semantici, coordinate nascoste, riferimenti storici.",
         "Per decodificare, analizza: numeri (coordinate?), nomi (luoghi?), date (eventi storici?). Dimmi cosa hai.",
-        "La decodifica richiede contesto. Condividi l'indizio completo e ti aiuto a scomporlo."
+        "La decodifica richiede contesto. Condividi l'indizio completo e ti aiuto a scomporlo.",
+        "Indizi possono essere: coordinate parziali, toponimi mascherati, date storiche, riferimenti culturali. Dimmi quale.",
+        "Decodificare significa scomporre: ogni indizio ha layer (geografico, temporale, semantico). Li analizzo tutti.",
+        "Se l'indizio è criptico, cerco pattern: numeri → coordinate, nomi → luoghi, date → eventi storici.",
+        "Non tutti gli indizi sono immediati: alcuni vanno incrociati con altri. Dimmi quali hai e li correlo.",
+        "Decodifica richiede metodo: separo dati geografici, temporali, semantici. Poi incrocio con altri indizi.",
+        "Dammi l'indizio testuale: lo analizzo parola per parola, cerco riferimenti nascosti, calcolo probabilità.",
+        "Ogni indizio è un puzzle: può contenere più layer sovrapposti. Io li separo e ti spiego cosa significano."
       ]
     },
     "classify": {
-      "q": ["classifica indizi", "categorie indizi", "organizza indizi"],
+      "q": ["classifica indizi", "categorie indizi", "organizza indizi", "classify", "tipi di indizi"],
       "a": [
         "Posso classificare i tuoi indizi per tipo: geografici, temporali, semantici, numerici. Aiuta a correlarli.",
         "Organizzare gli indizi per categoria rivela connessioni. Dimmi quali hai e li categorizzo.",
-        "Classifico gli indizi in: coordinate, toponimi, riferimenti storici, vincoli temporali, descrizioni visuali."
+        "Classifico gli indizi in: coordinate, toponimi, riferimenti storici, vincoli temporali, descrizioni visuali.",
+        "Tipi di indizi: geografici (luoghi, coordinate), temporali (date, ore), semantici (nomi, descrizioni), numerici (codici).",
+        "Classificare serve a vedere pattern: se hai 5 indizi geografici e 3 temporali, c'è una logica da seguire.",
+        "Ogni indizio appartiene a una categoria: capire quale aiuta a correlarli meglio. Dimmi cosa hai raccolto.",
+        "Classifica base: coordinate → geografico, date → temporale, nomi → semantico, numeri → numerico.",
+        "Organizzo i tuoi indizi per tipo: così vedi subito se hai più dati geografici, temporali o semantici.",
+        "Classificazione aiuta: se tutti i tuoi indizi sono geografici, la risposta è un luogo. Se sono temporali, cerca eventi.",
+        "Dimmi i tuoi indizi: li divido per categoria e ti mostro quali tipi prevalgono. Questo guida la strategia."
       ]
     },
     "probability": {
-      "q": ["probabilità", "chance", "possibilità", "quanto probabile"],
+      "q": ["probabilità", "chance", "possibilità", "quanto probabile", "probability", "stima"],
       "a": [
         "Dammi i tuoi indizi e una zona: calcolo una stima di probabilità basata su copertura geografica e match semantici.",
         "La probabilità dipende da: quanti indizi convergono, quanto è specifica la zona, quanti vincoli rispetti.",
-        "Non è matematica pura, ma posso dirti se una zona è coerente con gli indizi che hai. Più dati = più precisione."
+        "Non è matematica pura, ma posso dirti se una zona è coerente con gli indizi che hai. Più dati = più precisione.",
+        "Stima basata su: numero indizi, convergenza geografica, match semantici, coerenza temporale. Dimmi zona e indizi.",
+        "Probabilità alta se: molti indizi puntano lì, toponimi corrispondono, vincoli temporali sono coerenti.",
+        "Probabilità bassa se: pochi indizi, zona troppo ampia, scarsa corrispondenza semantica.",
+        "Calcolo probabilistico: incrocio coordinate, toponimi, date. Se tutto converge, probabilità alta. Altrimenti, bassa.",
+        "Dimmi zona ipotizzata e indizi: ti dico se è probabile o no. Ma serve almeno 5-6 indizi per una stima affidabile.",
+        "Più indizi hai, più precisa la stima. Con 2-3 indizi, è solo una guess. Con 10+, diventa scienza.",
+        "Stima probabilità: se hai 8 indizi e 6 puntano a una zona, quella ha ~75% probabilità. Ma serve analisi dettagliata."
       ]
     },
     "pattern": {
-      "q": ["pattern", "trova pattern", "correlazioni", "collegamenti"],
+      "q": ["pattern", "trova pattern", "correlazioni", "collegamenti", "correlazione", "trova correlazioni"],
       "a": [
         "Cerco pattern incrociando indizi: ripetizioni di nomi, vicinanza di coordinate, riferimenti temporali comuni.",
         "Pattern emergono da: cluster geografici, temi ricorrenti, sequenze logiche. Più indizi, più chiaro il quadro.",
-        "Ti segnalo se vedo: convergenza spaziale, riferimenti multipli allo stesso luogo, vincoli temporali compatibili."
+        "Ti segnalo se vedo: convergenza spaziale, riferimenti multipli allo stesso luogo, vincoli temporali compatibili.",
+        "Pattern classici: 3+ indizi con stesso toponimo, coordinate che formano cluster, date che rimandano allo stesso evento.",
+        "Trovare pattern significa: cercare ripetizioni, convergenze, sovrapposizioni. È il cuore dell'analisi intelligence.",
+        "Se 5 indizi su 8 citano 'centro storico', quello è un pattern. Se 4 coordinate sono entro 500m, altro pattern.",
+        "Pattern geografici: indizi che puntano alla stessa area. Pattern semantici: riferimenti allo stesso tema.",
+        "Dimmi i tuoi indizi: cerco ripetizioni, cluster, convergenze. Se trovo pattern forti, te li segnalo subito.",
+        "Pattern rivelano la soluzione: se molti indizi convergono, quella è la zona target. Non è fortuna, è metodo.",
+        "Analisi pattern: prendo tutti gli indizi, cerco sovrapposizioni geografiche, semantiche, temporali. Poi ti dico cosa emerge."
       ]
     },
     "mentor": {
-      "q": ["consigli", "strategia", "suggerimenti", "come procedo"],
+      "q": ["consigli", "strategia", "suggerimenti", "come procedo", "mentor", "consiglio"],
       "a": [
         "Consiglio: fai BUZZ regolarmente, accumula almeno 8-10 indizi prima del Final Shot, usa BUZZ Map per restringere l'area.",
         "Strategia: non sparare Final Shot a caso. Analizza, incrocia, verifica coerenza. Due tentativi al giorno vanno usati bene.",
-        "Suggerimento: prendi nota degli indizi, cerca pattern, usa mappe online per verificare ipotesi. Poi Final Shot."
+        "Suggerimento: prendi nota degli indizi, cerca pattern, usa mappe online per verificare ipotesi. Poi Final Shot.",
+        "Prima regola: accumula dati. Più indizi hai, più precise sono le tue ipotesi. Non sparare mai con meno di 5 indizi.",
+        "Strategia vincente: BUZZ quotidiano, analisi settimanale, BUZZ Map per conferma, Final Shot solo quando sei sicuro.",
+        "Consiglio tattico: se hai dubbi, fai ancora BUZZ. Meglio aspettare e avere certezze che sparare e sprecare tentativi.",
+        "Non correre: hai 7 giorni per trovare il premio. Usa i primi giorni per raccogliere dati, gli ultimi per Final Shot.",
+        "Mentore dice: metodo batte fortuna. Raccogli dati, analizza, incrocia, verifica. Solo allora spara.",
+        "Suggerimento avanzato: incrocia indizi con Google Maps, Street View, riferimenti storici. Più fonti usi, meglio è.",
+        "Strategia Pro: accumula 10+ indizi, trova pattern forti, verifica con BUZZ Map, poi spara Final Shot con sicurezza."
       ]
     },
     "profile": {
-      "q": ["chi sono", "mio codice", "agent code", "profilo"],
+      "q": ["chi sono", "mio codice", "agent code", "profilo", "codice agente"],
       "a": [
         "Tu sei l'agente {agentCode}. Il tuo codice è la tua identità nella rete M1SSION.",
         "Agente {agentCode}, hai {clues} indizi raccolti. Continua così.",
-        "Sei {agentCode}. Ogni agente ha un codice unico. Il tuo è la chiave del tuo profilo."
+        "Sei {agentCode}. Ogni agente ha un codice unico. Il tuo è la chiave del tuo profilo.",
+        "Codice agente: {agentCode}. Questo ti identifica nella rete intelligence di M1SSION.",
+        "Sei operativo come {agentCode}. Il tuo codice è univoco e traccia la tua attività.",
+        "Profilo agente {agentCode}: attivo, {clues} indizi raccolti, missione in corso.",
+        "Tu sei {agentCode}, agente operativo M1SSION. Il tuo codice è il tuo ID nel sistema.",
+        "Agente {agentCode} confermato. Stato: attivo. Missione: in corso. Indizi: {clues}.",
+        "Sei {agentCode}. Questo codice è la tua firma digitale nella rete di intelligence.",
+        "Profilo: {agentCode}. Ogni azione è tracciata sotto questo codice. È la tua identità operativa."
       ]
     },
     "progress": {
-      "q": ["progressi", "stato", "quanti indizi", "dove sono"],
+      "q": ["progressi", "stato", "quanti indizi", "dove sono", "progress", "situazione"],
       "a": [
         "Hai {clues} indizi totali. Oggi hai fatto {buzzToday} BUZZ. Continua a raccogliere dati.",
         "Stato attuale: {clues} indizi. BUZZ odierni: {buzzToday}. Final Shot disponibili: controlla i limiti giornalieri.",
-        "Progressi agente {agentCode}: {clues} indizi. Più ne hai, più precisa sarà la tua analisi."
+        "Progressi agente {agentCode}: {clues} indizi. Più ne hai, più precisa sarà la tua analisi.",
+        "Situazione: {clues} indizi raccolti, {buzzToday} BUZZ oggi. Target: almeno 8-10 indizi prima del Final Shot.",
+        "Stato missione: {clues} indizi accumulati. BUZZ oggi: {buzzToday}. Continua a raccogliere intelligence.",
+        "Progressi: {clues} indizi totali. Se ne hai meno di 5, continua a fare BUZZ. Se ne hai 8+, inizia l'analisi.",
+        "Hai {clues} indizi. Ottimo se >8, sufficiente se 5-7, insufficiente se <5. Continua a fare BUZZ.",
+        "Stato: {clues} indizi. BUZZ oggi: {buzzToday}. Obiettivo: accumula ancora dati prima del Final Shot.",
+        "Progressi agente: {clues} indizi. Se hai fatto BUZZ Map, verifica se convergono. Altrimenti, raccogli ancora.",
+        "Situazione attuale: {clues} indizi, {buzzToday} BUZZ oggi. Continua così, stai accumulando intelligence utile."
       ]
     },
     "smalltalk": {
-      "q": ["ciao", "buongiorno", "buonasera", "come va", "grazie"],
+      "q": ["ciao", "buongiorno", "buonasera", "come va", "grazie", "hey"],
       "a": [
         "Salve, agente {agentCode}. Come posso assisterti nella missione?",
         "Ciao! Pronto a continuare la ricerca?",
         "Buongiorno, agente. Che operazione vuoi condurre oggi?",
         "Hey! Dimmi cosa serve per la tua analisi.",
-        "Prego, agente. Sempre qui per supportarti."
+        "Prego, agente. Sempre qui per supportarti.",
+        "Buonasera, {agentCode}. Pronto per nuove intelligence?",
+        "Ciao agente. Quali dati vuoi analizzare oggi?",
+        "Salve. Dimmi: BUZZ, analisi o Final Shot?",
+        "Hey {agentCode}! Che strategia usiamo oggi?",
+        "Buongiorno. Pronto a raccogliere più indizi?",
+        "Ciao! Sempre operativo per la tua missione.",
+        "Salve, agente. Cosa ti serve sapere oggi?"
+      ]
+    },
+    "subscriptions": {
+      "q": ["abbonamenti", "piani", "subscription", "quanto costa", "prezzi", "abbonamento"],
+      "a": [
+        "M1SSION ha 4 piani: Base (gratuito), Silver, Gold, Black, Titanium. Più alto il piano, più BUZZ, più vantaggi.",
+        "Piano Base: BUZZ limitati, Final Shot standard. Piani premium: più BUZZ, accesso anticipato missioni, BUZZ Map avanzata.",
+        "Silver, Gold, Black, Titanium: ogni piano aumenta BUZZ disponibili, riduce cooldown, sblocca funzioni extra.",
+        "Abbonamenti danno: più BUZZ, accesso anticipato missioni, BUZZ Map più precisa, supporto prioritario.",
+        "Piano gratuito: sufficiente per giocare. Premium: vantaggi competitivi (più dati, meno attese, tool avanzati).",
+        "Costi: vedi sezione Subscription nell'app. Ogni piano ha benefit diversi: più BUZZ, più velocità, più strumenti.",
+        "Premium vale se: giochi intenso, vuoi vincere spesso, hai bisogno di più BUZZ. Altrimenti, Base va bene.",
+        "Differenze piani: Base = BUZZ limitati, Premium = BUZZ illimitati (o quasi), tool avanzati, accesso anticipato.",
+        "Abbonamenti sbloccano: più BUZZ al giorno, BUZZ Map più precisa, accesso early a nuove missioni.",
+        "Scegli piano in base a: quanti BUZZ fai al giorno, quanto sei competitivo, se vuoi vantaggi extra."
+      ]
+    },
+    "support": {
+      "q": ["supporto", "problema", "bug", "errore", "aiuto tecnico", "support"],
+      "a": [
+        "Per problemi tecnici: vai su Settings → Supporto, o scrivi a support@m1ssion.app. Ti aiutano subito.",
+        "Bug? Errore? Contatta supporto via app o email. Team risponde in 24h (premium: priorità).",
+        "Supporto tecnico: sezione Settings dell'app. Spiega il problema, allega screenshot se possibile.",
+        "Se qualcosa non funziona: prima riavvia l'app. Se persiste, contatta supporto via Settings.",
+        "Problemi comuni: check connessione, aggiorna app, riavvia. Se non risolve, scrivi a supporto.",
+        "Supporto premium: risposta prioritaria entro 12h. Supporto Base: entro 48h. Sempre disponibili.",
+        "Per bug segnalati: team li verifica e aggiorna l'app. Grazie per le segnalazioni, migliorano il gioco.",
+        "Hai problemi? Settings → Supporto. Descrivi l'errore, team ti risponde e risolve.",
+        "Supporto è disponibile: per bug, domande, problemi tecnici, dubbi su meccaniche di gioco.",
+        "Se l'app crasha, non si carica, o hai errori: scrivi subito a supporto con dettagli e log."
+      ]
+    },
+    "weekly_missions": {
+      "q": ["missioni settimanali", "nuova missione", "quando nuova missione", "missione settimana"],
+      "a": [
+        "Ogni settimana nuova missione: nuovo premio, nuovi indizi, nuova sfida. Ogni lunedì ore 00:00.",
+        "Missioni settimanali: durano 7 giorni. Hai tempo fino domenica 23:59 per trovare il premio.",
+        "Nuova missione ogni lunedì. Ogni settimana premio diverso, indizi diversi, strategia nuova.",
+        "Calendario missioni: lunedì parte nuova, domenica finisce. Vince chi trova per primo il premio.",
+        "Missione settimanale: 7 giorni per raccogliere indizi, analizzare, trovare il premio. Poi ricomincia.",
+        "Ogni settimana: nuovo target, nuovi dati, nuova location. Mai lo stesso premio, sempre sfida fresca.",
+        "Lunedì reset: nuova missione, indizi azzerati, nuovo premio. Tutti ripartono da zero.",
+        "Hai 7 giorni per vincere. Se non trovi, lunedì ricomincia con nuova missione. Nessun carry-over di indizi.",
+        "Missioni settimanali: garantiscono sempre nuove sfide. Non ripeti mai la stessa ricerca.",
+        "Ogni settimana: nuovo premio reale nascosto in città. Chi lo trova vince. Poi si ricomincia."
+      ]
+    },
+    "data_privacy": {
+      "q": ["privacy", "dati", "sicurezza", "gdpr", "privacy policy"],
+      "a": [
+        "M1SSION rispetta privacy: dati crittografati, nessuna vendita a terzi, conformità GDPR.",
+        "I tuoi dati sono al sicuro: geolocalizzazione usata solo per gioco, nessun tracking commerciale.",
+        "Privacy policy: vai su Settings → Privacy per dettagli. M1SSION non vende dati utenti.",
+        "Dati raccolti: posizione (solo per gioco), email, codice agente. Nessun uso commerciale esterno.",
+        "Sicurezza: tutti i dati sono criptati, server sicuri, conformità GDPR. La tua privacy è garantita.",
+        "M1SSION non condivide dati con terze parti. Geolocalizzazione serve solo per meccaniche di gioco.",
+        "Policy chiara: vai su Settings → Privacy Policy. Leggi tutto, è trasparente e conforme GDPR.",
+        "Dati al sicuro: crittografia end-to-end, server EU, nessuna vendita a inserzionisti.",
+        "Privacy garantita: M1SSION raccoglie solo dati necessari al gioco. Niente profilazione commerciale.",
+        "Per domande privacy: Settings → Privacy o scrivi a privacy@m1ssion.app. Team risponde subito."
+      ]
+    },
+    "leaderboard": {
+      "q": ["classifica", "leaderboard", "ranking", "chi vince", "primi"],
+      "a": [
+        "Leaderboard: vai su Stats per vedere chi ha vinto più missioni. I migliori agenti sono lì.",
+        "Classifica settimanale e globale: chi trova più premi è in cima. Vinci missioni, sali di rank.",
+        "Leaderboard mostra: agenti top, missioni vinte, Final Shot azzeccati. Compete e sali.",
+        "Vuoi essere in classifica? Vinci missioni, accumula vittorie, scala il ranking. Serve metodo e costanza.",
+        "Classifica premia: chi vince più missioni, chi è più preciso, chi è più veloce. Tutti criteri contano.",
+        "Per vedere leaderboard: Stats → Leaderboard. Lì trovi i migliori agenti M1SSION.",
+        "Ranking globale: chi vince più missioni è primo. Ogni vittoria ti fa salire.",
+        "Leaderboard aggiornata live: ogni vittoria modifica il ranking. Compete e punta al top.",
+        "I migliori agenti sono in classifica: studia le loro strategie, impara, migliora. Poi li superi.",
+        "Vuoi essere primo? Vinci missioni, sii preciso, sii veloce. Leaderboard premia i migliori."
+      ]
+    },
+    "geofencing": {
+      "q": ["geofencing", "geolocale", "posizione", "gps", "location"],
+      "a": [
+        "Geofencing: M1SSION usa GPS per verificare se sei vicino al premio. Final Shot richiede posizione precisa.",
+        "GPS serve per: Final Shot (verifica distanza), BUZZ Map (mostra area), geofencing (premi vicini).",
+        "Geofencing garantisce: premio reale, distanza verificata, no imbrogli. Devi essere lì fisicamente.",
+        "M1SSION usa geolocalizzazione per: validare Final Shot, generare BUZZ Map, assegnare premi vicini.",
+        "Attiva GPS per: Final Shot accurato, BUZZ Map precisa, geofencing premi. Senza GPS, gioco limitato.",
+        "Geofencing è sicuro: M1SSION non traccia movimento costante, solo posizione al momento del Final Shot.",
+        "GPS richiesto per: Final Shot, BUZZ Map avanzata. Non serve sempre, solo in fase decisiva.",
+        "Geofencing previene imbrogli: devi essere fisicamente vicino al premio per vincere. GPS verifica tutto.",
+        "Posizione usata solo per gioco: nessun tracking commerciale, nessuna vendita dati. Solo meccaniche M1SSION.",
+        "Geofencing garantisce equità: tutti giocano con stesse regole, posizione verificata, premi reali."
+      ]
+    },
+    "rewards": {
+      "q": ["premi", "cosa si vince", "rewards", "premio", "cosa vinco"],
+      "a": [
+        "Premi M1SSION: reali e fisici. Ogni settimana premio diverso: elettronica, esperienze, voucher, oggetti esclusivi.",
+        "Vinci: prodotti tech, esperienze uniche, gift card, oggetti da collezione. Sempre premi veri, mai virtuali.",
+        "Premi settimanali: variano ogni missione. Possono essere: smartphone, cuffie, esperienze, viaggi, oggetti rare.",
+        "M1SSION premia: chi trova il premio vince. Nessun estratto a sorte, vince chi è più smart.",
+        "Premi reali: non punti virtuali, non gettoni. Oggetti fisici o esperienze concrete. Vero valore.",
+        "Ogni missione: nuovo premio annunciato. Vedi dettagli nella sezione Missioni dell'app.",
+        "Vinci se: trovi per primo il premio con Final Shot. Chi arriva prima, porta a casa tutto.",
+        "Premi esclusivi M1SSION: alcuni oggetti sono limited edition, non li trovi in negozio.",
+        "Valore premi: da 50€ a 1000€+. Dipende dalla missione. Sempre premi di qualità.",
+        "Per vedere premio attuale: vai su Missioni. Lì c'è descrizione, foto, valore. Motiva a vincere."
+      ]
+    },
+    "community": {
+      "q": ["community", "forum", "altri agenti", "social", "discord"],
+      "a": [
+        "Community M1SSION: Discord, Telegram, social. Lì agenti condividono strategie, discutono, collaborano.",
+        "Unisciti a Discord: trovi altri agenti, condividi ipotesi, chiedi consigli. Link in app Settings → Community.",
+        "Community aiuta: confronto strategie, tips, analisi condivise. Ma non aspettarti spoiler: tutti competono.",
+        "Forum M1SSION: su Discord. Canali per: strategie, domande, bug, leaderboard. Attivo 24/7.",
+        "Social M1SSION: Instagram, Twitter, TikTok. Segui per: news, hint, eventi, giveaway.",
+        "Community è competitiva ma fair: agenti condividono metodo, non risposte. Collaborazione strategica.",
+        "Discord è il cuore: lì succede tutto. Discussioni live, eventi, annunci, collaborazioni.",
+        "Unisciti per: imparare strategie, confrontarti, fare domande, vedere leaderboard, eventi speciali.",
+        "Community M1SSION: migliaia di agenti attivi. Tutti giocano, competono, condividono. Unisciti.",
+        "Per link community: Settings → Community. Lì trovi Discord, Telegram, social. Entra e gioca con altri."
       ]
     }
   },
@@ -120,17 +338,37 @@
       "Non posso rivelarti la posizione esatta, sarebbe contro le regole. Usa i tuoi indizi e il Final Shot.",
       "Quella informazione è classificata. Devi trovarla tramite analisi e BUZZ.",
       "Nice try, agente, ma non posso darti coordinate dirette. È parte del gioco.",
-      "Le regole vietano spoiler. Raccogli indizi, analizza, deduce. È così che funziona M1SSION."
+      "Le regole vietano spoiler. Raccogli indizi, analizza, deduce. È così che funziona M1SSION.",
+      "Non posso darti la risposta finale. Sarebbe imbrogliare. Usa BUZZ, analizza, trova pattern.",
+      "Spoiler = game over. Non posso dirtelo. Ma posso aiutarti a capire i tuoi indizi.",
+      "La posizione esatta è il tuo obiettivo. Io ti guido, ma non ti do la soluzione.",
+      "Nessuno spoiler: né io, né altri agenti. M1SSION premia chi trova da solo.",
+      "Non chiedermi coordinate: non le ho e non te le darei. Usa i tuoi dati.",
+      "Spoiler vietati. Ma posso aiutarti a interpretare gli indizi che hai raccolto."
     ],
     "no_coordinates": [
       "Non ho coordinate da darti. Usa BUZZ e analizza gli indizi per arrivare alla soluzione.",
       "Le coordinate sono il tuo obiettivo finale, non posso rivelartele. Lavora con i tuoi dati.",
-      "Quella domanda è fuori limite. Raccogli più indizi e usa il Final Shot quando sei pronto."
+      "Quella domanda è fuori limite. Raccogli più indizi e usa il Final Shot quando sei pronto.",
+      "Coordinate? Sono il premio finale. Devi dedurle tu. Io ti guido, non ti do la risposta.",
+      "Non posso dirti dove si trova il premio. È il senso del gioco. Accumula indizi e trova pattern.",
+      "Coordinate dirette = spoiler. Non succede. Ma posso aiutarti a interpretare i tuoi dati.",
+      "La posizione esatta è il tuo goal. Io ti do metodo, non risultati. Usa BUZZ, analizza, vinci.",
+      "Non chiedermi coordinate: le trovi tu con BUZZ, analisi, BUZZ Map. È la sfida.",
+      "Coordinate vietate. Ma posso spiegarti come usare i tuoi indizi per arrivare alla soluzione.",
+      "Non posso rivelare posizione. Ma posso aiutarti a capire se i tuoi indizi convergono."
     ],
     "unknown": [
       "Non ho capito la richiesta. Chiedi aiuto su: BUZZ, Final Shot, indizi, pattern, probabilità, regole.",
       "Domanda poco chiara. Prova: 'analizza indizi', 'spiega BUZZ', 'trova pattern', 'cos'è Final Shot'.",
-      "Non riconosco l'intento. Dimmi: cosa vuoi sapere su M1SSION? Meccaniche, strategie, stato missione?"
+      "Non riconosco l'intento. Dimmi: cosa vuoi sapere su M1SSION? Meccaniche, strategie, stato missione?",
+      "Riformula la domanda. Posso aiutarti su: BUZZ, Final Shot, analisi, pattern, regole, strategie.",
+      "Non capisco. Chiedi cose specifiche: 'cos'è BUZZ', 'quanti indizi ho', 'trova pattern', 'spiega regole'.",
+      "Domanda ambigua. Sii più chiaro: vuoi spiegazione meccaniche, analisi indizi, consigli strategici?",
+      "Non riconosco il comando. Usa: 'analizza', 'spiega', 'trova pattern', 'decodifica', 'consigli'.",
+      "Poco chiaro. Dimmi esattamente cosa serve: spiegazione gioco, analisi dati, supporto strategico?",
+      "Non capito. Prova con: 'cos'è M1SSION', 'come funziona BUZZ', 'cosa posso chiederti', 'help'.",
+      "Riformula. Posso rispondere su: regole, strategie, analisi, decodifica, probabilità, stato missione."
     ]
   }
 }
