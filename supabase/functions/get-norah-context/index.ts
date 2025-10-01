@@ -39,8 +39,8 @@ serve(async (req) => {
       finalshotResult,
       messagesResult
     ] = await Promise.all([
-      supabase.from('agent_profiles').select('*').eq('user_id', userId).single(),
-      supabase.from('agent_missions').select('*').eq('user_id', userId).order('updated_at', { ascending: false }).limit(1).single(),
+      supabase.from('agent_profiles').select('*').eq('user_id', userId).maybeSingle(),
+      supabase.from('agent_missions').select('*').eq('user_id', userId).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
       supabase.from('agent_clues').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(20),
       supabase.from('agent_buzz_actions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10),
       supabase.from('agent_finalshot_attempts').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(5),
@@ -55,9 +55,17 @@ serve(async (req) => {
       agentCode = profileResult.data.agent_code;
       nickname = profileResult.data.nickname;
     } else {
-      const fallbackProfile = await supabase.from('profiles').select('agent_code').eq('id', userId).single();
+      const fallbackProfile = await supabase.from('profiles').select('agent_code, full_name').eq('id', userId).maybeSingle();
       if (fallbackProfile.data?.agent_code) {
         agentCode = fallbackProfile.data.agent_code;
+        nickname = fallbackProfile.data.full_name;
+        
+        // Auto-populate agent_profiles for future use
+        await supabase.from('agent_profiles').upsert({
+          user_id: userId,
+          agent_code: agentCode,
+          nickname: nickname
+        }, { onConflict: 'user_id' });
       }
     }
 
