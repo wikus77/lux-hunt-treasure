@@ -2071,6 +2071,36 @@ export type Database = {
         }
         Relationships: []
       }
+      norah_events: {
+        Row: {
+          created_at: string | null
+          event: string
+          id: string
+          intent: string | null
+          phase: string | null
+          sentiment: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event: string
+          id?: string
+          intent?: string | null
+          phase?: string | null
+          sentiment?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event?: string
+          id?: string
+          intent?: string | null
+          phase?: string | null
+          sentiment?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       norah_messages: {
         Row: {
           content: string
