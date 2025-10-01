@@ -171,26 +171,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
             </div>
           </div>
           
-          {/* Quick Action Chips - v4: hidden by default */}
-          {showChips && (
-            <div className="px-6 py-4 border-b border-white/10 flex gap-2 flex-wrap">
-              {QUICK_CHIPS.map((chip) => (
-                <button
-                  key={chip.mode}
-                  onClick={() => handleQuickAction(chip.mode)}
-                  disabled={isProcessing}
-                  className="px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(242, 19, 164, 0.15), rgba(0, 229, 255, 0.15))',
-                    border: '1px solid rgba(0, 229, 255, 0.3)',
-                    color: 'rgba(255, 255, 255, 0.9)'
-                  }}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Quick Action Chips - v4.2: Removed from UI, keep handlers internal */}
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
