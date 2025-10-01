@@ -710,6 +710,13 @@ export type Database = {
             referencedRelation: "clues"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clues_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "v_user_intel_clues"
+            referencedColumns: ["id"]
+          },
         ]
       }
       consent_history: {
@@ -1327,6 +1334,62 @@ export type Database = {
           response_data?: Json | null
           status_code?: number | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      intel_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intel_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "intel_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intel_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -4645,6 +4708,27 @@ export type Database = {
       v_pref_users: {
         Row: {
           user_id: string | null
+        }
+        Relationships: []
+      }
+      v_user_intel_clues: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string | null
+          title: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          title?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          title?: string | null
         }
         Relationships: []
       }
