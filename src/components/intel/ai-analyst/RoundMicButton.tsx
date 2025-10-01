@@ -12,7 +12,7 @@ const RoundMicButton: React.FC<RoundMicButtonProps> = ({ onClick, isActive }) =>
     <button
       onClick={onClick}
       className={`
-        fixed bottom-24 right-6 z-50
+        fixed bottom-24 left-1/2 -translate-x-1/2 z-50
         w-16 h-16 rounded-full
         bg-gradient-to-br from-[#F213A4] via-[#FF4D4D] to-[#0EA5E9]
         shadow-[0_0_30px_rgba(242,19,164,0.6)]
