@@ -4,7 +4,7 @@
 import type { Intent, State } from './router';
 import type { IntelContext } from './context';
 import type { Analysis } from './heuristics';
-import { ANALYST_TEMPLATES } from '../analystEngine';
+import { ANALYST_TEMPLATES } from '../analystTemplates';
 
 export type TemplateContext = {
   ctx: IntelContext;
