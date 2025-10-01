@@ -23,7 +23,8 @@ const IntelligencePage: React.FC = () => {
     clues,
     ttsEnabled, 
     toggleTTS, 
-    audioLevel 
+    audioLevel,
+    agentContext
   } = useIntelAnalyst();
 
   useEffect(() => {
