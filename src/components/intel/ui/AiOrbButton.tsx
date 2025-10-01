@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ - AI Orb Button Component
 import React from 'react';
-import { Activity, Loader2, Waves, Mic } from 'lucide-react';
+import { Loader2, Waves, Mic } from 'lucide-react';
 import styles from './AiOrbButton.module.css';
 
 interface AiOrbButtonProps {
@@ -23,7 +23,7 @@ const AiOrbButton: React.FC<AiOrbButtonProps> = ({
       case 'listening':
         return <Mic className={styles.icon} />;
       default:
-        return <Activity className={styles.icon} />;
+        return null;
     }
   };
 
