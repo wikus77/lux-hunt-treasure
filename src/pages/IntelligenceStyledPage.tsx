@@ -151,223 +151,315 @@ const [, setLocation] = useLocation();
             </Button>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Intelligence Panel
+                {aiEnabled ? 'M1SSION Intelligence / Analyst' : 'Intelligence Panel'}
               </h1>
-              <p className="text-muted-foreground">Strumenti di analisi tattica</p>
+              <p className="text-muted-foreground">
+                {aiEnabled ? 'AI-powered tactical intelligence analysis' : 'Strumenti di analisi tattica'}
+              </p>
             </div>
           </div>
 
-          {/* Intelligence Overview */}
-          <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
-            <CardHeader className="text-center pb-4">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400/20 to-cyan-400/10 mb-4 mx-auto">
-                <Brain className="h-10 w-10 text-cyan-400" />
-              </div>
-              <CardTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                M1SSION Intelligence
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-3 glass-card bg-background/20 border-0">
-                  <p className="text-sm text-muted-foreground">Moduli</p>
-                  <p className="font-semibold text-lg text-cyan-400">{intelligenceModules.length}</p>
-                </div>
-                <div className="text-center p-3 glass-card bg-background/20 border-0">
-                  <p className="text-sm text-muted-foreground">Attivi</p>
-                  <p className="font-semibold text-lg text-green-400">
-                    {intelligenceModules.filter(m => m.status === 'Disponibile').length}
+          {/* NEW UI: AI Analyst Mode */}
+          {aiEnabled && (
+            <>
+              {/* AI Analyst Hero */}
+              <Card className="glass-card border-0 bg-black/70 backdrop-blur-xl border-2 border-[#F213A4]/30 shadow-[0_0_30px_rgba(242,19,164,0.2)]">
+                <CardHeader className="text-center pb-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[#F213A4]/20 to-[#0EA5E9]/10 mb-4 mx-auto">
+                    <Brain className="h-10 w-10 text-[#F213A4]" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] bg-clip-text text-transparent">
+                    AI ANALYST
+                  </CardTitle>
+                  <p className="text-sm text-white/60 mt-2">
+                    Intelligence analysis, classification, and tactical support
                   </p>
-                </div>
-                <div className="text-center p-3 glass-card bg-background/20 border-0">
-                  <p className="text-sm text-muted-foreground">Livello</p>
-                  <p className="font-semibold text-lg text-blue-400">Max 5</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-white/80 space-y-2">
+                    <p className="mb-3">
+                      Click the round button below to activate the AI Analyst. The system provides:
+                    </p>
+                    <div className="grid gap-2">
+                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
+                        <span className="text-[#F213A4] font-bold">1.</span>
+                        <span>Analyze and classify your collected clues</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
+                        <span className="text-[#F213A4] font-bold">2.</span>
+                        <span>Detect patterns and correlations between intel</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
+                        <span className="text-[#F213A4] font-bold">3.</span>
+                        <span>Decode basic ciphers (Caesar, Base64, ASCII)</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
+                        <span className="text-[#F213A4] font-bold">4.</span>
+                        <span>Assess tactical probabilities and risks</span>
+                      </div>
+                      <div className="flex items-start gap-2 p-2 bg-white/5 rounded">
+                        <span className="text-[#F213A4] font-bold">5.</span>
+                        <span>Provide strategic guidance without spoilers</span>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-white/50 text-xs italic">
+                      ⚠️ The Analyst never reveals solutions, only strategic insights.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
 
-          {/* Intelligence Modules (legacy) */}
+              {/* Final Shot Card */}
+              <Card className="glass-card border-0 bg-black/70 backdrop-blur-xl border-2 border-cyan-500/30 shadow-[0_0_30px_rgba(14,165,233,0.2)]">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
+                    <Crosshair className="w-6 h-6 text-cyan-400" />
+                    FINAL SHOT
+                  </CardTitle>
+                  <p className="text-sm text-white/60 mt-1">
+                    Interactive map for final coordinate selection
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between bg-background/50 border-cyan-500/30 hover:bg-cyan-500/10"
+                    onClick={() => openModule('finalshotmap')}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Crosshair className="h-4 w-4 text-cyan-400" />
+                      <span>Open Final Shot Map</span>
+                    </div>
+                    →
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* LEGACY UI: Original Intelligence Panel */}
           {!aiEnabled && (
-            <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-blue-400" />
-                  Moduli Intelligence
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {intelligenceModules.map((module) => (
-                   <div 
-                    key={module.id} 
-                    className="glass-card p-4 bg-background/20 border-0 cursor-pointer hover:bg-background/30 transition-all duration-200"
-                    onClick={() => openModule(module.id, module.status)}
+            <>
+              {/* Intelligence Overview */}
+              <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+                <CardHeader className="text-center pb-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-cyan-400/20 to-cyan-400/10 mb-4 mx-auto">
+                    <Brain className="h-10 w-10 text-cyan-400" />
+                  </div>
+                  <CardTitle className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    M1SSION Intelligence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-3 glass-card bg-background/20 border-0">
+                      <p className="text-sm text-muted-foreground">Moduli</p>
+                      <p className="font-semibold text-lg text-cyan-400">{intelligenceModules.length}</p>
+                    </div>
+                    <div className="text-center p-3 glass-card bg-background/20 border-0">
+                      <p className="text-sm text-muted-foreground">Attivi</p>
+                      <p className="font-semibold text-lg text-green-400">
+                        {intelligenceModules.filter(m => m.status === 'Disponibile').length}
+                      </p>
+                    </div>
+                    <div className="text-center p-3 glass-card bg-background/20 border-0">
+                      <p className="text-sm text-muted-foreground">Livello</p>
+                      <p className="font-semibold text-lg text-blue-400">Max 5</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Intelligence Modules */}
+              <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-blue-400" />
+                    Moduli Intelligence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {intelligenceModules.map((module) => (
+                     <div 
+                      key={module.id} 
+                      className="glass-card p-4 bg-background/20 border-0 cursor-pointer hover:bg-background/30 transition-all duration-200"
+                      onClick={() => openModule(module.id, module.status)}
+                      onKeyDown={(e) => {
+                        if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                          e.preventDefault();
+                          openModule(module.id);
+                        }
+                      }}
+                      tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                      role="button"
+                      aria-label={`Accedi a ${module.name}`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 rounded-lg bg-primary/20 flex-shrink-0">
+                          <module.icon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-semibold text-foreground">{module.name}</h3>
+                            <Badge className={getStatusColor(module.status)}>
+                              {module.status}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground/80 mb-2">{module.description}</p>
+                          <div className="flex items-center justify-between">
+                            <span className={`text-xs font-medium ${getLevelColor(module.level)}`}>
+                              {module.level}
+                            </span>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="h-7 text-xs"
+                              disabled={module.status !== 'Disponibile'}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (module.status === 'Disponibile') openModule(module.id);
+                              }}
+                              onKeyDown={(e) => {
+                                if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  openModule(module.id);
+                                }
+                              }}
+                              tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                              role="button"
+                              aria-label={`Apri ${module.name}`}
+                            >
+                              {module.status === 'Disponibile' ? 'Accedi' : 'Bloccato'}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Intelligence Stats */}
+              <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
+                    <Activity className="h-5 w-5 text-purple-400" />
+                    Statistiche Intelligence
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="glass-card p-4 bg-background/20 border-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-blue-400" />
+                        <span className="text-sm font-medium">Analisi Completate</span>
+                      </div>
+                      <span className="text-sm text-blue-400 font-medium">47</span>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card p-4 bg-background/20 border-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Database className="h-4 w-4 text-green-400" />
+                        <span className="text-sm font-medium">Indizi Raccolti</span>
+                      </div>
+                      <span className="text-sm text-green-400 font-medium">124</span>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card p-4 bg-background/20 border-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-yellow-400" />
+                        <span className="text-sm font-medium">Precisione Media</span>
+                      </div>
+                      <span className="text-sm text-yellow-400 font-medium">87.3%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="glass-card p-4 bg-background/20 border-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Radar className="h-4 w-4 text-cyan-400" />
+                        <span className="text-sm font-medium">Scansioni Radar</span>
+                      </div>
+                      <span className="text-sm text-cyan-400 font-medium">31</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
+                <CardHeader>
+                  <CardTitle className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-orange-400" />
+                    Azioni Rapide
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
+                    onClick={() => openModule('coordinates')}
                     onKeyDown={(e) => {
-                      if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
+                      if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
-                        openModule(module.id);
+                        openModule('coordinates');
                       }
                     }}
-                    tabIndex={module.status === 'Disponibile' ? 0 : -1}
+                    tabIndex={0}
                     role="button"
-                    aria-label={`Accedi a ${module.name}`}
+                    aria-label="Apri Intelligence Panel"
                   >
-                    <div className="flex items-start space-x-3">
-                      <div className="p-2 rounded-lg bg-primary/20 flex-shrink-0">
-                        <module.icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-foreground">{module.name}</h3>
-                          <Badge className={getStatusColor(module.status)}>
-                            {module.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground/80 mb-2">{module.description}</p>
-                        <div className="flex items-center justify-between">
-                          <span className={`text-xs font-medium ${getLevelColor(module.level)}`}>
-                            {module.level}
-                          </span>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="h-7 text-xs"
-                            disabled={module.status !== 'Disponibile'}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (module.status === 'Disponibile') openModule(module.id);
-                            }}
-                            onKeyDown={(e) => {
-                              if ((e.key === 'Enter' || e.key === ' ') && module.status === 'Disponibile') {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                openModule(module.id);
-                              }
-                            }}
-                            tabIndex={module.status === 'Disponibile' ? 0 : -1}
-                            role="button"
-                            aria-label={`Apri ${module.name}`}
-                          >
-                            {module.status === 'Disponibile' ? 'Accedi' : 'Bloccato'}
-                          </Button>
-                        </div>
-                      </div>
+                    <div className="flex items-center space-x-2">
+                      <Brain className="h-4 w-4 text-primary" />
+                      <span>Apri Intelligence Panel</span>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                    →
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
+                    onClick={() => openModule('finalshotmap')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openModule('finalshotmap');
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label="Apri Final Shot Mappa"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Crosshair className="h-4 w-4 text-red-400" />
+                      <span>Final Shot Mappa</span>
+                    </div>
+                    →
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
           )}
-
-          {/* Intelligence Stats (legacy) */}
-          {!aiEnabled && (
-            <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
-              <CardHeader>
-                <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
-                  <Activity className="h-5 w-5 text-purple-400" />
-                  Statistiche Intelligence
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="glass-card p-4 bg-background/20 border-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4 text-blue-400" />
-                      <span className="text-sm font-medium">Analisi Completate</span>
-                    </div>
-                    <span className="text-sm text-blue-400 font-medium">47</span>
-                  </div>
-                </div>
-                
-                <div className="glass-card p-4 bg-background/20 border-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-green-400" />
-                      <span className="text-sm font-medium">Indizi Raccolti</span>
-                    </div>
-                    <span className="text-sm text-green-400 font-medium">124</span>
-                  </div>
-                </div>
-                
-                <div className="glass-card p-4 bg-background/20 border-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Target className="h-4 w-4 text-yellow-400" />
-                      <span className="text-sm font-medium">Precisione Media</span>
-                    </div>
-                    <span className="text-sm text-yellow-400 font-medium">87.3%</span>
-                  </div>
-                </div>
-                
-                <div className="glass-card p-4 bg-background/20 border-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Radar className="h-4 w-4 text-cyan-400" />
-                      <span className="text-sm font-medium">Scansioni Radar</span>
-                    </div>
-                    <span className="text-sm text-cyan-400 font-medium">31</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Quick Actions */}
-          <Card className="glass-card border-0 bg-card/50 backdrop-blur-md">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-orange-400" />
-                Azioni Rapide
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {aiEnabled && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
-                  onClick={() => setShowAIAnalyst(true)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setShowAIAnalyst(true);
-                    }
-                  }}
-                  tabIndex={0}
-                  role="button"
-                  aria-label="Apri AI Analyst"
-                >
-                  <div className="flex items-center space-x-2">
-                    <Brain className="h-4 w-4 text-primary" />
-                    <span>Apri AI Analyst</span>
-                  </div>
-                  →
-                </Button>
-              )}
-              
-              <Button
-                variant="outline"
-                className="w-full justify-between bg-background/50 border-primary/30 hover:bg-primary/10"
-                onClick={() => openModule('finalshotmap')}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    openModule('finalshotmap');
-                  }
-                }}
-                tabIndex={0}
-                role="button"
-                aria-label="Apri Final Shot Mappa"
-              >
-                <div className="flex items-center space-x-2">
-                  <Crosshair className="h-4 w-4 text-red-400" />
-                  <span>Final Shot Mappa</span>
-                </div>
-                →
-              </Button>
-            </CardContent>
-          </Card>
         </div>
       </main>
+
+      {/* AI Analyst Components (only when enabled) */}
+      {aiEnabled && (
+        <>
+          <RoundMicButton 
+            onClick={() => setShowAIAnalyst(true)}
+            isActive={showAIAnalyst}
+          />
+          {showAIAnalyst && (
+            <AIAnalystPanel onClose={() => setShowAIAnalyst(false)} />
+          )}
+        </>
+      )}
     </div>
   );
 };
