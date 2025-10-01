@@ -27,6 +27,23 @@ import { useLocation } from 'wouter';
 import RoundMicButton from '@/components/intel/ai-analyst/RoundMicButton';
 import AIAnalystPanel from '@/components/intel/ai-analyst/AIAnalystPanel';
 
+// Keyboard shortcut handler
+const useKeyboardShortcut = (key: string, callback: () => void) => {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === key.toLowerCase() && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        const target = e.target as HTMLElement;
+        if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          callback();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [key, callback]);
+};
+
 const IntelligenceStyledPage: React.FC = () => {
 const [, setLocation] = useLocation();
   const [showAIAnalyst, setShowAIAnalyst] = useState(false);
@@ -49,6 +66,13 @@ const [, setLocation] = useLocation();
       setAiEnabled(true);
     }
   }, []);
+  
+  // Keyboard shortcut: A to open/close AI Analyst
+  useKeyboardShortcut('a', () => {
+    if (aiEnabled) {
+      setShowAIAnalyst(prev => !prev);
+    }
+  });
   const INTEL_ROUTES: Record<string, string> = {
     coordinates: '/intelligence/coordinates',
     journal: '/intelligence/clue-journal',

@@ -1,27 +1,57 @@
 // © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Panel
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Send, Brain } from 'lucide-react';
-import { useIntelAnalyst } from '@/hooks/useIntelAnalyst';
-import SiriWaveOverlay from './SiriWaveOverlay';
+import { X, Send, Activity } from 'lucide-react';
+import { useIntelAnalyst, type AnalystMode } from '@/hooks/useIntelAnalyst';
+import AIEdgeGlow from './SiriWaveOverlay';
 
 interface AIAnalystPanelProps {
   onClose: () => void;
 }
 
+const QUICK_CHIPS: Array<{ label: string; mode: AnalystMode }> = [
+  { label: 'Classifica indizi', mode: 'classify' },
+  { label: 'Trova pattern', mode: 'analyze' },
+  { label: 'Decodifica', mode: 'decode' },
+  { label: 'Valuta probabilità', mode: 'assess' },
+  { label: 'Mentore', mode: 'guide' }
+];
+
+const PLACEHOLDERS = [
+  "Analizza gli indizi raccolti...",
+  "Cosa significano questi pattern?",
+  "Trova correlazioni tra i dati...",
+  "Decodifica questo messaggio...",
+  "Quali sono le probabilità?"
+];
+
 const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
+  const { messages, isProcessing, status, sendMessage } = useIntelAnalyst();
   const [input, setInput] = useState('');
+  const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { messages, isProcessing, voiceEnergy, sendMessage } = useIntelAnalyst();
+
+  // Rotate placeholder
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPlaceholder(PLACEHOLDERS[Math.floor(Math.random() * PLACEHOLDERS.length)]);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isProcessing) return;
-    
-    await sendMessage(input);
-    setInput('');
+  const handleSend = (mode: AnalystMode = 'analyze') => {
+    if (input.trim()) {
+      sendMessage(input, mode);
+      setInput('');
+    }
+  };
+
+  const handleQuickAction = (mode: AnalystMode) => {
+    const message = mode === 'decode' ? 'decode' : `Esegui ${mode}`;
+    sendMessage(message, mode);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -33,82 +63,126 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
 
   return (
     <>
-      <SiriWaveOverlay energy={voiceEnergy} isActive={isProcessing} />
+      {/* Background overlay */}
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+        onClick={onClose}
+      />
       
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-        <div className="w-full max-w-4xl h-[80vh] m-4 bg-black/90 backdrop-blur-xl rounded-2xl border-2 border-[#F213A4]/30 shadow-[0_0_50px_rgba(242,19,164,0.3)] flex flex-col">
-          
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-white/10">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F213A4] to-[#0EA5E9] flex items-center justify-center">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
+      {/* Siri Edge Glow */}
+      <AIEdgeGlow status={status} isActive={true} />
+      
+      {/* Panel */}
+      <div className="fixed inset-4 md:inset-8 z-50 flex items-center justify-center">
+        <div 
+          className="w-full max-w-4xl h-full max-h-[800px] bg-black/90 backdrop-blur-xl rounded-2xl flex flex-col"
+          style={{
+            border: '2px solid transparent',
+            backgroundClip: 'padding-box',
+            boxShadow: '0 0 40px rgba(242, 19, 164, 0.3), 0 0 80px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(242, 19, 164, 0.05)',
+            borderImage: 'linear-gradient(135deg, rgba(0, 229, 255, 0.4), rgba(242, 19, 164, 0.4)) 1'
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header with VU Meter */}
+          <div className="flex items-center justify-between p-6 border-b border-white/10">
+            <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-xl font-bold text-white">AI ANALYST</h2>
-                <p className="text-xs text-white/60">M1SSION Intelligence Support</p>
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] bg-clip-text text-transparent">
+                  M1SSION AI Analyst
+                </h2>
+                <p className="text-sm text-white/60 mt-1">Intelligence Analysis System</p>
               </div>
+              
+              {/* VU Meter */}
+              {status === 'speaking' && (
+                <div className="flex items-center gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-1 bg-gradient-to-t from-[#00E5FF] to-[#F213A4] rounded-full animate-pulse"
+                      style={{
+                        height: `${12 + Math.random() * 20}px`,
+                        animationDelay: `${i * 100}ms`,
+                        animationDuration: '600ms'
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
+            
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-all"
-              aria-label="Close"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-6 h-6 text-white/80" />
             </button>
+          </div>
+          
+          {/* Quick Action Chips */}
+          <div className="px-6 py-4 border-b border-white/10 flex gap-2 flex-wrap">
+            {QUICK_CHIPS.map((chip) => (
+              <button
+                key={chip.mode}
+                onClick={() => handleQuickAction(chip.mode)}
+                disabled={isProcessing}
+                className="px-4 py-2 rounded-full text-sm font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(242, 19, 164, 0.15), rgba(0, 229, 255, 0.15))',
+                  border: '1px solid rgba(0, 229, 255, 0.3)',
+                  color: 'rgba(255, 255, 255, 0.9)'
+                }}
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 && (
-              <div className="text-center text-white/60 mt-8">
-                <Brain className="w-16 h-16 mx-auto mb-4 text-[#F213A4]" />
-                <p className="text-lg mb-2">Welcome, Agent</p>
-                <p className="text-sm">I can help you with:</p>
-                <div className="mt-4 space-y-2 text-left max-w-md mx-auto">
-                  <div className="p-2 bg-white/5 rounded">• Analyze your collected clues</div>
-                  <div className="p-2 bg-white/5 rounded">• Classify and organize intel</div>
-                  <div className="p-2 bg-white/5 rounded">• Decode basic ciphers</div>
-                  <div className="p-2 bg-white/5 rounded">• Assess tactical probabilities</div>
-                  <div className="p-2 bg-white/5 rounded">• Provide strategic guidance</div>
-                </div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {messages.length === 0 ? (
+              <div className="text-center text-white/40 py-12">
+                <Activity className="w-16 h-16 mx-auto mb-4 opacity-40" />
+                <p className="text-lg mb-2">🎯 Intelligence Analyst Ready</p>
+                <p className="text-sm">Use quick chips above or type your query below.</p>
               </div>
-            )}
-            
-            {messages.map((msg, idx) => (
-              <div
-                key={idx}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+            ) : (
+              messages.map((message, index) => (
                 <div
-                  className={`max-w-[80%] p-3 rounded-lg ${
-                    msg.role === 'user'
-                      ? 'bg-gradient-to-br from-[#F213A4] to-[#FF4D4D] text-white'
-                      : 'bg-white/10 text-white border border-white/20'
-                  }`}
+                  key={index}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                  {msg.metadata && (
-                    <div className="mt-2 pt-2 border-t border-white/20 text-xs opacity-60">
-                      {msg.metadata.probability && (
-                        <div>Probability: {msg.metadata.probability}</div>
-                      )}
-                      {msg.metadata.risk && (
-                        <div>Risk Level: {msg.metadata.risk}</div>
-                      )}
+                  <div
+                    className={`max-w-[80%] p-4 rounded-2xl ${
+                      message.role === 'user'
+                        ? 'bg-gradient-to-br from-[#F213A4]/20 to-[#0EA5E9]/20 border border-[#F213A4]/30'
+                        : 'bg-white/5 border border-white/10'
+                    }`}
+                  >
+                    <div className="text-sm text-white/90 whitespace-pre-wrap leading-relaxed">
+                      {message.content}
                     </div>
-                  )}
+                    {message.metadata && message.metadata.cluesAnalyzed !== undefined && (
+                      <div className="mt-2 text-xs text-white/40">
+                        {message.metadata.cluesAnalyzed} indizi analizzati • {message.metadata.mode}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
             
             {isProcessing && (
               <div className="flex justify-start">
-                <div className="bg-white/10 text-white border border-white/20 p-3 rounded-lg">
-                  <div className="flex gap-2">
-                    <div className="w-2 h-2 bg-[#F213A4] rounded-full animate-pulse"></div>
-                    <div className="w-2 h-2 bg-[#FF4D4D] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-2 h-2 bg-[#0EA5E9] rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                  <div className="flex items-center gap-2 text-white/60">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-[#F213A4] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <div className="w-2 h-2 bg-[#0EA5E9] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <div className="w-2 h-2 bg-[#F213A4] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                    <span className="text-sm">{status === 'thinking' ? 'Processing...' : 'Speaking...'}</span>
                   </div>
                 </div>
               </div>
@@ -117,27 +191,27 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = ({ onClose }) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="p-4 border-t border-white/10">
-            <div className="flex gap-2">
+          {/* Input with rotating placeholder */}
+          <div className="p-6 border-t border-white/10">
+            <div className="flex gap-3">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Ask the Analyst..."
+                placeholder={placeholder}
                 disabled={isProcessing}
-                className="flex-1 bg-white/10 text-white placeholder-white/40 px-4 py-3 rounded-lg border border-white/20 focus:border-[#F213A4] focus:outline-none disabled:opacity-50"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#F213A4]/50 disabled:opacity-50 transition-all"
               />
               <button
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim() || isProcessing}
-                className="w-12 h-12 bg-gradient-to-br from-[#F213A4] to-[#0EA5E9] rounded-lg flex items-center justify-center hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                aria-label="Send"
+                className="px-6 py-3 bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] rounded-xl font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                <Send className="w-5 h-5 text-white" />
+                <Send className="w-5 h-5" />
               </button>
             </div>
+            <p className="text-xs text-white/30 mt-2">Press Enter to send • Shortcut: A to open/close</p>
           </div>
         </div>
       </div>
