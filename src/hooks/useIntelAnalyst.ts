@@ -6,7 +6,7 @@ import { generateReply, type AnalystMode } from '@/lib/ai/analystEngine';
 export type { AnalystMode };
 export type AnalystStatus = 'idle' | 'thinking' | 'speaking';
 
-interface Message {
+export interface AnalystMessage {
   role: 'user' | 'analyst';
   content: string;
   timestamp: Date;
@@ -24,7 +24,7 @@ interface Clue {
 }
 
 export const useIntelAnalyst = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<AnalystMessage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [status, setStatus] = useState<AnalystStatus>('idle');
   const [currentMode, setCurrentMode] = useState<AnalystMode>('analyze');
@@ -118,7 +118,7 @@ export const useIntelAnalyst = () => {
     setStatus('thinking');
     setCurrentMode(mode);
 
-    const userMessage: Message = {
+    const userMessage: AnalystMessage = {
       role: 'user',
       content,
       timestamp: new Date(),
@@ -144,7 +144,7 @@ export const useIntelAnalyst = () => {
     // Simulate streaming
     await new Promise(resolve => setTimeout(resolve, 1200));
     
-    const analystMessage: Message = {
+    const analystMessage: AnalystMessage = {
       role: 'analyst',
       content: response.content,
       timestamp: new Date(),
