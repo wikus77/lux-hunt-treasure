@@ -16,9 +16,9 @@ let persistTimeout: NodeJS.Timeout | null = null;
 export function addMessage(msg: NorahMessage) {
   messageBuffer.push(msg);
   
-  // Keep only last 20 in memory
-  if (messageBuffer.length > 20) {
-    messageBuffer = messageBuffer.slice(-20);
+  // v4: Keep only last 8 turns (16 messages) for contextual memory
+  if (messageBuffer.length > 16) {
+    messageBuffer = messageBuffer.slice(-16);
   }
 
   // Debounced persist

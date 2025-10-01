@@ -1,7 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Intent Router - Fuzzy NLU with normalization
+// Norah Intent Router v4 - Pipeline: normalize → spell → synonyms → fuzzy
 
 import { normalize, expandSynonyms, fuzzyScore } from './textNormalize';
+import { correctPhrase } from './spell';
 
 export type NorahIntent = 
   | 'about_mission'
@@ -119,7 +120,8 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
 };
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-const FUZZY_THRESHOLD = 0.45; // Reduced for better tolerance
+// v4: Fuzzy threshold lowered for better tolerance
+const FUZZY_THRESHOLD = 0.40;
 const HIGH_CONFIDENCE_THRESHOLD = 0.75;
 
 export function routeIntent(input: string): IntentResult {
@@ -132,16 +134,17 @@ export function routeIntent(input: string): IntentResult {
   // Guard-rail: spoiler check first
   for (const pattern of SPOILER_PATTERNS) {
     if (pattern.test(rawNormalized)) {
-      console.debug('[NORAH] Spoiler guard triggered');
+      console.log('[NORAH-v4] Spoiler guard triggered');
       return { intent: 'no_spoiler', confidence: 1.0 };
     }
   }
 
-  // Normalize and expand
-  const tokens = normalize(input);
+  // v4 Pipeline: normalize → spell → synonyms → fuzzy
+  const spellCorrected = correctPhrase(rawNormalized);
+  const tokens = normalize(spellCorrected);
   const expandedTokens = expandSynonyms(tokens);
   
-  console.debug('[NORAH] Intent routing:', { input, tokens, expandedTokens });
+  console.log('[NORAH-v4] Intent routing:', { input, spellCorrected, tokens, expandedTokens });
 
   // Single-word check
   if (tokens.length === 1) {
@@ -197,9 +200,28 @@ export function routeIntent(input: string): IntentResult {
     return { intent: topIntent, confidence };
   }
 
+  // v4: Intelligent fallback - re-route based on keywords
+  const keywordMap: Record<string, NorahIntent> = {
+    'mission': 'about_mission',
+    'm1ssion': 'about_mission',
+    'finalshot': 'about_finalshot',
+    'buzz': 'about_buzz',
+    'plan': 'plans',
+    'piani': 'plans',
+    'help': 'help',
+    'aiuto': 'help'
+  };
+  
+  for (const [keyword, intent] of Object.entries(keywordMap)) {
+    if (expandedTokens.includes(keyword)) {
+      console.log('[NORAH-v4] Fallback keyword match:', keyword, '→', intent);
+      return { intent, confidence: 0.55 };
+    }
+  }
+
   // Ambiguous or low confidence → help with suggestions
-  if (scores.length > 0 && scores[0].score >= 0.35) {
-    console.debug('[NORAH] Low confidence, defaulting to help');
+  if (scores.length > 0 && scores[0].score >= 0.30) {
+    console.log('[NORAH-v4] Low confidence, defaulting to help');
     return { 
       intent: 'help', 
       confidence: 0.5,
@@ -210,6 +232,6 @@ export function routeIntent(input: string): IntentResult {
   }
 
   // Unknown
-  console.debug('[NORAH] No intent match, unknown');
-  return { intent: 'unknown', confidence: 0.1 };
+  console.log('[NORAH-v4] No intent match, defaulting to help');
+  return { intent: 'help', confidence: 0.4 };
 }
