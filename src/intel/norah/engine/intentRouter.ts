@@ -200,7 +200,7 @@ export function routeIntent(input: string): IntentResult {
     return { intent: topIntent, confidence };
   }
 
-  // v4: Intelligent fallback - re-route based on keywords
+  // v4.2: Intelligent fallback - re-route based on keywords + synonyms
   const keywordMap: Record<string, NorahIntent> = {
     'mission': 'about_mission',
     'm1ssion': 'about_mission',
@@ -209,7 +209,10 @@ export function routeIntent(input: string): IntentResult {
     'plan': 'plans',
     'piani': 'plans',
     'help': 'help',
-    'aiuto': 'help'
+    'aiuto': 'help',
+    'spiega': 'help',
+    'come si fa': 'help',
+    'come faccio': 'help'
   };
   
   for (const [keyword, intent] of Object.entries(keywordMap)) {

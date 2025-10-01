@@ -5,12 +5,12 @@ import type { NorahIntent } from './intentRouter';
 import type { NorahContext } from './contextBuilder';
 import norahKB from '../kb/norahKB.it.json';
 
-// Recent variations cache (cooldown)
+// Recent variations cache (cooldown) - v4.2: increased to 4
 const recentVariations: string[] = [];
-const MAX_RECENT = 3;
+const MAX_RECENT = 4;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4.1: Empathy/Tone Layer - Expanded to 12+ variants
+// v4.2: Empathy/Tone Layer - Expanded to 16 variants
 const EMPATHY_INTROS = [
   'Capito, {nickname}!',
   'Ottima mossa, agente {code}.',
@@ -23,8 +23,29 @@ const EMPATHY_INTROS = [
   'Capisco, {nickname}.',
   'Roger, agente {code}.',
   'Interessante.',
-  'Procediamo.'
+  'Procediamo.',
+  'Chiaro, {nickname}.',
+  'Ok agente {code}!',
+  'Bene, vediamo.',
+  'Ricevuto!'
 ];
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v4.2: Friend nudge - casual, warm closing (10% chance)
+const FRIEND_NUDGES = [
+  '\n\nTi tengo il posto in BUZZ 😉',
+  '\n\nTorno qui quando vuoi!',
+  '\n\nSempre qui per te, agente.',
+  '\n\nUn passo alla volta, ok?',
+  '\n\nCi sentiamo presto!',
+  '\n\nSai dove trovarmi 🎯',
+  '\n\nAvanti così!',
+  '\n\nBuona caccia! 🚀'
+];
+
+function maybeAddFriendNudge(): string {
+  return Math.random() < 0.10 ? FRIEND_NUDGES[Math.floor(Math.random() * FRIEND_NUDGES.length)] : '';
+}
 
 function getEmpathyIntro(ctx: NorahContext): string {
   const intro = EMPATHY_INTROS[Math.floor(Math.random() * EMPATHY_INTROS.length)];
@@ -34,24 +55,45 @@ function getEmpathyIntro(ctx: NorahContext): string {
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4: Mentor/Coach Layer - CTA dinamiche basate su progressione
+// v4.2: Mentor/Coach Layer - CTA dinamiche con più varietà
 function getCoachCTA(ctx: NorahContext): string {
   const clues = ctx?.stats?.clues || 0;
+  const seed = Date.now();
   
   if (clues === 0) {
-    return '\n\n💡 **Prossimo passo**: Apri BUZZ e raccogli 2-3 indizi oggi. Poi torniamo qui per analizzarli insieme.';
+    const ctas = [
+      '\n\n💡 **Prossimo passo**: Apri BUZZ e raccogli 2-3 indizi oggi. Poi torniamo qui per analizzarli insieme.',
+      '\n\n💡 **Start**: Fai BUZZ subito per ottenere i primi 2-3 indizi. Ogni dato conta.',
+      '\n\n💡 **Primo step**: BUZZ ora, prendi 2-3 indizi, poi analizziamo insieme il quadro.'
+    ];
+    return ctas[seed % ctas.length];
   }
   
   if (clues >= 1 && clues <= 3) {
-    return '\n\n💡 **Suggerimento**: Hai i primi indizi. Continua con BUZZ per averne almeno 4-5, poi possiamo cercare pattern interessanti.';
+    const ctas = [
+      '\n\n💡 **Suggerimento**: Hai i primi indizi. Continua con BUZZ per averne almeno 4-5, poi possiamo cercare pattern interessanti.',
+      '\n\n💡 **Fase raccolta**: Buon inizio! Continua con BUZZ fino a 5-6 indizi per vedere pattern.',
+      '\n\n💡 **Prosegui**: Ancora BUZZ! Target: 5-6 indizi totali prima di analizzare pattern.'
+    ];
+    return ctas[seed % ctas.length];
   }
   
   if (clues >= 4 && clues <= 7) {
-    return '\n\n💡 **Ottimo ritmo!** Ora posso cercare pattern e correlazioni nei tuoi indizi. Vuoi che analizzi tutto?';
+    const ctas = [
+      '\n\n💡 **Ottimo ritmo!** Ora posso cercare pattern e correlazioni nei tuoi indizi. Vuoi che analizzi tutto?',
+      '\n\n💡 **Fase intermedia**: Hai dati solidi. Posso cercare pattern e convergenze ora.',
+      '\n\n💡 **Pronti per analisi**: Con questi indizi posso trovare correlazioni. Proseguiamo?'
+    ];
+    return ctas[seed % ctas.length];
   }
   
   if (clues >= 8) {
-    return '\n\n💡 **Fase avanzata**: Hai abbastanza dati. Se i segnali convergono, valuta Final Shot (max 2/giorno). Vuoi che verifichi la coerenza prima?';
+    const ctas = [
+      '\n\n💡 **Fase avanzata**: Hai abbastanza dati. Se i segnali convergono, valuta Final Shot (max 2/giorno). Vuoi che verifichi la coerenza prima?',
+      '\n\n💡 **Pronto per Final Shot**: Con questi indizi puoi valutare. Vuoi che controlli coerenze prima?',
+      '\n\n💡 **Fase finale**: Dati solidi! Analizza pattern, poi considera Final Shot (2 al giorno max).'
+    ];
+    return ctas[seed % ctas.length];
   }
   
   return '';
@@ -137,8 +179,34 @@ export function generateReply(
     }
 
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-    // v4.1: Retention-friendly responses for frustration/off-ramp
+    // v4.2: Enhanced retention responses - frustration + time constraints + confusion
     const lowerInput = (userInput || '').toLowerCase();
+    
+    // Detect confusion/lost signals - v4.2: expanded
+    const confusionSignals = ['non ho capito niente', 'nn capito niente', 'nn capito', 'boh', 'non capisco', 'niente', 'aiuto non capisco'];
+    const hasConfusion = confusionSignals.some(sig => lowerInput.includes(sig));
+    
+    if (hasConfusion) {
+      const reassuranceResponses = [
+        `${getEmpathyIntro(ctx)} Tranquillo! Ti spiego in un passo: fai BUZZ per ottenere 1 indizio. Solo questo. Poi torna qui e vediamo insieme cosa significa. Ci stai?`,
+        `${getEmpathyIntro(ctx)} Ok, ripartiamo: BUZZ = ottieni 1 indizio. Fine. Fallo ora, poi mi dici cosa hai ricevuto. Semplice così.`,
+        `${getEmpathyIntro(ctx)} Nessun panico! Passo 1: premi BUZZ. Ricevi 1 indizio. Stop. Poi analizziamo insieme. Vuoi provare?`
+      ];
+      return selectVariation(reassuranceResponses, seed) + maybeAddFriendNudge();
+    }
+    
+    // Detect time constraints - v4.2: new
+    const timeConstraints = ['non ho tempo', 'più tardi', 'domani', 'troppo lungo', 'veloce'];
+    const hasTimeIssue = timeConstraints.some(sig => lowerInput.includes(sig));
+    
+    if (hasTimeIssue) {
+      const quickResponses = [
+        `${getEmpathyIntro(ctx)} Ok, 30 secondi: apri BUZZ, prendi 1 solo indizio, chiudi. Domani ne prendi altri. Ogni piccolo step conta!`,
+        `${getEmpathyIntro(ctx)} Capisco. Fai solo questo oggi: 1 BUZZ, 1 indizio. Stop. Domani continui. Va bene?`,
+        `${getEmpathyIntro(ctx)} Zero stress: oggi 1 BUZZ rapido, domani altri 2-3. Costruisci piano. Ci stai?`
+      ];
+      return selectVariation(quickResponses, seed) + maybeAddFriendNudge();
+    }
     
     // Detect frustration/off-ramp signals
     const frustrationSignals = ['non mi piace', 'me ne vado', 'abbandono', 'inutile', 'difficile', 'troppo', 'basta'];
@@ -150,7 +218,7 @@ export function generateReply(
         `${getEmpathyIntro(ctx)} M1SSION richiede metodo, non fortuna. Ti aiuto passo-passo: iniziamo con 2-3 BUZZ oggi, poi analizziamo insieme. Ci stai?`,
         `${getEmpathyIntro(ctx)} Non mollare ora! Ti mostro il percorso più semplice: BUZZ → analisi → Final Shot. Ti seguo per 60 secondi?`
       ];
-      return selectVariation(retentionResponses, seed);
+      return selectVariation(retentionResponses, seed) + maybeAddFriendNudge();
     }
     
     // Unknown/Help fallback with smart contextual suggestions
@@ -228,7 +296,10 @@ export function generateReply(
       // Apply modulators for natural variation
       reply = addModulators(reply, seed);
       
-      console.log('[NORAH-v4] Reply with persona/coach/engagement:', { intent, hasCoachCTA: true });
+      // v4.2: Maybe add friend nudge (10% chance)
+      reply += maybeAddFriendNudge();
+      
+      console.log('[NORAH-v4.2] Reply with persona/coach/engagement:', { intent, hasCoachCTA: true });
       
       return reply;
     }

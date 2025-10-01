@@ -23,11 +23,13 @@ const M1SSION_DICT: Set<string> = new Set([
   'non', 'dove', 'quando', 'perche', 'perché', 'quindi'
 ]);
 
-// Slang/typo expansion map
+// Slang/typo expansion map - v4.2: extended
 const SLANG_MAP: Record<string, string> = {
   'nn': 'non',
   'xke': 'perche',
   'xkè': 'perche',
+  'xké': 'perche',
+  'xché': 'perche',
   'ke': 'che',
   'cmq': 'comunque',
   'anke': 'anche',
@@ -35,7 +37,12 @@ const SLANG_MAP: Record<string, string> = {
   'pk': 'perche',
   'qnd': 'quando',
   'dv': 'dove',
-  'pke': 'perche'
+  'pke': 'perche',
+  'qlcs': 'qualcosa',
+  'qlc': 'qualche',
+  'nn so': 'non so',
+  'pls': 'per favore',
+  't prego': 'ti prego'
 };
 
 // Damerau-Levenshtein distance (supports transposition)

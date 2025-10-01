@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-norah-cache-ttl',
 };
 
 serve(async (req) => {
@@ -122,14 +122,24 @@ serve(async (req) => {
         role: m.role,
         content: m.content,
         intent: m.intent
-      }))
+      })),
+      // v4.2: Add server timestamp for diagnostics
+      server_now: new Date().toISOString()
     };
 
     const elapsed = Date.now() - startTime;
     console.log('[NORAH-CTX] Success - elapsed:', elapsed, 'ms, agent:', agentCode);
 
+    // v4.2: Support x-norah-cache-ttl header echo (client-side cache control)
+    const cacheTTL = req.headers.get('x-norah-cache-ttl');
+    const responseHeaders = { 
+      ...corsHeaders, 
+      'Content-Type': 'application/json',
+      ...(cacheTTL ? { 'x-norah-cache-ttl': cacheTTL } : {})
+    };
+
     return new Response(JSON.stringify(context), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: responseHeaders,
     });
 
   } catch (error) {
