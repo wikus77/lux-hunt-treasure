@@ -1,7 +1,9 @@
-// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Hook with Audio/TTS
+// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Hook with Natural Responder
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { generateReply, type AnalystMode } from '@/lib/ai/analystEngine';
+import { getAgentContext, subscribeToContext, type AgentContext } from '@/intelligence/context/aiContext';
+import { generateNaturalResponse, detectIntent } from '@/intelligence/engine/naturalResponder';
 
 export type { AnalystMode };
 export type AnalystStatus = 'idle' | 'thinking' | 'speaking';
@@ -32,15 +34,31 @@ export const useIntelAnalyst = () => {
   const [isLoadingClues, setIsLoadingClues] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [agentContext, setAgentContext] = useState<AgentContext | null>(null);
   
   const speechSynthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const userIdRef = useRef<string | undefined>(undefined);
 
-  // Load clues and user ID on mount
+  // Load context and clues on mount
   useEffect(() => {
     loadClues();
     loadUserId();
+    loadAgentContext();
+    
+    // Subscribe to context updates
+    const unsubscribe = subscribeToContext((ctx) => {
+      if (ctx) {
+        setAgentContext(ctx);
+      }
+    });
+    
+    return unsubscribe;
   }, []);
+
+  const loadAgentContext = async () => {
+    const ctx = await getAgentContext();
+    setAgentContext(ctx);
+  };
 
   const loadUserId = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -132,21 +150,37 @@ export const useIntelAnalyst = () => {
 
     setStatus('speaking');
 
-    // Use deterministic engine (now async)
-    const response = await generateReply({
-      mode,
-      clues,
-      userText: content,
-      userId: userIdRef.current,
-      timestamp: Date.now()
-    });
+    // Try natural responder if context is available
+    let response: string;
+    if (agentContext) {
+      const intent = detectIntent(content);
+      const seed = Date.now() ^ (userIdRef.current?.charCodeAt(0) || 0);
+      
+      response = generateNaturalResponse({
+        prompt: content,
+        intent,
+        context: agentContext,
+        clues,
+        seed
+      });
+    } else {
+      // Fallback to existing engine
+      const engineResponse = await generateReply({
+        mode,
+        clues,
+        userText: content,
+        userId: userIdRef.current,
+        timestamp: Date.now()
+      });
+      response = engineResponse.content;
+    }
 
     // Simulate streaming
     await new Promise(resolve => setTimeout(resolve, 1200));
     
     const analystMessage: AnalystMessage = {
       role: 'analyst',
-      content: response.content,
+      content: response,
       timestamp: new Date(),
       metadata: { 
         mode,
@@ -161,12 +195,12 @@ export const useIntelAnalyst = () => {
     
     // TTS if enabled
     if (ttsEnabled) {
-      speakText(response.content);
+      speakText(response);
     }
     
     setStatus('idle');
     setIsProcessing(false);
-  }, [clues, isProcessing, ttsEnabled, speakText]);
+  }, [clues, isProcessing, ttsEnabled, speakText, agentContext]);
 
   const toggleTTS = useCallback(() => {
     setTtsEnabled(prev => !prev);
@@ -185,6 +219,7 @@ export const useIntelAnalyst = () => {
     isLoadingClues,
     ttsEnabled,
     audioLevel,
+    agentContext,
     sendMessage,
     clearMessages: () => setMessages([]),
     refreshClues: loadClues,
