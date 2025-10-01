@@ -59,21 +59,24 @@ export function generateFollowUpReply(
   const nba = nextBestAction(ctx, phase, sentiment);
   const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
 
-  // Friendly intro - v6: più naturale
+  // PATCH v6.1: More natural intros (6 variants)
   const intros = [
     `Ok ${agentName}, ecco il prossimo passo:`,
     `Bene! Il prossimo step è questo:`,
     `Perfetto, procediamo così:`,
     `Ok, ecco cosa fare adesso:`,
-    `Chiaro, passiamo a:`
+    `Chiaro, passiamo a:`,
+    `Allora, prossima mossa:`
   ];
 
+  // PATCH v6.1: More varied closers (no "Ci stai?" repetition)
   const closers = [
     '\n\nVai così!',
     '\n\nProcedi pure.',
     '\n\nFammi sapere come va.',
     '\n\nCi siamo!',
-    '\n\nSei sulla strada giusta.'
+    '\n\nSei sulla strada giusta.',
+    '\n\nDai, che ce la fai!'
   ];
 
   const intro = intros[Math.floor(Math.random() * intros.length)];

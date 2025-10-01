@@ -12,9 +12,24 @@ import { maybeJoke } from './humorEngine';
 import { getPredictiveAction, computeNBA } from './nextBestAction';
 import { summarizeWindow } from '../state/messageStore';
 
-// Recent variations cache (cooldown) - v4.2: increased to 4
+// PATCH v6.1: Anti-repetition tracking (last 3 responses per intent)
 const recentVariations: string[] = [];
 const MAX_RECENT = 4;
+const recentIntentResponses = new Map<NorahIntent, string[]>();
+
+function trackIntentResponse(intent: NorahIntent, response: string) {
+  if (!recentIntentResponses.has(intent)) {
+    recentIntentResponses.set(intent, []);
+  }
+  const responses = recentIntentResponses.get(intent)!;
+  responses.push(response);
+  if (responses.length > 3) responses.shift(); // Keep only last 3
+}
+
+function wasRecentlyUsed(intent: NorahIntent, response: string): boolean {
+  const responses = recentIntentResponses.get(intent) || [];
+  return responses.includes(response);
+}
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // v5: Empathy/Tone Layer - Expanded to 20 variants
@@ -55,25 +70,30 @@ const FRIEND_NUDGES = [
 ];
 
 /**
- * Check if reply echoes user input (anti-echo)
+ * PATCH v6.1: Enhanced anti-echo (lower threshold, ignore stop-words, no "Hai chiesto...")
+ * Check if reply echoes user input
  */
 function hasEcho(reply: string, userInput: string): boolean {
   const userWords = userInput.toLowerCase().split(/\s+/).filter(w => w.length > 3);
   const replyWords = reply.toLowerCase().split(/\s+/);
   
-  if (userWords.length < 3) return false;
+  if (userWords.length < 2) return false; // PATCH v6.1: Lower from 3 to 2
   
-  // Count matching words (exclude common words)
-  const commonWords = new Set(['buzz', 'map', 'final', 'shot', 'indizio', 'come', 'cosa', 'dove', 'quando']);
+  // PATCH v6.1: Expanded stop-words list
+  const stopWords = new Set([
+    'buzz', 'map', 'final', 'shot', 'indizio', 'come', 'cosa', 'dove', 'quando',
+    'perche', 'quale', 'chi', 'quanto', 'fare', 'spiegare', 'capire', 'aiutare'
+  ]);
+  
   let matches = 0;
   for (const word of userWords) {
-    if (!commonWords.has(word) && replyWords.includes(word)) {
+    if (!stopWords.has(word) && replyWords.includes(word)) {
       matches++;
     }
   }
   
-  // Echo if >40% of significant user words appear in reply
-  return matches > userWords.length * 0.4;
+  // PATCH v6.1: Echo if >30% match (lower from 40%)
+  return matches > userWords.length * 0.3;
 }
 
 /**
@@ -103,6 +123,7 @@ function buildNextStep(ctx: NorahContext, phase: NorahPhase, sentiment: Sentimen
 }
 
 /**
+ * PATCH v6.1: Enhanced pricing detection (+ isRetentionQuery for "me ne vado")
  * Detect BUZZ pricing query
  */
 function isPricingQuery(input: string): boolean {
@@ -119,6 +140,24 @@ function isPricingQuery(input: string): boolean {
   ];
   
   return patterns.some(p => p.test(lower)) && lower.includes('buzz');
+}
+
+/**
+ * PATCH v6.1: Detect retention-risk queries ("me ne vado", "non ho tempo")
+ */
+function isRetentionQuery(input: string): boolean {
+  const lower = input.toLowerCase();
+  const patterns = [
+    /me\s+ne\s+vado/i,
+    /abbandono/i,
+    /non\s+ho\s+tempo/i,
+    /troppo\s+difficile/i,
+    /troppo\s+complicato/i,
+    /inutile/i,
+    /basta/i
+  ];
+  
+  return patterns.some(p => p.test(lower));
 }
 
 function maybeAddFriendNudge(): string {
@@ -394,17 +433,22 @@ export function generateReply(
       return selectVariation(quickResponses, seed) + maybeAddFriendNudge();
     }
     
-    // Detect frustration/off-ramp signals
+    // PATCH v6.1: Personalized retention with phase + clues context
     const frustrationSignals = ['non mi piace', 'me ne vado', 'abbandono', 'inutile', 'difficile', 'troppo', 'basta'];
     const hasFrustration = frustrationSignals.some(sig => lowerInput.includes(sig));
     
     if (hasFrustration) {
-      const retentionResponses = [
-        `${getEmpathyIntro(ctx)} Capisco che possa sembrare complesso. Ti lascio 3 dritte veloci: 1) BUZZ per indizi, 2) BUZZ Map per vedere l'area, 3) Final Shot quando sei sicuro. Proviamo insieme?`,
-        `${getEmpathyIntro(ctx)} M1SSION richiede metodo, non fortuna. Ti aiuto passo-passo: iniziamo con 2-3 BUZZ oggi, poi analizziamo insieme. Ci stai?`,
-        `${getEmpathyIntro(ctx)} Non mollare ora! Ti mostro il percorso più semplice: BUZZ → analisi → Final Shot. Ti seguo per 60 secondi?`
-      ];
-      return selectVariation(retentionResponses, seed) + maybeAddFriendNudge();
+      const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+      const clues = ctx?.stats?.clues || 0;
+      
+      // Phase-aware retention response
+      if (clues === 0) {
+        return `${getEmpathyIntro(ctx, sentiment)} ${agentName}, capisco la frustrazione. Ti propongo 2 alternative: 1) Fai 1 BUZZ adesso (30 secondi) e vedi com'è, oppure 2) Riproviamo domani con calma. Cosa preferisci?` + maybeAddFriendNudge();
+      } else if (clues < 5) {
+        return `${getEmpathyIntro(ctx, sentiment)} ${agentName}, hai già ${clues} indizi. Sarebbe un peccato fermarsi ora. Alternative: 1) Fai solo 1 BUZZ oggi, oppure 2) Analizziamo insieme ciò che hai. 60 secondi. Ci stai?` + maybeAddFriendNudge();
+      } else {
+        return `${getEmpathyIntro(ctx, sentiment)} ${agentName}, hai ${clues} indizi - sei già a buon punto! Non mollare ora. Ti do 2 opzioni: 1) Fai 1 ultimo BUZZ, oppure 2) Analizziamo pattern con ciò che hai. Quale scegli?` + maybeAddFriendNudge();
+      }
     }
     
     // v6: Unknown/Help fallback - Tone adaptive, NO echo, coach-friendly
@@ -481,7 +525,15 @@ export function generateReply(
     const kbKey = intentToKbKey[intent] || intent;
     const faqEntry = norahKB?.faq?.[kbKey as keyof typeof norahKB.faq];
     if (faqEntry && Array.isArray(faqEntry.a) && faqEntry.a.length > 0) {
-      const raw = selectVariation(faqEntry.a, seed);
+      let raw = selectVariation(faqEntry.a, seed);
+      
+      // PATCH v6.1: Anti-repetition - retry if recently used
+      let attempts = 0;
+      while (wasRecentlyUsed(intent, raw) && attempts < 3) {
+        raw = selectVariation(faqEntry.a, seed + attempts);
+        attempts++;
+      }
+      
       reply += interpolate(raw, ctx);
       
       // v4: Add Coach CTA
@@ -493,21 +545,50 @@ export function generateReply(
       // Apply modulators for natural variation
       reply = addModulators(reply, seed);
       
+      // PATCH v6.1: Track response for anti-repetition
+      trackIntentResponse(intent, raw);
+      
+      // PATCH v6.1: Log to telemetry
+      logReplyToSupabase(intent, sentiment, phase).catch(console.error);
+      
       // v4.2: Maybe add friend nudge (10% chance)
       reply += maybeAddFriendNudge();
       
-      console.log('[NORAH-v4.2] Reply with persona/coach/engagement:', { intent, hasCoachCTA: true });
+      console.log('[NORAH-v6.1] Reply with persona/coach/engagement:', { intent, hasCoachCTA: true });
       
       return reply;
     }
 
     // v6: Fallback - Coach-friendly, NO rigid commands
     const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
-    const fallback = `${getEmpathyIntro(ctx)} ${agentName}, posso aiutarti con: Mission, BUZZ, Final Shot, pattern, regole. Cosa ti serve?`;
+    const fallback = `${getEmpathyIntro(ctx, sentiment)} ${agentName}, posso aiutarti con: Mission, BUZZ, Final Shot, pattern, regole. Cosa ti serve?`;
+    
+    // PATCH v6.1: Log unknown intents for improvement
+    logReplyToSupabase('unknown', sentiment, phase).catch(console.error);
+    
     return fallback + getCoachCTA(ctx) + maybeAddFriendNudge();
   } catch (error) {
-    console.error('[NORAH-v4] Reply generation error:', error);
+    console.error('[NORAH-v6.1] Reply generation error:', error);
     return 'Sistemi occupati, riprova tra un momento.';
+  }
+}
+
+// PATCH v6.1: Log replies to Supabase for telemetry
+async function logReplyToSupabase(intent: string, sentiment: string, phase: string) {
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase.from('norah_events').insert({
+      user_id: user.id,
+      event: 'reply_generated',
+      intent,
+      sentiment,
+      phase
+    });
+  } catch (error) {
+    console.error('[ReplyGenerator] Failed to log to telemetry:', error);
   }
 }
 
