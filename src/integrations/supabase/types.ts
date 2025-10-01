@@ -200,6 +200,126 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_buzz_actions: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_clues: {
+        Row: {
+          clue_id: string
+          created_at: string | null
+          id: string
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          clue_id: string
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          clue_id?: string
+          created_at?: string | null
+          id?: string
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_finalshot_attempts: {
+        Row: {
+          coords: Json
+          created_at: string | null
+          id: string
+          result: string | null
+          user_id: string
+        }
+        Insert: {
+          coords: Json
+          created_at?: string | null
+          id?: string
+          result?: string | null
+          user_id: string
+        }
+        Update: {
+          coords?: Json
+          created_at?: string | null
+          id?: string
+          result?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_missions: {
+        Row: {
+          id: string
+          mission_id: string
+          progress: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          mission_id: string
+          progress?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          mission_id?: string
+          progress?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agent_profiles: {
+        Row: {
+          agent_code: string
+          created_at: string | null
+          nickname: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_code: string
+          created_at?: string | null
+          nickname?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_code?: string
+          created_at?: string | null
+          nickname?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_generated_clues: {
         Row: {
           content: string
@@ -1948,6 +2068,36 @@ export type Database = {
           referrer?: string | null
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      norah_messages: {
+        Row: {
+          content: string
+          context: Json | null
+          created_at: string | null
+          id: string
+          intent: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          intent?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          context?: Json | null
+          created_at?: string | null
+          id?: string
+          intent?: string | null
+          role?: string
+          user_id?: string
         }
         Relationships: []
       }
