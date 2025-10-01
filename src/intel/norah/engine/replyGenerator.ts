@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Reply Generator v5 - Dialogue Manager + Multi-Intent + Sentiment
+// Norah Reply Generator v6 - Coach+Friend with Humor, Anti-echo, Predictive NBA
 
 import type { NorahIntent, IntentResult } from './intentRouter';
 import type { NorahContext } from './contextBuilder';
@@ -8,6 +8,9 @@ import { getPhase, nextBestAction, getPhaseContext, type NorahPhase } from './di
 import { detectSentiment, getToneModifier, type SentimentLabel } from './sentiment';
 import { isFollowUp, generateFollowUpReply } from './followUp';
 import { type ParsedIntent } from './multiIntent';
+import { maybeJoke } from './humorEngine';
+import { getPredictiveAction, computeNBA } from './nextBestAction';
+import { summarizeWindow } from '../state/messageStore';
 
 // Recent variations cache (cooldown) - v4.2: increased to 4
 const recentVariations: string[] = [];
@@ -51,15 +54,144 @@ const FRIEND_NUDGES = [
   '\n\nBuona caccia! 🚀'
 ];
 
+/**
+ * Check if reply echoes user input (anti-echo)
+ */
+function hasEcho(reply: string, userInput: string): boolean {
+  const userWords = userInput.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+  const replyWords = reply.toLowerCase().split(/\s+/);
+  
+  if (userWords.length < 3) return false;
+  
+  // Count matching words (exclude common words)
+  const commonWords = new Set(['buzz', 'map', 'final', 'shot', 'indizio', 'come', 'cosa', 'dove', 'quando']);
+  let matches = 0;
+  for (const word of userWords) {
+    if (!commonWords.has(word) && replyWords.includes(word)) {
+      matches++;
+    }
+  }
+  
+  // Echo if >40% of significant user words appear in reply
+  return matches > userWords.length * 0.4;
+}
+
+/**
+ * Build next step suggestion (follow-up helper)
+ */
+function buildNextStep(ctx: NorahContext, phase: NorahPhase, sentiment: SentimentLabel): string {
+  const nba = computeNBA(ctx, phase, sentiment);
+  
+  // Closers pool (no repetitions)
+  const closers = [
+    '\n\nVai così!',
+    '\n\nProcedi pure.',
+    '\n\nFammi sapere come va.',
+    '\n\nCi siamo!',
+    '\n\nSei sulla strada giusta.',
+    '\n\nDai, che ce la fai!'
+  ];
+  
+  const closer = closers[Math.floor(Math.random() * closers.length)];
+  
+  // Format NBA as next step
+  let reply = `🎯 **Prossimo passo:**\n\n`;
+  reply += nba.steps.slice(0, 2).map((step, idx) => `${idx + 1}. ${step}`).join('\n');
+  reply += closer;
+  
+  return reply;
+}
+
+/**
+ * Detect BUZZ pricing query
+ */
+function isPricingQuery(input: string): boolean {
+  const lower = input.toLowerCase();
+  const patterns = [
+    /si\s+paga/i,
+    /è\s+gratis/i,
+    /costa/i,
+    /prezzo/i,
+    /quanto\s+costa/i,
+    /è\s+a\s+pagamento/i,
+    /devo\s+pagare/i,
+    /gratuito/i
+  ];
+  
+  return patterns.some(p => p.test(lower)) && lower.includes('buzz');
+}
+
 function maybeAddFriendNudge(): string {
   return Math.random() < 0.10 ? FRIEND_NUDGES[Math.floor(Math.random() * FRIEND_NUDGES.length)] : '';
 }
 
-function getEmpathyIntro(ctx: NorahContext): string {
-  const intro = EMPATHY_INTROS[Math.floor(Math.random() * EMPATHY_INTROS.length)];
-  return intro
-    .replace('{nickname}', ctx?.agent?.nickname || 'agente')
-    .replace('{code}', ctx?.agent?.code || 'N/D');
+/**
+ * Get empathetic intro based on context and sentiment (v6: 20+ variations)
+ */
+function getEmpathyIntro(ctx: NorahContext, sentiment?: SentimentLabel): string {
+  const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+  const clues = ctx?.stats?.clues || 0;
+  
+  // Episodic memory greeting (if available)
+  const episodicSummary = summarizeWindow();
+  if (episodicSummary && Math.random() < 0.3) {
+    return `Ciao ${agentName}! ${episodicSummary}, giusto? Continuiamo.`;
+  }
+
+  // Sentiment-adaptive intros
+  if (sentiment === 'frustrated') {
+    const frustratedIntros = [
+      `${agentName}, tranquillo. Respira.`,
+      `Ok ${agentName}, facciamo reset.`,
+      `${agentName}, calma. Ti aiuto io.`,
+      `Ehi ${agentName}, niente panico.`,
+      `${agentName}, un passo alla volta.`
+    ];
+    return frustratedIntros[Math.floor(Math.random() * frustratedIntros.length)];
+  }
+  
+  if (sentiment === 'confused') {
+    const confusedIntros = [
+      `${agentName}, chiarisco subito.`,
+      `Ok ${agentName}, spiego meglio.`,
+      `${agentName}, facciamo ordine.`,
+      `Capito ${agentName}, orientiamoci.`,
+      `${agentName}, nessun problema.`
+    ];
+    return confusedIntros[Math.floor(Math.random() * confusedIntros.length)];
+  }
+  
+  if (sentiment === 'excited') {
+    const excitedIntros = [
+      `${agentName}, grande energia! 🔥`,
+      `Sì ${agentName}, andiamo!`,
+      `${agentName}, perfetto! Vai così!`,
+      `Ottimo ${agentName}, ti sento carico!`,
+      `${agentName}, questa è la vibe giusta!`
+    ];
+    return excitedIntros[Math.floor(Math.random() * excitedIntros.length)];
+  }
+
+  // Neutral/default intros (expanded pool)
+  const intros = [
+    `Ciao ${agentName}!`,
+    `${agentName}, ci sono.`,
+    `${agentName}, eccomi qui.`,
+    `Ok ${agentName}, vediamo.`,
+    `Certo ${agentName}.`,
+    `${agentName}, dimmi tutto.`,
+    `Presente ${agentName}!`,
+    `${agentName}, sono qui.`,
+    `Ehi ${agentName}, come andiamo?`,
+    `${agentName}, procediamo.`,
+    `Bene ${agentName}, cosa serve?`,
+    `${agentName}, elaboro.`,
+    `Ok ${agentName}, ti ascolto.`,
+    `${agentName}, vai pure.`,
+    `Perfetto ${agentName}.`
+  ];
+
+  return intros[Math.floor(Math.random() * intros.length)];
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

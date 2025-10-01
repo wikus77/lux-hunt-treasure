@@ -36,6 +36,43 @@ export function clearMessages() {
   messageBuffer = [];
 }
 
+/**
+ * Episodic summary: generate brief summary of last 6 messages
+ * Used for greeting continuity and conversational memory
+ */
+export function summarizeWindow(): string {
+  if (messageBuffer.length < 6) return '';
+
+  const last6 = messageBuffer.slice(-6);
+  const userMessages = last6.filter(m => m.role === 'user');
+  
+  if (userMessages.length === 0) return '';
+
+  // Extract key themes from user messages
+  const topics = userMessages
+    .map(m => m.content.toLowerCase())
+    .join(' ');
+
+  // Detect common themes
+  if (topics.includes('buzz') && topics.includes('non') && topics.includes('capito')) {
+    return 'Ieri eri bloccato su BUZZ';
+  }
+  if (topics.includes('finalshot') || topics.includes('final shot')) {
+    return 'Stavamo parlando di Final Shot';
+  }
+  if (topics.includes('pattern') || topics.includes('analiz')) {
+    return 'Stavi analizzando pattern negli indizi';
+  }
+  if (topics.includes('indiz') && userMessages.length >= 3) {
+    return 'Stavi raccogliendo indizi';
+  }
+  if (topics.includes('confus') || topics.includes('aiut')) {
+    return 'Ti stavo aiutando a orientarti';
+  }
+
+  return 'Continuiamo da dove eravamo rimasti';
+}
+
 async function persistToSupabase(msg: NorahMessage) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
