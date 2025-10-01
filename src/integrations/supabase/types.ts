@@ -2157,6 +2157,20 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "personality_quiz_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_agent_profile"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "personality_quiz_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "v_agent_status"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       pre_registered_users: {
@@ -3468,6 +3482,20 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_buzz_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_agent_profile"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_buzz_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_agent_status"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       user_buzz_map: {
@@ -3505,6 +3533,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_buzz_map_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_agent_profile"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_buzz_map_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_agent_status"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -3653,6 +3695,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_clues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_agent_profile"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "user_clues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_agent_status"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -4695,6 +4751,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_agent_profile: {
+        Row: {
+          agent_code: string | null
+          display_name: string | null
+          plan_type: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_code?: never
+          display_name?: never
+          plan_type?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_code?: never
+          display_name?: never
+          plan_type?: never
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      v_agent_status: {
+        Row: {
+          agent_code: string | null
+          current_week: number | null
+          progress_ratio: number | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_code?: never
+          current_week?: never
+          progress_ratio?: never
+          user_id?: string | null
+        }
+        Update: {
+          agent_code?: never
+          current_week?: never
+          progress_ratio?: never
+          user_id?: string | null
+        }
+        Relationships: []
       }
       v_latest_webpush_subscription: {
         Row: {

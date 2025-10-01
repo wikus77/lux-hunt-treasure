@@ -3,7 +3,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { generateReply, type AnalystMode } from '@/lib/ai/analystEngine';
 import { getAgentContext as getOldContext } from '@/intelligence/context/aiContext';
-import { getAgentContext, clearContextCache, type AgentContextData } from '@/intel/ai/context/agentContext';
+import { getAgentContext, refreshContext, type AgentContextData } from '@/intel/ai/context/agentContext';
 import { useRealtimeIntel } from '@/intel/ai/context/realtimeClues';
 import { composeReply } from '@/intel/ai/ui/aiPanelBehavior';
 
@@ -186,7 +186,10 @@ export const useIntelAnalyst = () => {
     agentContext,
     sendMessage,
     clearMessages: () => setMessages([]),
-    refreshClues: () => clearContextCache(),
+    refreshClues: async () => {
+      await refreshContext();
+      await loadAgentContext();
+    },
     toggleTTS
   };
 };
