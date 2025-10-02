@@ -166,20 +166,22 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       
       {/* Panel */}
       {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
-      <div className="fixed inset-0 md:inset-8 z-50 flex items-center justify-center">
+      <div 
+        className="fixed inset-0 md:inset-8 z-50 flex items-center justify-center"
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+        }}
+      >
         <div 
-          className="w-full max-w-full md:max-w-4xl h-full md:max-h-[800px] bg-black/90 backdrop-blur-xl flex flex-col"
+          className="w-full h-full md:max-w-4xl md:max-h-[800px] md:rounded-3xl bg-black/90 backdrop-blur-xl flex flex-col"
           style={{
-            borderRadius: '0px',
-            border: '0px solid transparent',
-            backgroundClip: 'padding-box',
-            boxShadow: '0 0 40px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(0, 229, 255, 0.05)',
-            borderImage: 'none'
+            boxShadow: '0 0 40px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(0, 229, 255, 0.05)'
           }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with VU Meter */}
-          <div className="flex items-center justify-between p-6 border-b border-white/10">
+          <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
             <div className="flex items-center gap-4">
               <div>
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-[#F213A4] to-[#0EA5E9] bg-clip-text text-transparent">
@@ -233,7 +235,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           {/* Quick Action Chips - v4.2: Removed from UI, keep handlers internal */}
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
             {messages.length === 0 ? (
               <div className="text-center text-white/40 py-12">
                 {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
@@ -287,7 +289,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           </div>
 
           {/* Input with rotating placeholder + NBA Pills */}
-          <div className="p-6 border-t border-white/10">
+          <div className="p-4 md:p-6 border-t border-white/10">
             {/* v6.7: NBA Pills with toast feedback */}
             {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7 */}
             <NBAPills 

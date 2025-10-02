@@ -65,20 +65,20 @@ const NorahAssistant = () => {
           zIndex: 0,
         }}
       >
-        <div className="max-w-screen-xl mx-auto p-4">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent mb-2">
+        <div className="w-full h-full px-0 md:px-4 md:max-w-screen-xl md:mx-auto">
+          <div className="mb-4 md:mb-6 px-4 md:px-0">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent mb-2">
               NORAH AI Assistant
             </h1>
-            <p className="text-white/70">
+            <p className="text-sm md:text-base text-white/70">
               La tua assistente personale M1SSION™. Chiedi informazioni su BUZZ, piani, Final Shot e
               molto altro!
             </p>
           </div>
 
-          <div style={{ height: 'calc(100dvh - 300px)' }}>
+          <div className="h-full" style={{ height: 'calc(100dvh - 240px)' }}>
             {userId && <NorahChatLLM userId={userId} />}
-            {!userId && <p className="text-white/60">Caricamento...</p>}
+            {!userId && <p className="text-white/60 px-4">Caricamento...</p>}
           </div>
         </div>
       </main>

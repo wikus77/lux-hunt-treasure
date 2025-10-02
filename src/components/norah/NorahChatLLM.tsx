@@ -69,9 +69,9 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0B14] border border-white/10 rounded-xl overflow-hidden">
+    <div className="flex flex-col h-full bg-[#0A0B14] border-0 md:border md:border-white/10 rounded-none md:rounded-xl overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border-b border-white/10">
+      <div className="flex items-center gap-3 p-3 md:p-4 bg-gradient-to-r from-[#4361ee]/20 to-[#7209b7]/20 border-b border-white/10">
         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center">
           <Bot className="w-6 h-6 text-white" />
         </div>
@@ -88,8 +88,8 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
+      <ScrollArea className="flex-1 p-3 md:p-4" ref={scrollRef}>
+        <div className="space-y-3 md:space-y-4">
           {messages.map((message, index) => (
             <div
               key={index}
@@ -142,7 +142,7 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 bg-white/5 border-t border-white/10">
+      <div className="p-3 md:p-4 bg-white/5 border-t border-white/10">
         <div className="flex gap-2">
           <Input
             value={input}
