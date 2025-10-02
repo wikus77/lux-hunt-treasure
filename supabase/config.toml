@@ -127,7 +127,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.rag-search]
-verify_jwt = true
+verify_jwt = false
 
 [functions.open-support-ticket]
 verify_jwt = true
@@ -136,4 +136,13 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.norah-chat]
+verify_jwt = false
+
+[functions."norah/rag-search"]
+verify_jwt = false
+
+[functions."norah/kb-upsert"]
+verify_jwt = false
+
+[functions.chat]
 verify_jwt = false
