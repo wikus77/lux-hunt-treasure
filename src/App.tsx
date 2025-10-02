@@ -25,6 +25,8 @@ import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
+// Import per esporre funzione popolamento KB globalmente
+import "@/utils/populateKnowledgeBase";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
