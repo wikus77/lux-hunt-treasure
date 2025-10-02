@@ -13,18 +13,27 @@ import { maybeJoke } from './humorEngine';
 import { computeNBA } from './nextBestAction';
 import { summarizeWindow, fetchLastEpisode } from '../state/messageStore';
 import { logEvent, logJokeUsed, logRetentionTrigger } from '../utils/telemetry';
+import { generateQuizChallenge, getRandomQuiz, validateAnswer } from '../coach/miniQuiz';
+import { generateDrillChallenge, getRandomDrill, validateDrillAnswer } from '../coach/patternDrill';
+import { generateFAQ60 } from '../coach/faq60';
 
 // v6.3: Recent template IDs (anti-repetition circular buffer)
 let recentTemplateIds: string[] = [];
 const MAX_RECENT_TEMPLATES = 3;
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v6.3: Expanded empathy hooks (20+ variants)
+// v6.8: Expanded empathy hooks (30+ variants)
 const EMPATHY_HOOKS = [
   'Ok {name}, ci penso io.',
+  'Ci sono: lo facciamo semplice e utile.',
+  'Ottima mossa, agente {code}.',
+  'Respiro profondo: un passo e siamo avanti.',
+  'Capito. Ti porto io nella direzione giusta.',
+  'Va bene saltare i giri inutili. Ecco cosa conviene fare.',
+  'Ho letto tra le righe: vuoi chiarezza rapida.',
+  'Zero fronzoli: ti alleno io.',
   'Tranquillo, sei nel posto giusto.',
   'Capito: facciamolo semplice e concreto.',
-  'Ottima mossa, agente {code}.',
   'Capito, {name}!',
   'Perfetto!',
   'Ci sono!',
@@ -43,12 +52,22 @@ const EMPATHY_HOOKS = [
   '{name}, perfetto.',
   'Ok {code}, ci siamo.',
   'Bene così!',
-  'Roger!'
+  'Roger!',
+  'Ehi {name}, facciamolo insieme.',
+  'Chiaro. Un attimo.'
 ];
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v6.3: Expanded closers (8+ variants)
+// v6.8: Expanded closers (16+ variants, sentiment-aware)
 const CLOSERS = [
+  'Sei più avanti di quanto pensi. Andiamo.',
+  'Ottimo ritmo: un tassello alla volta.',
+  'Ti copro le spalle: scelgo io la prossima mossa se vuoi.',
+  'Quando sei pronto, facciamo un altro passo.',
+  'Hai già {clues} indizi: capitalizziamoli.',
+  'Se vuoi sprint, ho una mossa da 30s.',
+  'Perfetto. Tocco leggero, risultati veri.',
+  'Lo stai rendendo interessante.',
   'Ci siamo: un passo alla volta, e il quadro compare.',
   'Ottimo ritmo. Torna agli indizi di ieri: c\'è un collegamento sottile.',
   'Se hai dubbi, scegli la pista più coerente col tema ricorrente.',
@@ -56,9 +75,7 @@ const CLOSERS = [
   'Buona caccia — il dettaglio fa la differenza.',
   'Procediamo con calma: il metodo batte la fretta.',
   'Ogni frammento conta. Continua così.',
-  'Il puzzle si compone pezzo dopo pezzo.',
-  'Resta metodico: la risposta emerge da sola.',
-  'Hai la capacità di risolvere questo. Fidati del processo.'
+  'Il puzzle si compone pezzo dopo pezzo.'
 ];
 
 /**
@@ -180,7 +197,7 @@ Vince chi deduce meglio, non chi spende di più.`;
 }
 
 /**
- * v6.3: Generate "How to start" explanation
+ * v6.8: Generate "How to start" explanation
  */
 function generateHowToStart(ctx: NorahContext): string {
   const hook = getEmpathyHook(ctx);
@@ -193,6 +210,82 @@ Step 2 (60s): torni qui e te lo traduco in azioni.`;
   const choices = [
     'Vuoi farlo ora?',
     'Preferisci una panoramica rapida di M1SSION?'
+  ];
+  
+  return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
+}
+
+/**
+ * v6.8: Generate "No BUZZ" alternative response
+ */
+function generateNoBuzzResponse(ctx: NorahContext): string {
+  const hook = getEmpathyHook(ctx);
+  const closer = getCloser();
+  
+  const body = `Ok, niente BUZZ ora. Ti propongo tre alternative per allenarti senza raccogliere indizi:`;
+  
+  const choices = [
+    '**Mini-Quiz 30s**: ti alleno su un indizio tipico (zero spoiler)',
+    '**Pattern Drill**: riconosci quale indizio restringe di più',
+    '**FAQ 60s**: 4 domande essenziali su M1SSION'
+  ];
+  
+  return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
+}
+
+/**
+ * v6.8: Generate "BUZZ vs Map" comparison
+ */
+function generateBuzzVsMapComparison(ctx: NorahContext): string {
+  const hook = getEmpathyHook(ctx);
+  const closer = getCloser();
+  
+  const body = `**BUZZ** = raccogli indizi veri (1/giorno gratis).\n**BUZZ Map** = visualizza indizi su mappa + raggio di confidenza.\n\nIl flusso: BUZZ → raccogli 5+ indizi → BUZZ Map → vedi dove convergono → Final Shot.`;
+  
+  const choices = [
+    'Faccio un BUZZ ora',
+    'Vedo BUZZ Map (serve ≥3 indizi)',
+    'Spiega Final Shot'
+  ];
+  
+  return `${hook}\n\n${body}\n\nScelte rapide:\n${renderChoiceList(choices)}\n\n${closer}`;
+}
+
+/**
+ * v6.8: Generate quick rules summary
+ */
+function generateRulesShort(ctx: NorahContext): string {
+  const hook = getEmpathyHook(ctx);
+  const closer = getCloser();
+  
+  const body = `**Regole in 3 righe**:\n1. Raccogli indizi con BUZZ (gratuito).\n2. Trova pattern e restringe l'area.\n3. Tira Final Shot sul punto esatto (max 2/giorno).`;
+  
+  const choices = [
+    'Inizia con 1 BUZZ',
+    'Spiega Final Shot safe',
+    'FAQ completa'
+  ];
+  
+  return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
+}
+
+/**
+ * v6.8: Generate saluto (greeting) response
+ */
+function generateSalutoResponse(ctx: NorahContext): string {
+  const hook = getEmpathyHook(ctx);
+  const closer = getCloser();
+  
+  const clues = ctx?.stats?.clues || 0;
+  
+  const body = clues > 0
+    ? `Hai già ${clues} indizi raccolti. Facciamo una mossa utile adesso?`
+    : `Facciamo una mossa semplice e utile per iniziare.`;
+  
+  const choices = [
+    'Apri BUZZ (1 indizio in 60s)',
+    'Panoramica M1SSION',
+    'Alternative senza BUZZ'
   ];
   
   return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
@@ -326,6 +419,19 @@ export function composeReply(
     return generatePricingResponse(ctx);
   }
   
+  // v6.8: Mini-Quiz / Pattern Drill / FAQ requests
+  if (/mini.?quiz|quiz/i.test(userInput)) {
+    return generateQuizChallenge();
+  }
+  
+  if (/pattern.?drill|drill/i.test(userInput)) {
+    return generateDrillChallenge();
+  }
+  
+  if (/faq|domande/i.test(userInput)) {
+    return generateFAQ60();
+  }
+  
   // Retention trigger (frustrated exit)
   if (sentiment === 'frustrated' && /me\s+ne\s+vado|basta|difficile/i.test(userInput)) {
     return generateRetentionResponse(ctx, phase);
@@ -342,7 +448,7 @@ export function composeReply(
     return handleMultiIntent(intentResult.multiIntents, ctx, userInput);
   }
   
-  // Intent-specific responses (v6.3 concrete examples)
+  // Intent-specific responses (v6.8: expanded with new intents)
   let baseReply = '';
   
   switch (intentResult.intent) {
@@ -355,7 +461,25 @@ export function composeReply(
       break;
       
     case 'help':
+    case 'help_start':
       baseReply = generateHowToStart(ctx);
+      break;
+      
+    case 'saluto':
+    case 'smalltalk':
+      baseReply = generateSalutoResponse(ctx);
+      break;
+      
+    case 'no_buzz':
+      baseReply = generateNoBuzzResponse(ctx);
+      break;
+      
+    case 'diff_buzz_vs_map':
+      baseReply = generateBuzzVsMapComparison(ctx);
+      break;
+      
+    case 'rules_short':
+      baseReply = generateRulesShort(ctx);
       break;
       
     case 'unknown':

@@ -26,6 +26,11 @@ export type NorahIntent =
   | 'data_privacy'
   | 'no_spoiler'
   | 'clarify_needed'
+  | 'saluto'
+  | 'no_buzz'
+  | 'diff_buzz_vs_map'
+  | 'help_start'
+  | 'rules_short'
   | 'unknown';
 
 export interface IntentResult {
@@ -98,7 +103,7 @@ const SINGLE_WORD_MAP: Record<string, NorahIntent> = {
   'comunità': 'community'
 };
 
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – v6.8
 // Intent trigger keywords for fuzzy matching
 const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
   about_mission: ['mission', 'm1ssion', 'missione', 'gioco', 'funziona', 'cosa è'],
@@ -120,7 +125,12 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
   help: ['aiuto', 'help', 'cosa puoi', 'aiutami', 'comandi'],
   smalltalk: ['ciao', 'buongiorno', 'buonasera', 'grazie', 'hey'],
   no_spoiler: [],
-  clarify_needed: [], // FIX build v6.5
+  clarify_needed: [],
+  saluto: ['ciao', 'salve', 'buongiorno', 'buonasera', 'hey', 'ehi', 'hola', 'hello'],
+  no_buzz: ['non voglio buzz', 'senza buzz', 'alternative buzz', 'no buzz', 'non uso buzz', 'se non voglio'],
+  diff_buzz_vs_map: ['differenza buzz map', 'buzz vs map', 'buzz o map', 'differenze'],
+  help_start: ['come inizio', 'da dove inizio', 'come si inizia', 'iniziare', 'primo passo'],
+  rules_short: ['regole veloci', 'regole rapide', 'summary regole', 'regole brevi'],
   unknown: []
 };
 

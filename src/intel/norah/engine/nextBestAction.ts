@@ -137,7 +137,7 @@ export function computeNBA(
 }
 
 /**
- * Convert NBA to Pills suggestions
+ * Convert NBA to Pills suggestions (v6.8: alternative paths)
  */
 export function nextBestActionToPills(ctx: NorahContext): NBASuggestion[] {
   const clues = ctx?.stats?.clues || 0;
@@ -146,24 +146,24 @@ export function nextBestActionToPills(ctx: NorahContext): NBASuggestion[] {
   if (buzzToday === 0) {
     return [
       { label: 'Apri BUZZ', payload: 'Voglio fare BUZZ' },
-      { label: 'Spiega BUZZ', payload: 'Come funziona BUZZ?' },
-      { label: 'Aiuto inizio', payload: 'Come inizio?' }
+      { label: 'Mini-Quiz 30s', payload: 'Fammi un mini-quiz' },
+      { label: 'Panoramica M1SSION', payload: 'Cos\'è M1SSION?' }
     ];
   }
 
   if (clues < 3) {
     return [
       { label: 'Fai altro BUZZ', payload: 'Voglio fare BUZZ' },
-      { label: 'Vedi progressi', payload: 'Quanti indizi ho?' },
-      { label: 'Piani disponibili', payload: 'Quali piani ci sono?' }
+      { label: 'Pattern Drill', payload: 'Fammi un pattern drill' },
+      { label: 'FAQ 60s', payload: 'FAQ rapida' }
     ];
   }
 
   if (clues >= 3 && clues < 8) {
     return [
       { label: 'Analizza pattern', payload: 'Cerca pattern negli indizi' },
-      { label: 'Usa BUZZ Map', payload: 'Come funziona BUZZ Map?' },
-      { label: 'Continua BUZZ', payload: 'Voglio fare BUZZ' }
+      { label: 'BUZZ Map', payload: 'Come funziona BUZZ Map?' },
+      { label: 'Mini-allenamento', payload: 'Fammi un mini-quiz' }
     ];
   }
 
@@ -178,8 +178,19 @@ export function nextBestActionToPills(ctx: NorahContext): NBASuggestion[] {
   // Default
   return [
     { label: 'Come inizio?', payload: 'Come inizio?' },
-    { label: 'Regole', payload: 'Quali sono le regole?' },
-    { label: 'Piani', payload: 'Quali piani ci sono?' }
+    { label: 'Alternative BUZZ', payload: 'Se non voglio usare BUZZ?' },
+    { label: 'FAQ rapida', payload: 'FAQ 60s' }
+  ];
+}
+
+/**
+ * v6.8: Get alternative actions to BUZZ
+ */
+export function getAlternativesToBuzz(): NBASuggestion[] {
+  return [
+    { label: 'Mini-Quiz 30s', payload: 'Fammi un mini-quiz' },
+    { label: 'Pattern Drill', payload: 'Fammi un pattern drill' },
+    { label: 'FAQ 60s', payload: 'FAQ rapida' }
   ];
 }
 

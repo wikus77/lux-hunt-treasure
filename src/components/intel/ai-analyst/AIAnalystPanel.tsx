@@ -95,8 +95,10 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
-  // v6.7: Expanded celebration triggers (clues + breakthrough)
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – v6.8
+  // v6.8: Expanded celebration triggers (3rd clue added, mini-quiz support)
+  const celebrationShown = useRef<string[]>([]);
+  
   useEffect(() => {
     if (!agentContext) return;
     
@@ -106,16 +108,25 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     // First clue celebration
     if (prevClues === 0 && currentClues === 1) {
       setCelebration(celebrateMilestone('milestone', '🎯 Primo indizio trovato!'));
+      celebrationShown.current.push('first_clue');
+    }
+    
+    // Third clue celebration
+    if (prevClues < 3 && currentClues === 3) {
+      setCelebration(celebrateMilestone('discovery', '💡 3 indizi! Pattern in formazione'));
+      celebrationShown.current.push('third_clue');
     }
     
     // Fifth clue celebration
     if (prevClues < 5 && currentClues === 5) {
       setCelebration(celebrateMilestone('milestone', '🌟 5 indizi raccolti! Il pattern si delinea'));
+      celebrationShown.current.push('fifth_clue');
     }
     
     // Tenth clue celebration (breakthrough)
     if (prevClues < 10 && currentClues === 10) {
       setCelebration(celebrateMilestone('discovery', '🎖️ 10 indizi! Final Shot quasi pronto'));
+      celebrationShown.current.push('tenth_clue');
     }
     
     prevCluesRef.current = currentClues;

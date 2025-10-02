@@ -19,20 +19,24 @@ export function useNorah() {
   const [messages, setMessages] = useState<NorahMessage[]>([]);
 
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  // v6.6: Load episodic greeting on mount
+  // v6.8: Load episodic greeting on mount with enhanced logging
   useEffect(() => {
     (async () => {
       try {
-        const episode = await fetchLastEpisode();
-        if (episode) {
+        const episode = await fetchLastEpisode({ timeoutMs: 300 });
+        if (episode?.summary) {
           const greetingMsg: NorahMessage = {
             role: 'norah',
-            content: `Bentornato! Ieri eravamo qui: "${episode}". Ripartiamo?`,
+            content: `Bentornato! Ieri eravamo qui: "${episode.summary}". Ripartiamo da lì o vuoi una scorciatoia?`,
             timestamp: Date.now()
           };
           addMessage(greetingMsg);
           setMessages([...getMessages()]);
-          await logEvent({ event: 'episode_greeted' });
+          
+          await logEvent({ 
+            event: 'episode_greeted',
+            meta: { summary_length: episode.summary.length }
+          });
         }
       } catch (error) {
         console.error('[Norah] Failed to load episodic greeting:', error);
