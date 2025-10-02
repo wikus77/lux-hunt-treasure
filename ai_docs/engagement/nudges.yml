@@ -133,9 +133,9 @@ engagement:
 monetization:
   buzz_limit_reached_free:
     when: "tier = free AND buzz_count >= monthly_limit"
-    text: "Hai esaurito i BUZZ del mese! 😅 Passa a Silver per 50 BUZZ/mese + early access 2h alle nuove missioni."
+    text: "Hai esaurito i BUZZ del mese (1/settimana = 30/mese)! 😅 Passa a Silver per 3 BUZZ/settimana (90/mese) + zero pubblicità + pillole AI Norah."
     ctas:
-      - label: "Upgrade a Silver"
+      - label: "Upgrade a Silver (3,99€/mese)"
         action: "navigate_subscription"
         payload: { target_tier: "silver" }
       - label: "Vedi tutti i piani"
@@ -146,7 +146,7 @@ monetization:
 
   cooldown_active:
     when: "cooldown_remaining > 0"
-    text: "BUZZ in cooldown ancora per {cooldown_remaining} minuti. Con Silver il cooldown è ridotto del 50%, con Black è eliminato! ⚡"
+    text: "BUZZ in cooldown ancora per {cooldown_remaining}. Silver ha cooldown 12h, Gold 8h, Black 4h, Titanium zero! ⚡"
     ctas:
       - label: "Upgrade ora"
         action: "navigate_subscription"
@@ -155,32 +155,55 @@ monetization:
       - label: "Aspetto"
         action: "dismiss"
     priority: medium
-    timing: "Only if cooldown > 30 min"
+    timing: "Only if cooldown > 4h for free users"
 
   new_mission_early_access:
-    when: "tier = free AND new_mission_announced = true"
-    text: "Nuova missione in arrivo! I membri Silver hanno accesso 2h prima, Gold 24h prima. Vuoi il vantaggio? 🚀"
+    when: "tier IN [free, silver, gold] AND new_mission_announced = true"
+    text: "Nuova missione in arrivo! Nota: Early access non è attivo per nessun tier al momento. Tutti partono insieme! 🚀"
     ctas:
-      - label: "Diventa Silver"
+      - label: "Info missione"
+        action: "navigate_missions"
+      - label: "Vedi piani premium"
         action: "navigate_subscription"
-        payload: { target_tier: "silver" }
-      - label: "Info early access"
-        action: "show_docs"
-        payload: { doc: "early-access" }
-    priority: high
+    priority: medium
     timing: "3 days before mission launch"
 
   power_user_gold_pitch:
     when: "tier = silver AND buzz_usage > 80%"
-    text: "Sei un power user! 💪 Passa a Gold per BUZZ quasi illimitati + analytics avanzate + eventi esclusivi."
+    text: "Sei un power user! 💪 Passa a Gold per 4 BUZZ/settimana (150/mese) + Final Shot a metà missione + memoria AI breve."
     ctas:
-      - label: "Upgrade a Gold"
+      - label: "Upgrade a Gold (6,99€/mese)"
         action: "navigate_subscription"
         payload: { target_tier: "gold" }
       - label: "Confronta piani"
         action: "show_pricing"
     priority: medium
     timing: "After 80% monthly BUZZ used"
+
+  power_user_black_pitch:
+    when: "tier = gold AND buzz_usage > 80%"
+    text: "Livello successivo: Black! 🖤 5 BUZZ/settimana + 1 BUZZ Map/mese + memoria AI completa + mappe quasi real-time (2h delay)."
+    ctas:
+      - label: "Upgrade a Black (9,99€/mese)"
+        action: "navigate_subscription"
+        payload: { target_tier: "black" }
+      - label: "Info BUZZ Map"
+        action: "show_docs"
+        payload: { doc: "buzz-and-map" }
+    priority: medium
+    timing: "After 80% monthly BUZZ used"
+
+  black_to_titanium_pitch:
+    when: "tier = black AND (buzz_map_used = true OR daily_active_days > 60)"
+    text: "Pronto per il massimo? Titanium: 7 BUZZ/settimana senza cooldown + 2 BUZZ Map/mese + Final Shot potenziato AI Norah! 💎"
+    ctas:
+      - label: "Scopri Titanium (29,99€/mese)"
+        action: "navigate_subscription"
+        payload: { target_tier: "titanium" }
+      - label: "Confronta Black vs Titanium"
+        action: "show_pricing"
+    priority: low
+    timing: "After 1 month as Black user OR after using BUZZ Map"
 
 # ============================================================================
 # MISSION-SPECIFIC

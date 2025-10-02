@@ -13,34 +13,40 @@
 ```yaml
 diritto_recesso:
   eu_consumer_rights: "14 giorni dalla data acquisto"
-  condizioni: "<COMPILARE: servizio digitale consumato = no refund?>"
+  condizioni: "Rimborso possibile solo se servizio non consumato (nessun BUZZ/BUZZ Map/Final Shot utilizzato)"
   
 rimborsi_ammessi:
   - "Errore tecnico impedisce utilizzo servizio"
   - "Addebito duplicato o non autorizzato"
-  - "Abbonamento cancellato entro <COMPILARE: es. 48h> dall'acquisto senza utilizzo"
+  - "Abbonamento cancellato entro 48h dall'acquisto senza utilizzo alcuno"
+  - "Bug grave che impedisce accesso funzionalità pagate"
   
 rimborsi_non_ammessi:
   - "Utente ha utilizzato BUZZ/BUZZ Map del periodo"
-  - "Utente ha partecipato a missioni con early access premium"
+  - "Utente ha sbloccato indizi premium o fatto Final Shot"
   - "Cambio idea dopo aver fruito delle feature premium"
+  - "Insoddisfazione personale dopo utilizzo normale servizio"
   
 procedura:
-  step_1: "Contatto supporto tramite ticket o email"
-  step_2: "Verifica utilizzo servizio da parte team"
-  step_3: "Decisione entro <COMPILARE: es. 5 giorni lavorativi>"
-  step_4: "Rimborso su metodo pagamento originale (7-14 giorni)"
+  step_1: "Contatto supporto tramite support@m1ssion.com o ticket in-app"
+  step_2: "Verifica utilizzo servizio da parte team (check database)"
+  step_3: "Decisione entro 5 giorni lavorativi"
+  step_4: "Rimborso su metodo pagamento originale (7-14 giorni via Stripe)"
 ```
 
 ### Casi Speciali
 ```yaml
 errore_tecnico_grave:
-  definizione: "<COMPILARE: es. app down >24h, perdita progressi per bug>"
-  rimedio: "Rimborso parziale o crediti compensativi"
+  definizione: "App inutilizzabile >24h consecutive, perdita progressi per bug, impossibilità accesso servizi pagati"
+  rimedio: "Rimborso parziale proporzionale o crediti compensativi (es. 1 mese gratis)"
   
 upgrade_errato:
-  scenario: "Utente fa upgrade per errore"
-  soluzione: "Downgrade immediato + rimborso differenza se entro 24h"
+  scenario: "Utente fa upgrade per errore (es. tap accidentale)"
+  soluzione: "Downgrade immediato + rimborso completo se entro 24h e nessun utilizzo feature premium"
+  
+downgrade_volontario:
+  effetto: "Feature premium disponibili fino a fine periodo pagato, poi downgrade automatico"
+  rimborso: "Nessun rimborso per periodo già pagato"
 ```
 
 ---
@@ -79,14 +85,15 @@ harassment:
 ### Sistema di Warning
 ```yaml
 livelli:
-  warning_1: "Email + notifica in-app, nessuna sanzione"
-  warning_2: "Ban temporaneo 7 giorni"
-  warning_3: "Ban permanente + no refund abbonamento"
+  warning_1: "Email + notifica in-app, nessuna sanzione immediata"
+  warning_2: "Ban temporaneo 7 giorni + sospensione abbonamento"
+  warning_3: "Ban permanente + no refund abbonamento + cancellazione account"
   
 appeal:
   permesso: true
-  metodo: "Ticket supporto con oggetto 'Appeal Ban'"
-  review_time: "<COMPILARE: es. 10 giorni lavorativi>"
+  metodo: "Ticket supporto con oggetto 'Appeal Ban' o email appeals@m1ssion.com"
+  review_time: "10 giorni lavorativi per risposta"
+  info_richieste: "User ID, data ban, spiegazione dettagliata"
 ```
 
 ---
@@ -120,25 +127,29 @@ diritti_utente:
 ### Gestione Dati Sensibili
 ```yaml
 geolocalizzazione:
-  utilizzo: "Solo per feature BUZZ/BUZZ Map/Final Shot"
-  storage: "Coordinate aggregate, no tracciamento continuo"
-  sharing: "Mai condiviso con terze parti"
+  utilizzo: "Solo per feature BUZZ/BUZZ Map/Final Shot durante utilizzo attivo"
+  storage: "Coordinate aggregate per analytics, no tracciamento continuo background"
+  sharing: "Mai condiviso con terze parti o advertisers"
+  retention: "Coordinate esatte cancellate dopo 90 giorni, solo aggregate mantenute"
   
 conversazioni_ai:
-  logging: "Anonimizzato per QA (no PII in logs pubblici)"
-  retention: "<COMPILARE: es. 90 giorni poi cancellazione automatica>"
-  opt_out: "Utente può disattivare memoria AI"
+  logging: "Anonimizzato per QA (no PII in logs accessibili)"
+  retention: "90 giorni poi cancellazione automatica (eccetto conversazioni flagged per training)"
+  opt_out: "Utente può disattivare memoria AI dalle impostazioni"
+  training: "Conversazioni possono essere usate per training AI (anonimizzate)"
   
 pagamenti:
-  processor: "Stripe (PCI-DSS compliant)"
-  storage: "M1SSION non memorizza dati carta"
+  processor: "Stripe (PCI-DSS compliant Level 1)"
+  storage: "M1SSION non memorizza mai dati carta - solo Stripe customer_id"
+  sicurezza: "3D Secure obbligatorio per transazioni >50€"
 ```
 
 ### Link Policy Completa
 ```yaml
-privacy_policy_url: "<COMPILARE: link completo privacy policy sito>"
-terms_of_service_url: "<COMPILARE: link ToS>"
-cookie_policy_url: "<COMPILARE: link cookie policy>"
+privacy_policy_url: "https://m1ssion.com/privacy"
+terms_of_service_url: "https://m1ssion.com/terms"
+cookie_policy_url: "https://m1ssion.com/cookies"
+fair_play_policy_url: "https://m1ssion.com/fair-play"
 ```
 
 ---
@@ -155,8 +166,9 @@ protezioni:
   - "Prezzo tier equo in tutte le regioni UE"
   
 moderazione:
-  contenuti_utente: "<COMPILARE: policy moderazione chat/forum se presente>"
-  segnalazioni: "Report abuse button + review manuale 24h"
+  contenuti_utente: "Non presente chat/forum pubblici al momento - no moderazione contenuti necessaria"
+  segnalazioni: "Report abuse button in profili utenti + review manuale entro 24h"
+  azioni_possibili: "Warning, ban temporaneo, ban permanente secondo gravità"
 ```
 
 ---
@@ -191,7 +203,7 @@ A: No, mai. I tuoi dati sono usati solo per fornire il servizio M1SSION e miglio
 A: Sì, hai diritto alla cancellazione completa (GDPR right to be forgotten). Contatta il supporto.
 
 **Q: Come vengono gestite le conversazioni con l'AI Assistant?**  
-A: Anonimizzate per QA, <COMPILARE: retention period>, puoi opt-out dalla memoria AI.
+A: Anonimizzate per QA, retention 90 giorni, puoi opt-out dalla memoria AI dalle impostazioni. Le conversazioni possono essere usate per training AI (sempre anonimizzate).
 
 ---
 

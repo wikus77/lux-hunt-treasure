@@ -9,7 +9,7 @@
 
 ## Overview Tier System
 
-M1SSION™ offre 4 tier di abbonamento, ciascuno con feature e limiti progressivi per ottimizzare l'esperienza di gioco.
+M1SSION™ offre 5 tier di abbonamento, ciascuno con feature e limiti progressivi per ottimizzare l'esperienza di gioco.
 
 ---
 
@@ -21,22 +21,24 @@ pricing:
   costo_annuale: 0€
   
 feature_incluse:
-  buzz_mensili: "<COMPILARE: es. 10 BUZZ al mese>"
-  buzz_map_mensili: "<COMPILARE: es. 2 BUZZ Map al mese>"
-  final_shot_giornalieri: "<COMPILARE: es. 1 tentativo/giorno>"
+  buzz_settimanali: 1
+  buzz_mensili: 30
+  buzz_map_mensili: 0
+  final_shot: "Solo visibile primo livello indizi"
   indizi_base: true
-  mappa_base: true
-  notifiche_push: true
+  mappa_base: false
+  notifiche_push: false
   early_access_missioni: false
+  memoria_ai: "Nessuna memoria persistente"
   
 limiti:
-  cooldown_buzz: "<COMPILARE: es. 1 ora tra BUZZ>"
-  cooldown_buzz_map: "<COMPILARE: es. 6 ore tra BUZZ Map>"
-  supporto: "Community forum + AI Assistant base"
-  ads: "<COMPILARE: presenti? assenti?>"
+  cooldown_buzz: "24 ore tra BUZZ"
+  cooldown_buzz_map: "Non disponibile"
+  supporto: "Solo FAQ"
+  ads: "Pubblicità attive"
   
 upgrade_incentive:
-  messaggio: "Passa a Silver per sbloccare più BUZZ, cooldown ridotti e early access!"
+  messaggio: "Passa a Silver per sbloccare 3 BUZZ/settimana, pillole AI Norah e zero pubblicità!"
 ```
 
 ---
@@ -45,29 +47,32 @@ upgrade_incentive:
 
 ```yaml
 pricing:
-  costo_mensile: "<COMPILARE: es. €9,99/mese>"
-  costo_annuale: "<COMPILARE: es. €99/anno (2 mesi gratis)>"
-  risparmio_annuale: "<COMPILARE: %>"
+  costo_mensile: 3,99€
+  costo_annuale: 39,99€ (2 mesi gratis)
+  risparmio_annuale: 16%
   
 feature_incluse:
-  buzz_mensili: "<COMPILARE: es. 50 BUZZ al mese>"
-  buzz_map_mensili: "<COMPILARE: es. 10 BUZZ Map al mese>"
-  final_shot_giornalieri: "<COMPILARE: es. 2 tentativi/giorno>"
-  indizi_premium: true
-  cooldown_ridotti: "50% rispetto a Free"
-  early_access_missioni: "2 ore prima del lancio pubblico"
+  buzz_settimanali: 3
+  buzz_mensili: 90
+  buzz_map_mensili: 0
+  final_shot: "Indizi livello 1+2, nessuna anticipazione"
+  indizi_premium: "Livello 1-2"
+  mappa_delay: "Aggiornamento 24h"
   badge_silver: true
-  supporto: "AI Assistant avanzato + ticket priority"
+  supporto: "Ticket email"
   ads: false
+  memoria_ai: "Nessuna memoria persistente"
+  notifiche_push: "Micro-celebrazioni + pillole AI Norah sempre attive"
   
 limiti:
-  cooldown_buzz: "<COMPILARE: es. 30 minuti>"
-  cooldown_buzz_map: "<COMPILARE: es. 3 ore>"
+  cooldown_buzz: "12 ore tra BUZZ"
+  cooldown_buzz_map: "Non disponibile"
   
 benefits_esclusivi:
-    - "Accesso anticipato nuove missioni"
-    - "Indizi premium esclusivi"
-    - "Badge distintivo profilo"
+    - "3 BUZZ a settimana"
+    - "Indizi livello 1+2"
+    - "Zero pubblicità"
+    - "Pillole AI Norah sempre attive"
 ```
 
 ---
@@ -76,31 +81,33 @@ benefits_esclusivi:
 
 ```yaml
 pricing:
-  costo_mensile: "<COMPILARE: es. €19,99/mese>"
-  costo_annuale: "<COMPILARE: es. €199/anno>"
-  risparmio_annuale: "<COMPILARE: %>"
+  costo_mensile: 6,99€
+  costo_annuale: 69,99€ (2 mesi gratis)
+  risparmio_annuale: 16%
   
 feature_incluse:
-  buzz_mensili: "<COMPILARE: es. 150 BUZZ al mese o illimitati?>"
-  buzz_map_mensili: "<COMPILARE: es. 30 BUZZ Map al mese>"
-  final_shot_giornalieri: "<COMPILARE: es. 5 tentativi/giorno>"
-  indizi_premium: true
-  cooldown_ridotti: "75% rispetto a Free"
-  early_access_missioni: "24 ore prima del lancio pubblico"
+  buzz_settimanali: 4
+  buzz_mensili: 150
+  buzz_map_mensili: 0
+  final_shot: "Disponibile a metà missione"
+  indizi_premium: "Livello 1-3"
+  mappa_delay: "Aggiornamento 12h"
   badge_gold: true
-  supporto: "Supporto dedicato + priorità massima"
+  supporto: "Live chat"
   ads: false
-  analytics_avanzate: true
+  notifiche_push: "Notifiche push premium"
+  memoria_ai: "Memoria AI breve (sessione + ultima settimana)"
   
 limiti:
-  cooldown_buzz: "<COMPILARE: es. 15 minuti>"
-  cooldown_buzz_map: "<COMPILARE: es. 1 ora>"
+  cooldown_buzz: "8 ore tra BUZZ"
+  cooldown_buzz_map: "Non disponibile"
   
 benefits_esclusivi:
-    - "Accesso 24h anticipato missioni"
-    - "Analytics dettagliate progressione"
-    - "Evento esclusivi Gold members"
-    - "Customizzazione profilo avanzata"
+    - "4 BUZZ a settimana"
+    - "Final Shot disponibile a metà missione"
+    - "Indizi livello 1-3"
+    - "Memoria AI sessione + settimana"
+    - "Mappe delay 12h"
 ```
 
 ---
@@ -109,45 +116,94 @@ benefits_esclusivi:
 
 ```yaml
 pricing:
-  costo_mensile: "<COMPILARE: es. €49,99/mese>"
-  costo_annuale: "<COMPILARE: es. €499/anno>"
-  risparmio_annuale: "<COMPILARE: %>"
+  costo_mensile: 9,99€
+  costo_annuale: 99,99€ (2 mesi gratis)
+  risparmio_annuale: 16%
   
 feature_incluse:
-  buzz_illimitati: true
-  buzz_map_illimitati: true
-  final_shot_giornalieri: "<COMPILARE: es. 10 tentativi/giorno o illimitati?>"
-  indizi_premium: true
-  cooldown_eliminati: "BUZZ e BUZZ Map senza cooldown"
-  early_access_missioni: "48 ore prima del lancio pubblico"
+  buzz_settimanali: 5
+  buzz_mensili: 200
+  buzz_map_mensili: 1
+  final_shot: "Disponibile in qualsiasi momento"
+  indizi_premium: "Livello 1-4"
+  mappa_delay: "Aggiornamento quasi real-time (2h)"
   badge_black: true
-  supporto: "Concierge service + linea diretta team M1SSION"
+  supporto: "Live chat + priorità"
   ads: false
-  analytics_avanzate: true
-  beta_tester: true
+  memoria_ai: "Memoria AI completa (storico indizi, progressi personali)"
+  vantaggi_luxury: "Vantaggi esclusivi su premi luxury (auto, orologi)"
+  
+limiti:
+  cooldown_buzz: "4 ore tra BUZZ"
+  cooldown_buzz_map: "30 giorni tra BUZZ Map (1 al mese)"
   
 benefits_esclusivi:
-    - "BUZZ illimitati senza cooldown"
-    - "Accesso 48h anticipato missioni"
-    - "Beta tester feature nuove"
-    - "Eventi VIP esclusivi"
-    - "Merchandising M1SSION™ gratuito"
-    - "Consulenza strategica con team"
+    - "5 BUZZ a settimana"
+    - "1 BUZZ Map al mese"
+    - "Final Shot sempre disponibile"
+    - "Indizi livello 1-4"
+    - "Memoria AI completa"
+    - "Mappe quasi real-time (delay 2h)"
+    - "Vantaggi su premi luxury"
+```
+
+---
+
+## Titanium Tier (PREMIUM MAX)
+
+```yaml
+pricing:
+  costo_mensile: 29,99€
+  costo_annuale: 299,99€ (2 mesi gratis)
+  risparmio_annuale: 16%
+  
+feature_incluse:
+  buzz_settimanali: 7
+  buzz_mensili: 280
+  buzz_map_mensili: 2
+  final_shot: "Potenziato con suggerimenti Norah AI"
+  indizi_premium: "Completo, livello 1-5"
+  mappa_delay: "Real-time"
+  badge_titanium: true
+  supporto: "Concierge 24/7"
+  ads: false
+  memoria_ai: "Memoria AI predittiva (profilo + suggerimenti personalizzati)"
+  eventi_esclusivi: "Eventi e premi riservati Titanium Only"
+  badge_classifica: "Badge speciale in classifica"
+  
+limiti:
+  cooldown_buzz: "Nessuno (può usare 7 BUZZ quando vuole)"
+  cooldown_buzz_map: "15 giorni tra BUZZ Map (2 al mese)"
+  
+benefits_esclusivi:
+    - "7 BUZZ a settimana senza cooldown"
+    - "2 BUZZ Map al mese"
+    - "Final Shot potenziato con suggerimenti Norah AI"
+    - "Indizi completi livello 1-5"
+    - "Memoria AI predittiva"
+    - "Mappe real-time"
+    - "Eventi Titanium Only"
+    - "Badge speciale classifica"
+    - "Concierge 24/7"
 ```
 
 ---
 
 ## Confronto Rapido
 
-| Feature | Free | Silver | Gold | Black |
-|---------|------|--------|------|-------|
-| BUZZ/mese | <COMPILARE> | <COMPILARE> | <COMPILARE> | ∞ |
-| BUZZ Map/mese | <COMPILARE> | <COMPILARE> | <COMPILARE> | ∞ |
-| Final Shot/giorno | <COMPILARE> | <COMPILARE> | <COMPILARE> | <COMPILARE> |
-| Cooldown BUZZ | <COMPILARE> | 50% ridotto | 75% ridotto | Nessuno |
-| Early Access | No | 2h | 24h | 48h |
-| Supporto | Community | Priority | Dedicato | Concierge |
-| Ads | <COMPILARE> | No | No | No |
+| Feature | Free | Silver | Gold | Black | Titanium |
+|---------|------|--------|------|-------|----------|
+| Prezzo | 0€ | 3,99€/m | 6,99€/m | 9,99€/m | 29,99€/m |
+| BUZZ/settimana | 1 | 3 | 4 | 5 | 7 |
+| BUZZ/mese | 30 | 90 | 150 | 200 | 280 |
+| BUZZ Map/mese | 0 | 0 | 0 | 1 | 2 |
+| Final Shot | Base | Base | Metà missione | Sempre | Potenziato AI |
+| Cooldown BUZZ | 24h | 12h | 8h | 4h | Nessuno |
+| Indizi | Lv 1 | Lv 1-2 | Lv 1-3 | Lv 1-4 | Lv 1-5 |
+| Memoria AI | No | No | Breve | Completa | Predittiva |
+| Mappe delay | - | 24h | 12h | 2h | Real-time |
+| Supporto | FAQ | Email | Live chat | Chat priority | Concierge 24/7 |
+| Ads | Sì | No | No | No | No |
 
 ---
 
@@ -156,34 +212,45 @@ benefits_esclusivi:
 ### Free → Silver
 ```yaml
 trigger_moment:
-  - "Utente ha esaurito BUZZ mensili"
-  - "Vuole fare BUZZ Map ma è in cooldown"
-  - "Missione nuova in arrivo (early access appeal)"
+  - "Utente ha esaurito BUZZ settimanali"
+  - "Vuole più indizi (bloccato a livello 1)"
+  - "Vede pubblicità troppo frequenti"
   
-messaggio_tipo: "Passa a Silver e sblocca 50 BUZZ al mese + early access 2h!"
-conversion_rate_target: "<COMPILARE: es. 15%>"
+messaggio_tipo: "Passa a Silver: 3 BUZZ/settimana, indizi livello 2, zero pubblicità!"
+conversion_rate_target: 18%
 ```
 
 ### Silver → Gold
 ```yaml
 trigger_moment:
-  - "Utente power user (>80% BUZZ mensili utilizzati)"
-  - "Vuole analytics avanzate"
-  - "Interessato a eventi esclusivi"
+  - "Utente power user (usa tutti i 3 BUZZ settimanali)"
+  - "Vuole Final Shot a metà missione"
+  - "Interessato a indizi livello 3"
   
-messaggio_tipo: "Diventa Gold: BUZZ quasi illimitati + accesso 24h anticipato!"
-conversion_rate_target: "<COMPILARE: es. 8%>"
+messaggio_tipo: "Diventa Gold: 4 BUZZ/settimana + Final Shot a metà missione!"
+conversion_rate_target: 12%
 ```
 
 ### Gold → Black
 ```yaml
 trigger_moment:
-  - "Utente super engaged (daily active)"
-  - "Richiede supporto concierge"
-  - "Vuole zero limitazioni"
+  - "Utente super engaged (usa 4 BUZZ ogni settimana)"
+  - "Vuole provare BUZZ Map"
+  - "Interessato a memoria AI completa"
   
-messaggio_tipo: "Black Tier: BUZZ illimitati, zero cooldown, VIP status"
-conversion_rate_target: "<COMPILARE: es. 3%>"
+messaggio_tipo: "Black Tier: 5 BUZZ/settimana + 1 BUZZ Map al mese + memoria AI!"
+conversion_rate_target: 8%
+```
+
+### Black → Titanium
+```yaml
+trigger_moment:
+  - "Utente usa il BUZZ Map del mese immediatamente"
+  - "Daily active da almeno 60 giorni"
+  - "Vuole Final Shot potenziato AI"
+  
+messaggio_tipo: "Titanium: 7 BUZZ senza cooldown + 2 BUZZ Map + AI predittiva!"
+conversion_rate_target: 5%
 ```
 
 ---
@@ -217,13 +284,13 @@ A: Sì, upgrade immediato. Downgrade effettivo a fine periodo già pagato.
 A: Sì, puoi iniziare a raccogliere indizi prima degli altri utenti, aumentando le possibilità di trovare il premio.
 
 **Q: Il Black Tier ha davvero BUZZ illimitati?**  
-A: <COMPILARE: confermare se veramente illimitati o "limite molto alto">
+A: No, Black ha 5 BUZZ a settimana (200/mese). Solo Titanium può usare 7 BUZZ senza cooldown.
 
 **Q: Quali metodi di pagamento accettate?**  
 A: Stripe: carta credito/debito, Apple Pay, Google Pay, bonifico SEPA.
 
 **Q: C'è trial gratuito per i tier a pagamento?**  
-A: <COMPILARE: es. "7 giorni trial Silver", "14 giorni trial Gold">
+A: Sì, 7 giorni trial gratuito per Silver e Gold. 3 giorni trial per Black e Titanium.
 
 ---
 

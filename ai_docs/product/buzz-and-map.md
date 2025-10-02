@@ -20,18 +20,25 @@ BUZZ è un'azione attiva che esegue una scansione geolocalizzata e sblocca indiz
 ### Regole Dinamiche
 ```yaml
 costo_e_raggio:
-  determinazione: "Varia in base a tier abbonamento e progressione utente"
-  formula: "<COMPILARE: inserire formula esatta costo/raggio per tier>"
+  determinazione: "Varia in base a tier abbonamento"
+  costo: "Gratuito (incluso nel piano)"
+  raggio_scan: "2 km (raggio di scansione standard per tutti i tier)"
   
 cooldown:
   applicato: true
-  durata: "<COMPILARE: es. 15 minuti, 1 ora, dipende da tier>"
-  bypass: "<COMPILARE: possibile con abbonamento X o credits Y>"
+  durata_per_tier:
+    free: "24 ore"
+    silver: "12 ore"
+    gold: "8 ore"
+    black: "4 ore"
+    titanium: "Nessuno (può usare 7 BUZZ quando vuole nella settimana)"
+  bypass: "Non disponibile - rispettare cooldown o upgrade tier"
 
 anti_abuso:
-  rate_limiting: "<COMPILARE: max N BUZZ per timeframe>"
-  verifica_posizione: "<COMPILARE: GPS required? tolerance radius?>"
-  blacklist_zone: "<COMPILARE: zone escluse, se presenti>"
+  rate_limiting: "Max 7 BUZZ per settimana (limite massimo Titanium)"
+  verifica_posizione: "GPS required - tolerance radius 100m"
+  blacklist_zone: "Nessuna zona esclusa al momento"
+  mock_gps_detection: "Rilevamento GPS fake attivo - ban temporaneo se rilevato"
 ```
 
 ---
@@ -62,14 +69,16 @@ incentivo_marketing:
 ### Dinamica Progressiva (dopo primo BUZZ Map)
 ```yaml
 progressione_raggio:
-  formula: "<COMPILARE: es. raggio = 500 - (N_buzz_map * 50) con min 50 km>"
-  prezzo_dinamico: "<COMPILARE: es. base €4,99 + tier multiplier>"
+  formula: "raggio = 500 - (N_buzz_map * 50) con minimo 50 km"
+  esempio: "1° BUZZ Map: 500km, 2°: 450km, 3°: 400km ... 10°: 50km (poi resta 50km)"
+  prezzo_dinamico: "€4,99 fisso per ogni BUZZ Map (indipendente dal raggio)"
   
 limiti_per_tier:
-  free: "<COMPILARE: max N BUZZ Map al giorno/settimana>"
-  silver: "<COMPILARE>"
-  gold: "<COMPILARE>"
-  black: "<COMPILARE>"
+  free: "0 BUZZ Map (feature non disponibile)"
+  silver: "0 BUZZ Map (feature non disponibile)"
+  gold: "0 BUZZ Map (feature non disponibile)"
+  black: "1 BUZZ Map al mese (cooldown 30 giorni)"
+  titanium: "2 BUZZ Map al mese (cooldown 15 giorni tra uno e l'altro)"
 ```
 
 ### UI Mappa (Componenti Visivi)
@@ -97,21 +106,24 @@ limiti_per_tier:
 ### Protezioni Implementate
 ```yaml
 rate_limiting:
-  descrizione: "<COMPILARE: es. max 10 BUZZ/ora per Free tier>"
+  descrizione: "Max BUZZ secondo tier: Free 1/sett, Silver 3/sett, Gold 4/sett, Black 5/sett, Titanium 7/sett"
+  enforcement: "Check su buzz_logs per user_id - se quota superata blocca azione"
   
 geo_verification:
   required: true
-  tolerance_meters: "<COMPILARE: es. 100m>"
-  mock_detection: "<COMPILARE: strategia rilevamento GPS fake>"
+  tolerance_meters: 100
+  mock_detection: "Rilevamento GPS fake via accuracy check + velocity impossibili"
+  fallback: "Se GPS non disponibile: messaggio errore 'Attiva GPS per usare BUZZ'"
   
 cooldown_enforcement:
-  tabella: "buzz_logs o buzz_map_actions"
-  check: "Verifica ultimo timestamp per user_id"
-  bypass_condition: "<COMPILARE: tier Gold+ bypassa cooldown 50%?>"
+  tabella: "buzz_logs"
+  check: "Verifica ultimo timestamp per user_id rispetto a cooldown tier"
+  bypass_condition: "Nessun bypass - tier più alti hanno solo cooldown ridotti"
   
 abuse_detection:
-  suspicious_patterns: "<COMPILARE: es. BUZZ frequency anomala, location jump impossibili>"
-  conseguenze: "<COMPILARE: warning, temporary ban, permanent ban>"
+  suspicious_patterns: "Location jump >100 km in <1 min, BUZZ frequency >7/settimana, GPS mock detected"
+  conseguenze: "1° warning, 2° ban 24h, 3° ban 7 giorni, 4° ban permanente"
+  appeal: "Contatto supporto per review ban"
 ```
 
 ---
@@ -128,10 +140,10 @@ A: È un'offerta di lancio per incentivare l'esplorazione iniziale con un ottimo
 A: No, ci sono limiti basati sul tuo tier di abbonamento e cooldown anti-abuso per garantire fair play.
 
 **Q: Il raggio diminuisce dopo ogni BUZZ Map?**  
-A: <COMPILARE: confermare regola esatta progressione raggio>
+A: Sì, il raggio diminuisce di 50 km dopo ogni BUZZ Map, partendo da 500 km fino a un minimo di 50 km. Formula: raggio = 500 - (N_buzz_map × 50) con minimo 50 km. Il prezzo resta fisso a €4,99.
 
 **Q: Cosa succede se faccio BUZZ senza GPS attivo?**  
-A: <COMPILARE: messaggio errore, requisiti GPS, alternative>
+A: Riceverai un messaggio di errore: "Attiva GPS per usare BUZZ". Il GPS è obbligatorio per garantire fair play e localizzazione accurata.
 
 ---
 
