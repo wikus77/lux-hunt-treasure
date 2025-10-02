@@ -44,11 +44,10 @@ export async function logEvent(e: TelemetryEvent): Promise<void> {
   }
 }
 
-export async function logPillClick(payload: string, phase: string): Promise<void> {
+export async function logPillClick(payload: string): Promise<void> {
   await logEvent({
     event: 'pill_click',
-    phase,
-    meta: { payload }
+    meta: { payload, ts: Date.now() } // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
   });
 }
 
@@ -64,5 +63,23 @@ export async function logRetentionTrigger(reason: string, clues: number): Promis
   await logEvent({
     event: 'retention_trigger',
     meta: { reason, clues }
+  });
+}
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v6.6: Additional telemetry events
+export async function logReplyGenerated(intent: string, sentiment: string, ms: number): Promise<void> {
+  await logEvent({
+    event: 'reply_generated',
+    intent,
+    sentiment,
+    meta: { ms }
+  });
+}
+
+export async function logEpisodeSaved(length: number, hasEmotionalPeak: boolean): Promise<void> {
+  await logEvent({
+    event: 'episode_saved',
+    meta: { length, has_emotional_peak: hasEmotionalPeak }
   });
 }

@@ -132,6 +132,14 @@ async function saveEpisodicMemory() {
     });
 
     console.log('[Norah] Episodic memory saved:', summary);
+    
+    // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+    // v6.6: Log episode saved telemetry
+    const { logEpisodeSaved } = await import('@/intel/norah/utils/telemetry');
+    await logEpisodeSaved(
+      lastMessages.length,
+      emotionalPeak !== 'positive'
+    );
   } catch (error) {
     console.error('[Norah] Failed to save episodic memory:', error);
   }

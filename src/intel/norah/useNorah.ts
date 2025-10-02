@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Norah Hook - Main facade for NORAH AI
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { routeIntent } from './engine/intentRouter';
 import { buildNorahContext, type NorahContext } from './engine/contextBuilder';
 import {
@@ -10,12 +10,35 @@ import {
   detectPatterns,
   estimateProbability
 } from './engine/replyGenerator';
-import { addMessage, getMessages, type NorahMessage } from './state/messageStore';
+import { addMessage, getMessages, type NorahMessage, fetchLastEpisode } from './state/messageStore';
+import { logEvent } from './utils/telemetry';
 
 export function useNorah() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [context, setContext] = useState<NorahContext | null>(null);
   const [messages, setMessages] = useState<NorahMessage[]>([]);
+
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  // v6.6: Load episodic greeting on mount
+  useEffect(() => {
+    (async () => {
+      try {
+        const episode = await fetchLastEpisode();
+        if (episode) {
+          const greetingMsg: NorahMessage = {
+            role: 'norah',
+            content: `Bentornato! Ieri eravamo qui: "${episode}". Ripartiamo?`,
+            timestamp: Date.now()
+          };
+          addMessage(greetingMsg);
+          setMessages([...getMessages()]);
+          await logEvent({ event: 'episode_greeted' });
+        }
+      } catch (error) {
+        console.error('[Norah] Failed to load episodic greeting:', error);
+      }
+    })();
+  }, []);
 
   const loadContext = useCallback(async () => {
     const ctx = await buildNorahContext();
@@ -25,6 +48,7 @@ export function useNorah() {
 
   const askNorah = useCallback(async (userInput: string): Promise<string> => {
     setIsProcessing(true);
+    const startTime = Date.now(); // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
     try {
       // Add user message
@@ -70,6 +94,16 @@ export function useNorah() {
       };
       addMessage(norahMsg);
       setMessages([...getMessages()]);
+
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+      // v6.6: Log reply generation telemetry
+      const elapsed = Date.now() - startTime;
+      await logEvent({
+        event: 'reply_generated',
+        intent: intentResult.intent,
+        sentiment: 'neutral',
+        meta: { ms: elapsed }
+      });
 
       return reply;
 
