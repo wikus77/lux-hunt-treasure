@@ -24,16 +24,13 @@ export function addMessage(msg: NorahMessage) {
     messageBuffer = messageBuffer.slice(-16);
   }
 
+  // v6.9: CRITICAL FIX - Immediate persist (no debounce to prevent data loss)
+  persistToSupabase(msg);
+
   // v6.8: Check if we should save episodic memory (every 5 messages)
   if (messageBuffer.length % 5 === 0 && messageBuffer.length > 0) {
     saveEpisodicMemory();
   }
-
-  // Debounced persist
-  if (persistTimeout) clearTimeout(persistTimeout);
-  persistTimeout = setTimeout(() => {
-    persistToSupabase(msg);
-  }, 1000);
 }
 
 export function getMessages(): NorahMessage[] {

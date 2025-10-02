@@ -19,15 +19,24 @@ export function useNorah() {
   const [messages, setMessages] = useState<NorahMessage[]>([]);
 
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  // v6.8: Load episodic greeting on mount with enhanced logging
+  // v6.9: Enhanced episodic greeting - more visible and natural
   useEffect(() => {
     (async () => {
       try {
         const episode = await fetchLastEpisode({ timeoutMs: 300 });
         if (episode?.summary) {
+          // v6.9: More natural, conversational greeting
+          const greetings = [
+            `Bentornato! L'ultima volta: "${episode.summary}". Continuiamo da lì?`,
+            `Ehi! Ieri stavamo qui: "${episode.summary}". Ripartiamo o preferisci un recap?`,
+            `Rieccoci! Ultima sessione: "${episode.summary}". Dove eravamo rimasti?`
+          ];
+          
+          const greeting = greetings[Math.floor(Math.random() * greetings.length)];
+          
           const greetingMsg: NorahMessage = {
             role: 'norah',
-            content: `Bentornato! Ieri eravamo qui: "${episode.summary}". Ripartiamo da lì o vuoi una scorciatoia?`,
+            content: greeting,
             timestamp: Date.now()
           };
           addMessage(greetingMsg);
@@ -35,8 +44,10 @@ export function useNorah() {
           
           await logEvent({ 
             event: 'episode_greeted',
-            meta: { summary_length: episode.summary.length }
+            meta: { summary_length: episode.summary.length, greeting_variant: greeting.substring(0, 20) }
           });
+          
+          console.log('[NORAH v6.9] Episodic greeting displayed:', greeting);
         }
       } catch (error) {
         console.error('[Norah] Failed to load episodic greeting:', error);
