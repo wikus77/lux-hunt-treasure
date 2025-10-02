@@ -1,3 +1,4 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // supabase/functions/push-broadcast/index.ts
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
@@ -86,11 +87,25 @@ serve(async (req) => {
     // ----- VAPID -----
     const pub = Deno.env.get("VAPID_PUBLIC_KEY");
     const priv = Deno.env.get("VAPID_PRIVATE_KEY");
-    const contact = Deno.env.get("VAPID_CONTACT") || "mailto:admin@example.com";
+    const contact = Deno.env.get("VAPID_CONTACT") || "mailto:admin@m1ssion.com";
     
-    // Import and configure webpush dynamically
-    const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
-    webpush.setVapidDetails(contact, pub, priv);
+    if (!pub || !priv) {
+      return cors(req, { status: 500 }, JSON.stringify({ 
+        error: "VAPID keys not configured" 
+      }));
+    }
+    
+    // Import webpush with proper error handling
+    let webpush: any;
+    try {
+      webpush = await import('https://esm.sh/web-push@3.6.6');
+      webpush.setVapidDetails(contact, pub, priv);
+    } catch (importError) {
+      console.error('[push-broadcast] Failed to import web-push:', importError);
+      return cors(req, { status: 500 }, JSON.stringify({ 
+        error: "Web push service unavailable" 
+      }));
+    }
 
     // ----- DB -----
     const supabaseUrl = Deno.env.get("SB_URL") ?? Deno.env.get("SUPABASE_URL");
@@ -159,3 +174,5 @@ serve(async (req) => {
     }));
   }
 });
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
