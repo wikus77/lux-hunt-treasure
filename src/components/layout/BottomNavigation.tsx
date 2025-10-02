@@ -97,7 +97,7 @@ const BottomNavigationComponent = () => {
         paddingBottom: isPWA ? "max(env(safe-area-inset-bottom), 6px)" : "6px",
         paddingLeft: "env(safe-area-inset-left)",
         paddingRight: "env(safe-area-inset-right)",
-        backgroundColor: "rgba(0,0,0,0.95)",
+        backgroundColor: "transparent",
         transform: "translateZ(0)",
         WebkitTransform: "translateZ(0)",
         isolation: "isolate",
@@ -114,12 +114,13 @@ const BottomNavigationComponent = () => {
         style={{
           position: "relative",
           zIndex: "inherit",
-          height: "var(--bottom-nav-height)", // Più bassa ma accessibile
+          height: "72px",
           display: "flex",
           alignItems: "center",
-          background: "linear-gradient(to right, rgba(0, 0, 0, 0.55), rgba(19, 21, 33, 0.55), rgba(0, 0, 0, 0.55))",
-          backdropFilter: "blur(12px)",
-          borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+          background: "rgba(0, 0, 0, 0.4)",
+          backdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(0, 209, 255, 0.2)",
+          boxShadow: "0 -4px 24px rgba(0, 209, 255, 0.15), 0 -2px 12px rgba(0, 209, 255, 0.1), inset 0 1px 0 rgba(0, 209, 255, 0.1)",
           WebkitTapHighlightColor: "transparent",
           touchAction: "manipulation",
         }}
