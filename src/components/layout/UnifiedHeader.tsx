@@ -137,7 +137,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         background: "var(--m1-header-bg-gradient)",
         backdropFilter: "blur(12px)",
         top: '0px',
-        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
+        paddingTop: '2px',
         marginTop: '0px',
         height: 'calc(var(--header-height) + max(env(safe-area-inset-top, 0px), 8px))',
         // Safe area background matches header
@@ -178,8 +178,35 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             )}
           </div>
 
-          {/* Center section - Referral Code Display - © 2025 Joseph MULÉ – M1SSION™ */}
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+            {/* CODE con pallino pulsante */}
+            <div className="flex items-center gap-2">
+              <motion.div
+                className="w-2 h-2 bg-[#00D1FF] rounded-full"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [1, 0.7, 1],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                style={{
+                  boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
+                }}
+              />
+              <span 
+                className="text-xs font-orbitron font-bold text-white tracking-wider"
+                style={{
+                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                }}
+              >
+                CODE
+              </span>
+            </div>
+            {/* Codice Agente sotto */}
             <ReferralCodeDisplay />
           </div>
 

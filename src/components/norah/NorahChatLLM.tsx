@@ -69,7 +69,7 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0A0B14] border-0 md:border md:border-white/10 rounded-none md:rounded-xl overflow-hidden">
+    <div className="flex flex-col h-screen md:h-full bg-[#0A0B14] border-0 md:border md:border-white/10 md:rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-3 p-3 md:p-4 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 border-b border-white/10">
         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center">
@@ -142,7 +142,7 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
       </ScrollArea>
 
       {/* Input */}
-      <div className="sticky bottom-0 p-3 md:p-4 bg-white/5 border-t border-white/10">
+      <div className="sticky bottom-0 p-3 md:p-4 bg-white/5 border-t border-white/10 z-10">
         <div className="flex gap-2">
           <Input
             value={input}
