@@ -290,3 +290,17 @@ export function routeIntent(input: string): IntentResult {
   console.log('[NORAH-v4] No intent match, defaulting to help');
   return { intent: 'help', confidence: 0.4 };
 }
+
+/**
+ * Should ask for clarification?
+ */
+export function shouldClarify(intentResult: IntentResult): boolean {
+  return intentResult.confidence < 0.55;
+}
+
+/**
+ * Generate clarification question
+ */
+export function getClarificationQuestion(message: string): string {
+  return "Non sono sicura di aver capito. Vuoi sapere di BUZZ, BUZZ Map, Final Shot o qualcos'altro? Dimmi pure!";
+}

@@ -4,10 +4,19 @@ import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import { ArrowLeft } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
-import { NorahChat } from '@/components/norah/NorahChat';
+import { NorahChatLLM } from '@/components/norah/NorahChatLLM';
+import { supabase } from '@/integrations/supabase/client';
 
 const NorahAssistant = () => {
   const [, setLocation] = useLocation();
+  const [userId, setUserId] = React.useState<string | null>(null);
+
+  // Get user ID
+  React.useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, []);
 
   const LeftComponent = () => (
     <div className="flex items-center">
@@ -68,7 +77,8 @@ const NorahAssistant = () => {
           </div>
 
           <div style={{ height: 'calc(100dvh - 300px)' }}>
-            <NorahChat />
+            {userId && <NorahChatLLM userId={userId} />}
+            {!userId && <p className="text-white/60">Caricamento...</p>}
           </div>
         </div>
       </main>
