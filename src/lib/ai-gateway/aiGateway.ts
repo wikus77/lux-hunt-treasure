@@ -34,17 +34,18 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
 
     // 2. PLANNER: Route intent to determine RAG/tool needs
     const intentResult = routeIntent(userMessage);
-    console.log(`[AI Gateway] traceId:${traceId} intent routed:`, {
+    const shortTraceId = traceId.substring(0, 8);
+    console.log(`[AI Gateway traceId:${shortTraceId}] Intent:`, {
       intent: intentResult.intent,
       confidence: intentResult.confidence,
       needs_rag: intentResult.needs_rag,
       needs_tool: intentResult.needs_tool
     });
 
-    // 3. Pre-execute RAG if needed
+    // 3. Pre-execute RAG if needed (ENFORCED BY ROUTER)
     let ragContext = '';
-    if (intentResult.needs_rag && intentResult.needs_tool?.includes('retrieve_docs')) {
-      console.log(`[AI Gateway] traceId:${traceId} fetching RAG context...`);
+    if (intentResult.needs_rag) {
+      console.log(`[AI Gateway traceId:${shortTraceId}] Router flagged RAG - fetching docs...`);
       try {
         const { data: ragData, error: ragError } = await supabase.functions.invoke('norah/rag-search', {
           body: { query: userMessage, k: 6 }
@@ -55,12 +56,32 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
             ragData.results.map((r: any, i: number) => 
               `${i + 1}. "${r.title}": ${r.chunk_text} (rilevanza: ${(r.similarity * 100).toFixed(0)}%)`
             ).join('\n\n');
-          console.log(`[AI Gateway] traceId:${traceId} RAG: ${ragData.results.length} chunks added`);
+          console.log(`[AI Gateway traceId:${shortTraceId}] RAG: ${ragData.results.length} chunks added`);
         } else {
-          console.log(`[AI Gateway] traceId:${traceId} RAG: no results or error:`, ragError);
+          console.log(`[AI Gateway traceId:${shortTraceId}] RAG returned 0 results - trying local cache`);
+          
+          // FALLBACK: Local knowledge cache
+          const { get: getLocalCache } = await import('@/intel/norah/kb/localCache');
+          const localKnowledge = getLocalCache(userMessage);
+          
+          if (localKnowledge) {
+            console.log(`[AI Gateway traceId:${shortTraceId}] Local cache HIT`);
+            ragContext = '\n\n📚 **Knowledge Base (Local Cache)**:\n' + localKnowledge;
+          } else {
+            console.log(`[AI Gateway traceId:${shortTraceId}] No local cache match - minimal fallback`);
+            ragContext = '\n\n📚 **Knowledge Base**:\nNon ho trovato riferimenti specifici nel KB. Posso spiegarti in breve o aprire le regole ufficiali.';
+          }
         }
       } catch (ragErr) {
-        console.warn(`[AI Gateway] traceId:${traceId} RAG fetch failed:`, ragErr);
+        console.warn(`[AI Gateway traceId:${shortTraceId}] RAG fetch failed:`, ragErr);
+        
+        // FALLBACK on error: try local cache
+        const { get: getLocalCache } = await import('@/intel/norah/kb/localCache');
+        const localKnowledge = getLocalCache(userMessage);
+        if (localKnowledge) {
+          console.log(`[AI Gateway traceId:${shortTraceId}] Local cache FALLBACK on RAG error`);
+          ragContext = '\n\n📚 **Knowledge Base (Local Cache - RAG Error)**:\n' + localKnowledge;
+        }
       }
     }
 
