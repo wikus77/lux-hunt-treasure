@@ -28,6 +28,14 @@ import { initDiagnostics } from './utils/diagnostics';
 // Ensure global Stripe fallback is available across the app (no side effects)
 import './lib/stripeFallback';
 
+// Expose KB populate helper globally (hard guard against tree-shaking)
+import { populateKnowledgeBase } from '@/utils/populateKnowledgeBase';
+if (typeof window !== 'undefined') {
+  (window as any).__populateKB__ = populateKnowledgeBase;
+  console.log('✅ [GLOBAL] window.__populateKB__ disponibile (main.tsx)');
+}
+
+
 // Initialize diagnostics early (development only)
 if (import.meta.env.DEV) {
   console.log('🔍 M1SSION™ Diagnostics ready');
