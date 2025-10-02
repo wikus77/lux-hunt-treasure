@@ -139,9 +139,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       className="fixed left-0 right-0 z-50"
       style={{
         top: '0px',
-        paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
-        marginTop: '0px',
-        height: 'calc(var(--header-height) + max(env(safe-area-inset-top, 0px), 8px))',
+        margin: 0,
+        padding: 0,
       }}
     >
       <div 
@@ -151,6 +150,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           backdropFilter: "blur(20px)",
           borderBottom: "1px solid rgba(0, 209, 255, 0.2)",
           boxShadow: "0 4px 24px rgba(0, 209, 255, 0.15), 0 2px 12px rgba(0, 209, 255, 0.1), inset 0 -1px 0 rgba(0, 209, 255, 0.1)",
+          paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
+          height: 'calc(72px + max(env(safe-area-inset-top, 0px), 8px))',
         }}
       >
         <div className="container mx-auto h-full max-w-screen-xl relative">
