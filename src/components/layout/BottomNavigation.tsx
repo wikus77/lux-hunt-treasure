@@ -42,12 +42,7 @@ const BottomNavigationComponent = () => {
       color: "#00D1FF"
     },
     { 
-      icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
-        <path d="M12 2L2 7v10l10 5 10-5V7l-10-5z"/>
-        <path d="M12 22V12"/>
-        <path d="M7 9l5-3 5 3"/>
-        <circle cx="12" cy="12" r="2"/>
-      </svg>, 
+      icon: <span className="text-lg font-bold">AI</span>,
       label: "Intel", 
       path: "/intelligence",
       color: "#00D1FF"
