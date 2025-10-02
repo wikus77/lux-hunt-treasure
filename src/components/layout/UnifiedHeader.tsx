@@ -44,12 +44,16 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const { user } = useUnifiedAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
+  const [isPWA, setIsPWA] = useState(false);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
 
   // Check for Capacitor environment and device type
   useEffect(() => {
+    // Detect PWA mode
+    const isPWAMode = window.matchMedia('(display-mode: standalone)').matches;
+    setIsPWA(isPWAMode);
     const checkAccess = async () => {
       // Detect Capacitor environment
       const isCapacitorApp = !!(window as any).Capacitor;
@@ -137,7 +141,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         background: "var(--m1-header-bg-gradient)",
         backdropFilter: "blur(12px)",
         top: '0px',
-        paddingTop: '2px',
+        paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
         marginTop: '0px',
         height: 'calc(var(--header-height) + max(env(safe-area-inset-top, 0px), 8px))',
         // Safe area background matches header
