@@ -40,16 +40,18 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
       { role: 'user', content: userMessage }
     ];
 
-    // 4. Call LLM with function calling (placeholder - integrate with actual provider)
-    // For now, return a structured response without actual LLM call
-    // In production, this would call OpenAI/Gemini with tool schemas
-    
+    // 4. Call LLM via Supabase Edge Function (Lovable AI Gateway)
+    const { data: fxData, error: fxError } = await supabase.functions.invoke('chat', {
+      body: { messages }
+    });
+
+    if (fxError) {
+      console.error('[AI Gateway] chat function error:', fxError);
+      return { message: 'Problema con il servizio AI. Riprova tra poco.', suggestedActions: [] };
+    }
+
     const response: AIResponse = {
-      message: `[AI Gateway Ready] Ricevuto: "${userMessage}". Context: ${context.agentCode || 'unknown'}, ${context.tier}, ${context.cluesFound} indizi.`,
-      suggestedActions: [
-        { label: 'Visualizza stato', action: 'view_state', payload: { userId } },
-        { label: 'Cerca premi vicini', action: 'find_prizes', payload: {} }
-      ]
+      message: fxData?.message || 'Nessuna risposta dal modello.',
     };
 
     // 5. Log interaction
