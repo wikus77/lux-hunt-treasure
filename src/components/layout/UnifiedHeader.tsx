@@ -137,9 +137,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         background: "var(--m1-header-bg-gradient)",
         backdropFilter: "blur(12px)",
         top: '0px',
-        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingTop: 'max(env(safe-area-inset-top, 0px), 8px)',
         marginTop: '0px',
-        height: 'calc(var(--header-height) + env(safe-area-inset-top, 0px))',
+        height: 'calc(var(--header-height) + max(env(safe-area-inset-top, 0px), 8px))',
         // Safe area background matches header
         backgroundImage: 'var(--m1-header-bg-gradient)'
       }}

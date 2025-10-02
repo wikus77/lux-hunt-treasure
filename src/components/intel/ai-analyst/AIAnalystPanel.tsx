@@ -167,16 +167,16 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       {/* Panel */}
       {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
       <div 
-        className="fixed inset-0 md:inset-8 z-50 flex items-center justify-center"
+        className="fixed z-50 flex items-center justify-center inset-0 md:inset-8"
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)'
         }}
       >
         <div 
-          className="w-full h-full md:max-w-4xl md:max-h-[800px] md:rounded-3xl bg-black/90 backdrop-blur-xl flex flex-col"
+          className="w-full h-full flex flex-col bg-black/95 md:bg-black/90 backdrop-blur-xl md:max-w-4xl md:max-h-[800px] md:rounded-3xl"
           style={{
-            boxShadow: '0 0 40px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(0, 229, 255, 0.05)'
+            boxShadow: '0 0 20px rgba(0, 229, 255, 0.15), inset 0 0 40px rgba(0, 229, 255, 0.03)'
           }}
           onClick={(e) => e.stopPropagation()}
         >
