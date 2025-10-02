@@ -12,13 +12,13 @@ export interface ReplyOptions {
   clues?: any[];
 }
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
 export async function composeReply(options: ReplyOptions): Promise<string> {
   const { userText } = options;
   
   try {
-    // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
-    // Generate natural reply with unified signature (2 args max)
-    const reply = await generateReply(userText, 'analyze');
+    // Generate natural reply with unified signature (1 arg)
+    const reply = await generateReply(userText);
     
     return reply;
   } catch (error) {

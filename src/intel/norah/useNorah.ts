@@ -82,7 +82,7 @@ export function useNorah() {
           reply = estimateProbability(ctx);
           break;
         default:
-          reply = await generateReply(userInput, 'analyze');
+          reply = await generateReply(userInput); // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
       }
 
       // Add Norah response

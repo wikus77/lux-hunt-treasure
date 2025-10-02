@@ -23,7 +23,8 @@ const M1SSION_DICT: Set<string> = new Set([
   'non', 'dove', 'quando', 'perche', 'perché', 'quindi'
 ]);
 
-// v6.2: Extended slang map with cm, qls, tvb, xk variants
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
+// v6.7: Extended slang map - all requested variants
 const SLANG_MAP: Record<string, string> = {
   'nn': 'non',
   'xke': 'perche',
@@ -51,7 +52,9 @@ const SLANG_MAP: Record<string, string> = {
   'raga': 'ragazzo',
   'boh': 'non so',
   'nn capito': 'non capito',
-  'nn ho': 'non ho'
+  'nn ho': 'non ho',
+  'ah si certo': 'sarcasmo',
+  'come no': 'sarcasmo'
 };
 
 // Damerau-Levenshtein distance (supports transposition)
