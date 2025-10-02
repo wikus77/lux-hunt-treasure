@@ -33,11 +33,21 @@ export type NorahIntent =
   | 'rules_short'
   | 'unknown';
 
+export interface IntentEntities {
+  topic?: string;       // BUZZ | BUZZ Map | Final Shot | premi | ...
+  place?: string;       // città/luogo menzionato
+  tier?: string;        // silver/gold/black/titanium
+  amount?: number;      // numeri menzionati
+}
+
 export interface IntentResult {
   intent: NorahIntent;
   confidence: number;
   slots?: Record<string, any>;
   multiIntents?: ParsedIntent[]; // v5: multi-intent support
+  entities?: IntentEntities;      // v6: structured entities
+  needs_rag?: boolean;            // v6: RAG flag
+  needs_tool?: string[];          // v6: Tool calling flag
 }
 
 // Spoiler guard patterns (priorità massima)
