@@ -1,7 +1,9 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah Message Store - In-memory + Supabase persistence
+// v6.2: Norah Message Store - In-memory + Supabase + Episodic Memory
 
 import { supabase } from '@/integrations/supabase/client';
+
+let episodicMemoryCache: any = null;
 
 export interface NorahMessage {
   role: 'user' | 'norah';
@@ -19,6 +21,11 @@ export function addMessage(msg: NorahMessage) {
   // v4: Keep only last 8 turns (16 messages) for contextual memory
   if (messageBuffer.length > 16) {
     messageBuffer = messageBuffer.slice(-16);
+  }
+
+  // v6.2: Check if we should save episodic memory (every 6 messages)
+  if (messageBuffer.length % 6 === 0 && messageBuffer.length > 0) {
+    saveEpisodicMemory();
   }
 
   // Debounced persist
@@ -87,5 +94,73 @@ async function persistToSupabase(msg: NorahMessage) {
     });
   } catch (error) {
     console.error('[Norah] Failed to persist message:', error);
+  }
+}
+
+/**
+ * v6.2: Save episodic memory to DB
+ */
+async function saveEpisodicMemory() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const summary = summarizeWindow();
+    if (!summary) return;
+
+    // Detect emotional peak
+    const lastMessages = messageBuffer.slice(-6);
+    const hasFrustration = lastMessages.some(m => 
+      m.content.toLowerCase().includes('difficile') || 
+      m.content.toLowerCase().includes('basta')
+    );
+    const hasBreakthrough = lastMessages.some(m => 
+      m.content.toLowerCase().includes('capito') || 
+      m.content.toLowerCase().includes('perfetto')
+    );
+
+    const emotionalPeak = hasFrustration ? 'negative' 
+      : hasBreakthrough ? 'breakthrough' 
+      : 'positive';
+
+    await supabase.from('norah_memory_episodes').insert({
+      user_id: user.id,
+      summary,
+      emotional_peak: emotionalPeak,
+      learned_pref: {}
+    });
+
+    console.log('[Norah] Episodic memory saved:', summary);
+  } catch (error) {
+    console.error('[Norah] Failed to save episodic memory:', error);
+  }
+}
+
+/**
+ * v6.2: Fetch last episodic memory for greeting
+ */
+export async function fetchLastEpisode(): Promise<string | null> {
+  try {
+    if (episodicMemoryCache) {
+      return episodicMemoryCache;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from('norah_memory_episodes')
+      .select('summary, emotional_peak')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) return null;
+
+    episodicMemoryCache = data.summary;
+    return data.summary;
+  } catch {
+    return null;
   }
 }

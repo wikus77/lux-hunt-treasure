@@ -4,6 +4,10 @@ import { X, Send, Activity } from 'lucide-react';
 import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
 import { type AgentContextData } from '@/intel/ai/context/agentContext';
+import { NBAPills, type NBASuggestion } from './NBAPills';
+import { nextBestActionToPills } from '@/intel/norah/engine/nextBestAction';
+import { buildNorahContext } from '@/intel/norah/engine/contextBuilder';
+import { logPillClick } from '@/intel/norah/utils/telemetry';
 
 export interface AIAnalystPanelProps {
   // Support both 'open' and 'isOpen' for compatibility
@@ -60,7 +64,22 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
   
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
+  const [nbaPills, setNbaPills] = useState<NBASuggestion[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // v6.2: Load NBA Pills on mount
+  useEffect(() => {
+    const loadPills = async () => {
+      try {
+        const ctx = await buildNorahContext();
+        const pills = nextBestActionToPills(ctx);
+        setNbaPills(pills);
+      } catch (error) {
+        console.error('[AIPanel] Failed to load NBA Pills:', error);
+      }
+    };
+    loadPills();
+  }, [messages.length]);
 
   // Rotate placeholder
   useEffect(() => {
@@ -227,15 +246,24 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input with rotating placeholder */}
+          {/* Input with rotating placeholder + NBA Pills */}
           <div className="p-6 border-t border-white/10">
+            {/* v6.2: NBA Pills above input */}
+            <NBAPills 
+              suggestions={nbaPills} 
+              onPick={async (payload) => {
+                await logPillClick(payload, 'unknown');
+                onSendMessage(payload, 'analyze');
+              }} 
+            />
+            
             <div className="flex gap-3">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={placeholder}
+                placeholder={nbaPills.length > 0 ? "Suggerimenti pronti ↑" : placeholder}
                 disabled={isProcessing}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#F213A4]/50 disabled:opacity-50 transition-all"
               />

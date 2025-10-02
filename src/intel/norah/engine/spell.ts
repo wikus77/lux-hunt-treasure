@@ -23,7 +23,7 @@ const M1SSION_DICT: Set<string> = new Set([
   'non', 'dove', 'quando', 'perche', 'perché', 'quindi'
 ]);
 
-// Slang/typo expansion map - v6: extended with boh, xkè variants
+// v6.2: Extended slang map with cm, qls, tvb, xk variants
 const SLANG_MAP: Record<string, string> = {
   'nn': 'non',
   'xke': 'perche',
@@ -31,6 +31,10 @@ const SLANG_MAP: Record<string, string> = {
   'xké': 'perche',
   'xché': 'perche',
   'ke': 'che',
+  'cm': 'come',
+  'qls': 'qualcosa',
+  'qlcs': 'qualcosa',
+  'tvb': 'ti voglio bene',
   'cmq': 'comunque',
   'anke': 'anche',
   'xo': 'pero',
@@ -38,10 +42,10 @@ const SLANG_MAP: Record<string, string> = {
   'qnd': 'quando',
   'dv': 'dove',
   'pke': 'perche',
-  'qlcs': 'qualcosa',
   'qlc': 'qualche',
   'nn so': 'non so',
   'pls': 'per favore',
+  'plz': 'per favore',
   't prego': 'ti prego',
   'xk': 'perche',
   'raga': 'ragazzo',

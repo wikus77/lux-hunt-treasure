@@ -10,7 +10,8 @@ import { isFollowUp, generateFollowUpReply } from './followUp';
 import { type ParsedIntent } from './multiIntent';
 import { maybeJoke } from './humorEngine';
 import { getPredictiveAction, computeNBA } from './nextBestAction';
-import { summarizeWindow } from '../state/messageStore';
+import { summarizeWindow, fetchLastEpisode } from '../state/messageStore';
+import { logEvent, logJokeUsed, logRetentionTrigger } from '../utils/telemetry';
 
 // Recent variations cache (cooldown) - v4.2: increased to 4
 const recentVariations: string[] = [];
@@ -55,25 +56,35 @@ const FRIEND_NUDGES = [
 ];
 
 /**
- * Check if reply echoes user input (anti-echo)
+ * v6.2: Check if reply echoes user input (anti-echo 2.0 - stricter)
+ * Now detects even 3+ contiguous words
  */
 function hasEcho(reply: string, userInput: string): boolean {
-  const userWords = userInput.toLowerCase().split(/\s+/).filter(w => w.length > 3);
-  const replyWords = reply.toLowerCase().split(/\s+/);
+  const userWords = userInput.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  const replyLower = reply.toLowerCase();
   
   if (userWords.length < 3) return false;
   
+  // Check for 3+ contiguous words from input appearing in reply
+  for (let i = 0; i <= userWords.length - 3; i++) {
+    const trigram = userWords.slice(i, i + 3).join(' ');
+    if (replyLower.includes(trigram)) {
+      console.log('[Anti-echo] Detected 3-word echo:', trigram);
+      return true;
+    }
+  }
+  
   // Count matching words (exclude common words)
-  const commonWords = new Set(['buzz', 'map', 'final', 'shot', 'indizio', 'come', 'cosa', 'dove', 'quando']);
+  const commonWords = new Set(['buzz', 'map', 'final', 'shot', 'indizio', 'come', 'cosa', 'dove', 'quando', 'che', 'per']);
   let matches = 0;
   for (const word of userWords) {
-    if (!commonWords.has(word) && replyWords.includes(word)) {
+    if (!commonWords.has(word) && replyLower.includes(word)) {
       matches++;
     }
   }
   
-  // Echo if >40% of significant user words appear in reply
-  return matches > userWords.length * 0.4;
+  // Echo if >35% of significant user words appear in reply
+  return matches > userWords.length * 0.35;
 }
 
 /**
@@ -126,13 +137,14 @@ function maybeAddFriendNudge(): string {
 }
 
 /**
- * Get empathetic intro based on context and sentiment (v6: 20+ variations)
+ * v6.2: Get empathetic intro with episodic memory from DB
  */
 function getEmpathyIntro(ctx: NorahContext, sentiment?: SentimentLabel): string {
   const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
   const clues = ctx?.stats?.clues || 0;
   
-  // Episodic memory greeting (if available)
+  // v6.2: Try episodic memory from DB (cached)
+  // Note: fetchLastEpisode is async, but we use summarizeWindow as sync fallback
   const episodicSummary = summarizeWindow();
   if (episodicSummary && Math.random() < 0.3) {
     return `Ciao ${agentName}! ${episodicSummary}, giusto? Continuiamo.`;
@@ -397,23 +409,48 @@ export function generateReply(
     // Detect frustration/off-ramp signals
     const frustrationSignals = ['non mi piace', 'me ne vado', 'abbandono', 'inutile', 'difficile', 'troppo', 'basta'];
     const hasFrustration = frustrationSignals.some(sig => lowerInput.includes(sig));
-    
+    // v6.2: Retention personalizzata su phase + clues
     if (hasFrustration) {
-      const retentionResponses = [
-        `${getEmpathyIntro(ctx)} Capisco che possa sembrare complesso. Ti lascio 3 dritte veloci: 1) BUZZ per indizi, 2) BUZZ Map per vedere l'area, 3) Final Shot quando sei sicuro. Proviamo insieme?`,
-        `${getEmpathyIntro(ctx)} M1SSION richiede metodo, non fortuna. Ti aiuto passo-passo: iniziamo con 2-3 BUZZ oggi, poi analizziamo insieme. Ci stai?`,
-        `${getEmpathyIntro(ctx)} Non mollare ora! Ti mostro il percorso più semplice: BUZZ → analisi → Final Shot. Ti seguo per 60 secondi?`
-      ];
-      return selectVariation(retentionResponses, seed) + maybeAddFriendNudge();
+      const clues = ctx?.stats?.clues || 0;
+      const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
+      
+      let retentionReply = `${getEmpathyIntro(ctx, sentiment)} `;
+      
+      if (clues >= 4) {
+        // High clues → emphasize progress
+        retentionReply += `${agentName}, hai già ${clues} indizi. Sei davvero vicino! Un passo alla volta: `;
+        retentionReply += clues >= 8 
+          ? 'puoi già cercare pattern o fare Final Shot. Ti accompagno ora?' 
+          : `altri ${8 - clues} indizi e sei pronto per Final Shot. Continuiamo?`;
+      } else if (clues > 0) {
+        // Some clues → acknowledge effort
+        retentionReply += `Capisco la frustrazione. Hai già ${clues} indizi: non buttare via questo lavoro. Ti mostro il percorso più semplice: BUZZ → analisi → Final Shot. 60 secondi insieme?`;
+      } else {
+        // Zero clues → empathy + micro-step
+        retentionReply += `M1SSION richiede metodo, non fortuna. Ti aiuto passo-passo: iniziamo con 1 solo BUZZ oggi, vediamo l'indizio insieme. Ci stai?`;
+      }
+      
+      return retentionReply + maybeAddFriendNudge();
     }
     
-    // v6: Unknown/Help fallback - Tone adaptive, NO echo, coach-friendly
+    // v6.2: Unknown/Help fallback - Intelligente, NO echo, opzioni chiare
     if (intent === 'unknown' || intent === 'help') {
       const agentName = ctx?.agent?.nickname || ctx?.agent?.code || 'Agente';
       const clues = ctx?.stats?.clues || 0;
       
+      let reply = '';
+      
+      // Clarify zone: suggest disambiguation
+      if (intentResult.slots?.clarify && intentResult.slots?.suggestedIntents) {
+        const suggested = intentResult.slots.suggestedIntents as string[];
+        reply = `${getEmpathyIntro(ctx)} Non sono sicura di aver capito. Intendi:\n`;
+        reply += suggested.slice(0, 2).map((s, i) => `${i + 1}. ${s.replace('about_', '').toUpperCase()}`).join('\n');
+        reply += '\n\nDimmi quale! 😊';
+        return reply;
+      }
+      
       // Apply tone modifier based on sentiment
-      let reply = `${toneModifier.prefix}${getEmpathyIntro(ctx)} `;
+      reply = `${toneModifier.prefix}${getEmpathyIntro(ctx, sentiment)} `;
       
       // Check if user mentioned known keywords but intent was missed
       const knownKeywords = ['mission', 'm1ssion', 'buzz', 'finalshot', 'fs', 'mappa', 'piani', 'abbo', 'pattern', 'decode'];
@@ -440,24 +477,18 @@ export function generateReply(
         }
       }
       
-      // v6: NO rigid commands, friendly suggestions instead
-      const helpOptions = [
-        `Posso aiutarti con: Mission (cos'è il gioco), BUZZ (indizi), Final Shot (colpo finale), piani (abbonamenti). Cosa ti serve?`,
-        `Ti spiego: Mission, BUZZ, Final Shot, piani, regole. Di cosa parliamo?`,
-        `Sono qui per: spiegare Mission, aiutarti con BUZZ, chiarire Final Shot, mostrare i piani. Dove iniziamo?`
-      ];
-      reply += selectVariation(helpOptions, seed);
+      // v6.2: Intelligent unknown - 1 riga empatica + 2 micro-opzioni
+      reply = `Tranquillo ${agentName}, ci sono io. `;
       
-      // Add contextual CTA based on agent state
-      if (ctx?.agent?.code === 'AG-UNKNOWN') {
-        reply += `\n\n⚠️ Profilo non sincronizzato. Prova a ricaricare la pagina.`;
-      } else if (clues === 0) {
-        reply += `\n\n💡 ${agentName}, ti consiglio: inizia con BUZZ per raccogliere i primi indizi.`;
-      } else if (clues < 8) {
-        reply += `\n\n💡 ${agentName}, hai ${clues} indizi. Prosegui con BUZZ o esplora BUZZ Map.`;
+      if (clues === 0) {
+        reply += `Vuoi:\n1️⃣ Una panoramica rapida di M1SSION\n2️⃣ Iniziare subito con 1 indizio BUZZ`;
+      } else if (clues < 5) {
+        reply += `Vuoi:\n1️⃣ Continuare a raccogliere indizi\n2️⃣ Capire meglio come funziona Final Shot`;
       } else {
-        reply += `\n\n💡 ${agentName}, con ${clues} indizi puoi cercare pattern o valutare Final Shot.`;
+        reply += `Vuoi:\n1️⃣ Cercare pattern nei tuoi ${clues} indizi\n2️⃣ Vedere l'area con BUZZ Map`;
       }
+      
+      reply += '\n\nDimmi cosa preferisci! 😊';
       
       return reply + maybeAddFriendNudge();
     }
@@ -493,10 +524,20 @@ export function generateReply(
       // Apply modulators for natural variation
       reply = addModulators(reply, seed);
       
+      // v6.2: Maybe add humor with telemetry
+      const jokeResult = maybeJoke(sentiment, ctx, intent);
+      if (jokeResult.used) {
+        reply += `\n\n${jokeResult.text}`;
+        logJokeUsed(sentiment, jokeResult.text);
+      }
+      
       // v4.2: Maybe add friend nudge (10% chance)
       reply += maybeAddFriendNudge();
       
-      console.log('[NORAH-v4.2] Reply with persona/coach/engagement:', { intent, hasCoachCTA: true });
+      // v6.2: Log telemetry
+      logEvent({ event: 'reply_generated', intent, sentiment, phase });
+      
+      console.log('[NORAH-v6.2] Reply with persona/coach/humor:', { intent, hasCoachCTA: true, jokeUsed: jokeResult.used });
       
       return reply;
     }
