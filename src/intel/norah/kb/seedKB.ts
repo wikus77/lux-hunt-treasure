@@ -12,7 +12,7 @@ export async function seedNorahKB(): Promise<{ success: boolean; processed: numb
 
   try {
     // Call kb-upsert edge function
-    const { data, error } = await supabase.functions.invoke('norah/kb-upsert', {
+    const { data, error } = await supabase.functions.invoke('norah-kb-upsert', {
       body: { documents: SEED_DOCUMENTS }
     });
 
@@ -53,7 +53,7 @@ export async function testRAGSearch(query: string = 'differenza BUZZ vs BUZZ Map
   console.log(`[KB Test] Testing RAG search with query: "${query}"`);
   
   try {
-    const { data, error } = await supabase.functions.invoke('norah/rag-search', {
+    const { data, error } = await supabase.functions.invoke('norah-rag-search', {
       body: { query, k: 3 }
     });
 

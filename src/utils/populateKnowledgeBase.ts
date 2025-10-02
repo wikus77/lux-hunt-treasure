@@ -16,7 +16,7 @@ export async function populateKnowledgeBase(options: PopulateKBOptions = {}) {
     console.log('📚 [NORAH KB] Popolamento Knowledge Base in corso...');
     console.log(`📄 [NORAH KB] Documenti da processare: ${docs.length}`);
 
-    const { data, error } = await supabase.functions.invoke('norah/kb-upsert', {
+    const { data, error } = await supabase.functions.invoke('norah-kb-upsert', {
       body: { documents: docs }
     });
 
