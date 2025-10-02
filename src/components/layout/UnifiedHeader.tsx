@@ -136,25 +136,19 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed left-0 right-0 z-50"
+      className="fixed left-0 right-0 z-50 backdrop-blur-xl rounded-b-lg"
       style={{
         top: '0px',
-        margin: 0,
-        padding: 0,
+        background: 'rgba(0, 0, 0, 0.15)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(0, 209, 255, 0.2)',
+        boxShadow: '0 4px 24px rgba(0, 209, 255, 0.15), 0 2px 12px rgba(0, 209, 255, 0.1), inset 0 -1px 0 rgba(0, 209, 255, 0.1)',
+        paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
+        height: 'calc(72px + max(env(safe-area-inset-top, 0px), 8px))',
       }}
     >
-      <div 
-        className="backdrop-blur-xl rounded-b-lg"
-        style={{
-          background: "rgba(0, 0, 0, 0.15)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(0, 209, 255, 0.2)",
-          boxShadow: "0 4px 24px rgba(0, 209, 255, 0.15), 0 2px 12px rgba(0, 209, 255, 0.1), inset 0 -1px 0 rgba(0, 209, 255, 0.1)",
-          paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
-          height: 'calc(72px + max(env(safe-area-inset-top, 0px), 8px))',
-        }}
-      >
-        <div className="container mx-auto h-full max-w-screen-xl relative">
+      <div className="container mx-auto h-full max-w-screen-xl relative">
           {/* Main Header Row */}
           <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
             {/* Left Section */}
@@ -258,7 +252,6 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Animated color line at bottom of header - same as bottom navigation */}
           <div className="line-glow absolute bottom-0 left-0 w-full"></div>
         </div>
-      </div>
     </motion.header>
   );
 };
