@@ -79,9 +79,18 @@ serve(async (req) => {
           .eq('id', docId);
         console.log(`  ♻️ Aggiornato documento esistente`);
       } else {
+        // Genera corpo compilato per il documento
+        const docBody = generateDocBody(doc);
+        
         const { data: newDoc, error: insertError } = await supabase
           .from('ai_docs')
-          .insert({ title: doc.title, category: doc.category })
+          .insert({ 
+            title: doc.title, 
+            body: docBody,
+            category: doc.category,
+            doc_type: 'faq',
+            locale: 'it'
+          })
           .select('id')
           .single();
         
@@ -214,6 +223,12 @@ function generateChunksForDoc(doc: any): string[] {
   }
 
   return [`Documento: ${doc.title}\nCategoria: ${doc.category}`];
+}
+
+// Genera corpo completo documento per storage in ai_docs.body
+function generateDocBody(doc: any): string {
+  const chunks = generateChunksForDoc(doc);
+  return chunks.join('\n\n---\n\n');
 }
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
