@@ -16,14 +16,9 @@ export async function composeReply(options: ReplyOptions): Promise<string> {
   const { userText } = options;
   
   try {
-    // Build Norah context from Supabase
-    const norahCtx = await buildNorahContext();
-    
-    // Route intent
-    const intentResult = routeIntent(userText);
-    
-    // Generate natural reply
-    const reply = generateReply(intentResult, norahCtx, userText);
+    // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
+    // Generate natural reply with unified signature (2 args max)
+    const reply = await generateReply(userText, 'analyze');
     
     return reply;
   } catch (error) {
