@@ -16,6 +16,7 @@ import { logEvent, logJokeUsed, logRetentionTrigger } from '../utils/telemetry';
 import { generateQuizChallenge, getRandomQuiz, validateAnswer } from '../coach/miniQuiz';
 import { generateDrillChallenge, getRandomDrill, validateDrillAnswer } from '../coach/patternDrill';
 import { generateFAQ60 } from '../coach/faq60';
+import { choicesToNaturalText, varyPhrase, detectEcho, removeEcho } from './naturalLanguage';
 
 // v6.3: Recent template IDs (anti-repetition circular buffer)
 let recentTemplateIds: string[] = [];
@@ -79,42 +80,19 @@ const CLOSERS = [
 ];
 
 /**
- * v6.3: Check if reply echoes user input (Anti-echo 2.0 - stricter)
- * Detects 3+ contiguous words or >35% overlap
+ * v6.9: DEPRECATED - Use naturalLanguage.detectEcho instead
+ * @deprecated Migrated to naturalLanguage module
  */
 function hasEcho(reply: string, userInput: string): boolean {
-  const userWords = userInput.toLowerCase().split(/\s+/).filter(w => w.length > 2);
-  const replyLower = reply.toLowerCase();
-  
-  if (userWords.length < 3) return false;
-  
-  // Check for 3+ contiguous words from input appearing in reply
-  for (let i = 0; i <= userWords.length - 3; i++) {
-    const trigram = userWords.slice(i, i + 3).join(' ');
-    if (replyLower.includes(trigram)) {
-      console.log('[Anti-echo] Detected 3-word echo:', trigram);
-      return true;
-    }
-  }
-  
-  // Count matching significant words (exclude common words)
-  const commonWords = new Set(['buzz', 'map', 'final', 'shot', 'indizio', 'come', 'cosa', 'dove', 'quando', 'che', 'per']);
-  let matches = 0;
-  for (const word of userWords) {
-    if (!commonWords.has(word) && replyLower.includes(word)) {
-      matches++;
-    }
-  }
-  
-  // Echo if >35% of significant user words appear in reply
-  return matches > userWords.length * 0.35;
+  return detectEcho(reply, userInput);
 }
 
 /**
- * v6.3: Render choice list with anti-repetition
+ * v6.9: DEPRECATED - Use choicesToNaturalText instead
+ * @deprecated Use naturalLanguage.choicesToNaturalText for human-like responses
  */
 export function renderChoiceList(choices: string[]): string {
-  return choices.map((c, i) => `${i + 1}. ${c}`).join('\n');
+  return choicesToNaturalText(choices);
 }
 
 /**
@@ -163,74 +141,69 @@ function getCloser(): string {
  * v6.3: Generate BUZZ explanation (concrete example)
  */
 function generateBuzzExplanation(ctx: NorahContext): string {
-  const hook = getEmpathyHook(ctx);
+  const hook = varyPhrase(getEmpathyHook(ctx));
   const closer = getCloser();
   
-  const body = `BUZZ ti dà indizi veri sul posto giusto: ogni BUZZ = 1 indizio leggibile in 10s.
-Con 6–8 indizi inizi a vedere un pattern; con 9–12 prepari il Final Shot.
-Scegli tu il ritmo: una volta al giorno è perfetto.`;
+  const body = `BUZZ ti dà indizi veri sul posto giusto: ogni BUZZ = 1 indizio leggibile in 10s. Con 6–8 indizi inizi a vedere un pattern; con 9–12 prepari il Final Shot. Scegli tu il ritmo: una volta al giorno è perfetto.`;
 
   const choices = [
-    'Apriamo BUZZ e prendiamo il primo indizio di oggi.',
-    'Oppure ti spiego come leggere correttamente un indizio.'
+    'aprire BUZZ e prendere il primo indizio di oggi',
+    'spiegarti come leggere correttamente un indizio'
   ];
   
-  return `${hook}\n\n${body}\n\nCosa facciamo adesso?\n${renderChoiceList(choices)}\n\n${closer}`;
+  return `${hook}\n\n${body}\n\n${choicesToNaturalText(choices)}\n\n${closer}`;
 }
 
 /**
  * v6.3: Generate Mission explanation (concrete example)
  */
 function generateMissionExplanation(ctx: NorahContext): string {
-  const hook = getEmpathyHook(ctx);
+  const hook = varyPhrase(getEmpathyHook(ctx));
   const closer = getCloser();
   
-  const body = `M1SSION è una caccia al premio reale: raccogli indizi, trovi pattern, tiri il Final Shot sul punto esatto.
-Vince chi deduce meglio, non chi spende di più.`;
+  const body = `M1SSION è una caccia al premio reale: raccogli indizi, trovi pattern, tiri il Final Shot sul punto esatto. Vince chi deduce meglio, non chi spende di più.`;
 
   const choices = [
-    'Prendiamo un indizio adesso (ti guido io).',
-    'Oppure ti spiego Final Shot in 2 frasi + una prova safe.'
+    'prendere un indizio adesso (ti guido io)',
+    'ascoltare la spiegazione di Final Shot in 2 frasi + una prova safe'
   ];
   
-  return `${hook}\n\n${body}\n\nScelte rapide:\n${renderChoiceList(choices)}\n\n${closer}`;
+  return `${hook}\n\n${body}\n\n${choicesToNaturalText(choices)}\n\n${closer}`;
 }
 
 /**
  * v6.8: Generate "How to start" explanation
  */
 function generateHowToStart(ctx: NorahContext): string {
-  const hook = getEmpathyHook(ctx);
+  const hook = varyPhrase(getEmpathyHook(ctx));
   const closer = getCloser();
   
-  const body = `Ci sono, partiamo in modo leggero.
-Step 1 (30s): apri BUZZ e prendi 1 indizio.
-Step 2 (60s): torni qui e te lo traduco in azioni.`;
+  const body = `Ci sono, partiamo in modo leggero. Prima apri BUZZ e prendi 1 indizio (30s), poi torni qui e te lo traduco in azioni (60s).`;
 
   const choices = [
-    'Vuoi farlo ora?',
-    'Preferisci una panoramica rapida di M1SSION?'
+    'farlo ora',
+    'avere prima una panoramica rapida di M1SSION'
   ];
   
-  return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
+  return `${hook}\n\n${body} ${choicesToNaturalText(choices)}\n\n${closer}`;
 }
 
 /**
  * v6.8: Generate "No BUZZ" alternative response
  */
 function generateNoBuzzResponse(ctx: NorahContext): string {
-  const hook = getEmpathyHook(ctx);
+  const hook = varyPhrase(getEmpathyHook(ctx));
   const closer = getCloser();
   
-  const body = `Ok, niente BUZZ ora. Ti propongo tre alternative per allenarti senza raccogliere indizi:`;
+  const body = `Ok, niente BUZZ ora. Ti propongo tre alternative per allenarti senza raccogliere indizi`;
   
   const choices = [
-    '**Mini-Quiz 30s**: ti alleno su un indizio tipico (zero spoiler)',
-    '**Pattern Drill**: riconosci quale indizio restringe di più',
-    '**FAQ 60s**: 4 domande essenziali su M1SSION'
+    'un **Mini-Quiz da 30s** dove ti alleno su un indizio tipico (zero spoiler)',
+    'un **Pattern Drill** per riconoscere quale indizio restringe di più',
+    'le **FAQ in 60s** con 4 domande essenziali su M1SSION'
   ];
   
-  return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
+  return `${hook}\n\n${body}: ${choicesToNaturalText(choices)}\n\n${closer}`;
 }
 
 /**
@@ -273,22 +246,22 @@ function generateRulesShort(ctx: NorahContext): string {
  * v6.8: Generate saluto (greeting) response
  */
 function generateSalutoResponse(ctx: NorahContext): string {
-  const hook = getEmpathyHook(ctx);
+  const hook = varyPhrase(getEmpathyHook(ctx));
   const closer = getCloser();
   
   const clues = ctx?.stats?.clues || 0;
   
   const body = clues > 0
     ? `Hai già ${clues} indizi raccolti. Facciamo una mossa utile adesso?`
-    : `Facciamo una mossa semplice e utile per iniziare.`;
+    : `Ehi! Facciamo una mossa semplice e utile per iniziare.`;
   
   const choices = [
-    'Apri BUZZ (1 indizio in 60s)',
-    'Panoramica M1SSION',
-    'Alternative senza BUZZ'
+    'aprire BUZZ (1 indizio in 60s)',
+    'avere una panoramica di M1SSION',
+    'vedere alternative senza BUZZ'
   ];
   
-  return `${hook}\n\n${body}\n\n${renderChoiceList(choices)}\n\n${closer}`;
+  return `${hook}\n\n${body} ${choicesToNaturalText(choices)}\n\n${closer}`;
 }
 
 /**
@@ -512,6 +485,17 @@ export function composeReply(
   if (joke.used) {
     logJokeUsed(sentiment, joke.text);
     baseReply = `${joke.text}\n\n${baseReply}`;
+  }
+  
+  // v6.9: Apply anti-echo filter before returning
+  if (detectEcho(baseReply, userInput)) {
+    console.log('[NORAH v6.9] Echo detected, rephrasing...');
+    baseReply = removeEcho(baseReply, userInput);
+  }
+  
+  // v6.9: Clamp output to prevent long-winded replies
+  if (baseReply.length > 1000) {
+    baseReply = baseReply.substring(0, 1000) + '…';
   }
   
   return baseReply;
