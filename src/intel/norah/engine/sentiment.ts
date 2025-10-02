@@ -43,13 +43,16 @@ export function detectSentiment(input: string): SentimentLabel {
     }
   }
 
-  // v6.2: Sarcasm baseline detection (priority 1.5)
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
+  // v6.7: Expanded sarcasm patterns
   const sarcasmPatterns = [
-    /ah\s+sì\s+certo/i,
+    /ah\s+s[ìi]\s+certo/i,
     /figurati/i,
     /come\s+no/i,
     /ma\s+dai/i,
-    /certo\s+certo/i
+    /ma\s+va\s*[!?]*/i,
+    /certo\s+certo/i,
+    /sicuro\s*[!?]+/i
   ];
   
   // If sarcasm + question mark → frustrated

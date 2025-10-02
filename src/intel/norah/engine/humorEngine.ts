@@ -107,9 +107,10 @@ export function maybeJoke(
     return { text: '', used: false };
   }
 
-  // 15% probability (1 in ~7 eligible messages)
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
+  // 17% probability (target: 12-18% range)
   const roll = Math.random();
-  if (roll > 0.15) {
+  if (roll > 0.17) {
     return { text: '', used: false };
   }
 

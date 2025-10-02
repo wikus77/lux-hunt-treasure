@@ -413,12 +413,11 @@ function isPricingQuery(input: string): boolean {
 }
 
 /**
- * v6.5: Unified generateReply signature (2 args max)
+ * v6.7: Unified generateReply signature (1 arg only)
  */
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
 export async function generateReply(
-  userInput: string,
-  mode?: 'analyze' | 'plain'
+  userInput: string
 ): Promise<string> {
   const ctx = await import('./contextBuilder').then(m => m.buildNorahContext());
   const intentResult = routeIntent(userInput);

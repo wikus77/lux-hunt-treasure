@@ -67,7 +67,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
   const [nbaPills, setNbaPills] = useState<NBASuggestion[]>([]);
   const [celebration, setCelebration] = useState<ReturnType<typeof celebrateMilestone> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const prevCluesRef = useRef<number>(0); // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  const prevCluesRef = useRef<number>(0); // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
 
   // v6.2: Load NBA Pills on mount
   useEffect(() => {
@@ -95,18 +95,27 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  // v6.6: Trigger celebrations on clue milestones
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
+  // v6.7: Expanded celebration triggers (clues + breakthrough)
   useEffect(() => {
-    const currentClues = agentContext?.cluesCount || 0;
+    if (!agentContext) return;
+    
+    const currentClues = agentContext.cluesCount || 0;
     const prevClues = prevCluesRef.current;
     
-    if (currentClues > prevClues) {
-      if (prevClues === 0 && currentClues === 1) {
-        setCelebration(celebrateMilestone('milestone', '🎯 Primo indizio trovato!'));
-      } else if (currentClues === 5) {
-        setCelebration(celebrateMilestone('milestone', '🌟 5 indizi raccolti!'));
-      }
+    // First clue celebration
+    if (prevClues === 0 && currentClues === 1) {
+      setCelebration(celebrateMilestone('milestone', '🎯 Primo indizio trovato!'));
+    }
+    
+    // Fifth clue celebration
+    if (prevClues < 5 && currentClues === 5) {
+      setCelebration(celebrateMilestone('milestone', '🌟 5 indizi raccolti! Il pattern si delinea'));
+    }
+    
+    // Tenth clue celebration (breakthrough)
+    if (prevClues < 10 && currentClues === 10) {
+      setCelebration(celebrateMilestone('discovery', '🎖️ 10 indizi! Final Shot quasi pronto'));
     }
     
     prevCluesRef.current = currentClues;
@@ -267,12 +276,15 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
 
           {/* Input with rotating placeholder + NBA Pills */}
           <div className="p-6 border-t border-white/10">
-            {/* v6.2: NBA Pills above input */}
-            {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
+            {/* v6.7: NBA Pills with toast feedback */}
+            {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7 */}
             <NBAPills 
               suggestions={nbaPills} 
               onPick={async (payload) => {
-                await logPillClick(payload); // v6.6: unified signature
+                await logPillClick(payload);
+                // Show toast feedback using sonner
+                const { toast } = await import('sonner');
+                toast.success('✔️ Azione impostata', { duration: 2000 });
                 onSendMessage(payload, 'analyze');
               }} 
             />
@@ -283,7 +295,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={nbaPills.length > 0 ? "Suggerimenti pronti ↑" : placeholder}
+                placeholder={nbaPills.length > 0 ? "Suggerimenti pronti ↑" : "Cosa vuoi sapere?"}
                 disabled={isProcessing}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#F213A4]/50 disabled:opacity-50 transition-all"
               />
