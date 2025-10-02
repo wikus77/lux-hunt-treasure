@@ -122,3 +122,15 @@ verify_jwt = false
 
 [functions.get-norah-context]
 verify_jwt = true
+
+[functions.get-user-state]
+verify_jwt = true
+
+[functions.get-nearby-prizes]
+verify_jwt = true
+
+[functions.rag-search]
+verify_jwt = true
+
+[functions.open-support-ticket]
+verify_jwt = true

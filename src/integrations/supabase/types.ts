@@ -323,6 +323,109 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_docs: {
+        Row: {
+          body: string
+          created_at: string | null
+          doc_type: string | null
+          id: string
+          locale: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string | null
+          doc_type?: string | null
+          id?: string
+          locale?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string | null
+          doc_type?: string | null
+          id?: string
+          locale?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ai_docs_embeddings: {
+        Row: {
+          chunk_idx: number
+          chunk_text: string
+          created_at: string | null
+          doc_id: string | null
+          embedding: string | null
+          id: string
+        }
+        Insert: {
+          chunk_idx: number
+          chunk_text: string
+          created_at?: string | null
+          doc_id?: string | null
+          embedding?: string | null
+          id?: string
+        }
+        Update: {
+          chunk_idx?: number
+          chunk_text?: string
+          created_at?: string | null
+          doc_id?: string | null
+          embedding?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_docs_embeddings_doc_id_fkey"
+            columns: ["doc_id"]
+            isOneToOne: false
+            referencedRelation: "ai_docs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_events_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "ai_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_generated_clues: {
         Row: {
           content: string
@@ -358,6 +461,69 @@ export type Database = {
           prompt_used?: string
           title?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_memories_user: {
+        Row: {
+          consent_given: boolean | null
+          created_at: string | null
+          id: string
+          memory_key: string
+          memory_value: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_given?: boolean | null
+          created_at?: string | null
+          id?: string
+          memory_key: string
+          memory_value: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_given?: boolean | null
+          created_at?: string | null
+          id?: string
+          memory_key?: string
+          memory_value?: Json
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ai_sessions: {
+        Row: {
+          device: string | null
+          id: string
+          last_active_at: string | null
+          locale: string | null
+          session_data: Json | null
+          started_at: string | null
+          subscription_tier: string | null
+          user_id: string
+        }
+        Insert: {
+          device?: string | null
+          id?: string
+          last_active_at?: string | null
+          locale?: string | null
+          session_data?: Json | null
+          started_at?: string | null
+          subscription_tier?: string | null
+          user_id: string
+        }
+        Update: {
+          device?: string | null
+          id?: string
+          last_active_at?: string | null
+          locale?: string | null
+          session_data?: Json | null
+          started_at?: string | null
+          subscription_tier?: string | null
           user_id?: string
         }
         Relationships: []
@@ -5134,6 +5300,19 @@ export type Database = {
         Args: { credits_to_add: number; user_email: string }
         Returns: undefined
       }
+      ai_rag_search: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+        }
+        Returns: {
+          chunk_text: string
+          doc_id: string
+          similarity: number
+          title: string
+        }[]
+      }
       assign_area_radius: {
         Args: { p_mission_id: string }
         Returns: number
@@ -5143,6 +5322,10 @@ export type Database = {
           | { p_user_id: string; p_xp_amount: number }
           | { p_user_id: string; p_xp_amount: number; p_xp_type?: string }
         Returns: Json
+      }
+      binary_quantize: {
+        Args: { "": string } | { "": unknown }
+        Returns: unknown
       }
       block_ip: {
         Args: {
@@ -5454,6 +5637,22 @@ export type Database = {
         Args: { p_count: number; p_source: string; p_user: string }
         Returns: undefined
       }
+      halfvec_avg: {
+        Args: { "": number[] }
+        Returns: unknown
+      }
+      halfvec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      halfvec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      halfvec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
@@ -5477,6 +5676,22 @@ export type Database = {
       haversine_m: {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
+      }
+      hnsw_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnsw_sparsevec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      hnswhandler: {
+        Args: { "": unknown }
+        Returns: unknown
       }
       inc_buzz_today: {
         Args: { p_user_id: string }
@@ -5525,6 +5740,26 @@ export type Database = {
       is_ip_blocked: {
         Args: { ip_addr: unknown }
         Returns: boolean
+      }
+      ivfflat_bit_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflat_halfvec_support: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      ivfflathandler: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      l2_norm: {
+        Args: { "": unknown } | { "": unknown }
+        Returns: number
+      }
+      l2_normalize: {
+        Args: { "": string } | { "": unknown } | { "": unknown }
+        Returns: string
       }
       list_my_redemptions: {
         Args: { limit_rows?: number; offset_rows?: number }
@@ -5647,6 +5882,18 @@ export type Database = {
         Args: { uid: string }
         Returns: undefined
       }
+      sparsevec_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      sparsevec_send: {
+        Args: { "": unknown }
+        Returns: string
+      }
+      sparsevec_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
+      }
       submit_final_shot: {
         Args: { p_latitude: number; p_longitude: number; p_mission_id: string }
         Returns: Json
@@ -5738,6 +5985,30 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
+      }
+      vector_avg: {
+        Args: { "": number[] }
+        Returns: string
+      }
+      vector_dims: {
+        Args: { "": string } | { "": unknown }
+        Returns: number
+      }
+      vector_norm: {
+        Args: { "": string }
+        Returns: number
+      }
+      vector_out: {
+        Args: { "": string }
+        Returns: unknown
+      }
+      vector_send: {
+        Args: { "": string }
+        Returns: string
+      }
+      vector_typmod_in: {
+        Args: { "": unknown[] }
+        Returns: number
       }
     }
     Enums: {
