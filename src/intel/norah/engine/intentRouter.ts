@@ -150,9 +150,65 @@ const FUZZY_MIN_CONF = 0.52;
 const FUZZY_THRESHOLD = 0.40; // Clarify zone
 const HIGH_CONFIDENCE_THRESHOLD = 0.75;
 
+/**
+ * Map intent to RAG/tool requirements
+ */
+function mapIntentToNeeds(intent: NorahIntent, input: string): {
+  needs_rag: boolean;
+  needs_tool: string[];
+} {
+  const lowerInput = input.toLowerCase();
+
+  // DEFINE intents → always RAG
+  if (intent === 'about_buzz' || intent === 'about_mission' || intent === 'about_finalshot' ||
+      intent === 'diff_buzz_vs_map' || intent === 'rules' || intent === 'rules_short' ||
+      lowerInput.match(/cos[\'ì]è|cosa è|cosa significa|differenza|spiega|final shot|buzz map|buzz/i)) {
+    return {
+      needs_rag: true,
+      needs_tool: ['retrieve_docs', 'get_user_state']
+    };
+  }
+
+  // STATUS/ACTION intents → nearby prizes
+  if (intent === 'buzz_map' || intent === 'progress' ||
+      lowerInput.match(/premi vicino|vedi premi|cosa c\'è qui|mappa|vicino a me/i)) {
+    return {
+      needs_rag: false,
+      needs_tool: ['get_nearby_prizes', 'get_user_state']
+    };
+  }
+
+  // BUG/support intent → support ticket
+  if (lowerInput.match(/non funziona|errore|bug|pagamento|problema/i)) {
+    return {
+      needs_rag: false,
+      needs_tool: ['open_support_ticket', 'get_user_state']
+    };
+  }
+
+  // Plans/profile → just user state
+  if (intent === 'plans' || intent === 'profile' || intent === 'mentor') {
+    return {
+      needs_rag: false,
+      needs_tool: ['get_user_state']
+    };
+  }
+
+  // Default: just user state
+  return {
+    needs_rag: false,
+    needs_tool: ['get_user_state']
+  };
+}
+
 export function routeIntent(input: string): IntentResult {
   if (!input || typeof input !== 'string') {
-    return { intent: 'unknown', confidence: 0.1 };
+    return { 
+      intent: 'unknown', 
+      confidence: 0.1,
+      needs_rag: false,
+      needs_tool: []
+    };
   }
 
   const rawNormalized = input.toLowerCase().trim();
@@ -174,7 +230,12 @@ export function routeIntent(input: string): IntentResult {
   for (const pattern of SPOILER_PATTERNS) {
     if (pattern.test(rawNormalized)) {
       console.log('[NORAH-v4] Spoiler guard triggered');
-      return { intent: 'no_spoiler', confidence: 1.0 };
+      return { 
+        intent: 'no_spoiler', 
+        confidence: 1.0,
+        needs_rag: false,
+        needs_tool: []
+      };
     }
   }
 
@@ -189,8 +250,15 @@ export function routeIntent(input: string): IntentResult {
   if (tokens.length === 1) {
     const singleWord = tokens[0];
     if (SINGLE_WORD_MAP[singleWord]) {
-      console.debug('[NORAH] Single-word match:', singleWord, '→', SINGLE_WORD_MAP[singleWord]);
-      return { intent: SINGLE_WORD_MAP[singleWord], confidence: 0.95 };
+      const matchedIntent = SINGLE_WORD_MAP[singleWord];
+      const needs = mapIntentToNeeds(matchedIntent, input);
+      console.debug('[NORAH] Single-word match:', singleWord, '→', matchedIntent);
+      return { 
+        intent: matchedIntent, 
+        confidence: 0.95,
+        needs_rag: needs.needs_rag,
+        needs_tool: needs.needs_tool
+      };
     }
   }
 
@@ -235,8 +303,14 @@ export function routeIntent(input: string): IntentResult {
   if (scores.length > 0 && scores[0].score >= FUZZY_MIN_CONF) {
     const topIntent = scores[0].intent;
     const confidence = scores[0].score >= HIGH_CONFIDENCE_THRESHOLD ? 0.9 : 0.7;
-    console.debug('[NORAH] Intent routed:', topIntent, 'confidence:', confidence);
-    return { intent: topIntent, confidence };
+    const needs = mapIntentToNeeds(topIntent, input);
+    console.debug('[NORAH] Intent routed:', topIntent, 'confidence:', confidence, 'needs:', needs);
+    return { 
+      intent: topIntent, 
+      confidence,
+      needs_rag: needs.needs_rag,
+      needs_tool: needs.needs_tool
+    };
   }
 
   // v6.2: Clarify zone (0.45 - 0.52): suggest disambiguation
@@ -246,7 +320,9 @@ export function routeIntent(input: string): IntentResult {
     return {
       intent: 'help',
       confidence: 0.5,
-      slots: { clarify: true, suggestedIntents: topTwo }
+      slots: { clarify: true, suggestedIntents: topTwo },
+      needs_rag: false,
+      needs_tool: ['get_user_state']
     };
   }
 
@@ -269,8 +345,14 @@ export function routeIntent(input: string): IntentResult {
   
   for (const [keyword, intent] of Object.entries(keywordMap)) {
     if (expandedTokens.includes(keyword)) {
+      const needs = mapIntentToNeeds(intent, input);
       console.log('[NORAH-v4] Fallback keyword match:', keyword, '→', intent);
-      return { intent, confidence: 0.55 };
+      return { 
+        intent, 
+        confidence: 0.55,
+        needs_rag: needs.needs_rag,
+        needs_tool: needs.needs_tool
+      };
     }
   }
 
@@ -282,13 +364,20 @@ export function routeIntent(input: string): IntentResult {
       confidence: 0.5,
       slots: { 
         suggestedIntents: scores.slice(0, 3).map(s => s.intent)
-      }
+      },
+      needs_rag: false,
+      needs_tool: ['get_user_state']
     };
   }
 
   // Unknown
   console.log('[NORAH-v4] No intent match, defaulting to help');
-  return { intent: 'help', confidence: 0.4 };
+  return { 
+    intent: 'help', 
+    confidence: 0.4,
+    needs_rag: false,
+    needs_tool: ['get_user_state']
+  };
 }
 
 /**

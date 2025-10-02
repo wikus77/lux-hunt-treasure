@@ -7,6 +7,7 @@ import { buildSystemPrompt, buildDeveloperPrompt } from './promptBuilder';
 import { executeToolCalls } from './functionCalling';
 import { TOOL_SCHEMAS } from './toolSchemas';
 import { AIResponse, EnhancedContext } from '@/types/ai-gateway.types';
+import { routeIntent } from '@/intel/norah/engine/intentRouter';
 
 export interface AIGatewayOptions {
   userId: string;
@@ -31,15 +32,43 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
       locale: options.locale || 'it'
     });
 
-    // 2. PLANNER: Route intent first (for needs_rag/needs_tool detection)
-    // Note: Full planner integration pending - this is a placeholder
-    console.log(`[AI Gateway] traceId:${traceId} message: "${userMessage.substring(0, 50)}..."`);
+    // 2. PLANNER: Route intent to determine RAG/tool needs
+    const intentResult = routeIntent(userMessage);
+    console.log(`[AI Gateway] traceId:${traceId} intent routed:`, {
+      intent: intentResult.intent,
+      confidence: intentResult.confidence,
+      needs_rag: intentResult.needs_rag,
+      needs_tool: intentResult.needs_tool
+    });
 
-    // 3. Build system prompt
-    const systemPrompt = buildSystemPrompt(context);
+    // 3. Pre-execute RAG if needed
+    let ragContext = '';
+    if (intentResult.needs_rag && intentResult.needs_tool?.includes('retrieve_docs')) {
+      console.log(`[AI Gateway] traceId:${traceId} fetching RAG context...`);
+      try {
+        const { data: ragData, error: ragError } = await supabase.functions.invoke('norah/rag-search', {
+          body: { query: userMessage, k: 6 }
+        });
+
+        if (!ragError && ragData?.results?.length > 0) {
+          ragContext = '\n\n📚 **Knowledge Base (M1SSION Docs)**:\n' +
+            ragData.results.map((r: any, i: number) => 
+              `${i + 1}. "${r.title}": ${r.chunk_text} (rilevanza: ${(r.similarity * 100).toFixed(0)}%)`
+            ).join('\n\n');
+          console.log(`[AI Gateway] traceId:${traceId} RAG: ${ragData.results.length} chunks added`);
+        } else {
+          console.log(`[AI Gateway] traceId:${traceId} RAG: no results or error:`, ragError);
+        }
+      } catch (ragErr) {
+        console.warn(`[AI Gateway] traceId:${traceId} RAG fetch failed:`, ragErr);
+      }
+    }
+
+    // 4. Build system prompt (with RAG context if present)
+    const systemPrompt = buildSystemPrompt(context) + ragContext;
     const developerPrompt = buildDeveloperPrompt();
 
-    // 3. Prepare messages for LLM with tool calling enabled
+    // 5. Prepare messages for LLM with tool calling enabled
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'system', content: developerPrompt },
@@ -47,7 +76,7 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
       { role: 'user', content: userMessage }
     ];
 
-    // 4. Call LLM with tool calling enabled
+    // 6. Call LLM with tool calling enabled
     const { data: fxData, error: fxError } = await supabase.functions.invoke('chat', {
       body: { 
         messages,
@@ -61,7 +90,7 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
       return { message: 'Problema con il servizio AI. Riprova tra poco.', suggestedActions: [] };
     }
 
-    // 5. Handle tool calls if present
+    // 7. Handle tool calls if present
     let finalMessage = fxData?.message || 'Nessuna risposta dal modello.';
     
     if (fxData?.tool_calls && Array.isArray(fxData.tool_calls)) {
@@ -96,7 +125,7 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
       message: finalMessage,
     };
 
-    // 6. Log interaction
+    // 8. Log interaction
     await logAIInteraction(userId, userMessage, response.message, context);
 
     console.log(`[AI Gateway] traceId:${traceId} completed`);
