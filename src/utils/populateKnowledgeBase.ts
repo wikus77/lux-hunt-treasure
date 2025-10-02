@@ -1,34 +1,43 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Helper per popolare knowledge base (chiamare una volta)
 
-export async function populateKnowledgeBase() {
-  const SUPABASE_URL = "https://vkjrqirvdvjbemsfzxof.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
+import { supabase } from '@/integrations/supabase/client';
+import { SEED_DOCUMENTS } from '@/intel/norah/kb/seedDocuments';
+
+export interface PopulateKBOptions {
+  documents?: typeof SEED_DOCUMENTS;
+  force?: boolean;
+}
+
+export async function populateKnowledgeBase(options: PopulateKBOptions = {}) {
+  const docs = options.documents ?? SEED_DOCUMENTS;
 
   try {
-    console.log('📚 Popolamento Knowledge Base in corso...');
+    console.log('📚 [NORAH KB] Popolamento Knowledge Base in corso...');
+    console.log(`📄 [NORAH KB] Documenti da processare: ${docs.length}`);
 
-    const response = await fetch(
-      `${SUPABASE_URL}/functions/v1/populate-knowledge-base`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-        body: JSON.stringify({}),
-      }
-    );
+    const { data, error } = await supabase.functions.invoke('norah/kb-upsert', {
+      body: { documents: docs }
+    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+    if (error) {
+      console.error('❌ [NORAH KB] Errore edge function:', error);
+      throw new Error(`KB upsert failed: ${error.message || JSON.stringify(error)}`);
     }
 
-    const result = await response.json();
-    console.log('✅ Knowledge Base popolata:', result);
-    return result;
+    console.log('✅ [NORAH KB] Knowledge Base popolata:', data);
+    console.log(`📊 [NORAH KB] Processati: ${data?.processed || 0}/${data?.total || docs.length}`);
+    
+    if (data?.results) {
+      data.results.forEach((r: any) => {
+        const status = r.status === 'ok' ? '✅' : '❌';
+        console.log(`${status} [NORAH KB] ${r.slug}: ${r.chunks || 0} chunks`);
+      });
+    }
+
+    return data;
   } catch (error) {
-    console.error('❌ Errore popolamento KB:', error);
+    console.error('❌ [NORAH KB] Errore popolamento:', error);
     throw error;
   }
 }
