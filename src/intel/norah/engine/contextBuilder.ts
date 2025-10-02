@@ -4,7 +4,7 @@
 import { supabase } from '@/integrations/supabase/client';
 
 const CACHE_KEY = 'norah_agent_cache';
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+const CACHE_TTL = 6 * 60 * 60 * 1000; // v6.2: 6 hours TTL
 
 export interface NorahContext {
   agent: {

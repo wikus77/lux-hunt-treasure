@@ -43,6 +43,21 @@ export function detectSentiment(input: string): SentimentLabel {
     }
   }
 
+  // v6.2: Sarcasm baseline detection (priority 1.5)
+  const sarcasmPatterns = [
+    /ah\s+sì\s+certo/i,
+    /figurati/i,
+    /come\s+no/i,
+    /ma\s+dai/i,
+    /certo\s+certo/i
+  ];
+  
+  // If sarcasm + question mark → frustrated
+  if (sarcasmPatterns.some(p => p.test(lower)) && lower.includes('?')) {
+    console.log('[Sentiment] Detected: frustrated (sarcasm)');
+    return 'frustrated';
+  }
+
   // Confused signals (priority 2 - needs hand-holding)
   const confusedPatterns = [
     'non ho capito',

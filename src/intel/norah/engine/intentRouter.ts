@@ -111,7 +111,7 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
   mentor: ['consiglio', 'strategia', 'suggerimento', 'come procedo', 'mentore'],
   profile: ['chi sono', 'codice', 'agent code', 'profilo'],
   progress: ['progress', 'stato', 'quanti indizi', 'avanzamento'],
-  plans: ['abbonamento', 'abbo', 'piano', 'pricing', 'subscription', 'prezzi'],
+  plans: ['abbonamento', 'abbo', 'piano', 'pricing', 'subscription', 'prezzi', 'paga', 'gratis', 'prezzo', 'costa', 'quanto costa', 'gratuito'],
   leaderboard: ['classifica', 'ranking', 'leader'],
   community: ['community', 'comunità'],
   data_privacy: ['privacy', 'dati', 'sicurezza', 'privata'],
@@ -122,8 +122,9 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
 };
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v4: Fuzzy threshold lowered for better tolerance
-const FUZZY_THRESHOLD = 0.40;
+// v6.2: Threshold raised to reduce false positives
+const FUZZY_MIN_CONF = 0.52;
+const FUZZY_THRESHOLD = 0.40; // Clarify zone
 const HIGH_CONFIDENCE_THRESHOLD = 0.75;
 
 export function routeIntent(input: string): IntentResult {
@@ -207,12 +208,23 @@ export function routeIntent(input: string): IntentResult {
 
   console.debug('[NORAH] Intent scores:', scores.slice(0, 3));
 
-  // Top match
-  if (scores.length > 0 && scores[0].score >= FUZZY_THRESHOLD) {
+  // v6.2: High confidence (>= 0.52)
+  if (scores.length > 0 && scores[0].score >= FUZZY_MIN_CONF) {
     const topIntent = scores[0].intent;
     const confidence = scores[0].score >= HIGH_CONFIDENCE_THRESHOLD ? 0.9 : 0.7;
     console.debug('[NORAH] Intent routed:', topIntent, 'confidence:', confidence);
     return { intent: topIntent, confidence };
+  }
+
+  // v6.2: Clarify zone (0.45 - 0.52): suggest disambiguation
+  if (scores.length > 0 && scores[0].score >= 0.45) {
+    const topTwo = scores.slice(0, 2).map(s => s.intent);
+    console.log('[NORAH-v6.2] Clarify zone, suggesting:', topTwo);
+    return {
+      intent: 'help',
+      confidence: 0.5,
+      slots: { clarify: true, suggestedIntents: topTwo }
+    };
   }
 
   // v5: Enhanced fallback - more synonyms for help intent

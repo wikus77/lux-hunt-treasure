@@ -301,6 +301,7 @@ export type Database = {
           agent_code: string
           created_at: string | null
           nickname: string | null
+          streak_days: number
           updated_at: string | null
           user_id: string
         }
@@ -308,6 +309,7 @@ export type Database = {
           agent_code: string
           created_at?: string | null
           nickname?: string | null
+          streak_days?: number
           updated_at?: string | null
           user_id: string
         }
@@ -315,6 +317,7 @@ export type Database = {
           agent_code?: string
           created_at?: string | null
           nickname?: string | null
+          streak_days?: number
           updated_at?: string | null
           user_id?: string
         }
@@ -2075,6 +2078,7 @@ export type Database = {
         Row: {
           created_at: string | null
           event: string
+          event_type: string
           id: string
           intent: string | null
           phase: string | null
@@ -2084,6 +2088,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           event: string
+          event_type?: string
           id?: string
           intent?: string | null
           phase?: string | null
@@ -2093,10 +2098,38 @@ export type Database = {
         Update: {
           created_at?: string | null
           event?: string
+          event_type?: string
           id?: string
           intent?: string | null
           phase?: string | null
           sentiment?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      norah_memory_episodes: {
+        Row: {
+          created_at: string
+          emotional_peak: string | null
+          id: string
+          learned_pref: Json | null
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emotional_peak?: string | null
+          id?: string
+          learned_pref?: Json | null
+          summary: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emotional_peak?: string | null
+          id?: string
+          learned_pref?: Json | null
+          summary?: string
           user_id?: string
         }
         Relationships: []
@@ -2106,6 +2139,7 @@ export type Database = {
           content: string
           context: Json | null
           created_at: string | null
+          episodic_summary: string | null
           id: string
           intent: string | null
           role: string
@@ -2115,6 +2149,7 @@ export type Database = {
           content: string
           context?: Json | null
           created_at?: string | null
+          episodic_summary?: string | null
           id?: string
           intent?: string | null
           role: string
@@ -2124,6 +2159,7 @@ export type Database = {
           content?: string
           context?: Json | null
           created_at?: string | null
+          episodic_summary?: string | null
           id?: string
           intent?: string | null
           role?: string
