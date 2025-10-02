@@ -165,15 +165,16 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       <AIEdgeGlow status={status} isActive={true} audioLevel={audioLevel} />
       
       {/* Panel */}
-      <div className="fixed inset-4 md:inset-8 z-50 flex items-center justify-center">
+      {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
+      <div className="fixed inset-0 md:inset-8 z-50 flex items-center justify-center">
         <div 
-          className="w-full max-w-4xl h-full max-h-[800px] bg-black/90 backdrop-blur-xl flex flex-col"
+          className="w-full max-w-full md:max-w-4xl h-full md:max-h-[800px] bg-black/90 backdrop-blur-xl flex flex-col"
           style={{
-            borderRadius: '20px',
-            border: '2px solid transparent',
+            borderRadius: '0px',
+            border: '0px solid transparent',
             backgroundClip: 'padding-box',
-            boxShadow: '0 0 40px rgba(242, 19, 164, 0.3), 0 0 80px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(242, 19, 164, 0.05)',
-            borderImage: 'linear-gradient(135deg, rgba(0, 229, 255, 0.4), rgba(242, 19, 164, 0.4)) 1'
+            boxShadow: '0 0 40px rgba(0, 229, 255, 0.2), inset 0 0 60px rgba(0, 229, 255, 0.05)',
+            borderImage: 'none'
           }}
           onClick={(e) => e.stopPropagation()}
         >
