@@ -136,121 +136,127 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className="fixed left-0 right-0 z-50 backdrop-blur-xl"
+      className="fixed left-0 right-0 z-50"
       style={{
-        background: "var(--m1-header-bg-gradient)",
-        backdropFilter: "blur(12px)",
         top: '0px',
         paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
         marginTop: '0px',
         height: 'calc(var(--header-height) + max(env(safe-area-inset-top, 0px), 8px))',
-        // Safe area background matches header
-        backgroundImage: 'var(--m1-header-bg-gradient)'
       }}
     >
-      <div className="container mx-auto h-full max-w-screen-xl relative">
-        {/* Main Header Row */}
-        <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
-          {/* Left Section */}
-          <div className="flex items-center">
-            {leftComponent ? (
-              leftComponent
-            ) : (
-              <div className="flex items-center">
-                {/* Back Button - Only show for non-home pages that aren't bottom nav pages */}
-                {!isHomePage && !isBottomNavPage && canGoBack && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => goBackWithFeedback()}
-                    className="mr-2 rounded-full hover:bg-white/10"
+      <div 
+        className="backdrop-blur-xl rounded-b-lg"
+        style={{
+          background: "rgba(0, 0, 0, 0.15)",
+          backdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(0, 209, 255, 0.2)",
+          boxShadow: "0 4px 24px rgba(0, 209, 255, 0.15), 0 2px 12px rgba(0, 209, 255, 0.1), inset 0 -1px 0 rgba(0, 209, 255, 0.1)",
+        }}
+      >
+        <div className="container mx-auto h-full max-w-screen-xl relative">
+          {/* Main Header Row */}
+          <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
+            {/* Left Section */}
+            <div className="flex items-center">
+              {leftComponent ? (
+                leftComponent
+              ) : (
+                <div className="flex items-center">
+                  {/* Back Button - Only show for non-home pages that aren't bottom nav pages */}
+                  {!isHomePage && !isBottomNavPage && canGoBack && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => goBackWithFeedback()}
+                      className="mr-2 rounded-full hover:bg-white/10"
+                    >
+                      <ArrowLeft className="w-5 h-5" />
+                    </Button>
+                  )}
+                  
+                  <Link
+                    to="/home"
+                    className="text-xl sm:text-2xl font-orbitron font-bold"
                   >
-                    <ArrowLeft className="w-5 h-5" />
-                  </Button>
-                )}
-                
-                <Link
-                  to="/home"
-                  className="text-xl sm:text-2xl font-orbitron font-bold"
-                >
-                  <span className="text-[#00D1FF]" style={{ 
-                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                  }}>M1</span>
-                  <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
-                </Link>
-              </div>
-            )}
-          </div>
-
-          {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
-          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
-            {/* CODE con pallino pulsante */}
-            <div className="flex items-center gap-2">
-              <motion.div
-                className="w-2 h-2 bg-[#00D1FF] rounded-full"
-                animate={{
-                  scale: [1, 1.2, 1],
-                  opacity: [1, 0.7, 1],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{
-                  boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
-                }}
-              />
-              <span 
-                className="text-xs font-orbitron font-bold text-white tracking-wider"
-                style={{
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                }}
-              >
-                CODE
-              </span>
+                    <span className="text-[#00D1FF]" style={{ 
+                      textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+                    }}>M1</span>
+                    <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
+                  </Link>
+                </div>
+              )}
             </div>
-            {/* Codice Agente sotto */}
-            <ReferralCodeDisplay />
-          </div>
 
-          {/* Right Section */}
-          <div className="flex items-center space-x-1 sm:space-x-3">
-            {/* Settings - Always accessible for authenticated users */}
-            <Link to="/settings">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="rounded-full hover:bg-white/10"
-              >
+            {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
+            <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
+              {/* CODE con pallino pulsante */}
+              <div className="flex items-center gap-2">
                 <motion.div
-                  animate={{ 
-                    rotate: [0, 360],
-                    scale: [1, 1.05, 1]
+                  className="w-2 h-2 bg-[#00D1FF] rounded-full"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [1, 0.7, 1],
                   }}
-                  transition={{ 
-                    rotate: { duration: 8, repeat: Infinity, ease: "linear" },
-                    scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut"
                   }}
                   style={{
-                    filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))"
+                    boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
+                  }}
+                />
+                <span 
+                  className="text-xs font-orbitron font-bold text-white tracking-wider"
+                  style={{
+                    textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
                   }}
                 >
-                  <Settings className="w-5 h-5 text-[#00D1FF]" />
-                </motion.div>
-              </Button>
-            </Link>
+                  CODE
+                </span>
+              </div>
+              {/* Codice Agente sotto */}
+              <ReferralCodeDisplay />
+            </div>
 
-            {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
-            <ProfileDropdown
-              profileImage={currentProfileImage}
-              className="cursor-pointer"
-            />
+            {/* Right Section */}
+            <div className="flex items-center space-x-1 sm:space-x-3">
+              {/* Settings - Always accessible for authenticated users */}
+              <Link to="/settings">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full hover:bg-white/10"
+                >
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 360],
+                      scale: [1, 1.05, 1]
+                    }}
+                    transition={{ 
+                      rotate: { duration: 8, repeat: Infinity, ease: "linear" },
+                      scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                    style={{
+                      filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))"
+                    }}
+                  >
+                    <Settings className="w-5 h-5 text-[#00D1FF]" />
+                  </motion.div>
+                </Button>
+              </Link>
+
+              {/* Profile Dropdown - 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™ */}
+              <ProfileDropdown
+                profileImage={currentProfileImage}
+                className="cursor-pointer"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Animated color line at bottom of header - same as bottom navigation */}
-        <div className="line-glow absolute bottom-0 left-0 w-full"></div>
+          {/* Animated color line at bottom of header - same as bottom navigation */}
+          <div className="line-glow absolute bottom-0 left-0 w-full"></div>
+        </div>
       </div>
     </motion.header>
   );
