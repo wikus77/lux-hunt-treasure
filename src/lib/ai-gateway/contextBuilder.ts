@@ -19,13 +19,20 @@ export async function buildEnhancedContext(
       body: { userId }
     });
 
-    // Get recent messages from norah_messages (if any)
-    const { data: recentMessages } = await supabase
-      .from('norah_messages')
-      .select('role, content')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // Get recent messages from norah_messages (optional table)
+    let recentMessages = null;
+    try {
+      const { data } = await supabase
+        .from('norah_messages')
+        .select('role, content')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      recentMessages = data;
+    } catch (err) {
+      // Table might not exist, continue without messages
+      console.warn('[Enhanced Context] norah_messages not available:', err);
+    }
 
     // Get recent final shots
     const { data: recentShots } = await supabase
