@@ -144,9 +144,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         backgroundImage: 'var(--m1-header-bg-gradient)'
       }}
     >
-      <div className="container mx-auto h-full max-w-screen-xl">
+      <div className="container mx-auto h-full max-w-screen-xl relative">
         {/* Main Header Row */}
-        <div className="flex items-center justify-between h-[72px] px-3 sm:px-4">
+        <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
           {/* Left Section */}
           <div className="flex items-center">
             {leftComponent ? (
@@ -179,7 +179,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           </div>
 
           {/* Center section - Referral Code Display - © 2025 Joseph MULÉ – M1SSION™ */}
-          <ReferralCodeDisplay />
+          <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <ReferralCodeDisplay />
+          </div>
 
           {/* Right Section */}
           <div className="flex items-center space-x-1 sm:space-x-3">
@@ -216,6 +218,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           </div>
         </div>
 
+        {/* Animated color line at bottom of header - same as bottom navigation */}
+        <div className="line-glow absolute bottom-0 left-0 w-full"></div>
       </div>
     </motion.header>
   );
