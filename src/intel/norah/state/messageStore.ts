@@ -24,8 +24,8 @@ export function addMessage(msg: NorahMessage) {
     messageBuffer = messageBuffer.slice(-16);
   }
 
-  // v6.2: Check if we should save episodic memory (every 6 messages)
-  if (messageBuffer.length % 6 === 0 && messageBuffer.length > 0) {
+  // v6.8: Check if we should save episodic memory (every 5 messages)
+  if (messageBuffer.length % 5 === 0 && messageBuffer.length > 0) {
     saveEpisodicMemory();
   }
 
@@ -45,14 +45,14 @@ export function clearMessages() {
 }
 
 /**
- * Episodic summary: generate brief summary of last 6 messages
+ * v6.8: Episodic summary: generate brief summary of last 5 messages
  * Used for greeting continuity and conversational memory
  */
 export function summarizeWindow(): string {
-  if (messageBuffer.length < 6) return '';
+  if (messageBuffer.length < 5) return '';
 
-  const last6 = messageBuffer.slice(-6);
-  const userMessages = last6.filter(m => m.role === 'user');
+  const last5 = messageBuffer.slice(-5);
+  const userMessages = last5.filter(m => m.role === 'user');
   
   if (userMessages.length === 0) return '';
 
@@ -146,25 +146,27 @@ async function saveEpisodicMemory() {
 }
 
 /**
- * v6.3: Fetch last episodic memory for greeting with timeout protection
+ * v6.8: Fetch last episodic memory for greeting with timeout protection
+ * Returns { summary: string } object for compatibility with useNorah
  */
-export async function fetchLastEpisode(): Promise<string | null> {
+export async function fetchLastEpisode(options?: { timeoutMs?: number }): Promise<{ summary: string } | null> {
   try {
     if (episodicMemoryFetched && episodicMemoryCache) {
-      return episodicMemoryCache;
+      return { summary: episodicMemoryCache };
     }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    // v6.3: Add timeout protection (300ms)
+    // v6.8: Configurable timeout (default 300ms)
+    const timeoutMs = options?.timeoutMs || 300;
     const timeoutPromise = new Promise<null>((resolve) => {
-      setTimeout(() => resolve(null), 300);
+      setTimeout(() => resolve(null), timeoutMs);
     });
 
     const fetchPromise = supabase
       .from('norah_memory_episodes')
-      .select('summary, emotional_peak')
+      .select('summary, emotional_peak, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -184,9 +186,18 @@ export async function fetchLastEpisode(): Promise<string | null> {
       return null;
     }
 
+    // v6.8: Check if episode is recent (<14 days)
+    const episodeDate = new Date(data.created_at);
+    const daysSince = (Date.now() - episodeDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (daysSince > 14) {
+      episodicMemoryFetched = true;
+      return null;
+    }
+
     episodicMemoryCache = data.summary;
     episodicMemoryFetched = true;
-    return data.summary;
+    return { summary: data.summary };
   } catch {
     episodicMemoryFetched = true;
     return null;
