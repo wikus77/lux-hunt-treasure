@@ -31,7 +31,11 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
       locale: options.locale || 'it'
     });
 
-    // 2. Build system prompt
+    // 2. PLANNER: Route intent first (for needs_rag/needs_tool detection)
+    // Note: Full planner integration pending - this is a placeholder
+    console.log(`[AI Gateway] traceId:${traceId} message: "${userMessage.substring(0, 50)}..."`);
+
+    // 3. Build system prompt
     const systemPrompt = buildSystemPrompt(context);
     const developerPrompt = buildDeveloperPrompt();
 
