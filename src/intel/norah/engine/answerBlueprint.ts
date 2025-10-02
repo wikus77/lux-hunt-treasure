@@ -177,20 +177,27 @@ export function formatAnswer(input: BlueprintInput): AnswerSection {
 }
 
 /**
- * Render answer to markdown string
+ * Render answer to markdown string with ENFORCED blueprint structure
  */
 export function renderAnswer(answer: AnswerSection): string {
+  // (1) Direct answer (≤2 sentences)
   let md = `${answer.direct}\n\n`;
   
+  // (2) Details (2-3 contextual bullets)
   if (answer.details.length > 0) {
-    md += answer.details.join('\n') + '\n\n';
+    md += answer.details.slice(0, 3).join('\n') + '\n\n';
   }
   
+  // (3) CTAs (2-3 actions) - MANDATORY for DEFINE/HOWTO/STATUS
   if (answer.ctas.length > 0) {
     md += `**Prossime mosse:**\n`;
-    md += answer.ctas.map(cta => `• ${cta}`).join('\n') + '\n\n';
+    md += answer.ctas.slice(0, 3).map(cta => `🎯 ${cta}`).join('\n') + '\n\n';
+  } else {
+    // Fallback CTAs if none provided (should never happen with proper intent routing)
+    md += `**Prossime mosse:**\n🎯 Apri regole complete\n🎯 Visualizza tutorial\n\n`;
   }
   
+  // (4) Motivation (1 line closer)
   md += answer.motivation;
   
   return md;
