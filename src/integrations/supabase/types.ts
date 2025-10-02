@@ -326,6 +326,7 @@ export type Database = {
       ai_docs: {
         Row: {
           body: string
+          category: string | null
           created_at: string | null
           doc_type: string | null
           id: string
@@ -336,6 +337,7 @@ export type Database = {
         }
         Insert: {
           body: string
+          category?: string | null
           created_at?: string | null
           doc_type?: string | null
           id?: string
@@ -346,6 +348,7 @@ export type Database = {
         }
         Update: {
           body?: string
+          category?: string | null
           created_at?: string | null
           doc_type?: string | null
           id?: string
