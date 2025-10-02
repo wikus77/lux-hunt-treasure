@@ -114,11 +114,11 @@ const BottomNavigationComponent = () => {
         style={{
           position: "relative",
           zIndex: "inherit",
-          height: isPWA ? "calc(72px + env(safe-area-inset-bottom))" : "72px",
+          height: "72px",
           display: "flex",
           alignItems: "center",
           paddingBottom: isPWA ? "env(safe-area-inset-bottom)" : "0px",
-          background: "rgba(0, 0, 0, 0.4)",
+          background: "rgba(0, 0, 0, 0.15)",
           backdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(0, 209, 255, 0.2)",
           boxShadow: "0 -4px 24px rgba(0, 209, 255, 0.15), 0 -2px 12px rgba(0, 209, 255, 0.1), inset 0 1px 0 rgba(0, 209, 255, 0.1)",
