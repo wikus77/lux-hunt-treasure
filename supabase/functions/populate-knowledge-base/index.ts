@@ -73,16 +73,21 @@ serve(async (req) => {
 
       if (existingDoc) {
         docId = existingDoc.id;
-        await supabase
-          .from('ai_docs')
-          .update({ category: doc.category, updated_at: new Date().toISOString() })
-          .eq('id', docId);
-        console.log(`  ♻️ Aggiornato documento esistente`);
+        try {
+          await supabase
+            .from('ai_docs')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', docId);
+          console.log(`  ♻️ Aggiornato documento esistente (solo timestamp)`);
+        } catch (e) {
+          console.log('  ⚠️ Update fallback failed, will proceed with embeddings refresh only');
+        }
       } else {
         // Genera corpo compilato per il documento
         const docBody = generateDocBody(doc);
         
-        const { data: newDoc, error: insertError } = await supabase
+        // Primo tentativo: inserire con tutte le colonne
+        let docInsert = await supabase
           .from('ai_docs')
           .insert({ 
             title: doc.title, 
@@ -94,12 +99,24 @@ serve(async (req) => {
           .select('id')
           .single();
         
-        if (insertError || !newDoc) {
-          console.error(`  ❌ Errore insert documento:`, insertError);
-          continue;
+        if (docInsert.error || !docInsert.data) {
+          console.warn('  ⚠️ Insert completo fallito, retry senza colonne opzionali:', docInsert.error?.message);
+          // Fallback: inserisci solo le colonne sicuramente presenti
+          const fallback = await supabase
+            .from('ai_docs')
+            .insert({ title: doc.title, body: docBody })
+            .select('id')
+            .single();
+          if (fallback.error || !fallback.data) {
+            console.error(`  ❌ Errore insert documento (fallback):`, fallback.error);
+            continue;
+          }
+          docId = fallback.data.id;
+          console.log(`  ✅ Creato nuovo documento (fallback)`);
+        } else {
+          docId = docInsert.data.id;
+          console.log(`  ✅ Creato nuovo documento`);
         }
-        docId = newDoc.id;
-        console.log(`  ✅ Creato nuovo documento`);
       }
 
       // Genera chunks basati sul contenuto compilato
@@ -143,7 +160,7 @@ serve(async (req) => {
           .insert({
             doc_id: docId,
             chunk_text: chunk,
-            chunk_index: i,
+            chunk_idx: i,
             embedding: embedding,
           });
 
