@@ -33,7 +33,14 @@ export async function populateKnowledgeBase() {
   }
 }
 
-// Helper per testare knowledge base in console
+// Esponi la funzione globalmente per debug
+declare global {
+  interface Window {
+    __populateKB__: typeof populateKnowledgeBase;
+  }
+}
+
 if (typeof window !== 'undefined') {
-  (window as any).__populateKB__ = populateKnowledgeBase;
+  window.__populateKB__ = populateKnowledgeBase;
+  console.log('✅ window.__populateKB__ disponibile');
 }
