@@ -80,8 +80,32 @@ export async function buildNorahContext(): Promise<NorahContext> {
   const cached = getCachedAgent();
   
   try {
+    // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+    // v6.6: Pass auth token to fix "missing sub claim" error
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    
+    if (!token) {
+      console.warn('[Norah] No session token available');
+      if (cached) {
+        return {
+          agent: { code: cached.code, nickname: cached.nickname },
+          mission: null,
+          stats: { clues: 0, buzz_today: 0, finalshot_today: 0 },
+          clues: [],
+          finalshot_recent: [],
+          recent_msgs: []
+        };
+      }
+      throw new Error('No authentication token');
+    }
+    
     const { data, error } = await supabase.functions.invoke('get-norah-context', {
-      method: 'GET'
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-client-version': 'norah-v6.6'
+      }
     });
 
     if (error) {

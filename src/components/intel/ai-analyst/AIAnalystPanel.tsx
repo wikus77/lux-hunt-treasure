@@ -8,6 +8,7 @@ import { NBAPills, type NBASuggestion } from './NBAPills';
 import { nextBestActionToPills } from '@/intel/norah/engine/nextBestAction';
 import { buildNorahContext } from '@/intel/norah/engine/contextBuilder';
 import { logPillClick } from '@/intel/norah/utils/telemetry';
+import { Celebrations, celebrateMilestone } from '@/intel/norah/ui/Celebrations';
 
 export interface AIAnalystPanelProps {
   // Support both 'open' and 'isOpen' for compatibility
@@ -58,14 +59,15 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     audioLevel, 
     ttsEnabled, 
     onToggleTTS,
-    agentContext,
-    showChips = false // v4: hide chips by default
+    agentContext
   } = props;
   
   const [input, setInput] = useState('');
   const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
   const [nbaPills, setNbaPills] = useState<NBASuggestion[]>([]);
+  const [celebration, setCelebration] = useState<ReturnType<typeof celebrateMilestone> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevCluesRef = useRef<number>(0); // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
   // v6.2: Load NBA Pills on mount
   useEffect(() => {
@@ -92,6 +94,23 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+  // v6.6: Trigger celebrations on clue milestones
+  useEffect(() => {
+    const currentClues = agentContext?.cluesCount || 0;
+    const prevClues = prevCluesRef.current;
+    
+    if (currentClues > prevClues) {
+      if (prevClues === 0 && currentClues === 1) {
+        setCelebration(celebrateMilestone('milestone', '🎯 Primo indizio trovato!'));
+      } else if (currentClues === 5) {
+        setCelebration(celebrateMilestone('milestone', '🌟 5 indizi raccolti!'));
+      }
+    }
+    
+    prevCluesRef.current = currentClues;
+  }, [agentContext?.cluesCount]);
 
   const handleSend = (mode: AnalystMode = 'analyze') => {
     if (input.trim()) {
@@ -249,10 +268,11 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           {/* Input with rotating placeholder + NBA Pills */}
           <div className="p-6 border-t border-white/10">
             {/* v6.2: NBA Pills above input */}
+            {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
             <NBAPills 
               suggestions={nbaPills} 
               onPick={async (payload) => {
-                await logPillClick(payload, 'unknown');
+                await logPillClick(payload); // v6.6: unified signature
                 onSendMessage(payload, 'analyze');
               }} 
             />
@@ -279,6 +299,15 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           </div>
         </div>
       </div>
+      
+      {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
+      {/* v6.6: Celebrations component */}
+      {celebration && (
+        <Celebrations
+          celebration={celebration}
+          onComplete={() => setCelebration(null)}
+        />
+      )}
     </>
   );
 };
