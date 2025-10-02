@@ -38,6 +38,7 @@ import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
+import NorahAssistant from "@/pages/NorahAssistant";
 import SettingsPage from "@/pages/settings/SettingsPage";
 import AgentProfileSettings from "@/pages/settings/AgentProfileSettings";
 import SecuritySettings from "@/pages/settings/SecuritySettings";
@@ -248,6 +249,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/intelligence">
             <ProtectedRoute>
               <GlobalLayout><IntelligenceStyledPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/norah-assistant">
+            <ProtectedRoute>
+              <GlobalLayout><NorahAssistant /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

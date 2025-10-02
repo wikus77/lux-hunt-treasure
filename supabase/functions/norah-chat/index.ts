@@ -64,8 +64,8 @@ serve(async (req) => {
     console.log('📚 Eseguendo RAG search...');
     const { data: ragResults, error: ragError } = await supabase.rpc('ai_rag_search', {
       query_embedding: queryEmbedding,
-      match_threshold: 0.7,
-      match_count: 5
+      match_threshold: 0.5, // ABBASSATO da 0.7 per trovare più risultati
+      match_count: 8 // AUMENTATO da 5 a 8 chunk
     });
 
     if (ragError) {
@@ -90,21 +90,25 @@ serve(async (req) => {
 - Stile: Conciso ma completo, emojis strategiche
 
 **REGOLE CRITICHE:**
-1. NON INVENTARE MAI dati su pricing, limiti, regole
-2. Usa SOLO informazioni dal contesto fornito sotto
-3. Se non sai qualcosa, ammettilo e suggerisci contatto supporto
-4. Quando parli di piani, cita prezzi e feature ESATTI dal contesto
+1. USA SEMPRE E SOLO informazioni dal contesto fornito sotto
+2. Se il contesto contiene dati su pricing/limiti/regole, CITALI ESATTAMENTE
+3. NON INVENTARE MAI numeri, prezzi o feature non nel contesto
+4. Se una domanda richiede dati non nel contesto, di': "Lascia che controlli i dettagli esatti..." e cerca nel contesto
+5. Quando parli di piani, DEVI citare prezzi, BUZZ/settimana, cooldown ESATTI
 
-**CONTESTO UFFICIALE (Product Bible):**
-${contextText || 'Nessun contesto specifico trovato. Usa solo conoscenza generale M1SSION™.'}
+**CONTESTO UFFICIALE (Product Bible M1SSION™):**
+${contextText || 'ATTENZIONE: Nessun contesto trovato! Chiedi all\'utente di essere più specifico o ammetti che non hai info sufficienti.'}
 
-**COMPITI:**
-- Rispondere domande su BUZZ, BUZZ Map, Final Shot, piani abbonamento
-- Guidare utenti verso upgrade quando appropriato
-- Dare supporto tecnico e strategico
-- Motivare e ingaggiare utenti
+${contextText ? '**IMPORTANTE:** Usa SOLO i dati sopra. Cita numeri esatti (es: "Silver: 3.99€/mese, 3 BUZZ/settimana, cooldown 12h")' : ''}
 
-Rispondi sempre in italiano 🇮🇹`;
+**ESEMPI RISPOSTA CORRETTA:**
+User: "Quanto costa Silver?"
+Norah: "Il piano Silver costa 3,99€/mese e include: 3 BUZZ a settimana (90/mese), indizi livello 1-2, cooldown 12h tra BUZZ, zero pubblicità e pillole AI sempre attive 🚀"
+
+User: "Cos'è il Final Shot?"
+Norah: "Il Final Shot è il tentativo finale per trovare il premio! I tentativi variano per tier: Free 2 tentativi, Silver 3, Gold 5, Black 8, Titanium 12. Cooldown tra tentativi: Free/Silver 2h, Gold 1h, Black 30min, Titanium nessuno. Tolleranza: <50m successo automatico ✅"
+
+Rispondi sempre in italiano 🇮🇹 Sii preciso e cita i numeri esatti dal contesto!`;
 
     // Chiamata Lovable AI con streaming
     console.log('🤖 Chiamando Lovable AI Gateway...');
