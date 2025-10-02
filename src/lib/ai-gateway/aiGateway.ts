@@ -47,7 +47,7 @@ export async function processAIRequest(options: AIGatewayOptions): Promise<AIRes
     if (intentResult.needs_rag) {
       console.log(`[AI Gateway traceId:${shortTraceId}] Router flagged RAG - fetching docs...`);
       try {
-        const { data: ragData, error: ragError } = await supabase.functions.invoke('norah/rag-search', {
+        const { data: ragData, error: ragError } = await supabase.functions.invoke('norah-rag-search', {
           body: { query: userMessage, k: 6 }
         });
 
