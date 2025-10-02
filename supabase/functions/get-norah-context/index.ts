@@ -130,11 +130,12 @@ serve(async (req) => {
     const elapsed = Date.now() - startTime;
     console.log('[NORAH-CTX] Success - elapsed:', elapsed, 'ms, agent:', agentCode);
 
-    // v4.2: Support x-norah-cache-ttl header echo (client-side cache control)
+    // v6.3: Add Cache-Control header (server-side) + support x-norah-cache-ttl (client-side)
     const cacheTTL = req.headers.get('x-norah-cache-ttl');
     const responseHeaders = { 
       ...corsHeaders, 
       'Content-Type': 'application/json',
+      'Cache-Control': 'private, max-age=3600', // v6.3: 1 hour server cache
       ...(cacheTTL ? { 'x-norah-cache-ttl': cacheTTL } : {})
     };
 

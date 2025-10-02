@@ -85,6 +85,7 @@ const BLOCKED_INTENTS = new Set([
  * v6.2: Maybe inject a contextual joke with telemetry (max 15% of responses)
  * @returns {text, used} object for telemetry
  */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 export function maybeJoke(
   sentiment: SentimentLabel,
   ctx: NorahContext,
