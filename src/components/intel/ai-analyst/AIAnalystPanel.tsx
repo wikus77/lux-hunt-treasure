@@ -157,7 +157,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     <>
       {/* Background overlay */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[11040]"
         onClick={onClose}
       />
       
@@ -167,7 +167,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       {/* Panel */}
       {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
       <div 
-        className="fixed z-50 flex items-center justify-center inset-0 md:inset-8"
+        className="fixed z-[11060] flex items-center justify-center inset-0 md:inset-8"
         style={{
           paddingTop: 'env(safe-area-inset-top, 0px)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)'
@@ -289,7 +289,12 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           </div>
 
           {/* Input with rotating placeholder + NBA Pills */}
-          <div className="p-4 md:p-6 border-t border-white/10">
+          <div 
+            className="p-4 md:p-6 border-t border-white/10"
+            style={{
+              paddingBottom: `calc(1rem + max(env(safe-area-inset-bottom, 0px), 4px))`
+            }}
+          >
             {/* v6.7: NBA Pills with toast feedback */}
             {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7 */}
             <NBAPills 

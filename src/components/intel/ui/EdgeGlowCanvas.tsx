@@ -38,6 +38,9 @@ const EdgeGlowCanvas: React.FC<EdgeGlowCanvasProps> = ({
     const drawGlow = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Check if mobile (disable side glows)
+      const isMobile = window.innerWidth < 768;
+
       // Calculate intensity based on status and audio level
       let baseIntensity = 0.3;
       let pulseSpeed = 0.5;
@@ -96,33 +99,37 @@ const EdgeGlowCanvas: React.FC<EdgeGlowCanvasProps> = ({
       ctx.fillRect(0, canvas.height - thickness, canvas.width, thickness);
       ctx.restore();
 
-      // Draw left edge
-      const leftGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      colors.forEach((color, i) => {
-        const alpha = (baseIntensity + pulse * 0.3) * 0.6;
-        leftGradient.addColorStop(i / (colors.length - 1), 
-          `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
-        );
-      });
-      ctx.save();
-      ctx.filter = `blur(${blurAmount}px)`;
-      ctx.fillStyle = leftGradient;
-      ctx.fillRect(0, 0, thickness, canvas.height);
-      ctx.restore();
+      // Draw left edge - ONLY ON DESKTOP (>= 768px)
+      if (!isMobile) {
+        const leftGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        colors.forEach((color, i) => {
+          const alpha = (baseIntensity + pulse * 0.3) * 0.6;
+          leftGradient.addColorStop(i / (colors.length - 1), 
+            `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
+          );
+        });
+        ctx.save();
+        ctx.filter = `blur(${blurAmount}px)`;
+        ctx.fillStyle = leftGradient;
+        ctx.fillRect(0, 0, thickness, canvas.height);
+        ctx.restore();
+      }
 
-      // Draw right edge
-      const rightGradient = ctx.createLinearGradient(canvas.width, 0, canvas.width, canvas.height);
-      colors.forEach((color, i) => {
-        const alpha = (baseIntensity + pulse * 0.3) * 0.6;
-        rightGradient.addColorStop(i / (colors.length - 1), 
-          `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
-        );
-      });
-      ctx.save();
-      ctx.filter = `blur(${blurAmount}px)`;
-      ctx.fillStyle = rightGradient;
-      ctx.fillRect(canvas.width - thickness, 0, thickness, canvas.height);
-      ctx.restore();
+      // Draw right edge - ONLY ON DESKTOP (>= 768px)
+      if (!isMobile) {
+        const rightGradient = ctx.createLinearGradient(canvas.width, 0, canvas.width, canvas.height);
+        colors.forEach((color, i) => {
+          const alpha = (baseIntensity + pulse * 0.3) * 0.6;
+          rightGradient.addColorStop(i / (colors.length - 1), 
+            `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
+          );
+        });
+        ctx.save();
+        ctx.filter = `blur(${blurAmount}px)`;
+        ctx.fillStyle = rightGradient;
+        ctx.fillRect(canvas.width - thickness, 0, thickness, canvas.height);
+        ctx.restore();
+      }
 
       animationFrameRef.current = requestAnimationFrame(drawGlow);
     };
