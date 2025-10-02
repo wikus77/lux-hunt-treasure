@@ -1,9 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// v6.2: Norah Message Store - In-memory + Supabase + Episodic Memory
+// v6.3: Norah Message Store - Episodic Memory with async greeting
 
 import { supabase } from '@/integrations/supabase/client';
 
-let episodicMemoryCache: any = null;
+let episodicMemoryCache: string | null = null;
+let episodicMemoryFetched = false;
 
 export interface NorahMessage {
   role: 'user' | 'norah';
@@ -137,18 +138,23 @@ async function saveEpisodicMemory() {
 }
 
 /**
- * v6.2: Fetch last episodic memory for greeting
+ * v6.3: Fetch last episodic memory for greeting with timeout protection
  */
 export async function fetchLastEpisode(): Promise<string | null> {
   try {
-    if (episodicMemoryCache) {
+    if (episodicMemoryFetched && episodicMemoryCache) {
       return episodicMemoryCache;
     }
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data, error } = await supabase
+    // v6.3: Add timeout protection (300ms)
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), 300);
+    });
+
+    const fetchPromise = supabase
       .from('norah_memory_episodes')
       .select('summary, emotional_peak')
       .eq('user_id', user.id)
@@ -156,11 +162,33 @@ export async function fetchLastEpisode(): Promise<string | null> {
       .limit(1)
       .single();
 
-    if (error || !data) return null;
+    const result = await Promise.race([fetchPromise, timeoutPromise]);
+
+    if (!result || result === null) {
+      episodicMemoryFetched = true;
+      return null;
+    }
+
+    const { data, error } = result as any;
+
+    if (error || !data) {
+      episodicMemoryFetched = true;
+      return null;
+    }
 
     episodicMemoryCache = data.summary;
+    episodicMemoryFetched = true;
     return data.summary;
   } catch {
+    episodicMemoryFetched = true;
     return null;
   }
+}
+
+/**
+ * v6.3: Reset episodic cache (useful for testing)
+ */
+export function resetEpisodicCache() {
+  episodicMemoryCache = null;
+  episodicMemoryFetched = false;
 }

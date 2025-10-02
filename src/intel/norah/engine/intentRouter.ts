@@ -25,6 +25,7 @@ export type NorahIntent =
   | 'community'
   | 'data_privacy'
   | 'no_spoiler'
+  | 'clarify_needed'
   | 'unknown';
 
 export interface IntentResult {
