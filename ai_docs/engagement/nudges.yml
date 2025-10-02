@@ -1,0 +1,293 @@
+# Engagement Nudges Library — M1SSION™
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
+version: 1.0
+last_updated: 2025-10-02
+
+# ============================================================================
+# ONBOARDING & ACTIVATION (A1 Metric)
+# ============================================================================
+
+onboarding:
+  welcome_first_time:
+    when: "new_user AND first_session"
+    text: "Benvenuto agente! Sono NORAH, la tua assistente M1SSION. Pronto a scoprire i segreti nascosti nella tua città? 🔍"
+    ctas:
+      - label: "Fai il primo BUZZ"
+        action: "navigate_buzz"
+      - label: "Apri la Mappa"
+        action: "navigate_map"
+      - label: "Come funziona"
+        action: "show_tutorial"
+    priority: high
+    
+  first_buzz_map_prompt:
+    when: "new_user AND !has_buzz_map"
+    text: "Primo BUZZ Map sbloccabile ora: raggio 500 km a €4,99. Vuoi accendere il radar e vedere cosa c'è intorno? 😉"
+    ctas:
+      - label: "Fai BUZZ Map"
+        action: "create_buzz_map"
+        payload: { first_time: true }
+      - label: "Regole BUZZ"
+        action: "show_docs"
+        payload: { doc: "buzz-and-map" }
+      - label: "Apri Mappa"
+        action: "navigate_map"
+    priority: high
+    timing: "After first BUZZ OR after 5 minutes in app"
+
+  no_gps_permission:
+    when: "gps_permission = denied"
+    text: "Per sbloccare premi e indizi geolocalizzati, M1SSION ha bisogno del GPS. Senza, non posso aiutarti a trovare il tesoro! 📍"
+    ctas:
+      - label: "Abilita GPS"
+        action: "request_gps_permission"
+      - label: "Perché serve?"
+        action: "show_docs"
+        payload: { doc: "gps-requirement" }
+    priority: critical
+    persistent: true
+
+  no_push_permission:
+    when: "push_permission = denied AND session_count > 3"
+    text: "Attiva le notifiche push per non perdere nuove missioni e aggiornamenti esclusivi! 🔔"
+    ctas:
+      - label: "Attiva notifiche"
+        action: "request_push_permission"
+      - label: "Non ora"
+        action: "dismiss"
+    priority: medium
+    timing: "After 3rd session"
+
+# ============================================================================
+# ENGAGEMENT & RETENTION (E1, R1 Metrics)
+# ============================================================================
+
+engagement:
+  no_prizes_nearby:
+    when: "map_open AND nearby_prizes = 0 AND radius < 100"
+    text: "Zona calma... ma il silenzio spesso nasconde qualcosa. Vuoi ampliare il raggio con un BUZZ ad hoc? 🌍"
+    ctas:
+      - label: "Fai BUZZ"
+        action: "create_buzz"
+      - label: "Aggiorna mappa"
+        action: "refresh_map"
+      - label: "FAQ premi"
+        action: "show_docs"
+        payload: { doc: "prizes-faq" }
+    priority: medium
+
+  stuck_no_progress:
+    when: "clues_found = 0 AND session_count > 5"
+    text: "Vedo che non hai ancora sbloccato indizi. Vuoi un consiglio per partire? 💡"
+    ctas:
+      - label: "Dammi un hint"
+        action: "get_hint"
+      - label: "Fai BUZZ ora"
+        action: "navigate_buzz"
+      - label: "Strategia BUZZ"
+        action: "show_docs"
+        payload: { doc: "buzz-strategy" }
+    priority: high
+    timing: "After 5 sessions with 0 clues"
+
+  comeback_48h:
+    when: "last_seen > 48h"
+    text: "Bentornato agente! M1SSION è andata avanti senza di te: vuoi un recap veloce + consiglio smart? 📊"
+    ctas:
+      - label: "Dammi il recap"
+        action: "get_recap"
+      - label: "Apri Mappa"
+        action: "navigate_map"
+      - label: "Novità recenti"
+        action: "show_changelog"
+    priority: high
+    timing: "First message after comeback"
+
+  comeback_7d:
+    when: "last_seen > 7d"
+    text: "È passata una settimana... ti mancava M1SSION? 😄 Intanto è successo di tutto: nuovi indizi, missioni aggiornate. Ti aggiorno?"
+    ctas:
+      - label: "Cosa mi sono perso?"
+        action: "get_recap"
+      - label: "Vedi missioni"
+        action: "navigate_missions"
+    priority: high
+    timing: "First message after comeback"
+
+  daily_streak_reminder:
+    when: "streak_days > 0 AND last_seen < 22h"
+    text: "Non perdere il tuo streak di {streak_days} giorni! Fai un BUZZ veloce per mantenerlo attivo 🔥"
+    ctas:
+      - label: "Fai BUZZ rapido"
+        action: "create_buzz"
+      - label: "Vedi progressi"
+        action: "show_profile"
+    priority: medium
+    timing: "22h after last activity"
+
+# ============================================================================
+# MONETIZATION (M1 Metric)
+# ============================================================================
+
+monetization:
+  buzz_limit_reached_free:
+    when: "tier = free AND buzz_count >= monthly_limit"
+    text: "Hai esaurito i BUZZ del mese! 😅 Passa a Silver per 50 BUZZ/mese + early access 2h alle nuove missioni."
+    ctas:
+      - label: "Upgrade a Silver"
+        action: "navigate_subscription"
+        payload: { target_tier: "silver" }
+      - label: "Vedi tutti i piani"
+        action: "show_pricing"
+      - label: "Aspetto il reset"
+        action: "dismiss"
+    priority: high
+
+  cooldown_active:
+    when: "cooldown_remaining > 0"
+    text: "BUZZ in cooldown ancora per {cooldown_remaining} minuti. Con Silver il cooldown è ridotto del 50%, con Black è eliminato! ⚡"
+    ctas:
+      - label: "Upgrade ora"
+        action: "navigate_subscription"
+      - label: "Vedi confronto tier"
+        action: "show_pricing"
+      - label: "Aspetto"
+        action: "dismiss"
+    priority: medium
+    timing: "Only if cooldown > 30 min"
+
+  new_mission_early_access:
+    when: "tier = free AND new_mission_announced = true"
+    text: "Nuova missione in arrivo! I membri Silver hanno accesso 2h prima, Gold 24h prima. Vuoi il vantaggio? 🚀"
+    ctas:
+      - label: "Diventa Silver"
+        action: "navigate_subscription"
+        payload: { target_tier: "silver" }
+      - label: "Info early access"
+        action: "show_docs"
+        payload: { doc: "early-access" }
+    priority: high
+    timing: "3 days before mission launch"
+
+  power_user_gold_pitch:
+    when: "tier = silver AND buzz_usage > 80%"
+    text: "Sei un power user! 💪 Passa a Gold per BUZZ quasi illimitati + analytics avanzate + eventi esclusivi."
+    ctas:
+      - label: "Upgrade a Gold"
+        action: "navigate_subscription"
+        payload: { target_tier: "gold" }
+      - label: "Confronta piani"
+        action: "show_pricing"
+    priority: medium
+    timing: "After 80% monthly BUZZ used"
+
+# ============================================================================
+# MISSION-SPECIFIC
+# ============================================================================
+
+mission:
+  final_shot_ready:
+    when: "criteria_final_shot_met = true"
+    text: "Sembra il tuo momento per il Final Shot! Prima di procedere, vuoi rivedere gli indizi chiave? 🎯"
+    ctas:
+      - label: "Rivedi indizi"
+        action: "show_clues"
+      - label: "Prova Final Shot"
+        action: "navigate_final_shot"
+      - label: "Apri ticket supporto"
+        action: "open_support_ticket"
+    priority: critical
+
+  final_shot_failed:
+    when: "last_final_shot_result = failed"
+    text: "Tentativo non andato a buon fine. Distanza dal target: {distance_meters}m. Non mollare, rivedi gli indizi! 💪"
+    ctas:
+      - label: "Rivedi indizi"
+        action: "show_clues"
+      - label: "Strategia Final Shot"
+        action: "show_docs"
+        payload: { doc: "final-shot" }
+      - label: "Apri Mappa"
+        action: "navigate_map"
+    priority: high
+
+  mission_completed:
+    when: "mission_status = completed"
+    text: "CONGRATULAZIONI AGENTE! 🎉 Hai completato la missione! Il premio ti attende. Vuoi vedere la prossima sfida?"
+    ctas:
+      - label: "Vedi prossima missione"
+        action: "navigate_missions"
+      - label: "Condividi vittoria"
+        action: "share_achievement"
+      - label: "Statistiche"
+        action: "show_profile"
+    priority: critical
+
+# ============================================================================
+# SUPPORT & HELP (S1 Metric)
+# ============================================================================
+
+support:
+  confusion_detected:
+    when: "user_message_contains: ['non capisco', 'help', 'aiuto', 'come funziona']"
+    text: "Vedo che hai bisogno di supporto. Preferisci una guida rapida o parlare con un operatore? 🤝"
+    ctas:
+      - label: "Guida rapida"
+        action: "show_tutorial"
+      - label: "FAQ complete"
+        action: "show_docs"
+        payload: { doc: "faq" }
+      - label: "Apri ticket"
+        action: "open_support_ticket"
+    priority: high
+
+  payment_issue:
+    when: "payment_failed = true"
+    text: "Capito, niente panico: controlliamo l'esito del pagamento e ti propongo l'alternativa più rapida. 💳"
+    ctas:
+      - label: "Verifica pagamento"
+        action: "check_payment_status"
+      - label: "Riprova pagamento"
+        action: "retry_payment"
+      - label: "Contatta supporto"
+        action: "open_support_ticket"
+    priority: critical
+
+# ============================================================================
+# CONTEXTUAL TIPS
+# ============================================================================
+
+tips:
+  map_first_open:
+    when: "map_opened = true AND map_open_count = 1"
+    text: "Benvenuto sulla Mappa M1SSION! I marker rossi sono premi, le aree colorate sono zone sbloccate. Zoom e pan per esplorare! 🗺️"
+    ctas:
+      - label: "Capito!"
+        action: "dismiss"
+      - label: "Guida mappa"
+        action: "show_docs"
+        payload: { doc: "map-guide" }
+    priority: medium
+
+  buzz_explanation:
+    when: "user_asks_about: 'buzz'"
+    text: "BUZZ è la tua azione di scansione: sblocca indizi e aree. BUZZ Map fa lo stesso ma sulla mappa con visualizzazione immediata. Primo BUZZ Map: 500 km a €4,99!"
+    ctas:
+      - label: "Fai BUZZ ora"
+        action: "create_buzz"
+      - label: "Dettagli BUZZ"
+        action: "show_docs"
+        payload: { doc: "buzz-and-map" }
+    priority: medium
+
+# ============================================================================
+# METADATA
+# ============================================================================
+
+metadata:
+  nudge_cooldown_global: 300  # 5 minuti tra nudge automatici
+  max_nudges_per_session: 3
+  dismiss_persistence_days: 7  # Se dismiss, non riproporre per 7gg
+
+# © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
