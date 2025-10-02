@@ -4,14 +4,17 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-norah-cache-ttl',
+  // Default allow headers; we will also echo back the requested ones on preflight
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-norah-cache-ttl, x-client-version',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
   const startTime = Date.now();
   
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    const requested = req.headers.get('Access-Control-Request-Headers') || corsHeaders['Access-Control-Allow-Headers'];
+    return new Response(null, { headers: { ...corsHeaders, 'Access-Control-Allow-Headers': requested } });
   }
 
   try {
