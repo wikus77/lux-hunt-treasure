@@ -98,6 +98,7 @@ const SINGLE_WORD_MAP: Record<string, NorahIntent> = {
   'comunità': 'community'
 };
 
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
 // Intent trigger keywords for fuzzy matching
 const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
   about_mission: ['mission', 'm1ssion', 'missione', 'gioco', 'funziona', 'cosa è'],
@@ -119,6 +120,7 @@ const INTENT_TRIGGERS: Record<NorahIntent, string[]> = {
   help: ['aiuto', 'help', 'cosa puoi', 'aiutami', 'comandi'],
   smalltalk: ['ciao', 'buongiorno', 'buonasera', 'grazie', 'hey'],
   no_spoiler: [],
+  clarify_needed: [], // FIX build v6.5
   unknown: []
 };
 

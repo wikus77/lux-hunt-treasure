@@ -40,10 +40,11 @@ export function useNorah() {
       const ctx = await buildNorahContext();
       setContext(ctx);
 
-      // Route intent
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
+      // Route intent (single arg signature)
       const intentResult = routeIntent(userInput);
 
-      // Generate reply based on intent
+      // Generate reply based on intent with unified signature
       let reply = '';
       
       switch (intentResult.intent) {
@@ -57,7 +58,7 @@ export function useNorah() {
           reply = estimateProbability(ctx);
           break;
         default:
-          reply = generateReply(intentResult, ctx, userInput);
+          reply = await generateReply(userInput, 'analyze');
       }
 
       // Add Norah response

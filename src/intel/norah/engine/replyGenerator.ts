@@ -2,6 +2,7 @@
 // NORAH Reply Generator v6.3 - Coach+Friend PRO: Empathetic, Concrete, Varied
 
 import type { NorahIntent, IntentResult } from './intentRouter';
+import { routeIntent } from './intentRouter'; // FIX v6.5
 import type { NorahContext } from './contextBuilder';
 import norahKB from '../kb/norahKB.it.json';
 import { getPhase, nextBestAction, getPhaseContext, type NorahPhase } from './dialogueManager';
@@ -277,14 +278,15 @@ function handleMultiIntent(
     return generateUnknownResponse(ctx, userInput);
   }
   
+  // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
   // Handle top 2 intents
   const cards: string[] = [];
   for (let i = 0; i < Math.min(2, multiIntents.length); i++) {
     const intentData = multiIntents[i];
-    const kb = norahKB[intentData.intent.intent as keyof typeof norahKB];
+    const kb = norahKB[intentData.intent as keyof typeof norahKB];
     if (kb && 'a' in kb) {
       const text = kb.a[0] || 'Info non disponibile';
-      cards.push(`**${String(intentData.intent.intent)}**\n${text}`);
+      cards.push(`**${String(intentData.intent)}**\n${text}`);
     }
   }
   
@@ -294,14 +296,15 @@ function handleMultiIntent(
 }
 
 /**
- * Main reply generator v6.3
+ * Main reply generator v6.5
  */
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
 export function composeReply(
   intentResult: IntentResult,
   userInput: string,
   ctx: NorahContext
 ): string {
-  const phase = getPhase(ctx);
+  const phase = getPhase(ctx, userInput, [intentResult.intent]);
   const sentiment = detectSentiment(userInput);
   
   // Log telemetry
@@ -410,11 +413,17 @@ function isPricingQuery(input: string): boolean {
 }
 
 /**
- * Legacy support exports
+ * v6.5: Unified generateReply signature (2 args max)
  */
-export async function generateReply(userInput: string, ctx: NorahContext): Promise<string> {
-  const hook = getEmpathyHook(ctx);
-  return `${hook}\n\nFunzione legacy. Usa composeReply per risposte complete.`;
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
+export async function generateReply(
+  userInput: string,
+  mode?: 'analyze' | 'plain'
+): Promise<string> {
+  const ctx = await import('./contextBuilder').then(m => m.buildNorahContext());
+  const intentResult = routeIntent(userInput);
+  
+  return composeReply(intentResult, userInput, ctx);
 }
 
 export function generateMentorAdvice(ctx: NorahContext): string {
