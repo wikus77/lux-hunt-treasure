@@ -39,3 +39,6 @@ test-results/
 # Supabase temp/backup
 supabase/.temp/
 supabase/config.toml.bak.*
+
+# Local backups
+*.bak.*
