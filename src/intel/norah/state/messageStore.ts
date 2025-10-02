@@ -16,6 +16,7 @@ export interface NorahMessage {
 let messageBuffer: NorahMessage[] = [];
 let persistTimeout: NodeJS.Timeout | null = null;
 
+// v7.0: Enhanced with persistence tracking
 export function addMessage(msg: NorahMessage) {
   messageBuffer.push(msg);
   
@@ -24,8 +25,16 @@ export function addMessage(msg: NorahMessage) {
     messageBuffer = messageBuffer.slice(-16);
   }
 
-  // v6.9: CRITICAL FIX - Immediate persist (no debounce to prevent data loss)
-  persistToSupabase(msg);
+  // v7.0: Immediate persist with result tracking
+  persistToSupabase(msg).then(success => {
+    if (!success) {
+      console.error('[Norah v7.0] Failed to persist message after retries, storing locally');
+      // v7.0: Fallback to localStorage for recovery
+      const failedMessages = JSON.parse(localStorage.getItem('norah_failed_messages') || '[]');
+      failedMessages.push({ ...msg, timestamp: Date.now() });
+      localStorage.setItem('norah_failed_messages', JSON.stringify(failedMessages));
+    }
+  });
 
   // v6.8: Check if we should save episodic memory (every 5 messages)
   if (messageBuffer.length % 5 === 0 && messageBuffer.length > 0) {
@@ -78,67 +87,133 @@ export function summarizeWindow(): string {
   return 'Continuiamo da dove eravamo rimasti';
 }
 
-async function persistToSupabase(msg: NorahMessage) {
+// v7.0: Enhanced persistence with retry logic and detailed diagnostics
+async function persistToSupabase(msg: NorahMessage, retryCount = 0): Promise<boolean> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('[Norah v7.0] Auth error during persist:', authError);
+      return false;
+    }
+    
+    if (!user) {
+      console.warn('[Norah v7.0] No authenticated user, skipping persist');
+      return false;
+    }
 
-    await supabase.from('norah_messages').insert({
+    console.log('[Norah v7.0] Persisting message:', { 
+      user_id: user.id, 
+      role: msg.role, 
+      content_length: msg.content.length,
+      intent: msg.intent,
+      attempt: retryCount + 1
+    });
+
+    const { data, error } = await supabase.from('norah_messages').insert({
       user_id: user.id,
       role: msg.role,
       content: msg.content,
       intent: msg.intent,
       context: {}
-    });
+    }).select();
+
+    if (error) {
+      console.error('[Norah v7.0] Insert error:', error);
+      
+      // v7.0: Retry logic (max 2 retries)
+      if (retryCount < 2) {
+        console.log(`[Norah v7.0] Retrying persist (${retryCount + 1}/2)...`);
+        await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+        return persistToSupabase(msg, retryCount + 1);
+      }
+      return false;
+    }
+
+    console.log('[Norah v7.0] Message persisted successfully:', data);
+    return true;
   } catch (error) {
-    console.error('[Norah] Failed to persist message:', error);
+    console.error('[Norah v7.0] Unexpected error during persist:', error);
+    
+    // v7.0: Retry on unexpected errors
+    if (retryCount < 2) {
+      console.log(`[Norah v7.0] Retrying after unexpected error (${retryCount + 1}/2)...`);
+      await new Promise(resolve => setTimeout(resolve, 500 * (retryCount + 1)));
+      return persistToSupabase(msg, retryCount + 1);
+    }
+    return false;
   }
 }
 
 /**
  * v6.2: Save episodic memory to DB
  */
+// v7.0: Enhanced episodic memory with detailed emotional tracking
 async function saveEpisodicMemory() {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError) {
+      console.error('[Norah v7.0] Auth error during episodic save:', authError);
+      return;
+    }
+    
+    if (!user) {
+      console.warn('[Norah v7.0] No authenticated user for episodic memory');
+      return;
+    }
 
     const summary = summarizeWindow();
     if (!summary) return;
 
-    // Detect emotional peak
+    // v7.0: Enhanced emotional detection
     const lastMessages = messageBuffer.slice(-6);
     const hasFrustration = lastMessages.some(m => 
       m.content.toLowerCase().includes('difficile') || 
-      m.content.toLowerCase().includes('basta')
+      m.content.toLowerCase().includes('basta') ||
+      m.content.toLowerCase().includes('confuso') ||
+      m.content.toLowerCase().includes('non capisco')
     );
     const hasBreakthrough = lastMessages.some(m => 
       m.content.toLowerCase().includes('capito') || 
-      m.content.toLowerCase().includes('perfetto')
+      m.content.toLowerCase().includes('perfetto') ||
+      m.content.toLowerCase().includes('chiaro') ||
+      m.content.toLowerCase().includes('grazie')
     );
 
     const emotionalPeak = hasFrustration ? 'negative' 
       : hasBreakthrough ? 'breakthrough' 
       : 'positive';
 
-    await supabase.from('norah_memory_episodes').insert({
+    console.log('[Norah v7.0] Saving episodic memory:', {
+      user_id: user.id,
+      summary,
+      emotionalPeak,
+      messageCount: lastMessages.length
+    });
+
+    const { data, error } = await supabase.from('norah_memory_episodes').insert({
       user_id: user.id,
       summary,
       emotional_peak: emotionalPeak,
       learned_pref: {}
-    });
+    }).select();
 
-    console.log('[Norah] Episodic memory saved:', summary);
+    if (error) {
+      console.error('[Norah v7.0] Failed to insert episodic memory:', error);
+      return;
+    }
+
+    console.log('[Norah v7.0] Episodic memory saved successfully:', data);
     
     // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-    // v6.6: Log episode saved telemetry
     const { logEpisodeSaved } = await import('@/intel/norah/utils/telemetry');
     await logEpisodeSaved(
       lastMessages.length,
       emotionalPeak !== 'positive'
     );
   } catch (error) {
-    console.error('[Norah] Failed to save episodic memory:', error);
+    console.error('[Norah v7.0] Unexpected error saving episodic memory:', error);
   }
 }
 

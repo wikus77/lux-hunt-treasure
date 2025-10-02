@@ -12,6 +12,11 @@ import {
 } from './engine/replyGenerator';
 import { addMessage, getMessages, type NorahMessage, fetchLastEpisode } from './state/messageStore';
 import { logEvent } from './utils/telemetry';
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// v7.0: Enhanced imports
+import { trackEmotion, getEmotionalContext, getAdaptiveEmpathy, persistEmotionalContext } from './engine/emotionalContext';
+import { getTimeContext, getTimeAwareGreeting } from './engine/personalization';
+import { detectSentiment } from './engine/sentiment';
 
 export function useNorah() {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,17 +24,19 @@ export function useNorah() {
   const [messages, setMessages] = useState<NorahMessage[]>([]);
 
   // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-  // v6.9: Enhanced episodic greeting - more visible and natural
+  // v7.0: Enhanced episodic greeting with time-awareness
   useEffect(() => {
     (async () => {
       try {
         const episode = await fetchLastEpisode({ timeoutMs: 300 });
+        const timeGreeting = getTimeAwareGreeting();
+        
         if (episode?.summary) {
-          // v6.9: More natural, conversational greeting
+          // v7.0: Time-aware episodic greetings
           const greetings = [
-            `Bentornato! L'ultima volta: "${episode.summary}". Continuiamo da lì?`,
-            `Ehi! Ieri stavamo qui: "${episode.summary}". Ripartiamo o preferisci un recap?`,
-            `Rieccoci! Ultima sessione: "${episode.summary}". Dove eravamo rimasti?`
+            `${timeGreeting} L'ultima volta: "${episode.summary}". Continuiamo?`,
+            `${timeGreeting} Riprendiamo: "${episode.summary}".`,
+            `${timeGreeting} Ricordo: "${episode.summary}". Dove eravamo rimasti?`
           ];
           
           const greeting = greetings[Math.floor(Math.random() * greetings.length)];
@@ -44,13 +51,22 @@ export function useNorah() {
           
           await logEvent({ 
             event: 'episode_greeted',
-            meta: { summary_length: episode.summary.length, greeting_variant: greeting.substring(0, 20) }
+            meta: { summary_length: episode.summary.length, time_aware: true }
           });
           
-          console.log('[NORAH v6.9] Episodic greeting displayed:', greeting);
+          console.log('[NORAH v7.0] Time-aware episodic greeting displayed:', greeting);
+        } else {
+          // v7.0: Time-aware initial greeting
+          const greetingMsg: NorahMessage = {
+            role: 'norah',
+            content: `${timeGreeting} Come posso aiutarti?`,
+            timestamp: Date.now()
+          };
+          addMessage(greetingMsg);
+          setMessages([...getMessages()]);
         }
       } catch (error) {
-        console.error('[Norah] Failed to load episodic greeting:', error);
+        console.error('[Norah v7.0] Failed to load greeting:', error);
       }
     })();
   }, []);
@@ -75,13 +91,21 @@ export function useNorah() {
       addMessage(userMsg);
       setMessages([...getMessages()]);
 
+      // v7.0: Track sentiment and emotional context
+      const sentiment = detectSentiment(userInput);
+      trackEmotion(sentiment);
+      const emotionalContext = getEmotionalContext();
+
       // Load/refresh context
       const ctx = await buildNorahContext();
       setContext(ctx);
 
-      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.5
+      // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
       // Route intent (single arg signature)
       const intentResult = routeIntent(userInput);
+
+      // v7.0: Get adaptive empathy prefix
+      const empathyPrefix = getAdaptiveEmpathy(emotionalContext);
 
       // Generate reply based on intent with unified signature
       let reply = '';
@@ -97,7 +121,12 @@ export function useNorah() {
           reply = estimateProbability(ctx);
           break;
         default:
-          reply = await generateReply(userInput); // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ – FIX v6.7
+          reply = await generateReply(userInput);
+      }
+
+      // v7.0: Apply adaptive empathy if needed
+      if (empathyPrefix && emotionalContext.emotionalTrend === 'declining') {
+        reply = empathyPrefix + reply;
       }
 
       // Add Norah response
@@ -110,20 +139,25 @@ export function useNorah() {
       addMessage(norahMsg);
       setMessages([...getMessages()]);
 
+      // v7.0: Persist emotional context
+      if (ctx?.agent?.code) {
+        await persistEmotionalContext(ctx.agent.code, emotionalContext);
+      }
+
       // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-      // v6.6: Log reply generation telemetry
+      // v7.0: Enhanced telemetry with sentiment
       const elapsed = Date.now() - startTime;
       await logEvent({
         event: 'reply_generated',
         intent: intentResult.intent,
-        sentiment: 'neutral',
-        meta: { ms: elapsed }
+        sentiment,
+        meta: { ms: elapsed, emotional_trend: emotionalContext.emotionalTrend }
       });
 
       return reply;
 
     } catch (error) {
-      console.error('[Norah] Ask failed:', error);
+      console.error('[Norah v7.0] Ask failed:', error);
       return 'Errore di comunicazione. Riprova.';
     } finally {
       setIsProcessing(false);
