@@ -180,22 +180,6 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Gradiente cangiante animato - sostituisce bande viola */}
-          <div 
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'radial-gradient(circle at 50% 50%, rgba(123, 46, 255, 0.12), transparent 70%)',
-              animation: 'gradientShift 8s ease-in-out infinite',
-              opacity: 0.15
-            }}
-          />
-          <style>{`
-            @keyframes gradientShift {
-              0% { background-position: 0% 50%; transform: scale(1); }
-              50% { background-position: 100% 50%; transform: scale(1.1); }
-              100% { background-position: 0% 50%; transform: scale(1); }
-            }
-          `}</style>
           {/* Header with VU Meter */}
           <div className="flex items-center justify-between p-4 md:p-6 border-b border-white/10">
             <div className="flex items-center gap-4">

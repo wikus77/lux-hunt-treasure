@@ -166,3 +166,10 @@ html, body {
 :root { --header-bg: #0b1220; }
 .app-header { position: sticky; top: 0; padding-top: env(safe-area-inset-top); background-color: var(--header-bg); z-index: 50; }
 .app-content { padding-top: 0; }
+
+/* PWA-specific safe area enforcement */
+@media (display-mode: standalone) {
+  .app-header {
+    padding-top: max(env(safe-area-inset-top, 0px), 12px) !important;
+  }
+}
