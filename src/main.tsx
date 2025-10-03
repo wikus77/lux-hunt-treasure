@@ -9,6 +9,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './index.css';
 import './styles/toast-animations.css';
+import './i18n/i18n'; // <-- importa PRIMA di render
+
+import { I18nextProvider } from 'react-i18next';
+import i18n from './i18n/i18n';
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Production safety: Hide debug content in production builds
@@ -374,21 +378,23 @@ const renderApp = () => {
     
     // Enhanced app rendering with PWA Loading Guard to prevent black screen
     root.render(
-      <QueryClientProvider client={queryClient}>
-        <React.Suspense fallback={
-          <div className="min-h-screen bg-background flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-              <p className="text-muted-foreground font-orbitron">Inizializzazione M1SSION™...</p>
-              <div className="text-xs text-muted-foreground">
-                Se il caricamento si blocca, ricarica la pagina
+      <I18nextProvider i18n={i18n}>
+        <QueryClientProvider client={queryClient}>
+          <React.Suspense fallback={
+            <div className="min-h-screen bg-background flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                <p className="text-muted-foreground font-orbitron">Inizializzazione M1SSION™...</p>
+                <div className="text-xs text-muted-foreground">
+                  Se il caricamento si blocca, ricarica la pagina
+                </div>
               </div>
             </div>
-          </div>
-        }>
-          <App />
-        </React.Suspense>
-      </QueryClientProvider>
+          }>
+            <App />
+          </React.Suspense>
+        </QueryClientProvider>
+      </I18nextProvider>
     );
     
     console.log("✅ ENHANCED REACT APP MOUNTED SUCCESSFULLY");
