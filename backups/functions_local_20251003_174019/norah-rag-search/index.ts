@@ -1,8 +1,5 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-<<<<<<< HEAD
-import { cfEmbed } from "../_shared/cfEmbed.ts";
-=======
 // --- CF Embeddings helper (bge-base-en-v1.5, 768 dim) ---
 const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
 const CF_TOKEN   = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
@@ -29,7 +26,6 @@ async function cfEmbed(text: string): Promise<number[]> {
   return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
 }
 // --- end helper ---
->>>>>>> 03b9af89 (backup: edge functions BEFORE fixes (20251003_174019))
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -56,24 +52,11 @@ serve(async (req) => {
     const { query, top_k = 3, locale = "it" } = (await req.json()) as Req;
     if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
 
-<<<<<<< HEAD
-    // 1) Embedding query using Cloudflare Workers AI (768d)
-    const embedding = await cfEmbed(query);
-
-    // 2) Vector search
-    const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
-      query_embedding: embedding,
-      match_count: top_k,
-      in_locale: locale,
-    });
-    if (error) throw new Error(`ai_rag_search_vec failed: ${error.message}`);
-=======
     // 1) Embedding query
     const embedding = await cfEmbed(query);
 
     // 2) Vector search
     const data = await callRagRpc(embedding, top_k, locale);
->>>>>>> 03b9af89 (backup: edge functions BEFORE fixes (20251003_174019))
 
     // 3) Log evento (best-effort)
     try {
