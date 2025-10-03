@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
+import MonthlyPrizesModal from "./MonthlyPrizesModal";
 
 // M1SSION PRIZE - real assets from public/assets/m1ssion-prize
 const missionPrizeImages = [
@@ -20,6 +21,7 @@ interface PrizeVisionProps {
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleSwipeLeft = () => {
     if (isSwipeTransition) return;
@@ -32,8 +34,10 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
   };
 
   return (
-    <GradientBox className="w-full">
-      <div className="p-4 border-b border-white/10 flex justify-between items-center">
+    <>
+      <div className="w-full cursor-pointer" onClick={() => setIsModalOpen(true)}>
+        <GradientBox className="w-full">
+          <div className="p-4 border-b border-white/10 flex justify-between items-center">
         <h2 className="text-lg md:text-xl font-orbitron font-bold">
           <span className="text-[#00D1FF]" style={{ 
             textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
@@ -89,6 +93,13 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
           ></div>
         </div>
       </div>
-    </GradientBox>
+        </GradientBox>
+      </div>
+
+      <MonthlyPrizesModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
+    </>
   );
 }
