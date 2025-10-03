@@ -35,6 +35,7 @@ import AppHome from "@/pages/AppHome";
 import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
 import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
+import IntelligenceRAG from "@/pages/IntelligenceRAG";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
@@ -322,6 +323,12 @@ const WouterRoutes: React.FC = () => {
                   <FinalShotPage />
                 </div>
               </GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/rag">
+            <ProtectedRoute>
+              <GlobalLayout><IntelligenceRAG /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
