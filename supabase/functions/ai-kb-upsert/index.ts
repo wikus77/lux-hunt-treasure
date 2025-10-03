@@ -4,7 +4,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { embed, getEmbeddingModel } from '../_shared/embedProvider.ts';
+import { cfEmbedBatch } from '../_shared/cfEmbed.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -42,9 +42,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    // Auto-detect embedding provider
-    const embeddingConfig = await getEmbeddingModel();
-    console.log(`[ai-kb-upsert] Using provider: ${embeddingConfig.provider}, model: ${embeddingConfig.model}`);
+    console.log(`[ai-kb-upsert] Using Cloudflare Workers AI embeddings (768d)`);
 
     // 1. Upsert document in ai_docs
     console.log(`[ai-kb-upsert] traceId:${traceId} upserting doc: "${title}"`);
@@ -104,10 +102,10 @@ serve(async (req) => {
       .delete()
       .eq('doc_id', docId);
 
-    // 4. Generate embeddings and insert (batch via abstraction layer)
+    // 4. Generate embeddings using Cloudflare Workers AI (768d)
     let embeddings: number[][];
     try {
-      embeddings = await embed(chunks);
+      embeddings = await cfEmbedBatch(chunks);
     } catch (embeddingError) {
       console.error(`[ai-kb-upsert] traceId:${traceId} embedding generation failed:`, embeddingError);
       throw new Error(`Embedding generation failed: ${embeddingError.message}`);
@@ -140,8 +138,8 @@ serve(async (req) => {
         doc_id: docId,
         chunks: embeddingInserts.length,
         title,
-        provider: embeddingConfig.provider,
-        model: embeddingConfig.model
+        provider: 'cloudflare',
+        model: '@cf/baai/bge-base-en-v1.5'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { embed } from "../_shared/embedProvider.ts";
+import { cfEmbed } from "../_shared/cfEmbed.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -27,13 +27,12 @@ serve(async (req) => {
     const { query, top_k = 3, locale = "it" } = (await req.json()) as Req;
     if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
 
-    // 1) Embedding query
-    const { vectors } = await embed([query]);
-    const qVec = vectors[0];
+    // 1) Embedding query using Cloudflare Workers AI (768d)
+    const embedding = await cfEmbed(query);
 
     // 2) Vector search
     const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
-      query_embedding: qVec,
+      query_embedding: embedding,
       match_count: top_k,
       in_locale: locale,
     });
