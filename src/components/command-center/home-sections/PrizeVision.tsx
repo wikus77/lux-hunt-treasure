@@ -23,7 +23,7 @@ interface PrizeVisionProps {
   status: "locked" | "partial" | "near" | "unlocked";
 }
 
-export function PrizeVision({ progress, status }: PrizeVisionProps) {
+export function PrizeVision({ progress }: PrizeVisionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -32,7 +32,6 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
   const handleSwipeLeft = () => {
     if (isSwipeTransition) return;
     setIsSwipeTransition(true);
-    
     setTimeout(() => {
       setCurrentImageIndex((prev) => (prev + 1) % missionPrizeImages.length);
       setIsSwipeTransition(false);
@@ -48,136 +47,156 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
   ];
 
   const toggleFlip = (index: number) => {
-    setFlipped(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
+    setFlipped((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]));
   };
 
+  const layoutSpring = { layout: { type: "spring", stiffness: 160, damping: 22 } } as const;
+
   return (
-    <>
-      {/* COLLAPSED: stesso container M1SSION PRIZE con morph all'espanso */}
-      <AnimatePresence initial={false}>
-        {!isExpanded && (
-          <motion.div
-            key="collapsed"
-            layoutId="missionPrize"
-            className="w-full"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+    <LayoutGroup id="mission-prize-group">
+      {/* COLLASSATO: il container RESTA lo stesso, con stripe e titolo */}
+      <motion.div
+        layoutId="missionPrize"
+        className="w-full"
+        style={{ visibility: isExpanded ? "hidden" : "visible" }}
+        transition={layoutSpring}
+      >
+        <GradientBox className="w-full relative overflow-hidden rounded-xl">
+          {/* Stripe superiore caratteristica */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#00D1FF]" />
+
+          <div
+            className="p-4 border-b border-white/10 flex justify-between items-center cursor-pointer"
+            onClick={() => setIsExpanded(true)}
           >
-            <GradientBox className="w-full">
-              <div 
-                className="p-4 border-b border-white/10 flex justify-between items-center cursor-pointer"
-                onClick={() => setIsExpanded(true)}
-              >
-                <h2 className="text-lg md:text-xl font-orbitron font-bold">
-                  <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
-                  <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
-                </h2>
-                <div className="flex items-center space-x-2">
-                  <span className="text-xs text-white/70">Visibilità: {progress}%</span>
-                  <span className="text-xs text-white/50">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
-                </div>
-              </div>
+            <h2 className="text-lg md:text-xl font-orbitron font-bold">
+              <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
+            </h2>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-white/70">Visibilità: {progress}%</span>
+              <span className="text-xs text-white/50">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
+            </div>
+          </div>
 
-              <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-                {/* Swipeable Image Container */}
-                <div 
-                  className="relative w-full h-full cursor-pointer"
-                  onClick={handleSwipeLeft}
-                  onTouchStart={handleSwipeLeft}
+          <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
+            {/* Swipeable Image Container */}
+            <div
+              className="relative w-full h-full cursor-pointer"
+              onClick={handleSwipeLeft}
+              onTouchStart={handleSwipeLeft}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentImageIndex}
+                  className="absolute inset-0"
+                  initial={{ opacity: 0, x: 50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={currentImageIndex}
-                      className="absolute inset-0"
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                    >
-                      <img 
-                        src={missionPrizeImages[currentImageIndex]}
-                        alt={`M1SSION Prize ${currentImageIndex + 1}`}
-                        className="w-full h-full object-cover rounded-lg shadow-lg"
-                      />
-                    </motion.div>
-                  </AnimatePresence>
-                  
-                  {/* Swipe Indicator */}
-                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-medium">
-                    Tocca per il prossimo →
-                  </div>
-                  
-                  {/* Disclaimer Overlay */}
-                  <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
-                    Image for illustrative purposes only
-                  </div>
-                </div>
-                
-                {/* Progress bar */}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
-                  <div 
-                    className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
-                    style={{ width: `${progress}%` }}
-                  ></div>
-                </div>
+                  <img
+                    src={missionPrizeImages[currentImageIndex]}
+                    alt={`M1SSION Prize ${currentImageIndex + 1}`}
+                    className="w-full h-full object-cover rounded-lg shadow-lg"
+                  />
+                </motion.div>
+              </AnimatePresence>
+              {/* Swipe Indicator */}
+              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-medium">
+                Tocca per il prossimo →
               </div>
-            </GradientBox>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              {/* Disclaimer Overlay */}
+              <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
+                Image for illustrative purposes only
+              </div>
+            </div>
 
-      {/* ESPANSO: overlay full-screen tra header e bottom, click fuori dalle card per chiudere */}
+            {/* Progress bar */}
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+              <div
+                className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+        </GradientBox>
+      </motion.div>
+
+      {/* ESPANSO: lo STESSO container si espande tra header (72px) e bottom nav (88px) dal CENTRO */}
       <AnimatePresence>
         {isExpanded && (
-          <motion.div key="overlay" className="fixed inset-0 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            {/* backdrop */}
-            <div className="absolute inset-0 bg-black/50" onClick={() => setIsExpanded(false)} />
+          <motion.div
+            key="overlay"
+            className="fixed inset-0 z-[100]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsExpanded(false)}
+          >
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
 
-            {/* container morphato dal layoutId */}
-            <motion.div layoutId="missionPrize" className="relative z-10 mx-4 md:mx-6 mt-4 mb-[calc(env(safe-area-inset-bottom)+72px)]">
-              <GradientBox className="w-full">
-                <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                  <h2 className="text-lg md:text-xl font-orbitron font-bold">
-                    <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
-                    <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
-                  </h2>
-                  <button onClick={() => setIsExpanded(false)} className="text-white/80 hover:text-white text-sm md:text-base">Chiudi</button>
-                </div>
+            {/* Container morphato: mantiene stripe e titolo; espansione dal centro */}
+            <motion.div
+              layoutId="missionPrize"
+              className="fixed left-0 right-0 z-[101]"
+              style={{ top: 72, bottom: 88, transformOrigin: "center center" }}
+              transition={layoutSpring}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 md:px-6 h-full">
+                <GradientBox className="w-full h-full flex flex-col relative overflow-hidden rounded-xl">
+                  {/* Stripe superiore */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#00D1FF]" />
 
-                {/* area scrollabile - click su quest'area (spazi vuoti) chiude */}
-                <div className="p-4 overflow-y-auto max-h-[calc(100vh-10rem)]" onClick={() => setIsExpanded(false)}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6" onClick={(e) => e.stopPropagation()}>
-                    {prizes.map((prize, index) => (
-                      <div 
-                        key={index} 
-                        className="perspective-1000 h-64"
-                        onClick={(e) => { e.stopPropagation(); toggleFlip(index); }}
-                      >
-                        <div 
-                          className={`mission-flip-card w-full h-full ${flipped.includes(index) ? 'is-flipped' : ''}`}
-                          style={{ transformOrigin: 'center center' }}
+                  {/* Header identico */}
+                  <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                    <h2 className="text-lg md:text-xl font-orbitron font-bold">
+                      <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
+                      <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
+                    </h2>
+                    <button onClick={() => setIsExpanded(false)} className="text-white/80 hover:text-white text-sm md:text-base">Chiudi</button>
+                  </div>
+
+                  {/* Contenuto scrollabile; click sugli spazi vuoti chiude (evento gestito dal parent overlay) */}
+                  <div className="flex-1 overflow-y-auto p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                      {prizes.map((prize, index) => (
+                        <div
+                          key={index}
+                          className="perspective-1000 h-64"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFlip(index);
+                          }}
                         >
-                          {/* Front */}
-                          <div className="mission-card-front absolute inset-0 rounded-xl overflow-hidden bg-white/5 border border-white/10">
-                            <img src={prize.image} alt={prize.name} className="absolute inset-0 w-full h-full object-cover" />
-                            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                              <h3 className="font-orbitron text-base md:text-lg font-bold text-cyan-400">{prize.name}</h3>
+                          <div
+                            className={`mission-flip-card w-full h-full ${flipped.includes(index) ? "is-flipped" : ""}`}
+                            style={{ transformOrigin: "center center" }}
+                          >
+                            {/* Front */}
+                            <div className="mission-card-front absolute inset-0 rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                              <img src={prize.image} alt={prize.name} className="absolute inset-0 w-full h-full object-cover" />
+                              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                                <h3 className="font-orbitron text-base md:text-lg font-bold text-cyan-400">{prize.name}</h3>
+                              </div>
+                            </div>
+                            {/* Back */}
+                            <div className="mission-card-back absolute inset-0 rounded-xl p-6 bg-white/5 border border-white/10 flex items-center justify-center text-center">
+                              <p className="text-white text-sm md:text-base leading-relaxed">{prize.description}</p>
                             </div>
                           </div>
-                          {/* Back */}
-                          <div className="mission-card-back absolute inset-0 rounded-xl p-6 bg-white/5 border border-white/10 flex items-center justify-center text-center">
-                            <p className="text-white text-sm md:text-base leading-relaxed">{prize.description}</p>
-                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
-              </GradientBox>
+                </GradientBox>
+              </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </LayoutGroup>
   );
 }
