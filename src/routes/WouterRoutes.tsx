@@ -36,6 +36,7 @@ import Map from "@/pages/Map";
 import { BuzzPage } from "@/pages/BuzzPage";
 import IntelligenceStyledPage from "@/pages/IntelligenceStyledPage";
 import IntelligenceRAG from "@/pages/IntelligenceRAG";
+import IntelligenceAnswerTest from "@/pages/IntelligenceAnswerTest";
 import HallOfWinnersStyledPage from "@/pages/HallOfWinnersStyledPage";
 import Notifications from "@/pages/Notifications";
 import Profile from "@/pages/Profile";
@@ -256,6 +257,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/intelligence/rag">
             <ProtectedRoute>
               <GlobalLayout><IntelligenceRAG /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/answer-test">
+            <ProtectedRoute>
+              <GlobalLayout><IntelligenceAnswerTest /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
