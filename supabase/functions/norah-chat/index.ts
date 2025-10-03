@@ -150,18 +150,61 @@ Rispondi sempre in italiano 🇮🇹 Sii preciso e cita i numeri esatti dal cont
       throw new Error(`Lovable AI error: ${response.status}`);
     }
 
+    // Ottieni user_id dal token JWT
+    const authHeader = req.headers.get('Authorization');
+    let userId: string | null = null;
+    
+    if (authHeader) {
+      const token = authHeader.replace('Bearer ', '');
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id || null;
+    }
+
+    // Import helper telemetria
+    const { logAiEvent, getOrCreateSession } = await import('../_shared/telemetry.ts');
+
+    // Bootstrap sessione se manca
+    let activeSessionId = sessionId;
+    if (userId && !activeSessionId) {
+      activeSessionId = await getOrCreateSession(userId, 'it', 'web', 'free') || undefined;
+    }
+
+    // Telemetria: reply_generated (prima dello stream)
+    const startTime = Date.now();
+    
     // Salva conversazione in database (opzionale)
-    if (sessionId) {
+    if (activeSessionId) {
       // Salva messaggio utente
-      await supabase.from('ai_messages').insert({
-        session_id: sessionId,
+      await supabase.from('norah_messages').insert({
+        session_id: activeSessionId,
         role: 'user',
         content: lastUserMessage.content,
       });
     }
 
     // Ritorna stream direttamente
-    return new Response(response.body, {
+    const originalBody = response.body;
+    
+    // Wrap stream per loggare al completamento
+    const transformStream = new TransformStream({
+      async flush() {
+        if (userId && activeSessionId) {
+          const latencyMs = Date.now() - startTime;
+          await logAiEvent({
+            user_id: userId,
+            session_id: activeSessionId,
+            type: 'reply_generated',
+            payload_json: {
+              latency_ms: latencyMs,
+              has_rag: (ragResults?.length || 0) > 0,
+              rag_chunks_used: ragResults?.length || 0
+            }
+          });
+        }
+      }
+    });
+
+    return new Response(originalBody?.pipeThrough(transformStream), {
       headers: { 
         ...corsHeaders, 
         'Content-Type': 'text/event-stream',

@@ -2,7 +2,9 @@
 // Populates knowledge base with essential M1SSION documents
 
 import { supabase } from '@/integrations/supabase/client';
-import { SEED_DOCUMENTS } from './seedDocuments';
+
+// Import documenti ufficiali da kb_seed_batch.json
+import seedBatch from '@/../ai_docs/admin/kb_seed_batch.json';
 
 export async function seedNorahKB(): Promise<{ success: boolean; processed: number; errors: string[] }> {
   console.log('[KB Seed] Starting knowledge base population...');
@@ -11,9 +13,9 @@ export async function seedNorahKB(): Promise<{ success: boolean; processed: numb
   let processed = 0;
 
   try {
-    // Call kb-upsert edge function
-    const { data, error } = await supabase.functions.invoke('norah-kb-upsert', {
-      body: { documents: SEED_DOCUMENTS }
+    // Call ai-kb-bulk-seed edge function con documenti ufficiali
+    const { data, error } = await supabase.functions.invoke('ai-kb-bulk-seed', {
+      body: { documents: seedBatch }
     });
 
     if (error) {
@@ -24,21 +26,26 @@ export async function seedNorahKB(): Promise<{ success: boolean; processed: numb
 
     console.log('[KB Seed] Response:', data);
 
-    if (data?.processed) {
-      processed = data.processed;
+    if (data?.successful) {
+      processed = data.successful;
       console.log(`[KB Seed] Successfully processed ${processed}/${data.total} documents`);
       
       if (data.results) {
         data.results.forEach((result: any) => {
-          console.log(`[KB Seed] ${result.slug}: ${result.status} (${result.chunks} chunks)`);
+          console.log(`[KB Seed] ${result.title}: success (${result.chunks} chunks)`);
         });
+      }
+      
+      if (data.errors && data.errors.length > 0) {
+        console.error('[KB Seed] Errors:', data.errors);
+        errors.push(...data.errors.map((e: any) => e.title));
       }
     }
 
     return { 
       success: processed > 0, 
       processed, 
-      errors: data?.results?.filter((r: any) => r.status !== 'ok').map((r: any) => r.slug) || []
+      errors
     };
 
   } catch (error) {
