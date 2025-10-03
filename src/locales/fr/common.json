@@ -3,9 +3,17 @@
   "norah_placeholder": "Demande à Norah…",
   "pills_ready": "Suggestions prêtes ↑",
   "cta_buzz": "Faire un BUZZ",
-  "cta_show_map": "Afficher la BUZZ Map",
-  "cta_plans": "Voir les abonnements",
-  "welcome_back_episode": "Bon retour ! Hier nous en étions là : « {{summary}} ». On continue ?",
+  "cta_show_map": "Voir BUZZ Map",
+  "cta_plans": "Voir les forfaits",
+  "cta_prizes": "Voir les prix",
+  "welcome_back_episode": "Bon retour ! Hier, nous étions ici : \"{{summary}}\". On continue ?",
+  "loading": "Chargement…",
+  "no_data": "Aucune donnée disponible",
+  "subscription_free": "Forfait Free",
+  "subscription_silver": "Forfait Silver",
+  "subscription_gold": "Forfait Gold",
+  "subscription_black": "Forfait Black",
+  "subscription_titanium": "Forfait Titanium",
   "norah_ready": "Norah Intelligence Ready",
   "write_natural": "Écrivez en langage naturel. Posez des questions sur M1SSION.",
   "processing": "Traitement...",
@@ -15,6 +23,5 @@
   "send_enter": "Appuyez sur Entrée pour envoyer • Raccourci : A pour ouvrir/fermer",
   "clues_analyzed": "indices analysés",
   "norah_ai_assistant": "NORAH AI Assistant",
-  "assistant_description": "Votre compagnon intelligent pour naviguer dans M1SSION™. Posez des questions, obtenez des insights stratégiques et débloquez les secrets de la chasse.",
-  "loading": "Chargement..."
+  "assistant_description": "Votre compagnon intelligent pour naviguer dans M1SSION™. Posez des questions, obtenez des insights stratégiques et débloquez les secrets de la chasse."
 }

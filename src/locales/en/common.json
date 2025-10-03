@@ -5,7 +5,15 @@
   "cta_buzz": "Do a BUZZ",
   "cta_show_map": "Show BUZZ Map",
   "cta_plans": "See plans",
-  "welcome_back_episode": "Welcome back! Yesterday we were here: \"{{summary}}\". Continue?",
+  "cta_prizes": "See prizes",
+  "welcome_back_episode": "Welcome back! Yesterday we were here: \"{{summary}}\". Shall we continue?",
+  "loading": "Loading…",
+  "no_data": "No data available",
+  "subscription_free": "Free Plan",
+  "subscription_silver": "Silver Plan",
+  "subscription_gold": "Gold Plan",
+  "subscription_black": "Black Plan",
+  "subscription_titanium": "Titanium Plan",
   "norah_ready": "Norah Intelligence Ready",
   "write_natural": "Write in natural language. Ask anything about M1SSION.",
   "processing": "Processing...",
@@ -15,6 +23,5 @@
   "send_enter": "Press Enter to send • Shortcut: A to open/close",
   "clues_analyzed": "clues analyzed",
   "norah_ai_assistant": "NORAH AI Assistant",
-  "assistant_description": "Your intelligent companion for navigating M1SSION™. Ask questions, get strategic insights, and unlock the secrets of the hunt.",
-  "loading": "Loading..."
+  "assistant_description": "Your intelligent companion for navigating M1SSION™. Ask questions, get strategic insights, and unlock the secrets of the hunt."
 }

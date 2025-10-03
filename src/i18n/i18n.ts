@@ -1,51 +1,141 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
-// Import base bundles (common). In futuro puoi splittare per namespace/pagine.
+// NOTE IMPORTANTI (PALLETTI):
+// - Non installare librerie nuove: usa i18next/react-i18next già presenti oppure fallback interno.
+// - Non modificare altri file dell'app. Questo modulo è drop-in e innocuo.
+// - Nessuna regressione: se le traduzioni mancano, fai fallback all'inglese.
+// - Rilevazione lingua: usa lingua del device/OS (navigator.language), con override opzionale salvato in localStorage.
+// - Le uniche lingue supportate qui sono: en, it, fr. Qualsiasi altra → fallback 'en'.
+// - Non toccare network, routing, o logiche di business. Solo i18n bootstrap.
+
+// Se i18next/react-i18next non fossero presenti nel progetto, il modulo espone API no-op
+// per evitare crash. Se sono presenti, useremo l'integrazione reale.
+
+let i18next: any = null;
+let initReactI18next: any = null;
+
+try {
+  // Lazy require per non esplodere se i pacchetti non sono installati
+  // (Lovable non deve aggiungere dipendenze; se già ci sono, le usiamo)
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  i18next = require('i18next');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  initReactI18next = require('react-i18next').initReactI18next;
+} catch {
+  // no-op fallback
+}
+
 import en from '../locales/en/common.json';
 import it from '../locales/it/common.json';
 import fr from '../locales/fr/common.json';
 
-// Normalizza lingua tipo "en-GB" -> "en"
-function normalize(lang?: string) {
-  const code = (lang || 'en').toLowerCase();
-  if (code.startsWith('it')) return 'it';
-  if (code.startsWith('fr')) return 'fr';
+// ---- Costanti & Utils
+const STORAGE_KEY = 'm1_locale';
+const SUPPORTED = ['en', 'it', 'fr'] as const;
+type SupportedLang = (typeof SUPPORTED)[number];
+
+function normalize(lang: string | undefined | null): SupportedLang {
+  if (!lang || typeof lang !== 'string') return 'en';
+  const lower = lang.toLowerCase();
+  // match en, it, fr anche se formati en-GB, it-IT, fr-FR
+  for (const code of SUPPORTED) {
+    if (lower === code || lower.startsWith(code + '-')) return code;
+  }
   return 'en';
 }
 
-i18n
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .init({
-    fallbackLng: 'en',
-    supportedLngs: ['en', 'it', 'fr'],
-    load: 'languageOnly',
-    detection: {
-      // Usa lingua device/OS via browser APIs
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
-      lookupLocalStorage: 'm1ssion_lang',
-    },
-    interpolation: { escapeValue: false },
-    resources: {
-      en: { translation: en },
-      it: { translation: it },
-      fr: { translation: fr },
-    },
-    parseMissingKeyHandler: (key) => {
-      // fallback pulito in dev
-      return key;
-    },
-    initImmediate: true,
-  });
-
-// Forza normalizzazione alla sola lingua principale (en/it/fr)
-const current = normalize(i18n.language);
-if (current !== i18n.language) {
-  i18n.changeLanguage(current);
+export function getDeviceLocale(): SupportedLang {
+  const nav = (globalThis as any)?.navigator;
+  const byList = Array.isArray(nav?.languages) && nav.languages.length > 0 ? nav.languages[0] : null;
+  const raw = byList || nav?.language || nav?.userLanguage || 'en';
+  return normalize(raw);
 }
 
-export default i18n;
+export function getSavedLocale(): SupportedLang | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? normalize(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setLocale(lng: SupportedLang): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, lng);
+  } catch {
+    /* ignore */
+  }
+  if (i18next?.changeLanguage) {
+    i18next.changeLanguage(lng);
+  }
+}
+
+export function getDefaultLocale(): SupportedLang {
+  return getSavedLocale() ?? getDeviceLocale();
+}
+
+// ---- Risorse
+const resources = {
+  en: { common: en },
+  it: { common: it },
+  fr: { common: fr },
+};
+
+// ---- Bootstrap i18n (reale se i18next presente, altrimenti no-op)
+let _initialized = false;
+
+export async function initI18n(): Promise<void> {
+  if (_initialized) return;
+
+  const lng = getDefaultLocale();
+
+  if (i18next && initReactI18next) {
+    // i18next reale
+    await i18next
+      .use(initReactI18next)
+      .init({
+        resources,
+        lng,
+        fallbackLng: 'en',
+        supportedLngs: SUPPORTED as unknown as string[],
+        ns: ['common'],
+        defaultNS: 'common',
+        interpolation: { escapeValue: false },
+        // Non tocchiamo detection plugin per non aggiungere dipendenze.
+        // Rilevazione custom con getDefaultLocale().
+      })
+      .catch(() => {
+        // Anche in caso di errore, evitare crash.
+      });
+  }
+
+  _initialized = true;
+}
+
+// Helper di traduzione sicuro (funziona anche in no-op)
+export function t(key: string, vars?: Record<string, unknown>): string {
+  if (i18next?.t) {
+    return i18next.t(key, vars);
+  }
+  // fallback semplice: ritorna la chiave se manca i18next
+  return key;
+}
+
+// Accessor lingua corrente (robusto)
+export function getLocale(): SupportedLang {
+  if (i18next?.language) return normalize(i18next.language);
+  return getDefaultLocale();
+}
+
+// Hook React opzionale (no crash se react-i18next manca)
+export function useI18nSafe() {
+  // Evitiamo importare hook reali per non vincolare dipendenze qui.
+  return {
+    t,
+    locale: getLocale(),
+    setLocale,
+  };
+}
+
+export default i18next;
