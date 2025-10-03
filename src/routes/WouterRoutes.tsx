@@ -249,6 +249,12 @@ const WouterRoutes: React.FC = () => {
 
           <Route path="/intelligence">
             <ProtectedRoute>
+              <GlobalLayout><IntelligenceStyledPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/intelligence/rag">
+            <ProtectedRoute>
               <GlobalLayout><IntelligenceRAG /></GlobalLayout>
             </ProtectedRoute>
           </Route>
