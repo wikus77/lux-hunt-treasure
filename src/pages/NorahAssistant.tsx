@@ -6,8 +6,10 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { NorahChatLLM } from '@/components/norah/NorahChatLLM';
 import { supabase } from '@/integrations/supabase/client';
+import { useTranslation } from 'react-i18next';
 
 const NorahAssistant = () => {
+  const { t } = useTranslation();
   const [, setLocation] = useLocation();
   const [userId, setUserId] = React.useState<string | null>(null);
 
@@ -68,17 +70,16 @@ const NorahAssistant = () => {
         <div className="w-full h-full px-0 md:px-4 md:max-w-screen-xl md:mx-auto">
           <div className="mb-4 md:mb-6 px-4 md:px-0">
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-[#4361ee] to-[#7209b7] bg-clip-text text-transparent mb-2">
-              NORAH AI Assistant
+              {t('norah_ai_assistant')}
             </h1>
             <p className="text-sm md:text-base text-white/70">
-              La tua assistente personale M1SSION™. Chiedi informazioni su BUZZ, piani, Final Shot e
-              molto altro!
+              {t('assistant_description')}
             </p>
           </div>
 
           <div className="h-full" style={{ height: 'calc(100dvh - 240px)' }}>
             {userId && <NorahChatLLM userId={userId} />}
-            {!userId && <p className="text-white/60 px-4">Caricamento...</p>}
+            {!userId && <p className="text-white/60 px-4">{t('loading')}</p>}
           </div>
         </div>
       </main>

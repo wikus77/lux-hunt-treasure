@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ - AI Analyst Panel
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Activity } from 'lucide-react';
 import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
@@ -9,6 +9,7 @@ import { nextBestActionToPills } from '@/intel/norah/engine/nextBestAction';
 import { buildNorahContext } from '@/intel/norah/engine/contextBuilder';
 import { logPillClick } from '@/intel/norah/utils/telemetry';
 import { Celebrations, celebrateMilestone } from '@/intel/norah/ui/Celebrations';
+import { useTranslation } from 'react-i18next';
 
 export interface AIAnalystPanelProps {
   // Support both 'open' and 'isOpen' for compatibility
@@ -47,6 +48,8 @@ const PLACEHOLDERS = [
 ];
 
 const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => { 
+  const { t } = useTranslation();
+  
   // Handle both 'open' and 'isOpen' for backward compatibility
   const isOpen = props.open ?? props.isOpen ?? false;
   const {
@@ -189,8 +192,8 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 </h2>
                 <p className="text-sm text-white/60 mt-1">
                   {agentContext?.agentCode && agentContext.agentCode !== 'AG-UNKNOWN' 
-                    ? `Norah Intelligence Ready • Agente ${agentContext.agentCode}`
-                    : 'Norah Intelligence Ready'
+                    ? `${t('norah_ready')} • Agente ${agentContext.agentCode}`
+                    : t('norah_ready')
                   }
                 </p>
               </div>
@@ -221,7 +224,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                     : 'bg-white/10 text-white/60 hover:bg-white/20'
                 }`}
               >
-                {ttsEnabled ? '🔊 TTS ON' : '🔇 TTS OFF'}
+                {ttsEnabled ? t('tts_on') : t('tts_off')}
               </button>
               <button
                 onClick={onClose}
@@ -239,8 +242,8 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
             {messages.length === 0 ? (
               <div className="text-center text-white/40 py-12">
                 {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
-                <p className="text-lg mb-2">Norah Intelligence Ready</p>
-                <p className="text-sm">Scrivi in linguaggio naturale. Chiedi qualsiasi cosa su M1SSION.</p>
+                <p className="text-lg mb-2">{t('norah_ready')}</p>
+                <p className="text-sm">{t('write_natural')}</p>
               </div>
             ) : (
               <>
@@ -261,7 +264,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                       </p>
                       {message.metadata && (
                         <div className="mt-2 text-xs text-white/40">
-                          {message.metadata.cluesAnalyzed} indizi analizzati • {message.metadata.mode}
+                          {message.metadata.cluesAnalyzed} {t('clues_analyzed')} • {message.metadata.mode}
                         </div>
                       )}
                     </div>
@@ -279,7 +282,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                       <div className="w-2 h-2 bg-[#0EA5E9] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <div className="w-2 h-2 bg-[#F213A4] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    <span className="text-sm">{status === 'thinking' ? 'Processing...' : 'Speaking...'}</span>
+                    <span className="text-sm">{status === 'thinking' ? t('processing') : t('speaking')}</span>
                   </div>
                 </div>
               </div>
@@ -314,7 +317,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder={nbaPills.length > 0 ? "Suggerimenti pronti ↑" : "Cosa vuoi sapere?"}
+                placeholder={nbaPills.length > 0 ? t('pills_ready') : t('norah_placeholder')}
                 disabled={isProcessing}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:border-[#F213A4]/50 disabled:opacity-50 transition-all"
               />
@@ -326,7 +329,7 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
                 <Send className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-xs text-white/30 mt-2">Press Enter to send • Shortcut: A to open/close</p>
+            <p className="text-xs text-white/30 mt-2">{t('send_enter')}</p>
           </div>
         </div>
       </div>

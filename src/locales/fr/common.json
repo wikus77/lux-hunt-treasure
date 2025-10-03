@@ -1,0 +1,20 @@
+{
+  "intel_title": "Intelligence",
+  "norah_placeholder": "Demande à Norah…",
+  "pills_ready": "Suggestions prêtes ↑",
+  "cta_buzz": "Faire un BUZZ",
+  "cta_show_map": "Afficher la BUZZ Map",
+  "cta_plans": "Voir les abonnements",
+  "welcome_back_episode": "Bon retour ! Hier nous en étions là : « {{summary}} ». On continue ?",
+  "norah_ready": "Norah Intelligence Ready",
+  "write_natural": "Écrivez en langage naturel. Posez des questions sur M1SSION.",
+  "processing": "Traitement...",
+  "speaking": "Parler...",
+  "tts_on": "🔊 TTS ON",
+  "tts_off": "🔇 TTS OFF",
+  "send_enter": "Appuyez sur Entrée pour envoyer • Raccourci : A pour ouvrir/fermer",
+  "clues_analyzed": "indices analysés",
+  "norah_ai_assistant": "NORAH AI Assistant",
+  "assistant_description": "Votre compagnon intelligent pour naviguer dans M1SSION™. Posez des questions, obtenez des insights stratégiques et débloquez les secrets de la chasse.",
+  "loading": "Chargement..."
+}
