@@ -3,7 +3,12 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
-import MonthlyPrizesModal from "./MonthlyPrizesModal";
+import "@/styles/landing-flip-cards.css";
+import huracanImg from "@/assets/prizes/lamborghini-huracan.png";
+import rolexImg from "@/assets/prizes/rolex-submariner.png";
+import birkinImg from "@/assets/prizes/hermes-birkin.png";
+import iphoneImg from "@/assets/prizes/iphone-16-pro-max.png";
+import airpodsImg from "@/assets/prizes/airpods-max.png";
 
 // M1SSION PRIZE - real assets from public/assets/m1ssion-prize
 const missionPrizeImages = [
@@ -21,7 +26,8 @@ interface PrizeVisionProps {
 export function PrizeVision({ progress, status }: PrizeVisionProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSwipeTransition, setIsSwipeTransition] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [flipped, setFlipped] = useState<number[]>([]);
 
   const handleSwipeLeft = () => {
     if (isSwipeTransition) return;
@@ -33,9 +39,21 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
     }, 150);
   };
 
+  const prizes = [
+    { name: "Lamborghini Huracán Experience", image: huracanImg, description: "🏎️ Lamborghini Huracán Experience — Un weekend adrenalina pura." },
+    { name: "Rolex Submariner", image: rolexImg, description: "⌚ Rolex Submariner — Precisione e stile intramontabile." },
+    { name: "Hermès Birkin", image: birkinImg, description: "👜 Hermès Birkin — Eleganza senza compromessi." },
+    { name: "iPhone 16 Pro Max", image: iphoneImg, description: "📱 iPhone 16 Pro Max — Tecnologia all’avanguardia." },
+    { name: "AirPods Max", image: airpodsImg, description: "🎧 AirPods Max — Immersivo, ovunque." }
+  ];
+
+  const toggleFlip = (index: number) => {
+    setFlipped(prev => prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]);
+  };
+
   return (
     <>
-      <div className="w-full cursor-pointer" onClick={() => setIsModalOpen(true)}>
+      <div className="w-full cursor-pointer" onClick={() => setIsExpanded(true)}>
         <GradientBox className="w-full">
           <div className="p-4 border-b border-white/10 flex justify-between items-center">
         <h2 className="text-lg md:text-xl font-orbitron font-bold">
@@ -96,10 +114,50 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
         </GradientBox>
       </div>
 
-      <MonthlyPrizesModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 16 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed left-0 right-0 z-50 px-4 md:px-6"
+            style={{ top: 0, bottom: "calc(env(safe-area-inset-bottom) + 72px)" }}
+          >
+            <GradientBox className="w-full h-full">
+              <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                <h2 className="text-lg md:text-xl font-orbitron font-bold">
+                  <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
+                  <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
+                </h2>
+                <button onClick={() => setIsExpanded(false)} className="text-white/80 hover:text-white text-sm md:text-base">Chiudi</button>
+              </div>
+
+              <div className="p-4 overflow-y-auto h-[calc(100%-64px)]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  {prizes.map((prize, index) => (
+                    <div key={index} className="perspective-1000 h-64 cursor-pointer" onClick={() => toggleFlip(index)}>
+                      <div className={`mission-flip-card w-full h-full ${flipped.includes(index) ? 'is-flipped' : ''}`}>
+                        {/* Front */}
+                        <div className="mission-card-front relative rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                          <img src={prize.image} alt={prize.name} className="absolute inset-0 w-full h-full object-cover" />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                            <h3 className="font-orbitron text-base md:text-lg font-bold text-cyan-400">{prize.name}</h3>
+                          </div>
+                        </div>
+                        {/* Back */}
+                        <div className="mission-card-back rounded-xl p-6 bg-white/5 border border-white/10 flex items-center justify-center text-center">
+                          <p className="text-white text-sm md:text-base leading-relaxed">{prize.description}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </GradientBox>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
