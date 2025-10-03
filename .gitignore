@@ -45,3 +45,6 @@ supabase/config.toml.bak.*
 
 # supabase CLI cache
 supabase/.temp/
+
+# local backups
+.backup_*
