@@ -1,34 +1,9 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-// --- CF Embeddings helper (bge-base-en-v1.5, 768 dim) ---
-const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
-const CF_TOKEN   = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
-const CF_EMBED_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
-
-async function cfEmbed(text: string): Promise<number[]> {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${CF_EMBED_MODEL}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${CF_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Cloudflare embeddings failed: ${res.status} ${err}`);
-  }
-  const json = await res.json();
-  // Cloudflare: { data: [[...]], shape: [1,768], ... }
-  let e: any = (json?.result?.data ?? json?.data);
-  if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
-  return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
-}
-// --- end helper ---
+import { embed } from "../_shared/embedProvider.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE")!;
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
 type Req = { query: string; top_k?: number; locale?: string };
@@ -53,7 +28,13 @@ serve(async (req) => {
     if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
 
     // 1) Embedding query
-    const embedding = await cfEmbed(query);
+    // embedding robust: accetta sia {vectors:[...]} sia [...]
+const __embRes = await embed([query]);
+const __vectors = Array.isArray(__embRes) ? __embRes : (__embRes?.vectors ?? __embRes?.embeddings);
+const qVec = __vectors?.[0];
+if (!qVec || !Array.isArray(qVec)) {
+  throw new Error('Embed provider returned no vectors (check CF credentials/model).');
+}
 
     // 2) Vector search
     const data = await callRagRpc(embedding, top_k, locale);
@@ -97,6 +78,20 @@ function __flattenEmbedding(input: any): number[] {
   return e.map((n: any) => Number(n));
 }
 // --- end helper ---
+// --- helper: flatten embedding for RPC (idempotente se già definita) ---
+function __flattenEmbedding(input: any): number[] {
+  let e: any = input;
+  if (e && typeof e === 'object' && 'data' in e) {
+    const d: any = (e as any).data;
+    e = Array.isArray(d) && Array.isArray(d[0]) ? d[0] : d;
+  }
+  if (e && (e as any).buffer && (e as any).BYTES_PER_ELEMENT) {
+    e = Array.from(e as any);
+  }
+  if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
+  if (!Array.isArray(e)) return [];
+  return e.map((n: any) => Number(n));
+}
 
 // --- helper: chiama l'RPC via PostgREST con Prefer: params=single-object ---
 async function callRagRpc(embedding: any, top_k: number, locale: string) {
@@ -120,21 +115,3 @@ async function callRagRpc(embedding: any, top_k: number, locale: string) {
   }
   return rpcRes.json();
 }
-// --- helper: flatten embedding (Cloudflare/TypedArray/[[...]]) ---
-function __flattenEmbedding(input: any): number[] {
-  let e: any = input;
-  // Cloudflare Workers AI: { data: [[...]], shape: [1, N] }
-  if (e && typeof e === 'object' && 'data' in e) {
-    const d: any = (e as any).data;
-    e = Array.isArray(d) && Array.isArray(d[0]) ? d[0] : d;
-  }
-  // TypedArray -> Array
-  if (e && (e as any).buffer && (e as any).BYTES_PER_ELEMENT) {
-    e = Array.from(e as any);
-  }
-  // Eventuale [[...]] -> [...]
-  if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
-  if (!Array.isArray(e)) return [];
-  return e.map((n: any) => Number(n));
-}
-// --- end helper ---
