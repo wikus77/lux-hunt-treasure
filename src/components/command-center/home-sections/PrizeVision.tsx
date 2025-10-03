@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import GradientBox from "@/components/ui/gradient-box";
 import "@/styles/landing-flip-cards.css";
 import huracanImg from "@/assets/prizes/lamborghini-huracan.png";
