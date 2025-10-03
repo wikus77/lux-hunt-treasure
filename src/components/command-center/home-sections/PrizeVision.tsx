@@ -53,90 +53,140 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
 
   return (
     <>
-      <div className="w-full cursor-pointer" onClick={() => setIsExpanded(true)}>
-        <GradientBox className="w-full">
-          <div className="p-4 border-b border-white/10 flex justify-between items-center">
-        <h2 className="text-lg md:text-xl font-orbitron font-bold">
-          <span className="text-[#00D1FF]" style={{ 
-            textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-          }}>M1</span>
-          <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
-        </h2>
-        <div className="flex items-center space-x-2">
-          <span className="text-xs text-white/70">Visibilità: {progress}%</span>
-          <span className="text-xs text-white/50">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
-        </div>
-      </div>
-      
-      <div className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden">
-        {/* Swipeable Image Container */}
-        <div 
-          className="relative w-full h-full cursor-pointer"
-          onClick={handleSwipeLeft}
-          onTouchStart={handleSwipeLeft}
-        >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentImageIndex}
-              className="absolute inset-0"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.3, ease: "easeInOut" }}
-            >
-              <img 
-                src={missionPrizeImages[currentImageIndex]}
-                alt={`M1SSION Prize ${currentImageIndex + 1}`}
-                className="w-full h-full object-cover rounded-lg shadow-lg"
-              />
-            </motion.div>
-          </AnimatePresence>
-          
-          {/* Swipe Indicator */}
-          <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-medium">
-            Tocca per il prossimo →
-          </div>
-          
-          {/* Disclaimer Overlay */}
-          <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
-            Image for illustrative purposes only
-          </div>
-        </div>
-        
-        {/* Progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
-          <div 
-            className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
-        </GradientBox>
-      </div>
-
+      {/* Backdrop per chiudere quando espanso */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed left-0 right-0 z-50 px-4 md:px-6"
-            style={{ top: 0, bottom: "calc(env(safe-area-inset-bottom) + 72px)" }}
-          >
-            <GradientBox className="w-full h-full">
-              <div className="p-4 border-b border-white/10 flex justify-between items-center">
-                <h2 className="text-lg md:text-xl font-orbitron font-bold">
-                  <span className="text-[#00D1FF]" style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}>M1</span>
-                  <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
-                </h2>
-                <button onClick={() => setIsExpanded(false)} className="text-white/80 hover:text-white text-sm md:text-base">Chiudi</button>
-              </div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsExpanded(false)}
+          />
+        )}
+      </AnimatePresence>
 
-              <div className="p-4 overflow-y-auto h-[calc(100%-64px)]">
+      {/* Container principale che si espande */}
+      <motion.div
+        layout
+        initial={false}
+        animate={isExpanded ? {
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: "calc(env(safe-area-inset-bottom) + 72px)",
+          zIndex: 50,
+          padding: "1rem",
+        } : {
+          position: "relative",
+          zIndex: 1,
+        }}
+        transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+        className="w-full"
+      >
+        <GradientBox className="w-full h-full">
+          <div 
+            className="p-4 border-b border-white/10 flex justify-between items-center cursor-pointer"
+            onClick={() => !isExpanded && setIsExpanded(true)}
+          >
+            <h2 className="text-lg md:text-xl font-orbitron font-bold">
+              <span className="text-[#00D1FF]" style={{ 
+                textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+              }}>M1</span>
+              <span className="text-white">SSION<span className="text-xs align-top">™</span> PRIZE</span>
+            </h2>
+            <div className="flex items-center space-x-2">
+              {!isExpanded && (
+                <>
+                  <span className="text-xs text-white/70">Visibilità: {progress}%</span>
+                  <span className="text-xs text-white/50">({currentImageIndex + 1}/{missionPrizeImages.length})</span>
+                </>
+              )}
+              {isExpanded && (
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(false);
+                  }} 
+                  className="text-white/80 hover:text-white text-sm md:text-base"
+                >
+                  Chiudi
+                </button>
+              )}
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {!isExpanded ? (
+              <motion.div
+                key="collapsed"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="relative h-60 sm:h-72 md:h-80 lg:h-96 overflow-hidden"
+              >
+                {/* Swipeable Image Container */}
+                <div 
+                  className="relative w-full h-full cursor-pointer"
+                  onClick={handleSwipeLeft}
+                  onTouchStart={handleSwipeLeft}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentImageIndex}
+                      className="absolute inset-0"
+                      initial={{ opacity: 0, x: 50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -50 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                    >
+                      <img 
+                        src={missionPrizeImages[currentImageIndex]}
+                        alt={`M1SSION Prize ${currentImageIndex + 1}`}
+                        className="w-full h-full object-cover rounded-lg shadow-lg"
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  
+                  {/* Swipe Indicator */}
+                  <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-medium">
+                    Tocca per il prossimo →
+                  </div>
+                  
+                  {/* Disclaimer Overlay */}
+                  <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
+                    Image for illustrative purposes only
+                  </div>
+                </div>
+                
+                {/* Progress bar */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/30">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF]"
+                    style={{ width: `${progress}%` }}
+                  ></div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-4 overflow-y-auto h-[calc(100%-64px)]"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   {prizes.map((prize, index) => (
-                    <div key={index} className="perspective-1000 h-64 cursor-pointer" onClick={() => toggleFlip(index)}>
+                    <div 
+                      key={index} 
+                      className="perspective-1000 h-64"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFlip(index);
+                      }}
+                    >
                       <div className={`mission-flip-card w-full h-full ${flipped.includes(index) ? 'is-flipped' : ''}`}>
                         {/* Front */}
                         <div className="mission-card-front relative rounded-xl overflow-hidden bg-white/5 border border-white/10">
@@ -153,11 +203,11 @@ export function PrizeVision({ progress, status }: PrizeVisionProps) {
                     </div>
                   ))}
                 </div>
-              </div>
-            </GradientBox>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </GradientBox>
+      </motion.div>
     </>
   );
 }
