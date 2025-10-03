@@ -1,0 +1,25 @@
+{
+  "documents": [
+    {
+      "title": "POLICY_GIOCO_v1",
+      "locale": "it",
+      "tags": ["policy","fair-play","gdpr","refund"],
+      "category": "policy",
+      "body_md": "Policy e fair-play. Linee guida, rimborsi (condizioni), GDPR, canali supporto."
+    },
+    {
+      "title": "REGOLE_BUZZ_v1",
+      "locale": "it",
+      "tags": ["buzz","buzz-map","regole","tier","cooldown"],
+      "category": "docs",
+      "body_md": "BUZZ vs BUZZ Map: quando usare ciascuno, raggio, cooldown per tier, note operative."
+    },
+    {
+      "title": "FAQ_UTENTE_v1",
+      "locale": "it",
+      "tags": ["faq","onboarding","howto"],
+      "category": "docs",
+      "body_md": "FAQ operative (~25 voci). Accesso, piani, limitazioni, troubleshooting rapido."
+    }
+  ]
+}

@@ -1,100 +1,60 @@
-// © 2025 Joseph MULÉ – M1SSION™ – NORAH AI RAG Search
-// Server-side embedding + semantic search
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { embed } from "../_shared/embedProvider.ts";
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS'
-};
+type Req = { query: string; top_k?: number; locale?: string };
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  const traceId = crypto.randomUUID();
-  console.log(`[rag-search] traceId:${traceId} start`);
-
   try {
-    const { query, k = 6 } = await req.json();
-
-    if (!query || typeof query !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Missing or invalid "query" parameter' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // CORS preflight
+    if (req.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+        },
+      });
     }
 
-    // 1. Generate embedding server-side using Lovable AI Gateway
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
+    if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
-    console.log(`[rag-search] traceId:${traceId} generating embedding for: "${query.substring(0, 50)}..."`);
+    const { query, top_k = 3, locale = "it" } = (await req.json()) as Req;
+    if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
 
-    const embeddingResponse = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'text-embedding-3-small',
-        input: query
-      })
+    // 1) Embedding query
+    const { vectors } = await embed([query]);
+    const qVec = vectors[0];
+
+    // 2) Vector search
+    const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
+      query_embedding: qVec,
+      match_count: top_k,
+      in_locale: locale,
     });
+    if (error) throw new Error(`ai_rag_search_vec failed: ${error.message}`);
 
-    if (!embeddingResponse.ok) {
-      const errText = await embeddingResponse.text();
-      console.error(`[rag-search] traceId:${traceId} embedding error:`, errText);
-      throw new Error(`Embedding API error: ${embeddingResponse.status}`);
-    }
+    // 3) Log evento (best-effort)
+    try {
+      const { error: evErr } = await supabaseAdmin
+        .from("norah_events")
+        .insert([{ event_type: "rag_query", payload: { q: query, locale, top_k, hits: data } }]);
+      if (evErr) console.warn("norah_events insert error:", evErr.message || evErr);
+    } catch (_) { /* no-op */ }
 
-    const embeddingData = await embeddingResponse.json();
-    const embedding = embeddingData?.data?.[0]?.embedding;
-
-    if (!embedding || !Array.isArray(embedding) || embedding.length !== 1536) {
-      throw new Error('Invalid embedding response');
-    }
-
-    // 2. Search via RPC
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
-
-    const { data, error } = await supabaseClient.rpc('ai_rag_search', {
-      query_embedding: embedding,
-      match_threshold: 0.7,
-      match_count: k
+    return new Response(JSON.stringify({ rag_used: true, hits: data }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
     });
-
-    if (error) {
-      console.error(`[rag-search] traceId:${traceId} RPC error:`, error);
-      throw error;
-    }
-
-    console.log(`[rag-search] traceId:${traceId} found ${data?.length || 0} results`);
-
-    return new Response(
-      JSON.stringify({ 
-        query, 
-        results: data || [],
-        count: data?.length || 0 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error(`[rag-search] traceId:${traceId} error:`, error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+  } catch (e) {
+    return new Response(JSON.stringify({ error: String(e?.message ?? e) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 });
-
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
