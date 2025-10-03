@@ -1,0 +1,115 @@
+/* © 2025 M1SSION™ – Norah Chat Modal Layout */
+/* Mobile-optimized modal that fits between header and bottom nav */
+
+/* Main modal container - fixed positioning between header and bottom nav */
+.norah-chat-modal {
+  position: fixed;
+  left: 0;
+  right: 0;
+  
+  /* Space between header and bottom nav, with iOS safe areas */
+  top: calc(var(--app-header-height, 72px) + env(safe-area-inset-top, 0px));
+  bottom: calc(var(--app-bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px));
+  
+  /* Robust height calculation for iOS */
+  height: auto;
+  max-height: calc(
+    100dvh - var(--app-header-height, 72px) - var(--app-bottom-nav-height, 64px) 
+    - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+  );
+  
+  /* Fallback for browsers without dvh support */
+  max-height: calc(
+    100vh - var(--app-header-height, 72px) - var(--app-bottom-nav-height, 64px) 
+    - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+  );
+  
+  display: flex;
+  flex-direction: column;
+  
+  background: #0A0B14;
+  margin: 0;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  overflow: hidden;
+}
+
+/* Desktop: relative positioning with border and rounded corners */
+@media (min-width: 768px) {
+  .norah-chat-modal {
+    position: relative;
+    top: auto;
+    bottom: auto;
+    height: 100%;
+    max-height: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin: 0;
+  }
+}
+
+/* Modal header - fixed height, no scroll */
+.norah-chat-modal__header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: linear-gradient(to right, rgba(67, 97, 238, 0.1), rgba(114, 9, 183, 0.1));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@media (min-width: 768px) {
+  .norah-chat-modal__header {
+    padding: 1rem;
+  }
+}
+
+/* Modal body - scrollable messages area */
+.norah-chat-modal__body {
+  flex: 1 1 auto;
+  min-height: 0; /* Critical for flex child scrolling */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0.75rem;
+  overscroll-behavior: contain; /* Prevent pull-to-refresh on iOS */
+}
+
+@media (min-width: 768px) {
+  .norah-chat-modal__body {
+    padding: 1rem;
+  }
+}
+
+/* Modal footer - input area, sticky at bottom */
+.norah-chat-modal__footer {
+  flex: 0 0 auto;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (min-width: 768px) {
+  .norah-chat-modal__footer {
+    padding: 1rem;
+  }
+}
+
+/* iOS keyboard handling - prevent viewport resize issues */
+@supports (-webkit-touch-callout: none) {
+  .norah-chat-modal {
+    /* Use fixed viewport on iOS to prevent resize when keyboard appears */
+    max-height: calc(
+      100vh - var(--app-header-height, 72px) - var(--app-bottom-nav-height, 64px) 
+      - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+    );
+  }
+  
+  /* Ensure body remains scrollable */
+  .norah-chat-modal__body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
