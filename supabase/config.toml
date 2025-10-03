@@ -120,3 +120,5 @@ enable_signup = true
 [functions.ai-kb-upsert]
 
 [functions.ai-kb-bulk-seed]
+
+[functions.norah-diagnose]
