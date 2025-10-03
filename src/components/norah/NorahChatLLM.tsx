@@ -69,9 +69,9 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
   };
 
   return (
-    <div className="fixed inset-0 md:relative md:inset-auto flex flex-col h-full bg-[#0A0B14] border-0 md:border md:border-white/10 rounded-none md:rounded-xl overflow-hidden z-40">
+    <div className="norah-chat-modal">
       {/* Header */}
-      <div className="flex items-center gap-3 p-3 md:p-4 bg-gradient-to-r from-[#4361ee]/10 to-[#7209b7]/10 border-b border-white/10">
+      <div className="norah-chat-modal__header">
         <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center">
           <Bot className="w-6 h-6 text-white" />
         </div>
@@ -88,7 +88,7 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-3 md:p-4 pb-safe-bottom overflow-y-auto" ref={scrollRef}>
+      <div className="norah-chat-modal__body" ref={scrollRef}>
         <div className="space-y-3 md:space-y-4">
           {messages.map((message, index) => (
             <div
@@ -139,10 +139,10 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Input */}
-      <div className="sticky bottom-0 p-3 md:p-4 bg-white/5 border-t border-white/10 z-50">
+      <div className="norah-chat-modal__footer">
         <div className="flex gap-2">
           <Input
             value={input}
