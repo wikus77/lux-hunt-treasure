@@ -4,6 +4,7 @@
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { embed, getEmbeddingModel } from '../_shared/embedProvider.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -41,10 +42,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY not configured');
-    }
+    // Auto-detect embedding provider
+    const embeddingConfig = await getEmbeddingModel();
+    console.log(`[ai-kb-upsert] Using provider: ${embeddingConfig.provider}, model: ${embeddingConfig.model}`);
 
     // 1. Upsert document in ai_docs
     console.log(`[ai-kb-upsert] traceId:${traceId} upserting doc: "${title}"`);
@@ -104,46 +104,21 @@ serve(async (req) => {
       .delete()
       .eq('doc_id', docId);
 
-    // 4. Generate embeddings and insert
-    const embeddingInserts = [];
-    
-    for (let idx = 0; idx < chunks.length; idx++) {
-      const chunk = chunks[idx];
-      
-      // Generate embedding via Lovable AI Gateway
-      const embeddingResponse = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: chunk
-        })
-      });
-
-      if (!embeddingResponse.ok) {
-        const errText = await embeddingResponse.text();
-        console.error(`[ai-kb-upsert] traceId:${traceId} embedding error for chunk ${idx}:`, errText);
-        continue; // Skip failed chunks but continue processing
-      }
-
-      const embeddingData = await embeddingResponse.json();
-      const embedding = embeddingData?.data?.[0]?.embedding;
-
-      if (!embedding || !Array.isArray(embedding) || embedding.length !== 1536) {
-        console.error(`[ai-kb-upsert] traceId:${traceId} invalid embedding for chunk ${idx}`);
-        continue;
-      }
-
-      embeddingInserts.push({
-        doc_id: docId,
-        chunk_idx: idx,
-        chunk_text: chunk,
-        embedding
-      });
+    // 4. Generate embeddings and insert (batch via abstraction layer)
+    let embeddings: number[][];
+    try {
+      embeddings = await embed(chunks);
+    } catch (embeddingError) {
+      console.error(`[ai-kb-upsert] traceId:${traceId} embedding generation failed:`, embeddingError);
+      throw new Error(`Embedding generation failed: ${embeddingError.message}`);
     }
+
+    const embeddingInserts = chunks.map((chunk, idx) => ({
+      doc_id: docId,
+      chunk_idx: idx,
+      chunk_text: chunk,
+      embedding: embeddings[idx]
+    }));
 
     // Batch insert embeddings
     if (embeddingInserts.length > 0) {
@@ -164,7 +139,9 @@ serve(async (req) => {
         success: true,
         doc_id: docId,
         chunks: embeddingInserts.length,
-        title
+        title,
+        provider: embeddingConfig.provider,
+        model: embeddingConfig.model
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
