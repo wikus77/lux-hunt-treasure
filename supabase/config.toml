@@ -116,3 +116,7 @@ enable_signup = true
 [functions.norah-kb-upsert]
 
 [functions.chat]
+
+[functions.ai-kb-upsert]
+
+[functions.ai-kb-bulk-seed]
