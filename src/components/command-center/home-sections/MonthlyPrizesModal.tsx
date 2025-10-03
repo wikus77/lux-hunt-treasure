@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import "@/styles/animations/flip-card.css";
+import "@/styles/landing-flip-cards.css";
 import lamborghiniImg from "@/assets/prizes/lamborghini-huracan.png";
 import rolexImg from "@/assets/prizes/rolex-submariner.png";
 import hermesImg from "@/assets/prizes/hermes-birkin.png";
@@ -77,7 +77,7 @@ const MonthlyPrizesModal = ({ isOpen, onClose }: MonthlyPrizesModalProps) => {
               stiffness: 300,
               duration: 0.4 
             }}
-            className="fixed inset-4 md:inset-x-8 md:top-[5%] md:bottom-[5%] z-[101] mx-auto max-w-4xl overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/10"
+            className="fixed inset-0 z-[101] p-4 md:p-8 mx-auto max-w-5xl overflow-hidden rounded-2xl bg-white/5 backdrop-blur-md border border-white/10"
             style={{
               boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)"
             }}
@@ -85,9 +85,7 @@ const MonthlyPrizesModal = ({ isOpen, onClose }: MonthlyPrizesModalProps) => {
             {/* Header */}
             <div className="sticky top-0 z-10 flex items-center justify-between px-4 md:px-6 py-4 border-b border-white/10 bg-black/40 backdrop-blur-md">
               <h2 className="text-xl md:text-2xl font-orbitron font-bold">
-                <span className="text-[#00D1FF]" style={{ 
-                  textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
-                }}>PREMI</span>
+                <span className="text-[#00D1FF]">PREMI</span>
                 <span className="text-white"> MENSILI</span>
               </h2>
               <button
@@ -100,16 +98,14 @@ const MonthlyPrizesModal = ({ isOpen, onClose }: MonthlyPrizesModalProps) => {
 
             {/* Scrollable Content */}
             <div className="overflow-y-auto h-full pb-6 px-4 md:px-6 pt-6">
-              <p className="text-white/70 text-xs md:text-sm mb-6 text-center">
-                Premi in palio durante la M1SSION mensile corrente - Tocca le card per scoprire i dettagli
-              </p>
+              
 
               {/* Prizes Grid with Flip Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {prizes.map((prize, index) => (
                   <div
                     key={index}
-                    className="perspective-1000 h-64 cursor-pointer"
+                    className="perspective-1000 h-72 cursor-pointer"
                     onClick={() => toggleFlip(index)}
                   >
                     <motion.div
@@ -119,17 +115,14 @@ const MonthlyPrizesModal = ({ isOpen, onClose }: MonthlyPrizesModalProps) => {
                       className={`mission-flip-card w-full h-full ${flippedCards.includes(index) ? 'is-flipped' : ''}`}
                     >
                       {/* FRONT */}
-                      <div className="mission-card-front bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                        <div className="h-3/5 overflow-hidden">
-                          <img 
-                            src={prize.image} 
-                            alt={prize.name} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="p-4 h-2/5 flex flex-col justify-center">
-                          <h3 className="font-orbitron text-base md:text-lg font-bold text-cyan-400 mb-2">{prize.name}</h3>
-                          <p className="text-xs text-cyan-300/70 italic">👆 Tocca per scoprire →</p>
+                      <div className="mission-card-front relative rounded-xl overflow-hidden border border-white/10">
+                        <img 
+                          src={prize.image} 
+                          alt={prize.name} 
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                          <h3 className="font-orbitron text-base md:text-lg font-bold text-cyan-400">{prize.name}</h3>
                         </div>
                       </div>
 
@@ -142,7 +135,7 @@ const MonthlyPrizesModal = ({ isOpen, onClose }: MonthlyPrizesModalProps) => {
                           <p>🗓️ Disponibile questo mese</p>
                           <p>📍 Italia</p>
                         </div>
-                        <p className="text-xs text-cyan-300/70 italic mt-4">← Tocca per tornare</p>
+                        
                       </div>
                     </motion.div>
                   </div>
