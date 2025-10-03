@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { mysteryPrizes } from "@/data/mysteryPrizesData";
-import "../../styles/animations/flip-card.css";
+import "@/styles/animations/flip-card.css";
 
 interface MonthlyPrizesModalProps {
   isOpen: boolean;
