@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ragSearch } from '@/api/rag';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function RagQuery() {
   const [q, setQ] = useState('');
@@ -12,6 +13,17 @@ export default function RagQuery() {
     try {
       const res = await ragSearch(q, 'it', 3);
       setHits(res.hits ?? []);
+      
+      // Telemetry: log RAG UI query to norah_events
+      try {
+        await supabase.from('norah_events').insert({
+          event: 'rag_ui_query',
+          user_id: (await supabase.auth.getUser()).data.user?.id || '',
+          payload: { q, top_k: 3, locale: 'it', hits_count: res.hits?.length ?? 0 }
+        });
+      } catch (telErr) {
+        console.warn('Telemetry insert failed:', telErr);
+      }
     } catch (e:any) {
       setErr(e?.message ?? 'Errore');
     } finally {
