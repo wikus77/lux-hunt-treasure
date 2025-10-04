@@ -50,7 +50,7 @@ serve(async (req: Request): Promise<Response> => {
     // Find current active mission (mission of the month)
     const { data: missions, error: missionError } = await supabase
       .from('missions')
-      .select('id, name, status')
+      .select('id, title, status')
       .eq('status', 'active')
       .order('starts_at', { ascending: false })
       .limit(1);
@@ -71,7 +71,7 @@ serve(async (req: Request): Promise<Response> => {
     }
 
     const mission = missions[0];
-    console.log('📍 [ENROLL-MISSION] Found mission:', mission.name, mission.id);
+    console.log('📍 [ENROLL-MISSION] Found mission:', mission.title, mission.id);
 
     // Enroll user (idempotent with ON CONFLICT DO NOTHING)
     const { error: enrollError } = await supabase
@@ -97,7 +97,7 @@ serve(async (req: Request): Promise<Response> => {
         event_type: 'mission_enroll',
         payload: {
           mission_id: mission.id,
-          mission_name: mission.name,
+          mission_name: mission.title,
           enrolled_at: new Date().toISOString(),
         },
       });
