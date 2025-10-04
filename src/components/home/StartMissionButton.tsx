@@ -89,6 +89,9 @@ export const StartMissionButton: React.FC = () => {
 
       console.log('✅ [START-MISSION] Enrollment success:', result.mission_id);
 
+      // Notifica immediata agli observer per aggiornare il badge
+      window.dispatchEvent(new CustomEvent('mission:enrolled', { detail: { missionId: result.mission_id } }));
+
       // Step 3: Successo! Mostra toast e naviga alla mappa
       toast.success('Sei dentro! Missione del mese attivata.', {
         description: 'Preparati per l\'avventura! 🎯',
