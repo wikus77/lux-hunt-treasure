@@ -1,9 +1,14 @@
 /* © 2025 M1SSION™ – Norah Chat Modal Layout */
-/* Modal centrato su mobile e desktop */
+/* Modal centrato come dialog su mobile e desktop */
 
-/* Main modal container - centered dialog on all devices */
+/* Main modal container - fixed centered dialog on all devices */
 .norah-chat-modal {
-  position: relative;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 100;
+  
   display: flex;
   flex-direction: column;
   
@@ -13,14 +18,13 @@
   overflow: hidden;
   
   /* Mobile: dimensioni contenute come desktop */
-  width: 100%;
-  max-width: 90vw;
+  width: 90vw;
+  max-width: 500px;
   height: auto;
-  max-height: 75vh;
-  margin: 0 auto;
+  max-height: 70vh;
 }
 
-/* Desktop: stesse proporzioni, solo con border */
+/* Desktop: stesse proporzioni, solo con border e dimensioni maggiori */
 @media (min-width: 768px) {
   .norah-chat-modal {
     border: 1px solid rgba(255, 255, 255, 0.1);
