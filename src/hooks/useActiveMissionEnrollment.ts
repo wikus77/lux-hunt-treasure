@@ -37,10 +37,10 @@ export const useActiveMissionEnrollment = () => {
         // Check if user is enrolled
         const { data: enrollment, error: enrollmentError } = await supabase
           .from('mission_enrollments')
-          .select('id')
+          .select('user_id')
           .eq('user_id', user.id)
           .eq('mission_id', activeMissionId)
-          .single();
+          .maybeSingle();
 
         setIsEnrolled(!!enrollment && !enrollmentError);
       } catch (err) {

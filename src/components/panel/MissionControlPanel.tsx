@@ -65,7 +65,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'user_mission_registrations'
+        table: 'mission_enrollments'
       }, () => {
         loadParticipantCounts();
       })
@@ -107,10 +107,9 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       
       for (const mission of missions) {
         const { count, error } = await supabase
-          .from('user_mission_registrations')
+          .from('mission_enrollments')
           .select('*', { count: 'exact', head: true })
-          .eq('mission_id', mission.id)
-          .eq('status', 'active');
+          .eq('mission_id', mission.id);
 
         if (!error) {
           counts[mission.id] = count || 0;
