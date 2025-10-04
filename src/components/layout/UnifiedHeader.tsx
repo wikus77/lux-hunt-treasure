@@ -134,6 +134,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];
   const isBottomNavPage = bottomNavPages.includes(location);
+  const isMap = location === '/map';
 
   return (
     <>
@@ -173,7 +174,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ 
-          y: shouldHideHeader ? -100 : 0, 
+          y: isMap ? 0 : (shouldHideHeader ? -100 : 0), 
           opacity: shouldHideHeader ? 0 : 1 
         }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
