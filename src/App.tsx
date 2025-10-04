@@ -26,6 +26,7 @@ import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
+import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 
@@ -96,6 +97,7 @@ function App() {
                     <BuzzPaymentMonitor />
                     <LegalOnboarding />
                     <FirstLoginQuizManager />
+                    <WalkthroughManager />
                     <WouterRoutes />
                     <InstallPrompt />
                     <IOSPermissionManager />
