@@ -2339,6 +2339,45 @@ export type Database = {
         }
         Relationships: []
       }
+      norah_proactive_notifications: {
+        Row: {
+          body: string
+          clicked: boolean | null
+          clicked_at: string | null
+          created_at: string | null
+          id: string
+          notification_type: string
+          payload: Json | null
+          sent_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          clicked?: boolean | null
+          clicked_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_type: string
+          payload?: Json | null
+          sent_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          clicked?: boolean | null
+          clicked_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_type?: string
+          payload?: Json | null
+          sent_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_counters: {
         Row: {
           unread_count: number
@@ -5909,6 +5948,10 @@ export type Database = {
       }
       mark_choose_plan_seen: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      mark_norah_notification_clicked: {
+        Args: { p_notification_id: string }
         Returns: undefined
       }
       normalize_feed_url: {
