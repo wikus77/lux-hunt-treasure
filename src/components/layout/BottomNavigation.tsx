@@ -13,7 +13,7 @@ const BottomNavigationComponent = () => {
   const { navigate } = useWouterNavigation();
   const isPWA = typeof window !== 'undefined' && 
     window.matchMedia('(display-mode: standalone)').matches;
-  const reduceAnimations = currentPath === '/profile';
+  const reduceAnimations = currentPath === '/profile' || currentPath === '/settings/agent-profile';
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
