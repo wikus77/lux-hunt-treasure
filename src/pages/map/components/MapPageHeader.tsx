@@ -9,7 +9,7 @@ import MinimalHeaderStrip from '@/components/layout/MinimalHeaderStrip';
 import AgentBadge from '@/components/AgentBadge';
 
 const MapPageHeader: React.FC = () => {
-  const { shouldHideHeader } = useScrollDirection(50);
+  const { shouldHideHeader } = useScrollDirection(50, '#map-scroll-container');
   
   return (
     <>
