@@ -361,23 +361,23 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
   const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#131524]/90 to-black/95 flex items-center justify-center p-4">
+    <div className="min-h-full bg-gradient-to-b from-[#131524]/90 to-black/95 flex items-center justify-center p-2 sm:p-4 py-4 sm:py-6">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-2xl"
       >
         <Card className="bg-black/60 border-[#00D1FF]/30 backdrop-blur-sm">
-          <CardHeader className="text-center space-y-4">
+          <CardHeader className="text-center space-y-3 sm:space-y-4 p-4 sm:p-6">
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <CardTitle className="text-2xl font-orbitron text-white">
+              <CardTitle className="text-xl sm:text-2xl font-orbitron text-white">
                 Quiz Personalità Agente
               </CardTitle>
-              <p className="text-white/70 text-sm mt-2">
+              <p className="text-white/70 text-xs sm:text-sm mt-2">
                 Scopri il tuo tipo di agente M1SSION™
               </p>
             </motion.div>
@@ -391,7 +391,7 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion}
@@ -401,11 +401,11 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <h3 className="text-lg font-medium text-white leading-relaxed">
+                <h3 className="text-base sm:text-lg font-medium text-white leading-relaxed">
                   {quizQuestions[currentQuestion].text}
                 </h3>
 
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {quizQuestions[currentQuestion].options.map((option, index) => (
                     <motion.button
                       key={index}
@@ -413,25 +413,25 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: index * 0.1 }}
                       onClick={() => handleOptionSelect(index)}
-                      className={`w-full p-4 text-left rounded-lg border transition-all duration-200 ${
+                      className={`w-full p-3 sm:p-4 text-left rounded-lg border transition-all duration-200 ${
                         selectedOption === index
                           ? 'border-[#00D1FF] bg-[#00D1FF]/10 text-white'
                           : 'border-white/20 bg-white/5 text-white/80 hover:border-white/40 hover:bg-white/10'
                       }`}
                     >
-                      <span className="text-sm leading-relaxed">{option.text}</span>
+                      <span className="text-xs sm:text-sm leading-relaxed">{option.text}</span>
                     </motion.button>
                   ))}
                 </div>
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex justify-between items-center pt-4">
+            <div className="flex justify-between items-center pt-4 gap-2 sm:gap-4">
               <Button
                 onClick={handleSkipQuiz}
                 disabled={isLoading}
                 variant="outline"
-                className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white px-6"
+                className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white px-3 sm:px-6 text-xs sm:text-sm"
               >
                 Salta Quiz
               </Button>
@@ -439,7 +439,7 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
               <Button
                 onClick={handleNextQuestion}
                 disabled={selectedOption === null || isLoading}
-                className="bg-[#00D1FF] hover:bg-[#00A3CC] text-black font-medium px-8"
+                className="bg-[#00D1FF] hover:bg-[#00A3CC] text-black font-medium px-4 sm:px-8 text-xs sm:text-sm"
               >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
@@ -461,30 +461,30 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-6"
+          className="mt-4 sm:mt-6"
         >
           <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-center text-white font-orbitron text-lg">
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-center text-white font-orbitron text-base sm:text-lg">
                 Tipi di Agente M1SSION™
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <CardContent className="p-4 sm:p-6 pt-0">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
                 {playerTypes.map((type) => (
                   <div
                     key={type.id}
-                    className="text-center p-3 rounded-lg bg-white/5 border border-white/10"
+                    className="text-center p-2 sm:p-3 rounded-lg bg-white/5 border border-white/10"
                   >
-                    <div className="text-2xl mb-2">{type.icon}</div>
+                    <div className="text-xl sm:text-2xl mb-1 sm:mb-2">{type.icon}</div>
                     <Badge 
                       variant="outline" 
-                      className="text-xs mb-2"
+                      className="text-[10px] sm:text-xs mb-1 sm:mb-2"
                       style={{ borderColor: type.color, color: type.color }}
                     >
                       {type.name}
                     </Badge>
-                    <p className="text-white/70 text-xs leading-relaxed">
+                    <p className="text-white/70 text-[10px] sm:text-xs leading-relaxed">
                       {type.description}
                     </p>
                   </div>
