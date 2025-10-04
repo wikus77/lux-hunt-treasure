@@ -22,8 +22,8 @@ export const XpLevelProgress: React.FC<XpLevelProgressProps> = ({ totalXp, class
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <motion.div
-            animate={{ rotate: [0, 360] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full"
           >
             <Star className="w-5 h-5 text-white" />
@@ -56,14 +56,9 @@ export const XpLevelProgress: React.FC<XpLevelProgressProps> = ({ totalXp, class
           />
           <motion.div
             className="absolute inset-0 h-3 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 pointer-events-none"
-            animate={{
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           />
         </div>
         <p className="text-xs text-center text-gray-500">
