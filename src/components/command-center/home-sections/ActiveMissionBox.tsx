@@ -209,11 +209,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <div className="w-2 h-2 bg-[#00D1FF] rounded-full" />
             <span className="text-white/80 text-sm">Stato missione</span>
           </div>
-          <div className="text-xl font-bold text-[#00D1FF] mb-1">
+          <div className="text-xl font-bold text-[#00D1FF] mb-3">
               {mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA'}
-            </div>
-            <div className="text-xs text-white/60 mb-2">
-              Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
             </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
@@ -224,6 +221,9 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
               }`}
               style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }}
             />
+          </div>
+          <div className="text-xs text-white/60 mb-1">
+            Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
           </div>
           <span className="text-xs text-white/60">
             {Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}% tempo trascorso ({mission.totalDays - mission.remainingDays}/{mission.totalDays} giorni)
