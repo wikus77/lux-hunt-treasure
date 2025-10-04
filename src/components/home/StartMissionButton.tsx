@@ -126,7 +126,7 @@ export const StartMissionButton: React.FC = () => {
         </>
       ) : (
         <span className="text-xs font-orbitron font-semibold text-[#00D1FF] uppercase tracking-wider">
-          INIZIA MISSIONE
+          START M1SSION
         </span>
       )}
     </motion.button>
