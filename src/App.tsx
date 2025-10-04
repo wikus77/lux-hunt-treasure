@@ -25,6 +25,7 @@ import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
+import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 
@@ -94,6 +95,7 @@ function App() {
                     {/* OneSignal rimosso - usando solo FCM */}
                     <BuzzPaymentMonitor />
                     <LegalOnboarding />
+                    <FirstLoginQuizManager />
                     <WouterRoutes />
                     <InstallPrompt />
                     <IOSPermissionManager />

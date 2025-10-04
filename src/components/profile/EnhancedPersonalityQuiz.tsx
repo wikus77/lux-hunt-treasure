@@ -315,18 +315,14 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
 
       const assignedPlayerType = playerTypes.find(type => type.id === highestType) || playerTypes[0];
 
-      // Save to Supabase
-      const { data, error } = await supabase.rpc('update_personality_quiz_result', {
+      // Save only the investigative style (tipo agente) to Supabase
+      const { error } = await supabase.rpc('update_personality_quiz_result', {
         p_user_id: userId,
-        p_quiz_answers: {
-          answers: finalAnswers,
-          scores: finalScores
-        },
-        p_assigned_type: assignedPlayerType.name,
-        p_assigned_description: assignedPlayerType.description
+        p_investigative_style: assignedPlayerType.name
       });
 
       if (error) {
+        console.error('Quiz save error:', error);
         toast.error('Errore nel salvare il risultato del quiz. Riprova.');
         return;
       }
@@ -334,7 +330,29 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
       toast.success(`Profilo assegnato: ${assignedPlayerType.name}!`);
       onComplete(assignedPlayerType);
     } catch (error) {
+      console.error('Quiz completion error:', error);
       toast.error('Errore durante il completamento del quiz. Riprova.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSkipQuiz = async () => {
+    setIsLoading(true);
+    try {
+      // Mark first login as completed without assigning investigative style
+      const { error } = await supabase
+        .from('profiles')
+        .update({ first_login_completed: true })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast.info('Quiz saltato. Potrai completarlo in seguito.');
+      onComplete(null as any); // Signal skip to parent
+    } catch (error) {
+      console.error('Skip quiz error:', error);
+      toast.error('Errore. Riprova.');
     } finally {
       setIsLoading(false);
     }
@@ -408,7 +426,16 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-between items-center pt-4">
+              <Button
+                onClick={handleSkipQuiz}
+                disabled={isLoading}
+                variant="outline"
+                className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white px-6"
+              >
+                Salta Quiz
+              </Button>
+              
               <Button
                 onClick={handleNextQuestion}
                 disabled={selectedOption === null || isLoading}
