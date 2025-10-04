@@ -20,15 +20,18 @@ export function BadgeUnlockedNotification({
 }: BadgeUnlockedNotificationProps) {
   
   useEffect(() => {
-    // Trigger confetti animation
+    // Micro-confetti: rapido e non invasivo
     confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 }
+      particleCount: 24,
+      spread: 55,
+      ticks: 40,
+      gravity: 1.15,
+      scalar: 0.7,
+      origin: { y: 0.65 }
     });
 
-    // Auto-dismiss after 5 seconds
-    const timer = setTimeout(onClose, 5000);
+    // Auto-dismiss rapido
+    const timer = setTimeout(onClose, 1600);
     
     return () => clearTimeout(timer);
   }, [onClose]);
@@ -91,27 +94,7 @@ export function BadgeUnlockedNotification({
               </motion.p>
             </div>
 
-            {/* Sparkle effects */}
-            <motion.div
-              className="absolute top-0 right-0 text-4xl"
-              animate={{
-                rotate: [0, 360],
-                scale: [1, 1.2, 1],
-              }}
-              transition={{ repeat: 2, duration: 0.8 }}
-            >
-              ✨
-            </motion.div>
-            <motion.div
-              className="absolute bottom-0 left-0 text-3xl"
-              animate={{
-                rotate: [0, -360],
-                scale: [1, 1.3, 1],
-              }}
-              transition={{ repeat: 2, duration: 0.9, delay: 0.1 }}
-            >
-              ⭐
-            </motion.div>
+            {/* Sparkles rimossi per evitare loop visivi */}
           </div>
         </div>
       </motion.div>
