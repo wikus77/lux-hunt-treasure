@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
 import { StartMissionButton } from './StartMissionButton';
-import TutorialOverlay from '@/components/tutorial/TutorialOverlay';
 
 export const MissionBadgeInjector = () => {
   const { isEnrolled, isLoading } = useActiveMissionEnrollment();
@@ -110,31 +109,22 @@ export const MissionBadgeInjector = () => {
 
   // Se iscritto: mostra "ON M1SSION" con gradiente verde-viola
   // Se NON iscritto: mostra "START M1SSION" (StartMissionButton)
-  return (
-    <>
-      {createPortal(
-        (isEnrolled || enrolledOverride) ? (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center justify-center px-3 py-1 rounded-full border border-emerald-400/40 bg-gradient-to-r from-emerald-600/15 to-fuchsia-600/15"
-          >
-            <span 
-              className="text-xs font-orbitron font-semibold uppercase tracking-wider bg-gradient-to-r from-emerald-400 to-fuchsia-400 bg-clip-text text-transparent"
-            >
-              ON M1SSION
-            </span>
-          </motion.div>
-        ) : (
-          <StartMissionButton />
-        ),
-        portalTarget
-      )}
-
-      {createPortal(
-        <TutorialOverlay />,
-        document.body
-      )}
-    </>
+  return createPortal(
+    (isEnrolled || enrolledOverride) ? (
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="inline-flex items-center justify-center px-3 py-1 rounded-full border border-emerald-400/40 bg-gradient-to-r from-emerald-600/15 to-fuchsia-600/15"
+      >
+        <span 
+          className="text-xs font-orbitron font-semibold uppercase tracking-wider bg-gradient-to-r from-emerald-400 to-fuchsia-400 bg-clip-text text-transparent"
+        >
+          ON M1SSION
+        </span>
+      </motion.div>
+    ) : (
+      <StartMissionButton />
+    ),
+    portalTarget
   );
 };
