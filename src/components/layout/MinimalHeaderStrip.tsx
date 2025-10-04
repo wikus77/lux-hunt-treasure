@@ -12,22 +12,27 @@ const MinimalHeaderStrip: React.FC<MinimalHeaderStripProps> = ({ show }) => {
     <AnimatePresence>
       {show && (
         <motion.div
-          initial={{ opacity: 0, y: -30 }}
+          initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -30 }}
+          exit={{ opacity: 0, y: -20 }}
           transition={{ 
             duration: 0.3, 
             ease: [0.4, 0, 0.2, 1] 
           }}
-          className="fixed top-0 left-0 right-0 z-[60] h-[30px] backdrop-blur-xl bg-black/60 border-b border-white/10"
+          className="fixed left-1/2 z-[60]"
           style={{
-            top: '47px',
+            top: 'calc(47px + 12px)',
+            transform: 'translateX(-50%)',
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-center">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md bg-black/40 border border-white/10"
+            style={{
+              boxShadow: "0 4px 12px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 209, 255, 0.2)"
+            }}
+          >
             {/* Pallino realtime status */}
             <motion.div
-              className="w-1.5 h-1.5 bg-[#00D1FF] rounded-full mr-2"
+              className="w-2 h-2 bg-[#00D1FF] rounded-full"
               animate={{
                 scale: [1, 1.2, 1],
                 opacity: [1, 0.7, 1],
@@ -38,12 +43,12 @@ const MinimalHeaderStrip: React.FC<MinimalHeaderStripProps> = ({ show }) => {
                 ease: "easeInOut"
               }}
               style={{
-                boxShadow: "0 0 6px rgba(0, 209, 255, 0.6)"
+                boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
               }}
             />
             
             {/* Agent Code */}
-            <div className="scale-75 origin-center">
+            <div className="scale-90 origin-center">
               <AgentCodeDisplay />
             </div>
           </div>
