@@ -77,7 +77,7 @@ const NorahAssistant = () => {
             </p>
           </div>
 
-          <div className="h-full" style={{ height: 'calc(100dvh - 240px)' }}>
+          <div className="h-full">
             {userId && <NorahChatLLM userId={userId} />}
             {!userId && <p className="text-white/60 px-4">{t('loading')}</p>}
           </div>
