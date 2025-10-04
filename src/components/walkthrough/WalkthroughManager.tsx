@@ -15,7 +15,7 @@ interface WalkthroughManagerProps {
 export function WalkthroughManager({ onBuzzDemo, onBuzzMapDemo }: WalkthroughManagerProps) {
   const [location] = useLocation();
   const { user, isAuthenticated } = useAuthContext();
-  const { buzzCompleted, buzzMapCompleted, loading } = useWalkthroughState();
+  const { buzzCompleted, buzzMapCompleted, loading, completeWalkthrough, refresh } = useWalkthroughState();
   const [activeWalkthrough, setActiveWalkthrough] = useState<'buzz' | 'buzz_map' | null>(null);
   const [hasCheckedRoute, setHasCheckedRoute] = useState(false);
 
@@ -37,16 +37,27 @@ export function WalkthroughManager({ onBuzzDemo, onBuzzMapDemo }: WalkthroughMan
     }
   }, [location, buzzCompleted, buzzMapCompleted, isAuthenticated, user, loading, hasCheckedRoute]);
 
-  const handleBuzzComplete = () => {
-    setActiveWalkthrough(null);
-    setHasCheckedRoute(false);
+  const handleBuzzComplete = async () => {
+    try {
+      await completeWalkthrough('buzz');
+      await refresh?.();
+    } finally {
+      setActiveWalkthrough(null);
+      // Keep route as checked to avoid immediate re-open on the same page
+      setHasCheckedRoute(true);
+    }
   };
 
-  const handleBuzzMapComplete = () => {
-    setActiveWalkthrough(null);
-    setHasCheckedRoute(false);
+  const handleBuzzMapComplete = async () => {
+    try {
+      await completeWalkthrough('buzz_map');
+      await refresh?.();
+    } finally {
+      setActiveWalkthrough(null);
+      // Keep route as checked to avoid immediate re-open on the same page
+      setHasCheckedRoute(true);
+    }
   };
-
   const handleBuzzDemoTrigger = () => {
     if (onBuzzDemo) {
       onBuzzDemo();
