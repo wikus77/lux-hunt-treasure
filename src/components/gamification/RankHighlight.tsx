@@ -80,8 +80,8 @@ export const RankHighlight: React.FC = () => {
           {/* Left Side - Rank */}
           <div className="flex items-center gap-3">
             <motion.div
-              animate={isPodium ? { scale: [1, 1.1, 1] } : {}}
-              transition={isPodium ? { duration: 2, repeat: Infinity } : {}}
+              animate={isPodium ? { scale: [1, 1.05, 1] } : {}}
+              transition={isPodium ? { duration: 0.4, ease: "easeOut" } : {}}
               className={`p-3 ${isPodium ? 'bg-yellow-500/20' : 'bg-cyan-500/20'} rounded-full`}
             >
               {isPodium ? (

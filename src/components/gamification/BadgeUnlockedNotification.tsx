@@ -44,7 +44,7 @@ export function BadgeUnlockedNotification({
       >
         <div className="relative bg-gradient-to-br from-primary/20 via-background to-accent/20 p-8 rounded-2xl shadow-2xl border-2 border-primary/50 backdrop-blur-md">
           {/* Glow effect */}
-          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl animate-pulse" />
+          <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl" />
           
           <div className="relative flex flex-col items-center text-center gap-4">
             {/* Badge Icon */}
@@ -98,7 +98,7 @@ export function BadgeUnlockedNotification({
                 rotate: [0, 360],
                 scale: [1, 1.2, 1],
               }}
-              transition={{ repeat: Infinity, duration: 2 }}
+              transition={{ repeat: 2, duration: 0.8 }}
             >
               ✨
             </motion.div>
@@ -108,7 +108,7 @@ export function BadgeUnlockedNotification({
                 rotate: [0, -360],
                 scale: [1, 1.3, 1],
               }}
-              transition={{ repeat: Infinity, duration: 2.5, delay: 0.5 }}
+              transition={{ repeat: 2, duration: 0.9, delay: 0.1 }}
             >
               ⭐
             </motion.div>
