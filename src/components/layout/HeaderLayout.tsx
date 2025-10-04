@@ -33,7 +33,7 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
 
   return (
     <>
-      <MinimalHeaderStrip show={shouldHideHeader} />
+      {/* No MinimalHeaderStrip for HeaderLayout - it doesn't have agent code */}
       <motion.header
         animate={{ 
           y: shouldHideHeader ? -100 : 0,
