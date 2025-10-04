@@ -60,9 +60,9 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
       // Get enrollments
       const { data: enrollments, error: regError, count } = await supabase
         .from('mission_enrollments')
-        .select('*', { count: 'exact' })
+        .select('mission_id,user_id,joined_at', { count: 'exact' })
         .eq('mission_id', selectedMissionId)
-        .order('created_at', { ascending: false });
+        .order('joined_at', { ascending: false });
 
       if (regError) throw regError;
 
@@ -83,10 +83,10 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
 
       // Merge data and normalize fields
       const participantsData: Participant[] = enrollments.map((enr: any) => ({
-        id: enr.id,
+        id: `${enr.mission_id}-${enr.user_id}`,
         user_id: enr.user_id,
         mission_id: enr.mission_id,
-        registered_at: enr.created_at,
+        registered_at: enr.joined_at,
         status: 'active',
         profiles: profiles?.find(p => p.id === enr.user_id)
       }));
