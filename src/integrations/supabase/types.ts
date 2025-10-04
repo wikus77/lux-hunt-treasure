@@ -5419,8 +5419,8 @@ export type Database = {
       }
       award_xp: {
         Args:
+          | { p_source: string; p_user_id: string; p_xp_amount: number }
           | { p_user_id: string; p_xp_amount: number }
-          | { p_user_id: string; p_xp_amount: number; p_xp_type?: string }
         Returns: Json
       }
       binary_quantize: {
