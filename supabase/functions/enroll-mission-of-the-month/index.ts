@@ -52,7 +52,7 @@ serve(async (req: Request): Promise<Response> => {
       .from('missions')
       .select('id, title, status')
       .eq('status', 'active')
-      .order('starts_at', { ascending: false })
+      .order('start_date', { ascending: false })
       .limit(1);
 
     if (missionError) {
