@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 
 /**
  * Hook per ascoltare notifiche proattive di Norah AI
@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom';
  */
 export const useNorahProactiveListener = () => {
   const { user } = useAuthContext();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!user?.id || !('serviceWorker' in navigator)) return;
@@ -33,7 +33,7 @@ export const useNorahProactiveListener = () => {
             label: 'Apri',
             onClick: () => {
               if (deepLink) {
-                navigate(deepLink);
+                setLocation(deepLink);
               }
             }
           },
@@ -61,5 +61,5 @@ export const useNorahProactiveListener = () => {
       navigator.serviceWorker.removeEventListener('message', handleMessage);
       console.log('🔇 [NORAH PROACTIVE] Listener disattivato');
     };
-  }, [user?.id, navigate]);
+  }, [user?.id, setLocation]);
 };
