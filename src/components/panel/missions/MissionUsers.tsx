@@ -27,41 +27,72 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
+
+  // Auto-select active mission if none selected
+  useEffect(() => {
+    const fetchActiveMission = async () => {
+      if (selectedMissionId) {
+        setActiveMissionId(selectedMissionId);
+        return;
+      }
+
+      try {
+        const { data: missions } = await supabase
+          .from('missions')
+          .select('id')
+          .eq('status', 'active')
+          .order('start_date', { ascending: false })
+          .limit(1);
+
+        if (missions && missions.length > 0) {
+          setActiveMissionId(missions[0].id);
+        }
+      } catch (err) {
+        console.error('Error fetching active mission:', err);
+      }
+    };
+
+    fetchActiveMission();
+  }, [selectedMissionId]);
 
   useEffect(() => {
-    if (!selectedMissionId) return;
+    if (!activeMissionId) return;
 
     fetchParticipants();
 
-    // Real-time subscription
+    // Real-time subscription with auto-refresh
     const channel = supabase
-      .channel(`participants-${selectedMissionId}`)
+      .channel(`participants-realtime-${activeMissionId}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'mission_enrollments',
-        filter: `mission_id=eq.${selectedMissionId}`
-      }, () => {
+        filter: `mission_id=eq.${activeMissionId}`
+      }, (payload) => {
+        console.log('📡 Mission enrollment change:', payload);
         fetchParticipants();
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [selectedMissionId]);
+  }, [activeMissionId]);
 
   const fetchParticipants = async () => {
-    if (!selectedMissionId) return;
+    if (!activeMissionId) return;
 
     try {
       setIsLoading(true);
 
-      // Get enrollments
+      // Get enrollments with realtime-enabled query
       const { data: enrollments, error: regError, count } = await supabase
         .from('mission_enrollments')
         .select('mission_id,user_id,joined_at', { count: 'exact' })
-        .eq('mission_id', selectedMissionId)
+        .eq('mission_id', activeMissionId)
         .order('joined_at', { ascending: false });
 
       if (regError) throw regError;
@@ -112,11 +143,11 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
     });
   };
 
-  if (!selectedMissionId) {
+  if (!activeMissionId) {
     return (
       <div className="glass-card p-8 border border-white/20 text-center">
         <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <p className="text-gray-400">Seleziona una missione per visualizzare i partecipanti</p>
+        <p className="text-gray-400">Nessuna missione attiva trovata</p>
       </div>
     );
   }

@@ -23,10 +23,11 @@ export const MissionBadgeInjector = () => {
     if (isLoading) return;
 
     let retryCount = 0;
-    const maxRetries = 120;
-    const retryDelay = 150;
+    const maxRetries = 200;
+    const retryDelay = 100;
     let headerObserver: MutationObserver | null = null;
     let globalObserver: MutationObserver | null = null;
+    let badgeNodeRef: HTMLElement | null = null;
 
     const getHeaderContext = () => {
       let headerH1 = document.getElementById('m1-home-title') as HTMLElement | null;
@@ -51,19 +52,28 @@ export const MissionBadgeInjector = () => {
       const { headerH1, headerWrapper, subtitle } = getHeaderContext();
       if (!headerH1 || !headerWrapper) return false;
 
-      let badgeNode = document.getElementById('mission-status-badge-portal');
-      if (!badgeNode) {
-        badgeNode = document.createElement('div');
-        badgeNode.id = 'mission-status-badge-portal';
-        badgeNode.setAttribute('data-anchor', 'm1-header-badge');
-        badgeNode.className = 'flex justify-center my-3';
+      if (!badgeNodeRef) {
+        badgeNodeRef = document.getElementById('mission-status-badge-portal');
+        if (!badgeNodeRef) {
+          badgeNodeRef = document.createElement('div');
+          badgeNodeRef.id = 'mission-status-badge-portal';
+          badgeNodeRef.setAttribute('data-anchor', 'm1-header-badge');
+          badgeNodeRef.className = 'flex justify-center my-3';
+          badgeNodeRef.setAttribute('data-persistent', 'true');
+        }
       }
 
-      // Preferred: before subtitle if exists, else right after H1
-      if (subtitle && badgeNode.nextSibling !== subtitle) {
-        headerWrapper.insertBefore(badgeNode, subtitle);
-      } else if (headerH1 && headerH1.nextElementSibling !== badgeNode) {
-        headerH1.insertAdjacentElement('afterend', badgeNode);
+      // Anchor strategy: before subtitle if exists, else right after H1
+      const isCorrectlyPositioned = subtitle 
+        ? badgeNodeRef.nextSibling === subtitle && badgeNodeRef.parentElement === headerWrapper
+        : badgeNodeRef.previousElementSibling === headerH1 && badgeNodeRef.parentElement === headerWrapper;
+
+      if (!isCorrectlyPositioned) {
+        if (subtitle) {
+          headerWrapper.insertBefore(badgeNodeRef, subtitle);
+        } else {
+          headerH1.insertAdjacentElement('afterend', badgeNodeRef);
+        }
       }
 
       setPortalReady(true);
@@ -72,19 +82,20 @@ export const MissionBadgeInjector = () => {
 
     const findAndInject = () => {
       if (ensureBadgePosition()) {
-        // Observe header wrapper for changes
+        // Observe header wrapper for structural changes
         const { headerWrapper } = getHeaderContext();
         if (headerWrapper && !headerObserver) {
-          headerObserver = new MutationObserver(() => ensureBadgePosition());
-          headerObserver.observe(headerWrapper, { childList: true });
+          headerObserver = new MutationObserver(() => {
+            requestAnimationFrame(() => ensureBadgePosition());
+          });
+          headerObserver.observe(headerWrapper, { childList: true, subtree: false });
         }
-        // Global guard: if someone moves the badge elsewhere, snap it back
+        
+        // Global guard: if badge moves or disconnects, reattach
         if (!globalObserver) {
           globalObserver = new MutationObserver(() => {
-            const badgeNode = document.getElementById('mission-status-badge-portal');
-            const { headerWrapper } = getHeaderContext();
-            if (badgeNode && headerWrapper && badgeNode.parentElement !== headerWrapper) {
-              ensureBadgePosition();
+            if (badgeNodeRef && !document.body.contains(badgeNodeRef)) {
+              requestAnimationFrame(() => ensureBadgePosition());
             }
           });
           globalObserver.observe(document.body, { childList: true, subtree: true });
@@ -96,22 +107,31 @@ export const MissionBadgeInjector = () => {
         retryCount++;
         setTimeout(findAndInject, retryDelay);
       } else {
-        console.warn('[MissionBadgeInjector] Header not found after retries');
+        console.warn('[MissionBadgeInjector] Header not found after max retries');
       }
     };
 
     findAndInject();
 
-    const onPageShow = () => findAndInject();
+    const onRouteChange = () => {
+      requestAnimationFrame(() => {
+        setPortalReady(false);
+        badgeNodeRef = null;
+        setTimeout(findAndInject, 50);
+      });
+    };
+
+    const onPageShow = () => requestAnimationFrame(findAndInject);
+    
     window.addEventListener('pageshow', onPageShow);
+    window.addEventListener('popstate', onRouteChange);
 
     return () => {
       headerObserver?.disconnect();
       globalObserver?.disconnect();
       window.removeEventListener('pageshow', onPageShow);
-      const node = document.getElementById('mission-status-badge-portal');
-      if (node) node.remove();
-      setPortalReady(false);
+      window.removeEventListener('popstate', onRouteChange);
+      badgeNodeRef = null;
     };
   }, [isLoading]);
 
