@@ -15,6 +15,10 @@ import BottomNavigation from "@/components/layout/BottomNavigation";
 import { DailyCheckInButton } from "@/components/gamification/DailyCheckInButton";
 import { WeeklyLeaderboard } from "@/components/gamification/WeeklyLeaderboard";
 import { BadgeUnlockedNotification } from "@/components/gamification/BadgeUnlockedNotification";
+import { XpLevelProgress } from "@/components/gamification/XpLevelProgress";
+import { BadgeGallery } from "@/components/gamification/BadgeGallery";
+import { AchievementTimeline } from "@/components/gamification/AchievementTimeline";
+import { RankHighlight } from "@/components/gamification/RankHighlight";
 import { useXpSystem } from "@/hooks/useXpSystem";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
@@ -23,7 +27,7 @@ const Profile = () => {
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
-  const { newBadge, closeBadgeNotification } = useXpSystem();
+  const { newBadge, closeBadgeNotification, xpStatus } = useXpSystem();
   
   // Initialize real-time notifications (this sets up the listener)
   useRealTimeNotifications();
@@ -105,6 +109,21 @@ const Profile = () => {
 
           {/* Gamification Section */}
           <div className="mx-2 sm:mx-4 mt-4 space-y-4">
+            {/* XP Level Progress */}
+            <Card className="glass-card">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold gradient-text">
+                  ⭐ Progressione XP
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <XpLevelProgress totalXp={xpStatus.total_xp} />
+              </CardContent>
+            </Card>
+
+            {/* Rank Highlight */}
+            <RankHighlight />
+
             {/* Daily Check-In Card */}
             <Card className="glass-card">
               <CardHeader>
@@ -116,6 +135,12 @@ const Profile = () => {
                 <DailyCheckInButton />
               </CardContent>
             </Card>
+
+            {/* Badge Gallery */}
+            <BadgeGallery />
+
+            {/* Achievement Timeline */}
+            <AchievementTimeline />
 
             {/* Weekly Leaderboard */}
             <WeeklyLeaderboard />
