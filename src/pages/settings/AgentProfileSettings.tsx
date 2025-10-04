@@ -412,12 +412,19 @@ const AgentProfileSettings: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Badge Unlock Notification */}
       {newBadge && (
         <BadgeUnlockedNotification
           badgeName={newBadge.name}
           badgeDescription={newBadge.description}
           onClose={closeBadgeNotification}
+          onClick={() => {
+            const label = (newBadge.name || '').toLowerCase();
+            if (label.includes('mappa')) {
+              navigate('/map?free=1&reward=1');
+            } else {
+              navigate('/buzz?free=1&reward=1');
+            }
+          }}
         />
       )}
 

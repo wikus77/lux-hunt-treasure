@@ -8,22 +8,31 @@ interface BadgeUnlockedNotificationProps {
   badgeDescription: string;
   badgeIcon?: string;
   onClose: () => void;
+  onClick?: () => void;
 }
 
 export function BadgeUnlockedNotification({
   badgeName,
   badgeDescription,
   badgeIcon,
-  onClose
+  onClose,
+  onClick
 }: BadgeUnlockedNotificationProps) {
   
   useEffect(() => {
-    const timer = setTimeout(onClose, 1600);
+    const timer = setTimeout(onClose, 2000);
     return () => clearTimeout(timer);
   }, [onClose]);
 
   return (
-    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] pointer-events-none">
+    <div 
+      className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] pointer-events-auto"
+      role="button"
+      tabIndex={0}
+      onClick={() => { onClick?.(); onClose(); }}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { onClick?.(); onClose(); } }}
+      aria-label="Apri premio sbloccato"
+    >
       <div className="relative bg-gradient-to-br from-primary/20 via-background to-accent/20 p-8 rounded-2xl shadow-2xl border-2 border-primary/50 backdrop-blur-md">
         <div className="absolute inset-0 bg-primary/20 blur-xl rounded-2xl" />
         <div className="relative flex flex-col items-center text-center gap-4">
