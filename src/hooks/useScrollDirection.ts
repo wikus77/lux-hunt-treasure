@@ -18,9 +18,11 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
   });
 
   useEffect(() => {
-    const containerEl = containerSelector ? (document.querySelector(containerSelector) as HTMLElement | null) : null;
+    let containerEl: HTMLElement | null = containerSelector ? (document.querySelector(containerSelector) as HTMLElement | null) : null;
     let lastScroll = containerEl ? containerEl.scrollTop : window.scrollY;
     let ticking = false;
+    let attachedTarget: any = null;
+    let retryTimer: number | undefined;
 
     const readScroll = () => (containerEl ? containerEl.scrollTop : window.scrollY);
 
@@ -53,10 +55,35 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
       }
     };
 
-    const target: any = containerEl || window;
-    target.addEventListener('scroll', onScroll, { passive: true });
+    const attachListener = (target: any) => {
+      if (attachedTarget) attachedTarget.removeEventListener('scroll', onScroll);
+      target.addEventListener('scroll', onScroll, { passive: true });
+      attachedTarget = target;
+    };
 
-    return () => target.removeEventListener('scroll', onScroll);
+    // Initial attach: window, then try to switch to container when it exists
+    attachListener(window);
+
+    if (containerSelector) {
+      const tryAttach = () => {
+        const el = document.querySelector(containerSelector) as HTMLElement | null;
+        if (el && el !== containerEl) {
+          containerEl = el;
+          lastScroll = readScroll();
+          attachListener(containerEl);
+          if (retryTimer) window.clearInterval(retryTimer);
+        }
+      };
+      // Try a few times while the page mounts
+      retryTimer = window.setInterval(tryAttach, 200);
+      // Also try once on next frame
+      requestAnimationFrame(tryAttach);
+    }
+
+    return () => {
+      if (attachedTarget) attachedTarget.removeEventListener('scroll', onScroll);
+      if (retryTimer) window.clearInterval(retryTimer);
+    };
   }, [threshold, containerSelector]);
 
   return state;
