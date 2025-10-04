@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React from 'react';
-import { motion } from 'framer-motion';
+
 import { Progress } from '@/components/ui/progress';
 import { Star, TrendingUp } from 'lucide-react';
 
@@ -21,13 +21,11 @@ export const XpLevelProgress: React.FC<XpLevelProgressProps> = ({ totalXp, class
       {/* Level Display */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+          <div
             className="p-2 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full"
           >
             <Star className="w-5 h-5 text-white" />
-          </motion.div>
+          </div>
           <div>
             <p className="text-sm text-gray-400">Livello</p>
             <p className="text-2xl font-bold gradient-text">{level}</p>
@@ -54,11 +52,8 @@ export const XpLevelProgress: React.FC<XpLevelProgressProps> = ({ totalXp, class
             value={progressPercentage} 
             className="h-3 bg-gray-800/50 border border-cyan-500/20"
           />
-          <motion.div
+          <div
             className="absolute inset-0 h-3 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 pointer-events-none"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
           />
         </div>
         <p className="text-xs text-center text-gray-500">
