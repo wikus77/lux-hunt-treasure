@@ -15,6 +15,7 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 import { InviteFriendButton } from "@/components/xp/InviteFriendButton";
+import { StartMissionButton } from "@/components/home/StartMissionButton";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -179,13 +180,23 @@ export default function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <PrizeVision 
-          progress={progress} 
-          status={prizeUnlockStatus} 
-        />
-      </motion.div>
+      <PrizeVision 
+        progress={progress} 
+        status={prizeUnlockStatus} 
+      />
+    </motion.div>
 
-      {/* Active Mission Box below the Prize Vision */}
+    {/* Start Mission Button - Right below Prize Vision */}
+    <motion.div 
+      className="mb-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5, delay: 0.05 }}
+    >
+      <StartMissionButton />
+    </motion.div>
+
+    {/* Active Mission Box below the Prize Vision */}
       <motion.div 
         className="mb-6"
         initial={{ opacity: 0 }}

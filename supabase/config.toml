@@ -130,3 +130,5 @@ enable_signup = true
 [functions.weekly-reset-cron]
 
 [functions.norah-proactive-analyzer]
+
+[functions.enroll-mission-of-the-month]
