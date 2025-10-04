@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, Brain, Target, Search, Zap, Trophy, Gift } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
@@ -59,7 +58,7 @@ const tutorialSlides: TutorialSlide[] = [
 const TutorialOverlay: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [showTutorial, setShowTutorial] = useState(false);
-  const navigate = useNavigate();
+  
   const { showTutorial: showFromHook, isLoading, hideTutorialForever } = useOnboardingTutorial();
 
   useEffect(() => {
@@ -72,7 +71,6 @@ const TutorialOverlay: React.FC = () => {
     localStorage.setItem('hasSeenTutorial', 'true');
     hideTutorialForever();
     setShowTutorial(false);
-    navigate('/home');
   };
 
   const handleNext = () => {
@@ -91,7 +89,6 @@ const TutorialOverlay: React.FC = () => {
     localStorage.setItem('hasSeenTutorial', 'true');
     hideTutorialForever();
     setShowTutorial(false);
-    navigate('/home');
   };
 
   if (!showTutorial) return null;
