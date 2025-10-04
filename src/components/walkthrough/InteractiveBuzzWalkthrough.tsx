@@ -83,9 +83,16 @@ export function InteractiveBuzzWalkthrough({ onComplete, onDemoTrigger }: Intera
     onComplete();
   };
 
-  const step = WALKTHROUGH_STEPS[currentStep];
-  const Icon = step.icon;
+  const step = WALKTHROUGH_STEPS[currentStep] || WALKTHROUGH_STEPS[0];
+  const Icon = step?.icon || Zap;
   const progress = ((currentStep + 1) / WALKTHROUGH_STEPS.length) * 100;
+
+  // Safety check: if step is invalid, reset to 0
+  useEffect(() => {
+    if (!WALKTHROUGH_STEPS[currentStep]) {
+      setCurrentStep(0);
+    }
+  }, [currentStep]);
 
   return (
     <AnimatePresence>
