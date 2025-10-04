@@ -91,6 +91,7 @@ export const StartMissionButton: React.FC = () => {
 
       // Notifica immediata agli observer per aggiornare il badge
       window.dispatchEvent(new CustomEvent('mission:enrolled', { detail: { missionId: result.mission_id } }));
+      try { localStorage.setItem('m1_mission_enrolled', '1'); } catch (_) {}
 
       // Step 3: Successo! Mostra toast e naviga alla mappa
       toast.success('Sei dentro! Missione del mese attivata.', {
