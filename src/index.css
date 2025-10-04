@@ -40,6 +40,11 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
+  /* Norah AI Panel body scroll lock */
+  body.m1-no-scroll {
+    overflow: hidden !important;
+  }
+
   /* Emergency fallback for iOS PWA - prevents blue/yellow screen */
   html.ios-pwa-fallback {
     background: #131521 !important;
