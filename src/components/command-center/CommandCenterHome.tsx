@@ -14,8 +14,7 @@ import { usePrizeData } from "@/hooks/usePrizeData";
 import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
-import { InviteFriendButton } from "@/components/xp/InviteFriendButton";
-import { StartMissionButton } from "@/components/home/StartMissionButton";
+import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -186,15 +185,8 @@ export default function CommandCenterHome() {
       />
     </motion.div>
 
-    {/* Start Mission Button - Right below Prize Vision */}
-    <motion.div 
-      className="mb-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, delay: 0.05 }}
-    >
-      <StartMissionButton />
-    </motion.div>
+{/* Floating Invite circle button in top-right */}
+<InviteFloatingButton />
 
     {/* Active Mission Box below the Prize Vision */}
       <motion.div 
@@ -210,15 +202,7 @@ export default function CommandCenterHome() {
         />
       </motion.div>
 
-      {/* Invite Friend Button */}
-      <motion.div 
-        className="mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.15 }}
-      >
-        <InviteFriendButton />
-      </motion.div>
+{/* Floating button handles invitations; removed inline list button */}
 
 
       {/* Two column layout for Console and Agent */}

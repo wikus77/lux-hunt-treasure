@@ -39,7 +39,7 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'user_mission_registrations',
+        table: 'mission_enrollments',
         filter: `mission_id=eq.${selectedMissionId}`
       }, () => {
         fetchParticipants();
@@ -57,24 +57,23 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
     try {
       setIsLoading(true);
 
-      // Get registrations
-      const { data: registrations, error: regError, count } = await supabase
-        .from('user_mission_registrations')
+      // Get enrollments
+      const { data: enrollments, error: regError, count } = await supabase
+        .from('mission_enrollments')
         .select('*', { count: 'exact' })
         .eq('mission_id', selectedMissionId)
-        .eq('status', 'active')
-        .order('registered_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (regError) throw regError;
 
-      if (!registrations || registrations.length === 0) {
+      if (!enrollments || enrollments.length === 0) {
         setParticipants([]);
         setTotalCount(0);
         return;
       }
 
       // Get user profiles
-      const userIds = registrations.map(r => r.user_id);
+      const userIds = enrollments.map(r => r.user_id);
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, full_name, email')
@@ -82,10 +81,14 @@ export const MissionUsers: React.FC<MissionUsersProps> = ({ selectedMissionId })
 
       if (profilesError) throw profilesError;
 
-      // Merge data
-      const participantsData = registrations.map(reg => ({
-        ...reg,
-        profiles: profiles?.find(p => p.id === reg.user_id)
+      // Merge data and normalize fields
+      const participantsData: Participant[] = enrollments.map((enr: any) => ({
+        id: enr.id,
+        user_id: enr.user_id,
+        mission_id: enr.mission_id,
+        registered_at: enr.created_at,
+        status: 'active',
+        profiles: profiles?.find(p => p.id === enr.user_id)
       }));
 
       setParticipants(participantsData as any);
