@@ -1,0 +1,24 @@
+/* © 2025 M1SSION™ – Prize Modal Mobile Fix */
+/* Adattamento responsive del modal M1SSION PRIZE per mobile */
+
+@media (max-width: 768px) {
+  .prize-modal-container {
+    /* Su mobile: usa safe-area per iOS */
+    top: calc(72px + env(safe-area-inset-top, 0px)) !important;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+    
+    /* Calcolo altezza dinamico per viewport mobile */
+    height: auto;
+    max-height: calc(
+      100dvh - 72px - 88px 
+      - env(safe-area-inset-top, 0px) 
+      - env(safe-area-inset-bottom, 0px)
+    );
+  }
+  
+  /* Assicura che il contenuto scrolli correttamente */
+  .prize-modal-container .flex-1.overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+}

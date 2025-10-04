@@ -1,26 +1,20 @@
 /* © 2025 M1SSION™ – Norah Chat Modal Layout */
 /* Mobile-optimized modal that fits between header and bottom nav */
 
-/* Main modal container - fixed positioning between header and bottom nav */
+/* Main modal container - mobile optimized between header and bottom nav */
 .norah-chat-modal {
   position: fixed;
   left: 0;
   right: 0;
   
   /* Space between header and bottom nav, with iOS safe areas */
-  top: calc(var(--app-header-height, 72px) + env(safe-area-inset-top, 0px));
-  bottom: calc(var(--app-bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px));
+  top: calc(72px + env(safe-area-inset-top, 0px));
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   
-  /* Robust height calculation for iOS */
+  /* Dynamic height for mobile */
   height: auto;
   max-height: calc(
-    100dvh - var(--app-header-height, 72px) - var(--app-bottom-nav-height, 64px) 
-    - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
-  );
-  
-  /* Fallback for browsers without dvh support */
-  max-height: calc(
-    100vh - var(--app-header-height, 72px) - var(--app-bottom-nav-height, 64px) 
+    100dvh - 72px - 88px 
     - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
   );
   
@@ -28,13 +22,14 @@
   flex-direction: column;
   
   background: #0A0B14;
-  margin: 0;
-  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.5);
-  z-index: 40;
+  margin: 0 8px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   overflow: hidden;
+  z-index: 100;
 }
 
-/* Desktop: relative positioning with border and rounded corners */
+/* Desktop: relative positioning with border */
 @media (min-width: 768px) {
   .norah-chat-modal {
     position: relative;
@@ -43,7 +38,6 @@
     height: 100%;
     max-height: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
     margin: 0;
   }
 }
@@ -99,15 +93,6 @@
 
 /* iOS keyboard handling - prevent viewport resize issues */
 @supports (-webkit-touch-callout: none) {
-  .norah-chat-modal {
-    /* Use fixed viewport on iOS to prevent resize when keyboard appears */
-    max-height: calc(
-      100vh - var(--app-header-height, 72px) - var(--app-bottom-nav-height, 64px) 
-      - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
-    );
-  }
-  
-  /* Ensure body remains scrollable */
   .norah-chat-modal__body {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;

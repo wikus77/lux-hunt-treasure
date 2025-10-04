@@ -8,6 +8,7 @@
 @import './styles/mobile-optimizations.css';
 @import './styles/ios-safe-area-fixes.css';
 @import './styles/norah-modal.css';
+@import './styles/prize-modal.css';
 
 @tailwind base;
 @tailwind components;

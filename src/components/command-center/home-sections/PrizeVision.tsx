@@ -140,12 +140,12 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
             {/* Container morphato: mantiene stripe e titolo; espansione dal centro */}
             <motion.div
               layoutId="missionPrize"
-              className="fixed left-0 right-0 z-[101]"
+              className="fixed left-0 right-0 z-[101] prize-modal-container"
               style={{ top: 72, bottom: 88, transformOrigin: "center center" }}
               transition={layoutSpring}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="px-4 md:px-6 h-full">
+              <div className="px-2 md:px-6 h-full max-w-screen-xl mx-auto">
                 <GradientBox className="w-full h-full flex flex-col relative overflow-hidden rounded-xl">
                   {/* Stripe superiore */}
                   <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#00D1FF] via-[#7B2EFF] to-[#00D1FF]" />
