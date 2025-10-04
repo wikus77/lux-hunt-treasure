@@ -126,6 +126,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const currentPageTitle = pageTitles[location] || 'M1SSION';
   const isHomePage = location === '/home';
+  const reduceAnimations = location === '/profile';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];
@@ -194,8 +195,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                     opacity: [1, 0.7, 1],
                   }}
                   transition={{
-                    duration: 2,
-                    repeat: Infinity,
+                    duration: 1.6,
+                    repeat: reduceAnimations ? 0 : Infinity,
                     ease: "easeInOut"
                   }}
                   style={{
@@ -230,8 +231,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                       scale: [1, 1.05, 1]
                     }}
                     transition={{ 
-                      rotate: { duration: 8, repeat: Infinity, ease: "linear" },
-                      scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                      rotate: { duration: reduceAnimations ? 1.6 : 8, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
+                      scale: { duration: reduceAnimations ? 1.2 : 4, repeat: reduceAnimations ? 0 : Infinity, ease: "easeInOut" }
                     }}
                     style={{
                       filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))"
