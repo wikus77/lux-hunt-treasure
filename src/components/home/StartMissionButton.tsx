@@ -111,20 +111,23 @@ export const StartMissionButton: React.FC = () => {
     <motion.button
       onClick={handleStartMission}
       disabled={isLoading}
-      className="w-full py-4 px-6 bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] rounded-xl text-white font-orbitron font-bold text-lg flex items-center justify-center gap-3 shadow-lg hover:shadow-[#00D1FF]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      whileHover={!isLoading ? { scale: 1.02 } : {}}
-      whileTap={!isLoading ? { scale: 0.98 } : {}}
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-[#00D1FF]/10 border border-[#00D1FF]/30 hover:bg-[#00D1FF]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      whileHover={!isLoading ? { scale: 1.05 } : {}}
+      whileTap={!isLoading ? { scale: 0.95 } : {}}
     >
       {isLoading ? (
         <>
-          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
-          <span>Iscrizione in corso...</span>
+          <div className="animate-spin rounded-full h-3 w-3 border border-[#00D1FF] border-t-transparent mr-2" />
+          <span className="text-xs font-orbitron font-semibold text-[#00D1FF] uppercase tracking-wider">
+            Caricamento...
+          </span>
         </>
       ) : (
-        <>
-          <Rocket size={24} />
-          <span>INIZIA MISSIONE</span>
-        </>
+        <span className="text-xs font-orbitron font-semibold text-[#00D1FF] uppercase tracking-wider">
+          INIZIA MISSIONE
+        </span>
       )}
     </motion.button>
   );
