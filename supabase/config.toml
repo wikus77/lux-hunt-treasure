@@ -128,3 +128,5 @@ enable_signup = true
 [functions.sync-weekly-leaderboard]
 
 [functions.weekly-reset-cron]
+
+[functions.norah-proactive-analyzer]
