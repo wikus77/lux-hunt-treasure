@@ -23,10 +23,12 @@ export const XpRewardModal: React.FC<XpRewardModalProps> = ({
   onRedirectToBuzzMap
 }) => {
   const handleBuzzRedirect = () => {
+    onOpenChange(false);
     onRedirectToBuzz();
   };
 
   const handleBuzzMapRedirect = () => {
+    onOpenChange(false);
     onRedirectToBuzzMap();
   };
 
