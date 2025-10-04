@@ -25,6 +25,7 @@ import { AchievementTimeline } from '@/components/gamification/AchievementTimeli
 import { WeeklyLeaderboard } from '@/components/gamification/WeeklyLeaderboard';
 import { BadgeUnlockedNotification } from '@/components/gamification/BadgeUnlockedNotification';
 import { useXpSystem } from '@/hooks/useXpSystem';
+import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
 
 const AgentProfileSettings: React.FC = () => {
   const { user } = useAuth();
@@ -277,6 +278,9 @@ const AgentProfileSettings: React.FC = () => {
 
             {/* Full width sections */}
             <div className="space-y-4">
+              {/* Reward Badge Card - Shows when rewards are available */}
+              <RewardBadgeCard />
+
               {/* Badge Gallery */}
               <BadgeGallery />
 
