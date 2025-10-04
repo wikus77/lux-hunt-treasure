@@ -11,6 +11,14 @@ export const MissionBadgeInjector = () => {
   const [portalReady, setPortalReady] = useState(false);
   const [enrolledOverride, setEnrolledOverride] = useState(false);
 
+  // Sync enrollment override from localStorage on mount (persist after navigation)
+  useEffect(() => {
+    try {
+      const persisted = localStorage.getItem('m1_mission_enrolled') === '1';
+      if (persisted) setEnrolledOverride(true);
+    } catch (_) {}
+  }, []);
+
   useEffect(() => {
     if (isLoading) return;
 
@@ -21,9 +29,16 @@ export const MissionBadgeInjector = () => {
     let globalObserver: MutationObserver | null = null;
 
     const getHeaderContext = () => {
-      const headerH1 = document.querySelector('h1[aria-label*="Centro di Comando Agente"]') as HTMLElement | null
-        || document.querySelector('h1[aria-label*="M1SSION"]') as HTMLElement | null
-        || Array.from(document.querySelectorAll('h1')).find(h => h.textContent?.includes('M1SSION')) as HTMLElement | null;
+      let headerH1 = document.getElementById('m1-home-title') as HTMLElement | null;
+      if (!headerH1) {
+        headerH1 = document.querySelector('h1[aria-label*="Centro di Comando Agente"]') as HTMLElement | null
+          || document.querySelector('h1[aria-label*="M1SSION"]') as HTMLElement | null
+          || Array.from(document.querySelectorAll('h1')).find(h => h.textContent?.includes('M1SSION')) as HTMLElement | null;
+        if (headerH1) {
+          headerH1.id = 'm1-home-title';
+          headerH1.setAttribute('data-m1-anchor', 'home-title');
+        }
+      }
 
       const headerWrapper = headerH1?.closest('div');
       const subtitle = headerWrapper ? Array.from(headerWrapper.querySelectorAll('p, span, div'))
