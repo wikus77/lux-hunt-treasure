@@ -21,8 +21,8 @@
 }
 
 :root {
-  --m1-header-bg: #131521;
-  --m1-header-bg-gradient: linear-gradient(180deg, rgba(19, 21, 33, 0.85) 0%, rgba(19, 21, 33, 0.85) 100%);
+  --m1-header-bg: #0A0B14;
+  --m1-header-bg-gradient: linear-gradient(180deg, rgba(10, 11, 20, 0.85) 0%, rgba(10, 11, 20, 0.85) 100%);
   --header-height: 72px;
   --bottom-nav-height: 54px;
   --app-header-height: 72px;
@@ -60,7 +60,9 @@
     position: fixed;
     inset: 0 0 auto 0;
     height: env(safe-area-inset-top);
-    background: var(--m1-header-bg);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     z-index: 1000;
     pointer-events: none;
   }
