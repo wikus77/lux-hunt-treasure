@@ -10,7 +10,7 @@ interface MapPageLayoutProps {
 }
 
 const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
-  const { shouldHideHeader } = useScrollDirection(50);
+  const { shouldHideHeader } = useScrollDirection(50, '#map-scroll-container');
   
   return (
     <div 
@@ -36,6 +36,7 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
       </motion.header>
       
       <main
+        id="map-scroll-container"
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™

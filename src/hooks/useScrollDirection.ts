@@ -8,7 +8,8 @@ interface ScrollState {
   shouldHideHeader: boolean;
 }
 
-export const useScrollDirection = (threshold: number = 50): ScrollState => {
+// Enhanced: can observe window or a specific scrollable container via CSS selector
+export const useScrollDirection = (threshold: number = 50, containerSelector?: string): ScrollState => {
   const [state, setState] = useState<ScrollState>({
     isScrollingUp: false,
     isScrollingDown: false,
@@ -17,28 +18,31 @@ export const useScrollDirection = (threshold: number = 50): ScrollState => {
   });
 
   useEffect(() => {
-    let lastScrollY = window.scrollY;
+    const containerEl = containerSelector ? (document.querySelector(containerSelector) as HTMLElement | null) : null;
+    let lastScroll = containerEl ? containerEl.scrollTop : window.scrollY;
     let ticking = false;
 
-    const updateScrollDirection = () => {
-      const scrollY = window.scrollY;
+    const readScroll = () => (containerEl ? containerEl.scrollTop : window.scrollY);
 
-      if (Math.abs(scrollY - lastScrollY) < threshold) {
+    const updateScrollDirection = () => {
+      const current = readScroll();
+
+      if (Math.abs(current - lastScroll) < threshold) {
         ticking = false;
         return;
       }
 
-      const isScrollingDown = scrollY > lastScrollY;
-      const isScrollingUp = scrollY < lastScrollY;
+      const isScrollingDown = current > lastScroll;
+      const isScrollingUp = current < lastScroll;
       
       setState({
         isScrollingUp,
         isScrollingDown,
-        scrollY,
-        shouldHideHeader: isScrollingDown && scrollY > threshold,
+        scrollY: current,
+        shouldHideHeader: isScrollingDown && current > threshold,
       });
 
-      lastScrollY = scrollY > 0 ? scrollY : 0;
+      lastScroll = current > 0 ? current : 0;
       ticking = false;
     };
 
@@ -49,10 +53,11 @@ export const useScrollDirection = (threshold: number = 50): ScrollState => {
       }
     };
 
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const target: any = containerEl || window;
+    target.addEventListener('scroll', onScroll, { passive: true });
 
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [threshold]);
+    return () => target.removeEventListener('scroll', onScroll);
+  }, [threshold, containerSelector]);
 
   return state;
 };
