@@ -90,9 +90,16 @@ export function InteractiveBuzzMapWalkthrough({ onComplete, onDemoTrigger }: Int
     onComplete();
   };
 
-  const step = WALKTHROUGH_STEPS[currentStep];
-  const Icon = step.icon;
+  const step = WALKTHROUGH_STEPS[currentStep] || WALKTHROUGH_STEPS[0];
+  const Icon = step?.icon || Map;
   const progress = ((currentStep + 1) / WALKTHROUGH_STEPS.length) * 100;
+
+  // Safety check: if step is invalid, reset to 0
+  useEffect(() => {
+    if (!WALKTHROUGH_STEPS[currentStep]) {
+      setCurrentStep(0);
+    }
+  }, [currentStep]);
 
   return (
     <AnimatePresence>
