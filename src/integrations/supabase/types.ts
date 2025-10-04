@@ -2775,6 +2775,8 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          buzz_map_walkthrough_completed: boolean | null
+          buzz_walkthrough_completed: boolean | null
           can_access_app: boolean | null
           choose_plan_seen: boolean
           city: string | null
@@ -2815,6 +2817,8 @@ export type Database = {
           tier: string | null
           updated_at: string
           username: string | null
+          walkthrough_step_buzz: number | null
+          walkthrough_step_buzz_map: number | null
           weekly_hints: string | null
         }
         Insert: {
@@ -2827,6 +2831,8 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          buzz_map_walkthrough_completed?: boolean | null
+          buzz_walkthrough_completed?: boolean | null
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
@@ -2867,6 +2873,8 @@ export type Database = {
           tier?: string | null
           updated_at?: string
           username?: string | null
+          walkthrough_step_buzz?: number | null
+          walkthrough_step_buzz_map?: number | null
           weekly_hints?: string | null
         }
         Update: {
@@ -2879,6 +2887,8 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          buzz_map_walkthrough_completed?: boolean | null
+          buzz_walkthrough_completed?: boolean | null
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
@@ -2919,6 +2929,8 @@ export type Database = {
           tier?: string | null
           updated_at?: string
           username?: string | null
+          walkthrough_step_buzz?: number | null
+          walkthrough_step_buzz_map?: number | null
           weekly_hints?: string | null
         }
         Relationships: []
