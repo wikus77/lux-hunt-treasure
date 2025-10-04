@@ -15,22 +15,29 @@ export const useOnboardingTutorial = () => {
   useEffect(() => {
     const checkTutorialStatus = async () => {
       try {
+        console.log('🔍 [TUTORIAL-DEBUG] Starting check, user.id:', user?.id);
+        
         if (user?.id) {
           // User authenticated: check Supabase
+          console.log('🔍 [TUTORIAL-DEBUG] Calling RPC get_user_flags for user:', user.id);
           const { data, error } = await supabase.rpc('get_user_flags');
 
           if (error) {
             console.warn('⚠️ [TUTORIAL] Error fetching flags, fallback to localStorage:', error);
             const hidden = localStorage.getItem(LOCALSTORAGE_KEY) === '1';
+            console.log('🔍 [TUTORIAL-DEBUG] Fallback localStorage value:', hidden);
             setShowTutorial(!hidden);
           } else {
             const hideFlag = data?.[0]?.hide_tutorial ?? false;
+            console.log('🔍 [TUTORIAL-DEBUG] RPC response data:', data);
+            console.log('🔍 [TUTORIAL-DEBUG] hideFlag value:', hideFlag, 'type:', typeof hideFlag);
             setShowTutorial(!hideFlag);
             console.log('🎓 [TUTORIAL] Supabase flag:', hideFlag, 'Show:', !hideFlag);
           }
         } else {
           // User not authenticated: check localStorage
           const hidden = localStorage.getItem(LOCALSTORAGE_KEY) === '1';
+          console.log('🔍 [TUTORIAL-DEBUG] No user, localStorage value:', hidden);
           setShowTutorial(!hidden);
           console.log('🎓 [TUTORIAL] LocalStorage flag:', hidden, 'Show:', !hidden);
         }
@@ -39,6 +46,7 @@ export const useOnboardingTutorial = () => {
         setShowTutorial(false);
       } finally {
         setIsLoading(false);
+        console.log('🔍 [TUTORIAL-DEBUG] Check complete, isLoading set to false');
       }
     };
 

@@ -30,6 +30,7 @@ import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager"
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
+import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -106,6 +107,7 @@ function App() {
                     <PushNotificationSetup className="hidden" />
                     <XpSystemManager />
                     <NorahProactiveManager />
+                    <MissionBadgeInjector />
                     <Toaster />
                     <BadgeAuditReport />
                   </InterestSignalsProvider>
