@@ -2024,6 +2024,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_enrollments: {
+        Row: {
+          joined_at: string
+          mission_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          mission_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          mission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_enrollments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "mission_status_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_enrollments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_prizes: {
         Row: {
           category_id: string | null
@@ -4283,6 +4316,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_flags: {
+        Row: {
+          hide_tutorial: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          hide_tutorial?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          hide_tutorial?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interest_profile: {
         Row: {
           topics: Json
@@ -5750,6 +5801,12 @@ export type Database = {
         Args: { email_param: string }
         Returns: unknown[]
       }
+      get_user_flags: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          hide_tutorial: boolean
+        }[]
+      }
       get_user_role_safe: {
         Args: { p_user_id: string }
         Returns: string
@@ -6028,6 +6085,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      set_hide_tutorial: {
+        Args: { p_hide: boolean }
+        Returns: undefined
       }
       setup_developer_user: {
         Args: { uid: string }
