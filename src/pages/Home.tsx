@@ -22,6 +22,7 @@ import CookieBanner from '@/components/legal/CookieBanner';
 import TermsBanner from '@/components/legal/TermsBanner';
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { useOnboardingTutorial } from "@/hooks/useOnboardingTutorial";
+import { MissionStatusBadge } from "@/components/home/MissionStatusBadge";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -265,7 +266,7 @@ const Home = () => {
 
             <div className="container mx-auto px-3">
               <motion.div
-                className="text-center my-6"
+                className="text-center my-6 space-y-3"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
@@ -276,6 +277,14 @@ const Home = () => {
                   }}>M1</span>
                   <span className="text-white">SSION<span className="text-xs align-top">™</span></span>
                 </h1>
+                
+                <div className="flex justify-center">
+                  <MissionStatusBadge />
+                </div>
+                
+                <p className="text-sm text-white/60 font-orbitron uppercase tracking-widest">
+                  Centro di Comando Agente
+                </p>
               </motion.div>
 
               <main className="max-w-screen-xl mx-auto pb-20">
