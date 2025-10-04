@@ -361,14 +361,14 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
   const progress = ((currentQuestion + 1) / quizQuestions.length) * 100;
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-[#131524]/90 to-black/95 flex items-center justify-center p-2 sm:p-4 py-4 sm:py-6">
+    <div className="w-full bg-gradient-to-b from-[#131524]/90 to-black/95 p-2 sm:p-4 py-3 sm:py-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-2xl"
+        className="w-full max-w-2xl mx-auto"
       >
         <Card className="bg-black/60 border-[#00D1FF]/30 backdrop-blur-sm">
-          <CardHeader className="text-center space-y-3 sm:space-y-4 p-4 sm:p-6">
+          <CardHeader className="text-center space-y-2 sm:space-y-3 p-3 sm:p-4">
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -391,7 +391,7 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+          <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion}
@@ -426,12 +426,12 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
               </motion.div>
             </AnimatePresence>
 
-            <div className="flex justify-between items-center pt-4 gap-2 sm:gap-4">
+            <div className="flex justify-between items-center pt-3 gap-2">
               <Button
                 onClick={handleSkipQuiz}
                 disabled={isLoading}
                 variant="outline"
-                className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white px-3 sm:px-6 text-xs sm:text-sm"
+                className="border-white/20 text-white/80 hover:bg-white/10 hover:text-white px-3 sm:px-4 text-xs sm:text-sm h-9 sm:h-10"
               >
                 Salta Quiz
               </Button>
@@ -439,7 +439,7 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
               <Button
                 onClick={handleNextQuestion}
                 disabled={selectedOption === null || isLoading}
-                className="bg-[#00D1FF] hover:bg-[#00A3CC] text-black font-medium px-4 sm:px-8 text-xs sm:text-sm"
+                className="bg-[#00D1FF] hover:bg-[#00A3CC] text-black font-medium px-4 sm:px-6 text-xs sm:text-sm h-9 sm:h-10"
               >
                 {isLoading ? (
                   <div className="flex items-center space-x-2">
@@ -461,16 +461,16 @@ const EnhancedPersonalityQuiz: React.FC<EnhancedPersonalityQuizProps> = ({ onCom
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-4 sm:mt-6"
+          className="mt-3 sm:mt-4"
         >
           <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
-            <CardHeader className="p-4 sm:p-6">
-              <CardTitle className="text-center text-white font-orbitron text-base sm:text-lg">
+            <CardHeader className="p-3 sm:p-4">
+              <CardTitle className="text-center text-white font-orbitron text-sm sm:text-base">
                 Tipi di Agente M1SSION™
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 sm:p-6 pt-0">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+            <CardContent className="p-3 sm:p-4 pt-0">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
                 {playerTypes.map((type) => (
                   <div
                     key={type.id}
