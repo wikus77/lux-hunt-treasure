@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -23,7 +23,7 @@ import { useXpSystem } from "@/hooks/useXpSystem";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const Profile = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
