@@ -72,16 +72,22 @@ export const MissionBadgeInjector = () => {
   const portalTarget = document.getElementById('mission-status-badge-portal');
   if (!portalTarget) return null;
 
-  // Se iscritto: mostra "ON M1SSION"
-  // Se NON iscritto: mostra "INIZIA MISSIONE" (StartMissionButton)
+  // Se iscritto: mostra "ON M1SSION" con gradiente verde-viola
+  // Se NON iscritto: mostra "START M1SSION" (StartMissionButton)
   return createPortal(
     isEnrolled ? (
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-[#00D1FF]/10 border border-[#00D1FF]/30"
+        className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-gradient-to-r from-green-500/10 to-purple-500/10 border border-green-500/30"
+        style={{
+          background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(168, 85, 247, 0.1))',
+          borderImage: 'linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(168, 85, 247, 0.3)) 1'
+        }}
       >
-        <span className="text-xs font-orbitron font-semibold text-[#00D1FF] uppercase tracking-wider">
+        <span 
+          className="text-xs font-orbitron font-semibold uppercase tracking-wider bg-gradient-to-r from-green-400 to-purple-400 bg-clip-text text-transparent"
+        >
           ON M1SSION
         </span>
       </motion.div>
