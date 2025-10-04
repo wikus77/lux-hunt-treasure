@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState, useRef, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { X, Send, Activity } from 'lucide-react';
 import { type AnalystMode, type AnalystStatus, type AnalystMessage } from '@/hooks/useIntelAnalyst';
 import AIEdgeGlow from './SiriWaveOverlay';
@@ -154,13 +155,25 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
     }
   };
 
+  // Body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('m1-no-scroll');
+    } else {
+      document.body.classList.remove('m1-no-scroll');
+    }
+    return () => {
+      document.body.classList.remove('m1-no-scroll');
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  return (
+  const panelContent = (
     <>
       {/* Background overlay */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[11040]"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[12000]"
         onClick={onClose}
       />
       
@@ -170,14 +183,15 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       {/* Panel */}
       {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
       <div 
-        className="fixed z-[11060] flex items-center justify-center inset-0 md:inset-8"
+        className="fixed z-[12050] flex flex-col inset-0"
         style={{
+          height: '100dvh',
           paddingTop: 'env(safe-area-inset-top, 0px)',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)'
         }}
       >
         <div 
-          className="relative w-full h-full flex flex-col bg-black/95 md:bg-black/90 backdrop-blur-xl md:max-w-4xl md:max-h-[800px] md:rounded-3xl overflow-hidden"
+          className="relative w-full h-full flex flex-col bg-black/95 backdrop-blur-xl overflow-hidden md:max-w-4xl md:max-h-[800px] md:rounded-3xl md:m-auto"
           style={{
             boxShadow: '0 0 20px rgba(0, 229, 255, 0.15), inset 0 0 40px rgba(0, 229, 255, 0.03)'
           }}
@@ -238,7 +252,14 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
           {/* Quick Action Chips - v4.2: Removed from UI, keep handlers internal */}
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
+          <div 
+            className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6"
+            style={{
+              minHeight: 0,
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain'
+            }}
+          >
             {messages.length === 0 ? (
               <div className="text-center text-white/40 py-12">
                 {/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */}
@@ -344,6 +365,8 @@ const AIAnalystPanel: React.FC<AIAnalystPanelProps> = (props) => {
       )}
     </>
   );
+
+  return ReactDOM.createPortal(panelContent, document.body);
 };
 
 export default AIAnalystPanel;
