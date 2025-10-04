@@ -52,39 +52,52 @@ export function DailyCheckInButton() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('handle-daily-checkin', {
-        body: {}
+      const today = new Date().toISOString().split('T')[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      
+      // Determine new streak
+      let newStreak = currentStreak;
+      if (!lastCheckIn || lastCheckIn === yesterday) {
+        // Continue streak
+        newStreak = currentStreak + 1;
+      } else if (lastCheckIn !== today) {
+        // Broken streak
+        newStreak = 1;
+        toast.warning('⚠️ La tua streak è stata resettata', { duration: 3000 });
+      }
+
+      // Update profile with new streak
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          current_streak_days: newStreak,
+          last_check_in_date: today
+        })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Award XP (10 XP per check-in)
+      const { error: xpError } = await supabase.rpc('award_xp', {
+        p_user_id: user.id,
+        p_xp_amount: 10,
+        p_source: 'daily_checkin'
       });
 
-      if (error) throw error;
+      if (xpError) console.error('XP award error:', xpError);
 
-      if (data.success) {
-        setCurrentStreak(data.newStreak);
-        setCanCheckIn(false);
-        setLastCheckIn(new Date().toISOString().split('T')[0]);
+      setCurrentStreak(newStreak);
+      setCanCheckIn(false);
+      setLastCheckIn(today);
 
-        toast.success(
-          `🔥 Check-in giornaliero completato! Streak: ${data.newStreak} giorni (+${data.xpAwarded} XP)`,
-          { duration: 5000 }
-        );
+      toast.success(
+        `🔥 Check-in completato! Streak: ${newStreak} giorni (+10 XP)`,
+        { duration: 3000 }
+      );
 
-        if (data.badgesAwarded && data.badgesAwarded.length > 0) {
-          toast.success(`🎖️ Nuovo badge sbloccato: Streak ${data.newStreak} giorni!`, {
-            duration: 7000
-          });
-        }
-
-        if (data.streakBroken) {
-          toast.warning('⚠️ La tua streak è stata resettata perché hai saltato un giorno', {
-            duration: 5000
-          });
-        }
-      } else {
-        toast.error(data.message || 'Errore durante il check-in');
-      }
     } catch (err: any) {
       console.error('Error during check-in:', err);
-      toast.error(err.message || 'Errore durante il check-in giornaliero');
+      toast.error('Errore durante il check-in');
     } finally {
       setLoading(false);
     }
@@ -97,7 +110,7 @@ export function DailyCheckInButton() {
       className="flex flex-col items-center gap-2"
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.15 }}
     >
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 text-primary">

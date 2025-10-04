@@ -121,7 +121,7 @@ export const AchievementTimeline: React.FC = () => {
               key={achievement.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.02, duration: 0.12 }}
               className="flex items-start gap-3 p-3 rounded-lg bg-gradient-to-r from-gray-900/40 to-gray-800/40 border border-gray-700/30 hover:border-cyan-500/30 transition-all"
             >
               {/* Icon */}

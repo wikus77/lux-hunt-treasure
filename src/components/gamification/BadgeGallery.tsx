@@ -127,7 +127,7 @@ export const BadgeGallery: React.FC = () => {
                 key={badge.id}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
+                transition={{ delay: index * 0.02, duration: 0.12 }}
                 className={`
                   relative p-4 rounded-lg border transition-all duration-300
                   ${badge.unlocked 
