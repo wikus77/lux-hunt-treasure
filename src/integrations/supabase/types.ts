@@ -325,7 +325,8 @@ export type Database = {
       }
       ai_docs: {
         Row: {
-          body: string
+          body: string | null
+          body_md: string | null
           category: string | null
           created_at: string | null
           doc_type: string | null
@@ -336,7 +337,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          body: string
+          body?: string | null
+          body_md?: string | null
           category?: string | null
           created_at?: string | null
           doc_type?: string | null
@@ -347,7 +349,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          body?: string
+          body?: string | null
+          body_md?: string | null
           category?: string | null
           created_at?: string | null
           doc_type?: string | null
@@ -2245,34 +2248,34 @@ export type Database = {
       }
       norah_events: {
         Row: {
-          created_at: string | null
-          event: string
+          created_at: string
           event_type: string
           id: string
           intent: string | null
+          payload: Json
           phase: string | null
           sentiment: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          event: string
+          created_at?: string
           event_type?: string
           id?: string
           intent?: string | null
+          payload?: Json
           phase?: string | null
           sentiment?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          created_at?: string | null
-          event?: string
+          created_at?: string
           event_type?: string
           id?: string
           intent?: string | null
+          payload?: Json
           phase?: string | null
           sentiment?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -5316,6 +5319,34 @@ export type Database = {
           title: string
         }[]
       }
+      ai_rag_search_vec: {
+        Args: {
+          in_locale?: string
+          match_count?: number
+          query_embedding: number[]
+        }
+        Returns: {
+          category: string
+          chunk_idx: number
+          chunk_text: string
+          distance: number
+          doc_id: string
+          locale: string
+          title: string
+        }[]
+      }
+      ai_rag_search_vec_json: {
+        Args: { payload: Json }
+        Returns: {
+          category: string
+          chunk_idx: number
+          chunk_text: string
+          distance: number
+          doc_id: string
+          locale: string
+          title: string
+        }[]
+      }
       assign_area_radius: {
         Args: { p_mission_id: string }
         Returns: number
@@ -5448,6 +5479,10 @@ export type Database = {
         Returns: number
       }
       create_free_subscription: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      debug_vec_info: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -5910,12 +5945,14 @@ export type Database = {
         Returns: Json
       }
       update_personality_quiz_result: {
-        Args: {
-          p_assigned_description: string
-          p_assigned_type: string
-          p_quiz_answers: Json
-          p_user_id: string
-        }
+        Args:
+          | {
+              p_assigned_description: string
+              p_assigned_type: string
+              p_quiz_answers: Json
+              p_user_id: string
+            }
+          | { p_investigative_style: string; p_user_id: string }
         Returns: Json
       }
       update_user_plan_complete: {
