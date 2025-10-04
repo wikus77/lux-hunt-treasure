@@ -11,7 +11,9 @@ const PullToRefreshIndicator: React.FC = () => {
 
   const { isPulling, pullDistance, isRefreshing } = usePullToRefresh(handleRefresh);
   const isVisible = isPulling || isRefreshing;
-  const progress = Math.min(pullDistance / 80, 1); // 80 is threshold
+  const progress = Math.min(pullDistance / 80, 1);
+
+  console.log('🎨 PullToRefreshIndicator render:', { isPulling, pullDistance, isRefreshing, isVisible, progress });
 
   return (
     <AnimatePresence>
@@ -24,6 +26,7 @@ const PullToRefreshIndicator: React.FC = () => {
           }}
           exit={{ opacity: 0, y: -50 }}
           className="fixed top-0 left-1/2 -translate-x-1/2 z-[9999] pointer-events-none"
+          style={{ willChange: 'transform, opacity' }}
         >
           <div className="relative mt-4">
             {/* Glow effect */}
