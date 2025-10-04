@@ -8,11 +8,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
 import { Rocket } from 'lucide-react';
+import { useActiveMissionEnrollment } from '@/hooks/useActiveMissionEnrollment';
 
 export const StartMissionButton: React.FC = () => {
   const { user } = useAuthContext();
   const [, setLocation] = useLocation();
   const [isLoading, setIsLoading] = useState(false);
+  const { isEnrolled, isLoading: enrollmentLoading } = useActiveMissionEnrollment();
+
+  // Hide button if user is already enrolled
+  if (enrollmentLoading || isEnrolled) return null;
 
   const handleStartMission = async () => {
     setIsLoading(true);
