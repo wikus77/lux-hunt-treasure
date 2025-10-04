@@ -16,7 +16,7 @@ const FirstLoginQuizModal: React.FC<FirstLoginQuizModalProps> = ({
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden p-0 border-none bg-transparent">
+      <DialogContent className="max-w-[95vw] sm:max-w-4xl h-[95vh] sm:h-auto sm:max-h-[95vh] overflow-y-auto p-0 border-none bg-transparent">
         <EnhancedPersonalityQuiz onComplete={onComplete} userId={userId} />
       </DialogContent>
     </Dialog>
