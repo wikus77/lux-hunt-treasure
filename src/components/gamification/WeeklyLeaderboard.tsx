@@ -35,7 +35,7 @@ export function WeeklyLeaderboard() {
 
       const { data, error } = await supabase
         .from('weekly_leaderboard')
-        .select('user_id, total_xp, rank, agent_code:profiles(agent_code), avatar_url:profiles(avatar_url)')
+        .select('user_id, total_xp, rank')
         .eq('week_number', currentWeek)
         .eq('year', currentYear)
         .order('rank', { ascending: true })
@@ -43,7 +43,24 @@ export function WeeklyLeaderboard() {
 
       if (error) throw error;
 
-      setLeaderboard(data || []);
+      // Fetch agent codes separately
+      const enrichedData = await Promise.all(
+        (data || []).map(async (entry) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('agent_code, avatar_url')
+            .eq('id', entry.user_id)
+            .single();
+
+          return {
+            ...entry,
+            agent_code: profile?.agent_code || 'AG-????',
+            avatar_url: profile?.avatar_url
+          };
+        })
+      );
+
+      setLeaderboard(enrichedData);
 
       // Get current user rank
       if (user) {
@@ -119,7 +136,7 @@ export function WeeklyLeaderboard() {
               key={entry.user_id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.02, duration: 0.15 }}
               className={`flex items-center justify-between p-3 rounded-lg ${
                 entry.rank <= 3 ? 'bg-primary/10' : 'bg-secondary/50'
               } ${entry.user_id === user?.id ? 'ring-2 ring-primary' : ''}`}
@@ -130,8 +147,7 @@ export function WeeklyLeaderboard() {
                 </div>
                 <div>
                   <p className="font-semibold">
-                    {/* @ts-ignore */}
-                    {entry.agent_code?.agent_code || 'Agente Segreto'}
+                    {entry.agent_code || 'Agente Segreto'}
                   </p>
                   <p className="text-xs text-muted-foreground">
                     {entry.total_xp.toLocaleString()} XP
