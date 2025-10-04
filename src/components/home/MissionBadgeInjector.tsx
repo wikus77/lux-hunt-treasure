@@ -20,24 +20,7 @@ export const MissionBadgeInjector = () => {
     const retryDelay = 150;
     let observer: MutationObserver | null = null;
 
-    const findAndInjectBadge = () => {
-      console.log(`🔍 [MissionBadgeInjector] Attempt ${retryCount + 1}/${maxRetries}`);
-
-      // Trova SOLO l'H1 con aria-label che contiene "Centro di Comando Agente"
-      const missionTitle = document.querySelector('h1[aria-label*="Centro di Comando Agente"]') as HTMLElement | null;
-
-      if (!missionTitle) {
-        console.warn('[MissionBadgeInjector] Target H1 not found yet');
-        if (retryCount < maxRetries) {
-          retryCount++;
-          setTimeout(findAndInjectBadge, retryDelay);
-        }
-        return;
-      }
-
-      console.log('✅ [MissionBadgeInjector] Target H1 resolved');
-
-      // Crea/recupera il portal container
+    const positionBadge = (missionTitle: HTMLElement | null, controlCenterNode: HTMLElement | null) => {
       let badgeNode = document.getElementById('mission-status-badge-portal');
       if (!badgeNode) {
         badgeNode = document.createElement('div');
@@ -45,40 +28,66 @@ export const MissionBadgeInjector = () => {
         badgeNode.className = 'flex justify-center my-3';
       }
 
-      const ensurePosition = () => {
-        if (!missionTitle || !badgeNode) return;
-        if (missionTitle.nextSibling !== badgeNode) {
-          missionTitle.parentNode?.insertBefore(badgeNode, missionTitle.nextSibling);
-          console.log('🔧 [MissionBadgeInjector] Badge positioned after H1');
-        }
-      };
+      const parent = (controlCenterNode?.parentElement) || (missionTitle?.parentElement) || null;
+      if (!parent) return false;
 
-      // Posiziona e attiva il portal
-      ensurePosition();
+      // Preferenza assoluta: PRIMA del testo "Centro di Comando Agente"
+      if (controlCenterNode && badgeNode.nextSibling !== controlCenterNode) {
+        parent.insertBefore(badgeNode, controlCenterNode);
+        console.log('🔧 [MissionBadgeInjector] Badge positioned before Control Center');
+      }
+      // Fallback: subito dopo l'H1
+      else if (missionTitle && missionTitle.nextSibling !== badgeNode) {
+        parent.insertBefore(badgeNode, missionTitle.nextSibling);
+        console.log('🔧 [MissionBadgeInjector] Badge positioned after H1');
+      }
+
       setPortalReady(true);
 
-      // Osserva cambi nel container per garantire la posizione corretta nel tempo
-      if (!observer && missionTitle.parentNode) {
-        observer = new MutationObserver(() => ensurePosition());
-        observer.observe(missionTitle.parentNode, { childList: true });
+      // Osserva cambi nel container per mantenere la posizione
+      if (!observer && parent) {
+        observer = new MutationObserver(() => {
+          positionBadge(missionTitle, controlCenterNode);
+        });
+        observer.observe(parent, { childList: true, subtree: false });
         console.log('👀 [MissionBadgeInjector] MutationObserver attached');
       }
+
+      return true;
+    };
+
+    const findAndInjectBadge = () => {
+      console.log(`🔍 [MissionBadgeInjector] Attempt ${retryCount + 1}/${maxRetries}`);
+
+      const missionTitle = document.querySelector('h1[aria-label*="Centro di Comando Agente"]') as HTMLElement | null
+        || document.querySelector('h1[aria-label*="M1SSION"]') as HTMLElement | null;
+
+      const controlCenterNode = Array.from(document.querySelectorAll('p, h2, div, span'))
+        .find(el => el.textContent?.includes('Centro di Comando Agente')) as HTMLElement | null;
+
+      if (!missionTitle && !controlCenterNode) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          setTimeout(findAndInjectBadge, retryDelay);
+        } else {
+          console.warn('[MissionBadgeInjector] Targets not found after retries');
+        }
+        return;
+      }
+
+      positionBadge(missionTitle, controlCenterNode);
     };
 
     findAndInjectBadge();
 
+    const onPageShow = () => findAndInjectBadge();
+    window.addEventListener('pageshow', onPageShow);
+
     return () => {
-      // Cleanup: rimuovi il nodo quando il componente unmount
       const node = document.getElementById('mission-status-badge-portal');
-      if (node) {
-        node.remove();
-        console.log('🧹 [MissionBadgeInjector] Badge node removed');
-      }
-      if (observer) {
-        observer.disconnect();
-        observer = null;
-        console.log('🧹 [MissionBadgeInjector] Observer disconnected');
-      }
+      if (node) node.remove();
+      if (observer) observer.disconnect();
+      window.removeEventListener('pageshow', onPageShow);
       setPortalReady(false);
     };
   }, [isLoading]);
