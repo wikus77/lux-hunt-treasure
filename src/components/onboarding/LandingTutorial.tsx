@@ -15,9 +15,12 @@ const LandingTutorial: React.FC<LandingTutorialProps> = ({ onComplete }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check if tutorial has been seen
+    // Check if tutorial has been seen AND if user has accepted legal terms
     const hasSeenTutorial = localStorage.getItem(TUTORIAL_KEY);
-    if (!hasSeenTutorial) {
+    const hasAcceptedTerms = localStorage.getItem('hasAcceptedTerms');
+    
+    // Show tutorial only after legal terms are accepted and tutorial hasn't been seen
+    if (!hasSeenTutorial && hasAcceptedTerms === 'true') {
       setIsVisible(true);
     }
   }, []);
