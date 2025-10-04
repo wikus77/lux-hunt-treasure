@@ -23,7 +23,9 @@ const MapHeader = ({
 
   return (
     <>
-      <MinimalHeaderStrip show={shouldHideHeader} />
+      <MinimalHeaderStrip show={shouldHideHeader}>
+        <AgentBadge />
+      </MinimalHeaderStrip>
       <motion.header
         animate={{ 
           y: shouldHideHeader ? -100 : 0,

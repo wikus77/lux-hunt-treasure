@@ -137,7 +137,39 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   return (
     <>
-      <MinimalHeaderStrip show={shouldHideHeader} />
+      <MinimalHeaderStrip show={shouldHideHeader}>
+        {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
+        <div className="flex flex-col items-center gap-1">
+          {/* CODE con pallino pulsante */}
+          <div className="flex items-center gap-2">
+            <motion.div
+              className="w-2 h-2 bg-[#00D1FF] rounded-full"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.7, 1],
+              }}
+              transition={{
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
+              }}
+            />
+            <span 
+              className="text-xs font-orbitron font-bold text-white tracking-wider"
+              style={{
+                textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+              }}
+            >
+              CODE
+            </span>
+          </div>
+          {/* Codice Agente sotto */}
+          <ReferralCodeDisplay />
+        </div>
+      </MinimalHeaderStrip>
       <motion.header
         initial={{ y: -20, opacity: 0 }}
         animate={{ 
