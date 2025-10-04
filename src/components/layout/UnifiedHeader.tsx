@@ -126,7 +126,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const currentPageTitle = pageTitles[location] || 'M1SSION';
   const isHomePage = location === '/home';
-  const reduceAnimations = location === '/profile';
+  const reduceAnimations = location === '/profile' || location === '/settings/agent-profile';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];

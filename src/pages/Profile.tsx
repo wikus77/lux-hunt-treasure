@@ -12,22 +12,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import BottomNavigation from "@/components/layout/BottomNavigation";
-import { DailyCheckInButton } from "@/components/gamification/DailyCheckInButton";
-import { WeeklyLeaderboard } from "@/components/gamification/WeeklyLeaderboard";
-import { BadgeUnlockedNotification } from "@/components/gamification/BadgeUnlockedNotification";
-import { XpLevelProgress } from "@/components/gamification/XpLevelProgress";
-import { BadgeGallery } from "@/components/gamification/BadgeGallery";
-import { AchievementTimeline } from "@/components/gamification/AchievementTimeline";
-import { RankHighlight } from "@/components/gamification/RankHighlight";
-import { useXpSystem } from "@/hooks/useXpSystem";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 const Profile = () => {
   const { navigate } = useWouterNavigation();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
-  const { newBadge, closeBadgeNotification, xpStatus } = useXpSystem();
   
   // Initialize real-time notifications (this sets up the listener)
   useRealTimeNotifications();
@@ -61,56 +51,6 @@ const Profile = () => {
             onSave={actions.handleSaveProfile}
           />
           
-          {/* Gamification Dashboard - Moved to top for visibility */}
-          <div className="p-3 sm:p-6 space-y-4">
-            {/* Dashboard Title */}
-            <h2 className="text-xl sm:text-2xl font-bold gradient-text mb-4">
-              📊 Dashboard Progressi
-            </h2>
-
-            {/* Gamification Grid - Responsive 2 columns on desktop, 1 on mobile */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* XP Level Progress */}
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold gradient-text">
-                    ⭐ Livello & XP
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <XpLevelProgress totalXp={xpStatus.total_xp} />
-                </CardContent>
-              </Card>
-
-              {/* Rank Highlight */}
-              <RankHighlight />
-
-              {/* Daily Check-In */}
-              <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg font-semibold gradient-text">
-                    🎯 Check-In Giornaliero
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DailyCheckInButton />
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Full width sections */}
-            <div className="space-y-4">
-              {/* Badge Gallery */}
-              <BadgeGallery />
-
-              {/* Achievement Timeline */}
-              <AchievementTimeline />
-
-              {/* Weekly Leaderboard */}
-              <WeeklyLeaderboard />
-            </div>
-          </div>
-
           {/* Profile Information - MANTENUTO INTATTO */}
           <div className="p-3 sm:p-6 border-t border-white/10">
             <h2 className="text-xl sm:text-2xl font-bold gradient-text mb-4">
@@ -161,16 +101,7 @@ const Profile = () => {
           </div>
         </div>
         
-        {/* Badge Unlock Notification */}
-        {newBadge && (
-          <BadgeUnlockedNotification
-            badgeName={newBadge.name}
-            badgeDescription={newBadge.description}
-            onClose={closeBadgeNotification}
-          />
-        )}
-        
-        <NotificationsDrawer 
+        <NotificationsDrawer
           open={notificationsDrawerOpen}
           onOpenChange={closeNotificationsDrawer}
         />
