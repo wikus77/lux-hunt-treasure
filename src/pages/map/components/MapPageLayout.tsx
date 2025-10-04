@@ -2,12 +2,16 @@
 import React from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
 import MapPageHeader from './MapPageHeader';
+import { motion } from 'framer-motion';
+import { useScrollDirection } from '@/hooks/useScrollDirection';
 
 interface MapPageLayoutProps {
   children: React.ReactNode;
 }
 
 const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
+  const { shouldHideHeader } = useScrollDirection(50);
+  
   return (
     <div 
       className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
@@ -17,7 +21,7 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
         position: 'relative'
       }}
     >
-      <header 
+      <motion.header 
         className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
         style={{
           height: '72px',
@@ -25,9 +29,11 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
           background: "rgba(19, 21, 33, 0.55)",
           backdropFilter: "blur(12px)"
         }}
+        animate={{ y: shouldHideHeader ? -100 : 0, opacity: shouldHideHeader ? 0 : 1 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       >
         <MapPageHeader />
-      </header>
+      </motion.header>
       
       <main
         style={{
