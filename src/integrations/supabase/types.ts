@@ -2783,6 +2783,7 @@ export type Database = {
           country: string | null
           created_at: string
           credits: number | null
+          current_streak_days: number | null
           device_token: string | null
           early_access_hours: number | null
           email: string | null
@@ -2794,9 +2795,11 @@ export type Database = {
           is_admin: boolean
           is_pre_registered: boolean | null
           language: string | null
+          last_check_in_date: string | null
           last_cookie_banner_shown: string | null
           last_name: string | null
           last_plan_change: string | null
+          longest_streak_days: number | null
           notifications_enabled: boolean | null
           phone: string | null
           plan: string | null
@@ -2839,6 +2842,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           credits?: number | null
+          current_streak_days?: number | null
           device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
@@ -2850,9 +2854,11 @@ export type Database = {
           is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
+          last_check_in_date?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
           last_plan_change?: string | null
+          longest_streak_days?: number | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
@@ -2895,6 +2901,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           credits?: number | null
+          current_streak_days?: number | null
           device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
@@ -2906,9 +2913,11 @@ export type Database = {
           is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
+          last_check_in_date?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
           last_plan_change?: string | null
+          longest_streak_days?: number | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
@@ -4992,6 +5001,39 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_leaderboard: {
+        Row: {
+          created_at: string | null
+          id: string
+          rank: number | null
+          total_xp: number | null
+          updated_at: string | null
+          user_id: string
+          week_number: number
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rank?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_number: number
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rank?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       buzz_map_markers: {
@@ -5015,6 +5057,18 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      current_week_leaderboard: {
+        Row: {
+          agent_code: string | null
+          avatar_url: string | null
+          current_week: number | null
+          current_year: number | null
+          rank: number | null
+          total_xp: number | null
+          user_id: string | null
         }
         Relationships: []
       }
@@ -5901,6 +5955,10 @@ export type Database = {
       redeem_qr: {
         Args: { code_input: string }
         Returns: Json
+      }
+      refresh_current_week_leaderboard: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       register_user_to_active_mission: {
         Args: { p_user_id: string }
