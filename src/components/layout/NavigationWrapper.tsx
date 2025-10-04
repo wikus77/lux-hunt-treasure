@@ -29,9 +29,9 @@ const NavigationWrapper: React.FC<NavigationWrapperProps> = ({ children }) => {
     const isMobile = /iPad|iPhone|iPod|Android|Mobile/i.test(navigator.userAgent);
     
     if (isPWA || isMobile) {
-      // Prevent bounce effect
-      document.body.style.overscrollBehavior = 'none';
-      document.body.style.touchAction = 'manipulation';
+      // Prevent horizontal bounce only (allow vertical for pull-to-refresh)
+      document.body.style.overscrollBehaviorX = 'none';
+      document.body.style.overscrollBehaviorY = 'auto';
       
       // Fix viewport on orientation change
       const handleOrientationChange = () => {

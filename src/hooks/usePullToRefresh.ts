@@ -7,90 +7,85 @@ interface PullToRefreshState {
   isRefreshing: boolean;
 }
 
-const PULL_THRESHOLD = 80; // Minimum pull distance to trigger refresh
-const MAX_PULL_DISTANCE = 120; // Maximum visual pull distance
+const PULL_THRESHOLD = 80;
+const MAX_PULL_DISTANCE = 120;
 
 export const usePullToRefresh = (onRefresh: () => void | Promise<void>) => {
-  const [state, setState] = useState<PullToRefreshState>({
-    isPulling: false,
-    pullDistance: 0,
-    isRefreshing: false,
-  });
+  const [isPulling, setIsPulling] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const startY = useRef<number>(0);
   const currentY = useRef<number>(0);
   const isPWA = useRef<boolean>(false);
 
+  const stableOnRefresh = useCallback(onRefresh, []);
+
   useEffect(() => {
-    // Check if running as PWA
+    console.log('🔄 Pull-to-Refresh hook mounted');
+    
     isPWA.current = 
       window.matchMedia('(display-mode: standalone)').matches ||
       (window.navigator as any).standalone === true ||
       document.referrer.includes('android-app://');
 
-    // Only enable on mobile/PWA
     const isMobile = /iPad|iPhone|iPod|Android|Mobile/i.test(navigator.userAgent);
-    if (!isMobile && !isPWA.current) return;
+    
+    console.log('📱 Device check:', { isMobile, isPWA: isPWA.current });
+    
+    if (!isMobile && !isPWA.current) {
+      console.log('⚠️ Pull-to-refresh disabled: not mobile/PWA');
+      return;
+    }
 
     const handleTouchStart = (e: TouchEvent) => {
-      // Only trigger if at top of page
-      if (window.scrollY === 0 && !state.isRefreshing) {
+      if (window.scrollY === 0) {
         startY.current = e.touches[0].clientY;
+        console.log('👆 Touch start at Y:', startY.current);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (window.scrollY !== 0 || state.isRefreshing) return;
+      if (window.scrollY !== 0) return;
+      if (isRefreshing) return;
 
       currentY.current = e.touches[0].clientY;
-      const pullDistance = Math.max(0, currentY.current - startY.current);
-
-      if (pullDistance > 0) {
-        // Prevent default scroll behavior
+      const rawDistance = currentY.current - startY.current;
+      
+      if (rawDistance > 0) {
         e.preventDefault();
         
-        // Apply resistance curve for natural feel
-        const resistance = Math.min(pullDistance / 2, MAX_PULL_DISTANCE);
+        const resistance = Math.min(rawDistance / 2, MAX_PULL_DISTANCE);
         
-        setState({
-          isPulling: true,
-          pullDistance: resistance,
-          isRefreshing: false,
-        });
+        console.log('📏 Pull distance:', resistance);
+        
+        setIsPulling(true);
+        setPullDistance(resistance);
       }
     };
 
     const handleTouchEnd = async () => {
-      if (!state.isPulling) return;
-
-      if (state.pullDistance >= PULL_THRESHOLD) {
-        // Trigger refresh
-        setState({
-          isPulling: false,
-          pullDistance: 0,
-          isRefreshing: true,
-        });
+      console.log('🖐️ Touch end - isPulling:', isPulling, 'distance:', pullDistance);
+      
+      if (isPulling && pullDistance >= PULL_THRESHOLD) {
+        console.log('✅ Threshold reached, triggering refresh');
+        
+        setIsPulling(false);
+        setPullDistance(0);
+        setIsRefreshing(true);
 
         try {
-          await onRefresh();
-          // Add small delay for smooth UX
+          await stableOnRefresh();
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
-          console.error('Pull-to-refresh error:', error);
+          console.error('❌ Pull-to-refresh error:', error);
         } finally {
-          setState({
-            isPulling: false,
-            pullDistance: 0,
-            isRefreshing: false,
-          });
+          setIsRefreshing(false);
         }
       } else {
-        // Reset if didn't pull enough
-        setState({
-          isPulling: false,
-          pullDistance: 0,
-          isRefreshing: false,
-        });
+        console.log('⏹️ Reset without refresh');
+        setIsPulling(false);
+        setPullDistance(0);
       }
 
       startY.current = 0;
@@ -106,7 +101,7 @@ export const usePullToRefresh = (onRefresh: () => void | Promise<void>) => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [state.isPulling, state.pullDistance, state.isRefreshing, onRefresh]);
+  }, [isPulling, pullDistance, isRefreshing, stableOnRefresh]);
 
-  return state;
+  return { isPulling, pullDistance, isRefreshing };
 };
