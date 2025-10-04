@@ -29,7 +29,7 @@ import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
 import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
-import { useNorahProactiveListener } from "./hooks/useNorahProactiveListener";
+import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -60,9 +60,6 @@ function App() {
   
   // Initialize PWA stabilizer (prevents reload loops and manages push)
   usePWAStabilizer();
-  
-  // Initialize Norah AI proactive listener (background notifications)
-  useNorahProactiveListener();
 
   
   return (
@@ -108,6 +105,7 @@ function App() {
                     <AndroidPushSetup className="hidden" />
                     <PushNotificationSetup className="hidden" />
                     <XpSystemManager />
+                    <NorahProactiveManager />
                     <Toaster />
                     <BadgeAuditReport />
                   </InterestSignalsProvider>
