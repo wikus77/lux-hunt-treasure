@@ -12,6 +12,8 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
+import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -45,6 +47,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
+  const { shouldHideHeader } = useScrollDirection(50);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
@@ -133,10 +136,15 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const isBottomNavPage = bottomNavPages.includes(location);
 
   return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+    <>
+      <MinimalHeaderStrip show={shouldHideHeader} />
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ 
+          y: shouldHideHeader ? -100 : 0, 
+          opacity: shouldHideHeader ? 0 : 1 
+        }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl rounded-b-lg"
       style={{
         top: '0px',
@@ -254,7 +262,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Animated color line at bottom of header - same as bottom navigation */}
           <div className="line-glow absolute bottom-0 left-0 w-full"></div>
         </div>
-    </motion.header>
+      </motion.header>
+    </>
   );
 };
 
