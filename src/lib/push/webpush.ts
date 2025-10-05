@@ -59,21 +59,18 @@ export async function subscribeWebPushAndSave({
     throw new Error('Invalid Web Push subscription: missing endpoint/keys')
   }
 
-  // Save to push_tokens table
+  // Save to webpush_subscriptions table
   const { data, error } = await supabase
-    .from('push_tokens')
+    .from('webpush_subscriptions')
     .upsert({
       user_id: userId,
-      token: payload.endpoint,
-      provider: payload.endpoint.includes('fcm.googleapis.com') ? 'fcm' : 
-               payload.endpoint.includes('push.apple.com') ? 'apple' : 'webpush',
-      platform,
-      keys_p256dh: payload.keys.p256dh,
-      keys_auth: payload.keys.auth,
+      endpoint: payload.endpoint,
+      keys: payload.keys,
+      device_info: { platform },
       is_active: true,
-      last_used: new Date().toISOString()
+      last_used_at: new Date().toISOString()
     }, {
-      onConflict: 'user_id,token'
+      onConflict: 'endpoint'
     })
     .select()
     .single()

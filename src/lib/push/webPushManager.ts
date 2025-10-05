@@ -190,18 +190,16 @@ async function saveSubscriptionToDatabase(
   }
   
   const { error } = await supabase
-    .from('push_tokens')
+    .from('webpush_subscriptions')
     .upsert({
       user_id: finalUserId,
-      token: subscription.endpoint,
-      platform,
       endpoint: subscription.endpoint,
-      p256dh: keys.p256dh,
-      auth: keys.auth,
+      keys: { p256dh: keys.p256dh, auth: keys.auth },
+      device_info: { platform, ua: navigator.userAgent },
       is_active: true,
+      last_used_at: new Date().toISOString()
     }, {
-      onConflict: 'token',
-      ignoreDuplicates: false
+      onConflict: 'endpoint'
     });
   
   if (error) {
@@ -215,8 +213,8 @@ async function saveSubscriptionToDatabase(
 // Delete subscription from database
 async function deleteSubscriptionFromDatabase(endpoint: string): Promise<void> {
   const { error } = await supabase
-    .from('push_tokens')
-    .delete()
+    .from('webpush_subscriptions')
+    .update({ is_active: false })
     .eq('endpoint', endpoint);
   
   if (error) {
