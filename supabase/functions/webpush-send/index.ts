@@ -40,16 +40,15 @@ serve(async (req) => {
   }
 
   try {
-    // ✅ PRIORITY 1: Check x-admin-token FIRST (bypass all auth)
-    const adminToken = req.headers.get('x-admin-token');
-    const configuredAdminToken = Deno.env.get('PUSH_ADMIN_TOKEN');
+    // ✅ PRIORITY 1: Admin bypass via x-admin-token (NO JWT REQUIRED)
+    const adminTokenHeader = req.headers.get('x-admin-token');
+    const ADMIN_TOKEN = Deno.env.get('PUSH_ADMIN_TOKEN');
     
-    if (adminToken && configuredAdminToken && adminToken === configuredAdminToken) {
-      console.log('[WEBPUSH-SEND] ✅ Admin bypass via x-admin-token');
+    if (adminTokenHeader && ADMIN_TOKEN && adminTokenHeader === ADMIN_TOKEN) {
+      console.log('[WEBPUSH-SEND] ✅ ADMIN BYPASS - x-admin-token validated');
       
-      // Skip ALL JWT validation, proceed directly to broadcast
       const body = await req.json();
-      const { audience, payload } = body;
+      const { payload } = body;
 
       if (!payload?.title || !payload?.body) {
         return new Response(JSON.stringify({ 
@@ -66,6 +65,7 @@ serve(async (req) => {
       const vapidContact = Deno.env.get('VAPID_CONTACT') || 'mailto:admin@m1ssion.eu';
 
       if (!vapidPublicKey || !vapidPrivateKey) {
+        console.error('[WEBPUSH-SEND] Missing VAPID keys');
         return new Response(JSON.stringify({ 
           error: 'VAPID keys not configured' 
         }), {
@@ -74,6 +74,7 @@ serve(async (req) => {
         });
       }
 
+      // Import and configure webpush
       const webpush = await import('npm:web-push@3.6.7');
       webpush.default.setVapidDetails(vapidContact, vapidPublicKey, vapidPrivateKey);
 
@@ -83,14 +84,36 @@ serve(async (req) => {
         Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
       );
 
-      const { data: dbSubs, error } = await supabase
+      const { data: dbSubs, error: dbError } = await supabase
         .from('webpush_subscriptions')
         .select('id, endpoint, keys')
         .eq('is_active', true);
 
-      if (error) {
-        console.error('[WEBPUSH-SEND] Database error:', error);
-        throw error;
+      if (dbError) {
+        console.error('[WEBPUSH-SEND] Database error:', dbError);
+        return new Response(JSON.stringify({ 
+          error: 'Database query failed',
+          details: dbError.message 
+        }), {
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      console.log(`[WEBPUSH-SEND] Found ${dbSubs?.length || 0} active subscriptions`);
+
+      if (!dbSubs || dbSubs.length === 0) {
+        return new Response(JSON.stringify({
+          success: true,
+          mode: 'admin',
+          total: 0,
+          sent: 0,
+          failed: 0,
+          message: 'No active subscriptions found'
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
       }
 
       const targets = dbSubs.map(sub => ({
@@ -106,6 +129,7 @@ serve(async (req) => {
         url: payload.url || '/'
       });
 
+      // Send to all targets
       for (const target of targets) {
         try {
           await webpush.default.sendNotification(target, pushPayload);
@@ -115,13 +139,15 @@ serve(async (req) => {
             status: 201
           });
         } catch (error: any) {
-          console.error(`[WEBPUSH-SEND] Failed to send:`, error.message);
+          console.error(`[WEBPUSH-SEND] Send failed:`, error.message);
           
+          // Mark dead endpoints as inactive
           if (error.statusCode === 410 || error.statusCode === 404) {
             await supabase
               .from('webpush_subscriptions')
               .update({ is_active: false })
               .eq('endpoint', target.endpoint);
+            console.log(`[WEBPUSH-SEND] Marked endpoint inactive: ${target.endpoint?.substring(0, 30)}`);
           }
           
           results.push({
@@ -141,17 +167,17 @@ serve(async (req) => {
       return new Response(JSON.stringify({
         success: true,
         mode: 'admin',
-        results,
         total: targets.length,
         sent,
-        failed
+        failed,
+        results
       }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // ✅ PRIORITY 2: Check service_role JWT
+    // ✅ PRIORITY 2: Service role JWT bypass
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       const token = authHeader.replace(/^Bearer\s+/i, '');
@@ -160,9 +186,8 @@ serve(async (req) => {
       if (token === serviceRoleKey) {
         console.log('[WEBPUSH-SEND] ✅ Service role JWT validated');
         
-        // Same logic as admin bypass
         const body = await req.json();
-        const { audience, payload } = body;
+        const { payload } = body;
 
         if (!payload?.title || !payload?.body) {
           return new Response(JSON.stringify({ 
@@ -194,17 +219,22 @@ serve(async (req) => {
           Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
         );
 
-        const { data: dbSubs, error } = await supabase
+        const { data: dbSubs, error: dbError } = await supabase
           .from('webpush_subscriptions')
           .select('id, endpoint, keys')
           .eq('is_active', true);
 
-        if (error) {
-          console.error('[WEBPUSH-SEND] Database error:', error);
-          throw error;
+        if (dbError) {
+          console.error('[WEBPUSH-SEND] Database error:', dbError);
+          return new Response(JSON.stringify({ 
+            error: 'Database query failed' 
+          }), {
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
         }
 
-        const targets = dbSubs.map(sub => ({
+        const targets = (dbSubs || []).map(sub => ({
           id: sub.id,
           endpoint: sub.endpoint,
           keys: (sub.keys as any) || { p256dh: '', auth: '' }
@@ -225,6 +255,200 @@ serve(async (req) => {
               success: true,
               status: 201
             });
+          } catch (error: any) {
+            console.error(`[WEBPUSH-SEND] Send failed:`, error.message);
+            
+            if (error.statusCode === 410 || error.statusCode === 404) {
+              await supabase
+                .from('webpush_subscriptions')
+                .update({ is_active: false })
+                .eq('endpoint', target.endpoint);
+            }
+            
+            results.push({
+              endpoint: target.endpoint?.substring(0, 50) + '...',
+              success: false,
+              error: error?.message || 'Unknown error',
+              statusCode: error?.statusCode
+            });
+          }
+        }
+
+        const sent = results.filter(r => r.success).length;
+        const failed = results.filter(r => !r.success).length;
+        
+        console.log(`[WEBPUSH-SEND] Service role mode complete: total=${targets.length}, sent=${sent}, failed=${failed}`);
+
+        return new Response(JSON.stringify({
+          success: true,
+          mode: 'service_role',
+          total: targets.length,
+          sent,
+          failed,
+          results
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    }
+
+    // ✅ PRIORITY 3: Validate user JWT
+    if (!authHeader) {
+      console.log('[WEBPUSH-SEND] No authentication provided');
+      return new Response(JSON.stringify({
+        error: 'Unauthorized',
+        reason: 'missing_authentication',
+        details: 'Provide x-admin-token, service_role JWT, or user JWT'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+    
+    const { data, error } = await supabase.auth.getUser(token);
+    if (error || !data?.user) {
+      console.log('[WEBPUSH-SEND] Invalid user JWT');
+      return new Response(JSON.stringify({
+        error: 'Unauthorized',
+        reason: 'invalid_jwt'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    console.log('[WEBPUSH-SEND] User JWT validated:', data.user.id);
+
+    const body = await req.json();
+    const { subscriptions, audience, payload } = body;
+
+    if (!payload?.title || !payload?.body) {
+      return new Response(JSON.stringify({ 
+        error: 'Missing payload with title and body' 
+      }), {
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Setup VAPID
+    const vapidPublicKey = Deno.env.get('VAPID_PUBLIC_KEY');
+    const vapidPrivateKey = Deno.env.get('VAPID_PRIVATE_KEY');
+    const vapidContact = Deno.env.get('VAPID_CONTACT') || 'mailto:admin@m1ssion.eu';
+
+    if (!vapidPublicKey || !vapidPrivateKey) {
+      return new Response(JSON.stringify({ 
+        error: 'VAPID keys not configured' 
+      }), {
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Import and configure webpush via npm (stable on Supabase Edge)
+    const webpush = await import('npm:web-push@3.6.7');
+    webpush.default.setVapidDetails(vapidContact, vapidPublicKey, vapidPrivateKey);
+
+    // Determine targets
+    let targets = [];
+
+    if (subscriptions?.length > 0) {
+      // Case A: Direct subscriptions
+      targets = subscriptions;
+    } else if (audience) {
+      // Case B: Audience from database
+      const { data: dbSubs, error } = await supabase
+        .from('webpush_subscriptions')
+        .select('id, endpoint, keys')
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('[WEBPUSH-SEND] Database error:', error);
+        throw error;
+      }
+
+      targets = (dbSubs || []).map(sub => ({
+        id: sub.id,
+        endpoint: sub.endpoint,
+        keys: (sub.keys as any) || { p256dh: '', auth: '' }
+      }));
+    }
+
+    // Send notifications
+    const results = [];
+    const pushPayload = JSON.stringify({
+      title: payload.title,
+      body: payload.body,
+      url: payload.url || '/'
+    });
+
+    for (const target of targets) {
+      try {
+        await webpush.default.sendNotification(target, pushPayload);
+        results.push({
+          endpoint: target.endpoint?.substring(0, 50) + '...',
+          success: true,
+          status: 201
+        });
+      } catch (error: any) {
+        console.error(`[WEBPUSH-SEND] Failed to send to ${target.endpoint?.substring(0, 50)}:`, error);
+        
+        // Handle dead endpoints
+        if (error.statusCode === 410 || error.statusCode === 404) {
+          try {
+            await supabase
+              .from('webpush_subscriptions')
+              .update({ is_active: false })
+              .eq('endpoint', target.endpoint);
+              
+            console.log(`[WEBPUSH-SEND] Marked endpoint as inactive: ${target.endpoint?.substring(0, 50)}`);
+          } catch (dbError) {
+            console.error('[WEBPUSH-SEND] Failed to mark endpoint as inactive:', dbError);
+          }
+        }
+        
+        results.push({
+          endpoint: target.endpoint?.substring(0, 50) + '...',
+          success: false,
+          error: error?.message || 'Unknown error',
+          statusCode: error?.statusCode
+        });
+      }
+    }
+
+    const sent = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    
+    console.log(`[WEBPUSH-SEND] Complete: total=${targets.length}, sent=${sent}, failed=${failed}`);
+
+    return new Response(JSON.stringify({
+      success: true,
+      results,
+      total: targets.length,
+      sent,
+      failed
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('[WEBPUSH-SEND] Error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    });
+  }
+});
           } catch (error: any) {
             console.error(`[WEBPUSH-SEND] Failed to send:`, error.message);
             
