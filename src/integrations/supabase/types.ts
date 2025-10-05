@@ -5031,6 +5031,39 @@ export type Database = {
         }
         Relationships: []
       }
+      webpush_subscriptions: {
+        Row: {
+          created_at: string
+          device_info: Json | null
+          endpoint: string
+          id: string
+          is_active: boolean
+          keys: Json
+          last_used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_info?: Json | null
+          endpoint: string
+          id?: string
+          is_active?: boolean
+          keys: Json
+          last_used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_info?: Json | null
+          endpoint?: string
+          id?: string
+          is_active?: boolean
+          keys?: Json
+          last_used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
