@@ -33,6 +33,7 @@ export default function PushDebug() {
     lastTestResult: null
   });
   const [loading, setLoading] = useState(false);
+  const [sendingTest, setSendingTest] = useState(false);
 
   useEffect(() => {
     loadDiagnostics();
@@ -109,6 +110,73 @@ export default function PushDebug() {
       toast.error('❌ Push enable failed: ' + message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const testSendNotification = async () => {
+    setSendingTest(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) {
+        toast.error('❌ Not authenticated');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('webpush-send', {
+        body: {
+          audience: { user_id: session.user.id },
+          payload: {
+            title: '🧪 M1SSION Test',
+            body: 'Push debug test notification',
+            url: '/notifications'
+          }
+        }
+      });
+
+      if (error) {
+        toast.error(`❌ Send failed: ${error.message}`);
+        setDiagnostics(prev => ({
+          ...prev,
+          lastTestResult: {
+            status: 500,
+            message: `Send error: ${error.message}`,
+            timestamp: new Date().toISOString()
+          }
+        }));
+      } else if (data?.sent > 0) {
+        toast.success(`✅ Notification sent! (${data.sent}/${data.total})`);
+        setDiagnostics(prev => ({
+          ...prev,
+          lastTestResult: {
+            status: 200,
+            message: `Sent ${data.sent} of ${data.total} notifications`,
+            timestamp: new Date().toISOString()
+          }
+        }));
+      } else {
+        toast.warning(`⚠️ No notifications sent (${data?.failed || 0} failed)`);
+        setDiagnostics(prev => ({
+          ...prev,
+          lastTestResult: {
+            status: 400,
+            message: `Send failed: ${data?.failed || 0} failed`,
+            timestamp: new Date().toISOString()
+          }
+        }));
+      }
+    } catch (error: any) {
+      const message = error?.message || 'Unknown error';
+      toast.error(`❌ Send error: ${message}`);
+      setDiagnostics(prev => ({
+        ...prev,
+        lastTestResult: {
+          status: 500,
+          message: `Send error: ${message}`,
+          timestamp: new Date().toISOString()
+        }
+      }));
+    } finally {
+      setSendingTest(false);
     }
   };
 
@@ -203,7 +271,16 @@ export default function PushDebug() {
               disabled={loading}
               className="w-full"
             >
-              {loading ? 'Testing...' : '🔔 Test Push Subscribe'}
+              {loading ? 'Testing...' : '🔔 Test Push Subscribe (Resubscribe)'}
+            </Button>
+            
+            <Button 
+              onClick={testSendNotification} 
+              disabled={sendingTest || !diagnostics.hasSubscription}
+              className="w-full"
+              variant="secondary"
+            >
+              {sendingTest ? 'Sending...' : '📤 Test Send (Self)'}
             </Button>
             
             <Button 

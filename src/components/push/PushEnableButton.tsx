@@ -10,9 +10,7 @@ import { enableWebPush } from '@/lib/push/enableWebPush';
 import { disableWebPush } from '@/lib/push/disableWebPush';
 import { supabase } from '@/integrations/supabase/client';
 import { Bell, BellOff, Send, Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-
-// VAPID Public Key - UNIFIED FROM ENV
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+import { VAPID_PUBLIC_KEY } from '@/lib/vapid';
 
 interface PushEnableButtonProps {
   userId?: string;
