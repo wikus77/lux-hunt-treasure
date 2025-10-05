@@ -12,6 +12,7 @@ function getCorsHeaders(request: Request): Record<string, string> {
     'https://m1ssion.eu',
     /^https:\/\/.*\.m1ssion\.pages\.dev$/,
     /^https:\/\/.*\.lovable\.dev$/,
+    /^https:\/\/.*\.lovableproject\.com$/,
     /^http:\/\/localhost(:\d+)?$/
   ];
   
