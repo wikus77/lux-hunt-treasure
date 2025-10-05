@@ -1,60 +1,81 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* W3C Web Push Enable Function */
+/* Robust Web Push Enable Function (JWT-safe, VAPID unified) */
 
-function b64ToUint8Array(base64: string) {
-  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
-  const base64Safe = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(base64Safe);
-  const arr = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
-  return arr;
-}
+import { getVAPIDUint8 } from '@/lib/config/push';
 
 export async function enableWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     throw new Error('Push API non supportata');
   }
-  const reg = await navigator.serviceWorker.ready;
-  if (Notification.permission !== 'granted') {
-    const p = await Notification.requestPermission();
-    if (p !== 'granted') throw new Error('permesso negato');
+
+  // 1) Ensure SW registration (iOS PWA can race without controller)
+  try {
+    if (!navigator.serviceWorker.controller) {
+      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    }
+  } catch {
+    // Keep going, ready will still resolve if already registered
   }
-  const vapid = "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o";
-  if (!vapid) throw new Error('VAPID key mancante');
 
-  const key = b64ToUint8Array(vapid);
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: key as unknown as BufferSource,
-  });
+  // 2) Permission
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') throw new Error('Permesso notifiche negato');
 
-  const body = await (async () => {
-    const json = JSON.parse(JSON.stringify(sub));
-    const { endpoint, keys } = json;
-    return {
-      endpoint,
-      keys: { p256dh: keys?.p256dh, auth: keys?.auth },
-      ua: navigator.userAgent,
-      platform: 'web',
-    };
-  })();
-
-  // Get auth token from Supabase
+  // 3) Ensure session/token ready (iOS PWA race-safe)
   const { supabase } = await import('@/integrations/supabase/client');
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (!session?.access_token) {
-    throw new Error('User not authenticated');
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session) {
+    await new Promise<void>((resolve) => {
+      const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+        if (s) {
+          sub.subscription?.unsubscribe();
+          resolve();
+        }
+      });
+      // Fallback timeout to avoid hanging forever
+      setTimeout(() => {
+        sub.subscription?.unsubscribe();
+        resolve();
+      }, 3000);
+    });
+    session = (await supabase.auth.getSession()).data.session;
+  }
+  const token = session?.access_token;
+  if (!token) throw new Error('User non autenticato (JWT mancante)');
+
+  // 4) Get active registration and subscription
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  let createdNew = false;
+  if (!sub) {
+    const appServerKey = getVAPIDUint8();
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: appServerKey as unknown as BufferSource,
+    });
+    createdNew = true;
   }
 
-  // Invoke Supabase Edge Function with automatic headers (Authorization + apikey)
+  // 5) Invoke push-subscribe with explicit Authorization header
+  const json = sub.toJSON();
+  const body = {
+    endpoint: json.endpoint,
+    keys: { p256dh: json.keys?.p256dh, auth: json.keys?.auth },
+    platform: 'web',
+    ua: navigator.userAgent,
+  };
+
   const { data, error } = await supabase.functions.invoke('push-subscribe', {
     body,
+    headers: { Authorization: `Bearer ${token}` },
   });
 
   if (error) {
-    await sub.unsubscribe().catch(() => {});
+    if (createdNew) {
+      try { await sub.unsubscribe(); } catch {}
+    }
     throw new Error(`push-subscribe failed: ${error.message}`);
   }
+
   return sub;
 }

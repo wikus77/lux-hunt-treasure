@@ -42,8 +42,9 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization');
+    console.log('[PUSH-SUBSCRIBE] hasAuth=', !!authHeader, 'len=', authHeader?.length || 0);
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: 'Missing Authorization header' }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'missing_or_invalid_jwt' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -82,7 +83,7 @@ serve(async (req) => {
     const { data: authData, error: authErr } = await serviceClient.auth.getUser(token);
     if (authErr || !authData?.user) {
       console.error('[PUSH-SUBSCRIBE] Invalid JWT:', authErr?.message);
-      return new Response(JSON.stringify({ error: 'Unauthorized: invalid JWT' }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'missing_or_invalid_jwt' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -97,7 +98,7 @@ serve(async (req) => {
       else if (/android/i.test(ua)) platform = 'android';
     }
 
-    console.log('[PUSH-SUBSCRIBE] Payload', { endpoint: String(endpoint).slice(0,50) + '...', hasKeys: !!(keysObj?.p256dh && keysObj?.auth), platform });
+    console.log('[PUSH-SUBSCRIBE] Payload', { endpointHash: String(endpoint).slice(-12), hasKeys: !!(keysObj?.p256dh && keysObj?.auth), platform });
 
     // Save to webpush_subscriptions
     const { data, error } = await serviceClient
