@@ -81,10 +81,10 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
                 displayCluesFound === 0 ? 'bg-gray-500' :
-                displayCluesFound < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
-                displayCluesFound < 100 ? 'bg-gradient-to-r from-blue-400 to-green-400' :
-                displayCluesFound < 150 ? 'bg-gradient-to-r from-green-400 to-yellow-400' : 
-                'bg-gradient-to-r from-yellow-400 to-red-500'
+                displayCluesFound < 50 ? 'bg-gradient-to-r from-[#22C55E] to-[#10B981]' :
+                displayCluesFound < 100 ? 'bg-gradient-to-r from-[#10B981] to-[#00D1FF]' :
+                displayCluesFound < 150 ? 'bg-gradient-to-r from-[#00D1FF] to-[#A855F7]' : 
+                'bg-gradient-to-r from-[#A855F7] to-[#D946EF]'
               }`}
               style={{ width: `${(displayCluesFound / totalClues) * 100}%` }}
             />
@@ -169,10 +169,10 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
-                mission.remainingDays <= 0 ? 'bg-red-500' :
-                mission.remainingDays <= 5 ? 'bg-gradient-to-r from-yellow-400 to-red-500' :
-                mission.remainingDays <= 15 ? 'bg-gradient-to-r from-green-400 to-yellow-400' : 
-                'bg-gradient-to-r from-[#00D1FF] to-green-400'
+                mission.remainingDays <= 0 ? 'bg-gradient-to-r from-[#EF4444] to-[#DC2626]' :
+                mission.remainingDays <= 5 ? 'bg-gradient-to-r from-[#F97316] to-[#EF4444]' :
+                mission.remainingDays <= 15 ? 'bg-gradient-to-r from-[#FBBF24] to-[#F97316]' : 
+                'bg-gradient-to-r from-[#FDE047] to-[#FBBF24]'
               }`}
               style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }}
             />
