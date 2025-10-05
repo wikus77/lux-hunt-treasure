@@ -46,10 +46,9 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
-  const { shouldHideHeader } = useScrollDirection(
-    50, 
-    location === '/map' ? '#map-scroll-container' : undefined
-  );
+  const isMapRoute = location === '/map' || location.startsWith('/map/');
+  const targetSelector = isMapRoute ? '#map-scroll-container' : undefined;
+  const { shouldHideHeader } = useScrollDirection(50, targetSelector);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
