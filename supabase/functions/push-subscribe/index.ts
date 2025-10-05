@@ -14,7 +14,8 @@ function getCorsHeaders(request: Request): Record<string, string> {
     /^https:\/\/.*\.pages\.dev$/,
     /^https:\/\/.*\.lovable\.dev$/,
     /^https:\/\/.*\.lovableproject\.com$/,
-    /^http:\/\/localhost(:\d+)?$/
+    /^http:\/\/localhost(:\d+)?$/,
+    /^https:\/\/m1ssion\.pages\.dev$/
   ];
   
   let allowOrigin = 'https://m1ssion.eu';
@@ -43,7 +44,7 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
-    console.log('[PUSH-SUBSCRIBE] hasAuth:', !!authHeader, 'preview:', authHeader.slice(0, 30));
+    console.log('[PUSH-SUBSCRIBE] hasAuth:', !!authHeader, 'len:', authHeader?.length, 'preview:', authHeader.slice(0, 30));
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ 
@@ -110,7 +111,9 @@ serve(async (req) => {
       else if (/android/i.test(ua)) platform = 'android';
     }
 
-    console.log('[PUSH-SUBSCRIBE] endpointHash=', String(endpoint).slice(-12), 'hasKeys=', !!(keysObj?.p256dh && keysObj?.auth), 'platform=', platform);
+    // Create SHA256 hash of endpoint for logging (last 12 chars)
+    const endpointHash = endpoint ? String(endpoint).slice(-12) : 'none';
+    console.log('[PUSH-SUBSCRIBE] user=', userId, 'endpointHash=', endpointHash, 'hasKeys=', !!(keysObj?.p256dh && keysObj?.auth), 'platform=', platform);
 
     // Save to webpush_subscriptions
     const { data, error } = await serviceClient
