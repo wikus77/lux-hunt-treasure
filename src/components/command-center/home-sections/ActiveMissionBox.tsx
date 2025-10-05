@@ -53,20 +53,7 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           <span className="text-[#00D1FF]">CACCIA</span>
           <span className="text-white"> AL TESORO URBANO</span>
         </h2>
-        <p className="text-xl font-orbitron font-bold">
-          <span 
-            className="text-[#00D1FF]"
-            style={{ textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)" }}
-          >
-            {mission.title.split(' ')[0]}
-          </span>
-          <span 
-            className="text-white"
-            style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
-          >
-            {' ' + mission.title.split(' ').slice(1).join(' ')}
-          </span>
-        </p>
+        <p className="text-white/60 text-sm">MISSIONE ID: {mission.title}</p>
       </div>
 
       {/* Three Box Grid - Exact Style from Screenshot */}
