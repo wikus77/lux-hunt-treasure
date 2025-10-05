@@ -150,10 +150,27 @@ const HallOfWinnersStyledPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
+    <div 
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      style={{ 
+        height: '100dvh',
+        overflow: 'hidden',
+        position: 'relative'
+      }}
+    >
       <UnifiedHeader />
       
-      <main className="pt-16 pb-20 px-4">
+      <main 
+        style={{
+          paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
+          height: '100dvh',
+          overflowY: 'auto',
+          position: 'relative',
+          zIndex: 0
+        }}
+        className="px-4"
+      >
         <div className="max-w-lg mx-auto space-y-6">
           {/* Header */}
           <div className="flex items-center space-x-4 mb-6">
