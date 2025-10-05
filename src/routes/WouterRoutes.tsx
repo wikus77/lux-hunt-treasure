@@ -66,7 +66,7 @@ import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
-import VAPIDKeyTest from "@/pages/VAPIDKeyTest";
+// VAPIDKeyTest removed - using Web Push now
 import PushHealth from "@/pages/PushHealth";
 import PushDebug from "@/pages/PushDebug";
 import { PushReport } from "@/pages/PushReport";
@@ -590,10 +590,10 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* 🧪 VAPID Key Test Route - CRITICAL DEBUG */}
-          <Route path="/vapid-test">
+          {/* 🔔 Push Debug Route */}
+          <Route path="/push-debug">
             <ProtectedRoute>
-              <GlobalLayout><VAPIDKeyTest /></GlobalLayout>
+              <GlobalLayout><PushDebug /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
