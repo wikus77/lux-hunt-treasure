@@ -46,10 +46,31 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
-  const isMapRoute = location === '/map' || location.startsWith('/map/');
-  const targetSelector = isMapRoute ? '#map-scroll-container' : undefined;
-  const thresholdVal = isMapRoute ? 10 : 50;
+  const targetSelector = '#map-scroll-container';
+  const thresholdVal = (location === '/map' || location.startsWith('/map/')) ? 10 : 50;
   const { shouldHideHeader } = useScrollDirection(thresholdVal, targetSelector);
+  const [hideManual, setHideManual] = useState(false);
+  const hideHeader = shouldHideHeader || (() => {
+    const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
+    return !!el && el.scrollTop > thresholdVal;
+  })();
+
+  useEffect(() => {
+    const isMapRoute = location === '/map' || location.startsWith('/map/');
+    if (isMapRoute) {
+      const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
+      console.log('UnifiedHeader/map debug', {
+        location,
+        targetSelector,
+        thresholdVal,
+        shouldHideHeader,
+        containerFound: !!el,
+        scrollTop: el?.scrollTop,
+        scrollHeight: el?.scrollHeight,
+        clientHeight: el?.clientHeight,
+      });
+    }
+  }, [location, targetSelector, thresholdVal, shouldHideHeader]);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
@@ -192,7 +213,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
     >
         <motion.div
           className="absolute inset-0 pointer-events-none rounded-b-lg"
-          animate={{ opacity: shouldHideHeader ? 0 : 1 }}
+          animate={{ opacity: hideHeader ? 0 : 1 }}
           transition={{ duration: 0.3 }}
           style={{
             background: 'rgba(0, 0, 0, 0.3)',
@@ -206,7 +227,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Main Header Row */}
           <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
             {/* Left Section */}
-            <motion.div className="flex items-center" animate={{ opacity: shouldHideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
+            <motion.div className="flex items-center" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {leftComponent ? (
                 leftComponent
               ) : (
@@ -269,7 +290,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </div>
 
             {/* Right Section */}
-            <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: shouldHideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
+            <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {/* Settings - Always accessible for authenticated users */}
               <Link to="/settings">
                 <Button
@@ -306,7 +327,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
           {/* Animated color line at bottom of header - same as bottom navigation */}
           <motion.div 
             className="line-glow absolute bottom-0 left-0 w-full"
-            animate={{ opacity: shouldHideHeader ? 0 : 1 }}
+            animate={{ opacity: hideHeader ? 0 : 1 }}
             transition={{ duration: 0.3 }}
           />
         </div>
