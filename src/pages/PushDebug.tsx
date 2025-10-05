@@ -1,335 +1,232 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Push Notifications Debug Panel - Admin Only
+// M1SSION™ Push Notifications Debug Page
+// © 2025 Joseph MULÉ – Read-only diagnostics
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { Bell, Send, RefreshCw, Shield, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
+import { getVAPIDPublicWeb } from '@/lib/config/push';
+import { enableWebPush } from '@/lib/push/enableWebPush';
+import { toast } from 'sonner';
 
-interface PushStats {
-  activeTokens: number;
-  totalLogs: number;
-  successRate: number;
-  recentLogs: Array<{
-    id: string;
-    status: string;
-    created_at: string;
-    error_message?: string;
-    payload: any;
-  }>;
+interface DiagnosticState {
+  permission: NotificationPermission;
+  hasSubscription: boolean;
+  subscriptionEndpoint: string | null;
+  sessionUserId: string | null;
+  vapidKey: string;
+  lastTestResult: {
+    status: number;
+    message: string;
+    timestamp: string;
+  } | null;
 }
 
 export default function PushDebug() {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [stats, setStats] = useState<PushStats | null>(null);
-  const [testTitle, setTestTitle] = useState("Test M1SSION™");
-  const [testBody, setTestBody] = useState("Questa è una notifica di test");
-  const [testUrl, setTestUrl] = useState("/home");
-  const [sending, setSending] = useState(false);
+  const [diagnostics, setDiagnostics] = useState<DiagnosticState>({
+    permission: 'default',
+    hasSubscription: false,
+    subscriptionEndpoint: null,
+    sessionUserId: null,
+    vapidKey: '',
+    lastTestResult: null
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    checkAdminAndLoadStats();
+    loadDiagnostics();
   }, []);
 
-  const checkAdminAndLoadStats = async () => {
+  const loadDiagnostics = async () => {
     try {
-      // Check if user is admin
-      const { data: { user } } = await supabase.auth.getUser();
+      // Permission
+      const permission = 'Notification' in window ? Notification.permission : 'default';
       
-      if (!user) {
-        navigate("/");
-        return;
+      // Subscription
+      let hasSubscription = false;
+      let subscriptionEndpoint: string | null = null;
+      
+      if ('serviceWorker' in navigator && 'PushManager' in window) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (reg) {
+          const sub = await reg.pushManager.getSubscription();
+          if (sub) {
+            hasSubscription = true;
+            subscriptionEndpoint = sub.endpoint.slice(-8);
+          }
+        }
       }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
-
-      if (profile?.role !== "admin") {
-        toast({
-          title: "Accesso Negato",
-          description: "Solo gli admin possono accedere a questa pagina",
-          variant: "destructive"
-        });
-        navigate("/");
-        return;
-      }
-
-      setIsAdmin(true);
-      await loadStats();
+      
+      // Session
+      const { data: { session } } = await supabase.auth.getSession();
+      const sessionUserId = session?.user?.id?.slice(0, 8) || null;
+      
+      // VAPID
+      const vapidKey = getVAPIDPublicWeb().slice(0, 20) + '...';
+      
+      setDiagnostics({
+        permission,
+        hasSubscription,
+        subscriptionEndpoint,
+        sessionUserId,
+        vapidKey,
+        lastTestResult: diagnostics.lastTestResult
+      });
     } catch (error) {
-      console.error("Error checking admin:", error);
-      navigate("/");
+      console.error('Failed to load diagnostics:', error);
+    }
+  };
+
+  const testPushSubscribe = async () => {
+    setLoading(true);
+    try {
+      await enableWebPush();
+      
+      setDiagnostics(prev => ({
+        ...prev,
+        lastTestResult: {
+          status: 200,
+          message: 'Push subscription successful',
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+      toast.success('✅ Push enabled successfully');
+      await loadDiagnostics();
+    } catch (error: any) {
+      const message = error?.message || 'Unknown error';
+      
+      setDiagnostics(prev => ({
+        ...prev,
+        lastTestResult: {
+          status: error?.status || 500,
+          message,
+          timestamp: new Date().toISOString()
+        }
+      }));
+      
+      toast.error('❌ Push enable failed: ' + message);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadStats = async () => {
-    try {
-      // Get active tokens count
-      const { count: activeCount } = await supabase
-        .from("push_tokens")
-        .select("*", { count: "exact", head: true })
-        .eq("is_active", true);
-
-      // Get recent logs
-      const { data: logs } = await supabase
-        .from("push_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      // Calculate success rate
-      const { count: successCount } = await supabase
-        .from("push_logs")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "success");
-
-      const { count: totalCount } = await supabase
-        .from("push_logs")
-        .select("*", { count: "exact", head: true });
-
-      const successRate = totalCount && successCount 
-        ? Math.round((successCount / totalCount) * 100)
-        : 0;
-
-      setStats({
-        activeTokens: activeCount || 0,
-        totalLogs: totalCount || 0,
-        successRate,
-        recentLogs: logs || []
-      });
-    } catch (error) {
-      console.error("Error loading stats:", error);
-      toast({
-        title: "Errore",
-        description: "Impossibile caricare le statistiche",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const sendTestNotification = async () => {
-    setSending(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
-      const { data, error } = await supabase.functions.invoke("send-web-push", {
-        body: {
-          user_ids: [user.id],
-          payload: {
-            title: testTitle,
-            body: testBody,
-            url: testUrl
-          }
-        }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "✅ Notifica Inviata",
-        description: `Inviata a ${data.sent} dispositivi`
-      });
-
-      // Reload stats after sending
-      await loadStats();
-    } catch (error) {
-      console.error("Error sending test:", error);
-      toast({
-        title: "Errore",
-        description: error instanceof Error ? error.message : "Invio fallito",
-        variant: "destructive"
-      });
-    } finally {
-      setSending(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <Shield className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Push Debug Panel</h1>
-            <p className="text-muted-foreground">Diagnostica Web Push - Admin Only</p>
-          </div>
-        </div>
+    <div className="container mx-auto p-6 max-w-3xl">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold mb-2">🔧 Push Debug</h1>
+        <p className="text-muted-foreground">Read-only diagnostics for Web Push notifications</p>
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Token Attivi</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-primary" />
-                <span className="text-3xl font-bold">{stats?.activeTokens || 0}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-3xl font-bold">{stats?.successRate || 0}%</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium">Totale Invii</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <Send className="w-5 h-5 text-primary" />
-                <span className="text-3xl font-bold">{stats?.totalLogs || 0}</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Test Notification */}
+      <div className="space-y-4">
+        {/* Current State */}
         <Card>
           <CardHeader>
-            <CardTitle>Invia Notifica Test</CardTitle>
-            <CardDescription>
-              Invia una notifica di test al tuo dispositivo
-            </CardDescription>
+            <CardTitle>Current State</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Titolo</Label>
-              <Input
-                value={testTitle}
-                onChange={(e) => setTestTitle(e.target.value)}
-                placeholder="Titolo notifica"
-              />
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Permission:</span>
+              <Badge variant={diagnostics.permission === 'granted' ? 'default' : 'destructive'}>
+                {diagnostics.permission}
+              </Badge>
             </div>
-            <div className="space-y-2">
-              <Label>Messaggio</Label>
-              <Textarea
-                value={testBody}
-                onChange={(e) => setTestBody(e.target.value)}
-                placeholder="Corpo del messaggio"
-                rows={3}
-              />
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Has Subscription:</span>
+              <Badge variant={diagnostics.hasSubscription ? 'default' : 'secondary'}>
+                {diagnostics.hasSubscription ? 'Yes' : 'No'}
+              </Badge>
             </div>
-            <div className="space-y-2">
-              <Label>URL (opzionale)</Label>
-              <Input
-                value={testUrl}
-                onChange={(e) => setTestUrl(e.target.value)}
-                placeholder="/home"
-              />
+            
+            {diagnostics.subscriptionEndpoint && (
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Endpoint (last 8 chars):</span>
+                <code className="text-xs bg-muted px-2 py-1 rounded">...{diagnostics.subscriptionEndpoint}</code>
+              </div>
+            )}
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Session User ID:</span>
+              {diagnostics.sessionUserId ? (
+                <code className="text-xs bg-muted px-2 py-1 rounded">{diagnostics.sessionUserId}...</code>
+              ) : (
+                <Badge variant="secondary">Not logged in</Badge>
+              )}
             </div>
-            <Button
-              onClick={sendTestNotification}
-              disabled={sending || !testTitle || !testBody}
+            
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">VAPID Key:</span>
+              <code className="text-xs bg-muted px-2 py-1 rounded">{diagnostics.vapidKey}</code>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Test Result */}
+        {diagnostics.lastTestResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Last Test Result</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Status:</span>
+                <Badge variant={diagnostics.lastTestResult.status === 200 ? 'default' : 'destructive'}>
+                  {diagnostics.lastTestResult.status}
+                </Badge>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Message:</span>
+                <span className="text-xs text-muted-foreground">{diagnostics.lastTestResult.message}</span>
+              </div>
+              
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">Timestamp:</span>
+                <code className="text-xs bg-muted px-2 py-1 rounded">
+                  {new Date(diagnostics.lastTestResult.timestamp).toLocaleTimeString()}
+                </code>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              onClick={testPushSubscribe} 
+              disabled={loading}
               className="w-full"
             >
-              {sending ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Invio...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4 mr-2" />
-                  Invia Test
-                </>
-              )}
+              {loading ? 'Testing...' : '🔔 Test Push Subscribe'}
+            </Button>
+            
+            <Button 
+              onClick={loadDiagnostics} 
+              variant="outline"
+              className="w-full"
+            >
+              🔄 Refresh Diagnostics
             </Button>
           </CardContent>
         </Card>
 
-        {/* Recent Logs */}
+        {/* Instructions */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Ultimi Invii</CardTitle>
-              <CardDescription>Log delle ultime 10 notifiche</CardDescription>
-            </div>
-            <Button
-              onClick={loadStats}
-              variant="outline"
-              size="sm"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
+          <CardHeader>
+            <CardTitle>Expected Flow</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {stats?.recentLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex items-center justify-between p-3 rounded-lg border"
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    {log.status === "success" ? (
-                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
-                    ) : (
-                      <XCircle className="w-5 h-5 text-destructive flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">
-                        {log.payload?.title || "No title"}
-                      </p>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {log.payload?.body || "No body"}
-                      </p>
-                      {log.error_message && (
-                        <p className="text-xs text-destructive mt-1">{log.error_message}</p>
-                      )}
-                    </div>
-                  </div>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
-                    {new Date(log.created_at).toLocaleString("it-IT")}
-                  </span>
-                </div>
-              ))}
-              {(!stats?.recentLogs || stats.recentLogs.length === 0) && (
-                <p className="text-center text-muted-foreground py-8">
-                  Nessun log disponibile
-                </p>
-              )}
-            </div>
+          <CardContent className="text-sm text-muted-foreground space-y-2">
+            <p>1. Permission should be "granted"</p>
+            <p>2. Has Subscription should be "Yes"</p>
+            <p>3. Session User ID should show a UUID fragment</p>
+            <p>4. Test button should return status 200</p>
+            <p className="pt-2 font-semibold text-foreground">If status is 401: Check Edge Function logs for JWT validation errors</p>
           </CardContent>
         </Card>
       </div>

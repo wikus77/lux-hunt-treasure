@@ -66,9 +66,9 @@ serve(async (req) => {
       });
     }
 
-    // Import and configure webpush dynamically
-    const webpush = await import('https://deno.land/x/webpush@0.1.4/mod.ts');
-    webpush.setVapidDetails(vapidContact, vapidPublicKey, vapidPrivateKey);
+    // Import and configure webpush via npm (stable on Supabase Edge)
+    const webpush = await import('npm:web-push@3.6.7');
+    webpush.default.setVapidDetails(vapidContact, vapidPublicKey, vapidPrivateKey);
 
     // Determine targets
     let targets = [];
@@ -110,7 +110,7 @@ serve(async (req) => {
 
     for (const target of targets) {
       try {
-        await webpush.sendNotification(target, pushPayload);
+        await webpush.default.sendNotification(target, pushPayload);
         results.push({
           endpoint: target.endpoint?.substring(0, 50) + '...',
           success: true,

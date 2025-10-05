@@ -11,6 +11,7 @@ function getCorsHeaders(request: Request): Record<string, string> {
   const allowedOrigins = [
     'https://m1ssion.eu',
     /^https:\/\/.*\.m1ssion\.pages\.dev$/,
+    /^https:\/\/.*\.pages\.dev$/,
     /^https:\/\/.*\.lovable\.dev$/,
     /^https:\/\/.*\.lovableproject\.com$/,
     /^http:\/\/localhost(:\d+)?$/
@@ -41,10 +42,15 @@ serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    console.log('[PUSH-SUBSCRIBE] hasAuth=', !!authHeader, 'len=', authHeader?.length || 0);
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'missing_or_invalid_jwt' }), {
+    const authHeader = req.headers.get('Authorization') ?? '';
+    console.log('[PUSH-SUBSCRIBE] hasAuth:', !!authHeader, 'preview:', authHeader.slice(0, 30));
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized', 
+        reason: 'missing_or_invalid_jwt',
+        details: 'Authorization header missing or malformed'
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -81,15 +87,21 @@ serve(async (req) => {
     // Validate JWT and get user
     const token = authHeader.replace(/^Bearer\s+/i, '');
     const { data: authData, error: authErr } = await serviceClient.auth.getUser(token);
+    
     if (authErr || !authData?.user) {
-      console.error('[PUSH-SUBSCRIBE] Invalid JWT:', authErr?.message);
-      return new Response(JSON.stringify({ error: 'Unauthorized', reason: 'missing_or_invalid_jwt' }), {
+      console.error('[PUSH-SUBSCRIBE] JWT validation failed:', authErr?.message || 'No user data');
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized', 
+        reason: 'invalid_jwt',
+        details: authErr?.message || 'Unable to verify user identity'
+      }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    
     const userId = authData.user.id;
-    console.log('[PUSH-SUBSCRIBE] Auth user', userId);
+    console.log('[PUSH-SUBSCRIBE] user=', userId);
 
     // Determine platform
     let platform = incomingPlatform || 'web';
@@ -98,7 +110,7 @@ serve(async (req) => {
       else if (/android/i.test(ua)) platform = 'android';
     }
 
-    console.log('[PUSH-SUBSCRIBE] Payload', { endpointHash: String(endpoint).slice(-12), hasKeys: !!(keysObj?.p256dh && keysObj?.auth), platform });
+    console.log('[PUSH-SUBSCRIBE] endpointHash=', String(endpoint).slice(-12), 'hasKeys=', !!(keysObj?.p256dh && keysObj?.auth), 'platform=', platform);
 
     // Save to webpush_subscriptions
     const { data, error } = await serviceClient
