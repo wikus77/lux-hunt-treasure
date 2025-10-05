@@ -46,14 +46,15 @@ const Notifications = () => {
 
   return (
     <motion.div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      className="w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
       }}
     >
       <UnifiedHeader />
@@ -70,6 +71,25 @@ const Notifications = () => {
         }}
       >
         <div className="container mx-auto">
+          <motion.h1
+            className="text-4xl font-orbitron font-bold text-center mt-6 mb-8"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5 }}
+          >
+            <span 
+              className="text-[#00F7FF]"
+              style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
+            >
+              NO
+            </span>
+            <span 
+              className="text-white"
+              style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
+            >
+              TICE
+            </span>
+          </motion.h1>
           
           <motion.div
             className="max-w-3xl mx-auto px-3 sm:px-4"

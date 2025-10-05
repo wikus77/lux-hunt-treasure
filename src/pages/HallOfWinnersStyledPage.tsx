@@ -151,11 +151,12 @@ const HallOfWinnersStyledPage: React.FC = () => {
 
   return (
     <div 
-      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
+      className="w-full"
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative'
+        position: 'relative',
+        background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
       }}
     >
       <UnifiedHeader />
