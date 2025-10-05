@@ -40,6 +40,60 @@ serve(async (req) => {
   }
 
   try {
+    // Admin bypass: check x-admin-token or service_role JWT
+    const adminToken = req.headers.get('x-admin-token');
+    const authHeader = req.headers.get('authorization');
+    const configuredAdminToken = Deno.env.get('PUSH_ADMIN_TOKEN');
+    
+    let isAdmin = false;
+    
+    // Check x-admin-token bypass
+    if (adminToken && configuredAdminToken && adminToken === configuredAdminToken) {
+      console.log('[WEBPUSH-SEND] Admin token validated');
+      isAdmin = true;
+    }
+    
+    // Check service_role JWT
+    if (!isAdmin && authHeader) {
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (token === serviceRoleKey) {
+        console.log('[WEBPUSH-SEND] Service role JWT validated');
+        isAdmin = true;
+      }
+    }
+    
+    // If not admin, validate user JWT
+    if (!isAdmin && authHeader) {
+      const token = authHeader.replace(/^Bearer\s+/i, '');
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      
+      const { data, error } = await supabase.auth.getUser(token);
+      if (error || !data?.user) {
+        console.log('[WEBPUSH-SEND] Invalid user JWT');
+        return new Response(JSON.stringify({
+          error: 'Unauthorized',
+          reason: 'invalid_jwt'
+        }), {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      console.log('[WEBPUSH-SEND] User JWT validated:', data.user.id);
+    } else if (!isAdmin) {
+      console.log('[WEBPUSH-SEND] No valid authentication provided');
+      return new Response(JSON.stringify({
+        error: 'Unauthorized',
+        reason: 'missing_authentication'
+      }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const body = await req.json();
     const { subscriptions, audience, payload } = body;
 
@@ -147,12 +201,17 @@ serve(async (req) => {
       }
     }
 
+    const sent = results.filter(r => r.success).length;
+    const failed = results.filter(r => !r.success).length;
+    
+    console.log(`[WEBPUSH-SEND] Complete: total=${targets.length}, sent=${sent}, failed=${failed}`);
+
     return new Response(JSON.stringify({
       success: true,
       results,
       total: targets.length,
-      sent: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length
+      sent,
+      failed
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
