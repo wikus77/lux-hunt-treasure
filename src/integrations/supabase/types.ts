@@ -3194,6 +3194,7 @@ export type Database = {
           device_info: Json | null
           endpoint: string | null
           endpoint_type: string | null
+          id: string
           is_active: boolean | null
           last_used: string | null
           last_used_at: string | null
@@ -3210,6 +3211,7 @@ export type Database = {
           device_info?: Json | null
           endpoint?: string | null
           endpoint_type?: string | null
+          id?: string
           is_active?: boolean | null
           last_used?: string | null
           last_used_at?: string | null
@@ -3226,6 +3228,7 @@ export type Database = {
           device_info?: Json | null
           endpoint?: string | null
           endpoint_type?: string | null
+          id?: string
           is_active?: boolean | null
           last_used?: string | null
           last_used_at?: string | null
