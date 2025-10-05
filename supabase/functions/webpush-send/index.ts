@@ -85,7 +85,7 @@ serve(async (req) => {
 
       const { data: dbSubs, error } = await supabase
         .from('webpush_subscriptions')
-        .select('id, endpoint, provider, p256dh, auth')
+        .select('id, endpoint, keys')
         .eq('is_active', true);
 
       if (error) {
@@ -96,8 +96,7 @@ serve(async (req) => {
       targets = dbSubs.map(sub => ({
         id: sub.id,
         endpoint: sub.endpoint,
-        provider: sub.provider,
-        keys: { p256dh: sub.p256dh, auth: sub.auth }
+        keys: (sub.keys as any) || { p256dh: '', auth: '' }
       }));
     }
 
