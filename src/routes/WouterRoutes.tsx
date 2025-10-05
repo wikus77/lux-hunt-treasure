@@ -68,7 +68,7 @@ import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
 // VAPIDKeyTest removed - using Web Push now
 import PushHealth from "@/pages/PushHealth";
-import PushDebug from "@/pages/PushDebug";
+const PushDebug = React.lazy(() => import("@/pages/PushDebug"));
 import { PushReport } from "@/pages/PushReport";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
