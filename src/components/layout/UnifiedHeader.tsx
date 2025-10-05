@@ -47,28 +47,56 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
   const isMapRoute = location === '/map' || location.startsWith('/map/');
-  const targetSelector = isMapRoute ? '#map-scroll-container' : undefined;
-  const thresholdVal = isMapRoute ? 10 : 50;
-  const { shouldHideHeader } = useScrollDirection(thresholdVal, targetSelector);
-  // Final flag used by animations
-  const hideHeader = shouldHideHeader;
+  const { shouldHideHeader: windowHide } = useScrollDirection(50);
+  const [mapHide, setMapHide] = useState(false);
+  const hideHeader = isMapRoute ? mapHide : windowHide;
 
   useEffect(() => {
-    const isMapRoute = location === '/map' || location.startsWith('/map/');
-    if (isMapRoute) {
-      const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
-      console.log('UnifiedHeader/map debug', {
-        location,
-        targetSelector,
-        thresholdVal,
-        shouldHideHeader,
-        containerFound: !!el,
-        scrollTop: el?.scrollTop,
-        scrollHeight: el?.scrollHeight,
-        clientHeight: el?.clientHeight,
-      });
+    if (!isMapRoute) return;
+    const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
+    if (!el) return;
+
+    const onScroll = () => setMapHide(el.scrollTop > 10);
+    el.addEventListener('scroll', onScroll, { passive: true });
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY > 0) setMapHide(true);
+      if (e.deltaY < 0 && el.scrollTop <= 0) setMapHide(false);
+    };
+    el.addEventListener('wheel', onWheel, { passive: true, capture: true });
+
+    let touchStartY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0]?.clientY ?? null; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartY == null) return;
+      const currentY = e.touches[0]?.clientY ?? touchStartY;
+      const deltaY = touchStartY - currentY;
+      if (deltaY > 0) setMapHide(true);
+      if (deltaY < 0 && el.scrollTop <= 0) setMapHide(false);
+      touchStartY = currentY;
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
+
+    const leaflet = document.querySelector('.leaflet-container') as HTMLElement | null;
+    if (leaflet) {
+      leaflet.addEventListener('wheel', onWheel, { passive: true, capture: true });
+      leaflet.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+      leaflet.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
     }
-  }, [location, targetSelector, thresholdVal, shouldHideHeader]);
+
+    return () => {
+      el.removeEventListener('scroll', onScroll as any);
+      el.removeEventListener('wheel', onWheel as any);
+      el.removeEventListener('touchstart', onTouchStart as any);
+      el.removeEventListener('touchmove', onTouchMove as any);
+      if (leaflet) {
+        leaflet.removeEventListener('wheel', onWheel as any);
+        leaflet.removeEventListener('touchstart', onTouchStart as any);
+        leaflet.removeEventListener('touchmove', onTouchMove as any);
+      }
+    };
+  }, [isMapRoute, location]);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
