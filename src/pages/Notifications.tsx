@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
+import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useNotificationsDynamicIsland } from '@/hooks/useNotificationsDynamicIsland';
 import { useNotificationsAutoReload } from '@/hooks/useNotificationsAutoReload';
@@ -15,6 +16,7 @@ const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
+  const { triggerHaptic } = usePWAHardwareStub();
   
   // Custom hooks for managing notifications behavior
   const { updateDynamicIslandOnRead, closeDynamicIsland } = useNotificationsDynamicIsland(notifications);
@@ -22,18 +24,21 @@ const Notifications = () => {
   useDynamicIslandSafety();
   useNotificationsAutoReload(reloadNotifications);
 
-  const handleMarkAsRead = (id: string) => {
+  const handleMarkAsRead = async (id: string) => {
+    await triggerHaptic('tick');
     markAsRead(id);
     playSound();
     updateDynamicIslandOnRead(id);
   };
 
-  const handleDeleteNotification = (id: string) => {
+  const handleDeleteNotification = async (id: string) => {
+    await triggerHaptic('selection');
     deleteNotification(id);
     playSound();
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllAsRead = async () => {
+    await triggerHaptic('success');
     markAllAsRead();
     playSound();
     closeDynamicIsland();
