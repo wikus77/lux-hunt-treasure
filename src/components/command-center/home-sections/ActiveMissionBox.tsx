@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Clock, Target, CheckCircle, AlertCircle, Timer, ChevronDown } from "lucide-react";
-import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 
 interface ActiveMissionBoxProps {
@@ -24,13 +23,14 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
   const [expandedBox, setExpandedBox] = useState<string | null>(null);
   
   // 🔥 USA I DATI REALI DALLA MISSIONE - foundClues dal database user_clues
-  const realCluesFound = mission.foundClues || 0;
+  const realCluesFound = mission.foundClues ?? 0;
   const totalClues = mission.totalClues || 200;
-  
+
   const { notifications } = useNotifications();
-  
-  // 🔥 Filtra le notifiche BUZZ per mostrarle nel container
+  // 🔄 Fallback: se il DB non è ancora sincronizzato, mostra il conteggio dei nuovi indizi BUZZ in Notice
   const buzzClues = notifications.filter(n => n.type === 'buzz');
+  const fallbackFoundFromBuzz = buzzClues?.length || 0;
+  const displayCluesFound = realCluesFound > 0 ? realCluesFound : fallbackFoundFromBuzz;
 
   const toggleBox = (boxId: string) => {
     setExpandedBox(expandedBox === boxId ? null : boxId);
@@ -75,20 +75,20 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <span className="text-white/80 text-sm">Indizi trovati</span>
           </div>
           <div className="text-2xl font-bold text-green-400 mb-2">
-            {realCluesFound}/{totalClues}
+            {displayCluesFound}/{totalClues}
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
-                realCluesFound === 0 ? 'bg-gray-500' :
-                realCluesFound < 50 ? 'bg-blue-400' :
-                realCluesFound < 150 ? 'bg-green-400' : 'bg-yellow-400'
+                displayCluesFound === 0 ? 'bg-gray-500' :
+                displayCluesFound < 50 ? 'bg-blue-400' :
+                displayCluesFound < 150 ? 'bg-green-400' : 'bg-yellow-400'
               }`}
-              style={{ width: `${(realCluesFound / totalClues) * 100}%` }}
+              style={{ width: `${(displayCluesFound / totalClues) * 100}%` }}
             />
           </div>
           <span className="text-xs text-white/60">
-            {Math.round((realCluesFound / totalClues) * 100)}% completato
+            {Math.round((displayCluesFound / totalClues) * 100)}% completato
           </span>
 
           <AnimatePresence>
