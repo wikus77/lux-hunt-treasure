@@ -23,8 +23,10 @@ interface ActiveMissionBoxProps {
 export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }: ActiveMissionBoxProps) {
   const [expandedBox, setExpandedBox] = useState<string | null>(null);
   
-  // 🔥 Hook per ottenere il conteggio degli indizi BUZZ
-  const { unlockedClues } = useBuzzClues();
+  // 🔥 USA I DATI REALI DALLA MISSIONE - foundClues dal database user_clues
+  const realCluesFound = mission.foundClues || 0;
+  const totalClues = mission.totalClues || 200;
+  
   const { notifications } = useNotifications();
   
   // 🔥 Filtra le notifiche BUZZ per mostrarle nel container
@@ -73,20 +75,20 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <span className="text-white/80 text-sm">Indizi trovati</span>
           </div>
           <div className="text-2xl font-bold text-green-400 mb-2">
-            {unlockedClues}/200
+            {realCluesFound}/{totalClues}
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
-                unlockedClues === 0 ? 'bg-gray-500' :
-                unlockedClues < 50 ? 'bg-blue-400' :
-                unlockedClues < 150 ? 'bg-green-400' : 'bg-yellow-400'
+                realCluesFound === 0 ? 'bg-gray-500' :
+                realCluesFound < 50 ? 'bg-blue-400' :
+                realCluesFound < 150 ? 'bg-green-400' : 'bg-yellow-400'
               }`}
-              style={{ width: `${(unlockedClues / 200) * 100}%` }}
+              style={{ width: `${(realCluesFound / totalClues) * 100}%` }}
             />
           </div>
           <span className="text-xs text-white/60">
-            {Math.round((unlockedClues / 200) * 100)}% completato
+            {Math.round((realCluesFound / totalClues) * 100)}% completato
           </span>
 
           <AnimatePresence>
@@ -247,17 +249,17 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 <div className="mb-4">
                   <div className="flex justify-between mb-2">
                     <span className="text-white text-sm">Progresso Generale</span>
-                    <span className="text-[#00D1FF] text-sm font-bold">{Math.round((unlockedClues / 200) * 100)}%</span>
+                    <span className="text-[#00D1FF] text-sm font-bold">{Math.round((realCluesFound / totalClues) * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-3">
                     <motion.div
                       className={`h-3 rounded-full transition-all duration-500 ${
-                        unlockedClues === 0 ? 'bg-gray-500' :
-                        unlockedClues < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
-                        unlockedClues < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
+                        realCluesFound === 0 ? 'bg-gray-500' :
+                        realCluesFound < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
+                        realCluesFound < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
                       }`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${(unlockedClues / 200) * 100}%` }}
+                      animate={{ width: `${(realCluesFound / totalClues) * 100}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
                   </div>
@@ -266,11 +268,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 {/* Mission Stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
-                    <p className="text-lg font-bold text-green-400">{unlockedClues}</p>
+                    <p className="text-lg font-bold text-green-400">{realCluesFound}</p>
                     <p className="text-xs text-white/60">Obiettivi Raggiunti</p>
                   </div>
                   <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
-                    <p className="text-lg font-bold text-red-400">{200 - unlockedClues}</p>
+                    <p className="text-lg font-bold text-red-400">{totalClues - realCluesFound}</p>
                     <p className="text-xs text-white/60">Obiettivi Rimanenti</p>
                   </div>
                 </div>
