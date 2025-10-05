@@ -24,7 +24,27 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
     let attachedTarget: any = null;
     let retryTimer: number | undefined;
 
-    const readScroll = () => (containerEl ? containerEl.scrollTop : window.scrollY);
+    // Fallback virtual scroll for non-scrollable containers (e.g., map gestures)
+    let virtualScroll = 0;
+    let wheelTarget: any = null;
+    let touchStartY: number | null = null;
+
+    const readScroll = () => (containerEl ? containerEl.scrollTop : window.scrollY) + virtualScroll;
+
+    const setFromDelta = (deltaY: number) => {
+      // Only used when container cannot scroll
+      if (deltaY === 0) return;
+      const current = readScroll() + deltaY;
+      const isScrollingDown = deltaY > 0;
+      const isScrollingUp = deltaY < 0;
+      virtualScroll += deltaY;
+      setState({
+        isScrollingDown,
+        isScrollingUp,
+        scrollY: current,
+        shouldHideHeader: isScrollingDown && Math.abs(virtualScroll) > threshold,
+      });
+    };
 
     const updateScrollDirection = () => {
       const current = readScroll();
@@ -55,10 +75,54 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
       }
     };
 
+    const onWheel = (e: WheelEvent) => {
+      // If container can't scroll, emulate scroll behavior so header can hide
+      if (containerEl && containerEl.scrollHeight <= containerEl.clientHeight) {
+        setFromDelta(e.deltaY);
+      }
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      touchStartY = e.touches[0]?.clientY ?? null;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartY == null) return;
+      const currentY = e.touches[0]?.clientY ?? touchStartY;
+      const deltaY = touchStartY - currentY; // positive when moving up (content would scroll down)
+      if (containerEl && containerEl.scrollHeight <= containerEl.clientHeight) {
+        setFromDelta(deltaY);
+      }
+      touchStartY = currentY;
+    };
+
     const attachListener = (target: any) => {
       if (attachedTarget) attachedTarget.removeEventListener('scroll', onScroll);
       target.addEventListener('scroll', onScroll, { passive: true });
       attachedTarget = target;
+    };
+
+    const attachGestureFallbacks = () => {
+      // Attach to container itself
+      if (containerEl) {
+        containerEl.addEventListener('wheel', onWheel, { passive: true });
+        containerEl.addEventListener('touchstart', onTouchStart, { passive: true });
+        containerEl.addEventListener('touchmove', onTouchMove, { passive: true });
+      }
+      // Also try Leaflet map container if present
+      const leaflet = document.querySelector('.leaflet-container') as HTMLElement | null;
+      if (leaflet) {
+        wheelTarget = leaflet;
+        leaflet.addEventListener('wheel', onWheel, { passive: true });
+        leaflet.addEventListener('touchstart', onTouchStart, { passive: true });
+        leaflet.addEventListener('touchmove', onTouchMove, { passive: true });
+      }
+      // Debug
+      console.debug('useScrollDirection: attached gesture fallbacks', {
+        containerSelector,
+        containerScrollable: containerEl ? containerEl.scrollHeight > containerEl.clientHeight : undefined,
+        leafletFound: !!leaflet,
+      });
     };
 
     // Initial attach: window, then try to switch to container when it exists
@@ -71,7 +135,16 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
           containerEl = el;
           lastScroll = readScroll();
           attachListener(containerEl);
+          // Gesture fallback if not scrollable
+          if (containerEl.scrollHeight <= containerEl.clientHeight) {
+            attachGestureFallbacks();
+          }
           if (retryTimer) window.clearInterval(retryTimer);
+          console.debug('useScrollDirection: attached to container', {
+            containerSelector,
+            scrollHeight: containerEl.scrollHeight,
+            clientHeight: containerEl.clientHeight,
+          });
         }
       };
       // Try a few times while the page mounts
@@ -82,6 +155,16 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
 
     return () => {
       if (attachedTarget) attachedTarget.removeEventListener('scroll', onScroll);
+      if (containerEl) {
+        containerEl.removeEventListener('wheel', onWheel as any);
+        containerEl.removeEventListener('touchstart', onTouchStart as any);
+        containerEl.removeEventListener('touchmove', onTouchMove as any);
+      }
+      if (wheelTarget) {
+        wheelTarget.removeEventListener('wheel', onWheel as any);
+        wheelTarget.removeEventListener('touchstart', onTouchStart as any);
+        wheelTarget.removeEventListener('touchmove', onTouchMove as any);
+      }
       if (retryTimer) window.clearInterval(retryTimer);
     };
   }, [threshold, containerSelector]);
