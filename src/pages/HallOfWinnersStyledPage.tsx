@@ -153,8 +153,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
     <div 
       className="w-full"
       style={{ 
-        height: '100dvh',
-        overflow: 'hidden',
+        minHeight: '100dvh',
         position: 'relative',
         background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
       }}
@@ -165,8 +164,7 @@ const HallOfWinnersStyledPage: React.FC = () => {
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 40px)',
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px))',
-          height: '100dvh',
-          overflowY: 'auto',
+          minHeight: '100dvh',
           position: 'relative',
           zIndex: 0
         }}
@@ -174,21 +172,22 @@ const HallOfWinnersStyledPage: React.FC = () => {
       >
         <div className="max-w-lg mx-auto space-y-6">
           {/* Header */}
-          <div className="flex items-center space-x-4 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setLocation('/settings')}
-              className="p-2 hover:bg-background/50"
-            >
-              ←
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Hall of Winners
-              </h1>
-              <p className="text-muted-foreground">Vincitori M1SSION™</p>
-            </div>
+          <div className="mb-6 text-center">
+            <h1 className="text-4xl font-orbitron font-bold">
+              <span 
+                className="text-[#00F7FF]"
+                style={{ textShadow: "0 0 10px rgba(0, 247, 255, 0.6), 0 0 20px rgba(0, 247, 255, 0.3)" }}
+              >
+                Hall of 
+              </span>
+              <span 
+                className="text-white"
+                style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
+              >
+                Winners
+              </span>
+            </h1>
+            <p className="text-muted-foreground">Vincitori M1SSION™</p>
           </div>
 
           {/* Winners Overview */}
