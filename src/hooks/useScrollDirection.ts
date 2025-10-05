@@ -76,10 +76,9 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
     };
 
     const onWheel = (e: WheelEvent) => {
-      // If container can't scroll, emulate scroll behavior so header can hide
-      if (containerEl && containerEl.scrollHeight <= containerEl.clientHeight) {
-        setFromDelta(e.deltaY);
-      }
+      // Always emulate header hide on wheel in map context
+      setFromDelta(e.deltaY);
+      console.log('useScrollDirection:onWheel', { deltaY: e.deltaY });
     };
 
     const onTouchStart = (e: TouchEvent) => {
@@ -90,9 +89,8 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
       if (touchStartY == null) return;
       const currentY = e.touches[0]?.clientY ?? touchStartY;
       const deltaY = touchStartY - currentY; // positive when moving up (content would scroll down)
-      if (containerEl && containerEl.scrollHeight <= containerEl.clientHeight) {
-        setFromDelta(deltaY);
-      }
+      setFromDelta(deltaY);
+      console.log('useScrollDirection:onTouchMove', { deltaY });
       touchStartY = currentY;
     };
 
@@ -105,17 +103,17 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
     const attachGestureFallbacks = () => {
       // Attach to container itself
       if (containerEl) {
-        containerEl.addEventListener('wheel', onWheel, { passive: true });
-        containerEl.addEventListener('touchstart', onTouchStart, { passive: true });
-        containerEl.addEventListener('touchmove', onTouchMove, { passive: true });
+        containerEl.addEventListener('wheel', onWheel, { passive: true, capture: true });
+        containerEl.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+        containerEl.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
       }
       // Also try Leaflet map container if present
       const leaflet = document.querySelector('.leaflet-container') as HTMLElement | null;
       if (leaflet) {
         wheelTarget = leaflet;
-        leaflet.addEventListener('wheel', onWheel, { passive: true });
-        leaflet.addEventListener('touchstart', onTouchStart, { passive: true });
-        leaflet.addEventListener('touchmove', onTouchMove, { passive: true });
+        leaflet.addEventListener('wheel', onWheel, { passive: true, capture: true });
+        leaflet.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+        leaflet.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
       }
       // Debug
       console.debug('useScrollDirection: attached gesture fallbacks', {
@@ -135,10 +133,8 @@ export const useScrollDirection = (threshold: number = 50, containerSelector?: s
           containerEl = el;
           lastScroll = readScroll();
           attachListener(containerEl);
-          // Gesture fallback if not scrollable
-          if (containerEl.scrollHeight <= containerEl.clientHeight) {
-            attachGestureFallbacks();
-          }
+          // Always attach gesture fallbacks so map gestures trigger header hide
+          attachGestureFallbacks();
           if (retryTimer) window.clearInterval(retryTimer);
           console.debug('useScrollDirection: attached to container', {
             containerSelector,
