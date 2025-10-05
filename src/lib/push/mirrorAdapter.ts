@@ -148,18 +148,21 @@ export class MirrorPushAdapter {
     mirror_system: string[];
     would_match: boolean;
   }> {
-    // Get current system endpoint
+    // Get current system tokens
     const { data: currentData } = await supabase
-      .from('v_latest_webpush_subscription')
-      .select('endpoint')
+      .from('push_tokens')
+      .select('token')
       .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     // Get mirror system endpoints
     const mirrorSubs = await this.getLatestByProvider(userId);
     const mirrorEndpoints = Object.values(mirrorSubs).map(sub => sub.endpoint);
 
-    const currentEndpoints = currentData ? [currentData.endpoint] : [];
+    const currentEndpoints = currentData ? [currentData.token] : [];
     
     return {
       current_system: currentEndpoints,
