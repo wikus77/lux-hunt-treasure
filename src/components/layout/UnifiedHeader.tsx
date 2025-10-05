@@ -46,14 +46,12 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
-  const targetSelector = '#map-scroll-container';
-  const thresholdVal = (location === '/map' || location.startsWith('/map/')) ? 10 : 50;
+  const isMapRoute = location === '/map' || location.startsWith('/map/');
+  const targetSelector = isMapRoute ? '#map-scroll-container' : undefined;
+  const thresholdVal = isMapRoute ? 10 : 50;
   const { shouldHideHeader } = useScrollDirection(thresholdVal, targetSelector);
-  const [hideManual, setHideManual] = useState(false);
-  const hideHeader = shouldHideHeader || (() => {
-    const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
-    return !!el && el.scrollTop > thresholdVal;
-  })();
+  // Final flag used by animations
+  const hideHeader = shouldHideHeader;
 
   useEffect(() => {
     const isMapRoute = location === '/map' || location.startsWith('/map/');
