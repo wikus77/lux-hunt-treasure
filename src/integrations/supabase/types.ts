@@ -1389,39 +1389,6 @@ export type Database = {
         }
         Relationships: []
       }
-      fcm_tokens: {
-        Row: {
-          created_at: string | null
-          fid: string
-          id: string
-          ip: unknown | null
-          token: string
-          updated_at: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          fid: string
-          id?: string
-          ip?: unknown | null
-          token: string
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          fid?: string
-          id?: string
-          ip?: unknown | null
-          token?: string
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       feed_crawler_runs: {
         Row: {
           created_at: string | null
@@ -3034,6 +3001,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_logs: {
+        Row: {
+          created_at: string | null
+          endpoint: string | null
+          error_message: string | null
+          id: string
+          payload: Json | null
+          status: string
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          status: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       push_notification_logs: {
         Row: {
           apns_failed: number | null
@@ -3194,9 +3194,12 @@ export type Database = {
           device_info: Json | null
           endpoint: string | null
           endpoint_type: string | null
+          is_active: boolean | null
+          last_used: string | null
           last_used_at: string | null
           p256dh: string | null
           platform: string | null
+          provider: string
           token: string
           updated_at: string | null
           user_id: string | null
@@ -3207,9 +3210,12 @@ export type Database = {
           device_info?: Json | null
           endpoint?: string | null
           endpoint_type?: string | null
+          is_active?: boolean | null
+          last_used?: string | null
           last_used_at?: string | null
           p256dh?: string | null
           platform?: string | null
+          provider?: string
           token: string
           updated_at?: string | null
           user_id?: string | null
@@ -3220,9 +3226,12 @@ export type Database = {
           device_info?: Json | null
           endpoint?: string | null
           endpoint_type?: string | null
+          is_active?: boolean | null
+          last_used?: string | null
           last_used_at?: string | null
           p256dh?: string | null
           platform?: string | null
+          provider?: string
           token?: string
           updated_at?: string | null
           user_id?: string | null
@@ -5019,48 +5028,6 @@ export type Database = {
         }
         Relationships: []
       }
-      webpush_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          is_active: boolean
-          keys: Json | null
-          p256dh: string
-          platform: string | null
-          provider: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          endpoint: string
-          id?: string
-          is_active?: boolean
-          keys?: Json | null
-          p256dh: string
-          platform?: string | null
-          provider: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          endpoint?: string
-          id?: string
-          is_active?: boolean
-          keys?: Json | null
-          p256dh?: string
-          platform?: string | null
-          provider?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       weekly_buzz_allowances: {
         Row: {
           created_at: string
@@ -5341,15 +5308,6 @@ export type Database = {
         }
         Relationships: []
       }
-      v_latest_webpush_subscription: {
-        Row: {
-          created_at: string | null
-          endpoint: string | null
-          sub_id: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
       v_pref_users: {
         Row: {
           user_id: string | null
@@ -5420,22 +5378,6 @@ export type Database = {
           endpoint_type?: string | null
           platform?: string | null
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      webpush_latest_per_user: {
-        Row: {
-          auth: string | null
-          created_at: string | null
-          endpoint: string | null
-          id: string | null
-          is_active: boolean | null
-          keys: Json | null
-          p256dh: string | null
-          platform: string | null
-          provider: string | null
-          rn: number | null
-          user_id: string | null
         }
         Relationships: []
       }
@@ -5595,6 +5537,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_idempotency_keys: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_push_tokens: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -6164,28 +6110,6 @@ export type Database = {
       upsert_user_position: {
         Args: { lat: number; lng: number; uid: string }
         Returns: undefined
-      }
-      upsert_webpush_subscription: {
-        Args: {
-          p_auth: string
-          p_endpoint: string
-          p_p256dh: string
-          p_platform?: string
-          p_user_id: string
-        }
-        Returns: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          is_active: boolean
-          keys: Json | null
-          p256dh: string
-          platform: string | null
-          provider: string
-          updated_at: string
-          user_id: string
-        }
       }
       validate_buzz_user_id: {
         Args: { p_user_id: string }

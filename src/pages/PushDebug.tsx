@@ -1,347 +1,338 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Push Debug Page */
+// Push Notifications Debug Panel - Admin Only
 
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { RefreshCw, Smartphone, Monitor, AlertCircle, CheckCircle, Send } from 'lucide-react';
-import { toast } from 'sonner';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { getVAPIDKeyInfo } from '@/lib/push/vapid';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { Bell, Send, RefreshCw, Shield, CheckCircle, XCircle } from "lucide-react";
 
-interface ServiceWorkerInfo {
-  scriptURL: string;
-  state: string;
-  scope: string;
+interface PushStats {
+  activeTokens: number;
+  totalLogs: number;
+  successRate: number;
+  recentLogs: Array<{
+    id: string;
+    status: string;
+    created_at: string;
+    error_message?: string;
+    payload: any;
+  }>;
 }
 
 export default function PushDebug() {
-  const {
-    isSupported,
-    permission,
-    isSubscribed,
-    loading,
-    platform,
-    endpointShort,
-    requestPermission,
-    subscribe,
-    unsubscribe
-  } = usePushNotifications();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [stats, setStats] = useState<PushStats | null>(null);
+  const [testTitle, setTestTitle] = useState("Test M1SSION™");
+  const [testBody, setTestBody] = useState("Questa è una notifica di test");
+  const [testUrl, setTestUrl] = useState("/home");
+  const [sending, setSending] = useState(false);
 
-  const [swInfo, setSwInfo] = useState<ServiceWorkerInfo[]>([]);
-  const [subscriptionJSON, setSubscriptionJSON] = useState<string>('');
-  const [vapidInfo, setVapidInfo] = useState<any>(null);
-  const [refreshing, setRefreshing] = useState(false);
+  useEffect(() => {
+    checkAdminAndLoadStats();
+  }, []);
 
-  // Refresh all debug info
-  const refreshDebugInfo = async () => {
-    setRefreshing(true);
-    
+  const checkAdminAndLoadStats = async () => {
     try {
-      // Get service worker registrations
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        const swData = registrations.map(reg => ({
-          scriptURL: reg.active?.scriptURL || reg.installing?.scriptURL || reg.waiting?.scriptURL || 'No script',
-          state: reg.active?.state || 'inactive',
-          scope: reg.scope
-        }));
-        setSwInfo(swData);
-
-        // Get current subscription JSON
-        try {
-          const registration = await navigator.serviceWorker.ready;
-          const subscription = await registration.pushManager.getSubscription();
-          if (subscription) {
-            setSubscriptionJSON(JSON.stringify(subscription.toJSON(), null, 2));
-          } else {
-            setSubscriptionJSON('No active subscription');
-          }
-        } catch (error) {
-          setSubscriptionJSON(`Error getting subscription: ${error}`);
-        }
-      }
-
-      // Get VAPID info
-      setVapidInfo(getVAPIDKeyInfo());
+      // Check if user is admin
+      const { data: { user } } = await supabase.auth.getUser();
       
-    } catch (error) {
-      console.error('Error refreshing debug info:', error);
-      toast.error('Error refreshing debug info');
-    } finally {
-      setRefreshing(false);
-    }
-  };
-
-  // Test push notification via edge function
-  const testPushNotification = async () => {
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.getSubscription();
-      
-      if (!subscription) {
-        toast.error('No subscription found. Enable notifications first.');
+      if (!user) {
+        navigate("/");
         return;
       }
 
-      console.log('Testing push with endpoint:', subscription.endpoint.substring(0, 50) + '...');
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
 
-      const { data, error } = await supabase.functions.invoke('send-push-canary', {
+      if (profile?.role !== "admin") {
+        toast({
+          title: "Accesso Negato",
+          description: "Solo gli admin possono accedere a questa pagina",
+          variant: "destructive"
+        });
+        navigate("/");
+        return;
+      }
+
+      setIsAdmin(true);
+      await loadStats();
+    } catch (error) {
+      console.error("Error checking admin:", error);
+      navigate("/");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      // Get active tokens count
+      const { count: activeCount } = await supabase
+        .from("push_tokens")
+        .select("*", { count: "exact", head: true })
+        .eq("is_active", true);
+
+      // Get recent logs
+      const { data: logs } = await supabase
+        .from("push_logs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      // Calculate success rate
+      const { count: successCount } = await supabase
+        .from("push_logs")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "success");
+
+      const { count: totalCount } = await supabase
+        .from("push_logs")
+        .select("*", { count: "exact", head: true });
+
+      const successRate = totalCount && successCount 
+        ? Math.round((successCount / totalCount) * 100)
+        : 0;
+
+      setStats({
+        activeTokens: activeCount || 0,
+        totalLogs: totalCount || 0,
+        successRate,
+        recentLogs: logs || []
+      });
+    } catch (error) {
+      console.error("Error loading stats:", error);
+      toast({
+        title: "Errore",
+        description: "Impossibile caricare le statistiche",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const sendTestNotification = async () => {
+    setSending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+
+      const { data, error } = await supabase.functions.invoke("send-web-push", {
         body: {
-          endpoint: subscription.endpoint,
-          title: 'M1SSION™ Debug Test ✅',
-          body: 'Push notification system is working perfectly!',
-          link: '/push-debug'
+          user_ids: [user.id],
+          payload: {
+            title: testTitle,
+            body: testBody,
+            url: testUrl
+          }
         }
       });
 
-      if (error) {
-        console.error('Push send error:', error);
-        toast.error(`Push failed: ${error.message}`);
-        return;
-      }
+      if (error) throw error;
 
-      console.log('Push result:', data);
-      
-      const sent = data.sent || 0;
-      const failed = data.failed || 0;
-      
-      if (failed === 0 && sent > 0) {
-        toast.success(`✅ Test successful! Sent: ${sent}`);
-      } else {
-        toast.error(`❌ Test failed! Sent: ${sent}, Failed: ${failed}`);
-      }
+      toast({
+        title: "✅ Notifica Inviata",
+        description: `Inviata a ${data.sent} dispositivi`
+      });
 
+      // Reload stats after sending
+      await loadStats();
     } catch (error) {
-      console.error('Push test error:', error);
-      toast.error(`Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Error sending test:", error);
+      toast({
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Invio fallito",
+        variant: "destructive"
+      });
+    } finally {
+      setSending(false);
     }
   };
 
-  // Copy subscription to clipboard
-  const copySubscription = async () => {
-    try {
-      await navigator.clipboard.writeText(subscriptionJSON);
-      toast.success('Subscription JSON copied to clipboard');
-    } catch (error) {
-      toast.error('Failed to copy to clipboard');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    refreshDebugInfo();
-  }, []);
+  if (!isAdmin) {
+    return null;
+  }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">🔧 Push Debug Console</h1>
-        <Button onClick={refreshDebugInfo} disabled={refreshing} variant="outline">
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
-
-      {/* Platform & Support Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {platform === 'ios_pwa' ? <Smartphone className="h-5 w-5" /> : <Monitor className="h-5 w-5" />}
-            Platform & Support
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Platform</p>
-              <Badge variant={platform === 'ios_pwa' ? 'default' : 'secondary'}>
-                {platform}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Push Support</p>
-              <Badge variant={isSupported ? 'default' : 'destructive'}>
-                {isSupported ? 'Supported' : 'Not Supported'}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Permission</p>
-              <Badge variant={permission === 'granted' ? 'default' : permission === 'denied' ? 'destructive' : 'secondary'}>
-                {permission || 'Unknown'}
-              </Badge>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Subscribed</p>
-              <Badge variant={isSubscribed ? 'default' : 'secondary'}>
-                {isSubscribed ? 'Yes' : 'No'}
-              </Badge>
-            </div>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Shield className="w-8 h-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Push Debug Panel</h1>
+            <p className="text-muted-foreground">Diagnostica Web Push - Admin Only</p>
           </div>
-          
-          {endpointShort && (
-            <div>
-              <p className="text-sm text-muted-foreground">Endpoint</p>
-              <p className="text-sm font-mono bg-muted p-2 rounded">{endpointShort}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Service Workers */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Service Workers</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {swInfo.length === 0 ? (
-            <p className="text-muted-foreground">No service workers found</p>
-          ) : (
-            <div className="space-y-3">
-              {swInfo.map((sw, index) => (
-                <div key={index} className="border rounded p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium">{sw.scriptURL.split('/').pop()}</p>
-                    <Badge variant={sw.state === 'activated' ? 'default' : 'secondary'}>
-                      {sw.state}
-                    </Badge>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Token Attivi</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" />
+                <span className="text-3xl font-bold">{stats?.activeTokens || 0}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-green-500" />
+                <span className="text-3xl font-bold">{stats?.successRate || 0}%</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Totale Invii</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Send className="w-5 h-5 text-primary" />
+                <span className="text-3xl font-bold">{stats?.totalLogs || 0}</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Test Notification */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Invia Notifica Test</CardTitle>
+            <CardDescription>
+              Invia una notifica di test al tuo dispositivo
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label>Titolo</Label>
+              <Input
+                value={testTitle}
+                onChange={(e) => setTestTitle(e.target.value)}
+                placeholder="Titolo notifica"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Messaggio</Label>
+              <Textarea
+                value={testBody}
+                onChange={(e) => setTestBody(e.target.value)}
+                placeholder="Corpo del messaggio"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>URL (opzionale)</Label>
+              <Input
+                value={testUrl}
+                onChange={(e) => setTestUrl(e.target.value)}
+                placeholder="/home"
+              />
+            </div>
+            <Button
+              onClick={sendTestNotification}
+              disabled={sending || !testTitle || !testBody}
+              className="w-full"
+            >
+              {sending ? (
+                <>
+                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                  Invio...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Invia Test
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Recent Logs */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Ultimi Invii</CardTitle>
+              <CardDescription>Log delle ultime 10 notifiche</CardDescription>
+            </div>
+            <Button
+              onClick={loadStats}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {stats?.recentLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="flex items-center justify-between p-3 rounded-lg border"
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    {log.status === "success" ? (
+                      <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {log.payload?.title || "No title"}
+                      </p>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {log.payload?.body || "No body"}
+                      </p>
+                      {log.error_message && (
+                        <p className="text-xs text-destructive mt-1">{log.error_message}</p>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">Scope: {sw.scope}</p>
-                  <p className="text-xs text-muted-foreground font-mono">{sw.scriptURL}</p>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap ml-4">
+                    {new Date(log.created_at).toLocaleString("it-IT")}
+                  </span>
                 </div>
               ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* VAPID Key Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {vapidInfo?.valid ? (
-              <CheckCircle className="h-5 w-5 text-green-500" />
-            ) : (
-              <AlertCircle className="h-5 w-5 text-red-500" />
-            )}
-            VAPID Key Validation
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {vapidInfo ? (
-            <div className="space-y-2">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge variant={vapidInfo.valid ? 'default' : 'destructive'}>
-                    {vapidInfo.valid ? 'Valid' : 'Invalid'}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Length</p>
-                  <p className="text-sm font-mono">{vapidInfo.length || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">First Byte</p>
-                  <p className="text-sm font-mono">{vapidInfo.firstByte || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Key Length</p>
-                  <p className="text-sm font-mono">{vapidInfo.fullLength}</p>
-                </div>
-              </div>
-              
-              {vapidInfo.error && (
-                <div className="bg-destructive/10 border border-destructive/20 p-3 rounded">
-                  <p className="text-sm text-destructive">{vapidInfo.error}</p>
-                </div>
+              {(!stats?.recentLogs || stats.recentLogs.length === 0) && (
+                <p className="text-center text-muted-foreground py-8">
+                  Nessun log disponibile
+                </p>
               )}
-              
-              <div>
-                <p className="text-sm text-muted-foreground">Key Preview</p>
-                <p className="text-sm font-mono bg-muted p-2 rounded">{vapidInfo.keyPreview}</p>
-              </div>
             </div>
-          ) : (
-            <p className="text-muted-foreground">Loading VAPID info...</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Subscription JSON */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Current Subscription
-            {subscriptionJSON && subscriptionJSON !== 'No active subscription' && (
-              <Button onClick={copySubscription} variant="outline" size="sm">
-                Copy JSON
-              </Button>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <pre className="text-xs bg-muted p-4 rounded overflow-auto max-h-64">
-            {subscriptionJSON || 'Loading...'}
-          </pre>
-        </CardContent>
-      </Card>
-
-      {/* Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {permission !== 'granted' && (
-              <Button onClick={requestPermission} disabled={loading}>
-                Request Permission
-              </Button>
-            )}
-            
-            {platform === 'ios_pwa' ? (
-              <Button 
-                onClick={subscribe} 
-                disabled={loading || permission !== 'granted'}
-                variant={isSubscribed ? 'outline' : 'default'}
-              >
-                {isSubscribed ? 'Resubscribe iOS (VAPID)' : 'Subscribe iOS (VAPID)'}
-              </Button>
-            ) : (
-              <Button 
-                onClick={subscribe} 
-                disabled={loading || permission !== 'granted'}
-                variant={isSubscribed ? 'outline' : 'default'}
-              >
-                {isSubscribed ? 'Resubscribe Desktop' : 'Subscribe Desktop'}
-              </Button>
-            )}
-            
-            <Button 
-              onClick={testPushNotification}
-              disabled={!isSubscribed}
-              variant="secondary"
-              className="flex items-center gap-2"
-            >
-              <Send className="h-4 w-4" />
-              Send Test (Edge Function)
-            </Button>
-          </div>
-          
-          <Separator />
-          
-          <div className="flex gap-4">
-            {isSubscribed && (
-              <Button onClick={unsubscribe} disabled={loading} variant="destructive">
-                Unsubscribe
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
