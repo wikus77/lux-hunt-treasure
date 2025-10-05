@@ -60,26 +60,29 @@ serve(async (req) => {
       });
     }
 
-    // Create authenticated client
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      {
-        global: {
-          headers: { Authorization: authHeader }
-        }
-      }
-    );
+    // Create service role client (bypass RLS) and extract user from JWT
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('[PUSH-SUBSCRIBE] Missing Supabase env vars');
+      return new Response(JSON.stringify({ error: 'Server misconfiguration' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    const serviceClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get user from auth
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      console.error('[PUSH-SUBSCRIBE] Auth error:', authError);
-      return new Response(JSON.stringify({ 
-        error: 'Unauthorized',
-        details: authError?.message 
-      }), {
+    // Extract user_id from Authorization JWT (already verified by Edge runtime)
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    let userId: string | null = null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] || ''));
+      userId = payload.sub || payload.user_id || null;
+    } catch (e) {
+      console.error('[PUSH-SUBSCRIBE] JWT parse error:', e);
+    }
+    if (!userId) {
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -93,10 +96,10 @@ serve(async (req) => {
     }
 
     // Save to webpush_subscriptions
-    const { data, error } = await supabase
+    const { data, error } = await serviceClient
       .from('webpush_subscriptions')
       .upsert({
-        user_id: user.id,
+        user_id: userId,
         endpoint,
         keys: { p256dh, auth },
         device_info: { ua, platform },
@@ -119,7 +122,7 @@ serve(async (req) => {
       });
     }
 
-    console.log(`[PUSH-SUBSCRIBE] ✅ Saved subscription for user ${user.id} (${platform})`);
+    console.log(`[PUSH-SUBSCRIBE] ✅ Saved subscription for user ${userId} (${platform})`);
 
     return new Response(JSON.stringify({
       success: true,
