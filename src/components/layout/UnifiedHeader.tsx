@@ -1,6 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™
-import { Link } from "wouter";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -47,7 +46,10 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
-  const { shouldHideHeader } = useScrollDirection(50);
+  const { shouldHideHeader } = useScrollDirection(
+    50, 
+    location === '/map' ? '#map-scroll-container' : undefined
+  );
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
