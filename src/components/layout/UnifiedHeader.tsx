@@ -138,7 +138,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   return (
     <>
-      <MinimalHeaderStrip show={shouldHideHeader}>
+      <MinimalHeaderStrip show={false}>
         {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
         <div className="flex flex-col items-center gap-1">
           {/* CODE con pallino pulsante */}
@@ -173,29 +173,38 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       </MinimalHeaderStrip>
       <motion.header
         initial={{ y: -20, opacity: 0 }}
-        animate={{ 
-          y: isMap ? 0 : (shouldHideHeader ? -100 : 0), 
-          opacity: shouldHideHeader ? 0 : 1 
-        }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl rounded-b-lg"
       style={{
         top: '0px',
-        background: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(0, 209, 255, 0.2)',
-        boxShadow: '0 4px 24px rgba(0, 209, 255, 0.18), 0 2px 12px rgba(0, 209, 255, 0.12), inset 0 -1px 0 rgba(0, 209, 255, 0.12)',
+        background: 'transparent',
+        backdropFilter: 'none',
+        WebkitBackdropFilter: 'none',
+        borderBottom: 'none',
+        boxShadow: 'none',
         paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
         height: 'calc(72px + max(env(safe-area-inset-top, 0px), 8px))',
         isolation: 'isolate',
       }}
     >
-      <div className="container mx-auto h-full max-w-screen-xl relative">
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-b-lg"
+          animate={{ opacity: shouldHideHeader ? 0 : 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(0, 209, 255, 0.2)',
+            boxShadow: '0 4px 24px rgba(0, 209, 255, 0.18), 0 2px 12px rgba(0, 209, 255, 0.12), inset 0 -1px 0 rgba(0, 209, 255, 0.12)'
+          }}
+        />
+        <div className="container mx-auto h-full max-w-screen-xl relative">
           {/* Main Header Row */}
           <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
             {/* Left Section */}
-            <div className="flex items-center">
+            <motion.div className="flex items-center" animate={{ opacity: shouldHideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {leftComponent ? (
                 leftComponent
               ) : (
@@ -223,7 +232,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   </Link>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
@@ -258,7 +267,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center space-x-1 sm:space-x-3">
+            <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: shouldHideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {/* Settings - Always accessible for authenticated users */}
               <Link to="/settings">
                 <Button
@@ -289,11 +298,15 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 profileImage={currentProfileImage}
                 className="cursor-pointer"
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Animated color line at bottom of header - same as bottom navigation */}
-          <div className="line-glow absolute bottom-0 left-0 w-full"></div>
+          <motion.div 
+            className="line-glow absolute bottom-0 left-0 w-full"
+            animate={{ opacity: shouldHideHeader ? 0 : 1 }}
+            transition={{ duration: 0.3 }}
+          />
         </div>
       </motion.header>
     </>
