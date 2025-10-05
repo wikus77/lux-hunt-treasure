@@ -81,8 +81,10 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
                 displayCluesFound === 0 ? 'bg-gray-500' :
-                displayCluesFound < 50 ? 'bg-blue-400' :
-                displayCluesFound < 150 ? 'bg-green-400' : 'bg-yellow-400'
+                displayCluesFound < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
+                displayCluesFound < 100 ? 'bg-gradient-to-r from-blue-400 to-green-400' :
+                displayCluesFound < 150 ? 'bg-gradient-to-r from-green-400 to-yellow-400' : 
+                'bg-gradient-to-r from-yellow-400 to-red-500'
               }`}
               style={{ width: `${(displayCluesFound / totalClues) * 100}%` }}
             />
@@ -166,7 +168,12 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
-              className="bg-amber-400 h-2 rounded-full transition-all duration-500"
+              className={`h-2 rounded-full transition-all duration-500 ${
+                mission.remainingDays <= 0 ? 'bg-red-500' :
+                mission.remainingDays <= 5 ? 'bg-gradient-to-r from-yellow-400 to-red-500' :
+                mission.remainingDays <= 15 ? 'bg-gradient-to-r from-green-400 to-yellow-400' : 
+                'bg-gradient-to-r from-[#00D1FF] to-green-400'
+              }`}
               style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }}
             />
           </div>
