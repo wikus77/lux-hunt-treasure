@@ -1,12 +1,12 @@
 // M1SSION™ - Enhanced Navigation Hook for iOS Capacitor
 import { useWouterNavigation } from '@/hooks/useWouterNavigation';
 import { useNavigationStore } from '@/stores/navigationStore';
-import { usePWAHardware } from './usePWAHardware';
+import { usePWAHardwareStub } from './usePWAHardwareStub';
 import { pwaNavigationHandler, preserveFunctionName } from '@/utils/pwaStubs';
 
 export const useEnhancedNavigation = () => {
   const { navigate, currentPath: location } = useWouterNavigation();
-  const { isPWA, vibrate } = usePWAHardware();
+  const { isPWA, triggerHaptic } = usePWAHardwareStub();
   const { setCurrentTab, addToHistory, goBack } = useNavigationStore();
 
   // Enhanced navigation with haptic feedback and iOS optimizations
@@ -14,9 +14,9 @@ export const useEnhancedNavigation = () => {
     async (path: string, options?: { replace?: boolean; haptic?: boolean }) => {
       console.log('🧭 Enhanced navigation to:', path);
       
-      // Haptic feedback on navigation (iOS)
-      if (options?.haptic !== false && isPWA) {
-        await vibrate(50);
+      // Haptic feedback on navigation
+      if (options?.haptic !== false) {
+        await triggerHaptic('tick');
       }
       
       // Update store
@@ -42,8 +42,8 @@ export const useEnhancedNavigation = () => {
       console.log('🧭 Enhanced back navigation');
       
       // Haptic feedback
-      if (options?.haptic !== false && isPWA) {
-        await vibrate(30);
+      if (options?.haptic !== false) {
+        await triggerHaptic('selection');
       }
       
       // Use browser's native back navigation for better UX

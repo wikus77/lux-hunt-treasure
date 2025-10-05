@@ -10,6 +10,7 @@ import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useAbuseProtection } from './useAbuseProtection';
 import { useStripePayment } from '@/hooks/useStripePayment';
 import { useBuzzNotificationScheduler } from '@/hooks/useBuzzNotificationScheduler';
+import { HapticType } from '@/utils/haptics';
 
 // --- BUZZ TOAST GLOBAL LOCK (shared) ---
 const __buzz = (globalThis as any).__buzzToastLock ?? { shown: false, t: 0 };
@@ -36,7 +37,7 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
   const [buzzing, setBuzzing] = useState(false);
   const [showShockwave, setShowShockwave] = useState(false);
   const { user } = useAuth();
-  const { vibrate } = usePWAHardwareStub();
+  const { vibrate, triggerHaptic } = usePWAHardwareStub();
   const { checkAbuseAndLog } = useAbuseProtection();
   const { processBuzzPurchase, loading: paymentLoading } = useStripePayment();
   const { scheduleBuzzAvailableNotification } = useBuzzNotificationScheduler();
@@ -68,7 +69,7 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
     try {
       setBuzzing(true);
       setShowShockwave(true);
-      await vibrate(100);
+      await triggerHaptic('buzzUnlocked');
       
       console.log('💰 BUZZ PRICE CHECK - FIXED', { currentPrice, hasFreeBuzz });
       
@@ -185,6 +186,7 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
         
         // Show clue toast if fresh notification available
         if (isDataFresh && data?.message && !buzzToastShown) {
+          await triggerHaptic('success');
           buzzToastOnce('success', data.message, {
             duration: 4000,
             position: 'top-center',
@@ -193,6 +195,7 @@ export function useBuzzHandler({ currentPrice, onSuccess, hasFreeBuzz = false, c
             }
           });
         } else if (hadError && !buzzToastShown) {
+          await triggerHaptic('error');
           buzzToastOnce('error', "Non sono riuscito a generare l'indizio, riprova fra poco.");
         }
         
