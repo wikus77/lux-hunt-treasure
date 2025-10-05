@@ -33,9 +33,9 @@ export async function enableWebPush() {
     const { endpoint, keys } = json;
     return {
       endpoint,
-      p256dh: keys?.p256dh,
-      auth: keys?.auth,
+      keys: { p256dh: keys?.p256dh, auth: keys?.auth },
       ua: navigator.userAgent,
+      platform: 'web',
     };
   })();
 
@@ -47,22 +47,14 @@ export async function enableWebPush() {
     throw new Error('User not authenticated');
   }
 
-  const url = "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push-subscribe";
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
-      'Authorization': `Bearer ${session.access_token}`,
-      'Origin': window.location.origin,
-    },
-    body: JSON.stringify(body),
+  // Invoke Supabase Edge Function with automatic headers (Authorization + apikey)
+  const { data, error } = await supabase.functions.invoke('push-subscribe', {
+    body,
   });
-  
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    await sub.unsubscribe().catch(()=>{});
-    throw new Error(`push-subscribe failed: ${res.status} - ${errorData.error || errorData.details || 'Unknown error'}`);
+
+  if (error) {
+    await sub.unsubscribe().catch(() => {});
+    throw new Error(`push-subscribe failed: ${error.message}`);
   }
   return sub;
 }

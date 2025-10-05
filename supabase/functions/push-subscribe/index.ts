@@ -43,18 +43,22 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: 'Missing Authorization header' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     const body = await req.json();
-    const { endpoint, p256dh, auth, ua } = body;
+    const endpoint = body?.endpoint;
+    const keysObj = body?.keys || { p256dh: body?.p256dh, auth: body?.auth };
+    const ua = body?.ua;
+    const incomingPlatform = body?.platform;
 
-    if (!endpoint || !p256dh || !auth) {
+    if (!endpoint || !keysObj?.p256dh || !keysObj?.auth) {
       return new Response(JSON.stringify({ 
-        error: 'Missing required fields: endpoint, p256dh, auth' 
+        error: 'Bad Request',
+        details: 'Missing required fields: endpoint, keys.p256dh, keys.auth' 
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -73,28 +77,27 @@ serve(async (req) => {
     }
     const serviceClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Extract user_id from Authorization JWT (already verified by Edge runtime)
+    // Validate JWT and get user
     const token = authHeader.replace(/^Bearer\s+/i, '');
-    let userId: string | null = null;
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1] || ''));
-      userId = payload.sub || payload.user_id || null;
-    } catch (e) {
-      console.error('[PUSH-SUBSCRIBE] JWT parse error:', e);
-    }
-    if (!userId) {
-      return new Response(JSON.stringify({ error: 'Unauthorized', details: 'Invalid token' }), {
+    const { data: authData, error: authErr } = await serviceClient.auth.getUser(token);
+    if (authErr || !authData?.user) {
+      console.error('[PUSH-SUBSCRIBE] Invalid JWT:', authErr?.message);
+      return new Response(JSON.stringify({ error: 'Unauthorized: invalid JWT' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+    const userId = authData.user.id;
+    console.log('[PUSH-SUBSCRIBE] Auth user', userId);
 
-    // Detect platform from user agent
-    let platform = 'web';
-    if (ua) {
+    // Determine platform
+    let platform = incomingPlatform || 'web';
+    if (!incomingPlatform && ua) {
       if (/iphone|ipod|ipad/i.test(ua)) platform = 'ios';
       else if (/android/i.test(ua)) platform = 'android';
     }
+
+    console.log('[PUSH-SUBSCRIBE] Payload', { endpoint: String(endpoint).slice(0,50) + '...', hasKeys: !!(keysObj?.p256dh && keysObj?.auth), platform });
 
     // Save to webpush_subscriptions
     const { data, error } = await serviceClient
@@ -102,7 +105,7 @@ serve(async (req) => {
       .upsert({
         user_id: userId,
         endpoint,
-        keys: { p256dh, auth },
+        keys: keysObj,
         device_info: { ua, platform },
         is_active: true,
         last_used_at: new Date().toISOString()
