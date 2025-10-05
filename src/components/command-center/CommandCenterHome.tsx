@@ -68,7 +68,7 @@ export default function CommandCenterHome() {
     dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
   } : {
     id: "M001",
-    title: "Caccia al Tesoro Urbano",
+    title: "M1SSION ONE",
     totalClues: 200,
     foundClues: 0,
     timeLimit: "48:00:00",
