@@ -46,12 +46,29 @@ export async function enableWebPush() {
   // 4) Get active registration and subscription
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
+  const vapidKeyUint8 = getVAPIDUint8();
+  
+  // Check if existing subscription uses different VAPID key
+  if (sub) {
+    // @ts-ignore - not all implementations expose options
+    const curKey = sub.options?.applicationServerKey;
+    const sameKey =
+      curKey &&
+      vapidKeyUint8.byteLength === curKey.byteLength &&
+      new Uint8Array(curKey).every((v, i) => v === vapidKeyUint8[i]);
+
+    if (!sameKey) {
+      console.log('[ENABLE-WEBPUSH] Unsubscribing from old VAPID key');
+      try { await sub.unsubscribe(); } catch {}
+      sub = null;
+    }
+  }
+
   let createdNew = false;
   if (!sub) {
-    const appServerKey = getVAPIDUint8();
     sub = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: appServerKey as unknown as BufferSource,
+      applicationServerKey: vapidKeyUint8 as unknown as BufferSource,
     });
     createdNew = true;
   }
@@ -64,13 +81,29 @@ export async function enableWebPush() {
                    navigator.platform || 
                    'web';
   
+  // Helper to convert ArrayBuffer to base64url
+  const arrayBufferToBase64Url = (buffer: ArrayBuffer | null): string => {
+    if (!buffer) return '';
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  };
+  
   const body = {
     user_id: session!.user.id,
     provider: 'webpush',
     endpoint: raw.endpoint,
-    keys: raw.keys, // Send as nested object: {p256dh, auth}
-    ua: navigator.userAgent,
-    platform
+    keys: {
+      p256dh: arrayBufferToBase64Url(sub.getKey('p256dh')),
+      auth: arrayBufferToBase64Url(sub.getKey('auth'))
+    },
+    device_info: {
+      ua: navigator.userAgent,
+      platform
+    }
   };
 
   const { data, error } = await supabase.functions.invoke('webpush-upsert', {
