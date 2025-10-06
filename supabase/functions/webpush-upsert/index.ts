@@ -62,22 +62,24 @@ serve(async (req) => {
       });
     }
 
-    // Extract and normalize keys (support both nested and flat formats)
-    const endpoint = body.endpoint;
-    let p256dh: string | undefined;
-    let auth: string | undefined;
+    // Extract fields tolerantly (support both flat and nested formats)
+    const { user_id: bodyUserId, provider, endpoint, ua, platform } = body;
+    const p256dh = body?.p256dh ?? body?.keys?.p256dh;
+    const auth   = body?.auth   ?? body?.keys?.auth;
 
-    if (body.keys && typeof body.keys === 'object') {
-      // Nested format: {keys: {p256dh, auth}}
-      p256dh = body.keys.p256dh;
-      auth = body.keys.auth;
-    } else {
-      // Flat format: {p256dh, auth}
-      p256dh = body.p256dh;
-      auth = body.auth;
+    // Validation: user_id (from body or will be extracted from JWT)
+    // provider, endpoint, p256dh, auth are required
+    const validProvider = provider || 'webpush';
+    if (validProvider !== 'webpush') {
+      return new Response(JSON.stringify({ 
+        error: 'Invalid provider. Must be "webpush"',
+        reason: 'invalid_provider'
+      }), {
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
 
-    // Validation
     if (!endpoint || typeof endpoint !== 'string') {
       return new Response(JSON.stringify({ 
         error: 'Missing or invalid endpoint',
@@ -90,9 +92,9 @@ serve(async (req) => {
 
     if (!p256dh || !auth) {
       return new Response(JSON.stringify({ 
-        error: 'Missing required fields: p256dh and auth',
+        error: 'Missing required keys fields',
         missing_fields: [!p256dh && 'p256dh', !auth && 'auth'].filter(Boolean),
-        reason: 'missing_keys'
+        reason: 'missing_fields'
       }), {
         status: 400, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -135,26 +137,33 @@ serve(async (req) => {
     }
 
     const userId = user.id;
-    const endpointHash = endpoint.substring(endpoint.length - 12);
+    const endpointTail = endpoint.substring(endpoint.length - 12);
 
     console.log('[WEBPUSH-UPSERT]', {
       hasAuth: true,
       userId,
-      endpointHash,
-      platform: body.platform || 'unknown'
+      endpointTail,
+      provider: validProvider,
+      platform: platform || 'web'
     });
 
-    // Upsert subscription
+    // Prepare keys JSONB
+    const keysJsonb = { p256dh, auth };
+    
+    // Prepare device_info JSONB (merge with existing if present)
+    const deviceInfoJsonb = {
+      platform: platform || 'web',
+      ua: ua || req.headers.get('user-agent') || 'unknown'
+    };
+
+    // Upsert subscription using JSONB for keys
     const { data, error } = await supabase
       .from('webpush_subscriptions')
       .upsert({
         user_id: userId,
         endpoint: endpoint,
-        keys: { p256dh, auth }, // Store as JSONB
-        device_info: {
-          platform: body.platform || 'web',
-          ua: body.ua || req.headers.get('user-agent') || 'unknown'
-        },
+        keys: keysJsonb,
+        device_info: deviceInfoJsonb,
         is_active: true,
         last_used_at: new Date().toISOString()
       }, { 
@@ -167,7 +176,7 @@ serve(async (req) => {
       console.error('[WEBPUSH-UPSERT] Database error:', error);
       return new Response(JSON.stringify({ 
         error: 'Database error',
-        reason: 'db_upsert_failed',
+        reason: 'database_error',
         details: error.message 
       }), { 
         status: 500, 
@@ -177,9 +186,12 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      upserted: true,
-      user_id: userId,
-      endpoint_hash: endpointHash,
+      upserted: {
+        endpoint_tail: endpointTail,
+        user_id: userId,
+        provider: validProvider
+      },
+      mode: 'jsonb_keys',
       id: data?.id
     }), {
       status: 200,
