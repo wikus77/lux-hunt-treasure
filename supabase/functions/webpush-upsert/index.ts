@@ -1,5 +1,5 @@
 /*
- * M1SSION™ Web Push Subscription Upsert
+ * M1SSION™ Web Push Subscription Upsert - Hardened Version
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
  */
 
@@ -11,7 +11,9 @@ function getCorsHeaders(request: Request): Record<string, string> {
   const allowedOrigins = [
     'https://m1ssion.eu',
     /^https:\/\/.*\.m1ssion\.pages\.dev$/,
-    /^https:\/\/.*\.lovable\.dev$/
+    /^https:\/\/.*\.lovable\.dev$/,
+    /^https:\/\/.*\.lovableproject\.com$/,
+    /^http:\/\/localhost(:\d+)?$/
   ];
   
   let allowOrigin = 'https://m1ssion.eu';
@@ -24,7 +26,7 @@ function getCorsHeaders(request: Request): Record<string, string> {
   
   return {
     'Access-Control-Allow-Origin': allowOrigin,
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info, x-mi-dropper-version',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Vary': 'Origin'
   };
@@ -36,6 +38,7 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
+  
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
       status: 405, 
@@ -44,60 +47,118 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const { user_id, endpoint, provider, p256dh, auth, keys, platform, is_active } = body;
-
-    // Validazione: 400 se mancano i 5 campi top-level richiesti
-    if (!user_id || !endpoint || !provider || !p256dh || !auth) {
-      const missing = [];
-      if (!user_id) missing.push('user_id');
-      if (!endpoint) missing.push('endpoint');
-      if (!provider) missing.push('provider');
-      if (!p256dh) missing.push('p256dh');
-      if (!auth) missing.push('auth');
-      
+    // Parse body with error handling
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (parseError) {
+      console.error('[WEBPUSH-UPSERT] Body parse error:', parseError);
       return new Response(JSON.stringify({ 
-        error: 'Missing required fields', 
-        missing_fields: missing 
+        error: 'Invalid JSON body',
+        reason: 'body_parse_error'
       }), {
         status: 400, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Auth: JWT utente (Bearer token)
-    const authHeader = req.headers.get('Authorization') ?? '';
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      {
-        global: { headers: { Authorization: authHeader } }
-      }
-    );
+    // Extract and normalize keys (support both nested and flat formats)
+    const endpoint = body.endpoint;
+    let p256dh: string | undefined;
+    let auth: string | undefined;
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user || user.id !== user_id) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+    if (body.keys && typeof body.keys === 'object') {
+      // Nested format: {keys: {p256dh, auth}}
+      p256dh = body.keys.p256dh;
+      auth = body.keys.auth;
+    } else {
+      // Flat format: {p256dh, auth}
+      p256dh = body.p256dh;
+      auth = body.auth;
+    }
+
+    // Validation
+    if (!endpoint || typeof endpoint !== 'string') {
+      return new Response(JSON.stringify({ 
+        error: 'Missing or invalid endpoint',
+        reason: 'missing_endpoint'
+      }), {
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (!p256dh || !auth) {
+      return new Response(JSON.stringify({ 
+        error: 'Missing required fields: p256dh and auth',
+        missing_fields: [!p256dh && 'p256dh', !auth && 'auth'].filter(Boolean),
+        reason: 'missing_keys'
+      }), {
+        status: 400, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Auth: JWT required
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized',
+        reason: 'missing_or_invalid_jwt'
+      }), { 
         status: 401, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       });
     }
 
+    const token = authHeader.substring(7);
+
+    // Create Supabase client with service role to bypass RLS for getUser
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY')!
+    );
+
+    // Validate user token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.error('[WEBPUSH-UPSERT] Auth error:', userError);
+      return new Response(JSON.stringify({ 
+        error: 'Unauthorized',
+        reason: 'invalid_jwt',
+        details: userError?.message
+      }), { 
+        status: 401, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      });
+    }
+
+    const userId = user.id;
+    const endpointHash = endpoint.substring(endpoint.length - 12);
+
+    console.log('[WEBPUSH-UPSERT]', {
+      hasAuth: true,
+      userId,
+      endpointHash,
+      platform: body.platform || 'unknown'
+    });
+
     // Upsert subscription
     const { data, error } = await supabase
       .from('webpush_subscriptions')
       .upsert({
-        user_id,
-        endpoint,
-        provider,
-        p256dh,
-        auth,
-        keys: keys || { p256dh, auth },
-        platform: platform || 'desktop',
-        is_active: is_active !== undefined ? is_active : true,
-        updated_at: new Date().toISOString()
+        user_id: userId,
+        endpoint: endpoint,
+        keys: { p256dh, auth }, // Store as JSONB
+        device_info: {
+          platform: body.platform || 'web',
+          ua: body.ua || req.headers.get('user-agent') || 'unknown'
+        },
+        is_active: true,
+        last_used_at: new Date().toISOString()
       }, { 
-        onConflict: 'user_id,endpoint' 
+        onConflict: 'endpoint' 
       })
       .select()
       .single();
@@ -105,7 +166,9 @@ serve(async (req) => {
     if (error) {
       console.error('[WEBPUSH-UPSERT] Database error:', error);
       return new Response(JSON.stringify({ 
-        error: 'Database error: ' + error.message 
+        error: 'Database error',
+        reason: 'db_upsert_failed',
+        details: error.message 
       }), { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -114,17 +177,21 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      id: data.id,
-      endpoint: data.endpoint,
-      provider: data.provider
+      upserted: true,
+      user_id: userId,
+      endpoint_hash: endpointHash,
+      id: data?.id
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('[WEBPUSH-UPSERT] Error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), { 
+    console.error('[WEBPUSH-UPSERT] Unexpected error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      reason: 'internal_error'
+    }), { 
       status: 500, 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
     });
