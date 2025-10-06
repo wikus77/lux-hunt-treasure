@@ -654,6 +654,119 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_push_config: {
+        Row: {
+          created_at: string
+          daily_max: number
+          daily_min: number
+          enabled: boolean
+          id: string
+          quiet_end: string
+          quiet_start: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_max?: number
+          daily_min?: number
+          enabled?: boolean
+          id?: string
+          quiet_end?: string
+          quiet_start?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_max?: number
+          daily_min?: number
+          enabled?: boolean
+          id?: string
+          quiet_end?: string
+          quiet_start?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auto_push_log: {
+        Row: {
+          created_at: string
+          delivery: Json | null
+          id: string
+          sent_at: string
+          sent_date: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery?: Json | null
+          id?: string
+          sent_at?: string
+          sent_date?: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery?: Json | null
+          id?: string
+          sent_at?: string
+          sent_date?: string
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_push_log_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "auto_push_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auto_push_templates: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          id: string
+          image_url: string | null
+          kind: string
+          title: string
+          updated_at: string
+          url: string
+          weight: number
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind: string
+          title: string
+          updated_at?: string
+          url?: string
+          weight?: number
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       backup_logs: {
         Row: {
           backup_date: string
