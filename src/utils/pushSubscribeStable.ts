@@ -10,7 +10,8 @@ export interface StableSubscriptionResult {
   auth: string;
 }
 
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+import { getVAPIDPublicWeb } from '@/lib/config/push';
+const VAPID_PUBLIC_KEY = getVAPIDPublicWeb();
 
 /**
  * Isolated and serialized flow: register SW → ready → controller → permission → subscribe

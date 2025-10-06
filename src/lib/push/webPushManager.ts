@@ -33,13 +33,10 @@ export function isPWAMode(): boolean {
   );
 }
 
-// Get VAPID public key from environment
-export function getVAPIDKey(): string {
-  const key = import.meta.env.VITE_VAPID_PUBLIC_KEY;
-  if (!key) {
-    throw new Error('VITE_VAPID_PUBLIC_KEY not configured in .env');
-  }
-  return key;
+// Get VAPID public key from environment (unified source)
+import { getVAPIDUint8 } from '@/lib/config/push';
+export function getVAPIDKey(): Uint8Array {
+  return getVAPIDUint8();
 }
 
 // Subscribe to Web Push notifications
@@ -90,8 +87,7 @@ export async function subscribeToWebPush(userId?: string): Promise<PushSubscript
   }
   
   // Get VAPID key
-  const vapidKey = getVAPIDKey();
-  const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+  const applicationServerKey = getVAPIDKey();
   
   // Subscribe to push
   console.log('[WEBPUSH] Subscribing to push...');

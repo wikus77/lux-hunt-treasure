@@ -57,9 +57,10 @@ export default function DebugTab() {
       setSessionInfo('Not logged in');
     }
 
-    // VAPID
+    // VAPID (unified source)
     try {
-      const vapid = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+      const { getVAPIDPublicWeb } = await import('@/lib/config/push');
+      const vapid = getVAPIDPublicWeb();
       setVapidKey(vapid ? '...' + vapid.slice(-12) : 'Not configured');
     } catch {
       setVapidKey('Error reading VAPID');
