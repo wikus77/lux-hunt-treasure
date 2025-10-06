@@ -597,6 +597,18 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/panel/push-control">
+            <ProtectedRoute>
+              <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/push-preflight">
+            <ProtectedRoute>
+              <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           {/* 🔥 Firebase Notification Debug Route */}
           <Route path="/firebase-notification-debug">
             <ProtectedRoute>
