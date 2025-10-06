@@ -58,6 +58,7 @@ import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
 import AdminPushConsolePage from "@/pages/push/AdminPushConsolePage";
+import PushSenderPanel from "@/pages/panel/PushSenderPanel";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
 import PanelUsersPage from "@/pages/PanelUsersPage";
@@ -481,6 +482,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/panel/push">
             <ProtectedRoute>
               <AdminPushConsolePage />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/push-sender">
+            <ProtectedRoute>
+              <PushSenderPanel />
             </ProtectedRoute>
           </Route>
 
