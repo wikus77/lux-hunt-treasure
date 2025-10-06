@@ -63,7 +63,9 @@ serve(async (req) => {
     }
 
     // Extract fields tolerantly (support both flat and nested formats)
-    const { user_id: bodyUserId, provider, endpoint, ua, platform } = body;
+    const { provider, endpoint } = body;
+    const ua = body.ua ?? body.device_info?.ua ?? body.user_agent ?? null;
+    const platform = body.platform ?? body.device_info?.platform ?? null;
     const p256dh = body?.p256dh ?? body?.keys?.p256dh;
     const auth   = body?.auth   ?? body?.keys?.auth;
 
@@ -150,8 +152,9 @@ serve(async (req) => {
     // Prepare keys JSONB
     const keysJsonb = { p256dh, auth };
     
-    // Prepare device_info JSONB (merge with existing if present)
+    // Prepare device_info JSONB
     const deviceInfoJsonb = {
+      provider: validProvider,
       platform: platform || 'web',
       ua: ua || req.headers.get('user-agent') || 'unknown'
     };

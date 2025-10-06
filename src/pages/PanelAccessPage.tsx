@@ -15,15 +15,14 @@ import { MissionConfigSection } from '@/components/panel/MissionConfigSection';
 import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
-import { M1ssionDebugTest } from './M1ssionDebugTest';
-import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
+// Removed obsolete debug panels - now using unified Push Center
 import BulkMarkerDropComponent from '@/components/admin/BulkMarkerDropComponent';
 import UsersRealtimePanel from '@/components/panel/UsersRealtimePanel';
 import { useLocation } from 'wouter';
 import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
 import PushCenterCard from '@/components/push-center/PushCenterCard';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'bulk-marker-drop' | 'push-center';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'bulk-marker-drop' | 'push-center';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -218,35 +217,7 @@ const PanelAccessPage = () => {
     );
   }
 
-  if (currentView === 'debug-test' && hasAccess) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
-        <Helmet>
-          <title>M1SSION PANEL™ - Debug Test</title>
-        </Helmet>
-        <UnifiedHeader profileImage={profileImage} />
-        <div 
-          className="px-4 py-8"
-          style={{ 
-            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-          }}
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 mb-8">
-              <button 
-                onClick={() => setCurrentView('home')}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ← Torna al Panel
-              </button>
-            </div>
-            <M1ssionDebugTest />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Removed old debug-test view - replaced by unified Push Center
 
   // Push Center View
   if (currentView === 'push-center' && hasAccess && isAdmin) {
