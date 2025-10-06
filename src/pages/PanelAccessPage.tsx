@@ -22,8 +22,9 @@ import { useLocation } from 'wouter';
 import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
 import PushCenterCard from '@/components/push-center/PushCenterCard';
 import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
+import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'bulk-marker-drop' | 'push-center' | 'push-control' | 'push-sender';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'bulk-marker-drop' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -315,6 +316,37 @@ const PanelAccessPage = () => {
     );
   }
 
+  // Push Preflight View
+  if (currentView === 'push-preflight' && hasAccess && isAdmin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <Helmet>
+          <title>M1SSION PANEL™ - Push Preflight</title>
+        </Helmet>
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-4 mb-8">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+            </div>
+            <PushAutoPreflightPage />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ========== HOME VIEW ==========
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
@@ -555,6 +587,25 @@ const PanelAccessPage = () => {
                     <div>
                       <h3 className="font-semibold text-white">🚀 Push Control Panel</h3>
                       <p className="text-gray-400 text-sm">Invio notifiche push avanzato</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {isAdmin && (
+                <motion.div 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setCurrentView('push-preflight')}
+                  className="glass-card p-4 border border-emerald-500/30 cursor-pointer group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <Shield className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white">🔍 Push Preflight (RO)</h3>
+                      <p className="text-gray-400 text-sm">Diagnostica catena push (solo lettura)</p>
                     </div>
                   </div>
                 </motion.div>
