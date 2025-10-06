@@ -62,7 +62,7 @@ enable_signup = true
 # enable_phone_autoconfirm = true
 
 [functions.webpush-send]
-
+verify_jwt = false
 [functions.webpush-upsert]
 
 [functions.geofence-engine]
