@@ -56,13 +56,21 @@ export async function enableWebPush() {
     createdNew = true;
   }
 
-  // 5) Invoke push-subscribe with explicit Authorization header
-  const json = sub.toJSON();
+  // 5) Invoke webpush-upsert with explicit Authorization header
+  const raw = sub.toJSON();
+  
+  // Determine platform
+  const platform = (navigator as any).userAgentData?.platform || 
+                   navigator.platform || 
+                   'web';
+  
   const body = {
-    endpoint: json.endpoint,
-    keys: { p256dh: json.keys?.p256dh, auth: json.keys?.auth },
-    platform: 'web',
+    user_id: session!.user.id,
+    provider: 'webpush',
+    endpoint: raw.endpoint,
+    keys: raw.keys, // Send as nested object: {p256dh, auth}
     ua: navigator.userAgent,
+    platform
   };
 
   const { data, error } = await supabase.functions.invoke('webpush-upsert', {
@@ -70,7 +78,7 @@ export async function enableWebPush() {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  console.log('[ENABLE-WEBPUSH] webpush-upsert response:', { data, error, status: data?.status });
+  console.log('[ENABLE-WEBPUSH] webpush-upsert response:', { data, error });
   
   if (error || (data && data.error)) {
     console.error('[ENABLE-WEBPUSH] webpush-upsert failed:', { error, data });

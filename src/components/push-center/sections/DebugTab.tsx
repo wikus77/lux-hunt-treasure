@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, RefreshCw, Send, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { getCurrentSubscription } from '@/utils/safeWebPushSubscribe';
-import { upsertWebPushSubscription, sendPushNotification, getSuggestion } from '../utils/api';
-import { getVAPIDUint8 } from '@/lib/config/push';
+import { sendPushNotification, getSuggestion } from '../utils/api';
+import { enableWebPush } from '@/lib/push/enableWebPush';
 
 export default function DebugTab() {
   const [permission, setPermission] = useState<NotificationPermission>('default');
@@ -75,57 +75,53 @@ export default function DebugTab() {
     setLastUpsertResult(null);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('Not authenticated. Please log in first.');
-      }
-
-      // Request permission
-      if (Notification.permission !== 'granted') {
-        const perm = await Notification.requestPermission();
-        if (perm !== 'granted') {
-          throw new Error('Notification permission denied');
-        }
-      }
-
-      // Get/create subscription
-      const reg = await navigator.serviceWorker.ready;
-      let sub = await reg.pushManager.getSubscription();
+      const sub = await enableWebPush();
       
-      if (!sub) {
-        const applicationServerKey = getVAPIDUint8();
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: applicationServerKey as unknown as BufferSource,
-        });
-      }
-
-      // Call webpush-upsert
-      const json = sub.toJSON();
-      const result = await upsertWebPushSubscription(
-        {
-          endpoint: json.endpoint!,
-          keys: {
-            p256dh: json.keys!.p256dh!,
-            auth: json.keys!.auth!
-          },
-          platform: 'web',
-          ua: navigator.userAgent
-        },
-        session.access_token
-      );
-
+      const endpointTail = sub.endpoint.substring(sub.endpoint.length - 12);
       setLastUpsertResult({
-        ...result,
-        suggestion: getSuggestion(result.error, result.status)
+        status: 200,
+        data: { 
+          ok: true, 
+          message: 'Subscription successful',
+          endpoint_tail: endpointTail,
+          mode: 'jsonb_keys'
+        },
+        suggestion: '✅ Success! Subscription registered in DB with JSONB keys.'
       });
 
       await updateStatus();
     } catch (error: any) {
+      console.error('[DebugTab] Resubscribe error:', error);
+      
+      // Parse error for specific reasons
+      let errorReason = 'unknown_error';
+      let errorMessage = error.message;
+      let suggestion = '';
+      
+      if (error.message.includes('missing_fields')) {
+        errorReason = 'missing_fields';
+        errorMessage = 'Missing p256dh or auth keys';
+        suggestion = '⚠️ Browser subscription may have failed. Check VAPID key configuration.';
+      } else if (error.message.includes('database_error')) {
+        errorReason = 'database_error';
+        errorMessage = 'Database error during upsert';
+        suggestion = '⚠️ Check webpush_subscriptions table schema and RLS policies in Supabase.';
+      } else if (error.message.includes('invalid_jwt') || error.message.includes('Unauthorized')) {
+        errorReason = 'auth_error';
+        errorMessage = 'Authentication failed';
+        suggestion = '⚠️ JWT invalid or expired. Please log in again.';
+      } else if (error.message.includes('Permesso notifiche negato')) {
+        errorReason = 'permission_denied';
+        errorMessage = 'Notification permission denied';
+        suggestion = '⚠️ User denied notification permission. Check browser settings.';
+      } else {
+        suggestion = '⚠️ ' + errorMessage;
+      }
+      
       setLastUpsertResult({
         status: 0,
-        data: { error: error.message },
-        suggestion: getSuggestion(error.message)
+        data: { error: errorMessage, reason: errorReason },
+        suggestion
       });
     } finally {
       setIsLoading(false);
