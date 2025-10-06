@@ -189,25 +189,33 @@ async function saveSubscriptionToDatabase(
     platform = 'android';
   }
   
-  const { error } = await supabase
-    .from('webpush_subscriptions')
-    .upsert({
-      user_id: finalUserId,
+  // Use webpush-upsert Edge Function instead of direct DB call
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  
+  if (!token) {
+    console.warn('[WEBPUSH] No JWT token, skipping upsert call');
+    return;
+  }
+
+  const { data, error } = await supabase.functions.invoke('webpush-upsert', {
+    body: {
       endpoint: subscription.endpoint,
       keys: { p256dh: keys.p256dh, auth: keys.auth },
-      device_info: { platform, ua: navigator.userAgent },
-      is_active: true,
-      last_used_at: new Date().toISOString()
-    }, {
-      onConflict: 'endpoint'
-    });
-  
-  if (error) {
-    console.error('[WEBPUSH] ❌ Database save error:', error);
-    throw new Error(`Failed to save subscription: ${error.message}`);
+      platform,
+      ua: navigator.userAgent
+    },
+    headers: { Authorization: `Bearer ${token}` }
+  });
+
+  console.log('[WEBPUSH] webpush-upsert response:', { data, error });
+
+  if (error || (data && data.error)) {
+    console.error('[WEBPUSH] ❌ webpush-upsert error:', error || data?.error);
+    throw new Error(`Failed to save subscription: ${error?.message || data?.error || 'Unknown error'}`);
   }
   
-  console.log('[WEBPUSH] ✅ Subscription saved to database');
+  console.log('[WEBPUSH] ✅ Subscription saved via webpush-upsert');
 }
 
 // Delete subscription from database

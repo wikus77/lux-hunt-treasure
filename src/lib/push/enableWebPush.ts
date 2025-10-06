@@ -65,16 +65,20 @@ export async function enableWebPush() {
     ua: navigator.userAgent,
   };
 
-  const { data, error } = await supabase.functions.invoke('push-subscribe', {
+  const { data, error } = await supabase.functions.invoke('webpush-upsert', {
     body,
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (error) {
+  console.log('[ENABLE-WEBPUSH] webpush-upsert response:', { data, error, status: data?.status });
+  
+  if (error || (data && data.error)) {
+    console.error('[ENABLE-WEBPUSH] webpush-upsert failed:', { error, data });
     if (createdNew) {
       try { await sub.unsubscribe(); } catch {}
     }
-    throw new Error(`push-subscribe failed: ${error.message}`);
+    const errMsg = error?.message || data?.error || 'Unknown error';
+    throw new Error(`webpush-upsert failed: ${errMsg}`);
   }
 
   return sub;
