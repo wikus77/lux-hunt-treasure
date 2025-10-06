@@ -116,6 +116,12 @@ export function getSuggestion(error?: string, status?: number): string {
   if (!error && status === 200) return '✅ Success!';
   
   if (status === 401) {
+    if (error?.includes('invalid_admin_token')) {
+      return '⚠️ Token admin errato. Verifica PUSH_ADMIN_TOKEN.';
+    }
+    if (error?.includes('missing_authorization')) {
+      return '⚠️ Authorization header mancante. Esegui il login o usa admin token.';
+    }
     if (error?.includes('missing') || error?.includes('invalid_jwt')) {
       return '⚠️ JWT mancante o non valido. Esegui il login per ottenere un token valido.';
     }

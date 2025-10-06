@@ -21,10 +21,18 @@ serve(async (req) => {
   }
 
   try {
-    // ✅ BYPASS ADMIN PRIMA DI TUTTO
-    const adminHdr = req.headers.get("x-admin-token") || "";
-    const ADMIN = Deno.env.get("PUSH_ADMIN_TOKEN") || "";
-    if (adminHdr && ADMIN && adminHdr === ADMIN) {
+    // ✅ BYPASS ADMIN FIRST - controllare PRIMA di validare JWT
+    const adminHdr = req.headers.get("x-admin-token")?.trim() || "";
+    const ADMIN = Deno.env.get("PUSH_ADMIN_TOKEN")?.trim() || "";
+    
+    // Se header admin presente, verificare validità
+    if (adminHdr) {
+      if (!ADMIN || adminHdr !== ADMIN) {
+        console.error("[WEBPUSH-SEND] ❌ Invalid admin token");
+        return json({ error: "Unauthorized", reason: "invalid_admin_token" }, 401, origin);
+      }
+      
+      // Token admin valido → BYPASS completo (no Authorization required)
       console.log("[WEBPUSH-SEND] ✅ Admin bypass attivo");
       const url = Deno.env.get("SUPABASE_URL")!;
       const srk = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY")!;
@@ -70,9 +78,15 @@ serve(async (req) => {
       return json({ success: true, mode: "admin", total, sent, failed, message: total ? "OK" : "No active subscriptions found" }, 200, origin);
     }
 
-    // ➜ Flusso JWT normale (user path)
+    // ➜ Flusso JWT normale (user path) - arriva qui solo se NON c'è admin token
     const auth = req.headers.get("Authorization");
-    if (!auth) return json({ code: 401, message: "Missing authorization header" }, 401, origin);
+    if (!auth) {
+      return json({ 
+        error: "Unauthorized", 
+        reason: "missing_authorization",
+        message: "Missing Authorization header. Use x-admin-token for admin bypass or Bearer token for user auth." 
+      }, 401, origin);
+    }
 
     const match = auth.match(/^Bearer\s+(.+)$/i);
     if (!match) {
