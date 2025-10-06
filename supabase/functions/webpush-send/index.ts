@@ -146,6 +146,7 @@ serve(async (req: Request) => {
   const adminHeader = req.headers.get("x-admin-token") || "";
   const adminSecret = Deno.env.get("PUSH_ADMIN_TOKEN") || "";
   if (adminHeader && adminSecret && adminHeader === adminSecret) {
+    console.log("[WEBPUSH-SEND] ✅ Admin bypass attivo");
     mode = "admin";
   }
 
