@@ -54,15 +54,21 @@ export default function SendTab() {
         request.audience = 'all';
       }
 
+      // Admin Bypass: se audience='all' con token → SOLO x-admin-token (NO Authorization)
       let userJWT: string | undefined;
-      if (audience !== 'all' || !adminToken) {
+      
+      if (audience === 'all' && adminToken) {
+        // Admin bypass: non serve JWT
+        userJWT = undefined;
+      } else {
+        // User path: serve JWT
         const { data: { session } } = await supabase.auth.getSession();
         userJWT = session?.access_token;
       }
 
       const response = await sendPushNotification(request, {
-        adminToken: audience === 'all' ? adminToken : undefined,
-        userJWT: audience !== 'all' || !adminToken ? userJWT : undefined
+        adminToken: audience === 'all' && adminToken ? adminToken : undefined,
+        userJWT: audience === 'all' && adminToken ? undefined : userJWT
       });
 
       setResult({
