@@ -5417,6 +5417,42 @@ export type Database = {
         }
         Relationships: []
       }
+      webpush_subscriptions_flat: {
+        Row: {
+          auth: string | null
+          created_at: string | null
+          device_info: Json | null
+          endpoint: string | null
+          id: string | null
+          is_active: boolean | null
+          last_used_at: string | null
+          p256dh: string | null
+          user_id: string | null
+        }
+        Insert: {
+          auth?: never
+          created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh?: never
+          user_id?: string | null
+        }
+        Update: {
+          auth?: never
+          created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh?: never
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       _gen_unique_agent_code: {
