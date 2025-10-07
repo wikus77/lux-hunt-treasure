@@ -5442,6 +5442,15 @@ export type Database = {
           },
         ]
       }
+      push_stats_daily: {
+        Row: {
+          date: string | null
+          success_rate: number | null
+          successful: number | null
+          total_sent: number | null
+        }
+        Relationships: []
+      }
       v_agent_profile: {
         Row: {
           agent_code: string | null
