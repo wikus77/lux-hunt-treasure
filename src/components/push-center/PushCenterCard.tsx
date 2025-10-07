@@ -4,14 +4,15 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card } from '@/components/ui/card';
-import { Send, Bug, Database, FileText } from 'lucide-react';
+import { Send, Bug, Database, FileText, Bell } from 'lucide-react';
+import ActivateTab from './sections/ActivateTab';
 import SendTab from './sections/SendTab';
 import DebugTab from './sections/DebugTab';
 import SubscriptionsTab from './sections/SubscriptionsTab';
 import LogsTab from './sections/LogsTab';
 
 export default function PushCenterCard() {
-  const [activeTab, setActiveTab] = useState('send');
+  const [activeTab, setActiveTab] = useState('activate');
 
   return (
     <Card className="glass-card p-6 border border-[#4361ee]/30">
@@ -25,7 +26,11 @@ export default function PushCenterCard() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-6">
+        <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsTrigger value="activate" className="flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            <span className="hidden sm:inline">Attiva</span>
+          </TabsTrigger>
           <TabsTrigger value="send" className="flex items-center gap-2">
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Send</span>
@@ -36,13 +41,17 @@ export default function PushCenterCard() {
           </TabsTrigger>
           <TabsTrigger value="subscriptions" className="flex items-center gap-2">
             <Database className="w-4 h-4" />
-            <span className="hidden sm:inline">Subscriptions</span>
+            <span className="hidden sm:inline">Subs</span>
           </TabsTrigger>
           <TabsTrigger value="logs" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
             <span className="hidden sm:inline">Logs</span>
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="activate" className="space-y-4">
+          <ActivateTab />
+        </TabsContent>
 
         <TabsContent value="send" className="space-y-4">
           <SendTab />
