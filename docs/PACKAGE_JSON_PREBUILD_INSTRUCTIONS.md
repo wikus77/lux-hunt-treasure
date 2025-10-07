@@ -1,4 +1,4 @@
-# 📋 Package.json Prebuild Hook - Manual Installation
+# 📋 Package.json Prebuild Hook - Installation Guide
 
 **File:** `package.json` (READ-ONLY in Lovable)  
 **Purpose:** Add security guard to run before every build  
@@ -6,13 +6,27 @@
 
 ---
 
-## ✅ WHAT YOU NEED TO DO
+## ✅ RECOMMENDED METHOD (New Helper Script)
 
-The `package.json` file is **read-only** in Lovable, so you need to add the `prebuild` hook manually.
+We've created a dedicated helper script for a cleaner installation:
 
-### ONE-LINER COMMAND
+```bash
+# From project root
+node scripts/add-prebuild-hook.cjs
+```
 
-**Copy and paste this into your terminal** (in the project root):
+**What it does:**
+- Reads `package.json`
+- Adds `"prebuild": "node scripts/push-guard.cjs"` to the `scripts` section
+- Writes back with proper formatting (2-space indent + trailing newline)
+- Idempotent (safe to run multiple times)
+- Confirms success
+
+---
+
+## ✅ ALTERNATIVE: ONE-LINER COMMAND
+
+If you prefer a one-liner (does the same thing):
 
 ```bash
 node -e "let p=require('./package.json');p.scripts=p.scripts||{};p.scripts.prebuild='node scripts/push-guard.cjs';require('fs').writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');console.log('✅ prebuild hook added')"
