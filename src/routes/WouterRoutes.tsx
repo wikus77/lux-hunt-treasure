@@ -61,6 +61,7 @@ import AdminPushConsolePage from "@/pages/push/AdminPushConsolePage";
 import PushSenderPanel from "@/pages/panel/PushSenderPanel";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import PushDiagnosi from "@/pages/PushDiagnosi";
 import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import PushTest from "@/pages/debug/PushTest";
@@ -606,6 +607,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/panel/push-preflight">
             <ProtectedRoute>
               <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* 🔧 Push Diagnostica Route */}
+          <Route path="/push-diagnosi">
+            <ProtectedRoute>
+              <PushDiagnosi />
             </ProtectedRoute>
           </Route>
 

@@ -21,6 +21,7 @@ import UsersRealtimePanel from '@/components/panel/UsersRealtimePanel';
 import { useLocation } from 'wouter';
 import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
 import PushCenterCard from '@/components/push-center/PushCenterCard';
+import { PushCenter } from '@/components/panel/PushCenter';
 import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
 import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 
@@ -415,6 +416,11 @@ const PanelAccessPage = () => {
                   <span className="text-green-400 font-semibold">TRACKING ATTIVO</span>
                 </div>
               </div>
+            </div>
+
+            {/* Push Center Card - Quick Access */}
+            <div className="mb-6">
+              <PushCenter />
             </div>
 
             <div className="grid gap-4">
