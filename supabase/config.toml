@@ -141,3 +141,6 @@ verify_jwt = false
 
 [functions.env-dump]
 verify_jwt = false
+
+[functions.webpush-targeted-send]
+verify_jwt = false
