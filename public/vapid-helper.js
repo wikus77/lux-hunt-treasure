@@ -9,12 +9,14 @@ export async function loadVAPIDPublicKey() {
 
 export function urlBase64ToUint8Array(base64url) {
   const pad = '='.repeat((4 - (base64url.length % 4)) % 4);
-  const b64 = (base64url + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const b64 = (base64url + pad)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
   const raw = atob(b64);
   const out = new Uint8Array(raw.length);
   for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
   if (out.length !== 65 || out[0] !== 0x04) {
-    throw new TypeError(\`VAPID non valida: len=\${out.length}, first=0x\${out[0].toString(16)}\`);
+    throw new TypeError(`VAPID non valida: len=${out.length}, first=0x${out[0].toString(16)}`);
   }
   return out;
 }
