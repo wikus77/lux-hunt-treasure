@@ -32,11 +32,12 @@ export async function loadVAPIDPublicKey(): Promise<string> {
  * Convert base64url string to Uint8Array for VAPID applicationServerKey
  * Validates P-256 format (65 bytes, 0x04 prefix)
  */
-export function urlBase64ToUint8Array(base64url: string): Uint8Array {
+export function urlBase64ToUint8Array(base64url: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64url.length % 4)) % 4);
   const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
   const raw = atob(base64);
-  const out = new Uint8Array(raw.length);
+  const buffer = new ArrayBuffer(raw.length);
+  const out = new Uint8Array(buffer);
   
   for (let i = 0; i < raw.length; ++i) {
     out[i] = raw.charCodeAt(i);
