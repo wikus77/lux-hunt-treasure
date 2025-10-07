@@ -13,7 +13,7 @@ export function getVAPIDPublicWeb(): string {
 }
 
 // Returns the validated Uint8Array for PushManager.subscribe
-export function getVAPIDUint8(): Uint8Array {
-  if (!cachedVapidUint8) cachedVapidUint8 = getAppServerKey();
+export async function getVAPIDUint8(): Promise<Uint8Array> {
+  if (!cachedVapidUint8) cachedVapidUint8 = await getAppServerKey();
   return cachedVapidUint8;
 }

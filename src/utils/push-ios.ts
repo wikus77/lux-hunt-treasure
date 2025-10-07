@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 /* Web Push VAPID for iOS PWA */
 
-import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from '@/lib/push/vapid';
+import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 /**
  * Detects if running on iOS in standalone mode (PWA)
@@ -77,7 +77,8 @@ export async function enableWebPushIOS(vapidPublicKey: string): Promise<any | nu
       console.log('[PUSH-IOS] Creating new push subscription');
       
       // Convert VAPID key using unified source
-      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      const vapidKey = await loadVAPIDPublicKey();
+      const applicationServerKey = urlBase64ToUint8Array(vapidKey);
       
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({
