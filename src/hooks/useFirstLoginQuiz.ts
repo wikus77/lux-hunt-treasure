@@ -49,13 +49,19 @@ export const useFirstLoginQuiz = () => {
         return;
       }
 
+      // Client-side daily guard: if user skipped today, don't show quiz
+      if (!shouldShowQuizAfterSkip()) {
+        setNeedsQuiz(false);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const user = getCurrentUser();
         if (!user) {
           setIsLoading(false);
           return;
         }
-
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('first_login_completed, investigative_style')
