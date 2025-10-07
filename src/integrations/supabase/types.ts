@@ -661,7 +661,10 @@ export type Database = {
           daily_min: number
           enabled: boolean
           id: string
+          max_push_per_day: number | null
           quiet_end: string
+          quiet_hours_end: number | null
+          quiet_hours_start: number | null
           quiet_start: string
           timezone: string
           updated_at: string
@@ -672,7 +675,10 @@ export type Database = {
           daily_min?: number
           enabled?: boolean
           id?: string
+          max_push_per_day?: number | null
           quiet_end?: string
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
           quiet_start?: string
           timezone?: string
           updated_at?: string
@@ -683,7 +689,10 @@ export type Database = {
           daily_min?: number
           enabled?: boolean
           id?: string
+          max_push_per_day?: number | null
           quiet_end?: string
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
           quiet_start?: string
           timezone?: string
           updated_at?: string
@@ -4923,6 +4932,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_push_settings: {
+        Row: {
+          id: string
+          unified_enabled: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          unified_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          unified_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_push_tokens: {
         Row: {
           created_at: string
@@ -6335,6 +6365,7 @@ export type Database = {
       }
     }
     Enums: {
+      push_kind: "morning" | "buzz" | "buzzmap" | "motivation" | "custom"
       referral_status: "pending" | "registered"
     }
     CompositeTypes: {
@@ -6467,6 +6498,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      push_kind: ["morning", "buzz", "buzzmap", "motivation", "custom"],
       referral_status: ["pending", "registered"],
     },
   },
