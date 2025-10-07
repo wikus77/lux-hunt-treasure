@@ -1,9 +1,9 @@
-// sw-bump-2025-10-07-04
+// sw-bump-2025-10-07-05
 // M1SSION™ PWA Service Worker - Unified Web Push + Caching
-// sw-bump-20251007-push-center-diagnostics
+// © 2025 Joseph MULÉ – NIYVORA KFT™
 
-const CACHE_NAME = 'm1ssion-v1';
-const STATIC_CACHE = 'm1ssion-static-v1';
+const CACHE_NAME = 'm1ssion-v2';
+const STATIC_CACHE = 'm1ssion-static-v2';
 
 // Precache critical resources
 const PRECACHE_RESOURCES = [
@@ -13,32 +13,43 @@ const PRECACHE_RESOURCES = [
   '/favicon.ico'
 ];
 
-// Install event - precache critical resources
+// Enable Navigation Preload if supported
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    (async () => {
+      if ('navigationPreload' in self.registration) {
+        await self.registration.navigationPreload.enable();
+      }
+    })()
+  );
+});
+
+// Install event - precache critical resources + immediate activation
 self.addEventListener('install', (event) => {
-  console.log('[M1SSION SW] Installing...');
+  console.log('[M1SSION SW] Installing v2...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then(cache => cache.addAll(PRECACHE_RESOURCES))
-      .then(() => self.skipWaiting())
+      .then(() => self.skipWaiting()) // Take control immediately
   );
 });
 
 // Activate event - cleanup old caches and claim clients
 self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Activating...');
+  console.log('[M1SSION SW] Activating v2...');
   event.waitUntil(
     caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== STATIC_CACHE) {
-            console.log('[M1SSION SW] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      console.log('[M1SSION SW] Claiming clients...');
-      return self.clients.claim();
+      return Promise.all([
+        // Delete old caches
+        ...cacheNames.filter(name => 
+          name !== CACHE_NAME && name !== STATIC_CACHE
+        ).map(name => {
+          console.log('[M1SSION SW] Deleting old cache:', name);
+          return caches.delete(name);
+        }),
+        // Claim all clients immediately
+        self.clients.claim()
+      ]);
     })
   );
 });
