@@ -1,6 +1,6 @@
-// sw-bump-2025-10-07-02
+// sw-bump-2025-10-07-03
 // M1SSION™ PWA Service Worker - Unified Web Push + Caching
-// sw-bump-20251007-vapid-unified
+// sw-bump-20251007-vapid-unified-repair
 
 const CACHE_NAME = 'm1ssion-v1';
 const STATIC_CACHE = 'm1ssion-static-v1';
