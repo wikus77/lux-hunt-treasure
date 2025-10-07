@@ -1,483 +1,536 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Push Diagnostics - Complete push system diagnostics
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
+// Push Notification Diagnostic Page
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import { repairPush, sendSelfTest, getPushStatus } from '@/utils/pushRepair';
 import { 
   CheckCircle, 
   XCircle, 
-  AlertCircle, 
+  AlertTriangle, 
   Loader2, 
-  WrenchIcon, 
-  Send, 
-  Trash2,
   RefreshCw,
-  ArrowLeft
+  Home
 } from 'lucide-react';
-import { useWouterNavigation } from '@/hooks/useWouterNavigation';
+import { Helmet } from 'react-helmet-async';
+import UnifiedHeader from '@/components/layout/UnifiedHeader';
 
-interface CheckResult {
-  name: string;
-  status: 'ok' | 'error' | 'warning' | 'pending';
+interface DiagnosticResult {
+  step: string;
+  status: 'success' | 'error' | 'warning';
   message: string;
   details?: string;
-  solution?: string;
 }
 
 export default function PushDiagnosi() {
-  const { navigate } = useWouterNavigation();
-  const [checks, setChecks] = useState<CheckResult[]>([]);
+  const { user } = useAuth();
   const [isRunning, setIsRunning] = useState(false);
-  const [isRepairing, setIsRepairing] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [results, setResults] = useState<DiagnosticResult[]>([]);
+  const [summary, setSummary] = useState<{ success: number; warnings: number; errors: number }>({
+    success: 0,
+    warnings: 0,
+    errors: 0
+  });
+
+  const addResult = (result: DiagnosticResult) => {
+    setResults(prev => [...prev, result]);
+  };
 
   const runDiagnostics = async () => {
+    setResults([]);
+    setSummary({ success: 0, warnings: 0, errors: 0 });
     setIsRunning(true);
-    const results: CheckResult[] = [];
+
+    const newResults: DiagnosticResult[] = [];
 
     try {
-      // CHECK 1: Permission
-      results.push({
-        name: 'Permission Notifiche',
-        status: Notification.permission === 'granted' ? 'ok' : 
-                Notification.permission === 'denied' ? 'error' : 'warning',
-        message: `Stato: ${Notification.permission}`,
-        details: Notification.permission === 'granted' 
-          ? 'Permesso concesso correttamente' 
-          : Notification.permission === 'denied'
-          ? 'Permesso negato dall\'utente'
-          : 'Permesso non ancora richiesto',
-        solution: Notification.permission !== 'granted' 
-          ? 'Clicca "Ripara notifiche" per richiedere il permesso. Su iOS Safari, installa l\'app alla Home Screen (PWA).'
-          : undefined
+      // 1) Check Push API Support
+      newResults.push({
+        step: '1/10',
+        status: 'success',
+        message: 'Controllo supporto Push API',
+        details: 'Verifica se il browser supporta le notifiche push...'
       });
 
-      // CHECK 2: Service Worker
-      if ('serviceWorker' in navigator) {
-        try {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          const swReg = await navigator.serviceWorker.getRegistration();
-          
-          const officialSW = regs.find(r => r.active?.scriptURL.endsWith('/sw.js'));
-          const extraSWs = regs.filter(r => !r.active?.scriptURL.endsWith('/sw.js'));
+      if (!('Notification' in window)) {
+        newResults.push({
+          step: '1/10',
+          status: 'error',
+          message: 'Push API non supportato',
+          details: 'Il tuo browser non supporta le notifiche push'
+        });
+        setResults(newResults);
+        return;
+      }
 
-          if (officialSW) {
-            results.push({
-              name: 'Service Worker',
-              status: extraSWs.length > 0 ? 'warning' : 'ok',
-              message: officialSW.active?.scriptURL || 'Registrato',
-              details: extraSWs.length > 0 
-                ? `Service Worker ufficiale attivo, ma trovati ${extraSWs.length} SW extra da rimuovere`
-                : 'Service Worker /sw.js registrato correttamente',
-              solution: extraSWs.length > 0 
-                ? 'Clicca "Unregister Extra SW" per rimuovere i Service Worker non necessari.'
-                : undefined
-            });
-          } else if (regs.length > 0) {
-            results.push({
-              name: 'Service Worker',
-              status: 'error',
-              message: `Trovati ${regs.length} SW, nessuno è /sw.js`,
-              details: regs.map(r => r.active?.scriptURL).join(', '),
-              solution: 'Clicca "Ripara notifiche" per registrare il Service Worker corretto.'
-            });
-          } else {
-            results.push({
-              name: 'Service Worker',
-              status: 'error',
-              message: 'Nessun Service Worker registrato',
-              solution: 'Clicca "Ripara notifiche" per registrare /sw.js'
-            });
-          }
-        } catch (error: any) {
-          results.push({
-            name: 'Service Worker',
-            status: 'error',
-            message: 'Errore durante il check',
-            details: error.message
-          });
-        }
-      } else {
-        results.push({
-          name: 'Service Worker',
+      if (!('serviceWorker' in navigator)) {
+        newResults.push({
+          step: '1/10',
           status: 'error',
           message: 'Service Worker non supportato',
-          details: 'Questo browser non supporta Service Workers'
+          details: 'Il tuo browser non supporta i Service Workers'
+        });
+        setResults(newResults);
+        return;
+      }
+
+      newResults.push({
+        step: '1/10',
+        status: 'success',
+        message: '✓ Push API supportato',
+        details: 'Browser compatibile con notifiche push'
+      });
+
+      // 2) Check Permissions
+      const permission = Notification.permission;
+      if (permission === 'denied') {
+        newResults.push({
+          step: '2/10',
+          status: 'error',
+          message: '✗ Permesso negato',
+          details: 'Le notifiche sono bloccate. Vai nelle impostazioni del browser per abilitarle.'
+        });
+      } else if (permission === 'default') {
+        newResults.push({
+          step: '2/10',
+          status: 'warning',
+          message: '⚠ Permesso non richiesto',
+          details: 'Usa il bottone "Ripara notifiche" per richiedere il permesso'
+        });
+      } else {
+        newResults.push({
+          step: '2/10',
+          status: 'success',
+          message: '✓ Permesso concesso',
+          details: `Stato permesso: ${permission}`
         });
       }
 
-      // CHECK 3: VAPID Key
+      // 3) Check Service Workers
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const mainReg = registrations.find(r => r.active?.scriptURL.includes('/sw.js'));
+
+      if (registrations.length === 0) {
+        newResults.push({
+          step: '3/10',
+          status: 'warning',
+          message: '⚠ Nessun SW registrato',
+          details: 'Usa "Ripara notifiche" per registrare /sw.js'
+        });
+      } else if (registrations.length > 1) {
+        newResults.push({
+          step: '3/10',
+          status: 'warning',
+          message: `⚠ ${registrations.length} SW registrati`,
+          details: 'Rilevati SW multipli. Consigliato mantenere solo /sw.js'
+        });
+      } else if (mainReg) {
+        newResults.push({
+          step: '3/10',
+          status: 'success',
+          message: '✓ SW corretto attivo',
+          details: `Scope: ${mainReg.scope}, State: ${mainReg.active?.state}`
+        });
+      } else {
+        newResults.push({
+          step: '3/10',
+          status: 'error',
+          message: '✗ SW non corretto',
+          details: `SW attivo: ${registrations[0]?.active?.scriptURL || 'unknown'}`
+        });
+      }
+
+      // 4) Check VAPID Key
       try {
-        const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js' + '?t=' + Date.now());
-        const vapid = await loadVAPIDPublicKey();
-        const vapidArray = urlBase64ToUint8Array(vapid);
+        // @ts-expect-error - Public JS file, types in vite-env.d.ts
+        const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js');
+        const vapidKey = await loadVAPIDPublicKey();
+        const vapidArray = urlBase64ToUint8Array(vapidKey);
         
-        results.push({
-          name: 'VAPID Key',
-          status: 'ok',
-          message: `${vapid.substring(0, 12)}... (${vapidArray.length} bytes)`,
-          details: `Formato P-256 valido: ${vapidArray.length} bytes, inizia con 0x${vapidArray[0].toString(16)}`
+        newResults.push({
+          step: '4/10',
+          status: 'success',
+          message: '✓ VAPID key valida',
+          details: `Length: ${vapidArray.length} bytes, Prefix: 0x${vapidArray[0].toString(16)}`
         });
       } catch (error: any) {
-        results.push({
-          name: 'VAPID Key',
+        newResults.push({
+          step: '4/10',
           status: 'error',
-          message: 'Errore validazione VAPID',
-          details: error.message,
-          solution: 'Contatta il supporto tecnico: la chiave VAPID potrebbe essere corrotta.'
+          message: '✗ VAPID key non valida',
+          details: error.message
+        });
+        setResults(newResults);
+        return;
+      }
+
+      // 5) Check JWT Session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        newResults.push({
+          step: '5/10',
+          status: 'error',
+          message: '✗ JWT mancante',
+          details: 'Sessione non valida. Effettua il login.'
+        });
+        setResults(newResults);
+        return;
+      }
+
+      newResults.push({
+        step: '5/10',
+        status: 'success',
+        message: '✓ JWT presente',
+        details: `User ID: ${session.user?.id?.substring(0, 8)}...`
+      });
+
+      // 6) Check Current Subscription
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
+
+      if (!subscription) {
+        newResults.push({
+          step: '6/10',
+          status: 'warning',
+          message: '⚠ Nessuna subscription',
+          details: 'Usa "Ripara notifiche" per creare una subscription'
+        });
+      } else {
+        const platform = subscription.endpoint.includes('web.push.apple.com') ? 'iOS' : 'Web';
+        
+        newResults.push({
+          step: '6/10',
+          status: 'success',
+          message: '✓ Subscription presente',
+          details: `Platform: ${platform}, Endpoint: ${subscription.endpoint.substring(0, 50)}...`
         });
       }
 
-      // CHECK 4: Subscription
+      // 7) Test Backend Connection
       try {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) {
-          const sub = await reg.pushManager.getSubscription();
-          if (sub) {
-            const platform = sub.endpoint.includes('web.push.apple.com') ? 'iOS Safari' : 'Web Standard';
-            results.push({
-              name: 'Push Subscription',
-              status: 'ok',
-              message: 'Subscription attiva',
-              details: `Platform: ${platform}\nEndpoint: ${sub.endpoint.substring(0, 50)}...`
-            });
-          } else {
-            results.push({
-              name: 'Push Subscription',
-              status: 'warning',
-              message: 'Nessuna subscription presente',
-              solution: 'Clicca "Ripara notifiche" per creare una nuova subscription.'
-            });
-          }
-        } else {
-          results.push({
-            name: 'Push Subscription',
+        const testBody = subscription ? {
+          endpoint: subscription.endpoint,
+          keys: subscription.toJSON().keys,
+          provider: 'webpush',
+          platform: subscription.endpoint.includes('web.push.apple.com') ? 'ios' : 'web',
+          ua: navigator.userAgent
+        } : { test: true };
+
+        const { data, error } = await supabase.functions.invoke('webpush-upsert', {
+          body: testBody
+        });
+
+        if (error) {
+          newResults.push({
+            step: '7/10',
             status: 'error',
-            message: 'Service Worker non registrato',
-            solution: 'Prima registra il Service Worker.'
+            message: '✗ Errore backend',
+            details: error.message
+          });
+        } else {
+          newResults.push({
+            step: '7/10',
+            status: 'success',
+            message: '✓ Backend raggiungibile',
+            details: `Response OK`
           });
         }
       } catch (error: any) {
-        results.push({
-          name: 'Push Subscription',
+        newResults.push({
+          step: '7/10',
           status: 'error',
-          message: 'Errore durante il check',
+          message: '✗ Errore connessione',
           details: error.message
         });
       }
 
-      // CHECK 5: JWT Token
+      // 8) Check Database Subscriptions
       try {
-        let jwt: string | null = null;
-        
-        if ((window as any).supabase?.auth?.getSession) {
-          const { data } = await (window as any).supabase.auth.getSession();
-          jwt = data?.session?.access_token;
-        }
+        const { count, error } = await supabase
+          .from('webpush_subscriptions')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user?.id || '')
+          .eq('is_active', true);
 
-        if (!jwt) {
-          const host = location.host.split(':')[0] || '';
-          const key = `${host}-auth-token`;
-          const raw = localStorage.getItem(key);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            jwt = parsed?.currentSession?.access_token;
-          }
-        }
-
-        if (jwt) {
-          results.push({
-            name: 'JWT Token',
-            status: 'ok',
-            message: 'Token presente',
-            details: `Token JWT trovato (${jwt.length} caratteri)`
+        if (error) {
+          newResults.push({
+            step: '8/10',
+            status: 'warning',
+            message: '⚠ Errore query database',
+            details: error.message
           });
         } else {
-          results.push({
-            name: 'JWT Token',
-            status: 'error',
-            message: 'Token non trovato',
-            details: 'Utente non autenticato',
-            solution: 'Effettua il login o ricarica la pagina.'
+          newResults.push({
+            step: '8/10',
+            status: count && count > 0 ? 'success' : 'warning',
+            message: count && count > 0 ? '✓ Subscriptions attive' : '⚠ Nessuna subscription nel DB',
+            details: `Count: ${count || 0}`
           });
         }
       } catch (error: any) {
-        results.push({
-          name: 'JWT Token',
-          status: 'error',
-          message: 'Errore durante il check',
+        newResults.push({
+          step: '8/10',
+          status: 'warning',
+          message: '⚠ Query non eseguita',
           details: error.message
         });
       }
+
+      // 9) Platform Detection
+      const isIOSSafari = navigator.userAgent.includes('Safari') && 
+                          !navigator.userAgent.includes('Chrome') &&
+                          /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                    (window.navigator as any).standalone === true;
+
+      let platformStatus: 'success' | 'warning' = 'success';
+      let platformMessage = '✓ Piattaforma supportata';
+      let platformDetails = `Browser: ${navigator.userAgent.substring(0, 50)}...`;
+
+      if (isIOSSafari && !isPWA) {
+        platformStatus = 'warning';
+        platformMessage = '⚠ iOS Safari';
+        platformDetails = 'Su iOS Safari, installa l\'app alla Home Screen (PWA) per ricevere notifiche (iOS 16.4+)';
+      }
+
+      newResults.push({
+        step: '9/10',
+        status: platformStatus,
+        message: platformMessage,
+        details: platformDetails
+      });
+
+      // 10) Summary
+      newResults.push({
+        step: '10/10',
+        status: 'success',
+        message: '✓ Diagnosi completata',
+        details: 'Controlla i risultati sopra per eventuali problemi'
+      });
 
     } catch (error: any) {
-      results.push({
-        name: 'Sistema',
+      newResults.push({
+        step: 'ERROR',
         status: 'error',
-        message: 'Errore critico durante la diagnostica',
+        message: '✗ Errore durante la diagnosi',
         details: error.message
       });
+    } finally {
+      setResults(newResults);
+      setIsRunning(false);
+      
+      // Calculate summary
+      const successCount = newResults.filter(r => r.status === 'success').length;
+      const warningCount = newResults.filter(r => r.status === 'warning').length;
+      const errorCount = newResults.filter(r => r.status === 'error').length;
+      
+      setSummary({ 
+        success: successCount, 
+        warnings: warningCount, 
+        errors: errorCount 
+      });
     }
-
-    setChecks(results);
-    setIsRunning(false);
   };
 
   useEffect(() => {
     runDiagnostics();
   }, []);
 
-  const handleRepair = async () => {
-    setIsRepairing(true);
-    try {
-      const result = await repairPush();
-      if (result.success) {
-        toast.success(result.message);
-        setTimeout(runDiagnostics, 1000);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(`Errore: ${error.message}`);
-    } finally {
-      setIsRepairing(false);
-    }
-  };
-
-  const handleSendTest = async () => {
-    setIsSending(true);
-    try {
-      const result = await sendSelfTest();
-      if (result.success) {
-        toast.success(result.message);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error(`Errore: ${error.message}`);
-    } finally {
-      setIsSending(false);
-    }
-  };
-
-  const handleUnregisterExtra = async () => {
-    try {
-      const regs = await navigator.serviceWorker.getRegistrations();
-      const extraSWs = regs.filter(r => !r.active?.scriptURL.endsWith('/sw.js'));
-      
-      for (const reg of extraSWs) {
-        await reg.unregister();
-        console.log('Unregistered:', reg.active?.scriptURL);
-      }
-      
-      toast.success(`Rimossi ${extraSWs.length} Service Worker extra`);
-      setTimeout(runDiagnostics, 1000);
-    } catch (error: any) {
-      toast.error(`Errore: ${error.message}`);
-    }
-  };
-
-  const handleUnsubscribe = async () => {
-    try {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg) {
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          await sub.unsubscribe();
-          toast.success('Subscription rimossa');
-          setTimeout(runDiagnostics, 1000);
-        } else {
-          toast.info('Nessuna subscription da rimuovere');
-        }
-      }
-    } catch (error: any) {
-      toast.error(`Errore: ${error.message}`);
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
+  const getStatusIcon = (status: 'success' | 'error' | 'warning') => {
     switch (status) {
-      case 'ok': return <CheckCircle className="w-5 h-5 text-green-400" />;
-      case 'error': return <XCircle className="w-5 h-5 text-red-400" />;
-      case 'warning': return <AlertCircle className="w-5 h-5 text-yellow-400" />;
-      default: return <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />;
+      case 'success':
+        return <CheckCircle className="w-5 h-5 text-green-400" />;
+      case 'error':
+        return <XCircle className="w-5 h-5 text-red-400" />;
+      case 'warning':
+        return <AlertTriangle className="w-5 h-5 text-yellow-400" />;
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ok': return 'bg-green-500/10 border-green-500/30';
-      case 'error': return 'bg-red-500/10 border-red-500/30';
-      case 'warning': return 'bg-yellow-500/10 border-yellow-500/30';
-      default: return 'bg-blue-500/10 border-blue-500/30';
-    }
+  const getStatusBadge = (status: 'success' | 'error' | 'warning') => {
+    const colors = {
+      success: 'bg-green-500/20 text-green-400 border-green-500/50',
+      error: 'bg-red-500/20 text-red-400 border-red-500/50',
+      warning: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+    };
+    return colors[status];
   };
 
   return (
-    <div className="min-h-screen bg-black text-white p-4">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-cyan-400">Push Diagnostica</h1>
-            <p className="text-white/60 text-sm mt-1">Sistema di controllo notifiche M1SSION™</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/panel-access')}
-            className="border-cyan-500/50 text-cyan-400"
+    <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+      <Helmet>
+        <title>M1SSION™ - Diagnosi Push Notifications</title>
+      </Helmet>
+
+      <UnifiedHeader profileImage={null} />
+
+      <div 
+        className="px-4 py-8"
+        style={{ 
+          paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+          paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+        }}
+      >
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Pannello
-          </Button>
-        </div>
-
-        {/* Action Buttons */}
-        <Card className="bg-black/40 border-cyan-500/30">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  🔍 Diagnosi Push Notifications
+                </h1>
+                <p className="text-gray-400">
+                  Controllo completo della configurazione push
+                </p>
+              </div>
+              
               <Button
-                onClick={handleRepair}
-                disabled={isRepairing}
-                className="bg-cyan-500 hover:bg-cyan-600 text-black font-medium"
-              >
-                {isRepairing ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <WrenchIcon className="w-4 h-4 mr-2" />
-                )}
-                Ripara ora
-              </Button>
-
-              <Button
-                onClick={handleSendTest}
-                disabled={isSending}
-                variant="outline"
-                className="border-green-500/50 text-green-400"
-              >
-                {isSending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4 mr-2" />
-                )}
-                Test a me
-              </Button>
-
-              <Button
-                onClick={handleUnsubscribe}
-                variant="outline"
-                className="border-red-500/50 text-red-400"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Unsubscribe
-              </Button>
-
-              <Button
-                onClick={runDiagnostics}
+                onClick={() => window.location.href = '/panel-access'}
                 variant="outline"
                 className="border-cyan-500/50 text-cyan-400"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Ricarica
+                <Home className="w-4 h-4 mr-2" />
+                Panel
               </Button>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Checklist */}
-        <Card className="bg-black/40 border-cyan-500/30">
-          <CardHeader>
-            <CardTitle className="text-cyan-400">Checklist Sistema</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {isRunning && checks.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin text-cyan-400" />
-              </div>
-            ) : (
-              checks.map((check, index) => (
-                <div key={index} className={`border rounded-lg p-4 ${getStatusColor(check.status)}`}>
-                  <div className="flex items-start gap-3">
-                    {getStatusIcon(check.status)}
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">{check.name}</h3>
-                        <Badge variant={check.status === 'ok' ? 'default' : 'destructive'}>
-                          {check.message}
-                        </Badge>
+            {/* Summary */}
+            {!isRunning && results.length > 0 && (
+              <Card className="bg-black/40 border-cyan-500/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        <span className="text-white font-medium">{summary.success}</span>
+                        <span className="text-gray-400 text-sm">Successi</span>
                       </div>
-                      {check.details && (
-                        <p className="text-sm text-white/70 mt-1 whitespace-pre-line">{check.details}</p>
-                      )}
-                      {check.solution && (
-                        <div className="mt-2 p-2 bg-white/5 rounded border border-white/10">
-                          <p className="text-sm text-cyan-300">
-                            <strong>Soluzione:</strong> {check.solution}
-                          </p>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                        <span className="text-white font-medium">{summary.warnings}</span>
+                        <span className="text-gray-400 text-sm">Warning</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <XCircle className="w-4 h-4 text-red-400" />
+                        <span className="text-white font-medium">{summary.errors}</span>
+                        <span className="text-gray-400 text-sm">Errori</span>
+                      </div>
                     </div>
+
+                    <Button
+                      onClick={runDiagnostics}
+                      variant="outline"
+                      size="sm"
+                      className="border-cyan-500/50 text-cyan-400"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Riesegui
+                    </Button>
                   </div>
-                </div>
-              ))
+                </CardContent>
+              </Card>
             )}
-          </CardContent>
-        </Card>
+          </motion.div>
 
-        {/* Common Errors */}
-        <Card className="bg-black/40 border-yellow-500/30">
-          <CardHeader>
-            <CardTitle className="text-yellow-400">Errori Comuni & Soluzioni</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h4 className="font-semibold text-white mb-2">🔴 "Registration failed – storage error"</h4>
-              <p className="text-sm text-white/70">
-                Su <strong>iOS</strong> serve la PWA installata alla Home Screen. Su <strong>desktop</strong> pulisci permessi/blocchi del sito.
-              </p>
-            </div>
-
-            <Separator className="bg-white/10" />
-
-            <div>
-              <h4 className="font-semibold text-white mb-2">🔴 "invalid_admin_token"</h4>
-              <p className="text-sm text-white/70">
-                Errore broadcast admin: risincronizzare il secret PUSH_ADMIN_TOKEN su Supabase.
-              </p>
-            </div>
-
-            <Separator className="bg-white/10" />
-
-            <div>
-              <h4 className="font-semibold text-white mb-2">🔴 "Missing or invalid endpoint"</h4>
-              <p className="text-sm text-white/70">
-                Subscription corrotta: clicca "Unsubscribe" poi "Ripara notifiche" per ricrearla.
-              </p>
-            </div>
-
-            <Separator className="bg-white/10" />
-
-            <div>
-              <h4 className="font-semibold text-white mb-2">⚠️ Service Worker multipli</h4>
-              <p className="text-sm text-white/70">
-                Solo /sw.js deve essere attivo. Clicca "Unregister Extra SW" per rimuovere gli altri.
-              </p>
-              <Button
-                onClick={handleUnregisterExtra}
-                variant="outline"
-                size="sm"
-                className="mt-2 border-yellow-500/50 text-yellow-400"
+          {/* Results */}
+          <div className="space-y-3">
+            {results.map((result, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
               >
-                🗑️ Unregister Extra SW
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <Card className={`bg-black/40 border ${
+                  result.status === 'success' ? 'border-green-500/30' :
+                  result.status === 'error' ? 'border-red-500/30' :
+                  'border-yellow-500/30'
+                }`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5">
+                        {getStatusIcon(result.status)}
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${getStatusBadge(result.status)}`}
+                          >
+                            {result.step}
+                          </Badge>
+                          <span className="text-white font-medium">
+                            {result.message}
+                          </span>
+                        </div>
+                        
+                        {result.details && (
+                          <p className="text-gray-400 text-sm mt-1 break-words">
+                            {result.details}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+
+            {/* Loading State */}
+            {isRunning && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center justify-center py-8"
+              >
+                <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+                <span className="ml-3 text-white">Esecuzione diagnosi...</span>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Help Section */}
+          {!isRunning && results.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8"
+            >
+              <Card className="bg-black/40 border-blue-500/30">
+                <CardHeader>
+                  <CardTitle className="text-blue-400 text-lg">
+                    💡 Suggerimenti
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p className="text-gray-300">
+                    • Se vedi errori o warning, usa il bottone <strong>"Ripara notifiche"</strong> nel Push Center
+                  </p>
+                  <p className="text-gray-300">
+                    • Su iOS Safari, installa l'app alla Home Screen (PWA) per abilitare le notifiche
+                  </p>
+                  <p className="text-gray-300">
+                    • Se il permesso è negato, vai nelle impostazioni del browser per ripristinarlo
+                  </p>
+                  <p className="text-gray-300">
+                    • Mantieni attivo solo il Service Worker <strong>/sw.js</strong>
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -118,3 +118,9 @@ interface MailjetRecipient {
   MessageID?: number;
   MessageHref?: string;
 }
+
+// Public VAPID helper module declaration
+declare module '/vapid-helper.js' {
+  export function loadVAPIDPublicKey(): Promise<string>;
+  export function urlBase64ToUint8Array(base64url: string): Uint8Array;
+}
