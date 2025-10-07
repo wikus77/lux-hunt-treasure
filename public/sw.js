@@ -1,5 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // M1SSION™ PWA Service Worker - Unified Web Push + Caching
+// sw-bump-20251007-vapid-unified
 
 const CACHE_NAME = 'm1ssion-v1';
 const STATIC_CACHE = 'm1ssion-static-v1';

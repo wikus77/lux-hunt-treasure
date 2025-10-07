@@ -46,7 +46,7 @@ export async function enableWebPush() {
   // 4) Get active registration and subscription
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
-  const vapidKeyUint8 = getVAPIDUint8();
+  const vapidKeyUint8 = await getVAPIDUint8();
   
   // Check if existing subscription uses different VAPID key
   if (sub) {

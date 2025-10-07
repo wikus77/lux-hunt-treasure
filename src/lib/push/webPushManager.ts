@@ -35,8 +35,8 @@ export function isPWAMode(): boolean {
 
 // Get VAPID public key from environment (unified source)
 import { getVAPIDUint8 } from '@/lib/config/push';
-export function getVAPIDKey(): Uint8Array {
-  return getVAPIDUint8();
+export async function getVAPIDKey(): Promise<Uint8Array> {
+  return await getVAPIDUint8();
 }
 
 // Subscribe to Web Push notifications
@@ -87,7 +87,7 @@ export async function subscribeToWebPush(userId?: string): Promise<PushSubscript
   }
   
   // Get VAPID key
-  const applicationServerKey = getVAPIDKey();
+  const applicationServerKey = await getVAPIDKey();
   
   // Subscribe to push
   console.log('[WEBPUSH] Subscribing to push...');
