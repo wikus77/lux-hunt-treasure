@@ -92,6 +92,7 @@ import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
 import FcmTest from "@/pages/FcmTest";
+import NotifyActivate from "@/pages/NotifyActivate";
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Import centralizzato

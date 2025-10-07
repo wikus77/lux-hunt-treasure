@@ -7,6 +7,7 @@ import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 interface PushRepairResult {
   success: boolean;
   message: string;
+  error?: string;
   details?: any;
 }
 
