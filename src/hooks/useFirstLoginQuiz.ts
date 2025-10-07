@@ -2,40 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
-
-const QUIZ_SKIP_KEY = 'm1_quiz_last_skip';
-
-/**
- * Check if a day has passed since the last quiz skip
- */
-const shouldShowQuizAfterSkip = (): boolean => {
-  try {
-    const lastSkipDate = localStorage.getItem(QUIZ_SKIP_KEY);
-    if (!lastSkipDate) return true; // Never skipped before
-    
-    const lastSkip = new Date(lastSkipDate);
-    const now = new Date();
-    
-    // Compare dates (ignoring time)
-    return lastSkip.toDateString() !== now.toDateString();
-  } catch (error) {
-    console.warn('localStorage not available:', error);
-    return true;
-  }
-};
-
-/**
- * Record that the user skipped the quiz today
- */
-const recordQuizSkip = (): void => {
-  try {
-    const now = new Date();
-    localStorage.setItem(QUIZ_SKIP_KEY, now.toISOString());
-    console.log('📅 Quiz skip recorded for today');
-  } catch (error) {
-    console.warn('Failed to record quiz skip:', error);
-  }
-};
+import { shouldShowQuizAfterSkip, recordQuizSkip } from '@/utils/quizDailyGuard';
 
 export const useFirstLoginQuiz = () => {
   const [needsQuiz, setNeedsQuiz] = useState(false);
