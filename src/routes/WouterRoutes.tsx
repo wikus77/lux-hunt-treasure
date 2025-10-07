@@ -543,6 +543,13 @@ const WouterRoutes: React.FC = () => {
             <GlobalLayout><NotificationDebug /></GlobalLayout>
           </Route>
 
+          {/* 🚀 PUSH ACTIVATION & REPAIR ROUTE - Feature Flagged */}
+          <Route path="/notify/activate">
+            <ProtectedRoute>
+              <GlobalLayout><NotifyActivate /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
           {/* 🔧 DEBUG PUSH TEST ROUTE */}
           <Route path="/debug/pushtest">
             <PushTest />
