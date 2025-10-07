@@ -60,11 +60,14 @@ export const useFirstLoginQuiz = () => {
           .from('profiles')
           .select('first_login_completed, investigative_style')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           console.error('Error checking quiz status:', error);
           setNeedsQuiz(false);
+        } else if (!profile) {
+          // Profile doesn't exist yet, show quiz
+          setNeedsQuiz(true);
         } else {
           // If user has completed quiz with investigative_style, never show again
           if (profile?.investigative_style) {

@@ -13,13 +13,13 @@ const FirstLoginQuizManager: React.FC = () => {
 
   const handleQuizComplete = async (playerType: any) => {
     if (playerType) {
-      // Quiz completed successfully
+      // Quiz completed successfully - investigative_style already saved by EnhancedPersonalityQuiz
       markQuizCompleted();
       toast.success('Quiz completato! Il tuo profilo è stato aggiornato.', {
         description: `Sei un ${playerType.name}!`
       });
     } else {
-      // User skipped the quiz
+      // User skipped the quiz - already saved first_login_completed by EnhancedPersonalityQuiz
       markQuizSkipped();
       toast.info('Quiz saltato. Riapparirà domani all\'apertura dell\'app.', {
         description: 'Potrai completarlo anche dalla tua area profilo.'
