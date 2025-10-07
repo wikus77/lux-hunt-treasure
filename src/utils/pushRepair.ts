@@ -96,9 +96,8 @@ export async function repairPush(): Promise<PushRepairResult> {
     const reg = await ensureSW();
     console.log('✅ Service Worker ready');
 
-    // Step 3: Load and validate VAPID key from public loader
-    // @ts-expect-error - Public JS file, types in vite-env.d.ts
-    const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js');
+    // Step 3: Load and validate VAPID key
+    const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
     const vapidKey = await loadVAPIDPublicKey();
     const vapidArray = urlBase64ToUint8Array(vapidKey);
     console.log('✅ VAPID key valid:', vapidArray.length, 'bytes');
@@ -282,10 +281,9 @@ export async function getPushStatus() {
     const jwt = await getJWT();
     status.jwtPresent = !!jwt;
 
-    // Check VAPID from public loader
+    // Check VAPID
     try {
-      // @ts-expect-error - Public JS file, types in vite-env.d.ts
-      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js');
+      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
       const vapid = await loadVAPIDPublicKey();
       urlBase64ToUint8Array(vapid); // Validate
       status.vapidValid = true;

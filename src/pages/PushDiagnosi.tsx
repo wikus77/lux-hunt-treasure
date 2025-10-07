@@ -146,8 +146,7 @@ export default function PushDiagnosi() {
 
       // 4) Check VAPID Key
       try {
-        // @ts-expect-error - Public JS file, types in vite-env.d.ts
-        const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js');
+        const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
         const vapidKey = await loadVAPIDPublicKey();
         const vapidArray = urlBase64ToUint8Array(vapidKey);
         
