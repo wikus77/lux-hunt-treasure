@@ -1,4 +1,4 @@
-# 🕐 M1SSION™ - Cron Jobs Setup Guide
+# 🕐 M1SSION™ - Cron Setup (SAFE, placeholders)
 
 **© 2025 Joseph MULÉ - NIYVORA KFT™**  
 **Status:** SAFE MODE - No modifications to core push infrastructure
@@ -7,18 +7,16 @@
 
 ## 📋 Overview
 
-This guide explains how to schedule automated push notifications using Supabase cron jobs:
+Automated push notifications via Supabase cron jobs:
 
-1. **auto-push-cron** - Hourly automated push notifications (9:00-20:00)
-2. **norah-producer** - Daily AI template generation (8:00, optional)
+1. **auto-push-cron** - Hourly (9:00-20:00)
+2. **norah-producer** - Daily at 8:00 (optional, template generation only)
 
-**IMPORTANT:** Migrations have been executed with PLACEHOLDERS. Before the cron jobs can work, you must manually update them in the Supabase SQL Editor.
+**IMPORTANT:** Migrations contain PLACEHOLDERS. Update them manually in Supabase SQL Editor.
 
 ---
 
-## 🔐 Step 1: Gather Required Secrets
-
-You need three values:
+## 🔐 Required Values
 
 ### 1. Supabase URL
 ```
@@ -31,14 +29,10 @@ eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ
 ```
 
 ### 3. Cron Secret
-Generate one:
+Generate and store in **Supabase Dashboard** > **Edge Functions** > **Secrets**:
 ```bash
-openssl rand -hex 32
+openssl rand -hex 32  # Name: CRON_SECRET
 ```
-
-Store in: **Supabase Dashboard** > **Edge Functions** > **Secrets**
-- Name: `CRON_SECRET`
-- Value: Your generated secret
 
 ---
 
