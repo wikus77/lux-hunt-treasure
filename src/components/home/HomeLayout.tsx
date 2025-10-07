@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import NotificationsBanner from "@/components/notifications/NotificationsBanner";
 import HomeHeader from "@/components/home/HomeHeader";
@@ -7,6 +6,10 @@ import { useNotificationManager } from "@/hooks/useNotificationManager";
 import CookiebotInit from "@/components/cookiebot/CookiebotInit";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 import TutorialOverlay from "@/components/tutorial/TutorialOverlay";
+import { ActivateBanner } from "@/components/notifications/ActivateBanner";
+import { FEATURE_FLAGS } from "@/config/features";
+import { useUnifiedPushSubscription } from "@/hooks/useUnifiedPushSubscription";
+import { useAuth } from "@/hooks/useAuth";
 
 type HomeLayoutProps = {
   children: React.ReactNode;
@@ -25,6 +28,17 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
     markAllAsRead,
     deleteNotification
   } = useNotificationManager();
+
+  const { isAuthenticated } = useAuth();
+  const { isSubscribed } = useUnifiedPushSubscription();
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  // Show activation banner if: feature flag ON, user authenticated, no active subscription, not dismissed
+  const showActivateBanner = 
+    FEATURE_FLAGS.PUSH_ACTIVATE_UI && 
+    isAuthenticated && 
+    !isSubscribed && 
+    !bannerDismissed;
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-x-hidden pb-16">
@@ -50,6 +64,19 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
             />
           </motion.div>
         )}
+        
+        {/* Push Activation Banner - Feature Flagged */}
+        {showActivateBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="container mx-auto px-4 pt-20"
+          >
+            <ActivateBanner onDismiss={() => setBannerDismissed(true)} />
+          </motion.div>
+        )}
+        
         {children}
       </div>
       
