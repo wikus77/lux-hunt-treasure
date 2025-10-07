@@ -22,6 +22,13 @@ export const ProfileCheckManager: React.FC<ProfileCheckManagerProps> = ({
         return;
       }
 
+      // Daily local guard: if user skipped today, don't show quiz again today
+      if (!shouldShowQuizAfterSkip()) {
+        console.log("Daily guard active - user skipped today, not showing quiz");
+        onProfileComplete();
+        return;
+      }
+
       console.log("Checking profile status for user:", userId);
       
       try {
