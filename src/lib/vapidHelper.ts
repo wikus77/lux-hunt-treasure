@@ -5,7 +5,7 @@
  * Load VAPID public key from /vapid-public.txt
  * @returns {Promise<string>} VAPID public key (base64url)
  */
-export async function loadVAPIDPublicKey() {
+export async function loadVAPIDPublicKey(): Promise<string> {
   try {
     const response = await fetch('/vapid-public.txt', {
       cache: 'no-store',
@@ -31,7 +31,7 @@ export async function loadVAPIDPublicKey() {
     return key;
   } catch (error) {
     console.error('❌ Failed to load VAPID public key:', error);
-    throw new Error(`VAPID load failed: ${error.message}`);
+    throw new Error(`VAPID load failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -41,7 +41,7 @@ export async function loadVAPIDPublicKey() {
  * @param {string} base64String - Base64url encoded string
  * @returns {Uint8Array} - Binary array for applicationServerKey
  */
-export function urlBase64ToUint8Array(base64String) {
+export function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   if (!base64String) {
     throw new Error('VAPID key is required');
   }
@@ -54,7 +54,8 @@ export function urlBase64ToUint8Array(base64String) {
       .replace(/_/g, '/');
 
     const rawData = atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
+    const buffer = new ArrayBuffer(rawData.length);
+    const outputArray = new Uint8Array(buffer);
 
     for (let i = 0; i < rawData.length; ++i) {
       outputArray[i] = rawData.charCodeAt(i);
@@ -72,7 +73,7 @@ export function urlBase64ToUint8Array(base64String) {
     return outputArray;
   } catch (error) {
     console.error('❌ VAPID conversion failed:', error);
-    throw new Error(`Invalid VAPID key: ${error.message}`);
+    throw new Error(`Invalid VAPID key: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -81,13 +82,13 @@ export function urlBase64ToUint8Array(base64String) {
  * @param {string} key - Base64url VAPID key
  * @returns {Promise<boolean>} - True if valid
  */
-export async function testVAPIDKey(key) {
+export async function testVAPIDKey(key: string): Promise<boolean> {
   try {
     const array = urlBase64ToUint8Array(key);
     console.log('✅ VAPID key valid:', array.length, 'bytes, format P-256');
     return true;
   } catch (error) {
-    console.error('❌ VAPID key invalid:', error.message);
+    console.error('❌ VAPID key invalid:', error instanceof Error ? error.message : 'Unknown error');
     return false;
   }
 }
