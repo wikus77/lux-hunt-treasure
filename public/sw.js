@@ -1,4 +1,4 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// sw-bump-2025-10-07-02
 // M1SSION™ PWA Service Worker - Unified Web Push + Caching
 // sw-bump-20251007-vapid-unified
 
@@ -175,3 +175,6 @@ self.addEventListener('notificationclick', (event) => {
 });
 
 console.log('[M1SSION SW] ✅ Service Worker loaded successfully');
+
+// sw-bump-1759826182
+self.VAPID_PUBLIC_KEY='BN399Y_Zi9ZLc-T_S90-IxAh4cMSSlklmim41ACc3ev5Dd-Qzl3XKTdQ72oiT8IWSBossxJYde2DVSee_m1NnHI';
