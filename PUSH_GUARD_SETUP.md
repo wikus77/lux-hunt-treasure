@@ -1,15 +1,39 @@
-# Push Guard Setup Instructions
+# 🔐 M1SSION™ — PUSH GUARD Setup Instructions
 
-## ✅ Files Created
-- ✅ `scripts/push-guard.cjs` - Security prebuild script
-- ✅ `docs/push-guard.md` - Complete documentation
+## ✅ Status: Guard Script Ready
 
-## 📝 Manual Steps Required
+Il guard prebuild `scripts/push-guard.cjs` è stato creato e testato.
 
-### 1. Update `package.json`
-**Location**: Root directory `package.json`
+---
 
-**Add** the `prebuild` script to the `scripts` section:
+## 📝 Setup Automatico (Raccomandato)
+
+### Comando One-Liner
+
+Esegui questo comando per aggiungere automaticamente il prebuild hook:
+
+```bash
+node -e "const fs=require('fs');const p=require('./package.json');p.scripts=p.scripts||{};p.scripts.prebuild='node scripts/push-guard.cjs';fs.writeFileSync('package.json',JSON.stringify(p,null,2)+String.fromCharCode(10));console.log('✅ prebuild hook added');"
+```
+
+### Verifica
+
+```bash
+# Controlla che sia stato aggiunto
+grep -A 1 '"prebuild"' package.json
+
+# Output atteso:
+#   "prebuild": "node scripts/push-guard.cjs",
+```
+
+---
+
+## 🛠️ Setup Manuale (Alternativa)
+
+Se preferisci modificare manualmente `package.json`:
+
+1. Apri `package.json`
+2. Aggiungi nella sezione `"scripts"`:
 
 ```json
 {
