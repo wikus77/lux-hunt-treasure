@@ -1,8 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Push Repair Utility - Centralized repair logic for notifications
 
-const SB_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-const SB_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+import { supabase } from '@/integrations/supabase/client';
+import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 interface PushRepairResult {
   success: boolean;
@@ -32,43 +32,16 @@ async function ensureSW(): Promise<ServiceWorkerRegistration> {
 }
 
 /**
- * Get JWT token from Supabase session or localStorage
+ * Get JWT token from Supabase session
  */
 async function getJWT(): Promise<string | null> {
-  // Try window.supabase first
-  if ((window as any).supabase?.auth?.getSession) {
-    try {
-      const { data } = await (window as any).supabase.auth.getSession();
-      const token = data?.session?.access_token;
-      if (token) {
-        console.log('✅ JWT from window.supabase');
-        return token;
-      }
-    } catch (error) {
-      console.warn('Failed to get JWT from window.supabase:', error);
-    }
-  }
-
-  // Fallback to localStorage
-  const host = location.host.split(':')[0] || '';
-  const key = `${host}-auth-token`;
-  
   try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    
-    const parsed = JSON.parse(raw);
-    const token = parsed?.currentSession?.access_token;
-    
-    if (token) {
-      console.log('✅ JWT from localStorage');
-      return token;
-    }
+    const { data } = await supabase.auth.getSession();
+    return data?.session?.access_token || null;
   } catch (error) {
-    console.warn('Failed to parse localStorage token:', error);
+    console.error('[Push] Failed to get JWT:', error);
+    return null;
   }
-
-  return null;
 }
 
 /**
@@ -97,10 +70,9 @@ export async function repairPush(): Promise<PushRepairResult> {
     console.log('✅ Service Worker ready');
 
     // Step 3: Load and validate VAPID key
-    const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
     const vapidKey = await loadVAPIDPublicKey();
     const vapidArray = urlBase64ToUint8Array(vapidKey);
-    console.log('✅ VAPID key valid:', vapidArray.length, 'bytes');
+    console.log('[Push] ✅ VAPID key valid:', vapidArray.length, 'bytes');
 
     // Step 4: Clear old subscription
     try {
@@ -147,24 +119,16 @@ export async function repairPush(): Promise<PushRepairResult> {
       ua: navigator.userAgent
     };
 
-    console.log('📤 Upserting subscription to backend...');
-    const response = await fetch(`${SB_URL}/functions/v1/webpush-upsert`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${jwt}`,
-        'apikey': SB_ANON_KEY
-      },
-      body: JSON.stringify(payload)
+    console.log('[Push] 📤 Upserting subscription to backend...');
+    const { data: result, error } = await supabase.functions.invoke('webpush-upsert', {
+      body: payload
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Upsert failed (${response.status}): ${errorText}`);
+    if (error) {
+      throw new Error(`Upsert failed: ${error.message}`);
     }
 
-    const result = await response.json();
-    console.log('✅ Subscription upserted:', result);
+    console.log('[Push] ✅ Subscription upserted:', result);
 
     return {
       success: true,
@@ -191,7 +155,7 @@ export async function repairPush(): Promise<PushRepairResult> {
  */
 export async function sendSelfTest(): Promise<PushRepairResult> {
   try {
-    console.log('📨 Sending self test push...');
+    console.log('[Push] 📨 Sending self test push...');
 
     const jwt = await getJWT();
     if (!jwt) {
@@ -201,32 +165,21 @@ export async function sendSelfTest(): Promise<PushRepairResult> {
       };
     }
 
-    const body = {
-      audience: 'self',
-      payload: {
-        title: '🔔 Test M1SSION',
-        body: 'Push di test ricevuto correttamente! ✅',
-        url: '/notifications'
-      }
+    const payload = {
+      title: '🔔 Test M1SSION',
+      body: 'Push di test ricevuto correttamente! ✅',
+      url: '/notifications'
     };
 
-    const response = await fetch(`${SB_URL}/functions/v1/webpush-send`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${jwt}`,
-        'apikey': SB_ANON_KEY
-      },
-      body: JSON.stringify(body)
+    const { data: result, error } = await supabase.functions.invoke('webpush-self-test', {
+      body: { payload }
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Send failed (${response.status}): ${errorText}`);
+    if (error) {
+      throw new Error(`Send failed: ${error.message}`);
     }
 
-    const result = await response.json();
-    console.log('✅ Test push sent:', result);
+    console.log('[Push] ✅ Test push sent:', result);
 
     return {
       success: true,
@@ -235,7 +188,7 @@ export async function sendSelfTest(): Promise<PushRepairResult> {
     };
 
   } catch (error: any) {
-    console.error('❌ Self test failed:', error);
+    console.error('[Push] ❌ Self test failed:', error);
     return {
       success: false,
       message: `Errore durante l'invio: ${error.message}`,
@@ -283,12 +236,11 @@ export async function getPushStatus() {
 
     // Check VAPID
     try {
-      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
       const vapid = await loadVAPIDPublicKey();
       urlBase64ToUint8Array(vapid); // Validate
       status.vapidValid = true;
     } catch (error) {
-      console.warn('VAPID validation failed:', error);
+      console.warn('[Push] VAPID validation failed:', error);
     }
 
   } catch (error) {
