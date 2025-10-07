@@ -1,67 +1,39 @@
-// M1SSION™ VAPID Client Library - Legacy compatibility wrapper
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
-// 
-// NOTE: This file is deprecated. Use @/lib/vapid-loader instead.
-// Kept for backward compatibility only.
+/**
+ * Shim compat per vecchi import "@/lib/vapid".
+ * Delega al loader unificato di /vapid-public.txt.
+ */
+let _cache: string | null = null;
 
-import { loadVAPIDPublicKey as _loadKey, urlBase64ToUint8Array as _urlB64 } from '@/lib/vapid-loader';
-
-let _cachedKey: string | null = null;
-
-async function _ensureLoaded(): Promise<string> {
-  if (!_cachedKey) _cachedKey = await _loadKey();
-  return _cachedKey;
+export async function loadVAPIDPublicKey(): Promise<string> {
+  if (_cache) return _cache;
+  try {
+    const res = await fetch('/vapid-public.txt', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    _cache = (await res.text()).trim();
+    return _cache;
+  } catch (e) {
+    const fb = import.meta.env.VITE_VAPID_PUBLIC_KEY;
+    if (!fb) throw e;
+    _cache = fb.trim();
+    return _cache;
+  }
 }
 
-export const VAPID_PUBLIC_KEY = 'DEPRECATED_USE_loadVAPIDPublicKey_INSTEAD';
-
-/**
- * @deprecated Use urlBase64ToUint8Array from @/lib/vapid-loader instead
- */
-export function urlB64ToUint8Array(base64String: string): Uint8Array {
-  return _urlB64(base64String);
+export function urlBase64ToUint8Array(s: string): Uint8Array {
+  const pad = '='.repeat((4 - (s.length % 4)) % 4);
+  const b64 = (s + pad).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(b64);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  if (out.length !== 65 || out[0] !== 0x04) {
+    throw new TypeError(`VAPID non valida: len=${out.length}, first=0x${out[0].toString(16)}`);
+  }
+  return out;
 }
 
-/**
- * @deprecated Use loadVAPIDPublicKey from @/lib/vapid-loader instead
- */
+// legacy helpers
 export async function getAppServerKey(): Promise<Uint8Array> {
-  const key = await _ensureLoaded();
-  return _urlB64(key);
+  return urlBase64ToUint8Array(await loadVAPIDPublicKey());
 }
-
-/**
- * @deprecated Use loadVAPIDPublicKey from @/lib/vapid-loader instead
- */
-export async function isVAPIDKeyValid(): Promise<boolean> {
-  try {
-    await getAppServerKey();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * @deprecated Use loadVAPIDPublicKey from @/lib/vapid-loader instead
- */
-export async function getVAPIDKeyInfo() {
-  try {
-    const key = await _ensureLoaded();
-    const decoded = _urlB64(key);
-    return {
-      valid: true,
-      length: decoded.length,
-      firstByte: '0x' + decoded[0].toString(16),
-      keyPreview: key.substring(0, 20) + '...',
-      fullLength: key.length
-    };
-  } catch (error) {
-    return {
-      valid: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      keyPreview: 'ERROR',
-      fullLength: 0
-    };
-  }
-}
+// Evita uso di const string hardcoded
+export const VAPID_PUBLIC_KEY: never = undefined as never;
