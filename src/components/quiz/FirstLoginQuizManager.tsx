@@ -7,21 +7,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const FirstLoginQuizManager: React.FC = () => {
-  const { needsQuiz, isLoading, markQuizCompleted } = useFirstLoginQuiz();
+  const { needsQuiz, isLoading, markQuizCompleted, markQuizSkipped } = useFirstLoginQuiz();
   const { getCurrentUser } = useUnifiedAuth();
   const user = getCurrentUser();
 
   const handleQuizComplete = async (playerType: any) => {
-    // Quiz already saved in EnhancedPersonalityQuiz component
-    markQuizCompleted();
-    
     if (playerType) {
+      // Quiz completed successfully
+      markQuizCompleted();
       toast.success('Quiz completato! Il tuo profilo è stato aggiornato.', {
         description: `Sei un ${playerType.name}!`
       });
     } else {
       // User skipped the quiz
-      toast.info('Hai saltato il quiz. Potrai completarlo in futuro dalla tua area profilo.');
+      markQuizSkipped();
+      toast.info('Quiz saltato. Riapparirà domani all\'apertura dell\'app.', {
+        description: 'Potrai completarlo anche dalla tua area profilo.'
+      });
     }
   };
 

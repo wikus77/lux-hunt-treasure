@@ -3,6 +3,40 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
+const QUIZ_SKIP_KEY = 'm1_quiz_last_skip';
+
+/**
+ * Check if a day has passed since the last quiz skip
+ */
+const shouldShowQuizAfterSkip = (): boolean => {
+  try {
+    const lastSkipDate = localStorage.getItem(QUIZ_SKIP_KEY);
+    if (!lastSkipDate) return true; // Never skipped before
+    
+    const lastSkip = new Date(lastSkipDate);
+    const now = new Date();
+    
+    // Compare dates (ignoring time)
+    return lastSkip.toDateString() !== now.toDateString();
+  } catch (error) {
+    console.warn('localStorage not available:', error);
+    return true;
+  }
+};
+
+/**
+ * Record that the user skipped the quiz today
+ */
+const recordQuizSkip = (): void => {
+  try {
+    const now = new Date();
+    localStorage.setItem(QUIZ_SKIP_KEY, now.toISOString());
+    console.log('📅 Quiz skip recorded for today');
+  } catch (error) {
+    console.warn('Failed to record quiz skip:', error);
+  }
+};
+
 export const useFirstLoginQuiz = () => {
   const [needsQuiz, setNeedsQuiz] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,8 +66,21 @@ export const useFirstLoginQuiz = () => {
           console.error('Error checking quiz status:', error);
           setNeedsQuiz(false);
         } else {
-          // User needs quiz if they haven't completed first login or don't have an investigative style
-          setNeedsQuiz(!profile?.first_login_completed || !profile?.investigative_style);
+          // If user has completed quiz with investigative_style, never show again
+          if (profile?.investigative_style) {
+            setNeedsQuiz(false);
+          } 
+          // If user has skipped quiz (first_login_completed but no investigative_style)
+          else if (profile?.first_login_completed) {
+            // Check if a day has passed since last skip
+            const shouldShow = shouldShowQuizAfterSkip();
+            setNeedsQuiz(shouldShow);
+            console.log('📊 Quiz daily check:', shouldShow ? 'SHOW (new day)' : 'SKIP (same day)');
+          }
+          // First time user, always show
+          else {
+            setNeedsQuiz(true);
+          }
         }
       } catch (error) {
         console.error('Error in checkQuizStatus:', error);
@@ -50,9 +97,15 @@ export const useFirstLoginQuiz = () => {
     setNeedsQuiz(false);
   };
 
+  const markQuizSkipped = () => {
+    recordQuizSkip();
+    setNeedsQuiz(false);
+  };
+
   return {
     needsQuiz,
     isLoading,
-    markQuizCompleted
+    markQuizCompleted,
+    markQuizSkipped
   };
 };
