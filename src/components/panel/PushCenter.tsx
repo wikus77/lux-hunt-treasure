@@ -206,9 +206,9 @@ export const PushCenter: React.FC = () => {
             <div className="pt-2 border-t border-white/10">
               <a 
                 href="/push-diagnosi" 
-                className="text-xs text-cyan-400 hover:text-cyan-300 underline"
+                className="text-xs text-cyan-400 hover:text-cyan-300 underline inline-block"
               >
-                Apri diagnostica completa →
+                🔍 Apri diagnostica completa →
               </a>
             </div>
           </>
