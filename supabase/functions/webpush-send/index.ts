@@ -5,18 +5,28 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
+// CORS Helper - aligned with push-health and norah-producer
+const ALLOW = (o: string | null): boolean =>
+  !!o && (o === "https://m1ssion.eu" || /^https:\/\/.*\.pages\.dev$/.test(o));
+
+function getCorsHeaders(origin: string | null) {
+  return {
+    "Access-Control-Allow-Origin": ALLOW(origin) ? origin! : "https://m1ssion.eu",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-admin-token",
+    "Vary": "Origin",
+  };
+}
+
 serve(async (req) => {
-  const origin = req.headers.get("origin") || "*";
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
 
   // CORS
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: {
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info, x-admin-token",
-      },
+      headers: corsHeaders,
     });
   }
 
@@ -177,11 +187,12 @@ serve(async (req) => {
 });
 
 // helper
-function json(obj: unknown, status = 200, origin = "*"): Response {
+function json(obj: unknown, status = 200, origin: string | null = null): Response {
+  const corsHeaders = getCorsHeaders(origin);
   return new Response(JSON.stringify(obj), {
     status,
     headers: {
-      "Access-Control-Allow-Origin": origin,
+      ...corsHeaders,
       "Content-Type": "application/json",
     },
   });
