@@ -132,3 +132,12 @@ verify_jwt = false
 [functions.norah-proactive-analyzer]
 
 [functions.enroll-mission-of-the-month]
+
+[functions.auto-push-cron]
+verify_jwt = false
+
+[functions.get-vapid]
+verify_jwt = false
+
+[functions.env-dump]
+verify_jwt = false
