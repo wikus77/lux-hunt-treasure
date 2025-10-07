@@ -97,7 +97,7 @@ export async function repairPush(): Promise<PushRepairResult> {
     console.log('✅ Service Worker ready');
 
     // Step 3: Load and validate VAPID key
-    const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js' + '?t=' + Date.now());
+    const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapidHelper');
     const vapidKey = await loadVAPIDPublicKey();
     const vapidArray = urlBase64ToUint8Array(vapidKey);
     console.log('✅ VAPID key valid:', vapidArray.length, 'bytes');
@@ -283,7 +283,7 @@ export async function getPushStatus() {
 
     // Check VAPID
     try {
-      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('/vapid-helper.js' + '?t=' + Date.now());
+      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapidHelper');
       const vapid = await loadVAPIDPublicKey();
       urlBase64ToUint8Array(vapid); // Validate
       status.vapidValid = true;
