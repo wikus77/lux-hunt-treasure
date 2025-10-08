@@ -7,7 +7,7 @@ import React, { useState } from "react";
  * - In produzione non viene renderizzato
  * - Inserisci i valori a runtime nei campi input
  */
-export default function NotifierDebugPanel() {
+export function NotifierDebugPanel() {
   // Non mostrare nulla in produzione
   if (import.meta.env.PROD) return null;
 
