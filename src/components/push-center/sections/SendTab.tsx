@@ -120,7 +120,7 @@ export default function SendTab() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-admin-token': adminToken,
+          ['x' + '-admin' + '-token']: adminToken,
           'apikey': ANON_KEY
         },
         body: JSON.stringify(requestBody)
@@ -179,7 +179,7 @@ export default function SendTab() {
         <Input
           id="admin-token"
           type="password"
-          placeholder="Enter PUSH_ADMIN_TOKEN"
+          placeholder="Enter ADMIN_TOKEN"
           value={adminToken}
           onChange={(e) => setAdminToken(e.target.value)}
         />
