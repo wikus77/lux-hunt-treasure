@@ -2,7 +2,7 @@
 // Safe Web Push Subscribe for iOS PWA
 
 import { ensureSWControlled } from './swControl';
-import { base64UrlToUint8Array } from './vapidHelper';
+import { urlBase64ToUint8Array } from '@/lib/vapid-loader';
 import { normalizePlatform, endpointHost, type PushPlatform } from './pushPlatform';
 
 export interface WebPushSubscription {
@@ -93,7 +93,7 @@ export async function subscribeWebPush(vapidPublic: string): Promise<WebPushSubs
     // 7) Convert VAPID key
     let applicationServerKey: Uint8Array;
     try {
-      applicationServerKey = base64UrlToUint8Array(vapidPublic);
+      applicationServerKey = urlBase64ToUint8Array(vapidPublic);
       console.log('[WEBPUSH-SUBSCRIBE] VAPID key converted successfully');
     } catch (error) {
       throw new Error(`Invalid VAPID key: ${error instanceof Error ? error.message : 'Unknown error'}`);

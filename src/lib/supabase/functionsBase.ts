@@ -27,8 +27,8 @@ export function getFunctionsBase(): string {
     console.warn('[NORAH] Could not detect Functions base from performance entries:', e);
   }
 
-  // Ultimate fallback: use known project ref
-  return 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
+  // Ultimate fallback: use env URL
+  return `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 }
 
 /**

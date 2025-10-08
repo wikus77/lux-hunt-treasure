@@ -59,8 +59,8 @@ export default function DebugTab() {
 
     // VAPID (unified source)
     try {
-      const { getVAPIDPublicWeb } = await import('@/lib/config/push');
-      const vapid = getVAPIDPublicWeb();
+      const { loadVAPIDPublicKey } = await import('@/lib/vapid-loader');
+      const vapid = await loadVAPIDPublicKey();
       setVapidKey(vapid ? '...' + vapid.slice(-12) : 'Not configured');
     } catch {
       setVapidKey('Error reading VAPID');

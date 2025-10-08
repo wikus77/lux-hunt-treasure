@@ -8,8 +8,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
 import { supabase } from '@/integrations/supabase/client';
 import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
-import { subscribeWebPushAndSave, looksLikeWebPushEndpoint, WebPushSubscriptionPayload } from '@/lib/push/webpush';
-import { UnifiedSubscription, detectPlatform } from '@/lib/push/types';
+import { detectPlatform } from '@/lib/push/types';
 import { toast } from 'sonner';
 
 interface UnifiedPushState {
@@ -154,7 +153,7 @@ export const useUnifiedPush = () => {
           };
 
           // Save to database
-          const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-upsert', {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-upsert`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({

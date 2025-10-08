@@ -112,8 +112,8 @@ export default function ActivateTab() {
       const p256dh = subJson.keys!.p256dh!;
       const auth = subJson.keys!.auth!;
 
-      const SB_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+      const SB_URL = import.meta.env.VITE_SUPABASE_URL;
+      const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
       const response = await fetch(`${SB_URL}/functions/v1/webpush-upsert`, {
         method: 'POST',

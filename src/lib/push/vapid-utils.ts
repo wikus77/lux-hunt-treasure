@@ -66,9 +66,9 @@ export function detectPushProvider(endpoint: string): 'apns' | 'fcm' | 'webpush'
 
 /**
  * Get VAPID public key for Web Push subscriptions
- * Uses the unified VAPID source from @/lib/config/push
+ * Uses the unified VAPID source from @/lib/vapid-loader
  */
-import { getVAPIDPublicWeb } from '@/lib/config/push';
-export function getVAPIDPublicKey(): string {
-  return getVAPIDPublicWeb();
+import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
+export async function getVAPIDPublicKey(): Promise<string> {
+  return await loadVAPIDPublicKey();
 }

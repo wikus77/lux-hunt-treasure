@@ -12,10 +12,10 @@ export async function disableWebPush() {
 
   // opzionale: cancella anche da Supabase
   try {
-    await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}`,{
+    await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(endpoint)}`,{
       method:'DELETE',
       headers:{
-        'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
         'Authorization': 'Bearer <JWT_RUNTIME>',
         'Prefer':'return=minimal'
       }
