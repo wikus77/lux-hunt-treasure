@@ -81,11 +81,11 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
       // Use unified VAPID key - import from single source
       const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
       const vapidKey = await loadVAPIDPublicKey();
-      const appServerKey = urlBase64ToUint8Array(vapidKey);
+      const appServerKey = urlBase64ToUint8Array(vapidKey) as unknown as BufferSource;
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: appServerKey as unknown as BufferSource
+        applicationServerKey: appServerKey
       });
 
       // Save subscription to database
@@ -113,20 +113,6 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
     }
   };
 
-  const urlBase64ToUint8Array = (base64String: string) => {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-  };
 
   if (!isSupported) {
     return null;
