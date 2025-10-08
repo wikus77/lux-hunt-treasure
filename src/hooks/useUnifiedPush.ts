@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 import { detectPlatform } from '@/lib/push/types';
 import { toast } from 'sonner';
+import type { WebPushSubscriptionPayload, UnifiedSubscription } from '@/lib/push/webPushManager';
+import { looksLikeWebPushEndpoint, subscribeWebPushAndSave } from '@/lib/push/webPushManager';
 
 interface UnifiedPushState {
   isSupported: boolean;
@@ -143,13 +145,12 @@ export const useUnifiedPush = () => {
           }
 
           unifiedSub = {
-            kind: 'WEBPUSH',
+            kind: 'webpush',
             endpoint: subscription.endpoint,
             keys: {
               p256dh: keys.p256dh,
               auth: keys.auth
-            },
-            platform: platform.platform
+            }
           };
 
           // Save to database
@@ -194,9 +195,8 @@ export const useUnifiedPush = () => {
 
             if (token && !looksLikeWebPushEndpoint(token)) {
               unifiedSub = {
-                kind: 'FCM',
-                token,
-                platform: platform.platform as 'android' | 'web'
+                kind: 'fcm',
+                token
               };
 
               // Save FCM token
@@ -219,28 +219,26 @@ export const useUnifiedPush = () => {
         // Fallback to Web Push if FCM failed
         if (!fcmSucceeded) {
           console.log('🌐 [UNIFIED-PUSH] Using Web Push fallback');
-          const webPushResult = await subscribeWebPushAndSave({
-            userId: user.id,
-            swReg,
-            vapidPublicKey: vapidKey,
-            platform: platform.platform
-          });
+          const webPushResult = await subscribeWebPushAndSave();
 
-          unifiedSub = {
-            kind: 'WEBPUSH',
-            endpoint: webPushResult.subscription.endpoint,
-            keys: webPushResult.subscription.keys,
-            platform: platform.platform
-          };
+          if (webPushResult) {
+            unifiedSub = {
+              kind: 'webpush',
+              endpoint: webPushResult.endpoint,
+              keys: webPushResult.keys
+            };
+          } else {
+            throw new Error('Failed to create web push subscription');
+          }
         }
       }
 
       setState(prev => ({
         ...prev,
         isSubscribed: true,
-        webPushSubscription: unifiedSub.kind === 'WEBPUSH' ? unifiedSub : null,
-        token: unifiedSub.kind === 'FCM' ? unifiedSub.token : null,
-        subscriptionType: unifiedSub.kind.toLowerCase() as 'fcm' | 'webpush',
+        webPushSubscription: unifiedSub.kind === 'webpush' ? unifiedSub : null,
+        token: unifiedSub.kind === 'fcm' ? unifiedSub.token : null,
+        subscriptionType: unifiedSub.kind,
         isLoading: false
       }));
 

@@ -5,10 +5,17 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, BellOff, AlertCircle, RefreshCw, Loader2 } from 'lucide-react';
 import { 
-  webPushManager, 
-  isWebPushSupported, 
-  isPWAMode 
+  isPushSupported as isWebPushSupported,
+  hasActiveSubscription,
+  enableWebPush,
+  disableWebPush
 } from '@/lib/push/webPushManager';
+
+// Helper to detect PWA mode
+const isPWAMode = () => {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         (navigator as any).standalone === true;
+};
 
 const WebPushToggle: React.FC = () => {
   const [isEnabled, setIsEnabled] = useState(false);
@@ -59,10 +66,10 @@ const WebPushToggle: React.FC = () => {
     if (!isWebPushSupported()) return;
     
     try {
-      const subscription = await webPushManager.getCurrent();
-      setIsEnabled(!!subscription);
+      const hasSubscription = await hasActiveSubscription();
+      setIsEnabled(hasSubscription);
       
-      if (subscription) {
+      if (hasSubscription) {
         console.log('[WEBPUSH-TOGGLE] Current subscription active');
       } else {
         console.log('[WEBPUSH-TOGGLE] No active subscription');
@@ -80,13 +87,13 @@ const WebPushToggle: React.FC = () => {
       if (!isEnabled) {
         // Subscribe
         console.log('[WEBPUSH-TOGGLE] Starting subscription...');
-        await webPushManager.subscribe();
+        await enableWebPush();
         setIsEnabled(true);
         console.log('[WEBPUSH-TOGGLE] ✅ Subscribed successfully');
       } else {
         // Unsubscribe
         console.log('[WEBPUSH-TOGGLE] Unsubscribing...');
-        await webPushManager.unsubscribe();
+        await disableWebPush();
         setIsEnabled(false);
         console.log('[WEBPUSH-TOGGLE] ✅ Unsubscribed successfully');
       }

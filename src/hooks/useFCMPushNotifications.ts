@@ -2,7 +2,7 @@
 // Web Push Notifications Hook (replaces FCM)
 
 import { useState, useEffect, useCallback } from 'react';
-import { webPushManager } from '@/lib/push/webPushManager';
+import { isPushSupported, enableWebPush } from '@/lib/push/webPushManager';
 import { toast } from 'sonner';
 
 interface WebPushNotificationsState {
@@ -25,7 +25,7 @@ export const useFCMPushNotifications = () => {
   // Check browser support and permission on mount
   useEffect(() => {
     const checkSupport = () => {
-      const supported = webPushManager.isSupported();
+      const supported = isPushSupported();
       const permission = typeof window !== 'undefined' ? Notification.permission : 'default';
       const isIOSCapacitor = typeof window !== 'undefined' && 
                            !!(window as any).Capacitor && 
@@ -57,7 +57,7 @@ export const useFCMPushNotifications = () => {
     try {
       console.log('🔔 Requesting Web Push subscription...');
       
-      const subscription = await webPushManager.subscribe();
+      const subscription = await enableWebPush();
       
       console.log('✅ Web Push subscription successful');
       toast.success('Notifiche push attivate con successo!');

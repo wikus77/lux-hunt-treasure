@@ -2,7 +2,7 @@
 // Web Push Hook (replaces FCM)
 
 import { useState, useEffect, useCallback } from 'react';
-import { webPushManager } from '@/lib/push/webPushManager';
+import { isPushSupported, hasActiveSubscription, enableWebPush } from '@/lib/push/webPushManager';
 
 interface UseWebPushState {
   status: 'idle' | 'loading' | 'success' | 'error';
@@ -31,24 +31,22 @@ export function useFcm(userId?: string): UseWebPushReturn {
 
   // Check Web Push support and cached data on mount
   useEffect(() => {
-    const checkSupport = () => {
-      const supported = webPushManager.isSupported();
+    const checkSupport = async () => {
+      const supported = isPushSupported();
       setIsSupported(supported);
       setPermission(Notification.permission);
-    };
-
-    checkSupport();
-
-    // Load current subscription if available
-    webPushManager.getCurrent().then(sub => {
-      if (sub) {
+      
+      // Load current subscription if available
+      const hasSubscription = await hasActiveSubscription();
+      if (hasSubscription) {
         setState(prev => ({
           ...prev,
-          subscription: sub,
           status: 'success'
         }));
       }
-    });
+    };
+
+    checkSupport();
   }, []);
 
   const generate = useCallback(async () => {
@@ -69,7 +67,7 @@ export function useFcm(userId?: string): UseWebPushReturn {
 
     try {
       console.log('[WEBPUSH] hook generate → START');
-      const subscription = await webPushManager.subscribe(userId);
+      const subscription = await enableWebPush();
       
       console.log('[WEBPUSH] hook generate → SUCCESS');
       setState({
