@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { getVAPIDPublicWeb } from '@/lib/config/push';
+import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
 import { enableWebPush } from '@/lib/push/enableWebPush';
 import { toast } from 'sonner';
 
@@ -64,7 +64,7 @@ export default function PushDebug() {
       const sessionUserId = session?.user?.id?.slice(0, 8) || null;
       
       // VAPID
-      const vapidKey = getVAPIDPublicWeb().slice(0, 20) + '...';
+      const vapidKey = (await loadVAPIDPublicKey()).slice(0, 20) + '...';
       
       setDiagnostics({
         permission,

@@ -10,7 +10,7 @@ import { enableWebPush } from '@/lib/push/enableWebPush';
 import { disableWebPush } from '@/lib/push/disableWebPush';
 import { supabase } from '@/integrations/supabase/client';
 import { Bell, BellOff, Send, Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import { VAPID_PUBLIC_KEY } from '@/lib/vapid';
+import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
 
 interface PushEnableButtonProps {
   userId?: string;
