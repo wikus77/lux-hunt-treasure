@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 /* Robust Web Push Enable Function (JWT-safe, VAPID unified) */
 
-import { getVAPIDUint8 } from '@/lib/config/push';
+import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 export async function enableWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -46,7 +46,8 @@ export async function enableWebPush() {
   // 4) Get active registration and subscription
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
-  const vapidKeyUint8 = await getVAPIDUint8();
+  const vapidKey = await loadVAPIDPublicKey();
+  const vapidKeyUint8 = urlBase64ToUint8Array(vapidKey);
   
   // Check if existing subscription uses different VAPID key
   if (sub) {

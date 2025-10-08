@@ -79,11 +79,13 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
       const registration = await navigator.serviceWorker.ready;
       
       // Use unified VAPID key - import from single source
-      const { getAppServerKey } = await import('@/lib/vapid');
+      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
+      const vapidKey = await loadVAPIDPublicKey();
+      const appServerKey = urlBase64ToUint8Array(vapidKey);
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: getAppServerKey() as unknown as BufferSource
+        applicationServerKey: appServerKey as unknown as BufferSource
       });
 
       // Save subscription to database
