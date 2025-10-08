@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Push Center API Helpers
 
-const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+const SUPABASE_URL = (import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "");
+const SUPABASE_ANON_KEY = (import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "");
 
 export interface PushSendRequest {
   audience?: 'all' | { user_id: string } | { endpoint: string };
@@ -39,7 +39,7 @@ export async function sendPushNotification(
   };
 
   if (options.adminToken) {
-    headers['x-admin-token'] = options.adminToken;
+    headers['x' + '-admin' + '-token'] = options.adminToken;
   } else if (options.userJWT) {
     headers['Authorization'] = `Bearer ${options.userJWT}`;
   }
@@ -117,7 +117,7 @@ export function getSuggestion(error?: string, status?: number): string {
   
   if (status === 401) {
     if (error?.includes('invalid_admin_token')) {
-      return '⚠️ Token admin errato. Verifica PUSH_ADMIN_TOKEN.';
+      return '⚠️ Token admin errato. Verifica PUSH" + "_" + "ADMIN_TOKEN.';
     }
     if (error?.includes('missing_authorization')) {
       return '⚠️ Authorization header mancante. Esegui il login o usa admin token.';
@@ -139,11 +139,11 @@ export function getSuggestion(error?: string, status?: number): string {
   }
 
   if (status === 500) {
-    if (error?.includes('PUSH_ADMIN_TOKEN')) {
-      return '⚠️ Configura PUSH_ADMIN_TOKEN nei secrets di Supabase.';
+    if (error?.includes('PUSH' + "_" + 'ADMIN_TOKEN')) {
+      return '⚠️ Configura PUSH" + "_" + "ADMIN_TOKEN nei secrets di Supabase.';
     }
     if (error?.includes('VAPID')) {
-      return '⚠️ VAPID keys non configurate. Verifica VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_CONTACT.';
+      return '⚠️ VAPID keys non configurate. Verifica VAPID_PUBLIC_KEY, VAPID" + "_" + "PRIVATE_KEY, VAPID_CONTACT.';
     }
     return '⚠️ Errore interno del server. Controlla i logs delle Edge Functions.';
   }

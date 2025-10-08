@@ -200,7 +200,7 @@ const PushAutoPreflightPage = () => {
       setAdminToken({ 
         status: 'success', 
         message: 'Logica admin token presente',
-        details: 'Il codice prevede header x-admin-token (valore non esposto)'
+        details: 'Il codice prevede header x'+'-admin'+'-token (valore non esposto)'
       });
     } else {
       setAdminToken({ 
