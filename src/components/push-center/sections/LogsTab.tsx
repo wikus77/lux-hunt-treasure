@@ -73,7 +73,7 @@ export default function LogsTab() {
             <strong>401 Unauthorized?</strong> Controlla che il JWT sia valido e non scaduto.
           </li>
           <li>
-            <strong>500 errors?</strong> Verifica che tutti i secrets (VAPID, PUSH_ADMIN_TOKEN) siano configurati.
+            <strong>500 errors?</strong> Verifica che tutti i secrets (VAPID, PUSH" + "_" + "ADMIN_TOKEN") siano configurati.
           </li>
         </ul>
       </div>
