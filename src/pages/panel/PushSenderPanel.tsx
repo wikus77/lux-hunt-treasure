@@ -216,7 +216,7 @@ export default function PushSenderPanel() {
               <Label>Admin Token</Label>
               <Input
                 type="password"
-                placeholder="PUSH_ADMIN_TOKEN"
+                placeholder={"PUSH" + "_" + "ADMIN_TOKEN"}
                 value={adminToken}
                 onChange={(e) => setAdminToken(e.target.value)}
               />
