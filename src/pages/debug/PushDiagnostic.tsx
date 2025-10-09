@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Smartphone, Monitor, AlertCircle, CheckCircle, Send, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { enablePushNotifications, getNotificationStatus } from '@/features/notifications/enablePush';
+import { getNotificationStatus, enablePush as enablePushNotifications } from '@/features/notifications/enablePush'
 
 interface DiagnosticData {
   // Environment
