@@ -1,10 +1,8 @@
-
 import React from 'react';
 import { Route } from 'react-router-dom';
 import { RoleBasedProtectedRoute } from "../../components/auth/RoleBasedProtectedRoute";
 
 // Pages
-import Settings from "../../pages/Settings";
 import PersonalInfo from "../../pages/PersonalInfo";
 import PrivacySecurity from "../../pages/PrivacySecurity";
 import LanguageSettings from "../../pages/LanguageSettings";
