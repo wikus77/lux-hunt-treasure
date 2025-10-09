@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe } from "lucide-react";
+import { ArrowLeft, User, Lock, CreditCard, ChevronRight, LogOut, Bell, Globe, Vibrate } from "lucide-react";
 import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import BottomNavigation from "@/components/layout/BottomNavigation";
@@ -15,8 +15,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useAuthContext } from "@/contexts/auth";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import AccountSection from "@/components/settings/AccountSection";
 import AppSection from "@/components/settings/AppSection";
+import { hapticManager } from "@/utils/haptics";
 
 import SupportSection from "@/components/settings/SupportSection";
 import RoleSwitcher from "@/components/auth/RoleSwitcher";
@@ -38,6 +40,7 @@ const Settings = () => {
   const [soundEffects, setSoundEffects] = useState(true);
   const [language, setLanguage] = useState("Italiano");
   const [pushEnabled, setPushEnabled] = useState(false);
+  const [hapticsEnabled, setHapticsEnabled] = useState(hapticManager.getEnabled());
 
   // Check push subscription status on mount and refresh properly
   useEffect(() => {
@@ -132,6 +135,37 @@ const Settings = () => {
               language={language}
               setSoundEffects={setSoundEffects}
             />
+            
+            {/* Haptic Feedback Settings */}
+            <div className="glass-card p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Vibrate className="h-5 w-5 text-white" />
+                  <div>
+                    <h3 className="text-white font-medium">Feedback Tattile</h3>
+                    <p className="text-sm text-gray-400">Vibrazione su azioni e notifiche</p>
+                  </div>
+                </div>
+                <Switch
+                  checked={hapticsEnabled}
+                  onCheckedChange={(enabled) => {
+                    setHapticsEnabled(enabled);
+                    hapticManager.setEnabled(enabled);
+                    if (enabled) {
+                      hapticManager.trigger('success');
+                      toast.success('Feedback tattile attivato');
+                    } else {
+                      toast.success('Feedback tattile disattivato');
+                    }
+                  }}
+                />
+              </div>
+              {!hapticManager.isSupported() && (
+                <p className="text-xs text-yellow-500">
+                  ⚠️ Il tuo dispositivo potrebbe non supportare la vibrazione
+                </p>
+              )}
+            </div>
             
             {/* Notification Settings Link */}
             <Link to="/settings/notifications" className="block">

@@ -325,7 +325,8 @@ export type Database = {
       }
       ai_docs: {
         Row: {
-          body: string
+          body: string | null
+          body_md: string | null
           category: string | null
           created_at: string | null
           doc_type: string | null
@@ -336,7 +337,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          body: string
+          body?: string | null
+          body_md?: string | null
           category?: string | null
           created_at?: string | null
           doc_type?: string | null
@@ -347,7 +349,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          body?: string
+          body?: string | null
+          body_md?: string | null
           category?: string | null
           created_at?: string | null
           doc_type?: string | null
@@ -648,6 +651,128 @@ export type Database = {
           private_key?: string
           team_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      auto_push_config: {
+        Row: {
+          created_at: string
+          daily_max: number
+          daily_min: number
+          enabled: boolean
+          id: string
+          max_push_per_day: number | null
+          quiet_end: string
+          quiet_hours_end: number | null
+          quiet_hours_start: number | null
+          quiet_start: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_max?: number
+          daily_min?: number
+          enabled?: boolean
+          id?: string
+          max_push_per_day?: number | null
+          quiet_end?: string
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          quiet_start?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_max?: number
+          daily_min?: number
+          enabled?: boolean
+          id?: string
+          max_push_per_day?: number | null
+          quiet_end?: string
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          quiet_start?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auto_push_log: {
+        Row: {
+          created_at: string
+          delivery: Json | null
+          id: string
+          sent_at: string
+          sent_date: string
+          template_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivery?: Json | null
+          id?: string
+          sent_at?: string
+          sent_date?: string
+          template_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delivery?: Json | null
+          id?: string
+          sent_at?: string
+          sent_date?: string
+          template_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_push_log_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "auto_push_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      auto_push_templates: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          id: string
+          image_url: string | null
+          kind: string
+          title: string
+          updated_at: string
+          url: string
+          weight: number
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind: string
+          title: string
+          updated_at?: string
+          url?: string
+          weight?: number
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          kind?: string
+          title?: string
+          updated_at?: string
+          url?: string
+          weight?: number
         }
         Relationships: []
       }
@@ -1386,39 +1511,6 @@ export type Database = {
         }
         Relationships: []
       }
-      fcm_tokens: {
-        Row: {
-          created_at: string | null
-          fid: string
-          id: string
-          ip: unknown | null
-          token: string
-          updated_at: string | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          fid: string
-          id?: string
-          ip?: unknown | null
-          token: string
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          fid?: string
-          id?: string
-          ip?: unknown | null
-          token?: string
-          updated_at?: string | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       feed_crawler_runs: {
         Row: {
           created_at: string | null
@@ -2021,6 +2113,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mission_enrollments: {
+        Row: {
+          joined_at: string
+          mission_id: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          mission_id: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          mission_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mission_enrollments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "mission_status_v"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mission_enrollments_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mission_prizes: {
         Row: {
           category_id: string | null
@@ -2245,34 +2370,34 @@ export type Database = {
       }
       norah_events: {
         Row: {
-          created_at: string | null
-          event: string
+          created_at: string
           event_type: string
           id: string
           intent: string | null
+          payload: Json
           phase: string | null
           sentiment: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
-          event: string
+          created_at?: string
           event_type?: string
           id?: string
           intent?: string | null
+          payload?: Json
           phase?: string | null
           sentiment?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
-          created_at?: string | null
-          event?: string
+          created_at?: string
           event_type?: string
           id?: string
           intent?: string | null
+          payload?: Json
           phase?: string | null
           sentiment?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -2332,6 +2457,45 @@ export type Database = {
           id?: string
           intent?: string | null
           role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      norah_proactive_notifications: {
+        Row: {
+          body: string
+          clicked: boolean | null
+          clicked_at: string | null
+          created_at: string | null
+          id: string
+          notification_type: string
+          payload: Json | null
+          sent_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          clicked?: boolean | null
+          clicked_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_type: string
+          payload?: Json | null
+          sent_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          clicked?: boolean | null
+          clicked_at?: string | null
+          created_at?: string | null
+          id?: string
+          notification_type?: string
+          payload?: Json | null
+          sent_at?: string | null
+          title?: string
           user_id?: string
         }
         Relationships: []
@@ -2772,12 +2936,15 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           birth_date: string | null
+          buzz_map_walkthrough_completed: boolean | null
+          buzz_walkthrough_completed: boolean | null
           can_access_app: boolean | null
           choose_plan_seen: boolean
           city: string | null
           country: string | null
           created_at: string
           credits: number | null
+          current_streak_days: number | null
           device_token: string | null
           early_access_hours: number | null
           email: string | null
@@ -2789,9 +2956,11 @@ export type Database = {
           is_admin: boolean
           is_pre_registered: boolean | null
           language: string | null
+          last_check_in_date: string | null
           last_cookie_banner_shown: string | null
           last_name: string | null
           last_plan_change: string | null
+          longest_streak_days: number | null
           notifications_enabled: boolean | null
           phone: string | null
           plan: string | null
@@ -2812,6 +2981,8 @@ export type Database = {
           tier: string | null
           updated_at: string
           username: string | null
+          walkthrough_step_buzz: number | null
+          walkthrough_step_buzz_map: number | null
           weekly_hints: string | null
         }
         Insert: {
@@ -2824,12 +2995,15 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          buzz_map_walkthrough_completed?: boolean | null
+          buzz_walkthrough_completed?: boolean | null
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
           credits?: number | null
+          current_streak_days?: number | null
           device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
@@ -2841,9 +3015,11 @@ export type Database = {
           is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
+          last_check_in_date?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
           last_plan_change?: string | null
+          longest_streak_days?: number | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
@@ -2864,6 +3040,8 @@ export type Database = {
           tier?: string | null
           updated_at?: string
           username?: string | null
+          walkthrough_step_buzz?: number | null
+          walkthrough_step_buzz_map?: number | null
           weekly_hints?: string | null
         }
         Update: {
@@ -2876,12 +3054,15 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           birth_date?: string | null
+          buzz_map_walkthrough_completed?: boolean | null
+          buzz_walkthrough_completed?: boolean | null
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
           country?: string | null
           created_at?: string
           credits?: number | null
+          current_streak_days?: number | null
           device_token?: string | null
           early_access_hours?: number | null
           email?: string | null
@@ -2893,9 +3074,11 @@ export type Database = {
           is_admin?: boolean
           is_pre_registered?: boolean | null
           language?: string | null
+          last_check_in_date?: string | null
           last_cookie_banner_shown?: string | null
           last_name?: string | null
           last_plan_change?: string | null
+          longest_streak_days?: number | null
           notifications_enabled?: boolean | null
           phone?: string | null
           plan?: string | null
@@ -2916,6 +3099,8 @@ export type Database = {
           tier?: string | null
           updated_at?: string
           username?: string | null
+          walkthrough_step_buzz?: number | null
+          walkthrough_step_buzz_map?: number | null
           weekly_hints?: string | null
         }
         Relationships: []
@@ -2935,6 +3120,39 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      push_logs: {
+        Row: {
+          created_at: string | null
+          endpoint: string | null
+          error_message: string | null
+          id: string
+          payload: Json | null
+          status: string
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          status: string
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint?: string | null
+          error_message?: string | null
+          id?: string
+          payload?: Json | null
+          status?: string
+          status_code?: number | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -3098,9 +3316,13 @@ export type Database = {
           device_info: Json | null
           endpoint: string | null
           endpoint_type: string | null
+          id: string
+          is_active: boolean | null
+          last_used: string | null
           last_used_at: string | null
           p256dh: string | null
           platform: string | null
+          provider: string
           token: string
           updated_at: string | null
           user_id: string | null
@@ -3111,9 +3333,13 @@ export type Database = {
           device_info?: Json | null
           endpoint?: string | null
           endpoint_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used?: string | null
           last_used_at?: string | null
           p256dh?: string | null
           platform?: string | null
+          provider?: string
           token: string
           updated_at?: string | null
           user_id?: string | null
@@ -3124,9 +3350,13 @@ export type Database = {
           device_info?: Json | null
           endpoint?: string | null
           endpoint_type?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_used?: string | null
           last_used_at?: string | null
           p256dh?: string | null
           platform?: string | null
+          provider?: string
           token?: string
           updated_at?: string | null
           user_id?: string | null
@@ -4220,6 +4450,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_flags: {
+        Row: {
+          hide_tutorial: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          hide_tutorial?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          hide_tutorial?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_interest_profile: {
         Row: {
           topics: Json
@@ -4684,6 +4932,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_push_settings: {
+        Row: {
+          id: string
+          unified_enabled: boolean | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          unified_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          unified_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_push_tokens: {
         Row: {
           created_at: string
@@ -4907,43 +5176,34 @@ export type Database = {
       }
       webpush_subscriptions: {
         Row: {
-          auth: string
           created_at: string
+          device_info: Json | null
           endpoint: string
           id: string
           is_active: boolean
-          keys: Json | null
-          p256dh: string
-          platform: string | null
-          provider: string
-          updated_at: string
-          user_id: string
+          keys: Json
+          last_used_at: string | null
+          user_id: string | null
         }
         Insert: {
-          auth: string
           created_at?: string
+          device_info?: Json | null
           endpoint: string
           id?: string
           is_active?: boolean
-          keys?: Json | null
-          p256dh: string
-          platform?: string | null
-          provider: string
-          updated_at?: string
-          user_id: string
+          keys: Json
+          last_used_at?: string | null
+          user_id?: string | null
         }
         Update: {
-          auth?: string
           created_at?: string
+          device_info?: Json | null
           endpoint?: string
           id?: string
           is_active?: boolean
-          keys?: Json | null
-          p256dh?: string
-          platform?: string | null
-          provider?: string
-          updated_at?: string
-          user_id?: string
+          keys?: Json
+          last_used_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -4977,6 +5237,39 @@ export type Database = {
         }
         Relationships: []
       }
+      weekly_leaderboard: {
+        Row: {
+          created_at: string | null
+          id: string
+          rank: number | null
+          total_xp: number | null
+          updated_at: string | null
+          user_id: string
+          week_number: number
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rank?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id: string
+          week_number: number
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rank?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string
+          week_number?: number
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       buzz_map_markers: {
@@ -5000,6 +5293,18 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           title?: string | null
+        }
+        Relationships: []
+      }
+      current_week_leaderboard: {
+        Row: {
+          agent_code: string | null
+          avatar_url: string | null
+          current_week: number | null
+          current_year: number | null
+          rank: number | null
+          total_xp: number | null
+          user_id: string | null
         }
         Relationships: []
       }
@@ -5137,6 +5442,15 @@ export type Database = {
           },
         ]
       }
+      push_stats_daily: {
+        Row: {
+          date: string | null
+          success_rate: number | null
+          successful: number | null
+          total_sent: number | null
+        }
+        Relationships: []
+      }
       v_agent_profile: {
         Row: {
           agent_code: string | null
@@ -5179,15 +5493,6 @@ export type Database = {
           current_week?: never
           progress_ratio?: never
           user_id?: string | null
-        }
-        Relationships: []
-      }
-      v_latest_webpush_subscription: {
-        Row: {
-          created_at: string | null
-          endpoint: string | null
-          sub_id: string | null
-          user_id: string | null
         }
         Relationships: []
       }
@@ -5264,19 +5569,39 @@ export type Database = {
         }
         Relationships: []
       }
-      webpush_latest_per_user: {
+      webpush_subscriptions_flat: {
         Row: {
           auth: string | null
           created_at: string | null
+          device_info: Json | null
           endpoint: string | null
           id: string | null
           is_active: boolean | null
-          keys: Json | null
+          last_used_at: string | null
           p256dh: string | null
-          platform: string | null
-          provider: string | null
-          rn: number | null
           user_id: string | null
+        }
+        Insert: {
+          auth?: never
+          created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh?: never
+          user_id?: string | null
+        }
+        Update: {
+          auth?: never
+          created_at?: string | null
+          device_info?: Json | null
+          endpoint?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          last_used_at?: string | null
+          p256dh?: never
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -5316,14 +5641,42 @@ export type Database = {
           title: string
         }[]
       }
+      ai_rag_search_vec: {
+        Args: {
+          in_locale?: string
+          match_count?: number
+          query_embedding: number[]
+        }
+        Returns: {
+          category: string
+          chunk_idx: number
+          chunk_text: string
+          distance: number
+          doc_id: string
+          locale: string
+          title: string
+        }[]
+      }
+      ai_rag_search_vec_json: {
+        Args: { payload: Json }
+        Returns: {
+          category: string
+          chunk_idx: number
+          chunk_text: string
+          distance: number
+          doc_id: string
+          locale: string
+          title: string
+        }[]
+      }
       assign_area_radius: {
         Args: { p_mission_id: string }
         Returns: number
       }
       award_xp: {
         Args:
+          | { p_source: string; p_user_id: string; p_xp_amount: number }
           | { p_user_id: string; p_xp_amount: number }
-          | { p_user_id: string; p_xp_amount: number; p_xp_type?: string }
         Returns: Json
       }
       binary_quantize: {
@@ -5411,6 +5764,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      cleanup_expired_push_tokens: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       cleanup_old_abuse_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -5448,6 +5805,10 @@ export type Database = {
         Returns: number
       }
       create_free_subscription: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      debug_vec_info: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
@@ -5609,6 +5970,12 @@ export type Database = {
       get_user_by_email: {
         Args: { email_param: string }
         Returns: unknown[]
+      }
+      get_user_flags: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          hide_tutorial: boolean
+        }[]
       }
       get_user_role_safe: {
         Args: { p_user_id: string }
@@ -5810,6 +6177,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      mark_norah_notification_clicked: {
+        Args: { p_notification_id: string }
+        Returns: undefined
+      }
       normalize_feed_url: {
         Args: { input_url: string }
         Returns: string
@@ -5855,6 +6226,10 @@ export type Database = {
         Args: { code_input: string }
         Returns: Json
       }
+      refresh_current_week_leaderboard: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       register_user_to_active_mission: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -5880,6 +6255,10 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      set_hide_tutorial: {
+        Args: { p_hide: boolean }
+        Returns: undefined
       }
       setup_developer_user: {
         Args: { uid: string }
@@ -5910,12 +6289,14 @@ export type Database = {
         Returns: Json
       }
       update_personality_quiz_result: {
-        Args: {
-          p_assigned_description: string
-          p_assigned_type: string
-          p_quiz_answers: Json
-          p_user_id: string
-        }
+        Args:
+          | {
+              p_assigned_description: string
+              p_assigned_type: string
+              p_quiz_answers: Json
+              p_user_id: string
+            }
+          | { p_investigative_style: string; p_user_id: string }
         Returns: Json
       }
       update_user_plan_complete: {
@@ -5953,28 +6334,6 @@ export type Database = {
       upsert_user_position: {
         Args: { lat: number; lng: number; uid: string }
         Returns: undefined
-      }
-      upsert_webpush_subscription: {
-        Args: {
-          p_auth: string
-          p_endpoint: string
-          p_p256dh: string
-          p_platform?: string
-          p_user_id: string
-        }
-        Returns: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          is_active: boolean
-          keys: Json | null
-          p256dh: string
-          platform: string | null
-          provider: string
-          updated_at: string
-          user_id: string
-        }
       }
       validate_buzz_user_id: {
         Args: { p_user_id: string }
@@ -6015,6 +6374,7 @@ export type Database = {
       }
     }
     Enums: {
+      push_kind: "morning" | "buzz" | "buzzmap" | "motivation" | "custom"
       referral_status: "pending" | "registered"
     }
     CompositeTypes: {
@@ -6147,6 +6507,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      push_kind: ["morning", "buzz", "buzzmap", "motivation", "custom"],
       referral_status: ["pending", "registered"],
     },
   },

@@ -57,8 +57,11 @@ import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
+import AdminPushConsolePage from "@/pages/push/AdminPushConsolePage";
+import PushSenderPanel from "@/pages/panel/PushSenderPanel";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
+import PushDiagnosi from "@/pages/PushDiagnosi";
 import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import PushTest from "@/pages/debug/PushTest";
@@ -66,9 +69,9 @@ import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
-import VAPIDKeyTest from "@/pages/VAPIDKeyTest";
+// VAPIDKeyTest removed - using Web Push now
 import PushHealth from "@/pages/PushHealth";
-import PushDebug from "@/pages/PushDebug";
+const PushDebug = React.lazy(() => import("@/pages/PushDebug"));
 import { PushReport } from "@/pages/PushReport";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
@@ -477,6 +480,18 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/panel/push">
+            <ProtectedRoute>
+              <AdminPushConsolePage />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/push-sender">
+            <ProtectedRoute>
+              <PushSenderPanel />
+            </ProtectedRoute>
+          </Route>
+
           {/* Push Console routes */}
           <Route path="/panel/push-admin">
             <ProtectedRoute>
@@ -583,6 +598,25 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
+          <Route path="/panel/push-control">
+            <ProtectedRoute>
+              <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/push-preflight">
+            <ProtectedRoute>
+              <GlobalLayout><PanelAccessPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* 🔧 Push Diagnostica Route */}
+          <Route path="/push-diagnosi">
+            <ProtectedRoute>
+              <PushDiagnosi />
+            </ProtectedRoute>
+          </Route>
+
           {/* 🔥 Firebase Notification Debug Route */}
           <Route path="/firebase-notification-debug">
             <ProtectedRoute>
@@ -590,10 +624,10 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* 🧪 VAPID Key Test Route - CRITICAL DEBUG */}
-          <Route path="/vapid-test">
+          {/* 🔔 Push Debug Route */}
+          <Route path="/push-debug">
             <ProtectedRoute>
-              <GlobalLayout><VAPIDKeyTest /></GlobalLayout>
+              <GlobalLayout><PushDebug /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

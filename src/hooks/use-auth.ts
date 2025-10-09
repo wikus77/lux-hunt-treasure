@@ -69,9 +69,17 @@ export const useAuth = () => {
   const logout = async (): Promise<void> => {
     console.log('🚪 LOGOUT STARTING - RESET COMPLETO 17/07/2025');
     
-    // 🧹 LOGOUT CACHE CLEANUP - Clear all storage and reset state
+    // 🧹 LOGOUT CACHE CLEANUP - Clear storage but preserve daily quiz skip key
+    const quizSkipKey = 'm1_quiz_last_skip';
+    const quizSkipValue = localStorage.getItem(quizSkipKey);
+    
     localStorage.clear();
     sessionStorage.clear();
+    
+    if (quizSkipValue) {
+      localStorage.setItem(quizSkipKey, quizSkipValue);
+      console.log('🛡️ Preserved daily quiz skip after logout');
+    }
     
     // Reset any existing state stores
     try {

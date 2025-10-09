@@ -23,8 +23,8 @@ export const InviteFriendModal: React.FC<InviteFriendModalProps> = ({
 
   // Generate referral link
   const referralLink = user?.id 
-    ? `${window.location.origin}?ref=${user.id}`
-    : `${window.location.origin}`;
+    ? `https://m1ssion.eu?ref=${user.id}`
+    : `https://m1ssion.eu`;
 
   const inviteMessage = `🎮 Unisciti a M1SSION™ - La caccia al tesoro più epica! Usa il mio link per iniziare: ${referralLink}`;
 

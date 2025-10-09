@@ -14,7 +14,7 @@ import { usePrizeData } from "@/hooks/usePrizeData";
 import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
-import { InviteFriendButton } from "@/components/xp/InviteFriendButton";
+import InviteFloatingButton from "@/components/home/InviteFloatingButton";
 
 export default function CommandCenterHome() {
   // © 2025 Joseph MULÉ – M1SSION™ - SISTEMA 200 INDIZI - RESET COMPLETO 17/07/2025
@@ -68,7 +68,7 @@ export default function CommandCenterHome() {
     dailyLimit: 50 // 🔥 BUZZ GIORNALIERO MASSIMO 50
   } : {
     id: "M001",
-    title: "Caccia al Tesoro Urbano",
+    title: "M1SSION ONE",
     totalClues: 200,
     foundClues: 0,
     timeLimit: "48:00:00",
@@ -179,13 +179,16 @@ export default function CommandCenterHome() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <PrizeVision 
-          progress={progress} 
-          status={prizeUnlockStatus} 
-        />
-      </motion.div>
+      <PrizeVision 
+        progress={progress} 
+        status={prizeUnlockStatus} 
+      />
+    </motion.div>
 
-      {/* Active Mission Box below the Prize Vision */}
+{/* Floating Invite circle button in top-right */}
+<InviteFloatingButton />
+
+    {/* Active Mission Box below the Prize Vision */}
       <motion.div 
         className="mb-6"
         initial={{ opacity: 0 }}
@@ -199,15 +202,7 @@ export default function CommandCenterHome() {
         />
       </motion.div>
 
-      {/* Invite Friend Button */}
-      <motion.div 
-        className="mb-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.15 }}
-      >
-        <InviteFriendButton />
-      </motion.div>
+{/* Floating button handles invitations; removed inline list button */}
 
 
       {/* Two column layout for Console and Agent */}

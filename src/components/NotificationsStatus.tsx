@@ -25,9 +25,10 @@ export default function NotificationsStatus({ userId }: Props) {
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("v_latest_webpush_subscription")
-        .select("*")
+        .from("push_tokens")
+        .select("token")
         .eq("user_id", userId)
+        .eq("is_active", true)
         .limit(1)
         .maybeSingle();
       if (!mounted) return;
@@ -38,7 +39,7 @@ export default function NotificationsStatus({ userId }: Props) {
       } else {
         const isConnected = !!data;
         setEnabled(isConnected);
-        setProviderLabel(isConnected ? getProviderFromEndpoint(data.endpoint) : "");
+        setProviderLabel(isConnected ? getProviderFromEndpoint(data.token) : "");
       }
       setLoading(false);
     })();

@@ -3,6 +3,9 @@ import { HelpCircle, Zap } from "lucide-react";
 import M1ssionText from "@/components/logo/M1ssionText";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AgentBadge from "@/components/AgentBadge";
+import { motion } from "framer-motion";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
+import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 
 interface MapHeaderProps {
   onHelp: () => void;
@@ -16,10 +19,22 @@ const MapHeader = ({
   buzzMapPrice,
 }: MapHeaderProps) => {
   const isMobile = useIsMobile();
+  const { shouldHideHeader } = useScrollDirection(50);
 
   return (
     <>
-      <header 
+      <MinimalHeaderStrip show={shouldHideHeader}>
+        <AgentBadge />
+      </MinimalHeaderStrip>
+      <motion.header
+        animate={{ 
+          y: shouldHideHeader ? -100 : 0,
+          opacity: shouldHideHeader ? 0 : 1 
+        }}
+        transition={{ 
+          duration: 0.3, 
+          ease: [0.4, 0, 0.2, 1] 
+        }}
         className="fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/40 border-b border-white/10"
         style={{ 
           // CRITICAL FIX: Position below safe zone
@@ -59,7 +74,7 @@ const MapHeader = ({
           
           <div className="line-glow"></div>
         </div>
-      </header>
+      </motion.header>
     </>
   );
 };

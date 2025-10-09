@@ -6,6 +6,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { BuzzActionButton } from '@/components/buzz/BuzzActionButton';
 import { BuzzInstructions } from '@/components/buzz/BuzzInstructions';
+import { BuzzRewardHandler } from '@/components/buzz/BuzzRewardHandler';
 import { useBuzzStats } from '@/hooks/useBuzzStats';
 import { useBuzzCounter } from '@/hooks/useBuzzCounter';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
@@ -62,6 +63,9 @@ export const BuzzPage: React.FC = () => {
         paddingRight: 'env(safe-area-inset-right, 0px)'
       }}
     >
+      {/* Free BUZZ Reward Handler - Non interferisce con Stripe */}
+      <BuzzRewardHandler onRewardRedeemed={handleBuzzSuccess} />
+      
       <UnifiedHeader />
       
       {/* Main scrollable content */}

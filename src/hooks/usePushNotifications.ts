@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { getApplicationServerKey, VAPID_PUBLIC_KEY } from '@/lib/push/vapid';
+import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 interface PushSubscriptionData {
   endpoint: string;
@@ -145,7 +145,8 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
     try {
       // Pre-validate VAPID key before any subscription attempt
       console.log('🔑 Pre-subscription VAPID validation...');
-      const applicationServerKey = getApplicationServerKey(); // Throws if invalid
+      const vapidKey = await loadVAPIDPublicKey();
+      const applicationServerKey = urlBase64ToUint8Array(vapidKey); // Throws if invalid
       console.log('✅ VAPID pre-validation passed');
 
       // P0 FIX: Ensure unified SW registration
@@ -186,7 +187,7 @@ export const usePushNotifications = (): UsePushNotificationsReturn => {
           try {
             const messaging = window.firebase.messaging();
             const token = await messaging.getToken({
-              vapidKey: VAPID_PUBLIC_KEY,
+              vapidKey,
               serviceWorkerRegistration: registration
             });
             

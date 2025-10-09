@@ -1,58 +1,54 @@
-/* M1SSION™ AG-X0197 */
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// FCM React Hook
+// Web Push Hook (replaces FCM)
 
 import { useState, useEffect, useCallback } from 'react';
-import { getAndSaveFcmToken, getCachedToken, getCachedUserId } from '@/lib/fcm';
+import { webPushManager } from '@/lib/push/webPushManager';
 
-interface UseFcmState {
+interface UseWebPushState {
   status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
-  token: string | null;
+  subscription: PushSubscription | null;
   userId: string | null;
 }
 
-interface UseFcmReturn extends UseFcmState {
+interface UseWebPushReturn extends UseWebPushState {
   generate: () => Promise<void>;
   isSupported: boolean;
   permission: NotificationPermission | null;
+  token: string | null; // endpoint as token for backward compatibility
 }
 
-export function useFcm(userId?: string): UseFcmReturn {
-  const [state, setState] = useState<UseFcmState>({
+export function useFcm(userId?: string): UseWebPushReturn {
+  const [state, setState] = useState<UseWebPushState>({
     status: 'idle',
     error: null,
-    token: null,
+    subscription: null,
     userId: null
   });
 
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
 
-  // Check FCM support and cached data on mount
+  // Check Web Push support and cached data on mount
   useEffect(() => {
     const checkSupport = () => {
-      const supported = 'serviceWorker' in navigator && 
-                       'Notification' in window && 
-                       'PushManager' in window;
+      const supported = webPushManager.isSupported();
       setIsSupported(supported);
       setPermission(Notification.permission);
     };
 
     checkSupport();
 
-    // Load cached token if available
-    const cachedToken = getCachedToken();
-    const cachedUserId = getCachedUserId();
-    
-    if (cachedToken) {
-      setState(prev => ({
-        ...prev,
-        token: cachedToken,
-        userId: cachedUserId,
-        status: 'success'
-      }));
-    }
+    // Load current subscription if available
+    webPushManager.getCurrent().then(sub => {
+      if (sub) {
+        setState(prev => ({
+          ...prev,
+          subscription: sub,
+          status: 'success'
+        }));
+      }
+    });
   }, []);
 
   const generate = useCallback(async () => {
@@ -60,7 +56,7 @@ export function useFcm(userId?: string): UseFcmReturn {
       setState(prev => ({
         ...prev,
         status: 'error',
-        error: 'FCM not supported in this browser'
+        error: 'Web Push not supported in this browser'
       }));
       return;
     }
@@ -72,23 +68,22 @@ export function useFcm(userId?: string): UseFcmReturn {
     }));
 
     try {
-      console.log('[M1SSION FCM] hook generate → START');
-      const finalUserId = userId || getCachedUserId();
-      const token = await getAndSaveFcmToken(finalUserId || undefined);
+      console.log('[WEBPUSH] hook generate → START');
+      const subscription = await webPushManager.subscribe(userId);
       
-      console.log('[M1SSION FCM] hook generate → SUCCESS');
+      console.log('[WEBPUSH] hook generate → SUCCESS');
       setState({
         status: 'success',
         error: null,
-        token,
-        userId: finalUserId
+        subscription,
+        userId: userId || null
       });
     } catch (error: any) {
-      console.error('[M1SSION FCM] hook generate → ERROR:', error);
+      console.error('[WEBPUSH] hook generate → ERROR:', error);
       setState(prev => ({
         ...prev,
         status: 'error',
-        error: error.message || 'Failed to generate FCM token'
+        error: error.message || 'Failed to generate push subscription'
       }));
     }
   }, [userId, isSupported]);
@@ -97,6 +92,7 @@ export function useFcm(userId?: string): UseFcmReturn {
     ...state,
     generate,
     isSupported,
-    permission
+    permission,
+    token: state.subscription?.endpoint || null // endpoint as token
   };
 }

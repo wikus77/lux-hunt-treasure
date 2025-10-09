@@ -27,6 +27,7 @@ export const useXpSystem = () => {
   });
   const [loading, setLoading] = useState(true);
   const [hasNewRewards, setHasNewRewards] = useState(false);
+  const [newBadge, setNewBadge] = useState<{ name: string; description: string } | null>(null);
 
   // Fetch user XP status
   const fetchXpStatus = async () => {
@@ -51,6 +52,19 @@ export const useXpSystem = () => {
         
         if (hadNewBuzzCredit || hadNewMapCredit) {
           setHasNewRewards(true);
+        }
+
+        // Check for new badges (when free credits are earned)
+        if (hadNewBuzzCredit) {
+          setNewBadge({
+            name: 'BUZZ Gratuito Sbloccato!',
+            description: `Hai guadagnato un BUZZ gratuito! (${newStatus.free_buzz_credit} disponibili)`
+          });
+        } else if (hadNewMapCredit) {
+          setNewBadge({
+            name: 'BUZZ MAP Gratuito Sbloccato!',
+            description: `Hai guadagnato un BUZZ MAP gratuito! (${newStatus.free_buzz_map_credit} disponibili)`
+          });
         }
         
         setXpStatus(newStatus);
@@ -141,12 +155,19 @@ export const useXpSystem = () => {
     };
   }, [user?.id]);
 
+  // Close badge notification
+  const closeBadgeNotification = () => {
+    setNewBadge(null);
+  };
+
   return {
     xpStatus,
     loading,
     hasNewRewards,
+    newBadge,
     consumeCredit,
     markRewardsAsSeen,
+    closeBadgeNotification,
     refreshXpStatus: fetchXpStatus
   };
 };

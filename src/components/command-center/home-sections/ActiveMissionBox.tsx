@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Clock, Target, CheckCircle, AlertCircle, Timer, ChevronDown } from "lucide-react";
-import { useBuzzClues } from "@/hooks/buzz/useBuzzClues";
 import { useNotifications } from "@/hooks/useNotifications";
 
 interface ActiveMissionBoxProps {
@@ -23,12 +22,15 @@ interface ActiveMissionBoxProps {
 export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }: ActiveMissionBoxProps) {
   const [expandedBox, setExpandedBox] = useState<string | null>(null);
   
-  // 🔥 Hook per ottenere il conteggio degli indizi BUZZ
-  const { unlockedClues } = useBuzzClues();
+  // 🔥 USA I DATI REALI DALLA MISSIONE - foundClues dal database user_clues
+  const realCluesFound = mission.foundClues ?? 0;
+  const totalClues = mission.totalClues || 200;
+
   const { notifications } = useNotifications();
-  
-  // 🔥 Filtra le notifiche BUZZ per mostrarle nel container
+  // 🔄 Fallback: se il DB non è ancora sincronizzato, mostra il conteggio dei nuovi indizi BUZZ in Notice
   const buzzClues = notifications.filter(n => n.type === 'buzz');
+  const fallbackFoundFromBuzz = buzzClues?.length || 0;
+  const displayCluesFound = realCluesFound > 0 ? realCluesFound : fallbackFoundFromBuzz;
 
   const toggleBox = (boxId: string) => {
     setExpandedBox(expandedBox === boxId ? null : boxId);
@@ -53,7 +55,10 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           <span className="text-[#00D1FF]">CACCIA</span>
           <span className="text-white"> AL TESORO URBANO</span>
         </h2>
-        <p className="text-white/60 text-sm">Missione ID: {mission.id}</p>
+        <h3 className="text-xl font-orbitron font-bold">
+          <span className="text-[#00D1FF]">MISSIONE ID:</span>
+          <span className="text-white"> {mission.title}</span>
+        </h3>
       </div>
 
       {/* Three Box Grid - Exact Style from Screenshot */}
@@ -70,20 +75,22 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <span className="text-white/80 text-sm">Indizi trovati</span>
           </div>
           <div className="text-2xl font-bold text-green-400 mb-2">
-            {unlockedClues}/200
+            {displayCluesFound}/{totalClues}
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
               className={`h-2 rounded-full transition-all duration-500 ${
-                unlockedClues === 0 ? 'bg-gray-500' :
-                unlockedClues < 50 ? 'bg-blue-400' :
-                unlockedClues < 150 ? 'bg-green-400' : 'bg-yellow-400'
+                displayCluesFound === 0 ? 'bg-gray-500' :
+                displayCluesFound < 50 ? 'bg-gradient-to-r from-[#22C55E] to-[#10B981]' :
+                displayCluesFound < 100 ? 'bg-gradient-to-r from-[#10B981] to-[#00D1FF]' :
+                displayCluesFound < 150 ? 'bg-gradient-to-r from-[#00D1FF] to-[#A855F7]' : 
+                'bg-gradient-to-r from-[#A855F7] to-[#D946EF]'
               }`}
-              style={{ width: `${(unlockedClues / 200) * 100}%` }}
+              style={{ width: `${(displayCluesFound / totalClues) * 100}%` }}
             />
           </div>
           <span className="text-xs text-white/60">
-            {Math.round((unlockedClues / 200) * 100)}% completato
+            {Math.round((displayCluesFound / totalClues) * 100)}% completato
           </span>
 
           <AnimatePresence>
@@ -161,7 +168,12 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
           </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
-              className="bg-amber-400 h-2 rounded-full transition-all duration-500"
+              className={`h-2 rounded-full transition-all duration-500 ${
+                mission.remainingDays <= 0 ? 'bg-gradient-to-r from-[#EF4444] to-[#DC2626]' :
+                mission.remainingDays <= 5 ? 'bg-gradient-to-r from-[#F97316] to-[#EF4444]' :
+                mission.remainingDays <= 15 ? 'bg-gradient-to-r from-[#FBBF24] to-[#F97316]' : 
+                'bg-gradient-to-r from-[#FDE047] to-[#FBBF24]'
+              }`}
               style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }}
             />
           </div>
@@ -209,11 +221,8 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
             <div className="w-2 h-2 bg-[#00D1FF] rounded-full" />
             <span className="text-white/80 text-sm">Stato missione</span>
           </div>
-          <div className="text-xl font-bold text-[#00D1FF] mb-1">
+          <div className="text-xl font-bold text-[#00D1FF] mb-3">
               {mission.remainingDays > 0 ? 'ATTIVA' : 'SCADUTA'}
-            </div>
-            <div className="text-xs text-white/60 mb-2">
-              Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
             </div>
           <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
             <div 
@@ -224,6 +233,9 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
               }`}
               style={{ width: `${((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100}%` }}
             />
+          </div>
+          <div className="text-xs text-white/60 mb-1">
+            Iniziata il {new Date(mission.startTime).toLocaleDateString('it-IT')}
           </div>
           <span className="text-xs text-white/60">
             {Math.round(((mission.totalDays - mission.remainingDays) / mission.totalDays) * 100)}% tempo trascorso ({mission.totalDays - mission.remainingDays}/{mission.totalDays} giorni)
@@ -244,17 +256,17 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 <div className="mb-4">
                   <div className="flex justify-between mb-2">
                     <span className="text-white text-sm">Progresso Generale</span>
-                    <span className="text-[#00D1FF] text-sm font-bold">{Math.round((unlockedClues / 200) * 100)}%</span>
+                    <span className="text-[#00D1FF] text-sm font-bold">{Math.round((realCluesFound / totalClues) * 100)}%</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-3">
                     <motion.div
                       className={`h-3 rounded-full transition-all duration-500 ${
-                        unlockedClues === 0 ? 'bg-gray-500' :
-                        unlockedClues < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
-                        unlockedClues < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
+                        realCluesFound === 0 ? 'bg-gray-500' :
+                        realCluesFound < 50 ? 'bg-gradient-to-r from-[#00D1FF] to-blue-400' :
+                        realCluesFound < 150 ? 'bg-gradient-to-r from-green-400 to-[#00D1FF]' : 'bg-gradient-to-r from-[#7B2EFF] to-[#00D1FF]'
                       }`}
                       initial={{ width: 0 }}
-                      animate={{ width: `${(unlockedClues / 200) * 100}%` }}
+                      animate={{ width: `${(realCluesFound / totalClues) * 100}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
                     />
                   </div>
@@ -263,11 +275,11 @@ export function ActiveMissionBox({ mission, purchasedClues = [], progress = 0 }:
                 {/* Mission Stats */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
-                    <p className="text-lg font-bold text-green-400">{unlockedClues}</p>
+                    <p className="text-lg font-bold text-green-400">{realCluesFound}</p>
                     <p className="text-xs text-white/60">Obiettivi Raggiunti</p>
                   </div>
                   <div className="bg-[#0a0a0a] p-3 rounded-lg text-center">
-                    <p className="text-lg font-bold text-red-400">{200 - unlockedClues}</p>
+                    <p className="text-lg font-bold text-red-400">{totalClues - realCluesFound}</p>
                     <p className="text-xs text-white/60">Obiettivi Rimanenti</p>
                   </div>
                 </div>

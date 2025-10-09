@@ -7,7 +7,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from '@/lib/push/vapid';
+import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 import { subscribeWebPushAndSave, looksLikeWebPushEndpoint, WebPushSubscriptionPayload } from '@/lib/push/webpush';
 import { UnifiedSubscription, detectPlatform } from '@/lib/push/types';
 import { toast } from 'sonner';
@@ -107,7 +107,7 @@ export const useUnifiedPush = () => {
     console.log('🔄 [UNIFIED-PUSH] Starting unified subscription process...');
 
     try {
-      const vapidKey = VAPID_PUBLIC_KEY;
+      const vapidKey = await loadVAPIDPublicKey();
       const platform = detectPlatform();
       console.log('🔑 [UNIFIED-PUSH] VAPID key loaded:', vapidKey.slice(0, 20) + '...');
       console.log('📱 [UNIFIED-PUSH] Platform detected:', platform);

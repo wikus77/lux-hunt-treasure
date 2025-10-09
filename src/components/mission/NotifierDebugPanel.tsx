@@ -60,10 +60,9 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
     
     setWebPushLoading(true);
     try {
-      // Use fallback approach since view types not available
       const { data, error } = await supabase
-        .from('webpush_subscriptions')
-        .select('id, endpoint, created_at')
+        .from('push_tokens')
+        .select('id, token, created_at')
         .eq('user_id', currentUser.id)
         .eq('is_active', true)
         .order('created_at', { ascending: false })
@@ -71,12 +70,12 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
         .maybeSingle();
       
       if (error) {
-        console.error('WebPush subscription error:', error);
+        console.error('Push token error:', error);
       } else {
-        setWebPushSub(data);
+        setWebPushSub(data ? { id: data.id, endpoint: data.token, created_at: data.created_at } : null);
       }
     } catch (err) {
-      console.error('WebPush subscription fetch error:', err);
+      console.error('Push token fetch error:', err);
     } finally {
       setWebPushLoading(false);
     }

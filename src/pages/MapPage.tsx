@@ -2,11 +2,12 @@
 import React, { useEffect } from 'react';
 import SafeAreaWrapper from '@/components/ui/SafeAreaWrapper';
 import MapContainer from './map/MapContainer';
-import MapPageHeader from './map/components/MapPageHeader';
+
 import MapDebugger from './map/components/MapDebugger';
 import { useNewMapPage } from '@/hooks/useNewMapPage';
 import { MapStateProvider } from './map/MapStateProvider';
 import MapErrorBoundary from './map/MapErrorBoundary';
+import { BuzzMapRewardHandler } from '@/components/buzz/BuzzMapRewardHandler';
 
 const MapPage: React.FC = () => {
   
@@ -64,11 +65,14 @@ const MapPage: React.FC = () => {
 
   return (
     <SafeAreaWrapper className="h-full bg-background">
+      {/* Handler per riscatto premi gratuiti */}
+      <BuzzMapRewardHandler />
+      
       <div className="flex flex-col h-[100dvh] w/full overflow-hidden" style={{
         paddingTop: 'calc(env(safe-area-inset-top, 0px) + 80px)',
         paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 80px)'
       }}>
-        <MapPageHeader />
+        
         <MapErrorBoundary>
           <MapStateProvider>
             <div 
