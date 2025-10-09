@@ -1,3 +1,4 @@
+import { loadPush keyPublicKey as loadPushKeySafe, urlBase64ToUint8Array as toU8 } from '@/lib/Push key-loader';
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  * Pagina di attivazione push notifications con diagnostica step-by-step
@@ -8,7 +9,7 @@ import { Bell, Check, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { usePushActivation } from '@/hooks/usePushActivation';
-import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
+
 import { supabase } from '@/integrations/supabase/client';
 
 interface DiagnosticStep {
@@ -22,7 +23,7 @@ export default function NotifyActivate() {
   const { activate, isActivating, isActivated } = usePushActivation();
   const [steps, setSteps] = useState<DiagnosticStep[]>([
     { id: 'sw', label: 'Service Worker', status: 'pending' },
-    { id: 'vapid', label: 'VAPID Key', status: 'pending' },
+    { id: 'pushkey', label: 'Push key', status: 'pending' },
     { id: 'permission', label: 'Browser Permission', status: 'pending' },
     { id: 'jwt', label: 'Autenticazione', status: 'pending' },
   ]);
@@ -55,17 +56,17 @@ export default function NotifyActivate() {
       updateStep('sw', { status: 'error', message: 'Non supportato' });
     }
 
-    // Check VAPID
-    updateStep('vapid', { status: 'checking' });
+    // Check Push key
+    updateStep('pushkey', { status: 'checking' });
     try {
-      const vapidKey = await loadVAPIDPublicKey();
-      if (vapidKey && vapidKey.length > 80) {
-        updateStep('vapid', { status: 'success', message: 'Caricata' });
+      const pushKey = await loadPushKeySafe();
+      if (pushKey && pushKey.length > 80) {
+        updateStep('pushkey', { status: 'success', message: 'Caricata' });
       } else {
-        updateStep('vapid', { status: 'error', message: 'Chiave non valida' });
+        updateStep('pushkey', { status: 'error', message: 'Chiave non valida' });
       }
     } catch (err) {
-      updateStep('vapid', { status: 'error', message: 'Caricamento fallito' });
+      updateStep('pushkey', { status: 'error', message: 'Caricamento fallito' });
     }
 
     // Check Permission

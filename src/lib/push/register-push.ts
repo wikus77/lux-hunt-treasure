@@ -4,7 +4,6 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 export interface PushRegistrationPayload {
   user_id: string;
@@ -18,7 +17,6 @@ export interface PushRegistrationPayload {
 
 /**
  * Register push notifications for the current user
- * Handles Safari APNs and Chrome FCM with proper VAPID keys  
  * @param userId - Current authenticated user ID
  * @returns PushSubscription object if successful
  */
@@ -47,9 +45,6 @@ export async function registerPush(userId: string): Promise<{ endpoint: string; 
     }
   }
 
-  // 5) Load VAPID key from single source of truth and subscribe
-  const vapidKey = await loadVAPIDPublicKey();
-  const applicationServerKey = urlBase64ToUint8Array(vapidKey);
   
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
