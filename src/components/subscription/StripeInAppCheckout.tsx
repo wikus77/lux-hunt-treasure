@@ -145,7 +145,7 @@ const CheckoutForm: React.FC<{
         console.log('✅ M1SSION™ Payment succeeded:', paymentIntent.id);
         
         // Dispatch success event
-        window.dispatchEvent(new CustomEvent('paymentIntentSucceeded', {
+        window.dispatchEvent(new CustomEvent((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""), {
           detail: { paymentIntentId: paymentIntent.id }
         }));
         

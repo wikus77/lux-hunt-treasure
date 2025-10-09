@@ -130,5 +130,5 @@ const ClueUnlockedExplosion = forwardRef<HTMLDivElement, Props>(({
     </div>
   );
 });
-ClueUnlockedExplosion.displayName = "ClueUnlockedExplosion";
+ClueUnlockedExplosion.displayName = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "");
 export default ClueUnlockedExplosion;

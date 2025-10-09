@@ -168,7 +168,7 @@ export const M1ssionPushTest = () => {
           Test completo sistema notifiche PWA + OneSignal + Supabase
         </p>
         <Badge variant="outline" className="mt-2">
-          Project: vkjrqirvdvjbemsfzxof | Function: send-push-notification
+          Project: ${import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || '***'} | Function: send-push-notification
         </Badge>
       </div>
 
