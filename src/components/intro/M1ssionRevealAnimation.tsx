@@ -14,7 +14,7 @@ const M1ssionRevealAnimation: React.FC<M1ssionRevealAnimationProps> = ({ onCompl
   const [showTrademark, setShowTrademark] = useState(false);
 
   // Characters for random generation
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "");
   
   // Generate random text
   const generateRandomText = () => {

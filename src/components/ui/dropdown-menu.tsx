@@ -177,7 +177,7 @@ const DropdownMenuShortcut = ({
     />
   )
 }
-DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
+DropdownMenuShortcut.displayName = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "")
 
 export {
   DropdownMenu,

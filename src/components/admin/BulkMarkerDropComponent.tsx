@@ -17,7 +17,7 @@ import { createBulkMarkers, type Distribution } from '@/utils/markerApi';
 // Build-time hash calculation for integrity verification
 const calculateCodeHash = () => {
   const sourceCode = [
-    'BulkMarkerDropComponent',
+    (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""),
     'create-random-markers',
     'WouterRoutes',
     'MissionPanelPage'
