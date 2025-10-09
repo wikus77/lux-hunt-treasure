@@ -1,15 +1,13 @@
 async function __loadKeyAndConv__(){
-  const mod = await import('@/lib/push-key-loader');
+  const mod = await import('@/lib/vapid-loader');
   const loadKey = mod.loadVAPIDPublicKey;
-  const conv = mod['url'+'Base64ToUint8Array']; // evita match del Guard sul nome in chiaro
+  const conv = mod.urlBase64ToUint8Array;
   return { loadKey, conv };
 }
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Web Push push-key Subscription Client */
+/* Web Push Subscription Client */
 
 import { supabase } from '@/integrations/supabase/client';
-
-// push-key Public Key - Unified source
 
 interface SubscribeOptions {
   userId?: string;
@@ -22,8 +20,6 @@ interface SubscribeResult {
   error?: string;
   data?: any;
 }
-
-// Removed duplicate - using import from @/lib/push-key-loader
 
 /**
  * Converts ArrayBuffer to base64url string
@@ -113,9 +109,10 @@ export async function subscribeToPush(options: SubscribeOptions = {}): Promise<S
     if (!subscription) {
       log('📝 Creating new push subscription...');
       
-      // Convert push-key key
-      const vapidKey = await loadVAPIDPublicKey();
-      const applicationServerKey = (await (async()=>{ const {loadKey,conv}=await __loadKeyAndConv__(); const k=await loadKey(); return (typeof k==="string"? conv(k):k); })());
+      // Convert VAPID key
+      const {loadKey, conv} = await __loadKeyAndConv__();
+      const k = await loadKey();
+      const applicationServerKey = typeof k === "string" ? conv(k) : k;
       
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({
