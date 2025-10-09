@@ -107,7 +107,7 @@ const Auth = () => {
     
     // Update profile in local storage and session
     localStorage.setItem("investigativeStyle", playerType.name);
-    localStorage.setItem((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""), playerType.color);
+    localStorage.setItem("investigativeStyleColor", playerType.color);
     localStorage.setItem("userProfileType", playerType.id);
     
     // Navigate to home page

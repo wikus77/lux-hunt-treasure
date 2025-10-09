@@ -417,7 +417,7 @@ const LandingPage = () => {
               {t('realPrizes')}
             </h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              {t((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""))}
+              {t('realPrizesDescription')}
             </p>
           </motion.div>
 

@@ -1,6 +1,7 @@
 /**
  * © 2025 Joseph MULÉ – M1SSION™ – NIYVORA KFT™
  * Hook per attivazione push notifications
+ * Feature-flagged: PUSH_ACTIVATE_UI
  */
 
 import { useState } from 'react';
@@ -39,7 +40,7 @@ export const usePushActivation = () => {
         
         return { success: true };
       } else {
-        const errorMsg = result.message || result.reason || 'Attivazione fallita';
+        const errorMsg = result.error || 'Attivazione fallita';
         setState({
           isActivating: false,
           isActivated: false,

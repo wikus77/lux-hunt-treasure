@@ -163,7 +163,7 @@ const BuzzMapButtonSecure: React.FC<BuzzMapButtonSecureProps> = ({
         onBuzzPress();
         
         // Dispatch success event for other components
-        window.dispatchEvent(new CustomEvent((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""), {
+        window.dispatchEvent(new CustomEvent('paymentIntentSucceeded', {
           detail: { 
             paymentIntentId,
             level,

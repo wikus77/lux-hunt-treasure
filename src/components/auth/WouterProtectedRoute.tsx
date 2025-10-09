@@ -50,7 +50,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     // Clear session storage on logout to prevent stale states
     if (!isAuthenticated && !authLoading) {
       console.log('🧹 [WouterProtectedRoute] Clearing session storage on logout');
-      sessionStorage.removeItem((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""));
+      sessionStorage.removeItem('hasSeenPostLoginIntro');
     }
   }, [isAuthenticated, authLoading]);
 

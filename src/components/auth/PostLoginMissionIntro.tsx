@@ -53,7 +53,7 @@ const PostLoginMissionIntro = () => {
                 
                 // 🎯 REDIRECT FINALE DOPO 1.5s
                 setTimeout(() => {
-                  sessionStorage.setItem((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""), 'true');
+                  sessionStorage.setItem('hasSeenPostLoginIntro', 'true');
                   navigate('/home');
                 }, 1500);
               }, 1000);
