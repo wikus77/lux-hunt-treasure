@@ -102,42 +102,10 @@ export function PrizeVision({ progress }: PrizeVisionProps) {
                   />
                 </motion.div>
               </AnimatePresence>
-              {/* Swipe Indicator - M1SSION Style Arrow */}
-              <motion.div 
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-[#00D1FF]/20 to-[#7B2EFF]/20 backdrop-blur-md border border-[#00D1FF]/30 flex items-center justify-center"
-                animate={{ 
-                  x: [0, 8, 0],
-                  opacity: [0.7, 1, 0.7]
-                }}
-                transition={{ 
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <svg 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="drop-shadow-[0_0_8px_rgba(0,209,255,0.6)]"
-                >
-                  <path 
-                    d="M5 12H19M19 12L12 5M19 12L12 19" 
-                    stroke="url(#arrowGradient)" 
-                    strokeWidth="2.5" 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round"
-                  />
-                  <defs>
-                    <linearGradient id="arrowGradient" x1="5" y1="12" x2="19" y2="12" gradientUnits="userSpaceOnUse">
-                      <stop offset="0%" stopColor="#00D1FF" />
-                      <stop offset="100%" stopColor="#7B2EFF" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </motion.div>
+              {/* Swipe Indicator */}
+              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-white text-sm font-medium">
+                Tocca per il prossimo →
+              </div>
               {/* Disclaimer Overlay */}
               <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-white text-[14px] md:text-[18px] font-medium">
                 Image for illustrative purposes only

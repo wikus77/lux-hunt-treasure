@@ -133,7 +133,7 @@ export default function MarkersHealthcheck() {
       // Use same headers as Edge Function calls
       const headers = {
         'Authorization': `Bearer ${session.access_token}`,
-        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+        'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
       };
 
       // Get total count
@@ -211,17 +211,16 @@ export default function MarkersHealthcheck() {
 
       console.log('🚀 Calling create-random-markers with payload:', payload);
 
-      const baseUrl = import.meta.env.VITE_SUPABASE_URL;
       const url = debugMode 
-        ? `${baseUrl}/functions/v1/create-random-markers?debug=1`
-        : `${baseUrl}/functions/v1/create-random-markers`;
+        ? `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers?debug=1`
+        : `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers`;
 
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
         },
         body: JSON.stringify(payload)
       });

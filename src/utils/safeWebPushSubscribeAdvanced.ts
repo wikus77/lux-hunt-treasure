@@ -2,7 +2,7 @@
 // Advanced Safe Web Push Subscribe with platform normalization
 
 import { ensureSWControlled } from './swControl';
-import { urlBase64ToUint8Array } from '@/lib/vapid-loader';
+import { base64UrlToUint8Array } from './vapidHelper';
 import { normalizePlatform, endpointHost, type PushPlatform } from './pushPlatform';
 
 export interface SafeWebPushInput {
@@ -94,7 +94,7 @@ export async function safeWebPushSubscribe(input: SafeWebPushInput): Promise<Saf
     // 7) Convert VAPID key
     let applicationServerKey: Uint8Array;
     try {
-      applicationServerKey = urlBase64ToUint8Array(input.vapidPublic);
+      applicationServerKey = base64UrlToUint8Array(input.vapidPublic);
     } catch (error) {
       throw new Error(`Invalid VAPID key: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

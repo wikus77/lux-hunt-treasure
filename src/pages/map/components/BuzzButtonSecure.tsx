@@ -14,15 +14,13 @@ interface BuzzButtonSecureProps {
   canUseBuzz: boolean;
   currentCount: number;
   maxCount: number;
-  isWalkthroughMode?: boolean;
 }
 
 const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   onBuzzPress,
   canUseBuzz,
   currentCount,
-  maxCount,
-  isWalkthroughMode = false
+  maxCount
 }) => {
   const { isAuthenticated, user } = useAuthContext();
   const { playSound } = useSoundEffects();
@@ -33,13 +31,6 @@ const BuzzButtonSecure: React.FC<BuzzButtonSecureProps> = ({
   const handleBuzzPress = () => {
     if (!isAuthenticated) {
       toast.error('Devi essere loggato per usare il Buzz!');
-      return;
-    }
-
-    // Walkthrough demo mode - bypass restrictions
-    if (isWalkthroughMode) {
-      playSound('buzz');
-      onBuzzPress();
       return;
     }
 

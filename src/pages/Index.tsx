@@ -8,7 +8,6 @@ import CountdownManager from "./index/CountdownManager";
 import MainContent from "./index/MainContent";
 import { useEventHandlers } from "./index/EventHandlers";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
-import LandingTutorial from "@/components/onboarding/LandingTutorial";
 import {
   useDeveloperAccess,
   useErrorRecovery,
@@ -61,9 +60,6 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col w-full bg-black overflow-x-hidden full-viewport smooth-scroll">
       <CookiebotInit />
-      
-      {/* Landing Tutorial - shown only on first visit */}
-      <LandingTutorial onComplete={() => console.log('Tutorial completato')} />
       
       <LoadingManager onLoaded={handleLoaded} />
       

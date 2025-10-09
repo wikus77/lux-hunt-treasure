@@ -70,6 +70,8 @@ export const M1ssionPushTestPanel = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
+          <p><strong>Project ID:</strong> vkjrqirvdvjbemsfzxof</p>
+          <p><strong>OneSignal App ID:</strong> 50cb75f7-f065-4626-9a63-ce5692fa7e70</p>
           <p><strong>Function:</strong> send-push-notification</p>
           <p><strong>API Key:</strong> {testResult?.keyFormat || 'Not tested yet'}</p>
         </div>

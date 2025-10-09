@@ -7,11 +7,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
-import { detectPlatform } from '@/lib/push/types';
+import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from '@/lib/push/vapid';
+import { subscribeWebPushAndSave, looksLikeWebPushEndpoint, WebPushSubscriptionPayload } from '@/lib/push/webpush';
+import { UnifiedSubscription, detectPlatform } from '@/lib/push/types';
 import { toast } from 'sonner';
-import type { WebPushSubscriptionPayload, UnifiedSubscription } from '@/lib/push/webPushManager';
-import { looksLikeWebPushEndpoint, subscribeWebPushAndSave } from '@/lib/push/webPushManager';
 
 interface UnifiedPushState {
   isSupported: boolean;
@@ -108,7 +107,7 @@ export const useUnifiedPush = () => {
     console.log('🔄 [UNIFIED-PUSH] Starting unified subscription process...');
 
     try {
-      const vapidKey = await loadVAPIDPublicKey();
+      const vapidKey = VAPID_PUBLIC_KEY;
       const platform = detectPlatform();
       console.log('🔑 [UNIFIED-PUSH] VAPID key loaded:', vapidKey.slice(0, 20) + '...');
       console.log('📱 [UNIFIED-PUSH] Platform detected:', platform);
@@ -145,16 +144,17 @@ export const useUnifiedPush = () => {
           }
 
           unifiedSub = {
-            kind: 'webpush',
+            kind: 'WEBPUSH',
             endpoint: subscription.endpoint,
             keys: {
               p256dh: keys.p256dh,
               auth: keys.auth
-            }
+            },
+            platform: platform.platform
           };
 
           // Save to database
-          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-upsert`, {
+          const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-upsert', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -195,8 +195,9 @@ export const useUnifiedPush = () => {
 
             if (token && !looksLikeWebPushEndpoint(token)) {
               unifiedSub = {
-                kind: 'fcm',
-                token
+                kind: 'FCM',
+                token,
+                platform: platform.platform as 'android' | 'web'
               };
 
               // Save FCM token
@@ -219,26 +220,28 @@ export const useUnifiedPush = () => {
         // Fallback to Web Push if FCM failed
         if (!fcmSucceeded) {
           console.log('🌐 [UNIFIED-PUSH] Using Web Push fallback');
-          const webPushResult = await subscribeWebPushAndSave();
+          const webPushResult = await subscribeWebPushAndSave({
+            userId: user.id,
+            swReg,
+            vapidPublicKey: vapidKey,
+            platform: platform.platform
+          });
 
-          if (webPushResult) {
-            unifiedSub = {
-              kind: 'webpush',
-              endpoint: webPushResult.endpoint,
-              keys: webPushResult.keys
-            };
-          } else {
-            throw new Error('Failed to create web push subscription');
-          }
+          unifiedSub = {
+            kind: 'WEBPUSH',
+            endpoint: webPushResult.subscription.endpoint,
+            keys: webPushResult.subscription.keys,
+            platform: platform.platform
+          };
         }
       }
 
       setState(prev => ({
         ...prev,
         isSubscribed: true,
-        webPushSubscription: unifiedSub.kind === 'webpush' ? unifiedSub : null,
-        token: unifiedSub.kind === 'fcm' ? unifiedSub.token : null,
-        subscriptionType: unifiedSub.kind,
+        webPushSubscription: unifiedSub.kind === 'WEBPUSH' ? unifiedSub : null,
+        token: unifiedSub.kind === 'FCM' ? unifiedSub.token : null,
+        subscriptionType: unifiedSub.kind.toLowerCase() as 'fcm' | 'webpush',
         isLoading: false
       }));
 

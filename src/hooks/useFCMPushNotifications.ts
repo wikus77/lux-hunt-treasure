@@ -1,23 +1,25 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
-// Web Push Notifications Hook (replaces FCM)
+// Firebase Cloud Messaging React Hook
 
 import { useState, useEffect, useCallback } from 'react';
-import { isPushSupported, enableWebPush } from '@/lib/push/webPushManager';
+import { getFCMToken, setupFCMMessageListener, isFCMSupported } from '@/lib/firebase';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { MessagePayload } from 'firebase/messaging';
 
-interface WebPushNotificationsState {
+interface FCMPushNotificationsState {
   isSupported: boolean;
   permission: NotificationPermission | null;
-  subscription: PushSubscription | null;
+  token: string | null;
   loading: boolean;
   isIOSCapacitor: boolean;
 }
 
 export const useFCMPushNotifications = () => {
-  const [state, setState] = useState<WebPushNotificationsState>({
+  const [state, setState] = useState<FCMPushNotificationsState>({
     isSupported: false,
     permission: null,
-    subscription: null,
+    token: null,
     loading: false,
     isIOSCapacitor: false
   });
@@ -25,7 +27,7 @@ export const useFCMPushNotifications = () => {
   // Check browser support and permission on mount
   useEffect(() => {
     const checkSupport = () => {
-      const supported = isPushSupported();
+      const supported = isFCMSupported();
       const permission = typeof window !== 'undefined' ? Notification.permission : 'default';
       const isIOSCapacitor = typeof window !== 'undefined' && 
                            !!(window as any).Capacitor && 
@@ -38,16 +40,35 @@ export const useFCMPushNotifications = () => {
         isIOSCapacitor
       }));
 
-      console.log('🔔 Web Push Support Check:', { supported, permission, isIOSCapacitor });
+      console.log('🔥 FCM Support Check:', { supported, permission, isIOSCapacitor });
     };
 
     checkSupport();
   }, []);
 
-  // Request permission and subscribe to web push
+  // Setup FCM message listener
+  useEffect(() => {
+    if (state.isSupported && state.permission === 'granted') {
+      const unsubscribe = setupFCMMessageListener((payload: MessagePayload) => {
+        console.log('📨 FCM Message received:', payload);
+        
+        // Show toast notification for foreground messages
+        if (payload.notification) {
+          toast.success(payload.notification.title || 'M1SSION™', {
+            description: payload.notification.body || 'Nuova notifica',
+            duration: 5000,
+          });
+        }
+      });
+
+      return unsubscribe;
+    }
+  }, [state.isSupported, state.permission]);
+
+  // Request permission and get FCM token
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!state.isSupported) {
-      console.error('❌ Web Push not supported in this browser');
+      console.error('❌ FCM not supported in this browser');
       toast.error('Notifiche push non supportate in questo browser');
       return false;
     }
@@ -55,32 +76,75 @@ export const useFCMPushNotifications = () => {
     setState(prev => ({ ...prev, loading: true }));
 
     try {
-      console.log('🔔 Requesting Web Push subscription...');
+      console.log('🔥 Requesting FCM permission...');
       
-      const subscription = await enableWebPush();
+      // Request notification permission
+      const permission = await Notification.requestPermission();
       
-      console.log('✅ Web Push subscription successful');
-      toast.success('Notifiche push attivate con successo!');
+      if (permission === 'granted') {
+        console.log('✅ FCM Permission granted');
+        
+        // Get FCM token
+        const token = await getFCMToken();
+        
+        if (token) {
+          console.log('✅ FCM Token retrieved successfully');
+          
+          // Save token to Supabase
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (user) {
+            const { error } = await supabase
+              .from('user_push_tokens')
+              .upsert({
+                user_id: user.id,
+                fcm_token: token,
+                device_info: {
+                  userAgent: navigator.userAgent,
+                  platform: navigator.platform,
+                  timestamp: new Date().toISOString()
+                },
+                is_active: true
+              }, {
+                onConflict: 'user_id,fcm_token'
+              });
 
-      setState(prev => ({
-        ...prev,
-        permission: 'granted',
-        subscription,
-        loading: false
-      }));
+            if (error) {
+              console.error('❌ Error saving FCM token to Supabase:', error);
+              toast.error('Errore nel salvare il token di notifica');
+            } else {
+              console.log('✅ FCM Token saved to Supabase successfully');
+              toast.success('Notifiche push attivate con successo!');
+            }
+          }
 
-      return true;
-    } catch (error: any) {
-      console.error('❌ Error requesting Web Push subscription:', error);
-      
-      let errorMessage = 'Errore nell\'attivare le notifiche push';
-      if (error.message.includes('home screen')) {
-        errorMessage = 'Su iOS, aggiungi l\'app alla home screen prima';
-      } else if (error.message.includes('permission')) {
-        errorMessage = 'Permesso per le notifiche negato';
+          setState(prev => ({
+            ...prev,
+            permission: 'granted',
+            token,
+            loading: false
+          }));
+
+          return true;
+        } else {
+          console.error('❌ Failed to retrieve FCM token');
+          toast.error('Errore nel recuperare il token di notifica');
+          setState(prev => ({ ...prev, loading: false }));
+          return false;
+        }
+      } else {
+        console.warn('⚠️ FCM Permission denied');
+        toast.error('Permesso per le notifiche negato');
+        setState(prev => ({
+          ...prev,
+          permission: 'denied',
+          loading: false
+        }));
+        return false;
       }
-      
-      toast.error(errorMessage);
+    } catch (error) {
+      console.error('❌ Error requesting FCM permission:', error);
+      toast.error('Errore nella richiesta di permesso per le notifiche');
       setState(prev => ({ ...prev, loading: false }));
       return false;
     }
@@ -89,7 +153,9 @@ export const useFCMPushNotifications = () => {
   // Start live activity (iOS specific - fallback to standard notification)
   const startLiveActivity = useCallback(async () => {
     if (state.isIOSCapacitor) {
-      console.log('🍎 iOS Capacitor detected - using Web Push');
+      console.log('🍎 iOS Capacitor detected - using native notification');
+      // In a real Capacitor environment, you would use native plugins here
+      // For now, fallback to standard web notification
     }
     
     return requestPermission();
@@ -98,7 +164,7 @@ export const useFCMPushNotifications = () => {
   return {
     isSupported: state.isSupported,
     permission: state.permission,
-    token: state.subscription?.endpoint || null,
+    token: state.token,
     loading: state.loading,
     requestPermission,
     startLiveActivity,

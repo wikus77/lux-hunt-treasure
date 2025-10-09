@@ -1,7 +1,8 @@
-/vapid-public.txt
-  Content-Type: text/plain; charset=utf-8
-  Cache-Control: no-store
-
 /sw.js
+  Cache-Control: no-cache, no-store, must-revalidate
   Service-Worker-Allowed: /
-  Cache-Control: no-store
+  X-Content-Type-Options: nosniff
+
+/sw-push.js
+  Cache-Control: no-cache, no-store, must-revalidate
+  X-Content-Type-Options: nosniff

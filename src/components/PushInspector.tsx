@@ -41,20 +41,30 @@ export default function PushInspector({ userId }: { userId: string }) {
         const swEndpoint = sub?.endpoint ?? null;
         const swProvider = detectProvider(swEndpoint);
 
-        // 2) DB: get latest push token for user
+        // 2) DB: vista latest per l'utente
         const { data: v, error } = await supabase
-          .from("push_tokens")
-          .select("id, token, is_active, created_at")
+          .from("v_latest_webpush_subscription")
+          .select("sub_id, endpoint, created_at")
           .eq("user_id", userId)
-          .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
 
         if (error) notes.push(`DB error: ${error.message}`);
 
-        const dbEndpoint = v?.token ?? null;
+        const dbEndpoint = v?.endpoint ?? null;
         const dbProvider = detectProvider(dbEndpoint);
-        const dbIsActive = v?.is_active ?? null;
+
+        // 3) Se ho sub_id, leggo anche is_active dalla tabella grezza
+        let dbIsActive: boolean | null = null;
+        if (v?.sub_id) {
+          const { data: s } = await supabase
+            .from("webpush_subscriptions")
+            .select("is_active")
+            .eq("id", v.sub_id)
+            .limit(1)
+            .maybeSingle();
+          dbIsActive = s?.is_active ?? null;
+        }
 
         // 4) Confronto endpoint SW vs DB
         const match = !!swEndpoint && !!dbEndpoint && swEndpoint === dbEndpoint;

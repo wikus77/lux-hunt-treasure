@@ -57,11 +57,8 @@ import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import MissionPanelPage from "@/pages/admin/MissionPanelPage";
 import PushTestPage from "@/pages/PushTestPage";
-import AdminPushConsolePage from "@/pages/push/AdminPushConsolePage";
-import PushSenderPanel from "@/pages/panel/PushSenderPanel";
 import NotificationDebug from "@/pages/NotificationDebug";
 import PanelAccessPage from "@/pages/PanelAccessPage";
-import PushDiagnosi from "@/pages/PushDiagnosi";
 import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import PushTest from "@/pages/debug/PushTest";
@@ -69,9 +66,9 @@ import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
-// VAPIDKeyTest removed - using Web Push now
+import VAPIDKeyTest from "@/pages/VAPIDKeyTest";
 import PushHealth from "@/pages/PushHealth";
-const PushDebug = React.lazy(() => import("@/pages/PushDebug"));
+import PushDebug from "@/pages/PushDebug";
 import { PushReport } from "@/pages/PushReport";
 // QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
@@ -92,7 +89,6 @@ import ChoosePlanPage from "@/pages/ChoosePlanPage";
 import SubscriptionVerify from "@/pages/SubscriptionVerify";
 import MissionIntroPage from "@/pages/MissionIntroPage";
 import FcmTest from "@/pages/FcmTest";
-import NotifyActivate from "@/pages/NotifyActivate";
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Import centralizzato
@@ -481,18 +477,6 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          <Route path="/panel/push">
-            <ProtectedRoute>
-              <AdminPushConsolePage />
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/panel/push-sender">
-            <ProtectedRoute>
-              <PushSenderPanel />
-            </ProtectedRoute>
-          </Route>
-
           {/* Push Console routes */}
           <Route path="/panel/push-admin">
             <ProtectedRoute>
@@ -541,13 +525,6 @@ const WouterRoutes: React.FC = () => {
           {/* 🔍 NOTIFICATION DEBUG ROUTE - M1SSION™ ULTIMATE */}
           <Route path="/notification-debug">
             <GlobalLayout><NotificationDebug /></GlobalLayout>
-          </Route>
-
-          {/* 🚀 PUSH ACTIVATION & REPAIR ROUTE - Feature Flagged */}
-          <Route path="/notify/activate">
-            <ProtectedRoute>
-              <GlobalLayout><NotifyActivate /></GlobalLayout>
-            </ProtectedRoute>
           </Route>
 
           {/* 🔧 DEBUG PUSH TEST ROUTE */}
@@ -606,25 +583,6 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          <Route path="/panel/push-control">
-            <ProtectedRoute>
-              <GlobalLayout><PanelAccessPage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          <Route path="/panel/push-preflight">
-            <ProtectedRoute>
-              <GlobalLayout><PanelAccessPage /></GlobalLayout>
-            </ProtectedRoute>
-          </Route>
-
-          {/* 🔧 Push Diagnostica Route */}
-          <Route path="/push-diagnosi">
-            <ProtectedRoute>
-              <PushDiagnosi />
-            </ProtectedRoute>
-          </Route>
-
           {/* 🔥 Firebase Notification Debug Route */}
           <Route path="/firebase-notification-debug">
             <ProtectedRoute>
@@ -632,10 +590,10 @@ const WouterRoutes: React.FC = () => {
             </ProtectedRoute>
           </Route>
 
-          {/* 🔔 Push Debug Route */}
-          <Route path="/push-debug">
+          {/* 🧪 VAPID Key Test Route - CRITICAL DEBUG */}
+          <Route path="/vapid-test">
             <ProtectedRoute>
-              <GlobalLayout><PushDebug /></GlobalLayout>
+              <GlobalLayout><VAPIDKeyTest /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 

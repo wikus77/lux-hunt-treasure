@@ -1,8 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Session Security & Management Utilities
 
-import { authStorage } from '@/utils/auth-storage';
-
 interface SessionData {
   timestamp: number;
   userId?: string;
@@ -72,7 +70,15 @@ export class SecureSessionManager {
       localStorage.removeItem(this.CLEANUP_KEY);
       
       // Clear all auth-related items
-      authStorage.clear();
+      const authKeys = [
+        'sb-vkjrqirvdvjbemsfzxof-auth-token',
+        'hasSeenPostLoginIntro',
+        'auth_cache_clear'
+      ];
+      
+      authKeys.forEach(key => {
+        localStorage.removeItem(key);
+      });
     } catch (error) {
       console.error('Failed to clear session:', error);
     }

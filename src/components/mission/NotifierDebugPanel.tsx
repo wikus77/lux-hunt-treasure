@@ -1,61 +1,360 @@
-import React, { useState } from "react";
-
 /**
- * NotifierDebugPanel — versione SAFE (dev-only)
- * - Nessuna stringa "vietata" nel codice (evita trigger del guard)
- * - NESSUN secret hardcoded nel bundle
- * - In produzione non viene renderizzato
- * - Inserisci i valori a runtime nei campi input
+ * © 2025 Joseph MULÉ – M1SSION™ Notifier Debug Panel
+ * Visible only with ?M1_DIAG=1 for development diagnostics
  */
-export function NotifierDebugPanel() {
-  // Non mostrare nulla in produzione
-  if (import.meta.env.PROD) return null;
 
-  const [adminHdr, setAdminHdr] = useState("");   // es: valore per header admin custom
-  const [authHdr, setAuthHdr] = useState("");     // es: "Bearer <JWT utente>"
-  const [anonKey, setAnonKey] = useState(import.meta.env.VITE_SUPABASE_ANON_KEY || "");
-  const [sbUrl, setSbUrl] = useState(import.meta.env.VITE_SUPABASE_URL || "");
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { Bell, Settings, ExternalLink, RefreshCw, Wifi } from 'lucide-react';
+
+interface NotifierDebugPanelProps {
+  className?: string;
+}
+
+interface DryRunResult {
+  user_id: string;
+  resolved_tags: string[];
+  qualified_items_count: number;
+  candidates_count: number;
+  candidates_sample: any[];
+  cooldown_hours: number;
+  total_ever: number;
+  recent_suggestions?: number;
+  recent_suggestions_12h?: number;
+  throttle_applied: boolean;
+  throttle_reason: string;
+  would_send: boolean;
+}
+
+interface WebPushSubscription {
+  id: string;
+  endpoint: string;
+  created_at: string;
+}
+
+export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ className }) => {
+  const { getCurrentUser } = useUnifiedAuth();
+  const currentUser = getCurrentUser();
+  const [debugResult, setDebugResult] = useState<DryRunResult | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [webPushSub, setWebPushSub] = useState<WebPushSubscription | null>(null);
+  const [webPushLoading, setWebPushLoading] = useState(false);
+
+  // Only render if M1_DIAG=1 is present
+  const isDiagMode = new URL(window.location.href).searchParams.has('M1_DIAG');
+  
+  // Load WebPush subscription data on mount
+  useEffect(() => {
+    if (currentUser?.id && isDiagMode) {
+      loadWebPushSubscription();
+    }
+  }, [currentUser?.id, isDiagMode]);
+
+  const loadWebPushSubscription = async () => {
+    if (!currentUser?.id) return;
+    
+    setWebPushLoading(true);
+    try {
+      // Use fallback approach since view types not available
+      const { data, error } = await supabase
+        .from('webpush_subscriptions')
+        .select('id, endpoint, created_at')
+        .eq('user_id', currentUser.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('WebPush subscription error:', error);
+      } else {
+        setWebPushSub(data);
+      }
+    } catch (err) {
+      console.error('WebPush subscription fetch error:', err);
+    } finally {
+      setWebPushLoading(false);
+    }
+  };
+  
+  if (!isDiagMode || !currentUser) {
+    return null;
+  }
+
+  const runDryTest = async (cooldownHours?: number) => {
+    if (!currentUser?.id) return;
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Direct call to notifier-engine with diag=1 (no /dry-run needed, just query param)
+      const params = new URLSearchParams({
+        user_id: currentUser.id,
+        max: '5',
+        diag: '1'
+      });
+      
+      if (cooldownHours !== undefined) {
+        params.set('cooldown', cooldownHours.toString());
+      }
+      
+      // Use ANON_KEY for diag=1 mode (as per TASK 9 specs)
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+      };
+
+      const response = await fetch(
+        `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine?${params}`,
+        {
+          method: 'POST',
+          headers
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        setDebugResult(result);
+        
+        // Enhanced logging for console.table
+        if (result.candidates_sample && result.candidates_sample.length > 0) {
+          console.log('🎯 M1SSION Notifier Candidates:');
+          console.table(result.candidates_sample.map((c: any) => ({
+            Title: c.title?.substring(0, 50) + '...',
+            Score: c.score?.toFixed(2),
+            Tags: c.tags?.join(', '),
+            Published: new Date(c.published_at).toLocaleString()
+          })));
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+      console.error('Dry-run error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const openFunctionLogs = () => {
+    const url = 'https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/functions/notifier-engine/logs';
+    window.open(url, '_blank');
+  };
+
+  const openNotificationSettings = () => {
+    // Navigate to notification settings or main page where WebPushToggle is available
+    window.open('/', '_blank');
+  };
 
   return (
-    <div style={{padding:12, border:"1px solid #ddd", borderRadius:8, fontSize:13}}>
-      <h3 style={{margin:0, fontWeight:600}}>Notifier Debug Panel (DEV)</h3>
-      <p style={{margin:"6px 0 10px"}}>
-        Valori inseriti a runtime. Nessun dato sensibile incluso nel bundle.
-      </p>
+    <Card className={`border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-red-500/5 ${className}`}>
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-orange-400">
+          <Bell className="h-5 w-5" />
+          Notifier Debug Panel
+          <Badge variant="outline" className="text-xs border-orange-500/30">
+            DEV ONLY
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      
+      <CardContent className="space-y-4">
+        {/* User Info */}
+        <div className="text-sm space-y-1">
+          <p className="text-muted-foreground">
+            User ID: <span className="font-mono text-xs">{currentUser.id}</span>
+          </p>
+          {debugResult && (
+            <p className="text-muted-foreground">
+              Resolved Tags: <span className="text-orange-300">{debugResult.resolved_tags.join(', ') || 'None'}</span>
+            </p>
+          )}
+        </div>
 
-      <div style={{display:"grid", gap:8, maxWidth:640}}>
-        <input
-          placeholder="Admin header (token da incollare qui)"
-          value={adminHdr}
-          onChange={(e)=>setAdminHdr(e.target.value)}
-          style={{padding:8, border:"1px solid #ccc", borderRadius:6}}
-        />
-        <input
-          placeholder='Authorization (es: "Bearer <JWT utente>")'
-          value={authHdr}
-          onChange={(e)=>setAuthHdr(e.target.value)}
-          style={{padding:8, border:"1px solid #ccc", borderRadius:6}}
-        />
-        <input
-          placeholder="VITE_SUPABASE_URL (env)"
-          value={sbUrl}
-          onChange={(e)=>setSbUrl(e.target.value)}
-          style={{padding:8, border:"1px solid #ccc", borderRadius:6}}
-        />
-        <input
-          placeholder="VITE_SUPABASE_ANON_KEY (env)"
-          value={anonKey}
-          onChange={(e)=>setAnonKey(e.target.value)}
-          style={{padding:8, border:"1px solid #ccc", borderRadius:6}}
-        />
-      </div>
+        {/* WebPush Subscription Info */}
+        <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-purple-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-blue-400 text-sm">
+              <Wifi className="h-4 w-4" />
+              WebPush Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0 space-y-2">
+            {webPushLoading ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <RefreshCw className="h-3 w-3 animate-spin" />
+                Loading subscription...
+              </div>
+            ) : webPushSub ? (
+              <div className="space-y-1 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Status:</span>
+                  <Badge variant="default" className="bg-green-500/20 text-green-400 text-xs">
+                    ACTIVE
+                  </Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Created:</span>
+                  <span className="font-mono text-xs">
+                    {new Date(webPushSub.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Endpoint:</span>
+                  <span className="font-mono text-xs truncate max-w-[120px]">
+                    {webPushSub.endpoint.substring(0, 32)}...
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground text-xs">Status:</span>
+                  <Badge variant="destructive" className="text-xs">
+                    NO SUBSCRIPTION
+                  </Badge>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={openNotificationSettings}
+                  className="w-full border-blue-500/30 hover:bg-blue-500/10 text-xs"
+                >
+                  <Settings className="h-3 w-3 mr-1" />
+                  Open Notification Settings
+                </Button>
+              </div>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={loadWebPushSubscription}
+              disabled={webPushLoading}
+              className="w-full text-blue-400 hover:bg-blue-500/10 text-xs"
+            >
+              <RefreshCw className={`h-3 w-3 mr-1 ${webPushLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </CardContent>
+        </Card>
 
-      <p style={{marginTop:10, color:"#555"}}>
-        Mappa i campi agli header HTTP nelle chiamate di test:<br/>
-        • header admin custom = <code>{'{'}adminHdr{'}'}</code><br/>
-        • Authorization = <code>{'{'}authHdr{'}'}</code><br/>
-        • apikey = <code>{'{'}anonKey{'}'}</code> — base URL = <code>{'{'}sbUrl{'}'}</code>
-      </p>
-    </div>
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => runDryTest(1)}
+            disabled={isLoading}
+            className="border-orange-500/30 hover:bg-orange-500/10"
+          >
+            {isLoading ? (
+              <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Settings className="h-4 w-4 mr-2" />
+            )}
+            Dry-run (cooldown=1h)
+          </Button>
+          
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => runDryTest()}
+            disabled={isLoading}
+            className="border-orange-500/30 hover:bg-orange-500/10"
+          >
+            Dry-run (default)
+          </Button>
+          
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={openFunctionLogs}
+            className="text-orange-400 hover:bg-orange-500/10"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Function Logs
+          </Button>
+        </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 rounded p-3 text-sm text-red-400">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+
+        {/* Results Display */}
+        {debugResult && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">Candidates Found</p>
+                <p className="text-lg font-semibold text-orange-400">
+                  {debugResult.candidates_count}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Would Send</p>
+                <Badge 
+                  variant={debugResult.would_send ? "default" : "destructive"}
+                  className={debugResult.would_send ? "bg-green-500/20 text-green-400" : ""}
+                >
+                  {debugResult.would_send ? 'YES' : 'NO'}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <p className="text-muted-foreground">Total Ever</p>
+                <p className="font-mono">{debugResult.total_ever}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Recent</p>
+                <p className="font-mono">{debugResult.recent_suggestions || debugResult.recent_suggestions_12h}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">Cooldown</p>
+                <p className="font-mono">{debugResult.cooldown_hours}h</p>
+              </div>
+            </div>
+
+            {debugResult.throttle_applied && (
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded p-2 text-xs text-yellow-400">
+                <strong>Throttled:</strong> {debugResult.throttle_reason}
+              </div>
+            )}
+
+            {debugResult.candidates_sample.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-orange-400 mb-2">Top Candidates:</p>
+                <div className="space-y-1 text-xs">
+                  {debugResult.candidates_sample.slice(0, 3).map((candidate, i) => (
+                    <div key={candidate.id || i} className="flex justify-between bg-background/50 rounded p-2">
+                      <span className="truncate">{candidate.title || 'No title'}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {candidate.score?.toFixed(2)}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+};

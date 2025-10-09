@@ -20,8 +20,6 @@ import UnifiedHeader from "@/components/layout/UnifiedHeader";
 import DeveloperAccess from "@/components/auth/DeveloperAccess";
 import CookieBanner from '@/components/legal/CookieBanner';
 import TermsBanner from '@/components/legal/TermsBanner';
-import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
-import { useOnboardingTutorial } from "@/hooks/useOnboardingTutorial";
 
 const Home = () => {
   const [error, setError] = useState<string | null>(null);
@@ -48,9 +46,6 @@ const Home = () => {
 
   // Attiva il sistema di sicurezza Dynamic Island
   useDynamicIslandSafety();
-
-  // Onboarding tutorial
-  const { showTutorial, isLoading: tutorialLoading, hideTutorialForever } = useOnboardingTutorial();
 
   // Check for developer access and Capacitor environment + PWA standalone mode + QR handling
   useEffect(() => {
@@ -320,14 +315,6 @@ const Home = () => {
         onClose={() => setShowQRModal(false)}
         qrCode={qrCodeToValidate}
       />
-
-      {/* Onboarding Tutorial */}
-      {!tutorialLoading && (
-        <OnboardingModal
-          isOpen={showTutorial}
-          onClose={hideTutorialForever}
-        />
-      )}
     </>
   );
 };

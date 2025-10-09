@@ -11,5 +11,6 @@ export { default as MapLayers } from './MapLayers';
 export { default as MapContent } from './MapContent';
 export { default as MapControls } from './MapControls';
 export { default as TechnicalStatus } from './TechnicalStatus';
+export { default as MapPageHeader } from './MapPageHeader';
 export { default as SidebarLayout } from './SidebarLayout';
 export { default as RightSidebarContent } from './RightSidebarContent';

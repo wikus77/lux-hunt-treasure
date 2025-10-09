@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 // Stable Push Subscribe for iOS PWA - Race-resistant utility
 
-import { urlBase64ToUint8Array } from '@/lib/vapid-loader';
+import { base64UrlToUint8Array } from './vapidHelper';
 
 export interface StableSubscriptionResult {
   sub: PushSubscription;
@@ -10,7 +10,7 @@ export interface StableSubscriptionResult {
   auth: string;
 }
 
-import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY;
 
 /**
  * Isolated and serialized flow: register SW → ready → controller → permission → subscribe
@@ -79,14 +79,13 @@ export async function pushSubscribeStable(): Promise<StableSubscriptionResult> {
     console.info('[STABLE-PUSH] Reusing existing subscription');
   } else {
     // Step 6: Create new subscription
-      console.info('[STABLE-PUSH] Creating new subscription...');
-      
-      const vapidKey = await loadVAPIDPublicKey();
-      if (!vapidKey) {
-        throw new Error('VAPID public key not configured');
-      }
-      
-      const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+    console.info('[STABLE-PUSH] Creating new subscription...');
+    
+    if (!VAPID_PUBLIC_KEY) {
+      throw new Error('VAPID public key not configured');
+    }
+    
+    const applicationServerKey = base64UrlToUint8Array(VAPID_PUBLIC_KEY);
     
     subscription = await pm.subscribe({
       userVisibleOnly: true,

@@ -10,9 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthContext } from '@/contexts/auth';
 import { useLocation } from 'wouter';
-import { XpLevelProgress } from '@/components/gamification/XpLevelProgress';
-import { DailyCheckInButton } from '@/components/gamification/DailyCheckInButton';
-import { useXpSystem } from '@/hooks/useXpSystem';
 
 interface ProfileToastProps {
   isOpen: boolean;
@@ -38,8 +35,6 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
   const { toast } = useToast();
   const { logout } = useAuthContext();
   const [, setLocation] = useLocation();
-  const { xpStatus } = useXpSystem();
-  const totalXp = xpStatus?.total_xp ?? 0;
 
   // © 2025 Joseph MULÉ – M1SSION™ - Real-time sync implementation
   useEffect(() => {
@@ -249,19 +244,6 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
                 </div>
               ) : profileData ? (
                 <>
-                  {/* XP & Daily Check-in */}
-                  <div className="border border-slate-700/50 rounded-lg p-3 bg-slate-900/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-blue-400">Livello & XP</h4>
-                      <span className="text-xs text-gray-400">Totale: {totalXp} XP</span>
-                    </div>
-                    <XpLevelProgress totalXp={totalXp} />
-                    <div className="mt-3 pt-3 border-t border-slate-700/50">
-                      <h5 className="text-xs text-gray-300 mb-2">Check-in giornaliero</h5>
-                      <DailyCheckInButton />
-                    </div>
-                  </div>
-
                   {/* Username */}
                   <div className="flex items-center space-x-3">
                     <User className="w-4 h-4 text-blue-400" />

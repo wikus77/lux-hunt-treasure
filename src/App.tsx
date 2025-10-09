@@ -25,12 +25,8 @@ import { usePWAStabilizer } from "./hooks/usePWAStabilizer";
 import { useState, useEffect } from "react";
 import LegalOnboarding from "./components/legal/LegalOnboarding";
 import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
-import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
-import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
-import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
-import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -98,16 +94,12 @@ function App() {
                     {/* OneSignal rimosso - usando solo FCM */}
                     <BuzzPaymentMonitor />
                     <LegalOnboarding />
-                    <FirstLoginQuizManager />
-                    <WalkthroughManager />
                     <WouterRoutes />
                     <InstallPrompt />
                     <IOSPermissionManager />
                     <AndroidPushSetup className="hidden" />
                     <PushNotificationSetup className="hidden" />
                     <XpSystemManager />
-                    <NorahProactiveManager />
-                    <MissionBadgeInjector />
                     <Toaster />
                     <BadgeAuditReport />
                   </InterestSignalsProvider>

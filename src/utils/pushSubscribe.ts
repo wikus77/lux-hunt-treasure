@@ -3,8 +3,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// VAPID Public Key - Unified source
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
+// VAPID Public Key - From environment with fallback
+const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
 
 interface SubscribeOptions {
   userId?: string;
@@ -18,7 +18,39 @@ interface SubscribeResult {
   data?: any;
 }
 
-// Removed duplicate - using import from @/lib/vapid-loader
+/**
+ * Converts VAPID public key from base64url to Uint8Array with P-256 validation
+ */
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  try {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    // Validate P-256 key (65 bytes, starts with 0x04)
+    if (outputArray.length !== 65) {
+      throw new Error(`Invalid VAPID key length: ${outputArray.length} bytes (expected 65)`);
+    }
+    
+    if (outputArray[0] !== 0x04) {
+      throw new Error(`Invalid VAPID key format: first byte is 0x${outputArray[0].toString(16)} (expected 0x04)`);
+    }
+    
+    console.log('✅ VAPID key validation passed:', outputArray.length, 'bytes');
+    return outputArray;
+  } catch (error) {
+    console.error('❌ VAPID key conversion failed:', error);
+    throw new Error(`VAPID key validation failed: ${error.message}`);
+  }
+}
 
 /**
  * Converts ArrayBuffer to base64url string
@@ -109,8 +141,7 @@ export async function subscribeToPush(options: SubscribeOptions = {}): Promise<S
       log('📝 Creating new push subscription...');
       
       // Convert VAPID key
-      const vapidKey = await loadVAPIDPublicKey();
-      const applicationServerKey = urlBase64ToUint8Array(vapidKey);
+      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({
