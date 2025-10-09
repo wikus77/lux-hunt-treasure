@@ -59,14 +59,21 @@ export async function subscribeWebPushAndSave({
     throw new Error('Invalid Web Push subscription: missing endpoint/keys')
   }
 
-  // Salvataggio via RPC (SECURITY DEFINER)
-  const { data, error } = await supabase.rpc('upsert_webpush_subscription', {
-    p_user_id: userId,
-    p_endpoint: payload.endpoint,
-    p_p256dh: payload.keys.p256dh,
-    p_auth: payload.keys.auth,
-    p_platform: platform,
-  })
+  // Save to webpush_subscriptions table
+  const { data, error } = await supabase
+    .from('webpush_subscriptions')
+    .upsert({
+      user_id: userId,
+      endpoint: payload.endpoint,
+      keys: payload.keys,
+      device_info: { platform },
+      is_active: true,
+      last_used_at: new Date().toISOString()
+    }, {
+      onConflict: 'endpoint'
+    })
+    .select()
+    .single()
 
   if (error) throw error
 

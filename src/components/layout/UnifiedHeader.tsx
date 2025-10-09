@@ -1,6 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™
-import { Link } from "wouter";
-import { useLocation } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
@@ -12,6 +11,8 @@ import { useProfileImage } from "@/hooks/useProfileImage";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
 import { supabase } from "@/integrations/supabase/client";
 import ReferralCodeDisplay from "@/components/layout/header/ReferralCodeDisplay";
+import { useScrollDirection } from "@/hooks/useScrollDirection";
+import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 
 interface UnifiedHeaderProps {
   profileImage?: string | null;
@@ -45,6 +46,57 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [hasAccess, setHasAccess] = useState(false);
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
+  const isMapRoute = location === '/map' || location.startsWith('/map/');
+  const { shouldHideHeader: windowHide } = useScrollDirection(50);
+  const [mapHide, setMapHide] = useState(false);
+  const hideHeader = isMapRoute ? mapHide : windowHide;
+
+  useEffect(() => {
+    if (!isMapRoute) return;
+    const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
+    if (!el) return;
+
+    const onScroll = () => setMapHide(el.scrollTop > 10);
+    el.addEventListener('scroll', onScroll, { passive: true });
+
+    const onWheel = (e: WheelEvent) => {
+      if (e.deltaY > 0) setMapHide(true);
+      if (e.deltaY < 0 && el.scrollTop <= 0) setMapHide(false);
+    };
+    el.addEventListener('wheel', onWheel, { passive: true, capture: true });
+
+    let touchStartY: number | null = null;
+    const onTouchStart = (e: TouchEvent) => { touchStartY = e.touches[0]?.clientY ?? null; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartY == null) return;
+      const currentY = e.touches[0]?.clientY ?? touchStartY;
+      const deltaY = touchStartY - currentY;
+      if (deltaY > 0) setMapHide(true);
+      if (deltaY < 0 && el.scrollTop <= 0) setMapHide(false);
+      touchStartY = currentY;
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
+
+    const leaflet = document.querySelector('.leaflet-container') as HTMLElement | null;
+    if (leaflet) {
+      leaflet.addEventListener('wheel', onWheel, { passive: true, capture: true });
+      leaflet.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+      leaflet.addEventListener('touchmove', onTouchMove, { passive: true, capture: true });
+    }
+
+    return () => {
+      el.removeEventListener('scroll', onScroll as any);
+      el.removeEventListener('wheel', onWheel as any);
+      el.removeEventListener('touchstart', onTouchStart as any);
+      el.removeEventListener('touchmove', onTouchMove as any);
+      if (leaflet) {
+        leaflet.removeEventListener('wheel', onWheel as any);
+        leaflet.removeEventListener('touchstart', onTouchStart as any);
+        leaflet.removeEventListener('touchmove', onTouchMove as any);
+      }
+    };
+  }, [isMapRoute, location]);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
@@ -126,34 +178,82 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
 
   const currentPageTitle = pageTitles[location] || 'M1SSION';
   const isHomePage = location === '/home';
+  const reduceAnimations = location === '/profile' || location === '/settings/agent-profile';
   
   // ✅ BY JOSEPH MULÈ — CEO di NIYVORA KFT - Pages that should NOT show back arrow 
   const bottomNavPages = ['/', '/home', '/map', '/buzz', '/games', '/notifications', '/leaderboard', '/intelligence'];
   const isBottomNavPage = bottomNavPages.includes(location);
+  const isMap = location === '/map';
 
   return (
-    <motion.header
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
+    <>
+      <MinimalHeaderStrip show={false}>
+        {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
+        <div className="flex flex-col items-center gap-1">
+          {/* CODE con pallino pulsante */}
+          <div className="flex items-center gap-2">
+            <motion.div
+              className="w-2 h-2 bg-[#00D1FF] rounded-full"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [1, 0.7, 1],
+              }}
+              transition={{
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{
+                boxShadow: "0 0 8px rgba(0, 209, 255, 0.6), 0 0 16px rgba(0, 209, 255, 0.4)"
+              }}
+            />
+            <span 
+              className="text-xs font-orbitron font-bold text-white tracking-wider"
+              style={{
+                textShadow: "0 0 10px rgba(0, 209, 255, 0.6), 0 0 20px rgba(0, 209, 255, 0.3)"
+              }}
+            >
+              CODE
+            </span>
+          </div>
+          {/* Codice Agente sotto */}
+          <ReferralCodeDisplay />
+        </div>
+      </MinimalHeaderStrip>
+      <motion.header
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       className="fixed left-0 right-0 z-50 backdrop-blur-xl rounded-b-lg"
       style={{
         top: '0px',
-        background: 'rgba(0, 0, 0, 0.3)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(0, 209, 255, 0.2)',
-        boxShadow: '0 4px 24px rgba(0, 209, 255, 0.18), 0 2px 12px rgba(0, 209, 255, 0.12), inset 0 -1px 0 rgba(0, 209, 255, 0.12)',
+        background: 'transparent',
+        backdropFilter: 'none',
+        WebkitBackdropFilter: 'none',
+        borderBottom: 'none',
+        boxShadow: 'none',
         paddingTop: isPWA ? 'max(env(safe-area-inset-top, 0px), 16px)' : 'max(env(safe-area-inset-top, 0px), 12px)',
         height: 'calc(72px + max(env(safe-area-inset-top, 0px), 8px))',
         isolation: 'isolate',
       }}
     >
-      <div className="container mx-auto h-full max-w-screen-xl relative">
+        <motion.div
+          className="absolute inset-0 pointer-events-none rounded-b-lg"
+          animate={{ opacity: hideHeader ? 0 : 1 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            borderBottom: '1px solid rgba(0, 209, 255, 0.2)',
+            boxShadow: '0 4px 24px rgba(0, 209, 255, 0.18), 0 2px 12px rgba(0, 209, 255, 0.12), inset 0 -1px 0 rgba(0, 209, 255, 0.12)'
+          }}
+        />
+        <div className="container mx-auto h-full max-w-screen-xl relative">
           {/* Main Header Row */}
           <div className="flex items-center justify-between h-[72px] px-3 sm:px-4 relative">
             {/* Left Section */}
-            <div className="flex items-center">
+            <motion.div className="flex items-center" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {leftComponent ? (
                 leftComponent
               ) : (
@@ -181,7 +281,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                   </Link>
                 </div>
               )}
-            </div>
+            </motion.div>
 
             {/* Center section - Agent Code Vertical Layout - © 2025 Joseph MULÉ – M1SSION™ */}
             <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1">
@@ -194,8 +294,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                     opacity: [1, 0.7, 1],
                   }}
                   transition={{
-                    duration: 2,
-                    repeat: Infinity,
+                    duration: 1.6,
+                    repeat: reduceAnimations ? 0 : Infinity,
                     ease: "easeInOut"
                   }}
                   style={{
@@ -216,7 +316,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center space-x-1 sm:space-x-3">
+            <motion.div className="flex items-center space-x-1 sm:space-x-3" animate={{ opacity: hideHeader ? 0 : 1 }} transition={{ duration: 0.3 }}>
               {/* Settings - Always accessible for authenticated users */}
               <Link to="/settings">
                 <Button
@@ -230,8 +330,8 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                       scale: [1, 1.05, 1]
                     }}
                     transition={{ 
-                      rotate: { duration: 8, repeat: Infinity, ease: "linear" },
-                      scale: { duration: 4, repeat: Infinity, ease: "easeInOut" }
+                      rotate: { duration: reduceAnimations ? 1.6 : 8, repeat: reduceAnimations ? 0 : Infinity, ease: "linear" },
+                      scale: { duration: reduceAnimations ? 1.2 : 4, repeat: reduceAnimations ? 0 : Infinity, ease: "easeInOut" }
                     }}
                     style={{
                       filter: "drop-shadow(0 0 8px rgba(0, 209, 255, 0.4))"
@@ -247,13 +347,18 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 profileImage={currentProfileImage}
                 className="cursor-pointer"
               />
-            </div>
+            </motion.div>
           </div>
 
           {/* Animated color line at bottom of header - same as bottom navigation */}
-          <div className="line-glow absolute bottom-0 left-0 w-full"></div>
+          <motion.div 
+            className="line-glow absolute bottom-0 left-0 w-full"
+            animate={{ opacity: hideHeader ? 0 : 1 }}
+            transition={{ duration: 0.3 }}
+          />
         </div>
-    </motion.header>
+      </motion.header>
+    </>
   );
 };
 

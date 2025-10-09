@@ -3,8 +3,9 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
-// VAPID Public Key - From environment with fallback
-const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || 'BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q';
+// VAPID Public Key - Unified source
+import { getVAPIDPublicWeb } from '@/lib/config/push';
+const VAPID_PUBLIC_KEY = getVAPIDPublicWeb();
 
 interface SubscribeOptions {
   userId?: string;

@@ -1,7 +1,6 @@
 // FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React from 'react';
 import BottomNavigation from '@/components/layout/BottomNavigation';
-import MapPageHeader from './MapPageHeader';
 
 interface MapPageLayoutProps {
   children: React.ReactNode;
@@ -17,19 +16,8 @@ const MapPageLayout: React.FC<MapPageLayoutProps> = ({ children }) => {
         position: 'relative'
       }}
     >
-      <header 
-        className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl"
-        style={{
-          height: '72px',
-          paddingTop: 'env(safe-area-inset-top, 47px)',
-          background: "rgba(19, 21, 33, 0.55)",
-          backdropFilter: "blur(12px)"
-        }}
-      >
-        <MapPageHeader />
-      </header>
-      
       <main
+        id="map-scroll-container"
         style={{
           paddingTop: 'calc(72px + env(safe-area-inset-top, 47px) + 60px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™
           paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 34px) + 40px)', // 🔐 FIRMATO: BY JOSEPH MULÈ — CEO di NIYVORA KFT™

@@ -14,9 +14,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { Copy, Upload, User, Mail, IdCard, ArrowLeft } from 'lucide-react';
+import { Copy, Upload, User, Mail, IdCard } from 'lucide-react';
 import UnifiedHeader from '@/components/layout/UnifiedHeader';
 import BottomNavigation from '@/components/layout/BottomNavigation';
+import { DailyCheckInButton } from '@/components/gamification/DailyCheckInButton';
+import { XpLevelProgress } from '@/components/gamification/XpLevelProgress';
+import { RankHighlight } from '@/components/gamification/RankHighlight';
+import { BadgeGallery } from '@/components/gamification/BadgeGallery';
+import { AchievementTimeline } from '@/components/gamification/AchievementTimeline';
+import { WeeklyLeaderboard } from '@/components/gamification/WeeklyLeaderboard';
+import { BadgeUnlockedNotification } from '@/components/gamification/BadgeUnlockedNotification';
+import { useXpSystem } from '@/hooks/useXpSystem';
+import { RewardBadgeCard } from '@/components/gamification/RewardBadgeCard';
 
 const AgentProfileSettings: React.FC = () => {
   const { user } = useAuth();
@@ -26,6 +35,7 @@ const AgentProfileSettings: React.FC = () => {
   const { profileImage } = useProfileImage();
   const [agentName, setAgentName] = useState('');
   const [loading, setLoading] = useState(false);
+  const { newBadge, closeBadgeNotification, xpStatus } = useXpSystem();
 
   // Use global profile data with real-time updates
   useProfileRealtime();
@@ -236,11 +246,58 @@ const AgentProfileSettings: React.FC = () => {
             <p className="text-white/70">Gestisci le informazioni del tuo profilo agente</p>
           </div>
 
+          {/* Gamification Dashboard - Top Section */}
+          <div className="space-y-4 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold gradient-text">
+              📊 Dashboard Progressi
+            </h2>
+
+            {/* Gamification Grid - Responsive 2 columns on desktop, 1 on mobile */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* XP Level Progress + Daily Check-In Combined Card */}
+              <Card className="glass-card">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold gradient-text">
+                    ⭐ Livello & XP
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <XpLevelProgress totalXp={xpStatus.total_xp} />
+                  
+                  {/* Daily Check-In Section */}
+                  <div className="pt-4 border-t border-white/10">
+                    <h3 className="text-sm font-semibold text-white mb-2">🎯 Check-In Giornaliero</h3>
+                    <DailyCheckInButton />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Rank Highlight */}
+              <RankHighlight />
+            </div>
+
+            {/* Full width sections */}
+            <div className="space-y-4">
+              {/* Reward Badge Card - Shows when rewards are available */}
+              <RewardBadgeCard />
+
+              {/* Badge Gallery */}
+              <BadgeGallery />
+
+              {/* Achievement Timeline */}
+              <AchievementTimeline />
+
+              {/* Weekly Leaderboard */}
+              <WeeklyLeaderboard />
+            </div>
+          </div>
+
+          {/* Profile Settings Card */}
           <Card className="bg-black/40 border-[#00D1FF]/20 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white font-orbitron flex items-center">
                 <User className="w-5 h-5 mr-2" />
-                Profilo Agente
+                Informazioni Profilo
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -354,6 +411,22 @@ const AgentProfileSettings: React.FC = () => {
           </Card>
         </motion.div>
       </div>
+
+      {newBadge && (
+        <BadgeUnlockedNotification
+          badgeName={newBadge.name}
+          badgeDescription={newBadge.description}
+          onClose={closeBadgeNotification}
+          onClick={() => {
+            const label = (newBadge.name || '').toLowerCase();
+            if (label.includes('mappa')) {
+              navigate('/map?free=1&reward=1');
+            } else {
+              navigate('/buzz?free=1&reward=1');
+            }
+          }}
+        />
+      )}
 
       {/* Bottom Navigation */}
       <div 

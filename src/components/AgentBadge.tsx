@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AgentInfoPopup from "@/components/agent/AgentInfoPopup";
 import useSoundEffects from "@/hooks/useSoundEffects";
 import { useLongPress } from "@/hooks/useLongPress";
+import { hapticManager } from "@/utils/haptics";
 
 const AgentBadge = () => {
   const [agentCode, setAgentCode] = useState<string | null>(null);
@@ -16,9 +17,7 @@ const AgentBadge = () => {
 
   // Handle haptic feedback when long pressed (mobile) or clicked (desktop)
   const triggerHapticFeedback = () => {
-    if (navigator.vibrate && isMobile) {
-      navigator.vibrate(30); // 30ms vibration for subtle feedback
-    }
+    hapticManager.trigger('selection');
   };
 
   // Enhanced long press handler with haptic feedback

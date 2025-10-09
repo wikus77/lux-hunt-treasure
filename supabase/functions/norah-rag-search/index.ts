@@ -1,12 +1,6 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { cfEmbed } from "../_shared/cfEmbed.ts";
-=======
-// --- CF Embeddings helper (bge-base-en-v1.5, 768 dim) ---
-const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
-const CF_TOKEN   = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
-=======
 
 // === Env ===
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -14,9 +8,8 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
 // === Cloudflare Workers AI embeddings (768d) ===
-const CF_ACCOUNT    = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
-const CF_TOKEN      = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
->>>>>>> 56beaeb7 (fix(rag): CF embeddings + RPC vector(768); diagnosi OK)
+const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
+const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_EMBED_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
 
 async function cfEmbed(text: string): Promise<number[]> {
@@ -36,15 +29,6 @@ async function cfEmbed(text: string): Promise<number[]> {
   if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
   return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
 }
-<<<<<<< HEAD
-// --- end helper ---
->>>>>>> 03b9af89 (backup: edge functions BEFORE fixes (20251003_174019))
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
-=======
->>>>>>> 56beaeb7 (fix(rag): CF embeddings + RPC vector(768); diagnosi OK)
 
 type Req = { query: string; top_k?: number; locale?: string };
 
@@ -67,41 +51,19 @@ Deno.serve(async (req) => {
     const { query, top_k = 3, locale = "it" } = (await req.json()) as Req;
     if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    // 1) Embedding query using Cloudflare Workers AI (768d)
-    const embedding = await cfEmbed(query);
-
-    // 2) Vector search
-    const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
-      query_embedding: embedding,
-      match_count: top_k,
-      in_locale: locale,
-    });
-    if (error) throw new Error(`ai_rag_search_vec failed: ${error.message}`);
-=======
-    // 1) Embedding query
-=======
     // 1) Embedding (768d)
->>>>>>> 56beaeb7 (fix(rag): CF embeddings + RPC vector(768); diagnosi OK)
     const embedding = await cfEmbed(query);
     if (!Array.isArray(embedding) || embedding.length !== 768) {
       throw new Error(`Bad embedding length: ${embedding?.length ?? 'null'} (expected 768)`);
     }
 
-<<<<<<< HEAD
-    // 2) Vector search
-    const data = await callRagRpc(embedding, top_k, locale);
->>>>>>> 03b9af89 (backup: edge functions BEFORE fixes (20251003_174019))
-=======
-    // 2) Vector search via RPC (funzione: public.ai_rag_search_vec(double precision[], integer, text))
+    // 2) Vector search via RPC (function: public.ai_rag_search_vec(double precision[], integer, text))
     const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
       query_embedding: embedding,
       match_count: top_k,
       in_locale: locale,
     });
     if (error) throw new Error(`ai_rag_search_vec failed: ${error.message}`);
->>>>>>> 56beaeb7 (fix(rag): CF embeddings + RPC vector(768); diagnosi OK)
 
     // 3) Log best-effort
     try {

@@ -2,6 +2,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, deleteToken, onMessage, MessagePayload, Messaging } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
+import { VAPID_PUBLIC_KEY } from '@/lib/vapid';
 
 // Firebase configuration for M1SSION app
 const firebaseConfig = {
@@ -12,9 +13,6 @@ const firebaseConfig = {
   messagingSenderId: "21417361168",
   appId: "1:21417361168:web:58841299455ee4bcc7af95"
 };
-
-// VAPID Public Key - NON CAMBIARE (invaliderebbe tutti i token esistenti)
-const VAPID_PUBLIC_KEY = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
 
 // Global Firebase app instance
 let globalApp: FirebaseApp | null = null;

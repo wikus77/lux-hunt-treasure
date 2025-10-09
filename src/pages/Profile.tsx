@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useWouterNavigation } from "@/hooks/useWouterNavigation";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import NotificationsDrawer from "@/components/notifications/NotificationsDrawer";
 import ProfileHeader from "@/components/profile/ProfileHeader";
@@ -14,7 +14,7 @@ import { useRealTimeNotifications } from "@/hooks/useRealTimeNotifications";
 import BottomNavigation from "@/components/layout/BottomNavigation";
 
 const Profile = () => {
-  const navigate = useNavigate();
+  const { navigate } = useWouterNavigation();
   const { profileData, actions } = useProfileData();
   const isMobile = useIsMobile();
   const { notificationsDrawerOpen, closeNotificationsDrawer } = useNotificationManager();
@@ -51,8 +51,11 @@ const Profile = () => {
             onSave={actions.handleSaveProfile}
           />
           
-          {/* Profile Information */}
-          <div className="p-3 sm:p-6">
+          {/* Profile Information - MANTENUTO INTATTO */}
+          <div className="p-3 sm:p-6 border-t border-white/10">
+            <h2 className="text-xl sm:text-2xl font-bold gradient-text mb-4">
+              👤 Informazioni Agente
+            </h2>
             <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
               {/* Left Column - Avatar and Basic Info */}
               <ProfileInfo 
@@ -98,7 +101,7 @@ const Profile = () => {
           </div>
         </div>
         
-        <NotificationsDrawer 
+        <NotificationsDrawer
           open={notificationsDrawerOpen}
           onOpenChange={closeNotificationsDrawer}
         />

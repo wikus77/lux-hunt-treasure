@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { playSound } from '@/utils/audio';
+import { hapticManager, HapticType } from '@/utils/haptics';
 
 export const usePWAHardwareStub = () => {
   const [state] = useState({
@@ -23,9 +24,14 @@ export const usePWAHardwareStub = () => {
     }
   };
 
+  const triggerHaptic = async (type: HapticType) => {
+    await hapticManager.trigger(type);
+  };
+
   return {
     ...state,
     vibrate,
+    triggerHaptic,
     playSound,
     isLoading: false
   };
