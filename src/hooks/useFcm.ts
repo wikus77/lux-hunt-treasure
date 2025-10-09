@@ -1,96 +1,87 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Web Push Hook (replaces FCM)
-
 import { useState, useEffect, useCallback } from 'react';
-import { isPushSupported, hasActiveSubscription, enableWebPush } from '@/lib/push/webPushManager';
+import { subscribeWebPushAndSave, type WebPushSubscriptionPayload } from '@/lib/push/webPushManager';
 
 interface UseWebPushState {
-  status: 'idle' | 'loading' | 'success' | 'error';
-  error: string | null;
-  subscription: PushSubscription | null;
-  userId: string | null;
-}
-
-interface UseWebPushReturn extends UseWebPushState {
-  generate: () => Promise<void>;
   isSupported: boolean;
   permission: NotificationPermission | null;
-  token: string | null; // endpoint as token for backward compatibility
+  isLoading: boolean;
+  error: string | null;
+  isSubscribed: boolean;
+  subscription: PushSubscription | null;
+  savedPayload: WebPushSubscriptionPayload | null;
 }
 
-export function useFcm(userId?: string): UseWebPushReturn {
+export function useFcm() {
   const [state, setState] = useState<UseWebPushState>({
-    status: 'idle',
+    isSupported: false,
+    permission: null,
+    isLoading: false,
     error: null,
+    isSubscribed: false,
     subscription: null,
-    userId: null
+    savedPayload: null,
   });
 
-  const [isSupported, setIsSupported] = useState(false);
-  const [permission, setPermission] = useState<NotificationPermission | null>(null);
-
-  // Check Web Push support and cached data on mount
-  useEffect(() => {
-    const checkSupport = async () => {
-      const supported = isPushSupported();
-      setIsSupported(supported);
-      setPermission(Notification.permission);
-      
-      // Load current subscription if available
-      const hasSubscription = await hasActiveSubscription();
-      if (hasSubscription) {
-        setState(prev => ({
-          ...prev,
-          status: 'success'
-        }));
-      }
-    };
-
-    checkSupport();
+  const checkSupport = useCallback(() => {
+    const supported =
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window;
+    const permission = supported ? Notification.permission : null;
+    setState(s => ({ ...s, isSupported: supported, permission }));
+    return supported;
   }, []);
 
-  const generate = useCallback(async () => {
-    if (!isSupported) {
-      setState(prev => ({
-        ...prev,
-        status: 'error',
-        error: 'Web Push not supported in this browser'
-      }));
-      return;
-    }
-
-    setState(prev => ({
-      ...prev,
-      status: 'loading',
-      error: null
-    }));
-
+  const getActiveSubscription = useCallback(async () => {
     try {
-      console.log('[WEBPUSH] hook generate → START');
-      const subscription = await enableWebPush();
-      
-      console.log('[WEBPUSH] hook generate → SUCCESS');
-      setState({
-        status: 'success',
-        error: null,
-        subscription,
-        userId: userId || null
-      });
-    } catch (error: any) {
-      console.error('[WEBPUSH] hook generate → ERROR:', error);
-      setState(prev => ({
-        ...prev,
-        status: 'error',
-        error: error.message || 'Failed to generate push subscription'
-      }));
+      const reg = await navigator.serviceWorker.ready;
+      return await reg.pushManager.getSubscription();
+    } catch {
+      return null;
     }
-  }, [userId, isSupported]);
+  }, []);
+
+  const refreshSubscriptionState = useCallback(async () => {
+    const sub = await getActiveSubscription();
+    setState(s => ({ ...s, isSubscribed: !!sub, subscription: sub }));
+  }, [getActiveSubscription]);
+
+  const enable = useCallback(async () => {
+    if (!checkSupport()) {
+      setState(s => ({ ...s, error: 'Push non supportato' }));
+      throw new Error('Push non supportato');
+    }
+    setState(s => ({ ...s, isLoading: true, error: null }));
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const payload = await subscribeWebPushAndSave(reg);
+      const sub = await reg.pushManager.getSubscription();
+      setState(s => ({
+        ...s,
+        isLoading: false,
+        isSubscribed: !!sub,
+        subscription: sub,
+        savedPayload: payload,
+      }));
+      return payload;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Enable push failed';
+      setState(s => ({ ...s, isLoading: false, error: msg }));
+      throw err;
+    }
+  }, [checkSupport]);
+
+  useEffect(() => {
+    checkSupport();
+    void refreshSubscriptionState();
+  }, [checkSupport, refreshSubscriptionState]);
 
   return {
     ...state,
-    generate,
-    isSupported,
-    permission,
-    token: state.subscription?.endpoint || null // endpoint as token
+    enable,
+    hasActiveSubscription: async () => !!(await getActiveSubscription()),
+    isPushSupported: state.isSupported,
   };
 }
+
+export default useFcm;
