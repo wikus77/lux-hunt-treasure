@@ -47,11 +47,16 @@ export async function enableWebPush() {
   
   if (sub) {
     // @ts-ignore - not all implementations expose options
-    const curKey = sub.options?.applicationServerKey;
-    const sameKey =
-      curKey &&
+    const curKey = (sub?.options as any)?.applicationServerKey as ArrayBuffer | undefined;
 
-    if (!sameKey) {
+// Confronto sicuro tra applicationServerKey richiesta e quella della subscription esistente
+function buffersEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.byteLength !== b.byteLength) return false;
+  for (let i = 0; i < a.byteLength; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+const sameKey = !!(applicationServerKey && curKey && buffersEqual(applicationServerKey, new Uint8Array(curKey)));
+if (!sameKey) {
       try { await sub.unsubscribe(); } catch {}
       sub = null;
     }

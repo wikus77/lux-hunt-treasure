@@ -76,3 +76,18 @@ export async function subscribeWebPushAndSave(userId?: string): Promise<WebPushS
     return null;
   }
 }
+
+
+/**
+ * Compatibility shim per import legacy:
+ *   import { webPushManager } from '@/lib/push/webPushManager'
+ * Raggruppa le API già esportate singolarmente.
+ */
+export const webPushManager = {
+  enableWebPush,
+  disableWebPush,
+  isPushSupported,
+  hasActiveSubscription,
+  looksLikeWebPushEndpoint,
+  subscribeWebPushAndSave,
+};

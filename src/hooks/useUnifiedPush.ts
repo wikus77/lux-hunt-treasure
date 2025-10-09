@@ -150,7 +150,7 @@ export const useUnifiedPush = () => {
           };
 
           // Save to database
-          const response = await fetch('https://${(import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || 'project')}.supabase.co/functions/v1/webpush-upsert', {
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/webpush-upsert`, {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
