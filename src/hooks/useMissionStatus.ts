@@ -33,22 +33,6 @@ export const useMissionStatus = () => {
       setLoading(true);
       setError(null);
 
-      // 🔥 Fetch the current active mission from missions table
-      const { data: activeMissionData, error: missionFetchError } = await supabase
-        .from('missions')
-        .select('id, title')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (missionFetchError && missionFetchError.code !== 'PGRST116') {
-        console.error('Error loading active mission:', missionFetchError);
-      }
-
-      const missionId = activeMissionData?.id || "M001";
-      const missionTitle = activeMissionData?.title || "M1SSION ONE";
-
       // 🔥 CRITICAL FIX: Get REAL clues count from user_clues table WITH RETRY
       let realCluesCount = 0;
       let retryCount = 0;
@@ -139,8 +123,8 @@ export const useMissionStatus = () => {
         }
 
         setMissionStatus({
-          id: missionId,
-          title: missionTitle,
+          id: "M001",
+          title: "Caccia al Tesoro Urbano",
           state: daysRemaining > 0 ? "ATTIVA" : "SCADUTA",
           startDate: missionStart,
           daysRemaining: daysRemaining,
@@ -172,8 +156,8 @@ export const useMissionStatus = () => {
         }
 
         setMissionStatus({
-          id: missionId,
-          title: missionTitle,
+          id: "M001",
+          title: "Caccia al Tesoro Urbano",
           state: daysRemaining > 0 ? "ATTIVA" : "SCADUTA",
           startDate: missionStart,
           daysRemaining: daysRemaining,

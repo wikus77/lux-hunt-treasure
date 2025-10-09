@@ -15,17 +15,14 @@ import { MissionConfigSection } from '@/components/panel/MissionConfigSection';
 import { usePanelAccessProtection } from '@/hooks/usePanelAccessProtection';
 import { Spinner } from '@/components/ui/spinner';
 import { QRControlPanel } from '@/components/admin/QRControlPanel';
-// Removed obsolete debug panels - now using unified Push Center
+import { M1ssionDebugTest } from './M1ssionDebugTest';
+import { M1ssionFirebasePushTestPanel } from '@/components/admin/M1ssionFirebasePushTestPanel';
 import BulkMarkerDropComponent from '@/components/admin/BulkMarkerDropComponent';
 import UsersRealtimePanel from '@/components/panel/UsersRealtimePanel';
 import { useLocation } from 'wouter';
 import { useAdminCheck } from '@/hooks/admin/useAdminCheck';
-import PushCenterCard from '@/components/push-center/PushCenterCard';
-import { PushCenter } from '@/components/panel/PushCenter';
-import PushControlPanelPage from '@/pages/panel/PushControlPanelPage';
-import PushAutoPreflightPage from '@/pages/panel/PushAutoPreflightPage';
 
-type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'bulk-marker-drop' | 'push-center' | 'push-control' | 'push-sender' | 'push-preflight';
+type ViewType = 'home' | 'ai-generator' | 'mission-control' | 'mission-reset' | 'mission-config' | 'qr-control' | 'debug-test' | 'firebase-debug-test' | 'bulk-marker-drop';
 
 const PanelAccessPage = () => {
   const { user } = useUnifiedAuth();
@@ -220,14 +217,11 @@ const PanelAccessPage = () => {
     );
   }
 
-  // Removed old debug-test view - replaced by unified Push Center
-
-  // Push Center View
-  if (currentView === 'push-center' && hasAccess && isAdmin) {
+  if (currentView === 'debug-test' && hasAccess) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
         <Helmet>
-          <title>M1SSION PANEL™ - Push Center</title>
+          <title>M1SSION PANEL™ - Debug Test</title>
         </Helmet>
         <UnifiedHeader profileImage={profileImage} />
         <div 
@@ -245,10 +239,47 @@ const PanelAccessPage = () => {
               >
                 ← Torna al Panel
               </button>
-              <h1 className="text-2xl font-bold text-white">📡 Push Center</h1>
+            </div>
+            <M1ssionDebugTest />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentView === 'firebase-debug-test' && hasAccess) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
+        <Helmet>
+          <title>M1SSION PANEL™ - Firebase Debug Test</title>
+        </Helmet>
+        <UnifiedHeader profileImage={profileImage} />
+        <div 
+          className="px-4 py-8"
+          style={{ 
+            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
+            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
+          }}
+        >
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-4 mb-8">
+              <button 
+                onClick={() => setCurrentView('home')}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ← Torna al Panel
+              </button>
+              <h1 className="text-2xl font-bold text-white">Firebase FCM Test Complete Suite</h1>
             </div>
             
-            <PushCenterCard />
+            <div className="glass-card p-6 border border-orange-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <Send className="w-6 h-6 text-orange-400" />
+                <h2 className="text-xl font-semibold text-orange-400">Firebase FCM Test Suite Completa</h2>
+              </div>
+              <p className="text-gray-400">Test completo Firebase FCM con debug avanzato</p>
+            </div>
+            <M1ssionFirebasePushTestPanel />
           </div>
         </div>
       </div>
@@ -280,68 +311,6 @@ const PanelAccessPage = () => {
               <h1 className="text-2xl font-bold text-white">Bulk Marker Drop</h1>
             </div>
             <BulkMarkerDropComponent />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Push Control Panel View
-  if ((currentView === 'push-control' || currentView === 'push-sender') && hasAccess && isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
-        <Helmet>
-          <title>M1SSION PANEL™ - Push Control</title>
-        </Helmet>
-        <UnifiedHeader profileImage={profileImage} />
-        <div 
-          className="px-4 py-8"
-          style={{ 
-            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-          }}
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 mb-8">
-              <button 
-                onClick={() => setCurrentView('home')}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ← Torna al Panel
-              </button>
-            </div>
-            <PushControlPanelPage />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Push Preflight View
-  if (currentView === 'push-preflight' && hasAccess && isAdmin) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#070818] via-[#0a0d1f] to-[#070818]">
-        <Helmet>
-          <title>M1SSION PANEL™ - Push Preflight</title>
-        </Helmet>
-        <UnifiedHeader profileImage={profileImage} />
-        <div 
-          className="px-4 py-8"
-          style={{ 
-            paddingTop: 'calc(72px + 47px + env(safe-area-inset-top, 0px))',
-            paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))'
-          }}
-        >
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 mb-8">
-              <button 
-                onClick={() => setCurrentView('home')}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ← Torna al Panel
-              </button>
-            </div>
-            <PushAutoPreflightPage />
           </div>
         </div>
       </div>
@@ -416,11 +385,6 @@ const PanelAccessPage = () => {
                   <span className="text-green-400 font-semibold">TRACKING ATTIVO</span>
                 </div>
               </div>
-            </div>
-
-            {/* Push Center Card - Quick Access */}
-            <div className="mb-6">
-              <PushCenter />
             </div>
 
             <div className="grid gap-4">
@@ -561,80 +525,76 @@ const PanelAccessPage = () => {
               </motion.div>
 
               {isAdmin && (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setCurrentView('push-center')}
-                  className="glass-card p-4 border border-[#4361ee]/30 cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-[#4361ee] to-[#7209b7] flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Send className="w-6 h-6 text-white" />
+                <>
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setLocation('/panel/push-admin')}
+                    className="glass-card p-4 border border-orange-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-600 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Send className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Admin Push Console</h3>
+                        <p className="text-gray-400 text-sm">Broadcast globale (solo admin)</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-white">📡 Push Center</h3>
-                      <p className="text-gray-400 text-sm">Invio + Debug + Subscriptions + Logs</p>
+                  </motion.div>
+
+                  <motion.div 
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setLocation('/panel/push')}
+                    className="glass-card p-4 border border-cyan-500/30 cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-cyan-600 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-white">Push Console</h3>
+                        <p className="text-gray-400 text-sm">Invio a utenti/segmenti selezionati</p>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                </>
               )}
 
-              {isAdmin && (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setCurrentView('push-control')}
-                  className="glass-card p-4 border border-orange-500/30 cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-600 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Send className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">🚀 Push Control Panel</h3>
-                      <p className="text-gray-400 text-sm">Invio notifiche push avanzato</p>
-                    </div>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView('debug-test')}
+                className="glass-card p-4 border border-orange-500/30 cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-orange-600 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Send className="w-6 h-6 text-white" />
                   </div>
-                </motion.div>
-              )}
+                  <div>
+                    <h3 className="font-semibold text-white">M1SSION Debug Suite</h3>
+                    <p className="text-gray-400 text-sm">Test e debug componenti sistema</p>
+                  </div>
+                </div>
+              </motion.div>
 
-              {isAdmin && (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setCurrentView('push-preflight')}
-                  className="glass-card p-4 border border-emerald-500/30 cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Shield className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">🔍 Push Preflight (RO)</h3>
-                      <p className="text-gray-400 text-sm">Diagnostica catena push (solo lettura)</p>
-                    </div>
+              <motion.div 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentView('firebase-debug-test')}
+                className="glass-card p-4 border border-red-500/30 cursor-pointer group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-red-600 to-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <Send className="w-6 h-6 text-white" />
                   </div>
-                </motion.div>
-              )}
-
-              {isAdmin && (
-                <motion.div 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setLocation('/panel/push-sender')}
-                  className="glass-card p-4 border border-blue-500/30 cursor-pointer group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Send className="w-6 h-6 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-white">📤 Push Sender</h3>
-                      <p className="text-gray-400 text-sm">Invio rapido Broadcast/Targeted/Self</p>
-                    </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Firebase FCM Test Suite</h3>
+                    <p className="text-gray-400 text-sm">Test Firebase Cloud Messaging completo</p>
                   </div>
-                </motion.div>
-              )}
+                </div>
+              </motion.div>
             </div>
 
             <div className="text-center pt-4">

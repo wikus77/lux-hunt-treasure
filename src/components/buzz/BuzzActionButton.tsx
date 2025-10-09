@@ -21,13 +21,11 @@ import { v4 as uuidv4 } from 'uuid'; // © 2025 Joseph MULÉ – M1SSION™
 interface BuzzActionButtonProps {
   isBlocked: boolean;
   onSuccess: () => void;
-  isWalkthroughMode?: boolean;
 }
 
 export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   isBlocked,
-  onSuccess,
-  isWalkthroughMode = false
+  onSuccess
 }) => {
   const { user } = useUnifiedAuth();
   const { hasFreeBuzz, consumeFreeBuzz, totalRemaining, dailyUsed } = useBuzzGrants(); // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
@@ -147,13 +145,6 @@ export const BuzzActionButton: React.FC<BuzzActionButtonProps> = ({
   const handleAction = async () => {
     if (!user) {
       toast.error('Devi essere loggato per utilizzare BUZZ!');
-      return;
-    }
-
-    // Walkthrough demo mode - bypass payment
-    if (isWalkthroughMode) {
-      await handleBuzz();
-      onSuccess();
       return;
     }
 

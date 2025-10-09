@@ -78,14 +78,12 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
     try {
       const registration = await navigator.serviceWorker.ready;
       
-      // Use unified VAPID key - import from single source
-      const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
-      const vapidKey = await loadVAPIDPublicKey();
-      const appServerKey = urlBase64ToUint8Array(vapidKey) as unknown as BufferSource;
+      // Use unified VAPID key from M1SSION™
+      const VAPID_PUBLIC_KEY = 'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
       
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: appServerKey
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource
       });
 
       // Save subscription to database
@@ -113,6 +111,20 @@ const PushSetup: React.FC<PushSetupProps> = ({ className = "" }) => {
     }
   };
 
+  const urlBase64ToUint8Array = (base64String: string) => {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  };
 
   if (!isSupported) {
     return null;

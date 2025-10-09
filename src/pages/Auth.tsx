@@ -13,7 +13,6 @@ import { ProfileCheckManager } from "@/components/auth/ProfileCheckManager";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { recordQuizSkip } from "@/utils/quizDailyGuard";
 
 const Auth = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -87,22 +86,6 @@ const Auth = () => {
 
   const handleQuizComplete = async (playerType: any) => {
     console.log("Enhanced quiz completed with player type:", playerType);
-    
-    // Handle skip case (playerType is null when user clicks "Salta Quiz")
-    if (!playerType) {
-      console.log("User skipped quiz - recording skip date");
-      recordQuizSkip();
-      setHasCompletedQuiz(true);
-      toast.info("Quiz saltato. Riapparirà domani all'apertura dell'app.", {
-        description: "Potrai completarlo anche dalla tua area profilo."
-      });
-      setTimeout(() => {
-        navigate("/home");
-      }, 1000);
-      return;
-    }
-    
-    // Quiz completed successfully
     setHasCompletedQuiz(true);
     
     // Update profile in local storage and session

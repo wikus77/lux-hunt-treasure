@@ -1,0 +1,19 @@
+/* M1SSION™ FCM config (non-ESM) */
+(function () {
+  try {
+    const config = {
+      apiKey: "AIzaSyDgY_2prLtVvme616VpfBgTyCJV1aW7mXs",
+      authDomain: "m1ssion-app.firebaseapp.com",
+      projectId: "m1ssion-app",
+      storageBucket: "m1ssion-app.firebasestorage.app",
+      messagingSenderId: "21417361168",
+      appId: "1:21417361168:web:58841299455ee4bcc7af95",
+      vapidKey: "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q"
+    };
+    self.__FIREBASE_CFG__ = config;
+    console.log('[M1SSION FCM] Config initialized for project:', config.projectId);
+  } catch (e) {
+    console.error('[M1SSION FCM] Config init error:', e);
+    self.__FIREBASE_CFG__ = null;
+  }
+})();

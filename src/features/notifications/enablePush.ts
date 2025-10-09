@@ -2,7 +2,6 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, deleteToken, onMessage, MessagePayload, Messaging } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
-import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
 
 // Firebase configuration for M1SSION app
 const firebaseConfig = {
@@ -13,6 +12,9 @@ const firebaseConfig = {
   messagingSenderId: "21417361168",
   appId: "1:21417361168:web:58841299455ee4bcc7af95"
 };
+
+// VAPID Public Key - NON CAMBIARE (invaliderebbe tutti i token esistenti)
+const VAPID_PUBLIC_KEY = "BBjgzWK_1_PBZXGLQb-xQjSEUH5jLsNNgx8N0LgOcKUkZeCUaNV_gRE-QM5pKS2bPKUhVJLn0Q-H3BNGnOOjy8Q";
 
 // Global Firebase app instance
 let globalApp: FirebaseApp | null = null;
@@ -159,10 +161,9 @@ export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }):
     const messaging = getMessagingInstance();
     
     // Generate token with VAPID key and service worker registration  
-    console.debug('[PUSH] Generating FCM token with VAPID...');
-    const vapidKey = await loadVAPIDPublicKey();
+    console.debug('[PUSH] Generating FCM token with hardcoded VAPID...');
     const token = await getToken(messaging, {
-      vapidKey,
+      vapidKey: VAPID_PUBLIC_KEY, // use hardcoded VAPID
       serviceWorkerRegistration: registration
     });
     
@@ -318,8 +319,7 @@ export async function regenerateFCMToken(): Promise<string | null> {
     console.log('🗑️ [M1SSION FCM] Old token deleted');
     
     // Generate new token
-    const vapidKey = await loadVAPIDPublicKey();
-    return await registerSwAndGetToken({ vapidKey });
+    return await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
     
   } catch (error) {
     console.error('❌ [M1SSION FCM] Token regeneration failed:', error);
@@ -432,8 +432,7 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
 
     // 6. Generate FCM token with comprehensive logging
     console.debug('[PUSH] Generating FCM token...');
-    const vapidKey = await loadVAPIDPublicKey();
-    const token = await registerSwAndGetToken({ vapidKey });
+    const token = await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
     
     if (!token || token === '') {
       console.error('[PUSH] No token generated');

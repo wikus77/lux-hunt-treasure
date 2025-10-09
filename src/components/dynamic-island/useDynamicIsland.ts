@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLongPress } from "@/hooks/useLongPress";
-import { hapticManager } from "@/utils/haptics";
 
 export const useDynamicIsland = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,7 +9,9 @@ export const useDynamicIsland = () => {
 
   // Handle haptic feedback
   const triggerHapticFeedback = () => {
-    hapticManager.trigger('selection');
+    if (navigator.vibrate && isMobile) {
+      navigator.vibrate(30); // 30ms vibration for subtle feedback
+    }
   };
 
   // Long press handler for mobile

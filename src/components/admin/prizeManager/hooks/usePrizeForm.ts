@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -28,8 +29,7 @@ export const usePrizeForm = () => {
   const [authDebugInfo, setAuthDebugInfo] = useState<any | null>(null);
   
   useEffect(() => {
-    // Initial auth check on mount
-
+    // Check authentication status on mount
     const checkAuth = async () => {
       try {
         const { data, error } = await supabase.auth.getUser();
@@ -127,8 +127,7 @@ export const usePrizeForm = () => {
   };
 
   const onSubmit = async (values: PrizeFormValues) => {
-    // Validate authentication and authorization before proceeding
-    
+    // Check if user is authenticated and admin before proceeding
     if (!isAuthenticated) {
       toast.error("Utente non autenticato", { 
         description: "Devi effettuare il login prima di poter inserire premi." 
@@ -136,6 +135,7 @@ export const usePrizeForm = () => {
       return;
     }
     
+    // Special logging for authorization debugging
     const authInfo = await logAuthDebugInfo();
     setAuthDebugInfo(authInfo);
     
@@ -168,18 +168,22 @@ export const usePrizeForm = () => {
         
         console.log("Using manual coordinates:", { lat, lon });
         
+        // Show confirmation toast
         toast.info("Utilizzo coordinate manuali", {
           description: `Lat: ${lat}, Lon: ${lon}`
         });
       } else {
+        // 1. Geocode the address to get coordinates
         toast.info("Geolocalizzazione indirizzo...");
         const geocodeData = await geocodeAddress(values.city, values.address);
         console.log("Geocode response:", geocodeData);
         setGeocodeResponse(geocodeData);
         
         if (geocodeData.error || !geocodeData.lat || !geocodeData.lon) {
+          // Set error state for UI
           setGeocodeError(geocodeData.error || "Impossibile ottenere le coordinate geografiche");
           
+          // Show specific error message based on error type
           if (geocodeData.errorType === 'rate_limit') {
             toast.error("Rate limit superato", { 
               description: "Troppe richieste a Nominatim. Riprova tra qualche istante o inserisci coordinate manualmente." 
@@ -198,6 +202,7 @@ export const usePrizeForm = () => {
             });
           }
           
+          // Enable manual coordinate input automatically
           setShowManualCoordinates(true);
           form.setValue("use_manual_coordinates", true);
           
@@ -207,6 +212,7 @@ export const usePrizeForm = () => {
         lat = parseFloat(geocodeData.lat);
         lon = parseFloat(geocodeData.lon);
         
+        // Show success toast with found location
         if (geocodeData.display_name) {
           toast.success("Indirizzo localizzato", {
             description: geocodeData.display_name
@@ -214,6 +220,7 @@ export const usePrizeForm = () => {
         }
       }
       
+      // 2. Insert prize into the database
       toast.info("Salvataggio premio...");
       const { data: prizeData, error: prizeError } = await createPrize(
         values, 
@@ -234,6 +241,7 @@ export const usePrizeForm = () => {
       const prizeId = prizeData[0].id;
       console.log("Created prize with ID:", prizeId);
       
+      // 3. Generate clues
       toast.info("Generazione indizi...");
       const clueData = await generatePrizeClues({
         prizeId,
@@ -249,6 +257,7 @@ export const usePrizeForm = () => {
         throw new Error(clueData.error || "Impossibile generare gli indizi");
       }
       
+      // 4. Insert clues into the database
       toast.info("Salvataggio indizi...");
       const insertResult = await insertPrizeClues(clueData.clues, prizeId);
       
@@ -258,10 +267,12 @@ export const usePrizeForm = () => {
         throw new Error(insertResult.error || "Errore durante il salvataggio degli indizi");
       }
       
+      // Success!
       toast.success("Premio e indizi creati con successo!", {
         description: `Salvato premio in ${values.city} con ${clueData.clues.length} indizi.`
       });
       
+      // Reset form after success
       setGeocodeError(null);
       setShowManualCoordinates(false);
       form.reset();

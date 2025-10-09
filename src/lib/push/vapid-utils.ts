@@ -66,9 +66,11 @@ export function detectPushProvider(endpoint: string): 'apns' | 'fcm' | 'webpush'
 
 /**
  * Get VAPID public key for Web Push subscriptions
- * Uses the unified VAPID source from @/lib/vapid-loader
+ * Uses the backend VAPID key, NOT Firebase FCM key
  */
-import { loadVAPIDPublicKey } from '@/lib/vapid-loader';
-export async function getVAPIDPublicKey(): Promise<string> {
-  return await loadVAPIDPublicKey();
+export function getVAPIDPublicKey(): string {
+  // This should be set by the backend or build process
+  // NOT the Firebase VAPID key which is only for FCM
+  return import.meta.env.VITE_VAPID_PUBLIC_KEY || 
+         'BMkETBgIgFEj0MOINyixtfrde9ZiMbj-5YEtsX8GpnuXpABax28h6dLjmJ7RK6rlZXUJg1N_z3ba0X6E7Qmjj7A';
 }

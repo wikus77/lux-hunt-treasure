@@ -1,52 +1,58 @@
+/* M1SSION™ AG-X0197 */
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-// Web Push Hook (replaces FCM)
+// FCM React Hook
 
 import { useState, useEffect, useCallback } from 'react';
-import { isPushSupported, hasActiveSubscription, enableWebPush } from '@/lib/push/webPushManager';
+import { getAndSaveFcmToken, getCachedToken, getCachedUserId } from '@/lib/fcm';
 
-interface UseWebPushState {
+interface UseFcmState {
   status: 'idle' | 'loading' | 'success' | 'error';
   error: string | null;
-  subscription: PushSubscription | null;
+  token: string | null;
   userId: string | null;
 }
 
-interface UseWebPushReturn extends UseWebPushState {
+interface UseFcmReturn extends UseFcmState {
   generate: () => Promise<void>;
   isSupported: boolean;
   permission: NotificationPermission | null;
-  token: string | null; // endpoint as token for backward compatibility
 }
 
-export function useFcm(userId?: string): UseWebPushReturn {
-  const [state, setState] = useState<UseWebPushState>({
+export function useFcm(userId?: string): UseFcmReturn {
+  const [state, setState] = useState<UseFcmState>({
     status: 'idle',
     error: null,
-    subscription: null,
+    token: null,
     userId: null
   });
 
   const [isSupported, setIsSupported] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission | null>(null);
 
-  // Check Web Push support and cached data on mount
+  // Check FCM support and cached data on mount
   useEffect(() => {
-    const checkSupport = async () => {
-      const supported = isPushSupported();
+    const checkSupport = () => {
+      const supported = 'serviceWorker' in navigator && 
+                       'Notification' in window && 
+                       'PushManager' in window;
       setIsSupported(supported);
       setPermission(Notification.permission);
-      
-      // Load current subscription if available
-      const hasSubscription = await hasActiveSubscription();
-      if (hasSubscription) {
-        setState(prev => ({
-          ...prev,
-          status: 'success'
-        }));
-      }
     };
 
     checkSupport();
+
+    // Load cached token if available
+    const cachedToken = getCachedToken();
+    const cachedUserId = getCachedUserId();
+    
+    if (cachedToken) {
+      setState(prev => ({
+        ...prev,
+        token: cachedToken,
+        userId: cachedUserId,
+        status: 'success'
+      }));
+    }
   }, []);
 
   const generate = useCallback(async () => {
@@ -54,7 +60,7 @@ export function useFcm(userId?: string): UseWebPushReturn {
       setState(prev => ({
         ...prev,
         status: 'error',
-        error: 'Web Push not supported in this browser'
+        error: 'FCM not supported in this browser'
       }));
       return;
     }
@@ -66,22 +72,23 @@ export function useFcm(userId?: string): UseWebPushReturn {
     }));
 
     try {
-      console.log('[WEBPUSH] hook generate → START');
-      const subscription = await enableWebPush();
+      console.log('[M1SSION FCM] hook generate → START');
+      const finalUserId = userId || getCachedUserId();
+      const token = await getAndSaveFcmToken(finalUserId || undefined);
       
-      console.log('[WEBPUSH] hook generate → SUCCESS');
+      console.log('[M1SSION FCM] hook generate → SUCCESS');
       setState({
         status: 'success',
         error: null,
-        subscription,
-        userId: userId || null
+        token,
+        userId: finalUserId
       });
     } catch (error: any) {
-      console.error('[WEBPUSH] hook generate → ERROR:', error);
+      console.error('[M1SSION FCM] hook generate → ERROR:', error);
       setState(prev => ({
         ...prev,
         status: 'error',
-        error: error.message || 'Failed to generate push subscription'
+        error: error.message || 'Failed to generate FCM token'
       }));
     }
   }, [userId, isSupported]);
@@ -90,7 +97,6 @@ export function useFcm(userId?: string): UseWebPushReturn {
     ...state,
     generate,
     isSupported,
-    permission,
-    token: state.subscription?.endpoint || null // endpoint as token
+    permission
   };
 }

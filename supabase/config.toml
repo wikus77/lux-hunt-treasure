@@ -62,7 +62,7 @@ enable_signup = true
 # enable_phone_autoconfirm = true
 
 [functions.webpush-send]
-verify_jwt = false
+
 [functions.webpush-upsert]
 
 [functions.geofence-engine]
@@ -122,25 +122,15 @@ verify_jwt = false
 [functions.ai-kb-bulk-seed]
 
 [functions.norah-diagnose]
-
-[functions.handle-daily-checkin]
-
-[functions.sync-weekly-leaderboard]
-
-[functions.weekly-reset-cron]
-
-[functions.norah-proactive-analyzer]
-
-[functions.enroll-mission-of-the-month]
-
-[functions.auto-push-cron]
-verify_jwt = false
-
-[functions.get-vapid]
-verify_jwt = false
-
-[functions.env-dump]
-verify_jwt = false
-
-[functions.webpush-targeted-send]
-verify_jwt = false
+<<<<<<< HEAD
+=======
+enabled = true
+verify_jwt = true
+import_map = "./functions/norah-diagnose/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/norah-diagnose/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/norah-diagnose/*.html" ]
+>>>>>>> 03b9af89 (backup: edge functions BEFORE fixes (20251003_174019))

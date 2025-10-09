@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { authStorage } from '@/utils/auth-storage';
 
 interface SessionManagerResult {
   user: User | null;
@@ -62,7 +61,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
             version: '2.0'
           };
           
-          authStorage.set(JSON.stringify(sessionBackup));
+          localStorage.setItem('sb-vkjrqirvdvjbemsfzxof-auth-token', JSON.stringify(sessionBackup));
           console.log('💾 Enhanced session backup stored in localStorage');
           
           return true;
@@ -149,7 +148,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
           }
         };
         
-        authStorage.set(JSON.stringify(sessionBackup));
+        localStorage.setItem('sb-vkjrqirvdvjbemsfzxof-auth-token', JSON.stringify(sessionBackup));
         console.log('💾 Enhanced manual session stored with full diagnostics');
         
         return true;
@@ -169,7 +168,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
     console.log('🧹 Clearing all session data (enhanced)...');
     setSession(null);
     setUser(null);
-    authStorage.clear();
+    localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
     try {
       await supabase.auth.signOut();
     } catch (error) {
@@ -203,7 +202,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
         }
         
         // Method 2: Check localStorage for developer session backup
-        const storedSession = authStorage.get();
+        const storedSession = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
         if (storedSession) {
           try {
             const parsedSession = JSON.parse(storedSession);
@@ -247,11 +246,11 @@ export const useAuthSessionManager = (): SessionManagerResult => {
               }
             } else {
               console.log('⚠️ STORED SESSION EXPIRED OR INVALID, clearing...');
-              authStorage.remove();
+              localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
             }
           } catch (parseError) {
             console.error('❌ PARSE STORED SESSION ERROR:', parseError);
-            authStorage.remove();
+            localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
           }
         }
         
@@ -286,7 +285,7 @@ export const useAuthSessionManager = (): SessionManagerResult => {
           version: '2.0',
           event_type: event
         };
-        authStorage.set(JSON.stringify(sessionBackup));
+        localStorage.setItem('sb-vkjrqirvdvjbemsfzxof-auth-token', JSON.stringify(sessionBackup));
       } else if (event === 'SIGNED_OUT') {
         console.log('👋 User signed out, clearing enhanced session...');
         await clearSession();

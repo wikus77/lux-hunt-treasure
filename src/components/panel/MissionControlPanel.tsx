@@ -65,7 +65,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'mission_enrollments'
+        table: 'user_mission_registrations'
       }, () => {
         loadParticipantCounts();
       })
@@ -90,7 +90,7 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
       
       // Load participant counts after missions are loaded
       if (data) {
-        loadParticipantCounts(data);
+        loadParticipantCounts();
       }
     } catch (error: any) {
       toast.error("Errore nel caricamento delle missioni", {
@@ -101,16 +101,16 @@ const MissionControlPanel: React.FC<MissionControlPanelProps> = ({ onBack }) => 
     }
   };
 
-  const loadParticipantCounts = async (list?: Mission[]) => {
+  const loadParticipantCounts = async () => {
     try {
       const counts: Record<string, number> = {};
-      const listToUse = list ?? missions;
       
-      for (const mission of listToUse) {
+      for (const mission of missions) {
         const { count, error } = await supabase
-          .from('mission_enrollments')
+          .from('user_mission_registrations')
           .select('*', { count: 'exact', head: true })
-          .eq('mission_id', mission.id);
+          .eq('mission_id', mission.id)
+          .eq('status', 'active');
 
         if (!error) {
           counts[mission.id] = count || 0;

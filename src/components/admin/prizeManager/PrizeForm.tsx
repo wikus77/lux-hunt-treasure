@@ -1,3 +1,4 @@
+
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         {form.formState.errors.address && (
           <p className="text-red-500 text-sm">{form.formState.errors.address.message}</p>
         )}
+        {/* Formato consigliato */}
         <p className="text-xs text-gray-400 mt-1">
           <Info className="h-3 w-3 inline mr-1" />
           Formato consigliato: "Via Nome Via 123" (es. "Via Monte Napoleone 10")
@@ -111,7 +113,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
           <AlertDescription className="text-red-200">
             {geocodeError}
             
-            
+            {/* Suggestions for fixing the address */}
             {suggestions && suggestions.length > 0 && (
               <div className="mt-3 space-y-1">
                 <p className="font-medium">Suggerimenti:</p>
@@ -181,8 +183,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </Alert>
       )}
       
-      
-      
+      {/* Manual coordinates input - now more visible and with instructions */}
       {showManualCoordinates && (
         <div className="glass-card p-4 rounded-md bg-blue-900/20 border border-blue-800/30">
           <h4 className="text-sm font-medium mb-2 flex items-center text-blue-300">
@@ -222,6 +223,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
             </div>
           </div>
           
+          {/* Use coordinates checkbox */}
           <div className="mt-3">
             <div className="flex items-center space-x-2">
               <input
@@ -242,6 +244,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </div>
       )}
       
+      {/* Show toggle button even without error */}
       {!geocodeError && !showManualCoordinates && (
         <div>
           <Button 
@@ -257,6 +260,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </div>
       )}
       
+      {/* Area radius */}
       <div>
         <Label htmlFor="area_radius_m">Raggio dell'area (metri)</Label>
         <Input 
@@ -274,6 +278,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         )}
       </div>
       
+      {/* Dates */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="start_date">Data Inizio</Label>
@@ -288,6 +293,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </div>
       </div>
       
+      {/* Submit button */}
       <div className="flex justify-end mt-6">
         <Button 
           type="submit" 
@@ -310,6 +316,7 @@ const PrizeForm: React.FC<PrizeFormProps> = ({
         </Button>
       </div>
       
+      {/* Auth messages */}
       {!isAuthenticated && (
         <div className="text-amber-400 text-sm mt-2">
           Devi autenticarti prima di poter salvare premi.

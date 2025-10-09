@@ -5,8 +5,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import M1ssionText from "@/components/logo/M1ssionText";
 import HeaderCountdown from "@/components/layout/header/HeaderCountdown";
 import { useLocation } from "wouter";
-import { useScrollDirection } from "@/hooks/useScrollDirection";
-import MinimalHeaderStrip from "@/components/layout/MinimalHeaderStrip";
 
 interface HeaderLayoutProps {
   children?: React.ReactNode;
@@ -25,24 +23,13 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [location] = useLocation();
-  const { shouldHideHeader } = useScrollDirection(50);
   
   // Don't show countdown on map page
   const isMapPage = location === "/map";
   const shouldShowCountdown = showCountdown && !isMapPage;
 
   return (
-    <>
-      {/* No MinimalHeaderStrip for HeaderLayout - it doesn't have agent code */}
-      <motion.header
-        animate={{ 
-          y: shouldHideHeader ? -100 : 0,
-          opacity: shouldHideHeader ? 0 : 1 
-        }}
-        transition={{ 
-          duration: 0.3, 
-          ease: [0.4, 0, 0.2, 1] 
-        }}
+    <header 
       className={`fixed top-0 left-0 right-0 z-50 w-full backdrop-blur-xl bg-black/50 border-b border-white/10 ${className}`}
       style={{
         // CRITICAL FIX: Position below safe zone
@@ -80,8 +67,7 @@ const HeaderLayout: React.FC<HeaderLayoutProps> = ({
       
       {/* Horizontal line with animation */}
       <div className="line-glow"></div>
-    </motion.header>
-    </>
+    </header>
   );
 };
 

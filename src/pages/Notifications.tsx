@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useBuzzSound } from '@/hooks/useBuzzSound';
-import { usePWAHardwareStub } from '@/hooks/usePWAHardwareStub';
 import { useDynamicIslandSafety } from "@/hooks/useDynamicIslandSafety";
 import { useNotificationsDynamicIsland } from '@/hooks/useNotificationsDynamicIsland';
 import { useNotificationsAutoReload } from '@/hooks/useNotificationsAutoReload';
@@ -16,7 +15,6 @@ const Notifications = () => {
   const [filter, setFilter] = useState<'all' | 'unread' | 'important'>('all');
   const { notifications, markAsRead, deleteNotification, markAllAsRead, reloadNotifications } = useNotifications();
   const { playSound } = useBuzzSound();
-  const { triggerHaptic } = usePWAHardwareStub();
   
   // Custom hooks for managing notifications behavior
   const { updateDynamicIslandOnRead, closeDynamicIsland } = useNotificationsDynamicIsland(notifications);
@@ -24,21 +22,18 @@ const Notifications = () => {
   useDynamicIslandSafety();
   useNotificationsAutoReload(reloadNotifications);
 
-  const handleMarkAsRead = async (id: string) => {
-    await triggerHaptic('tick');
+  const handleMarkAsRead = (id: string) => {
     markAsRead(id);
     playSound();
     updateDynamicIslandOnRead(id);
   };
 
-  const handleDeleteNotification = async (id: string) => {
-    await triggerHaptic('selection');
+  const handleDeleteNotification = (id: string) => {
     deleteNotification(id);
     playSound();
   };
 
-  const handleMarkAllAsRead = async () => {
-    await triggerHaptic('success');
+  const handleMarkAllAsRead = () => {
     markAllAsRead();
     playSound();
     closeDynamicIsland();
@@ -51,18 +46,28 @@ const Notifications = () => {
 
   return (
     <motion.div 
-      className="w-full"
+      className="bg-gradient-to-b from-[#131524]/70 to-black w-full"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
       style={{ 
         height: '100dvh',
         overflow: 'hidden',
-        position: 'relative',
-        background: 'linear-gradient(to bottom, #0a0b14 0%, #050508 100%)'
+        position: 'relative'
       }}
     >
-      <UnifiedHeader />
+      {/* Fixed Header */}
+      <header 
+        className="fixed top-0 left-0 right-0 z-50"
+        style={{
+          height: '72px',
+          paddingTop: 'env(safe-area-inset-top, 47px)',
+          background: 'rgba(19, 21, 33, 0.55)',
+          backdropFilter: 'blur(12px)'
+        }}
+      >
+        <UnifiedHeader />
+      </header>
       
       {/* Main scrollable content */}
       <main
@@ -92,7 +97,7 @@ const Notifications = () => {
               className="text-white"
               style={{ textShadow: "0 0 10px rgba(255, 255, 255, 0.6), 0 0 20px rgba(255, 255, 255, 0.3)" }}
             >
-              TICE
+              TIFICHE
             </span>
           </motion.h1>
           

@@ -90,6 +90,8 @@ export const M1ssionFirebasePushTestPanel = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">
+            <p><strong>Project ID:</strong> vkjrqirvdvjbemsfzxof</p>
+            <p><strong>Firebase Project:</strong> m1ssion-app</p>
             <p><strong>Function:</strong> send-firebase-push</p>
             <p><strong>Status:</strong> {testResult?.success ? '✅ Connected' : 'Ready to test'}</p>
           </div>

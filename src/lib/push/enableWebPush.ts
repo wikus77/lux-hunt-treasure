@@ -1,127 +1,58 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Robust Web Push Enable Function (JWT-safe, VAPID unified) */
+/* W3C Web Push Enable Function */
 
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
+function b64ToUint8Array(base64: string) {
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+  const base64Safe = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64Safe);
+  const arr = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; ++i) arr[i] = raw.charCodeAt(i);
+  return arr;
+}
 
 export async function enableWebPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     throw new Error('Push API non supportata');
   }
-
-  // 1) Ensure SW registration (iOS PWA can race without controller)
-  try {
-    if (!navigator.serviceWorker.controller) {
-      await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-    }
-  } catch {
-    // Keep going, ready will still resolve if already registered
-  }
-
-  // 2) Permission
-  const perm = await Notification.requestPermission();
-  if (perm !== 'granted') throw new Error('Permesso notifiche negato');
-
-  // 3) Ensure session/token ready (iOS PWA race-safe)
-  const { supabase } = await import('@/integrations/supabase/client');
-  let { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    await new Promise<void>((resolve) => {
-      const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-        if (s) {
-          sub.subscription?.unsubscribe();
-          resolve();
-        }
-      });
-      // Fallback timeout to avoid hanging forever
-      setTimeout(() => {
-        sub.subscription?.unsubscribe();
-        resolve();
-      }, 3000);
-    });
-    session = (await supabase.auth.getSession()).data.session;
-  }
-  const token = session?.access_token;
-  if (!token) throw new Error('User non autenticato (JWT mancante)');
-
-  // 4) Get active registration and subscription
   const reg = await navigator.serviceWorker.ready;
-  let sub = await reg.pushManager.getSubscription();
-  const vapidKey = await loadVAPIDPublicKey();
-  const vapidKeyUint8 = urlBase64ToUint8Array(vapidKey);
-  
-  // Check if existing subscription uses different VAPID key
-  if (sub) {
-    // @ts-ignore - not all implementations expose options
-    const curKey = sub.options?.applicationServerKey;
-    const sameKey =
-      curKey &&
-      vapidKeyUint8.byteLength === curKey.byteLength &&
-      new Uint8Array(curKey).every((v, i) => v === vapidKeyUint8[i]);
-
-    if (!sameKey) {
-      console.log('[ENABLE-WEBPUSH] Unsubscribing from old VAPID key');
-      try { await sub.unsubscribe(); } catch {}
-      sub = null;
-    }
+  if (Notification.permission !== 'granted') {
+    const p = await Notification.requestPermission();
+    if (p !== 'granted') throw new Error('permesso negato');
   }
+  const vapid = "BJMuwT6jgq_wAQIccbQKoVOeUkc4dB64CNtSicE8zegs12sHZs0Jz0itIEv2USImnhstQtw219nYydIDKr91n2o";
+  if (!vapid) throw new Error('VAPID key mancante');
 
-  let createdNew = false;
-  if (!sub) {
-    sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: vapidKeyUint8 as unknown as BufferSource,
-    });
-    createdNew = true;
-  }
-
-  // 5) Invoke webpush-upsert with explicit Authorization header
-  const raw = sub.toJSON();
-  
-  // Determine platform
-  const platform = (navigator as any).userAgentData?.platform || 
-                   navigator.platform || 
-                   'web';
-  
-  // Helper to convert ArrayBuffer to base64url
-  const arrayBufferToBase64Url = (buffer: ArrayBuffer | null): string => {
-    if (!buffer) return '';
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-  };
-  
-  const body = {
-    user_id: session!.user.id,
-    provider: 'webpush',
-    endpoint: raw.endpoint,
-    keys: {
-      p256dh: arrayBufferToBase64Url(sub.getKey('p256dh')),
-      auth: arrayBufferToBase64Url(sub.getKey('auth'))
-    },
-    device_info: {
-      ua: navigator.userAgent,
-      platform
-    }
-  };
-
-  const { data, error } = await supabase.functions.invoke('webpush-upsert', {
-    body,
-    headers: { Authorization: `Bearer ${token}` },
+  const key = b64ToUint8Array(vapid);
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: key as unknown as BufferSource,
   });
 
-  console.log('[ENABLE-WEBPUSH] webpush-upsert response:', { data, error });
-  
-  if (error || (data && data.error)) {
-    console.error('[ENABLE-WEBPUSH] webpush-upsert failed:', { error, data });
-    if (createdNew) {
-      try { await sub.unsubscribe(); } catch {}
-    }
-    const errMsg = error?.message || data?.error || 'Unknown error';
-    throw new Error(`webpush-upsert failed: ${errMsg}`);
-  }
+  const body = await (async () => {
+    const json = JSON.parse(JSON.stringify(sub));
+    const { endpoint, keys } = json;
+    return {
+      endpoint,
+      p256dh: keys?.p256dh,
+      auth: keys?.auth,
+      ua: navigator.userAgent,
+    };
+  })();
 
+  const url = "https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/push_subscribe";
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk",
+      'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`,
+      'Origin': window.location.origin,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    await sub.unsubscribe().catch(()=>{});
+    throw new Error(`push_subscribe failed: ${res.status}`);
+  }
   return sub;
 }

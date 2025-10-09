@@ -13,7 +13,6 @@ const BottomNavigationComponent = () => {
   const { navigate } = useWouterNavigation();
   const isPWA = typeof window !== 'undefined' && 
     window.matchMedia('(display-mode: standalone)').matches;
-  const reduceAnimations = currentPath === '/profile' || currentPath === '/settings/agent-profile';
 
   console.log('🧭 BottomNavigation render:', {
     currentPath,
@@ -164,16 +163,16 @@ const BottomNavigationComponent = () => {
                         opacity: [1, 0.9, 1] 
                       }}
                       transition={{ 
-                        repeat: reduceAnimations ? 0 : Infinity, 
+                        repeat: Infinity, 
                         duration: 3,
                         ease: "easeInOut"
                       }}
                     >
-                      <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] opacity-30 blur-sm ${!reduceAnimations ? 'animate-pulse' : ''}`} />
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-r from-[#00D1FF] to-[#7B2EFF] opacity-30 blur-sm animate-pulse" />
                       <div
                         className="absolute inset-0 rounded-full border-2 border-[#00D1FF]/60 animate-spin-slow"
                         style={{
-                          animation: reduceAnimations ? "spin 1.6s linear 1" : "spin 8s linear infinite",
+                          animation: "spin 8s linear infinite",
                         }}
                       />
                       <div
@@ -197,7 +196,7 @@ const BottomNavigationComponent = () => {
                         ]
                       } : {}}
                       transition={{ 
-                        repeat: isActive && !reduceAnimations ? Infinity : 0, 
+                        repeat: isActive ? Infinity : 0, 
                         duration: 3,
                         ease: "easeInOut"
                       }}
@@ -222,7 +221,7 @@ const BottomNavigationComponent = () => {
                         exit={{ scale: 0, opacity: 0 }}
                         transition={{ 
                           duration: 2, 
-                          repeat: reduceAnimations ? 0 : Infinity,
+                          repeat: Infinity,
                           repeatType: "reverse"
                         }}
                       >
@@ -248,7 +247,7 @@ const BottomNavigationComponent = () => {
                     ]
                   } : {}}
                   transition={{ 
-                    repeat: isActive && !reduceAnimations ? Infinity : 0, 
+                    repeat: isActive ? Infinity : 0, 
                     duration: 3,
                     ease: "easeInOut"
                   }}

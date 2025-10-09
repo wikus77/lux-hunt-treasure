@@ -3,7 +3,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { securityAlert } from './security-config';
-import { authStorage } from '@/utils/auth-storage';
 
 export interface SecurityCheckResult {
   level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'PASS';
@@ -149,7 +148,7 @@ const checkSessionSecurity = (): SecurityIssue[] => {
   const issues: SecurityIssue[] = [];
 
   // Check for insecure session storage
-  const authToken = authStorage.get();
+  const authToken = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
   if (authToken) {
     try {
       const tokenData = JSON.parse(authToken);

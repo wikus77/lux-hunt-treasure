@@ -4,7 +4,34 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
+
+// VAPID Public Key - use environment variable if available
+const VAPID_PUBLIC_KEY = 'BLQd4od5-KawKR0JkKCT6SqhbZOBOkN_yrDYyNs8rUP0PJ3WmjJxRaMfqfKxhGKUFEGebx8hUAWZqJLSuSFP-Tc';
+
+/**
+ * Convert base64url string to Uint8Array for VAPID
+ */
+function urlB64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+/**
+ * Get VAPID public key
+ */
+export function getVAPIDPublicKey(): string {
+  return VAPID_PUBLIC_KEY;
+}
 
 export interface PushRegistrationPayload {
   user_id: string;
@@ -47,13 +74,10 @@ export async function registerPush(userId: string): Promise<{ endpoint: string; 
     }
   }
 
-  // 5) Load VAPID key from single source of truth and subscribe
-  const vapidKey = await loadVAPIDPublicKey();
-  const applicationServerKey = urlBase64ToUint8Array(vapidKey);
-  
+  // 5) Subscribe with VAPID
   const subscription = await registration.pushManager.subscribe({
     userVisibleOnly: true,
-    applicationServerKey: applicationServerKey as unknown as BufferSource,
+    applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY) as unknown as BufferSource,
   });
 
   // 6) Extract keys

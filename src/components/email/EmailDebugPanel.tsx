@@ -23,8 +23,6 @@ const EmailDebugPanel: React.FC<EmailDebugPanelProps> = ({
   setShowDetailedDebug
 }) => {
   if (!lastError && !showDebugInfo) return null;
-
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
   
   return (
     <div className="mb-4 space-y-2">
@@ -85,7 +83,7 @@ const EmailDebugPanel: React.FC<EmailDebugPanelProps> = ({
               variant="outline" 
               size="sm"
               className="text-xs flex items-center gap-1"
-              onClick={() => window.open(`${supabaseUrl}/functions/send-email/logs`, "_blank")}
+              onClick={() => window.open("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/send-email/logs", "_blank")}
             >
               <Bug className="h-3 w-3" /> Visualizza logs completi
             </Button>
