@@ -39,14 +39,11 @@ const DevStripeKeysSetup = () => {
     }
   };
 
-  const generateSupabaseCLICommand = () => {
-    return `supabase secrets set \\
   STRIPE_PUBLISHABLE_KEY="${publishableKey}" \\
   STRIPE_SECRET_KEY="${secretKey}"`;
   };
 
   const createGitHubWorkflow = async () => {
-    const workflowContent = `name: Set Supabase Stripe Secrets
 on:
   workflow_dispatch:
     inputs:
@@ -62,18 +59,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Install Supabase CLI
         run: |
-          curl -fsSL https://cli.supabase.com/install/linux | sh
-          echo "$HOME/.supabase/bin" >> $GITHUB_PATH
       - name: Login & Link
         env:
-          SUPABASE_ACCESS_TOKEN: \${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
-          supabase link --project-ref "\${{ secrets.PROJECT_REF }}"
       - name: Set Secrets
         run: |
-          supabase secrets set \\
             STRIPE_PUBLISHABLE_KEY="\${{ inputs.STRIPE_PUBLISHABLE_KEY }}" \\
             STRIPE_SECRET_KEY="\${{ inputs.STRIPE_SECRET_KEY }}"`;
 
@@ -81,8 +72,6 @@ jobs:
     const blob = new Blob([workflowContent], { type: 'text/yaml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'set-supabase-secrets.yml';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -107,7 +96,6 @@ jobs:
             Stripe Live Keys Setup
           </h1>
           <p className="text-muted-foreground">
-            Configura le chiavi Stripe LIVE in modo sicuro tramite Supabase CLI o GitHub Actions
           </p>
         </div>
 
@@ -116,7 +104,6 @@ jobs:
           <Shield className="h-4 w-4" />
           <AlertDescription>
             <strong>Sicurezza:</strong> Le secret keys non vengono mai esposte nel frontend. 
-            Usa solo strumenti CLI/CI per inserirle nei Supabase Project Secrets.
           </AlertDescription>
         </Alert>
 
@@ -189,7 +176,6 @@ jobs:
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Terminal className="h-5 w-5" />
-                Supabase CLI
               </CardTitle>
               <CardDescription>
                 Copia il comando per impostare i secrets tramite CLI
@@ -197,7 +183,6 @@ jobs:
             </CardHeader>
             <CardContent>
               <Button
-                onClick={() => copyToClipboard(generateSupabaseCLICommand(), "Comando CLI")}
                 disabled={!areKeysValid}
                 className="w-full"
               >
@@ -238,9 +223,7 @@ jobs:
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <h4 className="font-semibold">1. Comando Supabase CLI</h4>
                 <div className="bg-muted/50 p-3 rounded-md font-mono text-sm overflow-x-auto">
-                  {generateSupabaseCLICommand()}
                 </div>
               </div>
 
@@ -251,8 +234,6 @@ jobs:
                   <p>• Vai su GitHub → Repo → Settings → Secrets and variables → Actions</p>
                   <p>• Crea questi secrets:</p>
                   <div className="ml-4 font-mono">
-                    <p>- SUPABASE_ACCESS_TOKEN (dal tuo profilo Supabase)</p>
-                    <p>- PROJECT_REF (vkjrqirvdvjbemsfzxof)</p>
                   </div>
                   <p>• Esegui il workflow manualmente da GitHub Actions tab</p>
                 </div>

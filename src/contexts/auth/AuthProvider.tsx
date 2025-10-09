@@ -4,13 +4,13 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  * 
  * AuthProvider - Sistema unificato di autenticazione per M1SSION™
- * PWA Safari iOS ottimizzato con persistenza nativa Supabase
+ * PWA Safari iOS ottimizzato con persistenza nativa SupaEnvSafe
  * UNIFIED SYSTEM - Unica fonte di verità per l'auth
  */
 
 import React, { useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { User, Session } from '@SupaEnvSafe/SupaEnvSafe-js';
+import { SupaEnvSafe } from '@/integrations/SupaEnvSafe/client';
 import AuthContext from './AuthContext';
 import { AuthContextType } from './types';
 import { authHealthLogger } from '@/utils/AuthHealthCheckLog';
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (!lastClear || (now - parseInt(lastClear)) > oneHour) {
           log("🧹 PWA: Clearing stale auth cache");
-          localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+          localStorage.removeItem(`sb-${(import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || 'project')}-auth-token`);
           localStorage.setItem('auth_cache_clear', now.toString());
         }
       };
@@ -84,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       while (attempts < maxAttempts && !session) {
         try {
-          const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+          const { data: { session: currentSession }, error } = await SupaEnvSafe.auth.getSession();
           
           if (error) {
             log(`Errore getSession (tentativo ${attempts + 1})`, error);
@@ -135,12 +135,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
   }, []);
 
-  // LISTENER STATO AUTH - Gestione eventi Supabase + MEMORY LEAK FIX
+  // LISTENER STATO AUTH - Gestione eventi SupaEnvSafe + MEMORY LEAK FIX
   useEffect(() => {
     log("Setup auth state listener");
     let timeoutId: NodeJS.Timeout | null = null;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = SupaEnvSafe.auth.onAuthStateChange(
       async (event, newSession) => {
         log(`Auth event: ${event}`, newSession?.user?.email || 'NO USER');
         
@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         log("PWA tornata attiva - verifica sessione");
         
         try {
-          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          const { data: { session: currentSession } } = await SupaEnvSafe.auth.getSession();
           
           // Verifica se sessione è cambiata
           if (currentSession && (!session || session.expires_at !== currentSession.expires_at)) {
@@ -239,7 +239,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     
     try {
       // Prima: user_roles table
-      const { data: rolesData } = await supabase
+      const { data: rolesData } = await SupaEnvSafe
         .from('user_roles')
         .select('role')
         .eq('user_id', userId);
@@ -252,7 +252,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Fallback: profiles table
-      const { data: profileData } = await supabase
+      const { data: profileData } = await SupaEnvSafe
         .from('profiles')
         .select('role')
         .eq('id', userId)
@@ -296,7 +296,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     log("Login attempt", email);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await SupaEnvSafe.auth.signInWithPassword({
         email,
         password,
       });
@@ -319,7 +319,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     log("Register attempt", email);
     
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error } = await SupaEnvSafe.auth.signUp({
         email,
         password,
         options: {
@@ -345,7 +345,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     log("Reset password attempt", email);
     
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await SupaEnvSafe.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/reset`
       });
 
@@ -367,7 +367,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     log("Resend verification attempt", email);
     
     try {
-      const { error } = await supabase.auth.resend({
+      const { error } = await SupaEnvSafe.auth.resend({
         type: 'signup',
         email,
         options: {
@@ -394,8 +394,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // 🔄 FORCE LOADING STATE per evitare race conditions
       setIsLoading(true);
       
-      // Supabase signOut - NO localStorage cleanup manuale
-      await supabase.auth.signOut();
+      // SupaEnvSafe signOut - NO localStorage cleanup manuale
+      await SupaEnvSafe.auth.signOut();
       
       // Cleanup stato locale IMMEDIATO + sessionStorage
       setUser(null);

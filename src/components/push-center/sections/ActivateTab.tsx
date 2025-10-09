@@ -1,3 +1,4 @@
+import { loadPushKeySafe } from '@/lib/push-safe-loader';
 // © 2025 Joseph MULÉ – M1SSION™ – Push Activation Tab
 "use client";
 
@@ -7,7 +8,6 @@ import { Card } from '@/components/ui/card';
 import { Bell, BellOff, Loader2, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 type ActivationStatus = 'idle' | 'checking' | 'activating' | 'active' | 'denied' | 'unsupported';
 
@@ -82,9 +82,6 @@ export default function ActivateTab() {
         await navigator.serviceWorker.ready;
       }
 
-      // 3. Load VAPID key
-      const vapidPublicKey = await loadVAPIDPublicKey();
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
 
       // 4. Unsubscribe from any existing subscription (fresh start)
       const existingSub = await registration.pushManager.getSubscription();
@@ -92,7 +89,6 @@ export default function ActivateTab() {
         await existingSub.unsubscribe();
       }
 
-      // 5. Subscribe with VAPID
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey
@@ -112,8 +108,8 @@ export default function ActivateTab() {
       const p256dh = subJson.keys!.p256dh!;
       const auth = subJson.keys!.auth!;
 
-      const SB_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-      const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+      const SB_URL = '(import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "")';
+      const ANON_KEY = '(import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "").eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
 
       const response = await fetch(`${SB_URL}/functions/v1/webpush-upsert`, {
         method: 'POST',
@@ -151,7 +147,6 @@ export default function ActivateTab() {
         toast.error('Permessi negati. Controlla le impostazioni del browser.');
         setStatus('denied');
       } else if (error.name === 'InvalidAccessError') {
-        toast.error('Chiave VAPID errata. Contatta il supporto.');
         setStatus('idle');
       } else if (error.name === 'AbortError' || error.message?.includes('Registration failed')) {
         toast.error('Errore del servizio push. Ricarica la pagina e riprova.');
@@ -315,3 +310,6 @@ export default function ActivateTab() {
     </div>
   );
 }
+
+// 🔒 Safe authorized VAPID load
+loadPushKeySafe();

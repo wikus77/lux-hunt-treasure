@@ -1,15 +1,11 @@
 // © 2025 Joseph MULÉ – M1SSION™ – NORAH AI Functions Base URL
-// Centralizes Supabase Functions base URL to prevent 404 HTML responses
 
-import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Get the correct base URL for Supabase Edge Functions
  * Handles both preview (.lovable.app) and production (m1ssion.eu) environments
  */
 export function getFunctionsBase(): string {
   // Primary: use client URL + /functions/v1
-  const clientUrl = (supabase as any).supabaseUrl;
   if (clientUrl) {
     return `${clientUrl}/functions/v1`;
   }
@@ -17,22 +13,16 @@ export function getFunctionsBase(): string {
   // Fallback: detect from performance entries
   try {
     const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-    const entry = entries.find(e => e.name.includes('.supabase.co'));
     if (entry) {
       const url = new URL(entry.name);
-      const projectRef = url.hostname.split('.')[0];
-      return `https://${projectRef}.supabase.co/functions/v1`;
     }
   } catch (e) {
     console.warn('[NORAH] Could not detect Functions base from performance entries:', e);
   }
 
-  // Ultimate fallback: use known project ref
-  return 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
 }
 
 /**
- * Invoke a Supabase Edge Function with proper error handling
  */
 export async function invokeFunctionRaw<T = any>(
   functionName: string,
@@ -47,7 +37,6 @@ export async function invokeFunctionRaw<T = any>(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         ...options.headers,
       },
       body: body ? JSON.stringify(body) : undefined,

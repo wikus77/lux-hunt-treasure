@@ -4,6 +4,16 @@
 import { supabase } from '@/integrations/supabase/client';
 import { securityAlert } from './security-config';
 
+/** Deriva la storage key dal VITE_SUPABASE_URL (no ref hardcoded) */
+function getAuthStorageKey(): string {
+  // import.meta.env in Vite; fallback vuoto per evitare crash in test
+  const url = (import.meta as any)?.env?.VITE_SUPABASE_URL ?? '';
+  const m = String(url).match(/^https?://([^.]+).supabase.co/i);
+  const ref = m?.[1] ?? 'default';
+  return `sb-${ref}-auth-token`;
+}
+
+
 export interface SecurityCheckResult {
   level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'PASS';
   score: number;
@@ -148,7 +158,7 @@ const checkSessionSecurity = (): SecurityIssue[] => {
   const issues: SecurityIssue[] = [];
 
   // Check for insecure session storage
-  const authToken = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+  const authToken = localStorage.getItem(getAuthStorageKey());
   if (authToken) {
     try {
       const tokenData = JSON.parse(authToken);

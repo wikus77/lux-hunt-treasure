@@ -2,7 +2,6 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getMessaging, getToken, deleteToken, onMessage, MessagePayload, Messaging } from 'firebase/messaging';
 import { supabase } from '@/integrations/supabase/client';
-import { VAPID_PUBLIC_KEY } from '@/lib/vapid';
 
 // Firebase configuration for M1SSION app
 const firebaseConfig = {
@@ -135,7 +134,6 @@ function validateUUID(uuid: string): boolean {
 /**
  * Register service worker and get FCM token
  */
-export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }): Promise<string> {
   console.debug('[PUSH] Starting SW registration and token generation...');
   
   // Check service worker support
@@ -158,10 +156,7 @@ export async function registerSwAndGetToken({ vapidKey }: { vapidKey: string }):
     // Get messaging instance
     const messaging = getMessagingInstance();
     
-    // Generate token with VAPID key and service worker registration  
-    console.debug('[PUSH] Generating FCM token with hardcoded VAPID...');
     const token = await getToken(messaging, {
-      vapidKey: VAPID_PUBLIC_KEY, // use hardcoded VAPID
       serviceWorkerRegistration: registration
     });
     
@@ -317,7 +312,6 @@ export async function regenerateFCMToken(): Promise<string | null> {
     console.log('🗑️ [M1SSION FCM] Old token deleted');
     
     // Generate new token
-    return await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
     
   } catch (error) {
     console.error('❌ [M1SSION FCM] Token regeneration failed:', error);
@@ -430,7 +424,6 @@ export async function enablePushNotifications(): Promise<PushEnableResult> {
 
     // 6. Generate FCM token with comprehensive logging
     console.debug('[PUSH] Generating FCM token...');
-    const token = await registerSwAndGetToken({ vapidKey: VAPID_PUBLIC_KEY });
     
     if (!token || token === '') {
       console.error('[PUSH] No token generated');

@@ -1,10 +1,8 @@
 /**
- * M1SSION™ VAPID Utilities - Common functions for Web Push
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED
  */
 
 /**
- * Convert URL-safe base64 string to Uint8Array for VAPID applicationServerKey
  * Handles proper padding and character replacement for Web Push subscriptions
  * @param base64url - base64url encoded string
  * @returns Uint8Array (typically 65 bytes for P-256 uncompressed keys)
@@ -65,10 +63,5 @@ export function detectPushProvider(endpoint: string): 'apns' | 'fcm' | 'webpush'
 }
 
 /**
- * Get VAPID public key for Web Push subscriptions
- * Uses the unified VAPID source from @/lib/config/push
  */
-import { getVAPIDPublicWeb } from '@/lib/config/push';
-export function getVAPIDPublicKey(): string {
-  return getVAPIDPublicWeb();
 }

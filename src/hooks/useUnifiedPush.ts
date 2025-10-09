@@ -7,7 +7,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './use-auth';
 import { supabase } from '@/integrations/supabase/client';
-import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 import { subscribeWebPushAndSave, looksLikeWebPushEndpoint, WebPushSubscriptionPayload } from '@/lib/push/webpush';
 import { UnifiedSubscription, detectPlatform } from '@/lib/push/types';
 import { toast } from 'sonner';
@@ -107,9 +106,7 @@ export const useUnifiedPush = () => {
     console.log('🔄 [UNIFIED-PUSH] Starting unified subscription process...');
 
     try {
-      const vapidKey = await loadVAPIDPublicKey();
       const platform = detectPlatform();
-      console.log('🔑 [UNIFIED-PUSH] VAPID key loaded:', vapidKey.slice(0, 20) + '...');
       console.log('📱 [UNIFIED-PUSH] Platform detected:', platform);
 
       // Check permission first
@@ -132,7 +129,6 @@ export const useUnifiedPush = () => {
         console.log('🍎 [UNIFIED-PUSH] Using Web Push for iOS/Safari/PWA');
         
         try {
-          const applicationServerKey = urlBase64ToUint8Array(vapidKey);
           const subscription = await swReg.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: applicationServerKey as unknown as BufferSource
@@ -154,7 +150,7 @@ export const useUnifiedPush = () => {
           };
 
           // Save to database
-          const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-upsert', {
+          const response = await fetch('https://${(import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || 'project')}.supabase.co/functions/v1/webpush-upsert', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -172,7 +168,6 @@ export const useUnifiedPush = () => {
 
         } catch (error) {
           if (error instanceof TypeError && error.message.includes('applicationServerKey')) {
-            throw new Error('VAPID key invalida: verifica conversione base64url→Uint8Array');
           }
           throw error;
         }
@@ -189,7 +184,6 @@ export const useUnifiedPush = () => {
             console.log('🔥 [UNIFIED-PUSH] Attempting FCM...');
             const messaging = getMessaging();
             const token = await getToken(messaging, { 
-              vapidKey: vapidKey,
               serviceWorkerRegistration: swReg 
             });
 
@@ -223,7 +217,6 @@ export const useUnifiedPush = () => {
           const webPushResult = await subscribeWebPushAndSave({
             userId: user.id,
             swReg,
-            vapidPublicKey: vapidKey,
             platform: platform.platform
           });
 

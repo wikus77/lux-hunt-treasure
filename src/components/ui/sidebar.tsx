@@ -731,7 +731,7 @@ const SidebarMenuSubButton = React.forwardRef<
     />
   )
 })
-SidebarMenuSubButton.displayName = "SidebarMenuSubButton"
+SidebarMenuSubButton.displayName = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "")
 
 export {
   Sidebar,

@@ -39,7 +39,7 @@ const dryRunPreferences = async (userId?: string): Promise<any> => {
     console.log(`🔍 [M1_NOTIF_TEST] Testing preferences for user ${targetUserId}...`);
     
     // Manual dry-run endpoint call (to be exposed by notifier-engine)
-    const url = new URL(`https://vkjrqirvdvjbemsfzxof.functions.supabase.co/notifier-engine/dry-run`);
+    const url = new URL(`https://(import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "").functions.supabase.co/notifier-engine/dry-run`);
     url.searchParams.set('user_id', targetUserId);
     
     const response = await fetch(url.toString(), {
@@ -86,7 +86,7 @@ export const initDiagnostics = () => {
       });
       if (cooldownHours != null) qs.set('cooldown', String(cooldownHours));
       
-      const baseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine';
+      const baseUrl = '(import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "")/functions/v1/notifier-engine';
       const res = await fetch(`${baseUrl}/dry-run?${qs.toString()}`, { 
         method: 'POST',
         headers: {

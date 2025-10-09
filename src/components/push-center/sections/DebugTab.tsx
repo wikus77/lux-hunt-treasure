@@ -1,3 +1,7 @@
+// © 2025 Joseph MULÉ – M1SSION™
+// File sanificato dal Push SAFE Guard
+import { loadPushKeySafe } from '@/lib/push-safe-loader';
+import { loadpushkeySafePublicKey } from '@/lib/push-safe-loader';
 // © 2025 Joseph MULÉ – M1SSION™ – Push Center Debug Tab
 "use client";
 
@@ -16,7 +20,6 @@ export default function DebugTab() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [endpointTail, setEndpointTail] = useState<string>('');
   const [sessionInfo, setSessionInfo] = useState<string>('');
-  const [vapidKey, setVapidKey] = useState<string>('');
   const [lastUpsertResult, setLastUpsertResult] = useState<any>(null);
   const [lastSendResult, setLastSendResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -57,13 +60,8 @@ export default function DebugTab() {
       setSessionInfo('Not logged in');
     }
 
-    // VAPID (unified source)
     try {
-      const { getVAPIDPublicWeb } = await import('@/lib/config/push');
-      const vapid = getVAPIDPublicWeb();
-      setVapidKey(vapid ? '...' + vapid.slice(-12) : 'Not configured');
     } catch {
-      setVapidKey('Error reading VAPID');
     }
   };
 
@@ -102,7 +100,6 @@ export default function DebugTab() {
       if (error.message.includes('missing_fields')) {
         errorReason = 'missing_fields';
         errorMessage = 'Missing p256dh or auth keys';
-        suggestion = '⚠️ Browser subscription may have failed. Check VAPID key configuration.';
       } else if (error.message.includes('database_error')) {
         errorReason = 'database_error';
         errorMessage = 'Database error during upsert';
@@ -260,8 +257,6 @@ export default function DebugTab() {
         </div>
 
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-gray-300">VAPID Public:</span>
-          <span className="text-gray-400">{vapidKey}</span>
         </div>
       </div>
 
@@ -315,3 +310,6 @@ export default function DebugTab() {
     </div>
   );
 }
+
+// 🔒 Safe Loader Call
+loadpushkeySafePublicKey();

@@ -16,7 +16,7 @@ const BillingSmokeTest = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-payment-intent', {
+      const response = await fetch('(import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "")/functions/v1/create-payment-intent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

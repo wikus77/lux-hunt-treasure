@@ -1,3 +1,12 @@
+
+/** Deriva dinamicamente la storage key dal VITE_SUPABASE_URL (niente project-ref hardcoded) */
+function getAuthStorageKey(): string {
+  const url = (import.meta as any)?.env?.VITE_SUPABASE_URL ?? '';
+  const m = String(url).match(/^https?://([^.]+)\.supabase\.co/i);
+  const ref = m?.[1] ?? 'default';
+  return `sb-${ref}-auth-token`;
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Session Security & Management Utilities
 
@@ -71,7 +80,7 @@ export class SecureSessionManager {
       
       // Clear all auth-related items
       const authKeys = [
-        'sb-vkjrqirvdvjbemsfzxof-auth-token',
+        getAuthStorageKey(),
         'hasSeenPostLoginIntro',
         'auth_cache_clear'
       ];

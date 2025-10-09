@@ -159,11 +159,11 @@ const PushAutoPreflightPage = () => {
     try {
       // Try OPTIONS request to check if function exists (NO push sent)
       const response = await fetch(
-        'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-send',
+        '(import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "")/functions/v1/webpush-send',
         { 
           method: 'OPTIONS',
           headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
+            'apikey': '(import.meta.env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "").eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk'
           }
         }
       );

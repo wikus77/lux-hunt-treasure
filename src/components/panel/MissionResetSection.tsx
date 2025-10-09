@@ -32,7 +32,7 @@ export const MissionResetSection: React.FC = () => {
       console.log('👤 User session:', session.user.email);
       
       // Fix: Use fetch directly to properly send JSON body
-      const supabaseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+      const supabaseUrl = '(import.meta.env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || "")';
       const response = await fetch(`${supabaseUrl}/functions/v1/reset-mission`, {
         method: 'POST',
         headers: {
