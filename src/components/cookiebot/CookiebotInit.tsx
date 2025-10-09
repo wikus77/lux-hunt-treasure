@@ -111,7 +111,7 @@ const CookiebotInit: React.FC = () => {
           };
           
           // Simulare l'evento di consenso
-          const event = new Event((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""));
+          const event = new Event('CookieScriptConsentFallback');
           document.dispatchEvent(event);
         }
       }, 3000);

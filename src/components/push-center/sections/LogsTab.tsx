@@ -6,7 +6,7 @@ import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function LogsTab() {
-  const SUPABASE_PROJECT_ID = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "");
+  const SUPABASE_PROJECT_ID = 'vkjrqirvdvjbemsfzxof';
 
   const openLogs = (functionName: string) => {
     window.open(

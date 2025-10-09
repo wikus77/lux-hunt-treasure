@@ -35,7 +35,7 @@ const SettingsPage = () => {
   const [sessionStatus, setSessionStatus] = useState<string>('Verifica...');
   const geo = useGeolocation();
   
-  const supabaseProjectId = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "");
+  const supabaseProjectId = "vkjrqirvdvjbemsfzxof";
 
   useEffect(() => {
     checkGeolocation();

@@ -68,7 +68,7 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
     } catch (err) {
       console.error('Error in checkVerificationStatus:', err);
     }
-  }, (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""));
+  }, 'checkVerificationStatus');
 
   // Resend verification email
   const resendVerificationEmail = preserveFunctionName(async () => {
@@ -102,7 +102,7 @@ export const EmailVerificationFlow: React.FC<EmailVerificationFlowProps> = ({
     } finally {
       setIsResending(false);
     }
-  }, (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""));
+  }, 'resendVerificationEmail');
 
   // Countdown timer
   useEffect(() => {

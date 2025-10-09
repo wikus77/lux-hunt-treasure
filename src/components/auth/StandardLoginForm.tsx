@@ -88,7 +88,7 @@ export function StandardLoginForm({ verificationStatus }: StandardLoginFormProps
       
       // Clear intro flag only if going to mission-intro
       if (!target) {
-        sessionStorage.removeItem((import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || ""));
+        sessionStorage.removeItem("hasSeenPostLoginIntro");
       }
       
       navigate(finalTarget);

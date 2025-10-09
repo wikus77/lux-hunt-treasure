@@ -21,7 +21,7 @@ const AgentCodeDisplay: React.FC<AgentCodeDisplayProps> = ({
   
   // Helper function to generate a new agent code
   const generateAgentCode = async () => {
-    const characters = (import.meta.env.VITE_SUPABASE_REF || process.env.VITE_SUPABASE_REF || "");
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     const RESERVED_ADMIN_CODE = 'X0197';
     
     let code;

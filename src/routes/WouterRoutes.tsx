@@ -56,6 +56,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import SendNotificationPage from "@/pages/admin/SendNotificationPage";
 import MissionPanelPage from "@/pages/admin/MissionPanelPage";
+import PushTestPage from "@/pages/PushTestPage";
 import AdminPushConsolePage from "@/pages/push/AdminPushConsolePage";
 import PushSenderPanel from "@/pages/panel/PushSenderPanel";
 import NotificationDebug from "@/pages/NotificationDebug";
@@ -64,12 +65,33 @@ import PushDiagnosi from "@/pages/PushDiagnosi";
 import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import PushTest from "@/pages/debug/PushTest";
+import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
+// VAPIDKeyTest removed - using Web Push now
+import PushHealth from "@/pages/PushHealth";
 const PushDebug = React.lazy(() => import("@/pages/PushDebug"));
 import { PushReport } from "@/pages/PushReport";
+// QR pages removed - rewards now handled by popup in map
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+
+import Terms from "@/pages/Terms";
+import Contact from "@/pages/Contact";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import CookiePolicy from "@/pages/CookiePolicy";
+import SafeCreative from "@/pages/SafeCreative";
+import GameRules from "@/pages/GameRules";
+
+// Subscription plan pages
+import SilverPlanPage from "@/pages/subscriptions/SilverPlanPage";
+import GoldPlanPage from "@/pages/subscriptions/GoldPlanPage";
+import BlackPlanPage from "@/pages/subscriptions/BlackPlanPage";
+import TitaniumPlanPage from "@/pages/subscriptions/TitaniumPlanPage";
+import ChoosePlanPage from "@/pages/ChoosePlanPage";
+import SubscriptionVerify from "@/pages/SubscriptionVerify";
+import MissionIntroPage from "@/pages/MissionIntroPage";
+import FcmTest from "@/pages/FcmTest";
 import NotifyActivate from "@/pages/NotifyActivate";
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
