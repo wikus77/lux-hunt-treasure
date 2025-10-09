@@ -79,6 +79,9 @@ export function useFcm() {
   return {
     ...state,
     enable,
+    generate: enable, // alias for compatibility
+    status: state.isLoading ? 'loading' : state.error ? 'error' : state.isSubscribed ? 'success' : 'idle',
+    token: state.savedPayload?.endpoint || null,
     hasActiveSubscription: async () => !!(await getActiveSubscription()),
     isPushSupported: state.isSupported,
   };
