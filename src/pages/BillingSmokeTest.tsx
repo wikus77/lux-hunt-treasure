@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CreditCard, TestTube } from 'lucide-react';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 
 const BillingSmokeTest = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +18,7 @@ const BillingSmokeTest = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-payment-intent', {
+      const response = await fetch(`${functionsBaseUrl}/create-payment-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

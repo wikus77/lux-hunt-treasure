@@ -71,7 +71,7 @@ export class SecureSessionManager {
       
       // Clear all auth-related items
       const authKeys = [
-        'sb-vkjrqirvdvjbemsfzxof-auth-token',
+        `sb-${import.meta.env.VITE_SUPABASE_PROJECT_REF}-auth-token`,
         'hasSeenPostLoginIntro',
         'auth_cache_clear'
       ];

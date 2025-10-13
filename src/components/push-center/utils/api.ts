@@ -1,7 +1,10 @@
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 // © 2025 Joseph MULÉ – M1SSION™ – Push Center API Helpers
 
-const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+const SUPABASE_URL = `https://${getProjectRef()}.supabase.co`;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 
 export interface PushSendRequest {
   audience?: 'all' | { user_id: string } | { endpoint: string };
@@ -44,7 +47,7 @@ export async function sendPushNotification(
     headers['Authorization'] = `Bearer ${options.userJWT}`;
   }
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/webpush-send`, {
+  const response = await fetch(`${functionsBaseUrl}/webpush-send`, {
     method: 'POST',
     headers,
     body: JSON.stringify(request),
@@ -72,7 +75,7 @@ export async function upsertWebPushSubscription(
   },
   userJWT: string
 ): Promise<{ status: number; data: any; error?: string }> {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/webpush-upsert`, {
+  const response = await fetch(`${functionsBaseUrl}/webpush-upsert`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

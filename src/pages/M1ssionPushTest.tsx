@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 
 interface TestResult {
   checkpoint: string;
@@ -167,12 +169,12 @@ export const M1ssionPushTest = () => {
         <p className="text-muted-foreground">
           Test completo sistema notifiche PWA + OneSignal + Supabase
         </p>
-        <Badge variant="outline" className="mt-2">
-          Project: vkjrqirvdvjbemsfzxof | Function: send-push-notification
+        <Badge variant="outline" className="mt-2`>
+          Project: ${getProjectRef()} | Function: send-push-notification
         </Badge>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className=`grid md:grid-cols-2 gap-6">
         {/* Test Form */}
         <Card>
           <CardHeader>

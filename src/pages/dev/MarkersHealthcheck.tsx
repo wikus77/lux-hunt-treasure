@@ -12,6 +12,8 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, Database, Play, RefreshCw, User, Clock } from 'lucide-react';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 
 interface MarkerDistribution {
   BUZZ_FREE: number;
@@ -212,8 +214,8 @@ export default function MarkersHealthcheck() {
       console.log('🚀 Calling create-random-markers with payload:', payload);
 
       const url = debugMode 
-        ? `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers?debug=1`
-        : `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers`;
+        ? `${functionsBaseUrl}/create-random-markers?debug=1`
+        : `${functionsBaseUrl}/create-random-markers`;
 
       const response = await fetch(url, {
         method: 'POST',

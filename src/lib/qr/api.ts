@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT– Joseph MULÉ
 import { supabase } from '@/integrations/supabase/client';
 const TRACE='M1QR-TRACE';
-const BASE = "https://vkjrqirvdvjbemsfzxof.supabase.co";
+const BASE = `import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.supabase.co``;
 const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
 
 function assertEnv(){

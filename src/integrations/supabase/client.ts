@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // M1SSION Supabase configuration
-const SUPABASE_URL = "https://vkjrqirvdvjbemsfzxof.supabase.co";
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.supabase.co``;
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   console.error("M1QR-TRACE", { step: 'env:missing:client', SUPABASE_URL: !!SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: !!SUPABASE_PUBLISHABLE_KEY });

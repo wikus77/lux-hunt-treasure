@@ -28,7 +28,7 @@ export function getFunctionsBase(): string {
   }
 
   // Ultimate fallback: use known project ref
-  return 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
+  return (import.meta.env.VITE_SUPABASE_FUNCTIONS_BASE ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.functions.supabase.co`.replace(/\/$/, "") + "/functions/v1");
 }
 
 /**

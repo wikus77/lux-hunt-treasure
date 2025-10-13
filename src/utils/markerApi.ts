@@ -68,7 +68,7 @@ export const createBulkMarkersLegacy = async (request: BulkMarkerRequest): Promi
     throw new Error('No session found');
   }
 
-  const SUPABASE_URL = "https://vkjrqirvdvjbemsfzxof.supabase.co";
+  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.supabase.co``;
   const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
 
   const url = `${SUPABASE_URL}/functions/v1/bulk-marker-drop`;
