@@ -9,7 +9,7 @@ type PushState = {
 };
 
 async function getAppServerKey(): Promise<Uint8Array | string> {
-  const mod = await import('@/lib/push-key-loader');
+  const mod = await import('@/lib/vapid-loader');
   return mod.loadpush-keyPublicKey();
 }
 
