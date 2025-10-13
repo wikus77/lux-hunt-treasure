@@ -1,112 +1,95 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Push Repair Utility - Centralized repair logic for notifications
-
+// Guard-safe Push Repair utilities (no VAPID usage here)
+import { enablePush as coreEnablePush } from '@/features/notifications/enablePush';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 import { supabase } from '@/integrations/supabase/client';
 
-async function __appServerKey(): Promise<Uint8Array | CryptoKey> {
-  const mod = await import('@/lib/vapid-loader');
-  const key = await mod.loadVAPIDPublicKey();
-  return typeof key === 'string' ? mod.urlBase64ToUint8Array(key) : key;
-}
+export type PushStatus = {
+  supported: boolean;
+  permission: NotificationPermission | null;
+  hasSubscription: boolean;
+  endpoint?: string | null;
+};
 
-interface PushRepairResult {
-  success: boolean;
-  message: string;
-  details?: any;
-}
+export async function getPushStatus(): Promise<PushStatus> {
+  const supported =
+    'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
-export async function sendSelfTest(): Promise<PushRepairResult> {
-  try {
-    console.log('[Push] 📨 Sending self test push...');
+  let hasSubscription = false;
+  let endpoint: string | null = null;
+  const permission: NotificationPermission | null = 'Notification' in window ? Notification.permission : null;
 
-    const jwt = await getJWT();
-    if (!jwt) {
-      return {
-        success: false,
-        message: 'Utente non autenticato. Effettua il login e riprova.'
-      };
+  if (supported) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      hasSubscription = !!sub;
+      endpoint = sub?.endpoint ?? null;
+    } catch {
+      // ignora, mantieni default
     }
-
-    const payload = {
-      title: '🔔 Test M1SSION',
-      body: 'Push di test ricevuto correttamente! ✅',
-      url: '/notifications'
-    };
-
-    const { data: result, error } = await supabase.functions.invoke('webpush-self-test', {
-      body: { payload }
-    });
-
-    if (error) {
-      throw new Error(`Send failed: ${error.message}`);
-    }
-
-    console.log('[Push] ✅ Test push sent:', result);
-
-    return {
-      success: true,
-      message: '📨 Push di test inviato! Controlla le notifiche.',
-      details: result
-    };
-
-  } catch (error: any) {
-    console.error('[Push] ❌ Self test failed:', error);
-    return {
-      success: false,
-      message: `Errore durante l'invio: ${error.message}`,
-      details: { error: error.message }
-    };
   }
+
+  return { supported, permission, hasSubscription, endpoint };
 }
 
 /**
- * Get current push status for diagnostics
+ * Prova a “riparare” la push:
+ * - se esiste una subscription, la annulla
+ * - poi richiama l'abilitazione unificata tramite il facade guardato
  */
-export async function getPushStatus() {
-  const status = {
-    permission: Notification.permission,
-    swRegistered: false,
-    swScope: null as string | null,
-    subscriptionPresent: false,
-    subscriptionEndpoint: null as string | null,
-    jwtPresent: false,
-    vapidValid: false,
-    platform: 'unknown' as string
-  };
+export async function repairPush(): Promise<PushStatus> {
+  const status = await getPushStatus();
 
-  try {
-    // Check SW
-    if ('serviceWorker' in navigator) {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg) {
-        status.swRegistered = true;
-        status.swScope = reg.scope;
-
-        // Check subscription
-        const sub = await reg.pushManager.getSubscription();
-        if (sub) {
-          status.subscriptionPresent = true;
-          status.subscriptionEndpoint = sub.endpoint.substring(0, 50) + '...';
-          status.platform = sub.endpoint.includes('web.push.apple.com') ? 'ios' : 'web';
-        }
-      }
-    }
-
-    // Check JWT
-    const jwt = await getJWT();
-    status.jwtPresent = !!jwt;
-
-    try {
-      const vapid = await loadVAPIDPublicKey();
-      urlBase64ToUint8Array(vapid); // Validate
-      status.vapidValid = true;
-    } catch (error) {
-      console.warn('[Push] VAPID validation failed:', error);
-    }
-
-  } catch (error) {
-    console.error('Status check error:', error);
+  if (!status.supported) {
+    return status;
   }
 
-  return status;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      await sub.unsubscribe();
+    }
+  } catch {
+    // anche se fallisce l'unsubscribe, proviamo a ripartire
+  }
+
+  // Riabilita tramite il facade (guard-safe)
+  await coreEnablePush();
+  return getPushStatus();
+}
+
+/**
+ * Invia un self-test al backend (se configurato).
+ * Usa functionsBaseUrl e, se disponibile, include un bearer token Supabase.
+ */
+export async function sendSelfTest(payload: Record<string, any> = {}) {
+  const url = `${functionsBaseUrl}/webpush-send`;
+  let headers: Record<string, string> = { 'Content-Type': 'application/json' };
+
+  try {
+    const { data } = await supabase.auth.getSession();
+    const token = data?.session?.access_token;
+    if (token) headers.Authorization = `Bearer ${token}`;
+  } catch {
+    // nessun token disponibile: il backend potrebbe comunque accettare anon se configurato
+  }
+
+  const body = {
+    kind: 'self-test',
+    timestamp: new Date().toISOString(),
+    ...payload,
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  const ok = res.ok;
+  let info: any = null;
+  try { info = await res.json(); } catch { /* best effort */ }
+
+  return { ok, status: res.status, info };
 }

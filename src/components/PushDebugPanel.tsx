@@ -4,12 +4,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { getCurrentSubscription } from '@/utils/safeWebPushSubscribe';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, CheckCircle, XCircle, Send, Users } from 'lucide-react';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 
 
+
+async function getCurrentSubscription(): Promise<PushSubscription | null> {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return await reg.pushManager.getSubscription();
+  } catch {
+    return null;
+  }
+}
 const PushDebugPanel: React.FC = () => {
   const [isControlled, setIsControlled] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);

@@ -1,28 +1,61 @@
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
-import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Chiama la Edge Function "bulk-marker-drop" in modo sicuro:
- * - URL costruito con la factory canonica (no hardcode)
- * - Bearer preso dalla sessione Supabase se disponibile
+ * Distribution of random markers around a center point.
  */
-export async function bulkMarkerDrop(payload: unknown) {
-  const { data: { session } } = await supabase.auth.getSession();
-  const bearer = session?.access_token;
+export type Distribution = {
+  lat: number;          // center latitude
+  lng: number;          // center longitude
+  radiusMeters: number; // radius for random scatter
+  count: number;        // how many markers to create
+};
 
-  const url = `${functionsBaseUrl}/bulk-marker-drop`;
-  const res = await fetch(url, {
+/**
+ * Create bulk random markers via Supabase Edge Function.
+ * Uses the canonical functionsBaseUrl to avoid hardcoded project refs.
+ *
+ * The server is expected to accept:
+ *   { lat, lng, radiusMeters, count, debug?: boolean, dryRun?: boolean }
+ */
+export async function createBulkMarkers(
+  dist: Distribution,
+  opts?: { debug?: boolean; dryRun?: boolean }
+): Promise<{ created?: number; message?: string; ok: boolean }> {
+  const payload = {
+    lat: dist.lat,
+    lng: dist.lng,
+    radiusMeters: dist.radiusMeters,
+    count: dist.count,
+    debug: opts?.debug ?? false,
+    dryRun: opts?.dryRun ?? false,
+  };
+
+  const res = await fetch(`${functionsBaseUrl}/create-random-markers`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
-    },
-    body: JSON.stringify(payload ?? {}),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
 
+  const data = await res
+    .json()
+    .catch(() => ({ message: 'Invalid JSON response from function' }));
+
   if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`bulk-marker-drop failed: ${res.status} ${res.statusText} ${text}`);
+    return {
+      ok: false,
+      message:
+        (data && (data.error || data.message)) ||
+        `Edge function error (${res.status})`,
+    };
   }
-  return res.json();
+
+  return {
+    ok: true,
+    created: typeof data?.created === 'number' ? data.created : undefined,
+    message:
+      data?.message ??
+      (payload.dryRun
+        ? 'Dry run completed'
+        : 'Markers created successfully'),
+  };
 }

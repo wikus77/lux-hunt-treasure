@@ -1,30 +1,27 @@
 /**
- * Guard-safe WebPush manager: nessun helper push-key custom, solo loader canonico.
- * Esporta i soli simboli realmente usati altrove nell'app.
+ * WebPush manager Guard-safe:
+ * - Nessun helper custom né import VAPID non canonico
+ * - Unico punto di verità: '@/lib/vapid-loader'
  */
 
-async function loadPublicKeyAndConverter(){
-  const mod = await import('@/lib/vapid-loader');
-  const loadKey = mod.loadVAPIDPublicKey;
-  // costruisco il nome per evitare il match del Guard
-  const convName = ('url' + 'Base64ToUint8Array');
-  const toU8 = mod[convName];
-  return { loadKey, toU8 };
-}
-
 export interface WebPushSubscriptionPayload {
-
-
   endpoint: string;
-  keys: { p256dh: string; auth: string 
-
-};
-  pushKey?: string;
+  keys: { p256dh: string; auth: string };
+  /** opzionale: preview/debug */
+  vapidKey?: string;
 }
-
 export type UnifiedSubscription = WebPushSubscriptionPayload;
 
-/** Heuristica blanda per riconoscere endpoint web-push */
+/** Importa on-demand le utility consentite dal loader canonico */
+async function loadKeyAndConverter() {
+  const mod = await import('@/lib/vapid-loader');
+  return {
+    loadPublicKey: mod.loadVAPIDPublicKey as () => Promise<string | Uint8Array>,
+    toUint8: mod.urlBase64ToUint8Array as (s: string) => Uint8Array,
+  };
+}
+
+/** Heuristica blanda per riconoscere endpoint web push */
 export function looksLikeWebPushEndpoint(url: string): boolean {
   try {
     const u = new URL(url);
@@ -38,21 +35,36 @@ export function looksLikeWebPushEndpoint(url: string): boolean {
   }
 }
 
-/**
- * Crea/recupera la subscription tramite ServiceWorkerRegistration
- * e ritorna il payload serializzabile. Nessun salvataggio lato server qui.
- */
+/** Stato supporto/permessi lato browser */
+export function getNotificationStatus() {
+  const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const permission: NotificationPermission | null = 'Notification' in window ? Notification.permission : null;
+  return { supported, permission };
+}
+export function isPushSupported(): boolean {
+  return getNotificationStatus().supported;
+}
+
+/** Ritorna true se esiste già una subscription attiva */
+export async function hasActiveSubscription(): Promise<boolean> {
+  if (!isPushSupported()) return false;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  return !!sub;
+}
+
+/** Crea/recupera la subscription e ritorna il payload serializzabile */
 export async function subscribeWebPushAndSave(
   reg: ServiceWorkerRegistration
 ): Promise<WebPushSubscriptionPayload> {
-  if (!reg?.pushManager) {
-    throw new Error('PushManager non disponibile');
-  }
+  const { loadPublicKey, toUint8 } = await loadKeyAndConverter();
 
-  // Carica la chiave pubblica SOLO tramite il loader canonico (dynamic import, token-safe)
-  const { loadKey, toU8 } = await loadPublicKeyAndConverter();
-  const publicKey = await loadKey();
-  const applicationServerKey = (typeof publicKey === 'string') ? toU8(publicKey) : publicKey;
+  // Chiave solo tramite loader canonico
+  const publicKey = await loadPublicKey();
+  const applicationServerKey =
+    typeof publicKey === 'string' ? toUint8(publicKey) : publicKey;
+
+  if (!reg?.pushManager) throw new Error('PushManager non disponibile');
 
   let sub = await reg.pushManager.getSubscription();
   if (!sub) {
@@ -74,6 +86,33 @@ export async function subscribeWebPushAndSave(
   return {
     endpoint: raw.endpoint,
     keys: { p256dh: raw.keys.p256dh, auth: raw.keys.auth },
-    pushKey: typeof publicKey === 'string' ? publicKey : undefined,
+    vapidKey: typeof publicKey === 'string' ? publicKey : undefined,
   };
 }
+
+/** Enable: si appoggia al SW registrato */
+export async function enableWebPush(): Promise<WebPushSubscriptionPayload> {
+  if (!isPushSupported()) throw new Error('Push non supportato su questo browser');
+  const reg = await navigator.serviceWorker.ready;
+  return subscribeWebPushAndSave(reg);
+}
+
+/** Disable: annulla la subscription corrente (se presente) */
+export async function disableWebPush(): Promise<boolean> {
+  if (!isPushSupported()) return true;
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.getSubscription();
+  if (sub) await sub.unsubscribe();
+  return true;
+}
+
+/** Facade ad oggetto, per i call-site che importano come "webPushManager" */
+export const webPushManager = {
+  isPushSupported,
+  hasActiveSubscription,
+  enableWebPush,
+  disableWebPush,
+  getNotificationStatus,
+  looksLikeWebPushEndpoint,
+  subscribeWebPushAndSave,
+};

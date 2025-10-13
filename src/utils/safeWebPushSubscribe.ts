@@ -26,3 +26,18 @@ export async function ensureWebPushSubscription(reg: ServiceWorkerRegistration):
   if (sub) return sub;
   return safeWebPushSubscribe(reg);
 }
+
+/**
+ * Guard-safe: ritorna la PushSubscription corrente (se presente) senza toccare VAPID.
+ */
+export async function getCurrentSubscription(): Promise<PushSubscription | null> {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    return null;
+  }
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return await reg.pushManager.getSubscription();
+  } catch {
+    return null;
+  }
+}
