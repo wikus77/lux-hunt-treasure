@@ -5,6 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 
 type CheckStatus = 'idle' | 'loading' | 'success' | 'warning' | 'error';
 
@@ -159,7 +161,7 @@ const PushAutoPreflightPage = () => {
     try {
       // Try OPTIONS request to check if function exists (NO push sent)
       const response = await fetch(
-        'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/webpush-send',
+        `${functionsBaseUrl}/webpush-send`,
         { 
           method: 'OPTIONS',
           headers: {

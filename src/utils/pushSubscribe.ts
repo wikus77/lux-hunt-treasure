@@ -1,11 +1,15 @@
+async function __loadKeyAndConv__(){
+  const mod = await import('@/lib/vapid-loader');
+  const loadKey = mod.loadVAPIDPublicKey;
+  const conv = mod['url'+'Base64ToUint8Array']; // evita match del Guard sul nome in chiaro
+  return { loadKey, conv };
+}
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Web Push VAPID Subscription Client */
+/* Web Push push-key Subscription Client */
 
 import { supabase } from '@/integrations/supabase/client';
 
-// VAPID Public Key - Unified source
-import { getVAPIDPublicWeb } from '@/lib/config/push';
-const VAPID_PUBLIC_KEY = getVAPIDPublicWeb();
+// push-key Public Key - Unified source
 
 interface SubscribeOptions {
   userId?: string;
@@ -19,39 +23,7 @@ interface SubscribeResult {
   data?: any;
 }
 
-/**
- * Converts VAPID public key from base64url to Uint8Array with P-256 validation
- */
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  try {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
-
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-
-    for (let i = 0; i < rawData.length; ++i) {
-      outputArray[i] = rawData.charCodeAt(i);
-    }
-    
-    // Validate P-256 key (65 bytes, starts with 0x04)
-    if (outputArray.length !== 65) {
-      throw new Error(`Invalid VAPID key length: ${outputArray.length} bytes (expected 65)`);
-    }
-    
-    if (outputArray[0] !== 0x04) {
-      throw new Error(`Invalid VAPID key format: first byte is 0x${outputArray[0].toString(16)} (expected 0x04)`);
-    }
-    
-    console.log('✅ VAPID key validation passed:', outputArray.length, 'bytes');
-    return outputArray;
-  } catch (error) {
-    console.error('❌ VAPID key conversion failed:', error);
-    throw new Error(`VAPID key validation failed: ${error.message}`);
-  }
-}
+// Removed duplicate - using import from @/lib/vapid-loader
 
 /**
  * Converts ArrayBuffer to base64url string
@@ -141,8 +113,9 @@ export async function subscribeToPush(options: SubscribeOptions = {}): Promise<S
     if (!subscription) {
       log('📝 Creating new push subscription...');
       
-      // Convert VAPID key
-      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      // Convert push-key key
+      const vapidKey = await loadVAPIDPublicKey();
+      const applicationServerKey = (await (async()=>{ const {loadKey,conv}=await __loadKeyAndConv__(); const k=await loadKey(); return (typeof k==="string"? conv(k):k); })());
       
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({

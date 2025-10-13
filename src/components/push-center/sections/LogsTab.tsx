@@ -2,11 +2,13 @@
 "use client";
 
 import React from 'react';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
+
 import { ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export default function LogsTab() {
-  const SUPABASE_PROJECT_ID = 'vkjrqirvdvjbemsfzxof';
+  const SUPABASE_PROJECT_ID = getProjectRef();
 
   const openLogs = (functionName: string) => {
     window.open(

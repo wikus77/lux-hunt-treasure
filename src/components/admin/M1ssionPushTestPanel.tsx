@@ -1,5 +1,7 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
 import React, { useState } from 'react';
+const SUPABASE_PROJECT_ID = getProjectRef();
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -70,7 +72,7 @@ export const M1ssionPushTestPanel = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          <p><strong>Project ID:</strong> vkjrqirvdvjbemsfzxof</p>
+          <p><strong>Project ID:</strong> {SUPABASE_PROJECT_ID}</p>
           <p><strong>OneSignal App ID:</strong> 50cb75f7-f065-4626-9a63-ce5692fa7e70</p>
           <p><strong>Function:</strong> send-push-notification</p>
           <p><strong>API Key:</strong> {testResult?.keyFormat || 'Not tested yet'}</p>

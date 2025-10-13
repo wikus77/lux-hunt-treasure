@@ -1,5 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React, { useState } from 'react';
+import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -252,7 +254,7 @@ jobs:
                   <p>• Crea questi secrets:</p>
                   <div className="ml-4 font-mono">
                     <p>- SUPABASE_ACCESS_TOKEN (dal tuo profilo Supabase)</p>
-                    <p>- PROJECT_REF (vkjrqirvdvjbemsfzxof)</p>
+                    <p>- PROJECT_REF ({getProjectRef()})</p>
                   </div>
                   <p>• Esegui il workflow manualmente da GitHub Actions tab</p>
                 </div>

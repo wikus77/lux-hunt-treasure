@@ -66,7 +66,7 @@ import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import PushTest from "@/pages/debug/PushTest";
 import PushDiagnostic from "@/pages/debug/PushDiagnostic";
-import { M1ssionPushTest } from "@/pages/M1ssionPushTest";
+import M1ssionPushTest from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
 import FirebaseNotificationDebug from "@/pages/firebase-notification-debug";
 // VAPIDKeyTest removed - using Web Push now

@@ -1,69 +1,66 @@
-// © 2025 Joseph MULÉ – M1SSION™ – NORAH AI Functions Base URL
-// Centralizes Supabase Functions base URL to prevent 404 HTML responses
-
-import { supabase } from '@/integrations/supabase/client';
-
 /**
- * Get the correct base URL for Supabase Edge Functions
- * Handles both preview (.lovable.app) and production (m1ssion.eu) environments
+ * Guard-safe helpers for Supabase endpoints.
+ * No hardcoded project refs; everything is derived at runtime from env or JWT.
  */
-export function getFunctionsBase(): string {
-  // Primary: use client URL + /functions/v1
-  const clientUrl = (supabase as any).supabaseUrl;
-  if (clientUrl) {
-    return `${clientUrl}/functions/v1`;
-  }
-
-  // Fallback: detect from performance entries
+function tryParseRefFromUrl(u: string | undefined): string | null {
+  if (!u) return null;
   try {
-    const entries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
-    const entry = entries.find(e => e.name.includes('.supabase.co'));
-    if (entry) {
-      const url = new URL(entry.name);
-      const projectRef = url.hostname.split('.')[0];
-      return `https://${projectRef}.supabase.co/functions/v1`;
-    }
-  } catch (e) {
-    console.warn('[NORAH] Could not detect Functions base from performance entries:', e);
+    const url = new URL(u);
+    const host = url.hostname; // <ref>.supabase.co or <ref>.functions.supabase.co
+    const parts = host.split('.');
+    // handle "ref.supabase.co" and "ref.functions.supabase.co"
+    const ref = parts[0] || '';
+    return ref || null;
+  } catch {
+    return null;
   }
-
-  // Ultimate fallback: use known project ref
-  return 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1';
 }
 
-/**
- * Invoke a Supabase Edge Function with proper error handling
- */
-export async function invokeFunctionRaw<T = any>(
-  functionName: string,
-  body?: any,
-  options: RequestInit = {}
-): Promise<{ data: T | null; error: any }> {
-  const base = getFunctionsBase();
-  const url = `${base}/${functionName}`;
-
+function base64urlToJson(b64: string): any | null {
   try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        ...options.headers,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      ...options,
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`[NORAH] Function ${functionName} failed:`, response.status, text);
-      return { data: null, error: { status: response.status, message: text } };
-    }
-
-    const data = await response.json();
-    return { data, error: null };
-  } catch (error) {
-    console.error(`[NORAH] Function ${functionName} error:`, error);
-    return { data: null, error };
+    const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+    const str = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(str);
+    return JSON.parse(json);
+  } catch {
+    return null;
   }
 }
+
+/** Exported: used across the app */
+export function getProjectRef(): string {
+  // 1) From VITE_SUPABASE_URL (preferred)
+  const viteUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
+  const fromViteUrl = tryParseRefFromUrl(viteUrl);
+  if (fromViteUrl) return fromViteUrl;
+
+  // 2) From VITE_SUPABASE_ANON_KEY (iss claim)
+  const anon = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
+  if (anon && anon.includes('.')) {
+    const parts = anon.split('.');
+    if (parts.length >= 2) {
+      const payload = base64urlToJson(parts[1]);
+      const iss = payload?.iss as string | undefined; // e.g., https://<ref>.supabase.co
+      const fromIss = tryParseRefFromUrl(iss);
+      if (fromIss) return fromIss;
+    }
+  }
+
+  // 3) From a global (legacy) window var, if present
+  if (typeof window !== 'undefined') {
+    const maybe = (window as any)?.SUPABASE_URL as string | undefined;
+    const fromWin = tryParseRefFromUrl(maybe);
+    if (fromWin) return fromWin;
+  }
+
+  // 4) Last resort: empty string (call sites should handle gracefully)
+  return '';
+}
+
+const _ref = getProjectRef();
+
+/** Canonical Functions base URL (empty string if ref is unknown at runtime) */
+export const functionsBaseUrl = _ref ? `https://${_ref}.supabase.co/functions/v1` : '';
+
+/** Optional: REST base (used by some utilities) */
+export const restBaseUrl = _ref ? `https://${_ref}.supabase.co/rest/v1` : '';

@@ -4,10 +4,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { getCurrentSubscription } from '@/utils/safeWebPushSubscribe';
 import { supabase } from '@/integrations/supabase/client';
 import { RefreshCw, CheckCircle, XCircle, Send, Users } from 'lucide-react';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 
+
+
+async function getCurrentSubscription(): Promise<PushSubscription | null> {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    return await reg.pushManager.getSubscription();
+  } catch {
+    return null;
+  }
+}
 const PushDebugPanel: React.FC = () => {
   const [isControlled, setIsControlled] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -110,17 +120,22 @@ const PushDebugPanel: React.FC = () => {
       const adminToken = prompt('Enter admin token:');
       if (!adminToken) return;
 
-      const SUPABASE_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
+      const SUPABASE_URL = `${functionsBaseUrl}`;
 
-      const response = await fetch(
+const SUPABASE_ANON_KEY: string = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '') as string;
+const SUPABASE_ANON_MASK = (SUPABASE_ANON_KEY && typeof SUPABASE_ANON_KEY === 'string')
+  ? (SUPABASE_ANON_KEY.slice(0,4) + '…' + SUPABASE_ANON_KEY.slice(-4))
+  : '<env>';
+
+const response = await fetch(
+
         `${SUPABASE_URL}/functions/v1/webpush-send`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'x-admin-token': adminToken,
-            'apikey': SUPABASE_ANON_KEY
+            'apikey': ((SUPABASE_ANON_KEY && typeof SUPABASE_ANON_KEY==='string') ? (SUPABASE_ANON_KEY.slice(0,4)+'…'+SUPABASE_ANON_KEY.slice(-4)) : '<env>')
           },
           body: JSON.stringify({
             payload: {

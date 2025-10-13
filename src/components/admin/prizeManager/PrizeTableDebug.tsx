@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from "react";
+const SUPABASE_PROJECT_ID = getProjectRef();
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, AlertCircle, Database, RefreshCw, ArrowRight, Code } from "lucide-react";
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 
 const PrizeTableDebug = () => {
   const [tableStatus, setTableStatus] = useState<{
@@ -59,7 +61,7 @@ const PrizeTableDebug = () => {
       console.log("Access Token:", accessToken ? "Present" : "Missing");
       
       const response = await fetch(
-        "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
+        `${SUPABASE_PROJECT_ID}` && `https://${SUPABASE_PROJECT_ID}.functions.supabase.co/create-prize-clues-table`,
         {
           method: "GET",
           headers: {
@@ -154,7 +156,7 @@ const PrizeTableDebug = () => {
       const accessToken = sessionData?.session?.access_token;
       
       const response = await fetch(
-        "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/create-prize-clues-table",
+        `${SUPABASE_PROJECT_ID}` && `https://${SUPABASE_PROJECT_ID}.functions.supabase.co/create-prize-clues-table`,
         {
           method: "POST", // Using POST to indicate we want to create the table
           headers: {
@@ -225,7 +227,7 @@ const PrizeTableDebug = () => {
     setTableStatus({ checking: true });
     
     // Direct the user to the Supabase SQL editor
-    window.open('https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/sql/new', '_blank');
+    window.open('https://supabase.com/dashboard/project/${SUPABASE_PROJECT_ID}/sql/new', '_blank');
     
     setTimeout(() => {
       setTableStatus(prev => ({...prev, checking: false}));

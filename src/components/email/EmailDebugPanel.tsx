@@ -1,5 +1,7 @@
 
 import React from 'react';
+const SUPABASE_PROJECT_ID = getProjectRef();
+import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
 import { Button } from '@/components/ui/button';
 import { ChevronUp, ChevronDown, Bug } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -83,7 +85,7 @@ const EmailDebugPanel: React.FC<EmailDebugPanelProps> = ({
               variant="outline" 
               size="sm"
               className="text-xs flex items-center gap-1"
-              onClick={() => window.open("https://vkjrqirvdvjbemsfzxof.supabase.co/functions/send-email/logs", "_blank")}
+              onClick={() => window.open("https://${SUPABASE_PROJECT_ID}.supabase.co/functions/send-email/logs", "_blank")}
             >
               <Bug className="h-3 w-3" /> Visualizza logs completi
             </Button>
