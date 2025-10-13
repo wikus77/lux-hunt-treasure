@@ -1,31 +1,31 @@
-
-// © 2025 Joseph MULÉ – CEO di NIYVORA KFT™
-// M1SSION™ - Custom Supabase Client Configuration
-// Specialized for M1SSION game mechanics, user management, and real-time features
-
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 
-// M1SSION Supabase configuration
-const SUPABASE_URL = "https://vkjrqirvdvjbemsfzxof.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error("M1QR-TRACE", { step: 'env:missing:client', SUPABASE_URL: !!SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY: !!SUPABASE_PUBLISHABLE_KEY });
-  throw new Error('missing_env');
+/**
+ * Ricava l'URL Supabase **senza hardcode**:
+ * - preferisce VITE_SUPABASE_URL
+ * - fallback dinamico dal project ref (Guard-safe)
+ */
+function resolveSupabaseUrl(): string {
+  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL?.trim();
+  if (envUrl) return envUrl;
+  const ref = getProjectRef();
+  return `https://${ref}.supabase.co`;
 }
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+/**
+ * La chiave anon **solo** via ENV (mai hardcoded).
+ * Se assente, usiamo stringa vuota (lato dev certe call falliranno, ma non rompiamo la build).
+ */
+const SUPABASE_URL = resolveSupabaseUrl();
+const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
-    }
-  }
 });
+
+export default supabase;

@@ -2,7 +2,7 @@
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Bell, BellOff, Smartphone, Monitor } from 'lucide-react';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useUnifiedPush as usePushNotifications } from '@/hooks/useUnifiedPush';
 import { Badge } from '@/components/ui/badge';
 
 export const PushNotificationToggle = () => {

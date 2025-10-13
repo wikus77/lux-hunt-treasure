@@ -4,12 +4,17 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
+
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Bell, Settings, ExternalLink, RefreshCw, Wifi } from 'lucide-react';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 
 interface NotifierDebugPanelProps {
   className?: string;
@@ -106,11 +111,11 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
       // Use ANON_KEY for diag=1 mode (as per TASK 9 specs)
       const headers = {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
       };
 
       const response = await fetch(
-        `https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine?${params}`,
+        `${functionsBaseUrl}/notifier-engine?${params}`,
         {
           method: 'POST',
           headers
@@ -148,7 +153,7 @@ export const NotifierDebugPanel: React.FC<NotifierDebugPanelProps> = ({ classNam
   };
 
   const openFunctionLogs = () => {
-    const url = 'https://supabase.com/dashboard/project/vkjrqirvdvjbemsfzxof/functions/notifier-engine/logs';
+    const url = `https://supabase.com/dashboard/project/${getProjectRef()}/functions/notifier-engine/logs`;
     window.open(url, '_blank');
   };
 

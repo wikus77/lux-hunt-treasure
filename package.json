@@ -17,7 +17,8 @@
     "build:release": "VITE_PWA_VERSION=$(date +%Y%m%d%H%M%S) npm run build",
     "test": "playwright test",
     "test:ui": "playwright test --ui",
-    "test:install": "playwright install --with-deps"
+    "test:install": "playwright install --with-deps",
+    "prebuild": "node scripts/push-guard.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

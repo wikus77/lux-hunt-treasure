@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Trash2, Plus, Map, AlertTriangle, Wrench, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'wouter';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+
 
 interface Distribution {
   type: 'BUZZ_FREE' | 'MESSAGE' | 'XP_POINTS' | 'EVENT_TICKET' | 'BADGE';
@@ -171,7 +173,7 @@ const MissionPanelPage: React.FC = () => {
       console.log('🚀 Calling create-random-markers with payload:', request);
 
       // Use direct fetch with explicit headers instead of supabase.functions.invoke
-      const response = await fetch(`https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/create-random-markers?debug=1`, {
+      const response = await fetch(`${functionsBaseUrl}/create-random-markers?debug=1`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

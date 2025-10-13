@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { PrizeFormValues } from "../hooks/usePrizeForm";
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 
 export interface GeocodeResult {
   lat?: string;
@@ -35,7 +36,7 @@ export async function geocodeAddress(city: string, address: string): Promise<Geo
     
     // Use the full URL with project ID for direct access without auth headers
     const geocodeResponse = await fetch(
-      "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/geocode-address", 
+      `https://${getProjectRef()}.functions.supabase.co/geocode-address`, 
       {
         method: "POST",
         headers: { 
@@ -191,7 +192,7 @@ export async function generatePrizeClues(params: ClueGenerationParams): Promise<
   try {
     console.log(`Generating clues for prize ID: ${params.prizeId}`);
     const clueResponse = await fetch(
-      "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/generate-prize-clues", 
+      `https://${getProjectRef()}.functions.supabase.co/generate-prize-clues`, 
       {
         method: "POST",
         headers: { 
@@ -236,7 +237,7 @@ export async function insertPrizeClues(clues: any[], prizeId: string) {
     console.log("Clue data sample:", formattedClues[0]);
     
     const insertResponse = await fetch(
-      "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/insert-prize-clues", 
+      `https://${getProjectRef()}.functions.supabase.co/insert-prize-clues`, 
       {
         method: "POST",
         headers: { 
@@ -295,7 +296,7 @@ export const savePrizeClues = async (cluesData: any[]) => {
     
     // Call the Edge Function to insert clues
     const response = await fetch(
-      "https://vkjrqirvdvjbemsfzxof.functions.supabase.co/insert-prize-clues",
+      `https://${getProjectRef()}.functions.supabase.co/insert-prize-clues`,
       {
         method: "POST",
         headers: {

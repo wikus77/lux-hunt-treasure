@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { RefreshCw, Smartphone, Monitor, AlertCircle, CheckCircle, Send, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { enablePushNotifications, getNotificationStatus } from '@/features/notifications/enablePush';
+import { enablePush, getNotificationStatus } from '@/features/notifications/enablePush';
 
 interface DiagnosticData {
   // Environment
@@ -155,7 +155,7 @@ export default function PushDiagnostic() {
   const testPushFlow = async () => {
     addLog('🧪 Starting push notification test...');
     try {
-      const result = await enablePushNotifications();
+      const result = await enablePush();
       setTestResult(result);
       
       if (result.success) {

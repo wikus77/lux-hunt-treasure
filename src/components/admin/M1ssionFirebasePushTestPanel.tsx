@@ -1,5 +1,7 @@
 // © 2025 M1SSION™ – NIYVORA KFT – Joseph MULÉ
 import React, { useState } from 'react';
+const SUPABASE_PROJECT_ID = getProjectRef();
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +92,7 @@ export const M1ssionFirebasePushTestPanel = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">
-            <p><strong>Project ID:</strong> vkjrqirvdvjbemsfzxof</p>
+            <p><strong>Project ID:</strong> {SUPABASE_PROJECT_ID}</p>
             <p><strong>Firebase Project:</strong> m1ssion-app</p>
             <p><strong>Function:</strong> send-firebase-push</p>
             <p><strong>Status:</strong> {testResult?.success ? '✅ Connected' : 'Ready to test'}</p>

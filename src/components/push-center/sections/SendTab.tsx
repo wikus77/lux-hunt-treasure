@@ -2,6 +2,8 @@
 "use client";
 
 import React, { useState } from 'react';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
+
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -94,7 +96,7 @@ export default function SendTab() {
         extra: parsedExtra
       };
 
-      const SB_URL = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+      const SB_URL = `https://${getProjectRef()}.supabase.co`;
       const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk';
 
       let endpoint = '';

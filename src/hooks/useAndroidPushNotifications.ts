@@ -84,8 +84,8 @@ export const useAndroidPushNotifications = () => {
         const registration = await navigator.serviceWorker.ready;
         
         // Subscribe to push notifications (unified source)
-        const { getVAPIDPublicWeb } = await import('@/lib/config/push');
-        const vapidKey = getVAPIDPublicWeb();
+        const { loadVAPIDPublicKey } = await import('@/lib/vapid-loader');
+        const vapidKey = loadVAPIDPublicKey();
         if (!vapidKey) {
           throw new Error('VAPID public key not configured');
         }

@@ -1,6 +1,8 @@
 // © 2025 Joseph MULÉ – M1SSION™ - ALL RIGHTS RESERVED - NIYVORA KFT
 
 import React, { useState } from 'react';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,7 +34,7 @@ export const MissionResetSection: React.FC = () => {
       console.log('👤 User session:', session.user.email);
       
       // Fix: Use fetch directly to properly send JSON body
-      const supabaseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co';
+      const supabaseUrl = `https://${getProjectRef()}.supabase.co`;
       const response = await fetch(`${supabaseUrl}/functions/v1/reset-mission`, {
         method: 'POST',
         headers: {

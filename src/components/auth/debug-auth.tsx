@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react';
+const SUPABASE_PROJECT_ID = getProjectRef();
+import { getProjectRef } from '@/lib/supabase/functionsBase';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/use-auth';
@@ -34,7 +36,7 @@ const DebugAuth = () => {
       addLog(`✅ Refresh Token: ${session?.refresh_token ? 'Present' : 'null'}`);
       
       // Check localStorage
-      const tokenStorage = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+      const tokenStorage = localStorage.getItem('sb-${SUPABASE_PROJECT_ID}-auth-token');
       addLog(`📦 LOCAL STORAGE TOKEN: ${tokenStorage ? 'Present' : 'Missing'}`);
       
       if (tokenStorage) {
@@ -76,7 +78,7 @@ const DebugAuth = () => {
         // Enhanced verification with multiple checks
         setTimeout(async () => {
           const { data: { session } } = await supabase.auth.getSession();
-          const tokenStorage = localStorage.getItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+          const tokenStorage = localStorage.getItem('sb-${SUPABASE_PROJECT_ID}-auth-token');
           
           addLog(`🔍 POST-LOGIN SESSION: ${session?.user?.email || 'Missing'}`);
           addLog(`📦 POST-LOGIN TOKEN: ${tokenStorage ? 'Present' : 'Missing'}`);
@@ -164,7 +166,7 @@ const DebugAuth = () => {
     addLog('🔧 CHECKING SUPABASE CONFIG');
     
     try {
-      addLog('URL: https://vkjrqirvdvjbemsfzxof.supabase.co');
+      addLog('URL: https://${SUPABASE_PROJECT_ID}.supabase.co');
       addLog('Key: eyJhbGciOiJIUzI1NiIs... (truncated)');
       addLog(`Current Origin: ${window.location.origin}`);
       

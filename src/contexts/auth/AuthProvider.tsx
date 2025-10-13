@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (!lastClear || (now - parseInt(lastClear)) > oneHour) {
           log("🧹 PWA: Clearing stale auth cache");
-          localStorage.removeItem('sb-vkjrqirvdvjbemsfzxof-auth-token');
+          localStorage.removeItem(`sb-${import.meta.env.VITE_SUPABASE_PROJECT_REF}-auth-token`);
           localStorage.setItem('auth_cache_clear', now.toString());
         }
       };

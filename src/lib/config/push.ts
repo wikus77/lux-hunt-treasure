@@ -1,19 +1,22 @@
-// Unified Web Push configuration for frontend
-// © 2025 M1SSION™ – Single source of truth for VAPID
+// Guard-safe config: niente VAPID, niente helper, solo feature flags.
 
-import { VAPID_PUBLIC_KEY, getAppServerKey } from '@/lib/vapid';
-
-let cachedVapidB64: string | null = null;
-let cachedVapidUint8: Uint8Array | null = null;
-
-// Returns the base64url VAPID public key used by the whole app
-export function getVAPIDPublicWeb(): string {
-  if (!cachedVapidB64) cachedVapidB64 = VAPID_PUBLIC_KEY;
-  return cachedVapidB64;
+export interface PushFeatureConfig {
+  /** abilita/disabilita UI e flussi push lato client */
+  enabled: boolean;
+  /** logging verboso lato client per debug */
+  debug: boolean;
 }
 
-// Returns the validated Uint8Array for PushManager.subscribe
-export async function getVAPIDUint8(): Promise<Uint8Array> {
-  if (!cachedVapidUint8) cachedVapidUint8 = await getAppServerKey();
-  return cachedVapidUint8;
-}
+export const PUSH_CONFIG: PushFeatureConfig = {
+  enabled: true,
+  debug: false,
+};
+
+export const isPushFeatureEnabled = () => PUSH_CONFIG.enabled;
+export const isPushDebug = () => PUSH_CONFIG.debug;
+
+/**
+ * Nota: qualunque chiave VAPID o conversione di chiavi
+ * DEVE passare esclusivamente da '@/lib/vapid-loader'.
+ * Questo file NON deve mai conoscere chiavi, loader, o helper VAPID.
+ */

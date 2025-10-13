@@ -9,6 +9,9 @@ import {
   resolveTagsForCurrentUser 
 } from '@/interest/resolveUserInterests';
 import { supabase } from '@/integrations/supabase/client';
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
+import { getProjectRef } from '@/lib/supabase/functionsBase';
+
 
 // Enhanced interface for notification testing
 interface M1DiagNotifTest {
@@ -39,14 +42,14 @@ const dryRunPreferences = async (userId?: string): Promise<any> => {
     console.log(`🔍 [M1_NOTIF_TEST] Testing preferences for user ${targetUserId}...`);
     
     // Manual dry-run endpoint call (to be exposed by notifier-engine)
-    const url = new URL(`https://vkjrqirvdvjbemsfzxof.functions.supabase.co/notifier-engine/dry-run`);
+    const url = new URL(`https://${getProjectRef()}.functions.supabase.co/notifier-engine/dry-run`);
     url.searchParams.set('user_id', targetUserId);
     
     const response = await fetch(url.toString(), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+        'Authorization': `Bearer ${await getSupabaseBearer()}`
       }
     });
 
@@ -86,12 +89,12 @@ export const initDiagnostics = () => {
       });
       if (cooldownHours != null) qs.set('cooldown', String(cooldownHours));
       
-      const baseUrl = 'https://vkjrqirvdvjbemsfzxof.supabase.co/functions/v1/notifier-engine';
+      const baseUrl = `${functionsBaseUrl}/notifier-engine`;
       const res = await fetch(`${baseUrl}/dry-run?${qs.toString()}`, { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk`
+          'Authorization': `Bearer ${await getSupabaseBearer()}`
         }
       });
       
