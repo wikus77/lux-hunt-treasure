@@ -113,9 +113,14 @@ const PushDebugPanel: React.FC = () => {
       if (!adminToken) return;
 
       const SUPABASE_URL = `${functionsBaseUrl}`;
-      const ((SUPABASE_ANON_KEY && typeof SUPABASE_ANON_KEY==='string') ? (SUPABASE_ANON_KEY.slice(0,4)+'…'+SUPABASE_ANON_KEY.slice(-4)) : '<env>') = import.meta.env.VITE_((SUPABASE_ANON_KEY && typeof SUPABASE_ANON_KEY==='string') ? (SUPABASE_ANON_KEY.slice(0,4)+'…'+SUPABASE_ANON_KEY.slice(-4)) : '<env>') as string;
 
-      const response = await fetch(
+const SUPABASE_ANON_KEY: string = (import.meta.env.VITE_SUPABASE_ANON_KEY ?? '') as string;
+const SUPABASE_ANON_MASK = (SUPABASE_ANON_KEY && typeof SUPABASE_ANON_KEY === 'string')
+  ? (SUPABASE_ANON_KEY.slice(0,4) + '…' + SUPABASE_ANON_KEY.slice(-4))
+  : '<env>';
+
+const response = await fetch(
+
         `${SUPABASE_URL}/functions/v1/webpush-send`,
         {
           method: 'POST',

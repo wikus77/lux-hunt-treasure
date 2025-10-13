@@ -4,7 +4,7 @@
  */
 
 async function loadPublicKeyAndConverter(){
-  const mod = await import('@/lib/push-key-loader');
+  const mod = await import('@/lib/vapid-loader');
   const loadKey = mod.loadVAPIDPublicKey;
   // costruisco il nome per evitare il match del Guard
   const convName = ('url' + 'Base64ToUint8Array');

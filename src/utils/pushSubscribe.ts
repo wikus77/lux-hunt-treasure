@@ -1,5 +1,5 @@
 async function __loadKeyAndConv__(){
-  const mod = await import('@/lib/push-key-loader');
+  const mod = await import('@/lib/vapid-loader');
   const loadKey = mod.loadVAPIDPublicKey;
   const conv = mod['url'+'Base64ToUint8Array']; // evita match del Guard sul nome in chiaro
   return { loadKey, conv };
@@ -23,7 +23,7 @@ interface SubscribeResult {
   data?: any;
 }
 
-// Removed duplicate - using import from @/lib/push-key-loader
+// Removed duplicate - using import from @/lib/vapid-loader
 
 /**
  * Converts ArrayBuffer to base64url string

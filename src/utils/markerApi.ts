@@ -1,101 +1,28 @@
-// © 2025 Joseph MULÉ – M1SSION™
+import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 import { supabase } from '@/integrations/supabase/client';
 
-export type Distribution =
-  | { type: 'message'; count: number; text: string }
-  | { type: 'buzz_free'; count: number }
-  | { type: 'xp_points'; count: number; points: number };
-
-export interface MarkerDistribution {
-  type: 'Message' | 'Buzz Free' | 'XP Points';
-  quantity: number;
-  message?: string;
-  visibility_hours?: number;
-}
-
-export interface BulkMarkerRequest {
-  distributions: MarkerDistribution[];
-  visibility_hours: number;
-}
-
-export interface BulkMarkerResponse {
-  success: boolean;
-  created?: number;
-  details?: Array<{ type: string; quantity: number }>;
-  timestamp?: string;
-  error?: string;
-  stage?: string;
-}
-
-export async function createBulkMarkers(
-  payload: { distributions: Distribution[]; visibilityHours: number }
-): Promise<BulkMarkerResponse> {
+/**
+ * Chiama la Edge Function "bulk-marker-drop" in modo sicuro:
+ * - URL costruito con la factory canonica (no hardcode)
+ * - Bearer preso dalla sessione Supabase se disponibile
+ */
+export async function bulkMarkerDrop(payload: unknown) {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Nessuna sessione');
-  
-  const accessToken = session.access_token;
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/bulk-marker-drop`;
-  
+  const bearer = session?.access_token;
+
+  const url = `${functionsBaseUrl}/bulk-marker-drop`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
-      'content-type': 'application/json',
-      'authorization': `Bearer ${accessToken}`,
-      'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-    },
-    body: JSON.stringify(payload)
-  });
-  
-  const text = await res.text();
-  let body: any = {};
-  try { 
-    body = text ? JSON.parse(text) : {}; 
-  } catch { 
-    body = { raw: text }; 
-  }
-  
-  if (!res.ok) {
-    throw new Error(body?.error || `HTTP ${res.status}: ${text}`);
-  }
-  
-  return body; // { success:true, created:[...], ... }
-}
-
-// Legacy function for backward compatibility
-export const createBulkMarkersLegacy = async (request: BulkMarkerRequest): Promise<BulkMarkerResponse> => {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    throw new Error('No session found');
-  }
-
-  const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? `https://${import.meta.env.VITE_SUPABASE_PROJECT_REF}.supabase.co``;
-  const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZranJxaXJ2ZHZqYmVtc2Z6eG9mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwMzQyMjYsImV4cCI6MjA2MDYxMDIyNn0.rb0F3dhKXwb_110--08Jsi4pt_jx-5IWwhi96eYMxBk";
-
-  const url = `${SUPABASE_URL}/functions/v1/bulk-marker-drop`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${session.access_token}`,
-      'apikey': ANON_KEY,
       'Content-Type': 'application/json',
-      'Origin': window.location.origin
+      ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
     },
-    body: JSON.stringify(request)
+    body: JSON.stringify(payload ?? {}),
   });
 
-  const responseText = await response.text();
-  
-  let parsedResponse: any;
-  try {
-    parsedResponse = JSON.parse(responseText);
-  } catch {
-    throw new Error(`Invalid JSON response: ${responseText}`);
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`bulk-marker-drop failed: ${res.status} ${res.statusText} ${text}`);
   }
-
-  if (!response.ok) {
-    throw new Error(parsedResponse?.error || `HTTP ${response.status}: ${responseText}`);
-  }
-
-  return parsedResponse;
-};
+  return res.json();
+}
