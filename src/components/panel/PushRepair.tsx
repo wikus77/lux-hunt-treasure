@@ -27,7 +27,7 @@ export default function PushRepair() {
     try {
       const result = await repairPush();
       
-      if (result.ok) {
+      if (result.supported && !result.hasSubscription) {
         addLog(`✅ Push riparato`);
         toast.success('Push riparato');
       } else {

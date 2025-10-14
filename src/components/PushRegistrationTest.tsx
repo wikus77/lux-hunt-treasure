@@ -42,8 +42,8 @@ export const PushRegistrationTest: React.FC = () => {
   const onRegister = async () => {
     try {
       setStatus('registering');
-      // keep API flexible: most implementations don't need args; if yours does, add them here.
-      const res = await registerPush();
+      const reg = await navigator.serviceWorker.ready;
+      const res = await registerPush(reg);
       setStatus('registered');
       toast.success('Registered for push');
       console.log('registerPush() result:', res);
