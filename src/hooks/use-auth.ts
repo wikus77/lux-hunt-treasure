@@ -168,3 +168,5 @@ export const useAuth = () => {
     getAccessToken: () => sessionManager.session?.access_token || '',
   };
 };
+
+export default useAuth;
