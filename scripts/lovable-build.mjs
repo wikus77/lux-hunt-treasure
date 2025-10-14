@@ -27,8 +27,11 @@ console.log("\n=== PREBUILD (GUARD) ===");
 code = run("pnpm run -s prebuild"); if (code) process.exit(code);
 console.log("\n=== BUILD (VITE) ===");
 code = run("pnpm run -s build");
-if (code) { console.error("❌ BUILD FAILED — log:", logFile);
+if (code) {
+  console.error("❌ BUILD FAILED — log:", logFile);
   run(`grep -E -m1 "(ERROR|ERR!|TS[0-9]{4}|RollupError|Cannot find module|TypeError|ReferenceError|Build failed|Failed to)" "${logFile}" || true`);
+  // stampa anche le ultime 200 righe per contesto
+  run(`tail -n 200 "${logFile}" || true`);
   process.exit(code);
 }
 console.log("\n=== DIST CHECK ===");
