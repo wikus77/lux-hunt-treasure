@@ -220,9 +220,7 @@ const Settings = () => {
             <PushDiagnostics />
             
             <div className="bg-zinc-900/50 p-4 rounded-lg border border-zinc-700">
-              <PushEnableButton 
-                className="bg-transparent border-zinc-700"
-              />
+              <PushEnableButton />
             </div>
             
             {/* Opera Fix Button */}

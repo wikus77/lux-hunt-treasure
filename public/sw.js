@@ -188,4 +188,3 @@ self.addEventListener('notificationclick', (event) => {
 console.log('[M1SSION SW] ✅ Service Worker loaded successfully');
 
 // sw-bump-1759826182
-self.VAPID_PUBLIC_KEY='BN399Y_Zi9ZLc-T_S90-IxAh4cMSSlklmim41ACc3ev5Dd-Qzl3XKTdQ72oiT8IWSBossxJYde2DVSee_m1NnHI';

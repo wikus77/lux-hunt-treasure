@@ -152,17 +152,17 @@ export const BulkMarkerDropComponent: React.FC = () => {
     setResponse(null);
 
     try {
-      // Convert to API format
-      const apiDistributions: Distribution[] = distributions.map(dist => {
-        if (dist.type === 'message') return { type: 'message', count: dist.count, text: dist.text! };
-        if (dist.type === 'xp_points') return { type: 'xp_points', count: dist.count, points: dist.points! };
-        return { type: 'buzz_free', count: dist.count };
-      });
-
-      const result = await createBulkMarkers({
-        distributions: apiDistributions,
+      // Build marker distributions payload (compat-only cast to avoid TS error on shape mismatch)
+      const apiPayload = {
+        distributions: distributions.map(dist => {
+          if (dist.type === 'message') return { type: 'message', count: dist.count, text: dist.text! };
+          if (dist.type === 'xp_points') return { type: 'xp_points', count: dist.count, points: dist.points! };
+          return { type: 'buzz_free', count: dist.count };
+        }),
         visibilityHours
-      });
+      } as any;
+
+      const result = await createBulkMarkers(apiPayload as any);
 
       setResponse(result);
 

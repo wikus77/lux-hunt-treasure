@@ -1,13 +1,8 @@
-async function __loadKeyAndConv__(){
-  const mod = await import('@/lib/vapid-loader');
-  const loadKey = mod.loadVAPIDPublicKey;
-  const conv = mod['url'+'Base64ToUint8Array']; // evita match del Guard sul nome in chiaro
-  return { loadKey, conv };
-}
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-/* Web Push push-key Subscription Client */
+/* Web Push Subscription Client */
 
 import { supabase } from '@/integrations/supabase/client';
+import { loadVAPIDPublicKey, urlBase64ToUint8Array } from '@/lib/vapid-loader';
 
 // push-key Public Key - Unified source
 
@@ -113,14 +108,15 @@ export async function subscribeToPush(options: SubscribeOptions = {}): Promise<S
     if (!subscription) {
       log('📝 Creating new push subscription...');
       
-      // Convert push-key key
+      // Convert VAPID key
       const vapidKey = await loadVAPIDPublicKey();
-      const applicationServerKey = (await (async()=>{ const {loadKey,conv}=await __loadKeyAndConv__(); const k=await loadKey(); return (typeof k==="string"? conv(k):k); })());
+      const keyBytes = typeof vapidKey === 'string' ? urlBase64ToUint8Array(vapidKey) : vapidKey;
+      const applicationServerKey = keyBytes as unknown as BufferSource;
       
       // Subscribe to push
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: applicationServerKey as unknown as BufferSource
+        applicationServerKey
       });
       
       log('✅ Push subscription created');

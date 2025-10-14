@@ -52,7 +52,24 @@ export const RecentSuggestionsTab: React.FC = () => {
           return;
         }
 
-        setSuggestions(data || []);
+        // Normalize external_feed_items from array to object
+        const normalized = (data || []).map((it: any) => {
+          const ext = Array.isArray(it.external_feed_items) 
+            ? it.external_feed_items[0] 
+            : it.external_feed_items;
+          return {
+            ...it,
+            external_feed_items: ext
+              ? { 
+                  title: String(ext.title ?? ''), 
+                  url: String(ext.url ?? ''), 
+                  tags: Array.isArray(ext.tags) ? ext.tags.map(String) : [] 
+                }
+              : { title: '', url: '', tags: [] }
+          };
+        });
+
+        setSuggestions(normalized as SuggestedNotification[]);
       } catch (error) {
         console.error('Error fetching suggestions:', error);
       } finally {

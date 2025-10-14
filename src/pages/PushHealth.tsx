@@ -249,9 +249,9 @@ export default function PushHealth() {
         </Card>
 
         {/* Push Enable Component */}
-        <PushEnableButton 
-          className="md:col-span-2 lg:col-span-1"
-        />
+        <div className="md:col-span-2 lg:col-span-1">
+          <PushEnableButton />
+        </div>
       </div>
 
       {/* Overall System Health */}

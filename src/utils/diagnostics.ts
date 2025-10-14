@@ -11,6 +11,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 import { getProjectRef } from '@/lib/supabase/functionsBase';
+import { getSupabaseBearer } from '@/utils/supabase-helpers';
 
 
 // Enhanced interface for notification testing

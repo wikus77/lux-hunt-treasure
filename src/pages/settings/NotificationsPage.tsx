@@ -36,16 +36,29 @@ const NotificationsPage: React.FC = () => {
   // State machine for notification toggle
   const [notificationState, setNotificationState] = useState<NotificationState>('OFF');
   const [subscriptions, setSubscriptions] = useState<FCMSubscription[]>([]);
-  const [notificationStatus, setNotificationStatus] = useState(getNotificationStatus());
+  const [notifStatus, setNotifStatus] = useState<{ 
+    supported: boolean; 
+    permission: NotificationPermission; 
+    enabled: boolean; 
+    endpoint?: string;
+  }>({ 
+    supported: false, 
+    permission: 'default', 
+    enabled: false 
+  });
   const [lastError, setLastError] = useState<string>('');
   const [debugMode, setDebugMode] = useState(false);
 
-  // Update status periodically
+  // Load notification status on mount
   useEffect(() => {
-    const interval = setInterval(() => {
-      setNotificationStatus(getNotificationStatus());
-    }, 1000);
-    return () => clearInterval(interval);
+    let mounted = true;
+    (async () => {
+      try {
+        const s = await getNotificationStatus();
+        if (mounted) setNotifStatus(s);
+      } catch {}
+    })();
+    return () => { mounted = false; };
   }, []);
 
   // Load user's FCM subscriptions
@@ -190,7 +203,7 @@ const NotificationsPage: React.FC = () => {
       } else {
         toast({
           title: "❌ Test Failed",
-          description: result.error || "Test notification failed",
+          description: "Test notification failed",
           variant: "destructive"
         });
       }
@@ -206,13 +219,15 @@ const NotificationsPage: React.FC = () => {
   const debugPayload = () => {
     if (!user) return;
     
+    const platform = /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'iOS' : 
+                     /Android/.test(navigator.userAgent) ? 'Android' : 'unknown';
     const payload = {
       user_id: user.id,
       token: subscriptions[0]?.token || 'NO_TOKEN',
-      platform: notificationStatus.platform,
+      platform,
       device_info: {
         userAgent: navigator.userAgent,
-        platform: notificationStatus.platform,
+        platform,
         timestamp: new Date().toISOString(),
         isStandalone: isStandalone(),
         url: window.location.href
@@ -255,8 +270,8 @@ const NotificationsPage: React.FC = () => {
   const isToggleDisabled = () => {
     return (
       !user ||
-      !notificationStatus.supported ||
-      notificationStatus.permission === 'denied' ||
+      !notifStatus.supported ||
+      notifStatus.permission === 'denied' ||
       ['REQUESTING', 'ENABLING', 'DISABLING'].includes(notificationState)
     );
   };
@@ -302,15 +317,16 @@ const NotificationsPage: React.FC = () => {
           
           <div className="flex items-center justify-between">
             <span>Permission:</span>
-            <Badge variant={getPermissionColor(notificationStatus.permission)}>
-              {notificationStatus.permission}
+            <Badge variant={getPermissionColor(notifStatus.permission)}>
+              {notifStatus.permission}
             </Badge>
           </div>
           
           <div className="flex items-center justify-between">
             <span>Platform:</span>
             <Badge variant="outline">
-              {notificationStatus.platform}
+              {/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'iOS' : 
+               /Android/.test(navigator.userAgent) ? 'Android' : 'unknown'}
             </Badge>
           </div>
           
@@ -345,7 +361,7 @@ const NotificationsPage: React.FC = () => {
             </div>
           )}
           
-          {notificationStatus.permission === 'denied' && (
+          {notifStatus.permission === 'denied' && (
             <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
               <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
                 <BellOff className="w-4 h-4" />

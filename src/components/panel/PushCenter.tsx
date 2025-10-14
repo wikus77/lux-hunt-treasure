@@ -40,11 +40,11 @@ export const PushCenter: React.FC = () => {
     setIsRepairing(true);
     try {
       const result = await repairPush();
-      if (result.success) {
-        toast.success(result.message);
+      if (result.supported && !result.hasSubscription) {
+        toast.success('Push riparato');
         await loadStatus(); // Refresh status
       } else {
-        toast.error(result.message);
+        toast.error('Errore riparazione');
       }
     } catch (error: any) {
       toast.error(`Errore: ${error.message}`);
@@ -57,10 +57,10 @@ export const PushCenter: React.FC = () => {
     setIsSending(true);
     try {
       const result = await sendSelfTest();
-      if (result.success) {
-        toast.success(result.message);
+      if (result.ok) {
+        toast.success('Test inviato');
       } else {
-        toast.error(result.message);
+        toast.error(`Test fallito (status: ${result.status ?? 500})`);
       }
     } catch (error: any) {
       toast.error(`Errore: ${error.message}`);

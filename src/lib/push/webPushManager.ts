@@ -61,8 +61,8 @@ export async function subscribeWebPushAndSave(
 
   // Chiave solo tramite loader canonico
   const publicKey = await loadPublicKey();
-  const applicationServerKey =
-    typeof publicKey === 'string' ? toUint8(publicKey) : publicKey;
+  const keyBytes = typeof publicKey === 'string' ? toUint8(publicKey) : publicKey;
+  const applicationServerKey = keyBytes as unknown as BufferSource;
 
   if (!reg?.pushManager) throw new Error('PushManager non disponibile');
 
