@@ -141,6 +141,12 @@ export async function subscribe(_userId?: string): Promise<PushSubscription> {
   return cur;
 }
 
+export async function getCurrentSubscription(): Promise<PushSubscription | null> {
+  if (!isPushSupported()) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
 export async function unsubscribe(): Promise<boolean> {
   return disableWebPush();
 }

@@ -1,22 +1,29 @@
 import {
-  enableWebPush as coreEnableWebPush,
-  getNotificationStatus,
+  enable as coreEnable,
+  getStatus as coreGetStatus,
   type UnifiedSubscription,
 } from '@/lib/push/webPushManager';
 
 /** Facade sottile: delega al manager core senza logica VAPID qui. */
 export type { UnifiedSubscription };
 
-export type EnablePushOptions = Parameters<typeof coreEnableWebPush>[0];
+export type EnablePushOptions = void;
 
-export async function enablePush(opts?: EnablePushOptions) {
-  return coreEnableWebPush(opts);
+export async function enablePush(_opts?: EnablePushOptions) {
+  return coreEnable();
 }
 
-export { getNotificationStatus };
+export const getNotificationStatus = coreGetStatus;
 
 // Compat exports
-export const enablePushNotifications = enablePush;
+export const enablePushNotifications = async () => {
+  try { 
+    await enablePush(); 
+    return { success: true }; 
+  } catch (e: any) { 
+    return { success: false, error: e?.message ?? 'Enable push failed' }; 
+  }
+};
 
 export function needsInstallGuide(): boolean {
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
@@ -29,7 +36,7 @@ export function isStandalone(): boolean {
 }
 
 // Segnaposto compat (NO token/URL nel FE, nessun hardcode)
-export async function getUserFCMTokens(_userId: string){ return []; }
-export async function regenerateFCMToken(_userId: string){ return null; }
-export async function testNotification(_userId: string){ return { ok: true }; }
-export async function deleteTokenFromDB(_token: string){ return { ok: true }; }
+export async function getUserFCMTokens(_?: any){ return []; }
+export async function regenerateFCMToken(_?: any){ return null; }
+export async function testNotification(_?: any){ return { ok: true, success: true }; }
+export async function deleteTokenFromDB(_?: any){ return { ok: true, success: true }; }

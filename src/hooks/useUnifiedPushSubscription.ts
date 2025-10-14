@@ -53,10 +53,10 @@ export const useUnifiedPushSubscription = () => {
       
       try {
         console.log('🔔 [useUnifiedPushSubscription] Auto-subscribing for authenticated user...');
-        const result = await registerPush(user.id);
+        const registration = await navigator.serviceWorker.ready;
+        const result = await registerPush(registration);
         
         // Get the actual subscription after registration
-        const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
         
         setState(prev => ({
@@ -95,11 +95,11 @@ export const useUnifiedPushSubscription = () => {
         throw new Error('User not authenticated');
       }
       
-      const result = await registerPush(user.id);
+      const registration = await navigator.serviceWorker.ready;
+      const result = await registerPush(registration);
       const permission = Notification.permission;
       
       // Get the actual subscription after registration
-      const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       
       setState(prev => ({

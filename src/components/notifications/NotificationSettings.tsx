@@ -34,12 +34,12 @@ export default function NotificationSettings() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const s = getNotificationStatus();
+      const s = await getNotificationStatus();
       if (!mounted) return;
       setStatus(s);
     })();
     const interval = setInterval(async () => {
-      const s = getNotificationStatus();
+      const s = await getNotificationStatus();
       if (!mounted) return;
       setStatus(s);
     }, 1000);
@@ -73,7 +73,7 @@ export default function NotificationSettings() {
         description: "Push notifications are now active!",
       });
       await loadTokens();
-      setStatus(getNotificationStatus());
+      setStatus(await getNotificationStatus());
     } catch (error: any) {
       toast({
         title: "❌ Error",

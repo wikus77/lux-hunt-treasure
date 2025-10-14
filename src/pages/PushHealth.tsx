@@ -250,8 +250,6 @@ export default function PushHealth() {
 
         {/* Push Enable Component */}
         <PushEnableButton 
-          onSubscriptionChange={handleSubscriptionChange}
-          showTestButton={true}
           className="md:col-span-2 lg:col-span-1"
         />
       </div>

@@ -155,18 +155,11 @@ export default function PushDiagnostic() {
   const testPushFlow = async () => {
     addLog('🧪 Starting push notification test...');
     try {
-      const result = await enablePush();
-      setTestResult(result);
-      
-      if (result.success) {
-        addLog('✅ Push test SUCCESS');
-        toast.success('Test push completato!');
-        // Refresh diagnostics to see new state
-        await refreshDiagnostics();
-      } else {
-        addLog(`❌ Push test FAILED: ${result.error}`);
-        toast.error('Test push fallito', { description: result.error });
-      }
+      await enablePush();
+      addLog('✅ Push test SUCCESS');
+      toast.success('Test push completato!');
+      // Refresh diagnostics to see new state
+      await refreshDiagnostics();
     } catch (error: any) {
       addLog(`💥 Push test ERROR: ${error.message}`);
       toast.error('Test push error', { description: error.message });
