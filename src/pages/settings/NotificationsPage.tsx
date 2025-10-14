@@ -57,7 +57,8 @@ const NotificationsPage: React.FC = () => {
       setSubscriptions(userTokens);
       
       // Set initial state based on active subscriptions
-      if (userTokens.length > 0 && notificationStatus.permission === 'granted') {
+      const status = await getNotificationStatus();
+      if (userTokens.length > 0 && status.permission === 'granted') {
         setNotificationState('ON');
       } else {
         setNotificationState('OFF');
@@ -69,7 +70,7 @@ const NotificationsPage: React.FC = () => {
 
   useEffect(() => {
     loadSubscriptions();
-  }, [user, notificationStatus.permission]);
+  }, [user]);
 
   // State machine handlers
   const handleToggleNotifications = async () => {
@@ -150,7 +151,7 @@ const NotificationsPage: React.FC = () => {
 
     try {
       // Delete all user tokens from database
-      await deleteTokenFromDB({ userId: user.id });
+      await deleteTokenFromDB(user.id);
       
       setNotificationState('OFF');
       toast({

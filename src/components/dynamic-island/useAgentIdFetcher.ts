@@ -22,7 +22,7 @@ export const useAgentIdFetcher = () => {
           // Get agent code from database
           const { data, error } = await supabase
             .rpc('get_my_agent_code')
-            .single();
+            .single<{ agent_code?: string }>();
 
           if (!error && data?.agent_code) {
             const code = data.agent_code.replace("AG-", "");

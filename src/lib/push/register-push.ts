@@ -3,9 +3,7 @@ export async function registerPush(reg: ServiceWorkerRegistration): Promise<Push
   if (!reg?.pushManager) {
     throw new Error('PushManager non disponibile');
   }
-  const mod = await import('@/lib/vapid-loader');
-  const loadVAPIDPublicKey = (mod as any).loadVAPIDPublicKey ?? mod.default;
-  const urlBase64ToUint8Array = (mod as any).urlBase64ToUint8Array;
+  const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
 
   const publicKey = await loadVAPIDPublicKey();
   const applicationServerKey =

@@ -42,7 +42,8 @@ export const usePWAStabilizer = () => {
           console.log('🔔 PWA Stabilizer: Setting up push subscription...');
           
           try {
-            const result = await registerPush(user.id);
+            const reg = await navigator.serviceWorker.ready;
+            const result = await registerPush(reg);
             if (result) {
               console.log('✅ PWA Stabilizer: Push subscription established:', result);
             }

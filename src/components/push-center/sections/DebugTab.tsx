@@ -41,10 +41,11 @@ export default function DebugTab() {
     }
 
     // Subscription
-    const status = await getCurrentSubscription();
-    setHasSubscription(status.isSubscribed);
-    if (status.subscription) {
-      setEndpointTail('...' + status.subscription.endpoint.slice(-20));
+    const sub = await getCurrentSubscription();
+    const isSubbed = !!sub;
+    setHasSubscription(isSubbed);
+    if (sub?.endpoint) {
+      setEndpointTail('...' + sub.endpoint.slice(-20));
     } else {
       setEndpointTail('');
     }
@@ -60,7 +61,7 @@ export default function DebugTab() {
     // VAPID (unified source)
     try {
       const { loadVAPIDPublicKey } = await import('@/lib/vapid-loader');
-      const vapid = loadVAPIDPublicKey();
+      const vapid = await loadVAPIDPublicKey();
       setVapidKey(vapid ? '...' + vapid.slice(-12) : 'Not configured');
     } catch {
       setVapidKey('Error reading VAPID');

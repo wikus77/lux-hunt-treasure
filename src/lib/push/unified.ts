@@ -110,10 +110,10 @@ export class UnifiedPushManager {
         throw new Error('User not authenticated');
       }
       
-      const result = await registerPush(session.user.id);
+      const registration = await navigator.serviceWorker.ready;
+      const result = await registerPush(registration);
       
       // Get the actual subscription after registration
-      const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
       
       return {
@@ -188,7 +188,7 @@ export class UnifiedPushManager {
       }
       
       console.log('🔧 [Desktop] Calling registerPush...');
-      await registerPush(session.user.id);
+      await registerPush(registration);
       
       // Get the actual subscription after registration
       const webPushSubscription = await registration.pushManager.getSubscription();

@@ -27,17 +27,15 @@ export default function PushRepair() {
     try {
       const result = await repairPush();
       
-      if (result.success) {
-        addLog(`✅ ${result.message}`);
-        toast.success(result.message);
+      if (result.ok) {
+        addLog(`✅ Push riparato`);
+        toast.success('Push riparato');
       } else {
-        addLog(`❌ ${result.message}`);
-        toast.error(result.message);
+        addLog(`❌ Errore riparazione`);
+        toast.error('Errore riparazione');
       }
 
-      if (result.details) {
-        addLog(`Details: ${JSON.stringify(result.details, null, 2)}`);
-      }
+      addLog(`Details: ${JSON.stringify(result, null, 2)}`);
 
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -55,17 +53,15 @@ export default function PushRepair() {
     try {
       const result = await sendSelfTest();
       
-      if (result.success) {
-        addLog(`✅ ${result.message}`);
-        toast.success(result.message);
+      if (result.ok) {
+        addLog(`✅ Test inviato`);
+        toast.success('Test inviato');
       } else {
-        addLog(`❌ ${result.message}`);
-        toast.error(result.message);
+        addLog(`❌ Test fallito`);
+        toast.error('Test fallito');
       }
 
-      if (result.details) {
-        addLog(`Details: ${JSON.stringify(result.details, null, 2)}`);
-      }
+      addLog(`Details: ${JSON.stringify(result, null, 2)}`);
 
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';

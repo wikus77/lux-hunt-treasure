@@ -70,7 +70,7 @@ const AgentBadge = () => {
           // Use our new secure RPC function to get the agent code
           const { data, error } = await supabase
             .rpc('get_my_agent_code')
-            .single();
+            .single<{ agent_code?: string }>();
 
           if (error) {
             console.error("Error fetching agent code:", error);

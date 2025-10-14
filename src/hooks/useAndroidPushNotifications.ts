@@ -84,23 +84,14 @@ export const useAndroidPushNotifications = () => {
         const registration = await navigator.serviceWorker.ready;
         
         // Subscribe to push notifications (unified source)
-        const { loadVAPIDPublicKey } = await import('@/lib/vapid-loader');
-        const vapidKey = loadVAPIDPublicKey();
+        const { loadVAPIDPublicKey, urlBase64ToUint8Array } = await import('@/lib/vapid-loader');
+        const vapidKey = await loadVAPIDPublicKey();
         if (!vapidKey) {
           throw new Error('VAPID public key not configured');
         }
 
-        // Convert VAPID key to proper format
-        const vapidKeyArray = (() => {
-          const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4);
-          const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/');
-          const rawData = atob(base64);
-          const outputArray = new Uint8Array(rawData.length);
-          for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-          }
-          return outputArray;
-        })();
+        // Convert VAPID key to proper format using canonical converter
+        const vapidKeyArray = urlBase64ToUint8Array(vapidKey);
 
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,

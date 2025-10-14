@@ -32,14 +32,17 @@ const PushDebugPanel: React.FC = () => {
 
   const updateStatus = async () => {
     try {
-      const status = await getCurrentSubscription();
-      setIsControlled(status.isControlled);
-      setIsSubscribed(status.isSubscribed);
+      const sub = await getCurrentSubscription();
+      const isControlledNow = !!navigator.serviceWorker.controller;
+      const isSubscribedNow = !!sub;
       
-      if (status.subscription) {
-        const url = new URL(status.subscription.endpoint);
+      setIsControlled(isControlledNow);
+      setIsSubscribed(isSubscribedNow);
+      
+      if (sub) {
+        const url = new URL(sub.endpoint);
         setEndpointHost(url.hostname);
-        setEndpointTail(status.subscription.endpoint.slice(-20));
+        setEndpointTail(sub.endpoint.slice(-20));
       } else {
         setEndpointHost('');
         setEndpointTail('');
