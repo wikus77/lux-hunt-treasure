@@ -25,17 +25,25 @@ interface FCMToken {
 export default function NotificationSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [status, setStatus] = useState(getNotificationStatus());
+  const [status, setStatus] = useState({ supported: false, permission: 'default' as NotificationPermission });
   const [tokens, setTokens] = useState<FCMToken[]>([]);
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
 
   // Update status periodically
   useEffect(() => {
-    const interval = setInterval(() => {
-      setStatus(getNotificationStatus());
+    let mounted = true;
+    (async () => {
+      const s = getNotificationStatus();
+      if (!mounted) return;
+      setStatus(s);
+    })();
+    const interval = setInterval(async () => {
+      const s = getNotificationStatus();
+      if (!mounted) return;
+      setStatus(s);
     }, 1000);
-    return () => clearInterval(interval);
+    return () => { mounted = false; clearInterval(interval); };
   }, []);
 
   // Load user tokens
@@ -59,22 +67,13 @@ export default function NotificationSettings() {
     
     setLoading(true);
     try {
-      const result = await enablePushNotifications();
-      
-      if (result.success) {
-        toast({
-          title: "✅ Notifications Enabled",
-          description: "Push notifications are now active!",
-        });
-        await loadTokens();
-        setStatus(getNotificationStatus());
-      } else {
-        toast({
-          title: "❌ Enable Failed",
-          description: result.error || "Failed to enable notifications",
-          variant: "destructive"
-        });
-      }
+      await enablePushNotifications();
+      toast({
+        title: "✅ Notifications Enabled",
+        description: "Push notifications are now active!",
+      });
+      await loadTokens();
+      setStatus(getNotificationStatus());
     } catch (error: any) {
       toast({
         title: "❌ Error",
@@ -91,21 +90,12 @@ export default function NotificationSettings() {
     
     setLoading(true);
     try {
-      const newToken = await regenerateFCMToken();
-      
-      if (newToken) {
-        toast({
-          title: "🔄 Token Regenerated",
-          description: "New push token generated successfully",
-        });
-        await loadTokens();
-      } else {
-        toast({
-          title: "❌ Regeneration Failed",
-          description: "Failed to regenerate token",
-          variant: "destructive"
-        });
-      }
+      await regenerateFCMToken(user.id);
+      toast({
+        title: "🔄 Token Regenerated",
+        description: "New push token generated successfully",
+      });
+      await loadTokens();
     } catch (error: any) {
       toast({
         title: "❌ Error",
@@ -118,25 +108,15 @@ export default function NotificationSettings() {
   };
 
   const handleTestNotification = async () => {
-    if (tokens.length === 0) return;
+    if (!user) return;
     
     setTesting(true);
     try {
-      const currentToken = tokens[0].token;
-      const result = await testNotification(currentToken);
-      
-      if (result.success) {
-        toast({
-          title: "🧪 Test Sent",
-          description: "Check for the test notification!",
-        });
-      } else {
-        toast({
-          title: "❌ Test Failed",
-          description: result.error || "Test notification failed",
-          variant: "destructive"
-        });
-      }
+      await testNotification(user.id);
+      toast({
+        title: "🧪 Test Sent",
+        description: "Check for the test notification!",
+      });
     } catch (error: any) {
       toast({
         title: "❌ Error",
@@ -199,24 +179,6 @@ export default function NotificationSettings() {
             </Badge>
           </div>
           
-          <div className="flex items-center justify-between">
-            <span>Platform:</span>
-            <Badge variant="outline">
-              {status.platform}
-            </Badge>
-          </div>
-          
-          {status.needsInstall && (
-            <div className="p-4 bg-amber-50 dark:bg-amber-950 rounded-lg">
-              <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
-                <Smartphone className="w-4 h-4" />
-                <span className="font-medium">iOS Installation Required</span>
-              </div>
-              <p className="text-sm mt-1 text-amber-600 dark:text-amber-400">
-                Please add this app to your Home Screen to enable notifications
-              </p>
-            </div>
-          )}
           
           {status.permission === 'denied' && (
             <div className="p-4 bg-red-50 dark:bg-red-950 rounded-lg">
@@ -261,7 +223,7 @@ export default function NotificationSettings() {
             <Button 
               variant="outline"
               onClick={handleTestNotification}
-              disabled={testing || tokens.length === 0}
+              disabled={testing || !user}
               className="flex items-center gap-2"
             >
               <TestTube className="w-4 h-4" />

@@ -106,6 +106,49 @@ export async function disableWebPush(): Promise<boolean> {
   return true;
 }
 
+// ---- Compat layer (append-only) ----
+
+export async function getCurrent(): Promise<PushSubscription | null> {
+  if (!isPushSupported()) return null;
+  const reg = await navigator.serviceWorker.ready;
+  return reg.pushManager.getSubscription();
+}
+
+export async function getStatus(): Promise<{
+  supported: boolean;
+  permission: NotificationPermission;
+  enabled: boolean;
+  endpoint?: string;
+}> {
+  const { supported, permission } = getNotificationStatus();
+  const sub = await getCurrent();
+  return { supported, permission: (permission ?? 'default'), enabled: !!sub, endpoint: sub?.endpoint };
+}
+
+export async function enable(): Promise<void> {
+  await enableWebPush();
+}
+
+export async function disable(): Promise<void> {
+  await disableWebPush();
+}
+
+export async function subscribe(_userId?: string): Promise<PushSubscription> {
+  const reg = await navigator.serviceWorker.ready;
+  await subscribeWebPushAndSave(reg);
+  const cur = await reg.pushManager.getSubscription();
+  if (!cur) throw new Error('Subscription failed');
+  return cur;
+}
+
+export async function unsubscribe(): Promise<boolean> {
+  return disableWebPush();
+}
+
+export function isSupported(): boolean {
+  return isPushSupported();
+}
+
 /** Facade ad oggetto, per i call-site che importano come "webPushManager" */
 export const webPushManager = {
   isPushSupported,
@@ -115,4 +158,19 @@ export const webPushManager = {
   getNotificationStatus,
   looksLikeWebPushEndpoint,
   subscribeWebPushAndSave,
+  // alias compat:
+  getCurrent,
+  getStatus,
+  enable,
+  disable,
+  subscribe,
+  unsubscribe,
+  isSupported,
 };
+
+// Export standalone richiesti da alcuni componenti
+export function isWebPushSupported(): boolean { return isPushSupported(); }
+export function isPWAMode(): boolean {
+  return window.matchMedia?.('(display-mode: standalone)').matches ||
+         (navigator as any).standalone === true;
+}

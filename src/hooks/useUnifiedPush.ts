@@ -91,7 +91,27 @@ export function useUnifiedPush() {
     }
   }, []);
 
-  return { ...state, enable, disable, refresh };
+  return {
+    ...state,
+    enable,
+    disable,
+    refresh,
+    // compat richiesti dai componenti legacy:
+    isSupported: webPushManager.isSupported(),
+    subscription: null,
+    webPushSubscription: state.subscriptionEndpoint,
+    subscriptionType: 'webpush' as const,
+    isLoading: state.loading,
+    isSubscribed: !!state.enabled,
+    canSubscribe: !state.enabled && !state.loading,
+    subscribe: enable,
+    async requestPermission() {
+      const perm = await Notification.requestPermission();
+      setState(s => ({ ...s, permission: perm }));
+      return perm === 'granted';
+    },
+    unsubscribe: disable,
+  };
 }
 
 export type { UseUnifiedPushState };
