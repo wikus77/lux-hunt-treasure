@@ -1,0 +1,9 @@
+{
+  "user_id": "'"$USER_ID"'",
+  "payload": {
+    "title": "TEST PUSH 200",
+    "body": "🔔 Verifica realtime – M1SSION™",
+    "link_url": "https://m1ssion.eu/notifications",
+    "image_url": null
+  }
+}
