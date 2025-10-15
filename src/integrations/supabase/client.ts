@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getProjectRef } from '@/lib/supabase/functionsBase';
 import type { Database } from './types';
+import { incSupabaseInstanceCount } from '@/lib/supabase/diag';
 
 // ⚠️ SINGLETON HARDENING — DO NOT create multiple Supabase clients!
 // Always import { supabase } or { sb } from this file.
@@ -32,13 +33,18 @@ function initSupabaseClient(): SupabaseClient<Database> {
     console.warn('⚠️ VITE_SUPABASE_ANON_KEY not set — some operations may fail');
   }
   
-  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  const client = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
   });
+  
+  // Track instance creation for diagnostics
+  incSupabaseInstanceCount();
+  
+  return client;
 }
 
 /**
