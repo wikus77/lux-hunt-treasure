@@ -2,82 +2,81 @@
  * Guard-safe helpers for Supabase endpoints.
  * No hardcoded project refs; everything is derived at runtime from env or JWT.
  */
-function tryParseRefFromUrl(u: string | undefined): string | null {
-  if (!u) return null;
-  try {
-    const url = new URL(u);
-    const host = url.hostname; // <ref>.supabase.co or <ref>.functions.supabase.co
-    const parts = host.split('.');
-    // handle "ref.supabase.co" and "ref.functions.supabase.co"
-    const ref = parts[0] || '';
-    return ref || null;
-  } catch {
-    return null;
+const cached: { ref?: string; fbase?: string } = {};
+
+export function getProjectRef(): string | null {
+  if (cached.ref) return cached.ref;
+  
+  // 1) Override diretto (opzionale)
+  const explicit = import.meta.env.VITE_SUPABASE_PROJECT_REF as string | undefined;
+  if (explicit && /^[a-z0-9]{20,}$/.test(explicit)) {
+    cached.ref = explicit;
+    return cached.ref;
   }
-}
-
-function base64urlToJson(b64: string): any | null {
+  
+  // 2) Parsare da VITE_SUPABASE_URL: https://<ref>.supabase.co
+  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
   try {
-    const pad = '='.repeat((4 - (b64.length % 4)) % 4);
-    const str = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
-    const json = atob(str);
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
-/** Exported: used across the app */
-export function getProjectRef(): string {
-  // 1) From VITE_SUPABASE_URL (preferred)
-  const viteUrl = (import.meta as any)?.env?.VITE_SUPABASE_URL as string | undefined;
-  const fromViteUrl = tryParseRefFromUrl(viteUrl);
-  if (fromViteUrl) return fromViteUrl;
-
-  // 2) From VITE_SUPABASE_ANON_KEY (iss claim)
-  const anon = (import.meta as any)?.env?.VITE_SUPABASE_ANON_KEY as string | undefined;
-  if (anon && anon.includes('.')) {
-    const parts = anon.split('.');
-    if (parts.length >= 2) {
-      const payload = base64urlToJson(parts[1]);
-      const iss = payload?.iss as string | undefined; // e.g., https://<ref>.supabase.co
-      const fromIss = tryParseRefFromUrl(iss);
-      if (fromIss) return fromIss;
+    if (url) {
+      const u = new URL(url);
+      const m = u.hostname.match(/^([a-z0-9-]+)\.supabase\.co$/i);
+      if (m && m[1]) {
+        cached.ref = m[1];
+        return cached.ref;
+      }
     }
-  }
-
-  // 3) From a global (legacy) window var, if present
-  if (typeof window !== 'undefined') {
-    const maybe = (window as any)?.SUPABASE_URL as string | undefined;
-    const fromWin = tryParseRefFromUrl(maybe);
-    if (fromWin) return fromWin;
-  }
-
-  // 4) Last resort: empty string (call sites should handle gracefully)
-  return '';
+  } catch {}
+  
+  return null;
 }
 
-const _ref = getProjectRef();
-
-/** Canonical Functions base URL (empty string if ref is unknown at runtime) */
-export const functionsBaseUrl = _ref ? `https://${_ref}.supabase.co/functions/v1` : '';
+export function functionsBaseUrl(fn?: string): string {
+  if (cached.fbase) return fn ? `${cached.fbase}/${fn}` : cached.fbase;
+  
+  // 1) Override esplicito (se presente)
+  const explicit = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
+  if (explicit) {
+    const base = explicit.replace(/\/+$/,'');
+    cached.fbase = base;
+    return fn ? `${base}/${fn}` : base;
+  }
+  
+  // 2) Costruzione da project ref
+  const ref = getProjectRef();
+  if (!ref) {
+    // lascio stringa segnaposto: il chiamante mostrerà "No project ref"
+    return fn ? `__NO_PROJECT_REF__/${fn}` : `__NO_PROJECT_REF__`;
+  }
+  
+  const base = `https://${ref}.functions.supabase.co`;
+  cached.fbase = base;
+  return fn ? `${base}/${fn}` : base;
+}
 
 /** Optional: REST base (used by some utilities) */
-export const restBaseUrl = _ref ? `https://${_ref}.supabase.co/rest/v1` : '';
+export const restBaseUrl = (() => {
+  const ref = getProjectRef();
+  return ref ? `https://${ref}.supabase.co/rest/v1` : '';
+})();
 
 /**
- * Verify if an edge function is reachable (OPTIONS preflight check)
+ * Ping di salute: ritorna {ok,status} e ragione testuale per 404/403/CORS
  */
-export async function verifyEdgeFunction(fnName: string): Promise<string> {
-  if (!_ref) return '⚠️ No project ref';
+export async function verifyEdgeFunction(name: string) {
+  const url = functionsBaseUrl(name);
   
-  const url = `${functionsBaseUrl}/${fnName}`;
   try {
-    const res = await fetch(url, { method: 'OPTIONS' });
-    if (res.ok || res.status === 204) return '✅ reachable';
-    if (res.status === 404) return '❌ 404 (not deployed)';
-    return `⚠️ ${res.status}`;
+    const r = await fetch(url, { method: 'OPTIONS' }).catch(() => null);
+    if (r && r.ok) return { ok: true, status: r.status };
+    
+    // Prova GET/HEAD se OPTIONS non supportato
+    const r2 = await fetch(url, { method: 'GET' }).catch(() => null);
+    if (!r2) return { ok: false, status: 0, reason: 'network' };
+    if (r2.status === 404) return { ok: false, status: 404, reason: 'not-deployed' };
+    if (r2.status === 403 || r2.status === 401) return { ok: false, status: r2.status, reason: 'auth-or-cors' };
+    
+    return { ok: r2.ok, status: r2.status };
   } catch (e: any) {
-    return `⚠️ ${e.message}`;
+    return { ok: false, status: 0, reason: e?.message || 'error' };
   }
 }

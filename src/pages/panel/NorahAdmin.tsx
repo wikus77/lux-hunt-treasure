@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { norahIngest, norahEmbed, norahSearch, norahKpis } from "@/lib/norah/api";
-import { verifyEdgeFunction } from "@/lib/supabase/functionsBase";
+import { verifyEdgeFunction, functionsBaseUrl } from "@/lib/supabase/functionsBase";
 
 export default function NorahAdmin() {
   const { toast } = useToast();
@@ -15,7 +15,7 @@ export default function NorahAdmin() {
   const [kpis, setKpis] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [edgeDiag, setEdgeDiag] = useState<Record<string, string>>({});
+  const [edgeDiag, setEdgeDiag] = useState<Record<string, any>>({});
 
   const handleIngest = async () => {
     setLoading("ingest");
@@ -101,21 +101,24 @@ export default function NorahAdmin() {
   const runEdgeDiag = async () => {
     setLoading("diag");
     const fns = ['norah-ingest', 'norah-embed', 'norah-rag-search', 'norah-kpis'];
-    const results: Record<string, string> = {};
+    const results: Record<string, any> = {};
     for (const fn of fns) {
-      results[fn] = await verifyEdgeFunction(fn);
+      const result = await verifyEdgeFunction(fn);
+      results[fn] = result;
     }
     setEdgeDiag(results);
     setLoading(null);
     
     // Show toast with summary
-    const allOk = Object.values(results).every(v => v.includes('✅'));
+    const allOk = Object.values(results).every((v: any) => v.ok === true);
     toast({
       title: allOk ? "✅ All Functions Reachable" : "⚠️ Some Functions Missing",
       description: allOk ? "All edge functions are deployed" : "Check the diagnostics panel below",
       variant: allOk ? "default" : "destructive"
     });
   };
+
+  const hasNoProjectRef = functionsBaseUrl().includes('__NO_PROJECT_REF__');
 
   const needsEmbedding = kpis && kpis.docs_count > kpis.chunks_count;
 
@@ -151,20 +154,39 @@ export default function NorahAdmin() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
+              {hasNoProjectRef && (
+                <div className="mb-4 p-3 bg-destructive/10 border border-destructive rounded-md">
+                  <p className="text-sm text-destructive font-semibold">⚠️ No project ref detected</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Set VITE_SUPABASE_URL or VITE_SUPABASE_PROJECT_REF/VITE_SUPABASE_FUNCTIONS_URL in build env
+                  </p>
+                </div>
+              )}
+              
               <Button onClick={runEdgeDiag} disabled={loading === "diag"} variant="outline" size="sm">
                 {loading === "diag" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 🔍 Verify Functions
               </Button>
               {Object.keys(edgeDiag).length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
-                  {Object.entries(edgeDiag).map(([fn, status]) => (
-                    <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted text-sm">
-                      <code className="text-xs">{fn}</code>
-                      <span className={status.includes('✅') ? 'text-green-500' : 'text-red-500'}>
-                        {status}
-                      </span>
-                    </div>
-                  ))}
+                  {Object.entries(edgeDiag).map(([fn, result]: [string, any]) => {
+                    const statusText = result.ok 
+                      ? '✅ reachable' 
+                      : result.status === 404 
+                        ? '❌ 404 (not deployed)' 
+                        : result.status === 403 || result.status === 401 
+                          ? '⚠️ auth/CORS' 
+                          : `⚠️ ${result.reason || result.status}`;
+                    
+                    return (
+                      <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted text-sm">
+                        <code className="text-xs">{fn}</code>
+                        <span className={result.ok ? 'text-green-500' : 'text-red-500'}>
+                          {statusText}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
