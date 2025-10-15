@@ -3,12 +3,15 @@
 
 import { functionsBaseUrl, norahHeaders, safeJson } from "@/lib/supabase/functionsBase";
 
-export async function norahIngest(source: "content-ai" | "remote" = "content-ai") {
+export async function norahIngest(
+  source: "content-ai" | "remote" = "content-ai",
+  docs?: Array<{title:string; text?:string; body?:string; body_md?:string; tags?:string[]; url?:string}>
+) {
   const url = functionsBaseUrl("norah-ingest");
-  const r = await fetch(url, { 
-    method: "POST", 
-    headers: norahHeaders(), 
-    body: JSON.stringify({ sources: source }) 
+  const r = await fetch(url, {
+    method: "POST",
+    headers: norahHeaders(),
+    body: JSON.stringify({ sources: source, docs: docs ?? [] })
   });
   return safeJson(r);
 }

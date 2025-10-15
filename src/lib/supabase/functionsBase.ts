@@ -31,23 +31,11 @@ export function getProjectRef(): string | null {
 }
 
 /**
- * Helper to extract project ref from URL
- */
-export function projectRefFromUrl(s: string): string {
-  try {
-    return new URL(s).hostname.split('.')[0];
-  } catch {
-    return '';
-  }
-}
-
-/**
  * Construct functions base URL - always use /functions/v1/<fn> pattern
  */
 export function functionsBaseUrl(fn: string): string {
   const url = import.meta.env.VITE_SUPABASE_URL!;
-  const base = url.replace(/\/+$/, "");
-  return `${base}/functions/v1/${fn}`;
+  return `${url.replace(/\/+$/, "")}/functions/v1/${fn}`;
 }
 
 export function norahHeaders() {
@@ -56,7 +44,7 @@ export function norahHeaders() {
     "Content-Type": "application/json",
     "apikey": anon,
     "Authorization": `Bearer ${anon}`,
-    "X-Client-Info": "m1ssion-norah-admin",
+    "X-Client-Info": "m1ssion-norah-admin"
   } as const;
 }
 
@@ -64,7 +52,7 @@ export async function safeJson(res: Response) {
   const ct = res.headers.get("content-type") || "";
   if (!ct.includes("application/json")) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Non-JSON (${res.status}) ${text?.slice(0,200)}`);
+    throw new Error(`Non-JSON (${res.status}) ${text.slice(0,200)}`);
   }
   return res.json();
 }
