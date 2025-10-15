@@ -17,6 +17,7 @@ export default function DiagSupabase() {
   React.useEffect(() => {
     (async () => {
       try {
+        // Use type assertion since RPC types aren't auto-generated yet
         const { data, error } = await supabase.rpc('supabase_client_health' as any);
         if (error) {
           setRpcError(error.message);
