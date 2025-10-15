@@ -6280,6 +6280,10 @@ export type Database = {
         Args: { p_latitude: number; p_longitude: number; p_mission_id: string }
         Returns: Json
       }
+      supabase_client_health: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       sync_user_permissions: {
         Args: { p_user_id: string }
         Returns: undefined

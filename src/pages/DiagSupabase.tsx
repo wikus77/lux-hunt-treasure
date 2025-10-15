@@ -16,12 +16,17 @@ export default function DiagSupabase() {
   // Fetch health metrics via RPC
   React.useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.rpc('supabase_client_health');
-      if (error) {
-        setRpcError(error.message);
-        console.warn('[SUPABASE-DIAG] RPC error:', error);
-      } else {
-        setRpcHealth(data);
+      try {
+        const { data, error } = await supabase.rpc('supabase_client_health' as any);
+        if (error) {
+          setRpcError(error.message);
+          console.warn('[SUPABASE-DIAG] RPC error:', error);
+        } else {
+          setRpcHealth(data);
+        }
+      } catch (err: any) {
+        setRpcError(err?.message || String(err));
+        console.warn('[SUPABASE-DIAG] RPC exception:', err);
       }
     })();
   }, []);
