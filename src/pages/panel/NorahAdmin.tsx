@@ -45,7 +45,7 @@ export default function NorahAdmin() {
         })
       );
 
-      const result = await norahIngest("content-ai");
+      const result = await norahIngest("content-ai", docsWithContent);
       toast({ title: "✅ Ingest Complete", description: `Inserted ${result.inserted || 0} documents` });
       loadKpis();
     } catch (error: any) {
