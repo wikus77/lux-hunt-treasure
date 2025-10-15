@@ -30,27 +30,29 @@ export function getProjectRef(): string | null {
   return null;
 }
 
-export function functionsBaseUrl(fn?: string): string {
-  if (cached.fbase) return fn ? `${cached.fbase}/${fn}` : cached.fbase;
-  
-  // 1) Override esplicito (se presente)
-  const explicit = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL as string | undefined;
-  if (explicit) {
-    const base = explicit.replace(/\/+$/,'');
-    cached.fbase = base;
-    return fn ? `${base}/${fn}` : base;
+/**
+ * Helper to extract project ref from URL
+ */
+export function projectRefFromUrl(s: string): string {
+  try {
+    return new URL(s).hostname.split('.')[0];
+  } catch {
+    return '';
   }
-  
-  // 2) Costruzione da project ref
-  const ref = getProjectRef();
-  if (!ref) {
-    // lascio stringa segnaposto: il chiamante mostrerà "No project ref"
+}
+
+/**
+ * Construct functions base URL - always use /functions/v1/<fn> pattern
+ */
+export function functionsBaseUrl(fn?: string): string {
+  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+  if (!url) {
     return fn ? `__NO_PROJECT_REF__/${fn}` : `__NO_PROJECT_REF__`;
   }
   
-  const base = `https://${ref}.functions.supabase.co`;
-  cached.fbase = base;
-  return fn ? `${base}/${fn}` : base;
+  // Always use /functions/v1/<fn> and force JSON
+  const base = url.replace(/\/+$/, '');
+  return fn ? `${base}/functions/v1/${fn}` : `${base}/functions/v1`;
 }
 
 /** Optional: REST base (used by some utilities) */
@@ -60,23 +62,22 @@ export const restBaseUrl = (() => {
 })();
 
 /**
- * Ping di salute: ritorna {ok,status} e ragione testuale per 404/403/CORS
+ * Verify edge function availability with HEAD/GET fallback
  */
-export async function verifyEdgeFunction(name: string) {
-  const url = functionsBaseUrl(name);
+export async function verifyEdgeFunction(fn: string) {
+  const u = functionsBaseUrl(fn);
   
+  // HEAD first (cheap), then OPTIONS to ensure CORS path exists
   try {
-    const r = await fetch(url, { method: 'OPTIONS' }).catch(() => null);
-    if (r && r.ok) return { ok: true, status: r.status };
-    
-    // Prova GET/HEAD se OPTIONS non supportato
-    const r2 = await fetch(url, { method: 'GET' }).catch(() => null);
-    if (!r2) return { ok: false, status: 0, reason: 'network' };
-    if (r2.status === 404) return { ok: false, status: 404, reason: 'not-deployed' };
-    if (r2.status === 403 || r2.status === 401) return { ok: false, status: r2.status, reason: 'auth-or-cors' };
-    
-    return { ok: r2.ok, status: r2.status };
+    const head = await fetch(u, { method: "HEAD" });
+    if (head.ok) return { ok: true, code: head.status };
+  } catch {}
+  
+  // fallback GET (must return JSON or 405)
+  try {
+    const get = await fetch(u, { method: "GET" });
+    return { ok: get.ok || get.status === 405, code: get.status };
   } catch (e: any) {
-    return { ok: false, status: 0, reason: e?.message || 'error' };
+    return { ok: false, code: 0, error: String(e) };
   }
 }
