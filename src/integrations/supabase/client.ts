@@ -1,5 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getProjectRef } from '@/lib/supabase/functionsBase';
+import type { Database } from './types';
+
+// ⚠️ SINGLETON HARDENING — DO NOT create multiple Supabase clients!
+// Always import { supabase } or { sb } from this file.
+
+declare global {
+  interface Window { __SUPABASE_CLIENT__?: SupabaseClient<Database>; }
+}
 
 /**
  * Ricava l'URL Supabase **senza hardcode**:
@@ -14,18 +22,54 @@ function resolveSupabaseUrl(): string {
 }
 
 /**
- * La chiave anon **solo** via ENV (mai hardcoded).
- * Se assente, usiamo stringa vuota (lato dev certe call falliranno, ma non rompiamo la build).
+ * Inizializza il client Supabase con le credenziali da ENV.
  */
-const SUPABASE_URL = resolveSupabaseUrl();
-const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
+function initSupabaseClient(): SupabaseClient<Database> {
+  const SUPABASE_URL = resolveSupabaseUrl();
+  const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
+  
+  if (!SUPABASE_ANON_KEY) {
+    console.warn('⚠️ VITE_SUPABASE_ANON_KEY not set — some operations may fail');
+  }
+  
+  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  });
+}
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-});
+/**
+ * Singleton accessor - HMR-safe in dev, static in prod
+ */
+function getSupabaseClient(): SupabaseClient<Database> {
+  if (import.meta.env.DEV) {
+    // In dev, attach to window to survive HMR
+    if (!window.__SUPABASE_CLIENT__) {
+      window.__SUPABASE_CLIENT__ = initSupabaseClient();
+    }
+    return window.__SUPABASE_CLIENT__;
+  } else {
+    // In prod, use module-level singleton
+    if (!_supabaseInstance) {
+      _supabaseInstance = initSupabaseClient();
+    }
+    return _supabaseInstance;
+  }
+}
 
+let _supabaseInstance: SupabaseClient<Database> | undefined;
+
+// Export singleton
+export const supabase = getSupabaseClient();
+export const sb = supabase; // alias
 export default supabase;
+
+// HMR: prevent recreation on hot reload
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    // Keep singleton warm across HMR
+  });
+}

@@ -1,9 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!
-);
+// ⚠️ Use the singleton from @/integrations/supabase/client
+// DO NOT create clients with createClient() here!
+import { supabase } from '@/integrations/supabase/client';
 
 export async function ragSearch(query: string, locale = 'it', top_k = 3) {
   const { data, error } = await supabase.functions.invoke('norah-rag-search', {
