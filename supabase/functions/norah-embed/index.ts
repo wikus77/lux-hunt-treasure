@@ -1,58 +1,131 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "../_shared/cors.ts";
 
-const URL = Deno.env.get('SUPABASE_URL')!;
-const SRV = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const MODEL = Deno.env.get('NORAH_EMBED_MODEL') || 'text-embedding-3-large';
-const OPENAI = Deno.env.get('OPENAI_API_KEY')!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
+const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
+const CF_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
+const CORS_ORIGIN = Deno.env.get("CORS_ALLOWED_ORIGIN") || "*";
 
-async function embedText(t: string) {
-  const r = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${OPENAI}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ input: t, model: MODEL }),
+const cors = (origin: string) => ({
+  "Access-Control-Allow-Origin": origin || CORS_ORIGIN,
+  "Vary": "Origin",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+});
+
+async function cfEmbed(text: string): Promise<number[]> {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${CF_MODEL}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${CF_TOKEN}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
   });
-  const j = await r.json(); if (!r.ok) throw new Error(`openai ${r.status}: ${JSON.stringify(j)}`);
-  return j.data[0].embedding as number[];
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`CF embed failed: ${res.status} ${err}`);
+  }
+
+  const json = await res.json();
+  let e: any = json?.result?.data ?? json?.data;
+  if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
+  return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
 }
 
-const chunk = (s: string, n = 1200) =>
-  Array.from({ length: Math.ceil((s || '').length / n) }, (_, i) => s.slice(i * n, (i + 1) * n));
+function chunkText(text: string, maxChars = 1000): string[] {
+  const chunks: string[] = [];
+  let start = 0;
+
+  while (start < text.length) {
+    let end = start + maxChars;
+    if (end < text.length) {
+      const sentenceEnd = text.lastIndexOf(".", end);
+      if (sentenceEnd > start) end = sentenceEnd + 1;
+    }
+    chunks.push(text.slice(start, end).trim());
+    start = end;
+  }
+
+  return chunks;
+}
 
 Deno.serve(async (req) => {
-  const headers = corsHeaders(req.headers.get('Origin'));
-  if (req.method === 'OPTIONS') return new Response(null, { headers });
+  const origin = req.headers.get("Origin") || "";
+  
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: cors(origin) });
+  }
+
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: cors(origin),
+    });
+  }
 
   try {
-    const { batch = 200 } = await req.json().catch(()=>({}));
-    const admin = createClient(URL, SRV);
+    const { reembed = false, batch = 100 } = await req.json().catch(() => ({}));
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    const { data: docs, error } = await admin
-      .from('ai_docs')
-      .select('id, text, body, body_md')
+    // Get docs that need embedding
+    const { data: docs, error: docsError } = await supabase
+      .from("ai_docs")
+      .select("id, text")
       .limit(batch);
-    if (error) throw error;
+
+    if (docsError) throw docsError;
+    if (!docs || docs.length === 0) {
+      return new Response(JSON.stringify({ ok: true, embedded: 0, message: "No documents to embed" }), {
+        headers: cors(origin),
+      });
+    }
 
     let embedded = 0;
-    for (const d of docs ?? []) {
-      const full = d.text ?? d.body ?? d.body_md ?? '';
-      if (!full.trim()) continue;
 
-      let idx = 0;
-      for (const c of chunk(full)) {
-        const vec = await embedText(c);
-        const { error: e2 } = await admin
-          .from('ai_docs_embeddings')
-          .upsert({ doc_id: d.id, chunk_index: idx, chunk_text: c, embedding: vec, model: MODEL });
-        if (e2) throw e2;
-        embedded++; idx++;
+    for (const doc of docs) {
+      // Check if already embedded
+      if (!reembed) {
+        const { count } = await supabase
+          .from("ai_docs_embeddings")
+          .select("*", { count: "exact", head: true })
+          .eq("doc_id", doc.id);
+        
+        if (count && count > 0) continue;
+      }
+
+      const chunks = chunkText(doc.text);
+
+      for (let idx = 0; idx < chunks.length; idx++) {
+        const embedding = await cfEmbed(chunks[idx]);
+
+        const { error: insertError } = await supabase
+          .from("ai_docs_embeddings")
+          .insert({
+            doc_id: doc.id,
+            embedding: `[${embedding.join(",")}]`,
+            model: CF_MODEL,
+            chunk_idx: idx,
+            chunk_text: chunks[idx],
+          });
+
+        if (!insertError) embedded++;
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, embedded }), { headers });
+    return new Response(JSON.stringify({ ok: true, embedded }), {
+      headers: cors(origin),
+    });
   } catch (e: any) {
-    return new Response(JSON.stringify({ ok: false, error: String(e?.message ?? e) }), { headers, status: 500 });
+    console.error("Embed error:", e);
+    return new Response(JSON.stringify({ error: e.message }), {
+      status: 500,
+      headers: cors(origin),
+    });
   }
 });
