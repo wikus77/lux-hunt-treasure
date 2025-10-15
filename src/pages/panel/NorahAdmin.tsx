@@ -45,8 +45,8 @@ export default function NorahAdmin() {
         })
       );
 
-      const result = await norahIngest("content-ai", docsWithContent);
-      toast({ title: "✅ Ingest Complete", description: `Inserted ${result.inserted} documents` });
+      const result = await norahIngest("content-ai");
+      toast({ title: "✅ Ingest Complete", description: `Inserted ${result.inserted || 0} documents` });
       loadKpis();
     } catch (error: any) {
       const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
@@ -118,7 +118,7 @@ export default function NorahAdmin() {
     });
   };
 
-  const hasNoProjectRef = functionsBaseUrl().includes('__NO_PROJECT_REF__');
+  const hasNoProjectRef = functionsBaseUrl("norah-kpis").includes('__NO_PROJECT_REF__');
 
   const needsEmbedding = kpis && kpis.docs_count > kpis.chunks_count;
 
