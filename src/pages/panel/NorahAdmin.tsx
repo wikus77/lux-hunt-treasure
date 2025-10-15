@@ -109,8 +109,8 @@ export default function NorahAdmin() {
     setEdgeDiag(results);
     setLoading(null);
     
-    // Show toast with summary
-    const allOk = Object.values(results).every((v: any) => v.ok === true);
+    // Show toast with summary - consider 405 as "reachable"
+    const allOk = Object.values(results).every((v: any) => v.ok === true || v.code === 405);
     toast({
       title: allOk ? "✅ All Functions Reachable" : "⚠️ Some Functions Missing",
       description: allOk ? "All edge functions are deployed" : "Check the diagnostics panel below",
@@ -170,18 +170,20 @@ export default function NorahAdmin() {
               {Object.keys(edgeDiag).length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
                   {Object.entries(edgeDiag).map(([fn, result]: [string, any]) => {
-                    const statusText = result.ok 
+                    const statusText = result.ok || result.code === 405
                       ? '✅ reachable' 
-                      : result.status === 404 
+                      : result.code === 404 
                         ? '❌ 404 (not deployed)' 
-                        : result.status === 403 || result.status === 401 
+                        : result.code === 403 || result.code === 401 
                           ? '⚠️ auth/CORS' 
-                          : `⚠️ ${result.reason || result.status}`;
+                          : `⚠️ ${result.error || result.code || 'unknown'}`;
+                    
+                    const isOk = result.ok || result.code === 405;
                     
                     return (
                       <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted text-sm">
                         <code className="text-xs">{fn}</code>
-                        <span className={result.ok ? 'text-green-500' : 'text-red-500'}>
+                        <span className={isOk ? 'text-green-500' : 'text-red-500'}>
                           {statusText}
                         </span>
                       </div>
