@@ -40,6 +40,22 @@ if (typeof window !== 'undefined') {
 }
 
 
+// DEV-only: Verify Supabase singleton at boot
+if (import.meta.env.DEV) {
+  setTimeout(() => {
+    import('@/lib/supabase/diag').then(({ getSupabaseDiag }) => {
+      const d = getSupabaseDiag();
+      if (d.count !== 1) {
+        // eslint-disable-next-line no-console
+        console.warn('[SUPABASE-DIAG] ⚠️ Expected singleton (count=1), got:', d.count);
+      } else {
+        // eslint-disable-next-line no-console
+        console.info('[SUPABASE-DIAG] ✅ Singleton OK (count=1)');
+      }
+    });
+  }, 500);
+}
+
 // Initialize diagnostics early (development only)
 if (import.meta.env.DEV) {
   console.log('🔍 M1SSION™ Diagnostics ready');
