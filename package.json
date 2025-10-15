@@ -18,7 +18,8 @@
     "test": "playwright test",
     "test:ui": "playwright test --ui",
     "test:install": "playwright install --with-deps",
-    "prebuild": "node scripts/push-guard.cjs"
+    "prebuild": "node scripts/push-guard.cjs",
+    "build:analyze": "vite build --config vite.analyze.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
@@ -105,7 +106,6 @@
     "recharts": "^2.12.7",
     "resend": "^2.0.0",
     "rimraf": "^6.0.1",
-    "rollup-plugin-visualizer": "^6.0.3",
     "sonner": "^1.5.0",
     "stripe": "^14.25.0",
     "tailwind-merge": "^2.5.2",
@@ -136,6 +136,7 @@
     "lovable-tagger": "^1.1.8",
     "node-fetch": "^2.7.0",
     "postcss": "^8.4.47",
+    "rollup-plugin-visualizer": "^6.0.3",
     "tailwindcss": "^3.4.11",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
