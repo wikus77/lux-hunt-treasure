@@ -1,4 +1,4 @@
-// sw-bump-2025-10-07-05
+// sw-bump-2025-10-15-01
 // M1SSION™ PWA Service Worker - Unified Web Push + Caching
 // © 2025 Joseph MULÉ – NIYVORA KFT™
 
@@ -10,7 +10,8 @@ const PRECACHE_RESOURCES = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/offline.html'
 ];
 
 // Enable Navigation Preload if supported
@@ -54,16 +55,47 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - NetworkFirst strategy for dynamic content
+// Fetch event - NetworkFirst with offline fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
+  const url = new URL(request.url);
   
-  // Skip non-GET requests
-  if (request.method !== 'GET') return;
+  // Only GET requests
+  const isGET = request.method === 'GET';
+  const isHTML = request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html');
   
-  // Skip non-http requests (chrome-extension, etc.)
-  if (!request.url.startsWith('http')) return;
+  // Exclude critical endpoints (Supabase, Edge Functions, SW itself, VAPID)
+  const isSupabase = url.hostname.endsWith('.supabase.co');
+  const isEdgeFunctions = url.pathname.startsWith('/functions/v1');
+  const isServiceWorker = url.pathname === '/sw.js';
+  const isVapid = url.pathname === '/vapid-public.txt';
+  
+  // Skip non-GET or non-http requests
+  if (!isGET || !request.url.startsWith('http')) return;
+  
+  // Handle HTML navigation with offline fallback
+  if (isHTML && !isSupabase && !isEdgeFunctions && !isServiceWorker && !isVapid) {
+    event.respondWith(
+      (async () => {
+        try {
+          // Try network first for fresh content
+          return await fetch(request, { cache: 'no-store' });
+        } catch {
+          // If offline, return offline.html
+          const cached = await caches.match('/offline.html');
+          if (cached) return cached;
+          // Ultimate fallback
+          return new Response('<h1>Offline</h1>', { 
+            headers: { 'Content-Type': 'text/html' }, 
+            status: 503 
+          });
+        }
+      })()
+    );
+    return;
+  }
 
+  // Default NetworkFirst strategy for other resources
   event.respondWith(
     fetch(request)
       .then(response => {
@@ -81,10 +113,6 @@ self.addEventListener('fetch', (event) => {
         return caches.match(request).then(response => {
           if (response) {
             return response;
-          }
-          // Return offline fallback for navigation requests
-          if (request.mode === 'navigate') {
-            return caches.match('/index.html');
           }
           return new Response('Offline - Content not available', {
             status: 503,
