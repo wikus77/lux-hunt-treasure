@@ -1,67 +1,45 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const CORS_ORIGIN = Deno.env.get("CORS_ALLOWED_ORIGIN") || "*";
+const URL = Deno.env.get("SUPABASE_URL")!;
+const SRV = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-const cors = (origin: string) => ({
-  "Access-Control-Allow-Origin": origin || CORS_ORIGIN,
-  "Vary": "Origin",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Content-Type": "application/json",
-});
+const ALLOWED = (Deno.env.get("CORS_ALLOWED_ORIGIN") || "*")
+  .split(",").map(s => s.trim());
+
+function makeCors(origin: string | null) {
+  const ok = origin && ALLOWED.some(a => a === "*" || origin.endsWith(a.replace(/^\*\./,"")));
+  return {
+    "Access-Control-Allow-Origin": ok ? origin! : "*",
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, X-Client-Info",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Content-Type": "application/json; charset=utf-8",
+  };
+}
+
+const okJSON  = (d:unknown,o:string|null,s=200)=>new Response(JSON.stringify(d),{status:s,headers:makeCors(o)});
+const errJSON = (m:string,o:string|null,s=400)=>okJSON({ok:false,error:m},o,s);
 
 Deno.serve(async (req) => {
-  const origin = req.headers.get("Origin") || "";
-  
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: cors(origin) });
-  }
-
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: cors(origin),
-    });
-  }
-
+  if (req.method === "OPTIONS") return new Response(null, { headers: makeCors(req.headers.get("Origin")) });
+  const admin = createClient(URL, SRV);
   try {
-    const { sources = "content-ai", docs = [] } = await req.json().catch(() => ({}));
-    
-    if (!Array.isArray(docs) || docs.length === 0) {
-      return new Response(JSON.stringify({ error: "No documents provided" }), {
-        status: 400,
-        headers: cors(origin),
-      });
-    }
-
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const { sources="content-ai", docs=[] } = await req.json().catch(()=>({}));
     let inserted = 0;
-
-    for (const doc of docs) {
-      if (!doc.title || !doc.text) continue;
-      
-      const { data, error } = await supabase.rpc("upsert_ai_doc", {
-        p_title: doc.title,
-        p_text: doc.text,
-        p_tags: doc.tags || [],
-        p_source: doc.source || sources,
-        p_url: doc.url || null,
+    for (const d of docs) {
+      const title = d.title ?? "Untitled";
+      const text  = d.text ?? d.body ?? d.body_md ?? "";
+      const tags  = Array.isArray(d.tags) ? d.tags : [];
+      const { error } = await admin.from("ai_docs").insert({
+        title, text, tags, source: d.source ?? sources, url: d.url ?? null
       });
-
-      if (!error && data) inserted++;
+      if (error) throw error;
+      inserted++;
     }
-
-    return new Response(JSON.stringify({ ok: true, inserted }), {
-      headers: cors(origin),
-    });
+    return okJSON({ ok:true, inserted }, req.headers.get("Origin"));
   } catch (e: any) {
-    console.error("Ingest error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: cors(origin),
-    });
+    return errJSON(`ingest-error: ${e?.message ?? String(e)}`, req.headers.get("Origin"), 500);
   }
 });
