@@ -44,15 +44,29 @@ export function projectRefFromUrl(s: string): string {
 /**
  * Construct functions base URL - always use /functions/v1/<fn> pattern
  */
-export function functionsBaseUrl(fn?: string): string {
-  const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
-  if (!url) {
-    return fn ? `__NO_PROJECT_REF__/${fn}` : `__NO_PROJECT_REF__`;
+export function functionsBaseUrl(fn: string): string {
+  const url = import.meta.env.VITE_SUPABASE_URL!;
+  const base = url.replace(/\/+$/, "");
+  return `${base}/functions/v1/${fn}`;
+}
+
+export function norahHeaders() {
+  const anon = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+  return {
+    "Content-Type": "application/json",
+    "apikey": anon,
+    "Authorization": `Bearer ${anon}`,
+    "X-Client-Info": "m1ssion-norah-admin",
+  } as const;
+}
+
+export async function safeJson(res: Response) {
+  const ct = res.headers.get("content-type") || "";
+  if (!ct.includes("application/json")) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Non-JSON (${res.status}) ${text?.slice(0,200)}`);
   }
-  
-  // Always use /functions/v1/<fn> and force JSON
-  const base = url.replace(/\/+$/, '');
-  return fn ? `${base}/functions/v1/${fn}` : `${base}/functions/v1`;
+  return res.json();
 }
 
 /** Optional: REST base (used by some utilities) */
