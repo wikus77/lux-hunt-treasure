@@ -73,10 +73,10 @@ Deno.serve(async (req) => {
     const { reembed = false, batch = 100 } = await req.json().catch(() => ({}));
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
-    // Get docs that need embedding
+    // Get docs that need embedding - use coalesce for text
     const { data: docs, error: docsError } = await supabase
       .from("ai_docs")
-      .select("id, text")
+      .select("id, text, body, body_md")
       .limit(batch);
 
     if (docsError) throw docsError;
@@ -89,6 +89,10 @@ Deno.serve(async (req) => {
     let embedded = 0;
 
     for (const doc of docs) {
+      // Use coalesce logic: text > body > body_md
+      const fullText = doc.text ?? doc.body ?? doc.body_md ?? "";
+      if (!fullText.trim()) continue;
+
       // Check if already embedded
       if (!reembed) {
         const { count } = await supabase
@@ -99,7 +103,7 @@ Deno.serve(async (req) => {
         if (count && count > 0) continue;
       }
 
-      const chunks = chunkText(doc.text);
+      const chunks = chunkText(fullText);
 
       for (let idx = 0; idx < chunks.length; idx++) {
         const embedding = await cfEmbed(chunks[idx]);

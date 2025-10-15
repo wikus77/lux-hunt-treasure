@@ -12,6 +12,23 @@ const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
 const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_EMBED_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
 
+const ALLOWED = (Deno.env.get("CORS_ALLOWED_ORIGIN") || "*")
+  .split(",").map(s => s.trim());
+
+function makeCors(origin: string | null) {
+  const ok = origin && ALLOWED.some(a => a === "*" || origin.endsWith(a.replace(/^\*\./,"")));
+  return {
+    "Access-Control-Allow-Origin": ok ? origin! : "*",
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, X-Client-Info",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Content-Type": "application/json; charset=utf-8",
+  };
+}
+
+const okJSON  = (d:unknown,o:string|null,s=200)=>new Response(JSON.stringify(d),{status:s,headers:makeCors(o)});
+const errJSON = (m:string,o:string|null,s=400)=>okJSON({ok:false,error:m},o,s);
+
 async function cfEmbed(text: string): Promise<number[]> {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${CF_EMBED_MODEL}`;
   const res = await fetch(url, {
@@ -33,23 +50,18 @@ async function cfEmbed(text: string): Promise<number[]> {
 type Req = { query: string; top_k?: number; locale?: string };
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get("Origin");
+  
   try {
     // CORS preflight
     if (req.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-        },
-      });
+      return new Response(null, { headers: makeCors(origin) });
     }
 
-    if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
+    if (req.method !== "POST") return errJSON("Method Not Allowed", origin, 405);
 
     const { query, top_k = 3, locale = "it" } = (await req.json()) as Req;
-    if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
+    if (!query) return errJSON("Missing query", origin, 400);
 
     // 1) Embedding (768d)
     const embedding = await cfEmbed(query);
@@ -72,15 +84,9 @@ Deno.serve(async (req) => {
       ]);
     } catch (_) { /* no-op */ }
 
-    return new Response(JSON.stringify({ rag_used: true, hits: data }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
-  } catch (e) {
+    return okJSON({ rag_used: true, hits: data }, origin);
+  } catch (e: any) {
     console.error("norah-rag-search error:", e);
-    return new Response(JSON.stringify({ error: String(e?.message ?? e) }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return errJSON(String(e?.message ?? e), origin, 500);
   }
 });
