@@ -5677,7 +5677,7 @@ export type Database = {
         Args:
           | { p_source: string; p_user_id: string; p_xp_amount: number }
           | { p_user_id: string; p_xp_amount: number }
-        Returns: Json
+        Returns: undefined
       }
       binary_quantize: {
         Args: { "": string } | { "": unknown }
@@ -6129,7 +6129,7 @@ export type Database = {
       }
       l2_normalize: {
         Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: string
+        Returns: unknown
       }
       list_my_redemptions: {
         Args: { limit_rows?: number; offset_rows?: number }
@@ -6313,6 +6313,16 @@ export type Database = {
       update_user_subscription_tier: {
         Args: { new_tier: string; target_user_id: string }
         Returns: undefined
+      }
+      upsert_ai_doc: {
+        Args: {
+          p_source?: string
+          p_tags?: string[]
+          p_text: string
+          p_title: string
+          p_url?: string
+        }
+        Returns: string
       }
       upsert_fcm_subscription: {
         Args: {

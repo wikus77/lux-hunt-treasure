@@ -64,6 +64,7 @@ import PanelAccessPage from "@/pages/PanelAccessPage";
 import PushDiagnosi from "@/pages/PushDiagnosi";
 import PanelUsersPage from "@/pages/PanelUsersPage";
 import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
+import NorahAdmin from "@/pages/panel/NorahAdmin";
 import PushTest from "@/pages/debug/PushTest";
 import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import M1ssionPushTest from "@/pages/M1ssionPushTest";
@@ -595,6 +596,12 @@ const WouterRoutes: React.FC = () => {
           <Route path="/panel/bulk-marker-drop">
             <ProtectedRoute>
               <BulkMarkerDropPage />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/panel/norah">
+            <ProtectedRoute>
+              <NorahAdmin />
             </ProtectedRoute>
           </Route>
 
