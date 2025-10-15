@@ -333,7 +333,6 @@ export type Database = {
           id: string
           locale: string | null
           tags: string[] | null
-          text: string | null
           title: string
           updated_at: string | null
         }
@@ -346,7 +345,6 @@ export type Database = {
           id?: string
           locale?: string | null
           tags?: string[] | null
-          text?: string | null
           title: string
           updated_at?: string | null
         }
@@ -359,7 +357,6 @@ export type Database = {
           id?: string
           locale?: string | null
           tags?: string[] | null
-          text?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -5275,14 +5272,6 @@ export type Database = {
       }
     }
     Views: {
-      ai_docs_kpis: {
-        Row: {
-          chunks_count: number | null
-          docs_count: number | null
-          last_embed_at: string | null
-        }
-        Relationships: []
-      }
       buzz_map_markers: {
         Row: {
           active: boolean | null
@@ -5669,7 +5658,7 @@ export type Database = {
         }[]
       }
       ai_rag_search_vec_json: {
-        Args: { k: number; minscore: number; qvec: string } | { payload: Json }
+        Args: { payload: Json }
         Returns: {
           category: string
           chunk_idx: number
