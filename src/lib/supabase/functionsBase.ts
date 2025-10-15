@@ -64,3 +64,20 @@ export const functionsBaseUrl = _ref ? `https://${_ref}.supabase.co/functions/v1
 
 /** Optional: REST base (used by some utilities) */
 export const restBaseUrl = _ref ? `https://${_ref}.supabase.co/rest/v1` : '';
+
+/**
+ * Verify if an edge function is reachable (OPTIONS preflight check)
+ */
+export async function verifyEdgeFunction(fnName: string): Promise<string> {
+  if (!_ref) return '⚠️ No project ref';
+  
+  const url = `${functionsBaseUrl}/${fnName}`;
+  try {
+    const res = await fetch(url, { method: 'OPTIONS' });
+    if (res.ok || res.status === 204) return '✅ reachable';
+    if (res.status === 404) return '❌ 404 (not deployed)';
+    return `⚠️ ${res.status}`;
+  } catch (e: any) {
+    return `⚠️ ${e.message}`;
+  }
+}

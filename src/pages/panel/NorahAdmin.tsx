@@ -1,12 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { useState } from "react";
-import { Brain, Database, Search, Activity, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Brain, Database, Search, Activity, Loader2, AlertCircle, Network } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { norahIngest, norahEmbed, norahSearch, norahKpis } from "@/lib/norah/api";
+import { verifyEdgeFunction } from "@/lib/supabase/functionsBase";
 
 export default function NorahAdmin() {
   const { toast } = useToast();
@@ -14,6 +15,7 @@ export default function NorahAdmin() {
   const [kpis, setKpis] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [edgeDiag, setEdgeDiag] = useState<Record<string, string>>({});
 
   const handleIngest = async () => {
     setLoading("ingest");
@@ -36,18 +38,19 @@ export default function NorahAdmin() {
           try {
             const response = await fetch(doc.url);
             const text = await response.text();
-            return { ...doc, text };
+            return { ...doc, text, source: "content-ai" };
           } catch (e) {
-            return { ...doc, text: `Placeholder content for ${doc.title}` };
+            return { ...doc, text: `Placeholder content for ${doc.title}`, source: "content-ai" };
           }
         })
       );
 
       const result = await norahIngest("content-ai", docsWithContent);
-      toast({ title: "Ingest Complete", description: `Inserted ${result.inserted} documents` });
+      toast({ title: "✅ Ingest Complete", description: `Inserted ${result.inserted} documents` });
       loadKpis();
     } catch (error: any) {
-      toast({ title: "Ingest Failed", description: error.message, variant: "destructive" });
+      const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
+      toast({ title: "❌ Ingest Failed", description: msg, variant: "destructive" });
     } finally {
       setLoading(null);
     }
@@ -57,10 +60,11 @@ export default function NorahAdmin() {
     setLoading("embed");
     try {
       const result = await norahEmbed({ reembed: false, batch: 200 });
-      toast({ title: "Embedding Complete", description: `Generated ${result.embedded} embeddings` });
+      toast({ title: "✅ Embedding Complete", description: `Generated ${result.embedded} embeddings` });
       loadKpis();
     } catch (error: any) {
-      toast({ title: "Embedding Failed", description: error.message, variant: "destructive" });
+      const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
+      toast({ title: "❌ Embedding Failed", description: msg, variant: "destructive" });
     } finally {
       setLoading(null);
     }
@@ -72,9 +76,10 @@ export default function NorahAdmin() {
     try {
       const result = await norahSearch(searchQuery, 8, 0.1);
       setSearchResults(result.hits || []);
-      toast({ title: "Search Complete", description: `Found ${result.hits?.length || 0} results` });
+      toast({ title: "✅ Search Complete", description: `Found ${result.hits?.length || 0} results` });
     } catch (error: any) {
-      toast({ title: "Search Failed", description: error.message, variant: "destructive" });
+      const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
+      toast({ title: "❌ Search Failed", description: msg, variant: "destructive" });
     } finally {
       setLoading(null);
     }
@@ -86,13 +91,38 @@ export default function NorahAdmin() {
       const result = await norahKpis();
       setKpis(result);
     } catch (error: any) {
-      toast({ title: "KPIs Failed", description: error.message, variant: "destructive" });
+      const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
+      toast({ title: "❌ KPIs Failed", description: msg, variant: "destructive" });
     } finally {
       setLoading(null);
     }
   };
 
+  const runEdgeDiag = async () => {
+    setLoading("diag");
+    const fns = ['norah-ingest', 'norah-embed', 'norah-rag-search', 'norah-kpis'];
+    const results: Record<string, string> = {};
+    for (const fn of fns) {
+      results[fn] = await verifyEdgeFunction(fn);
+    }
+    setEdgeDiag(results);
+    setLoading(null);
+    
+    // Show toast with summary
+    const allOk = Object.values(results).every(v => v.includes('✅'));
+    toast({
+      title: allOk ? "✅ All Functions Reachable" : "⚠️ Some Functions Missing",
+      description: allOk ? "All edge functions are deployed" : "Check the diagnostics panel below",
+      variant: allOk ? "default" : "destructive"
+    });
+  };
+
   const needsEmbedding = kpis && kpis.docs_count > kpis.chunks_count;
+
+  // Run edge diagnostics on mount
+  useEffect(() => {
+    runEdgeDiag();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -109,6 +139,37 @@ export default function NorahAdmin() {
             <p className="text-sm text-muted-foreground font-rajdhani">RAG Search Pipeline Management</p>
           </div>
         </div>
+
+        {/* Edge Function Diagnostics */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 font-orbitron">
+              <Network className="w-5 h-5" />
+              Edge Function Status
+            </CardTitle>
+            <CardDescription>Verify Supabase edge function deployment</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Button onClick={runEdgeDiag} disabled={loading === "diag"} variant="outline" size="sm">
+                {loading === "diag" ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                🔍 Verify Functions
+              </Button>
+              {Object.keys(edgeDiag).length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+                  {Object.entries(edgeDiag).map(([fn, status]) => (
+                    <div key={fn} className="flex items-center justify-between p-2 rounded bg-muted text-sm">
+                      <code className="text-xs">{fn}</code>
+                      <span className={status.includes('✅') ? 'text-green-500' : 'text-red-500'}>
+                        {status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Action Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
