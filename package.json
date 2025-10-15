@@ -19,7 +19,8 @@
     "test:ui": "playwright test --ui",
     "test:install": "playwright install --with-deps",
     "prebuild": "node scripts/push-guard.cjs",
-    "build:analyze": "vite build --config vite.analyze.config.ts"
+    "build:analyze": "vite build --config vite.analyze.config.ts",
+    "build:prod": "vite build --config vite.prod.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
