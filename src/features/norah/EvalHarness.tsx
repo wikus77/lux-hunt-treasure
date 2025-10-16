@@ -62,7 +62,7 @@ export default function EvalHarness() {
       
       for (let i = 0; i < questions.length; i++) {
         const q = questions[i];
-        const searchResult = await norahSearch(q.query);
+        const searchResult = await norahSearch({ q: q.query, top_k: 8 });
         const hits = searchResult.results || [];
         
         // MMR re-ranking (diversity boost)

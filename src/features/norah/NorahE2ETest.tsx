@@ -59,7 +59,7 @@ export default function NorahE2ETest() {
 
     try {
       log('ingest', 'Calling norahIngest with dryRun:false', { count: sampleDocs.length });
-      const result = await norahIngest('e2e-test', sampleDocs);
+      const result = await norahIngest({ documents: sampleDocs, dryRun: false });
       const inserted = result.inserted || 0;
       log('ingest', `Ingest completed: ${inserted} inserted`, result);
       
@@ -159,7 +159,7 @@ export default function NorahE2ETest() {
           continue;
         }
         log('rag', `Searching: "${q}"`);
-        const result = await norahSearch(q);
+        const result = await norahSearch({ q, top_k: 5 });
         const hits = result.results || [];
         log('rag', `Query "${q}" returned ${hits.length} hits`, hits);
         allResults.push({ query: q, hits });

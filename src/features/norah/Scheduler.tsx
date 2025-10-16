@@ -84,7 +84,7 @@ export default function Scheduler({ onTrigger }: SchedulerProps) {
         updatedAt: new Date().toISOString(),
       };
       
-      await norahIngest('content-ai', [demoDoc]);
+      await norahIngest({ documents: [demoDoc], dryRun: false });
       
       setLastRun(prev => ({ ...prev, crawl: new Date().toISOString() }));
       toast({ title: '✅ Daily Crawl Complete', description: 'Content updated' });
