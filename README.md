@@ -104,6 +104,35 @@ All environment variables and secrets are managed through:
 - Capacitor native configuration
 - Firebase project settings
 
+### Norah AI E2E Testing (Dev Only)
+
+Test the complete Norah pipeline with curl:
+
+```bash
+# Set your base URL
+BASE="${VITE_NORAH_BASE_URL:?set VITE_NORAH_BASE_URL}"
+
+# 1. Ingest sample documents
+curl -sS -X POST "$BASE/norah-ingest" -H "Content-Type: application/json" --data '{
+  "documents":[
+    {"docId":"dev-1","source":"panel","text":"M1SSION Push SAFE Guard overview.","tags":["test","guard"]},
+    {"docId":"dev-2","source":"panel","text":"Buzz Map pricing tiers…","tags":["buzz","pricing"]},
+    {"docId":"dev-3","source":"panel","text":"Norah flow ingest->embed->search KPIs","tags":["rag","flow"]}
+  ],
+  "dryRun":false
+}'
+
+# 2. Generate embeddings (two batches)
+curl -sS -X POST "$BASE/norah-embed" -H "Content-Type: application/json" --data '{"batch":5}'
+curl -sS -X POST "$BASE/norah-embed" -H "Content-Type: application/json" --data '{"batch":20}'
+
+# 3. RAG search (POST only)
+curl -sS -X POST "$BASE/norah-rag-search" -H "Content-Type: application/json" --data '{"q":"Push SAFE Guard"}'
+
+# 4. Check KPIs
+curl -sS "$BASE/norah-kpis"
+```
+
 ## 📞 Support & Contact
 
 For technical support or business inquiries:

@@ -82,7 +82,7 @@ export default function NorahAdmin() {
       setSearchResults(result.results || []);
       toast({ title: "✅ Search Complete", description: `Found ${result.results?.length || 0} results` });
     } catch (error: any) {
-      const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
+      const msg = error?.status ? `HTTP ${error.status}: ${error.details?.error || error.statusText}` : error.message;
       toast({ title: "❌ Search Failed", description: msg, variant: "destructive" });
     } finally {
       setLoading(null);
