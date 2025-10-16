@@ -46,7 +46,7 @@ export default function NorahAdmin() {
             </div>
           </div>
           <Badge variant="secondary" className="font-orbitron">
-            KB: {kpis?.docs_count || 0} docs • {kpis?.chunks_count || 0} embeddings
+            KB: {kpis?.documents || 0} docs • {kpis?.embeddings || 0} embeddings
           </Badge>
         </div>
 
