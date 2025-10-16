@@ -52,8 +52,10 @@ async function retryInvoke<T>(
       const errorMsg = error?.message?.toLowerCase() || '';
       const isFetchError = 
         error?.name === 'FunctionsFetchError' ||
+        error?.name === 'FunctionsRelayError' ||
         errorMsg.includes('failed to send') ||
         errorMsg.includes('failed to fetch') ||
+        errorMsg.includes('fetch failed') ||
         errorMsg.includes('networkerror') ||
         errorMsg.includes('aborterror') ||
         errorMsg.includes('operation was aborted') ||

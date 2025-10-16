@@ -114,20 +114,40 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
         
-        const result = await norahIngest({
-          documents: batch.map(d => ({
-            title: d.title,
-            text: d.text,
-            tags: d.tags,
-            source: d.source,
-            url: d.url,
-          })),
-          dryRun: false
-        });
-        
-        totalInserted += result.inserted || 0;
-        setProgress(((i + 1) / batches.length) * 100);
-        addLog(`✅ Batch ${i+1} ingested`);
+        try {
+          const result = await norahIngest({
+            documents: batch.map(d => ({
+              title: d.title,
+              text: d.text,
+              tags: d.tags,
+              source: d.source,
+              url: d.url,
+            })),
+            dryRun: false
+          });
+          totalInserted += result.inserted || 0;
+          setProgress(((i + 1) / batches.length) * 100);
+          addLog(`✅ Batch ${i+1} ingested`);
+        } catch (batchErr: any) {
+          addLog(`⚠️ Batch ${i+1} failed (${batchErr?.message || batchErr}). Falling back to per-doc ingestion...`);
+          // Fallback: ingest one document at a time to avoid sandbox/network flakiness
+          for (const d of batch) {
+            try {
+              if (window.location.hostname.includes('lovable') || import.meta.env.MODE === 'development') {
+                await new Promise(r => setTimeout(r, 120));
+              }
+              const r = await norahIngest({
+                documents: [{ title: d.title, text: d.text, tags: d.tags, source: d.source, url: d.url }],
+                dryRun: false
+              });
+              totalInserted += r.inserted || 0;
+            } catch (docErr: any) {
+              addLog(`  ✗ Doc failed: ${d.title} — ${docErr?.message || docErr}`);
+            }
+          }
+          setProgress(((i + 1) / batches.length) * 100);
+          addLog(`✅ Batch ${i+1} fallback complete`);
+        }
       }
       
       setStats(prev => ({ ...prev, inserted: totalInserted }));
