@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Norah AI 2.0 Types
 
-export type ContentSourceType = 'file' | 'url' | 'sitemap';
+export type ContentSourceType = 'file' | 'url' | 'sitemap' | 'synthetic';
 
 export interface ContentDoc {
   id: string;

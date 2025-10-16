@@ -244,17 +244,18 @@ export function generateM1SSIONKnowledgeBase(): ContentDoc[] {
     },
   ];
 
-  // Combine all docs
-  docs.push(...buzzMapDocs);
-  docs.push(...pushDocs);
-  docs.push(...missionDocs);
-  docs.push(...schedulerDocs);
-  docs.push(...securityDocs);
-  docs.push(...troubleshootingDocs);
-  docs.push(...devDocs);
+  // Combine all docs with IDs
+  const allDocs = [
+    ...buzzMapDocs,
+    ...pushDocs,
+    ...missionDocs,
+    ...schedulerDocs,
+    ...securityDocs,
+    ...troubleshootingDocs,
+    ...devDocs,
+  ];
 
-  // Add IDs
-  return docs.map((doc, idx) => ({
+  return allDocs.map((doc, idx) => ({
     id: `m1ssion-${String(idx + 1).padStart(3, '0')}`,
     ...doc,
   }));
