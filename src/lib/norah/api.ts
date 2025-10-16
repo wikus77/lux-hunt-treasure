@@ -2,6 +2,7 @@
 // Norah AI API client utilities
 
 import { supabase } from "@/integrations/supabase/client";
+import { functionsBaseUrl, norahHeaders } from "@/lib/supabase/functionsBase";
 import type { IngestPayload, EmbedPayload, RagQuery, NorahKPIs } from "./types";
 
 // ============ SANDBOX ABORT FIX ============
@@ -32,7 +33,9 @@ async function retryInvoke<T>(
         await sleep(backoff);
       }
       
-      const invokeOptions: any = method === 'GET' ? {} : { body };
+      const invokeOptions: any = method === 'GET'
+        ? { headers: { 'x-norah-cid': cid } }
+        : { body, headers: { 'x-norah-cid': cid } };
       const { data, error } = await supabase.functions.invoke(functionName, invokeOptions);
       
       if (error) throw error;
@@ -140,21 +143,35 @@ export async function norahSearch(payload: RagQuery) {
 }
 
 export async function norahKpis(): Promise<NorahKPIs> {
-  if (import.meta.env.DEV) {
-    console.debug('[NORAH2] norahKpis → GET');
-  }
-  try {
-    const data = await retryInvoke<NorahKPIs>('norah-kpis', undefined, { method: 'GET', phase: 'kpis' });
-    if (import.meta.env.DEV) {
-      console.debug('[NORAH2] norahKpis ✅', data);
+  const cid = crypto.randomUUID().slice(0, 8);
+  const url = functionsBaseUrl('norah-kpis');
+  const headers = { ...norahHeaders(), 'x-norah-cid': cid } as Record<string, string>;
+  const maxRetries = 3;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      if (attempt > 0 && isPreview()) {
+        const backoff = [0, 250, 500, 800][attempt] || 800;
+        await sleep(backoff);
+        if (import.meta.env.DEV) console.debug(`[NORAH2 cid:${cid}] norahKpis retry ${attempt}/${maxRetries}`);
+      }
+
+      const res = await fetch(url, { method: 'GET', headers });
+      if (!res.ok) throw new Error(`kpis-${res.status}`);
+      const data = await res.json();
+      if (import.meta.env.DEV) console.debug(`[NORAH2 cid:${cid}] norahKpis ✅`, data);
+      return data as NorahKPIs;
+    } catch (e: any) {
+      const msg = (e?.message || '').toLowerCase();
+      const retriable = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort');
+      if (!retriable || attempt >= maxRetries) {
+        if (import.meta.env.DEV) console.error(`[NORAH2 cid:${cid}] norahKpis ❌`, e?.message || e);
+        throw e;
+      }
     }
-    return data;
-  } catch (error: any) {
-    if (import.meta.env.DEV) {
-      console.error('[NORAH2] norahKpis ❌', error?.message || error);
-    }
-    throw error;
   }
+
+  throw new Error('kpis-retry-exhausted');
 }
 
 /**
