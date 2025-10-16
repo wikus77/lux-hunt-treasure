@@ -12,7 +12,7 @@ export interface NorahDocument {
 }
 
 /**
- * Auto-tag documents using simple keyword extraction
+ * Auto-tag documents using simple keyword extraction (max 5 tags)
  */
 export function autoTag(text: string, existingTags: string[] = []): string[] {
   const keywords = new Set(existingTags);
@@ -34,9 +34,9 @@ export function autoTag(text: string, existingTags: string[] = []): string[] {
     }
   }
   
-  // Extract top 3-6 words by frequency (simple TF)
+  // Extract top words by frequency (simple TF)
   const words = text.toLowerCase()
-    .replace(/[^\\w\\s]/g, ' ')
+    .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length > 4 && !['the', 'and', 'for', 'with', 'that', 'this', 'from'].includes(w));
   
@@ -50,11 +50,11 @@ export function autoTag(text: string, existingTags: string[] = []): string[] {
   
   topWords.forEach(w => keywords.add(w));
   
-  return Array.from(keywords).slice(0, 6);
+  return Array.from(keywords).slice(0, 5);
 }
 
 /**
- * Generate summary (3-5 bullet points)
+ * Generate summary (3-5 sentences, max 600 chars)
  */
 export function generateSummary(text: string): string {
   // Split into sentences
@@ -62,17 +62,33 @@ export function generateSummary(text: string): string {
   
   if (sentences.length === 0) return '';
   
-  // Take first 3 sentences as summary
-  const bullets = sentences
-    .slice(0, 3)
-    .map(s => `- ${s.trim()}`)
-    .join('\n');
+  // Take first 3-5 sentences, cap at 600 chars
+  let summary = '';
+  let count = 0;
+  for (const s of sentences) {
+    if (count >= 5 || summary.length + s.length > 600) break;
+    summary += `- ${s.trim()}\n`;
+    count++;
+  }
   
-  return `## TL;DR\n${bullets}\n\n`;
+  return summary ? `## TL;DR\n${summary}\n` : '';
 }
 
 /**
- * Calculate SHA-256 hash for deduplication
+ * Calculate deduplication key (hash of title + first 200 chars)
+ */
+export async function dedupeKey(title: string, text: string): Promise<string> {
+  const content = (title + text.slice(0, 200)).trim().toLowerCase();
+  const encoder = new TextEncoder();
+  const data = encoder.encode(content);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+/**
+ * Calculate SHA-256 hash for full text deduplication
  */
 export async function sha256(text: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -98,26 +114,22 @@ export function detectLanguage(text: string): 'it' | 'en' {
 }
 
 /**
- * Chunk text into 700-900 token chunks with overlap
+ * Chunk text into ~800 token chunks (2500-3500 chars) with overlap
  */
-export function chunkText(text: string, maxTokens = 800, overlap = 150): string[] {
-  // Rough estimate: 1 token ≈ 4 characters
-  const maxChars = maxTokens * 4;
-  const overlapChars = overlap * 4;
-  
-  // Split by sentences
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim());
+export function chunkText(text: string, maxChars = 3000, overlapChars = 500): string[] {
+  // Split by paragraphs first
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
   
   const chunks: string[] = [];
   let currentChunk = '';
   
-  for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > maxChars && currentChunk.length > 0) {
+  for (const para of paragraphs) {
+    if ((currentChunk + para).length > maxChars && currentChunk.length > 0) {
       chunks.push(currentChunk.trim());
       // Overlap: keep last N chars
-      currentChunk = currentChunk.slice(-overlapChars) + sentence;
+      currentChunk = currentChunk.slice(-overlapChars) + '\n\n' + para;
     } else {
-      currentChunk += sentence + '. ';
+      currentChunk += (currentChunk ? '\n\n' : '') + para;
     }
   }
   
@@ -125,37 +137,50 @@ export function chunkText(text: string, maxTokens = 800, overlap = 150): string[
     chunks.push(currentChunk.trim());
   }
   
-  return chunks;
+  return chunks.length > 0 ? chunks : [text];
 }
 
 /**
- * Enrich a single document
+ * Enrich a single document with auto-tags, summary, chunks, dedupeKey
  */
-export async function enrichDocument(doc: NorahDocument): Promise<NorahDocument> {
-  const tags = autoTag(doc.text, doc.tags);
+export async function enrichDocument(doc: any): Promise<any> {
+  const tags = autoTag(doc.text, doc.tags || []);
   const summary = generateSummary(doc.text);
   const language = doc.language || detectLanguage(doc.text);
   const hash = await sha256(doc.text);
+  const key = await dedupeKey(doc.title, doc.text);
+  const chunks = chunkText(doc.text).map((text, idx) => ({ idx, text }));
   
   return {
     ...doc,
     text: summary + doc.text,
+    autoTags: tags,
     tags,
     language,
     sha256: hash,
+    dedupeKey: key,
+    summary,
+    chunks,
   };
 }
 
 /**
- * Deduplicate documents by SHA-256
+ * Enrich many documents
  */
-export function deduplicateDocuments(docs: NorahDocument[]): NorahDocument[] {
+export async function enrichMany(docs: any[]): Promise<any[]> {
+  return Promise.all(docs.map(enrichDocument));
+}
+
+/**
+ * Deduplicate documents by dedupeKey
+ */
+export function deduplicateDocuments(docs: any[]): any[] {
   const seen = new Set<string>();
-  const unique: NorahDocument[] = [];
+  const unique: any[] = [];
   
   for (const doc of docs) {
-    if (doc.sha256 && seen.has(doc.sha256)) continue;
-    if (doc.sha256) seen.add(doc.sha256);
+    if (doc.dedupeKey && seen.has(doc.dedupeKey)) continue;
+    if (doc.dedupeKey) seen.add(doc.dedupeKey);
     unique.push(doc);
   }
   

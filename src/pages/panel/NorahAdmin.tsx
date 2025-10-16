@@ -1,19 +1,19 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Norah AI 2.0 Admin Panel
 import { useState, useEffect } from "react";
-import { Brain, Upload, TestTube, Clock, Activity } from "lucide-react";
+import { Brain, Upload, TestTube, Clock, Activity, BarChart } from "lucide-react";
 import NorahE2ETest from "@/features/norah/NorahE2ETest";
 import ContentSources from "@/features/norah/ContentSources";
 import BulkIngest from "@/features/norah/BulkIngest";
 import EvalHarness from "@/features/norah/EvalHarness";
 import Scheduler from "@/features/norah/Scheduler";
+import KPIPanel from "@/features/norah/KPIPanel";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { norahKpis } from "@/lib/norah/api";
-import type { NorahDocument } from "@/lib/norah/enrichment";
+import { useNorahStore } from "@/lib/norah/store";
 
 export default function NorahAdmin() {
   const [kpis, setKpis] = useState<any>(null);
-  const [selectedDocs, setSelectedDocs] = useState<NorahDocument[]>([]);
 
   const loadKpis = async () => {
     try {
@@ -51,7 +51,7 @@ export default function NorahAdmin() {
 
         {/* Main Tabs */}
         <Tabs defaultValue="sources" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="sources">
               <Upload className="w-4 h-4 mr-2" />
               Sources
@@ -68,6 +68,10 @@ export default function NorahAdmin() {
               <Clock className="w-4 h-4 mr-2" />
               Scheduler
             </TabsTrigger>
+            <TabsTrigger value="kpi">
+              <BarChart className="w-4 h-4 mr-2" />
+              KPIs
+            </TabsTrigger>
             <TabsTrigger value="legacy">
               <Activity className="w-4 h-4 mr-2" />
               E2E Tests
@@ -79,7 +83,7 @@ export default function NorahAdmin() {
           </TabsContent>
 
           <TabsContent value="ingest" className="space-y-4">
-            <BulkIngest documents={selectedDocs} onComplete={loadKpis} />
+            <BulkIngest onComplete={loadKpis} />
           </TabsContent>
 
           <TabsContent value="eval" className="space-y-4">
@@ -88,6 +92,10 @@ export default function NorahAdmin() {
 
           <TabsContent value="scheduler" className="space-y-4">
             <Scheduler onTrigger={loadKpis} />
+          </TabsContent>
+
+          <TabsContent value="kpi" className="space-y-4">
+            <KPIPanel />
           </TabsContent>
 
           <TabsContent value="legacy" className="space-y-4">
