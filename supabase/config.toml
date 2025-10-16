@@ -112,7 +112,7 @@ verify_jwt = false
 [functions.norah-chat]
 
 [functions.norah-rag-search]
-
+verify_jwt = false
 [functions.norah-kb-upsert]
 
 [functions.chat]
