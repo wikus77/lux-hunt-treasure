@@ -95,22 +95,74 @@ export default function IntelligenceActivation() {
       setSelectedDocs(enrichedDocs);
       updateStep(0, { status: 'success', progress: 100, message: `✅ ${generatedDocs.length} docs generated`, data: { count: generatedDocs.length } });
 
-      // STEP 2: Ingest Documents
-      updateStep(1, { status: 'running', progress: 10, message: 'Ingesting documents...' });
-      const ingestPayload = {
-        documents: generatedDocs.map(doc => ({
-          title: doc.title,
-          text: doc.text,
-          tags: doc.tags,
-          source: doc.source,
-          url: doc.url,
-        })),
-        dryRun: false,
-      };
+      // STEP 2: Ingest Documents (with batching to prevent payload too large)
+      updateStep(1, { status: 'running', progress: 10, message: 'Preparing documents...' });
       
-      const ingestResult = await norahIngest(ingestPayload);
-      results.ingestResult = ingestResult;
-      updateStep(1, { status: 'success', progress: 100, message: `✅ ${ingestResult.inserted || 0} docs ingested`, data: ingestResult });
+      const BATCH_SIZE = 10; // Small batches to avoid timeout/payload issues
+      const totalDocs = generatedDocs.length;
+      let totalInserted = 0;
+      let batchErrors = 0;
+      
+      const docsToIngest = generatedDocs.map(doc => ({
+        title: doc.title,
+        text: doc.text,
+        tags: doc.tags,
+        source: doc.source,
+        url: doc.url,
+      }));
+      
+      // Process in batches
+      for (let i = 0; i < docsToIngest.length; i += BATCH_SIZE) {
+        const batch = docsToIngest.slice(i, i + BATCH_SIZE);
+        const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(totalDocs / BATCH_SIZE);
+        
+        updateStep(1, { 
+          status: 'running', 
+          progress: 10 + (i / totalDocs * 80), 
+          message: `Ingesting batch ${batchNum}/${totalBatches} (${batch.length} docs)...` 
+        });
+        
+        // Retry logic for each batch
+        let batchSuccess = false;
+        let retryCount = 0;
+        const MAX_RETRIES = 2;
+        
+        while (!batchSuccess && retryCount <= MAX_RETRIES) {
+          try {
+            const batchResult = await norahIngest({ documents: batch, dryRun: false });
+            totalInserted += batchResult.inserted || 0;
+            batchSuccess = true;
+          } catch (error: any) {
+            retryCount++;
+            if (retryCount > MAX_RETRIES) {
+              console.error(`Batch ${batchNum} failed after ${MAX_RETRIES} retries:`, error);
+              batchErrors++;
+              break;
+            }
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+      
+      results.ingestResult = { inserted: totalInserted, errors: batchErrors };
+      
+      if (batchErrors > 0) {
+        updateStep(1, { 
+          status: 'success', 
+          progress: 100, 
+          message: `⚠️ ${totalInserted} docs ingested, ${batchErrors} batches failed`, 
+          data: { inserted: totalInserted, errors: batchErrors } 
+        });
+      } else {
+        updateStep(1, { 
+          status: 'success', 
+          progress: 100, 
+          message: `✅ ${totalInserted} docs ingested successfully`, 
+          data: { inserted: totalInserted } 
+        });
+      }
 
       // STEP 3: Embed Vectors
       updateStep(2, { status: 'running', progress: 10, message: 'Generating embeddings...' });
