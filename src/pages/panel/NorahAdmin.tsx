@@ -1,6 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { useState, useEffect } from "react";
 import { Brain, Database, Search, Activity, Loader2, AlertCircle, Network } from "lucide-react";
+import NorahE2ETest from "@/features/norah/NorahE2ETest";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -142,6 +143,11 @@ export default function NorahAdmin() {
             <p className="text-sm text-muted-foreground font-rajdhani">RAG Search Pipeline Management</p>
           </div>
         </div>
+
+        {/* E2E Test Suite (DEV ONLY) */}
+        {import.meta.env.DEV && (
+          <NorahE2ETest />
+        )}
 
         {/* Edge Function Diagnostics */}
         <Card>

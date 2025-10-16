@@ -35,15 +35,15 @@ type Req = { query: string; top_k?: number; locale?: string };
 Deno.serve(async (req) => {
   try {
     // CORS preflight
+    // CORS headers (shared across all responses)
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+    };
+
     if (req.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-          "Access-Control-Allow-Methods": "POST, OPTIONS",
-        },
-      });
+      return new Response(null, { status: 204, headers: corsHeaders });
     }
 
     if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
@@ -74,13 +74,13 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ rag_used: true, hits: data }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("norah-rag-search error:", e);
     return new Response(JSON.stringify({ error: String(e?.message ?? e) }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
