@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { preflight, json, errJSON } from "../_shared/cors.ts";
+import { preflight, json } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
   const pf = preflight(req);
@@ -10,13 +10,13 @@ Deno.serve(async (req) => {
 
   try {
     if (req.method !== "POST") {
-      return errJSON(405, "method-not-allowed", "Only POST allowed", origin);
+      return json(405, { ok: false, error: "method-not-allowed", message: "Only POST allowed" }, origin);
     }
 
     const { documents = [], dryRun = false } = await req.json().catch(() => ({}));
     
     if (!Array.isArray(documents)) {
-      return errJSON(400, "invalid-payload", "documents must be an array", origin);
+      return json(400, { ok: false, error: "invalid-payload", message: "documents must be an array" }, origin);
     }
 
     if (documents.length === 0) {
@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return errJSON(500, "missing-server-secrets", "Server configuration error", origin);
+      return json(500, { ok: false, error: "missing-server-secrets", message: "Server configuration error" }, origin);
     }
 
     if (dryRun) {
@@ -62,6 +62,6 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, inserted }, origin);
   } catch (e: any) {
     console.error("❌ norah-ingest error:", e);
-    return errJSON(500, "ingest-internal", String(e?.message || e), origin);
+    return json(500, { ok: false, error: "ingest-internal", message: String(e?.message || e) }, origin);
   }
 });
