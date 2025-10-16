@@ -38,9 +38,17 @@ export async function norahEmbed(opts?: { reembed?: boolean; batch?: number }) {
   return result;
 }
 
-export async function norahSearch(query: string, k = 8, minScore = 0.1) {
+export async function norahSearch(query: string) {
+  // Validate non-empty query client-side
+  if (!query || !query.trim()) {
+    if (import.meta.env.DEV) {
+      console.warn('[NORAH API] norahSearch: empty query, skipping call');
+    }
+    return { ok: false, error: 'empty-query', results: [] };
+  }
+
   const url = functionsBaseUrl("norah-rag-search");
-  const payload = { query, k, minScore };
+  const payload = { q: query.trim() };
   if (import.meta.env.DEV) {
     console.debug('[NORAH API] norahSearch →', { url, payload });
   }
