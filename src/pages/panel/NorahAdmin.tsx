@@ -1,12 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Norah AI 2.0 Admin Panel
 import { useState, useEffect } from "react";
-import { Brain, Upload, TestTube, Clock, Activity, BarChart } from "lucide-react";
+import { Brain, Upload, TestTube, Clock, Activity, BarChart, Zap } from "lucide-react";
 import NorahE2ETest from "@/features/norah/NorahE2ETest";
 import ContentSources from "@/features/norah/ContentSources";
 import BulkIngest from "@/features/norah/BulkIngest";
 import EvalHarness from "@/features/norah/EvalHarness";
 import Scheduler from "@/features/norah/Scheduler";
 import KPIPanel from "@/features/norah/KPIPanel";
+import IntelligenceActivation from "@/features/norah/IntelligenceActivation";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { norahKpis } from "@/lib/norah/api";
@@ -50,8 +51,12 @@ export default function NorahAdmin() {
         </div>
 
         {/* Main Tabs */}
-        <Tabs defaultValue="sources" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="activation" className="w-full">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="activation">
+              <Zap className="w-4 h-4 mr-2" />
+              Activation
+            </TabsTrigger>
             <TabsTrigger value="sources">
               <Upload className="w-4 h-4 mr-2" />
               Sources
@@ -77,6 +82,10 @@ export default function NorahAdmin() {
               E2E Tests
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="activation" className="space-y-4">
+            <IntelligenceActivation />
+          </TabsContent>
 
           <TabsContent value="sources" className="space-y-4">
             <ContentSources />
