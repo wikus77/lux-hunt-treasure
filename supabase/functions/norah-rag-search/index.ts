@@ -38,10 +38,13 @@ Deno.serve(async (req) => {
       return errJSON(405, "method-not-allowed", "Only POST allowed", origin);
     }
 
-    const { q, top_k = 3, locale = "it" } = (await req.json().catch(() => ({}))) as Req;
+    const payload = (await req.json().catch(() => ({}))) as any;
+    const q = (payload?.q ?? payload?.query ?? '').toString();
+    const top_k = Number(payload?.top_k ?? 3);
+    const locale = (payload?.locale ?? 'it').toString();
     
     if (!q || !q.trim()) {
-      return errJSON(400, "empty-query", "Query parameter 'q' is required and must be non-empty", origin);
+      return errJSON(400, "empty-query", "Query parameter 'q' (or 'query') is required and must be non-empty", origin);
     }
 
     const url = Deno.env.get("SUPABASE_URL");
