@@ -1,11 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-
-// === Env ===
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const supabaseAdmin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+import { preflight, json, errJSON } from "../_shared/cors.ts";
 
 // === Cloudflare Workers AI embeddings (768d) ===
 const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
@@ -23,64 +18,72 @@ async function cfEmbed(text: string): Promise<number[]> {
     const err = await res.text();
     throw new Error(`Cloudflare embeddings failed: ${res.status} ${err}`);
   }
-  const json = await res.json();
+  const result = await res.json();
   // Either { result: { data: [[...]] } } or { data: [[...]] }
-  let e: any = (json?.result?.data ?? json?.data);
+  let e: any = (result?.result?.data ?? result?.data);
   if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
   return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
 }
 
-type Req = { query: string; top_k?: number; locale?: string };
+type Req = { q: string; top_k?: number; locale?: string };
 
 Deno.serve(async (req) => {
-  try {
-    // CORS preflight
-    // CORS headers (shared across all responses)
-    const corsHeaders = {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-    };
+  const pf = preflight(req);
+  if (pf) return pf;
 
-    if (req.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders });
+  const origin = req.headers.get("Origin") || "*";
+
+  try {
+    if (req.method !== "POST") {
+      return errJSON(405, "method-not-allowed", "Only POST allowed", origin);
     }
 
-    if (req.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
+    const { q, top_k = 3, locale = "it" } = (await req.json().catch(() => ({}))) as Req;
+    
+    if (!q || !q.trim()) {
+      return errJSON(400, "empty-query", "Query parameter 'q' is required and must be non-empty", origin);
+    }
 
-    const { query, top_k = 3, locale = "it" } = (await req.json()) as Req;
-    if (!query) return new Response(JSON.stringify({ error: "Missing query" }), { status: 400 });
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!url || !key) {
+      console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return errJSON(500, "missing-server-secrets", "Server configuration error", origin);
+    }
 
-    // 1) Embedding (768d)
-    const embedding = await cfEmbed(query);
+    const supabaseAdmin = createClient(url, key, { auth: { persistSession: false } });
+
+    // 1) Generate embedding (768d)
+    const embedding = await cfEmbed(q.trim());
     if (!Array.isArray(embedding) || embedding.length !== 768) {
       throw new Error(`Bad embedding length: ${embedding?.length ?? 'null'} (expected 768)`);
     }
 
-    // 2) Vector search via RPC (function: public.ai_rag_search_vec(double precision[], integer, text))
+    // 2) Vector search via RPC
     const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
       query_embedding: embedding,
       match_count: top_k,
       in_locale: locale,
     });
-    if (error) throw new Error(`ai_rag_search_vec failed: ${error.message}`);
+    
+    if (error) {
+      console.error("❌ ai_rag_search_vec error:", error);
+      throw new Error(`ai_rag_search_vec failed: ${error.message}`);
+    }
 
-    // 3) Log best-effort
+    // 3) Log query (best-effort, don't fail on log errors)
     try {
       await supabaseAdmin.from("norah_events").insert([
-        { event_type: "rag_query", payload: { q: query, locale, top_k, hits: data } },
+        { event_type: "rag_query", payload: { q, locale, top_k, hits: data?.length || 0 } },
       ]);
-    } catch (_) { /* no-op */ }
+    } catch (logErr) {
+      console.warn("⚠️ Failed to log RAG query:", logErr);
+    }
 
-    return new Response(JSON.stringify({ rag_used: true, hits: data }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("norah-rag-search error:", e);
-    return new Response(JSON.stringify({ error: String(e?.message ?? e) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json(200, { ok: true, rag_used: true, results: data || [] }, origin);
+  } catch (e: any) {
+    console.error("❌ norah-rag-search error:", e);
+    return errJSON(500, "rag-internal", String(e?.message || e), origin);
   }
 });

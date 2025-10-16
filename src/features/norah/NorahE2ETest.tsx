@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { norahIngest, norahEmbed, norahSearch, norahKpis } from '@/lib/norah/api';
+import { formatHttpError } from '@/lib/httpJson';
 
 type TestStep = 'ingest' | 'embed' | 'rag' | 'kpis';
 type TestResult = { ok: boolean; message: string; data?: any };
@@ -77,12 +78,13 @@ export default function NorahE2ETest() {
         variant: inserted > 0 ? 'default' : 'destructive',
       });
     } catch (error: any) {
-      log('ingest', 'Ingest failed', error);
+      const msg = formatHttpError(error);
+      log('ingest', `❌ ${msg}`, error);
       setResults(prev => ({
         ...prev,
-        ingest: { ok: false, message: `❌ ${error.message}` },
+        ingest: { ok: false, message: `❌ ${msg}` },
       }));
-      toast({ title: '❌ Ingest Failed', description: error.message, variant: 'destructive' });
+      toast({ title: '❌ Ingest Failed', description: msg, variant: 'destructive' });
     } finally {
       setLoading(null);
     }
@@ -125,12 +127,13 @@ export default function NorahE2ETest() {
         variant: totalEmbedded > 0 ? 'default' : 'destructive',
       });
     } catch (error: any) {
-      log('embed', 'Embed failed', error);
+      const msg = formatHttpError(error);
+      log('embed', `❌ ${msg}`, error);
       setResults(prev => ({
         ...prev,
-        embed: { ok: false, message: `❌ ${error.message}` },
+        embed: { ok: false, message: `❌ ${msg}` },
       }));
-      toast({ title: '❌ Embed Failed', description: error.message, variant: 'destructive' });
+      toast({ title: '❌ Embed Failed', description: msg, variant: 'destructive' });
     } finally {
       setLoading(null);
     }
@@ -181,12 +184,13 @@ export default function NorahE2ETest() {
         variant: totalHits > 0 ? 'default' : 'destructive',
       });
     } catch (error: any) {
-      log('rag', 'RAG search failed', error);
+      const msg = formatHttpError(error);
+      log('rag', `❌ ${msg}`, error);
       setResults(prev => ({
         ...prev,
-        rag: { ok: false, message: `❌ ${error.message}` },
+        rag: { ok: false, message: `❌ ${msg}` },
       }));
-      toast({ title: '❌ RAG Failed', description: error.message, variant: 'destructive' });
+      toast({ title: '❌ RAG Failed', description: msg, variant: 'destructive' });
     } finally {
       setLoading(null);
     }
@@ -220,12 +224,13 @@ export default function NorahE2ETest() {
         description: `Docs: ${result.docs_count || 0}, Embeddings: ${result.chunks_count || 0}`,
       });
     } catch (error: any) {
-      log('kpis', 'KPIs fetch failed', error);
+      const msg = formatHttpError(error);
+      log('kpis', `❌ ${msg}`, error);
       setResults(prev => ({
         ...prev,
-        kpis: { ok: false, message: `❌ ${error.message}` },
+        kpis: { ok: false, message: `❌ ${msg}` },
       }));
-      toast({ title: '❌ KPIs Failed', description: error.message, variant: 'destructive' });
+      toast({ title: '❌ KPIs Failed', description: msg, variant: 'destructive' });
     } finally {
       setLoading(null);
     }

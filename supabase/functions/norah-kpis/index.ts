@@ -1,51 +1,56 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const CORS_ORIGIN = Deno.env.get("CORS_ALLOWED_ORIGIN") || "*";
-
-const cors = (origin: string) => ({
-  "Access-Control-Allow-Origin": origin || CORS_ORIGIN,
-  "Vary": "Origin",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Content-Type": "application/json",
-});
+import { preflight, json, errJSON } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
-  const origin = req.headers.get("Origin") || "";
-  
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: cors(origin) });
-  }
+  const pf = preflight(req);
+  if (pf) return pf;
 
-  if (req.method !== "GET") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: cors(origin),
-    });
-  }
+  const origin = req.headers.get("Origin") || "*";
 
   try {
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+    if (req.method !== "GET") {
+      return errJSON(405, "method-not-allowed", "Only GET allowed", origin);
+    }
 
-    // Get KPIs from view
-    const { data: kpis, error: kpisError } = await supabase
-      .from("ai_docs_kpis")
-      .select("*")
-      .single();
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    
+    if (!url || !key) {
+      console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+      return errJSON(500, "missing-server-secrets", "Server configuration error", origin);
+    }
 
-    if (kpisError) throw kpisError;
+    const admin = createClient(url, key, { auth: { persistSession: false } });
 
-    return new Response(JSON.stringify({ ...kpis, avgScore: null }), {
-      headers: cors(origin),
-    });
+    // Count documents
+    const { count: docs } = await admin
+      .from("ai_docs")
+      .select("id", { count: "exact", head: true });
+
+    // Count embeddings
+    const { count: embs } = await admin
+      .from("ai_docs_embeddings")
+      .select("id", { count: "exact", head: true });
+
+    // Last embed timestamp
+    const { data: last } = await admin
+      .from("ai_docs_embeddings")
+      .select("created_at")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const body = {
+      ok: true,
+      documents: docs ?? 0,
+      embeddings: embs ?? 0,
+      last_embed_at: last?.created_at ?? "1970-01-01T00:00:00Z",
+    };
+
+    return json(200, body, origin);
   } catch (e: any) {
-    console.error("KPIs error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: cors(origin),
-    });
+    console.error("❌ norah-kpis error:", e);
+    return errJSON(500, "kpis-internal", String(e?.message || e), origin);
   }
 });

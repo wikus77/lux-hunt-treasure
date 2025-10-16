@@ -1,41 +1,56 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Norah AI API client utilities
 
-import { functionsBaseUrl, norahHeaders, safeJson } from "@/lib/supabase/functionsBase";
+import { NORAH_ROUTES } from "@/lib/norahApi";
+import { httpJson, formatHttpError } from "@/lib/httpJson";
+
+const norahHeaders = () => ({
+  "Content-Type": "application/json",
+});
 
 export async function norahIngest(source: "content-ai" | "remote" | "e2e-test" = "content-ai", docs?: any[]) {
-  const url = functionsBaseUrl("norah-ingest");
   if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahIngest →', { url, source, docsCount: docs?.length || 0 });
+    console.debug('[NORAH API] norahIngest →', { source, docsCount: docs?.length || 0 });
   }
-  const r = await fetch(url, {
-    method: "POST",
-    headers: norahHeaders(),
-    body: JSON.stringify({ sources: source, docs: docs ?? [] })
-  });
-  const result = await safeJson(r);
-  if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahIngest ✅', result);
+  try {
+    const result = await httpJson(NORAH_ROUTES.ingest, {
+      method: "POST",
+      headers: norahHeaders(),
+      body: JSON.stringify({ documents: docs ?? [], dryRun: false })
+    });
+    if (import.meta.env.DEV) {
+      console.debug('[NORAH API] norahIngest ✅', result);
+    }
+    return result;
+  } catch (error: any) {
+    if (import.meta.env.DEV) {
+      console.error('[NORAH API] norahIngest ❌', formatHttpError(error));
+    }
+    throw error;
   }
-  return result;
 }
 
 export async function norahEmbed(opts?: { reembed?: boolean; batch?: number }) {
-  const url = functionsBaseUrl("norah-embed");
   const payload = { reembed: !!opts?.reembed, batch: opts?.batch ?? 200 };
   if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahEmbed →', { url, payload });
+    console.debug('[NORAH API] norahEmbed →', payload);
   }
-  const r = await fetch(url, {
-    method: "POST",
-    headers: norahHeaders(),
-    body: JSON.stringify(payload)
-  });
-  const result = await safeJson(r);
-  if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahEmbed ✅', result);
+  try {
+    const result = await httpJson(NORAH_ROUTES.embed, {
+      method: "POST",
+      headers: norahHeaders(),
+      body: JSON.stringify(payload)
+    });
+    if (import.meta.env.DEV) {
+      console.debug('[NORAH API] norahEmbed ✅', result);
+    }
+    return result;
+  } catch (error: any) {
+    if (import.meta.env.DEV) {
+      console.error('[NORAH API] norahEmbed ❌', formatHttpError(error));
+    }
+    throw error;
   }
-  return result;
 }
 
 export async function norahSearch(query: string) {
@@ -47,32 +62,45 @@ export async function norahSearch(query: string) {
     return { ok: false, error: 'empty-query', results: [] };
   }
 
-  const url = functionsBaseUrl("norah-rag-search");
   const payload = { q: query.trim() };
   if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahSearch →', { url, payload });
+    console.debug('[NORAH API] norahSearch →', payload);
   }
-  const r = await fetch(url, {
-    method: "POST",
-    headers: norahHeaders(),
-    body: JSON.stringify(payload)
-  });
-  const result = await safeJson(r);
-  if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahSearch ✅', result);
+  try {
+    const result = await httpJson(NORAH_ROUTES.rag, {
+      method: "POST",
+      headers: norahHeaders(),
+      body: JSON.stringify(payload)
+    });
+    if (import.meta.env.DEV) {
+      console.debug('[NORAH API] norahSearch ✅', result);
+    }
+    return result;
+  } catch (error: any) {
+    if (import.meta.env.DEV) {
+      console.error('[NORAH API] norahSearch ❌', formatHttpError(error));
+    }
+    throw error;
   }
-  return result;
 }
 
 export async function norahKpis() {
-  const url = functionsBaseUrl("norah-kpis");
   if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahKpis →', { url });
+    console.debug('[NORAH API] norahKpis → GET');
   }
-  const r = await fetch(url, { method: "GET", headers: norahHeaders() });
-  const result = await safeJson(r);
-  if (import.meta.env.DEV) {
-    console.debug('[NORAH API] norahKpis ✅', result);
+  try {
+    const result = await httpJson(NORAH_ROUTES.kpis, {
+      method: "GET",
+      headers: norahHeaders()
+    });
+    if (import.meta.env.DEV) {
+      console.debug('[NORAH API] norahKpis ✅', result);
+    }
+    return result;
+  } catch (error: any) {
+    if (import.meta.env.DEV) {
+      console.error('[NORAH API] norahKpis ❌', formatHttpError(error));
+    }
+    throw error;
   }
-  return result;
 }
