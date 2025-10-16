@@ -44,7 +44,6 @@ image_transformation = { enabled = true }
 
 [functions]
 verify_jwt = false
-verify_jwt = { enabled = true }
 
 [functions.fcm-test]
 
@@ -63,7 +62,6 @@ enable_signup = true
 # enable_phone_autoconfirm = true
 
 [functions.webpush-send]
-verify_jwt = false
 [functions.webpush-upsert]
 
 [functions.geofence-engine]
@@ -113,7 +111,6 @@ verify_jwt = false
 [functions.norah-chat]
 
 [functions.norah-rag-search]
-verify_jwt = false
 [functions.norah-kb-upsert]
 
 [functions.chat]
@@ -135,22 +132,15 @@ verify_jwt = false
 [functions.enroll-mission-of-the-month]
 
 [functions.auto-push-cron]
-verify_jwt = false
 
 [functions.get-vapid]
-verify_jwt = false
 
 [functions.env-dump]
-verify_jwt = false
 
 [functions.webpush-targeted-send]
-verify_jwt = false
 
 [functions.norah-ingest]
-verify_jwt = false
 
 [functions.norah-embed]
-verify_jwt = false
 
 [functions.norah-kpis]
-verify_jwt = false
