@@ -72,12 +72,15 @@ export default function NorahAdmin() {
   };
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      toast({ title: "⚠️ Empty Query", description: "Please enter a search query", variant: "destructive" });
+      return;
+    }
     setLoading("search");
     try {
-      const result = await norahSearch(searchQuery, 8, 0.1);
-      setSearchResults(result.hits || []);
-      toast({ title: "✅ Search Complete", description: `Found ${result.hits?.length || 0} results` });
+      const result = await norahSearch(searchQuery);
+      setSearchResults(result.results || []);
+      toast({ title: "✅ Search Complete", description: `Found ${result.results?.length || 0} results` });
     } catch (error: any) {
       const msg = error.message.includes("404") ? "Function not deployed - check Supabase" : error.message;
       toast({ title: "❌ Search Failed", description: msg, variant: "destructive" });

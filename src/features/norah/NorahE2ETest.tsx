@@ -150,9 +150,14 @@ export default function NorahE2ETest() {
       const allResults: any[] = [];
       
       for (const q of queries) {
+        if (!q.trim()) {
+          log('rag', `Skipping empty query`);
+          allResults.push({ query: q, ok: false, error: 'empty-query', results: [] });
+          continue;
+        }
         log('rag', `Searching: "${q}"`);
-        const result = await norahSearch(q, 5, 0.1);
-        const hits = result.hits || [];
+        const result = await norahSearch(q);
+        const hits = result.results || [];
         log('rag', `Query "${q}" returned ${hits.length} hits`, hits);
         allResults.push({ query: q, hits });
       }
