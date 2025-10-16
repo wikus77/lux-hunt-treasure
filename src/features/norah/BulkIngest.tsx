@@ -109,6 +109,11 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
         const batch = batches[i];
         addLog(`Ingesting batch ${i+1}/${batches.length} (${batch.length} docs)`);
         
+        // Micro-pacing between batches in preview
+        if (i > 0 && (import.meta.env.MODE === 'development' || window.location.hostname.includes('lovable'))) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         const result = await norahIngest({
           documents: batch.map(d => ({
             title: d.title,
@@ -145,12 +150,19 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
       let totalEmbedded = 0;
       let remaining = 1;
       
+      let embedRound = 0;
       while (remaining > 0) {
+        // Micro-pacing between embed batches in preview
+        if (embedRound > 0 && (import.meta.env.MODE === 'development' || window.location.hostname.includes('lovable'))) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         const result = await norahEmbed({ reembed: false, batch: 200 });
         totalEmbedded += result.embedded || 0;
         remaining = result.remaining || 0;
         setProgress(Math.min(95, (totalEmbedded / (totalEmbedded + remaining)) * 100));
         addLog(`Embedded ${result.embedded || 0} chunks, ${remaining} remaining`);
+        embedRound++;
       }
       
       setStats(prev => ({ ...prev, embedded: totalEmbedded }));
@@ -238,6 +250,11 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
       
       let totalInserted = 0;
       for (let i = 0; i < batches.length; i++) {
+        // Micro-pacing between batches in preview
+        if (i > 0 && (import.meta.env.MODE === 'development' || window.location.hostname.includes('lovable'))) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         const result = await norahIngest({
           documents: batches[i].map(d => ({
             title: d.title,
@@ -266,10 +283,17 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
     try {
       let totalEmbedded = 0;
       let remaining = 1;
+      let embedRoundComplete = 0;
       while (remaining > 0) {
+        // Micro-pacing between embed batches in preview
+        if (embedRoundComplete > 0 && (import.meta.env.MODE === 'development' || window.location.hostname.includes('lovable'))) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         const result = await norahEmbed({ batch: 200, reembed: false });
         totalEmbedded += result.embedded || 0;
         remaining = result.remaining || 0;
+        embedRoundComplete++;
       }
       setStats(prev => ({ ...prev, embedded: totalEmbedded }));
       addLog(`✅ Embeddings generated: ${totalEmbedded}`);

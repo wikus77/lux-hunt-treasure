@@ -123,10 +123,16 @@ export default function IntelligenceActivation() {
           message: `Ingesting batch ${batchNum}/${totalBatches} (${batch.length} docs)...` 
         });
         
+        // Micro-pacing between batches in preview
+        if (i > 0 && (import.meta.env.MODE === 'development' || window.location.hostname.includes('lovable'))) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         // Retry logic for each batch
         let batchSuccess = false;
         let retryCount = 0;
         const MAX_RETRIES = 2;
+        let batchError: any = null;
         
         while (!batchSuccess && retryCount <= MAX_RETRIES) {
           try {
@@ -134,9 +140,10 @@ export default function IntelligenceActivation() {
             totalInserted += batchResult.inserted || 0;
             batchSuccess = true;
           } catch (error: any) {
+            batchError = error;
             retryCount++;
             if (retryCount > MAX_RETRIES) {
-              console.error(`Batch ${batchNum} failed after ${MAX_RETRIES} retries:`, error);
+              console.error(`Batch ${batchNum} failed after ${MAX_RETRIES} retries:`, error?.message || error);
               batchErrors++;
               break;
             }
@@ -168,12 +175,19 @@ export default function IntelligenceActivation() {
       updateStep(2, { status: 'running', progress: 10, message: 'Generating embeddings...' });
       let totalEmbedded = 0;
       let remaining = 1;
+      let embedRound = 0;
       
       while (remaining > 0) {
+        // Micro-pacing between embed batches in preview
+        if (embedRound > 0 && (import.meta.env.MODE === 'development' || window.location.hostname.includes('lovable'))) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
         const embedResult = await norahEmbed({ batch: 200, reembed: false });
         totalEmbedded += embedResult.embedded || 0;
         remaining = embedResult.remaining || 0;
         updateStep(2, { status: 'running', progress: 50, message: `Embedded ${totalEmbedded} chunks, ${remaining} remaining...` });
+        embedRound++;
       }
       
       results.totalEmbedded = totalEmbedded;
