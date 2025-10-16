@@ -5,15 +5,20 @@
 
 const fromEnv = import.meta.env.VITE_NORAH_BASE_URL?.trim();
 
-// Use env var or throw error in production
-export const NORAH_BASE = fromEnv || (() => {
-  if (import.meta.env.PROD) {
-    throw new Error('VITE_NORAH_BASE_URL must be set in production');
+// Derive from SUPABASE_URL if not explicitly set
+const deriveFromSupabase = () => {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
+  if (!supabaseUrl) {
+    if (import.meta.env.DEV) {
+      console.warn('⚠️ Neither VITE_NORAH_BASE_URL nor VITE_SUPABASE_URL are set');
+    }
+    return '';
   }
-  // Dev fallback - requires local proxy or env var
-  console.warn('⚠️ VITE_NORAH_BASE_URL not set - using placeholder');
-  return '';
-})();
+  // Strip trailing slashes and append /functions/v1
+  return `${supabaseUrl.replace(/\/+$/, '')}/functions/v1`;
+};
+
+export const NORAH_BASE = fromEnv || deriveFromSupabase();
 
 export const NORAH_ROUTES = {
   ingest: `${NORAH_BASE}/norah-ingest`,
