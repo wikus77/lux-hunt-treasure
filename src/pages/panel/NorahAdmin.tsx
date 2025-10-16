@@ -84,7 +84,7 @@ export default function NorahAdmin() {
           </TabsList>
 
           <TabsContent value="activation" className="space-y-4">
-            <IntelligenceActivation />
+            <IntelligenceActivation onComplete={loadKpis} />
           </TabsContent>
 
           <TabsContent value="sources" className="space-y-4">
