@@ -43,6 +43,7 @@ file_size_limit = "50MiB"
 image_transformation = { enabled = true }
 
 [functions]
+verify_jwt = false
 verify_jwt = { enabled = true }
 
 [functions.fcm-test]
