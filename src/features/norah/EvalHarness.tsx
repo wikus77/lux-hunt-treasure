@@ -7,7 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { norahSearch } from '@/lib/norah/api';
+import { norahSearch, norahKpis } from '@/lib/norah/api';
+import { 
+  INTELLIGENCE_EVAL_QUESTIONS, 
+  calculateIntelligenceMetrics, 
+  generateIntelligenceVerdict,
+  type IntelligenceQuestion 
+} from '@/lib/norah/intelligenceEval';
+import { IntelligenceReport } from '@/lib/norah/intelligenceReport';
 
 interface GoldQuestion {
   query: string;
@@ -16,33 +23,11 @@ interface GoldQuestion {
   lang?: 'it' | 'en';
 }
 
-const DEFAULT_GOLD: GoldQuestion[] = [
-  {
-    query: 'Push SAFE Guard',
-    expected_keywords: ['guard', 'push', 'security', 'prebuild'],
-    lang: 'it',
-  },
-  {
-    query: 'Buzz Map pricing tiers',
-    expected_keywords: ['buzz', 'pricing', 'silver', 'gold', 'tier'],
-    lang: 'it',
-  },
-  {
-    query: 'Norah RAG flow',
-    expected_keywords: ['rag', 'embedding', 'cloudflare', 'vector'],
-    lang: 'it',
-  },
-  {
-    query: 'Final Shot rules',
-    expected_keywords: ['final', 'shot', 'mission', 'prize'],
-    lang: 'it',
-  },
-  {
-    query: 'Subscription levels',
-    expected_keywords: ['subscription', 'silver', 'gold', 'black', 'titanium'],
-    lang: 'it',
-  },
-];
+const DEFAULT_GOLD: GoldQuestion[] = INTELLIGENCE_EVAL_QUESTIONS.map(q => ({
+  query: q.query,
+  expected_keywords: q.expected_keywords,
+  lang: 'it' as const,
+}));
 
 export default function EvalHarness() {
   const { toast } = useToast();
@@ -50,6 +35,7 @@ export default function EvalHarness() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState<any[]>([]);
+  const [intelligenceReport, setIntelligenceReport] = useState<any>(null);
 
   const runEval = async () => {
     setRunning(true);
@@ -95,13 +81,29 @@ export default function EvalHarness() {
       
       setResults(evalResults);
       
-      const pass1Count = evalResults.filter(r => r.pass1).length;
-      const pass3Count = evalResults.filter(r => r.pass3).length;
-      const citationCount = evalResults.filter(r => r.hasCitation).length;
+      // Calculate intelligence metrics
+      const metrics = calculateIntelligenceMetrics(evalResults);
+      const verdict = generateIntelligenceVerdict(metrics);
+      
+      // Get KPIs
+      const kpis = await norahKpis();
+      
+      const report = {
+        timestamp: new Date().toISOString(),
+        docs: kpis.documents || 0,
+        embeddings: kpis.embeddings || 0,
+        last_embed_at: kpis.last_embed_at,
+        metrics,
+        verdict,
+        questions_tested: evalResults.length,
+        results: evalResults,
+      };
+      
+      setIntelligenceReport(report);
       
       toast({
-        title: '✅ Evaluation Complete',
-        description: `Pass@1: ${((pass1Count / evalResults.length) * 100).toFixed(1)}% | Pass@3: ${((pass3Count / evalResults.length) * 100).toFixed(1)}%`,
+        title: `✅ Intelligence Verification Complete`,
+        description: `Verdict: ${verdict} | Pass@1: ${metrics.pass1.toFixed(1)}% | Pass@3: ${metrics.pass3.toFixed(1)}%`,
       });
     } catch (error: any) {
       toast({ title: '❌ Evaluation Failed', description: error.message, variant: 'destructive' });
@@ -130,16 +132,17 @@ export default function EvalHarness() {
   };
 
   const exportJSON = () => {
-    const json = JSON.stringify(results, null, 2);
+    const exportData = intelligenceReport || { results, timestamp: new Date().toISOString() };
+    const json = JSON.stringify(exportData, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `norah-eval-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `norah-intelligence-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
     
-    toast({ title: '✅ Exported', description: 'Evaluation results downloaded (JSON)' });
+    toast({ title: '✅ Exported', description: 'Intelligence report downloaded (JSON)' });
   };
 
   const pass1Rate = results.length > 0 ? (results.filter(r => r.pass1).length / results.length) * 100 : 0;
@@ -200,11 +203,16 @@ export default function EvalHarness() {
         </CardContent>
       </Card>
 
+      {/* Intelligence Report */}
+      {intelligenceReport && (
+        <IntelligenceReport report={intelligenceReport} />
+      )}
+
       {/* Results */}
       {results.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="font-orbitron">KPI Dashboard</CardTitle>
+            <CardTitle className="font-orbitron">Detailed Results</CardTitle>
             <CardDescription>{results.length} questions evaluated</CardDescription>
           </CardHeader>
           <CardContent>

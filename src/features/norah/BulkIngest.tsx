@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 import { norahIngest, norahEmbed, norahSearch, norahKpis } from '@/lib/norah/api';
 import { useNorahStore } from '@/lib/norah/store';
+import { generateM1SSIONKnowledgeBase } from '@/lib/norah/m1ssionDocGenerator';
 
 interface BulkIngestProps {
   onComplete?: () => void;
@@ -17,7 +18,7 @@ interface BulkIngestProps {
 type Step = 'idle' | 'dry-run' | 'ingesting' | 'embedding' | 'testing' | 'kpis' | 'complete';
 
 export default function BulkIngest({ onComplete }: BulkIngestProps) {
-  const { selectedDocs } = useNorahStore();
+  const { selectedDocs, setSelectedDocs } = useNorahStore();
   const [step, setStep] = useState<Step>('idle');
   const [progress, setProgress] = useState(0);
   const [logs, setLogs] = useState<string[]>([]);
@@ -34,6 +35,23 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
     if (import.meta.env.DEV) {
       console.debug('[NORAH2]', msg);
     }
+  };
+
+  const generateM1SSIONKnowledge = () => {
+    const contentDocs = generateM1SSIONKnowledgeBase();
+    
+    // Convert ContentDoc to EnrichedDoc format
+    const enrichedDocs = contentDocs.map(doc => ({
+      ...doc,
+      summary: doc.text.substring(0, 150) + '...',
+      autoTags: doc.tags || [],
+      dedupeKey: `${doc.title}-${doc.source}`,
+      chunks: [{ idx: 0, text: doc.text }],
+    }));
+    
+    setSelectedDocs(enrichedDocs);
+    addLog(`✅ Generated ${enrichedDocs.length} M1SSION™ synthetic documents`);
+    toast.success(`Generated ${enrichedDocs.length} M1SSION™ documents for intelligence verification`);
   };
 
   const runDryRun = async () => {
@@ -320,6 +338,18 @@ export default function BulkIngest({ onComplete }: BulkIngestProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Generate M1SSION Docs Button */}
+          <Button 
+            onClick={generateM1SSIONKnowledge} 
+            disabled={isRunning}
+            variant="secondary"
+            size="lg" 
+            className="w-full"
+          >
+            <Upload className="w-5 h-5 mr-2" />
+            🧠 Generate M1SSION™ Knowledge Base (150+ docs)
+          </Button>
+
           {/* Progress Bar */}
           {isRunning && (
             <div className="space-y-2">
