@@ -53,7 +53,7 @@ interface FinalReport {
   recommendations: string[];
 }
 
-export default function IntelligenceActivation() {
+export default function IntelligenceActivation({ onComplete }: { onComplete?: () => void }) {
   const [isRunning, setIsRunning] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [steps, setSteps] = useState<StepResult[]>([
@@ -144,7 +144,21 @@ export default function IntelligenceActivation() {
             retryCount++;
             if (retryCount > MAX_RETRIES) {
               console.error(`Batch ${batchNum} failed after ${MAX_RETRIES} retries:`, error?.message || error);
-              batchErrors++;
+              // Fallback: per-doc ingestion so UI reflects backend success even if batch failed
+              let fallbackInserted = 0;
+              for (const d of batch) {
+                try {
+                  if (window.location.hostname.includes('lovable') || import.meta.env.MODE === 'development') {
+                    await new Promise(r => setTimeout(r, 120));
+                  }
+                  const r = await norahIngest({ documents: [d], dryRun: false });
+                  fallbackInserted += r.inserted || 0;
+                } catch (docErr: any) {
+                  console.warn(`  ✗ Doc failed (batch ${batchNum}): ${d.title} — ${docErr?.message || docErr}`);
+                }
+              }
+              totalInserted += fallbackInserted;
+              if (fallbackInserted === 0) batchErrors++;
               break;
             }
             // Wait before retry (exponential backoff)
