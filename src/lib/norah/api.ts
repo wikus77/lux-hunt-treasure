@@ -1,44 +1,23 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Norah AI API client utilities
 
-import { NORAH_ROUTES } from "@/lib/norahApi";
-import { httpJson, formatHttpError } from "@/lib/httpJson";
+import { supabase } from "@/integrations/supabase/client";
 import type { IngestPayload, EmbedPayload, RagQuery, NorahKPIs } from "./types";
-
-const norahHeaders = () => ({
-  "Content-Type": "application/json",
-});
-
-// Generic POST helper
-async function postJSON<T>(path: string, body: any): Promise<T> {
-  return httpJson(path, {
-    method: "POST",
-    headers: norahHeaders(),
-    body: JSON.stringify(body)
-  });
-}
-
-// Generic GET helper
-async function getJSON<T>(path: string): Promise<T> {
-  return httpJson(path, {
-    method: "GET",
-    headers: norahHeaders()
-  });
-}
 
 export async function norahIngest(payload: IngestPayload) {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahIngest →', { docsCount: payload.documents?.length || 0, dryRun: payload.dryRun });
   }
   try {
-    const result = await postJSON<any>(NORAH_ROUTES.ingest, payload);
+    const { data, error } = await supabase.functions.invoke('norah-ingest', { body: payload });
+    if (error) throw error;
     if (import.meta.env.DEV) {
-      console.debug('[NORAH2] norahIngest ✅', result);
+      console.debug('[NORAH2] norahIngest ✅', data);
     }
-    return result;
+    return data;
   } catch (error: any) {
     if (import.meta.env.DEV) {
-      console.error('[NORAH2] norahIngest ❌', formatHttpError(error));
+      console.error('[NORAH2] norahIngest ❌', error?.message || error);
     }
     throw error;
   }
@@ -49,14 +28,15 @@ export async function norahEmbed(payload: EmbedPayload) {
     console.debug('[NORAH2] norahEmbed →', payload);
   }
   try {
-    const result = await postJSON<any>(NORAH_ROUTES.embed, payload);
+    const { data, error } = await supabase.functions.invoke('norah-embed', { body: payload });
+    if (error) throw error;
     if (import.meta.env.DEV) {
-      console.debug('[NORAH2] norahEmbed ✅', result);
+      console.debug('[NORAH2] norahEmbed ✅', data);
     }
-    return result;
+    return data;
   } catch (error: any) {
     if (import.meta.env.DEV) {
-      console.error('[NORAH2] norahEmbed ❌', formatHttpError(error));
+      console.error('[NORAH2] norahEmbed ❌', error?.message || error);
     }
     throw error;
   }
@@ -74,14 +54,15 @@ export async function norahSearch(payload: RagQuery) {
     console.debug('[NORAH2] norahSearch →', payload);
   }
   try {
-    const result = await postJSON<any>(NORAH_ROUTES.rag, payload);
+    const { data, error } = await supabase.functions.invoke('norah-rag-search', { body: payload });
+    if (error) throw error;
     if (import.meta.env.DEV) {
-      console.debug('[NORAH2] norahSearch ✅', result);
+      console.debug('[NORAH2] norahSearch ✅', data);
     }
-    return result;
+    return data;
   } catch (error: any) {
     if (import.meta.env.DEV) {
-      console.error('[NORAH2] norahSearch ❌', formatHttpError(error));
+      console.error('[NORAH2] norahSearch ❌', error?.message || error);
     }
     throw error;
   }
@@ -92,14 +73,15 @@ export async function norahKpis(): Promise<NorahKPIs> {
     console.debug('[NORAH2] norahKpis → GET');
   }
   try {
-    const result = await getJSON<NorahKPIs>(NORAH_ROUTES.kpis);
+    const { data, error } = await supabase.functions.invoke('norah-kpis');
+    if (error) throw error;
     if (import.meta.env.DEV) {
-      console.debug('[NORAH2] norahKpis ✅', result);
+      console.debug('[NORAH2] norahKpis ✅', data);
     }
-    return result;
+    return data as NorahKPIs;
   } catch (error: any) {
     if (import.meta.env.DEV) {
-      console.error('[NORAH2] norahKpis ❌', formatHttpError(error));
+      console.error('[NORAH2] norahKpis ❌', error?.message || error);
     }
     throw error;
   }
