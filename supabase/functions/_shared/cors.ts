@@ -4,13 +4,30 @@
 const ALLOW_ORIGINS = Deno.env.get("CORS_ALLOWED_ORIGIN")
   ?.split(",").map(s => s.trim()).filter(Boolean) ?? ["*"];
 
+function matchOrigin(origin: string, pattern: string): boolean {
+  if (pattern === "*") return true;
+  if (pattern === origin) return true;
+  
+  // Wildcard matching: *.lovableproject.com matches https://xxx.lovableproject.com
+  if (pattern.includes("*")) {
+    const regex = new RegExp("^" + pattern.replace(/\*/g, ".*").replace(/\./g, "\\.") + "$");
+    return regex.test(origin);
+  }
+  
+  return false;
+}
+
 export function withCors(resp: Response, origin?: string): Response {
-  const o = (origin && ALLOW_ORIGINS.includes(origin)) 
-    ? origin 
-    : (ALLOW_ORIGINS.includes("*") ? "*" : ALLOW_ORIGINS[0] ?? "*");
+  let allowedOrigin = "*";
+  
+  if (origin && ALLOW_ORIGINS.some(pattern => matchOrigin(origin, pattern))) {
+    allowedOrigin = origin;
+  } else if (!ALLOW_ORIGINS.includes("*")) {
+    allowedOrigin = ALLOW_ORIGINS[0] ?? "*";
+  }
   
   const h = new Headers(resp.headers);
-  h.set("Access-Control-Allow-Origin", o);
+  h.set("Access-Control-Allow-Origin", allowedOrigin);
   h.set("Vary", "Origin");
   h.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
   h.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey, x-client-info");

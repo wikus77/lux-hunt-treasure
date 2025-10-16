@@ -1,20 +1,12 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { preflight, json, errJSON } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
 const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
-const CORS_ORIGIN = Deno.env.get("CORS_ALLOWED_ORIGIN") || "*";
-
-const cors = (origin: string) => ({
-  "Access-Control-Allow-Origin": origin || CORS_ORIGIN,
-  "Vary": "Origin",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Content-Type": "application/json",
-});
 
 async function cfEmbed(text: string): Promise<number[]> {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${CF_MODEL}`;
@@ -56,22 +48,18 @@ function chunkText(text: string, maxChars = 1000): string[] {
 }
 
 Deno.serve(async (req) => {
-  const origin = req.headers.get("Origin") || "";
-  
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: cors(origin) });
-  }
+  const pf = preflight(req);
+  if (pf) return pf;
 
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: cors(origin),
-    });
-  }
+  const origin = req.headers.get("Origin") || "*";
 
   try {
+    if (req.method !== "POST") {
+      return errJSON(405, "method-not-allowed", "Only POST allowed", origin);
+    }
+
     const { reembed = false, batch = 100 } = await req.json().catch(() => ({}));
-    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
     // Get docs that need embedding
     const { data: docs, error: docsError } = await supabase
@@ -81,9 +69,7 @@ Deno.serve(async (req) => {
 
     if (docsError) throw docsError;
     if (!docs || docs.length === 0) {
-      return new Response(JSON.stringify({ ok: true, embedded: 0, message: "No documents to embed" }), {
-        headers: cors(origin),
-      });
+      return json(200, { ok: true, embedded: 0, message: "No documents to embed" }, origin);
     }
 
     let embedded = 0;
@@ -118,14 +104,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, embedded }), {
-      headers: cors(origin),
-    });
+    return json(200, { ok: true, embedded }, origin);
   } catch (e: any) {
-    console.error("Embed error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: cors(origin),
-    });
+    console.error("❌ norah-embed error:", e);
+    return errJSON(500, "embed-internal", String(e?.message || e), origin);
   }
 });
