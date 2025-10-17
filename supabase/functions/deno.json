@@ -3,5 +3,8 @@
     "lib": ["deno.fetch", "deno.unstable"]
   },
   "tasks": {},
-  "imports": {}
+  "imports": {
+    "@supabase/supabase-js": "jsr:@supabase/supabase-js@2.49.8",
+    "@supabase/realtime-js": "jsr:@supabase/realtime-js@2.8.4"
+  }
 }

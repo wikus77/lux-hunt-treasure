@@ -2,7 +2,7 @@
 // Edge Function: Enroll user in current active mission (Mission of the Month)
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

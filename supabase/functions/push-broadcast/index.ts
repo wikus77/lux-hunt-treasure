@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // supabase/functions/push-broadcast/index.ts
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4"
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8"
 
 type Payload = {
   title: string;

@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     }
 
     // Create Supabase client with service role for database operations
-    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.49.4');
+    const { createClient } = await import('jsr:@supabase/supabase-js@2.49.8');
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
         autoRefreshToken: false,

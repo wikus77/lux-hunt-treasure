@@ -1,7 +1,7 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
 // Import utility functions
 import { validateRegistrationEmail } from "./utils/validateRegistrationEmail.ts";
