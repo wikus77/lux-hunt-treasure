@@ -98,7 +98,7 @@ serve(async (req) => {
     // Import webpush with proper error handling
     let webpush: any;
     try {
-      webpush = await import('https://esm.sh/web-push@3.6.6');
+      webpush = await import('npm:web-push@3.6.7');
       webpush.setVapidDetails(contact, pub, priv);
     } catch (importError) {
       console.error('[push-broadcast] Failed to import web-push:', importError);

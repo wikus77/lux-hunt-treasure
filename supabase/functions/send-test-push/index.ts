@@ -1,5 +1,5 @@
 // © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 import { encode } from 'https://deno.land/x/djwt@v3.0.2/mod.ts'
 
 const corsHeaders = {
