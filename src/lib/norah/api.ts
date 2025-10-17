@@ -62,6 +62,18 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
   
   let delay = 250;
   
+  // Debug mode logging
+  if (typeof localStorage !== 'undefined' && localStorage.NORAH_DEBUG === '1') {
+    console.debug('[NORAH] invokePOST call', {
+      fn,
+      phase,
+      origin: window.location.origin,
+      cid_raw: corr,
+      cid_norm: cleanCid,
+      bodyKeys: Object.keys(enrichedBody)
+    });
+  }
+  
   // Telemetria utile in preview
   if (isPreview && import.meta.env.DEV) {
     console.log('[NORAH2]', phase || fn, { 
@@ -80,6 +92,16 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
         headers 
       });
       if (error) throw error;
+      
+      // Debug mode response logging
+      if (typeof localStorage !== 'undefined' && localStorage.NORAH_DEBUG === '1') {
+        console.debug('[NORAH] invokePOST response', {
+          fn,
+          status: 'ok',
+          preview: JSON.stringify(data).slice(0, 200)
+        });
+      }
+      
       return data as T;
     } catch (e) {
       console.error(`[NORAH2 cid:${corr.slice(0, 8)}] ${fn} failed (attempt ${i+1}/3):`, (e as any)?.message || e);
@@ -106,6 +128,18 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
   const key = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
   const corr = cid();
   const cleanCid = normalizeUuid(corr) || corr;
+
+  // Debug mode logging
+  if (typeof localStorage !== 'undefined' && localStorage.NORAH_DEBUG === '1') {
+    console.debug('[NORAH] getFunctionJSON call', {
+      path,
+      phase,
+      base: functionsBase,
+      origin: window.location.origin,
+      cid_raw: corr,
+      cid_norm: cleanCid
+    });
+  }
 
   // Telemetria utile in preview
   if (isPreview && import.meta.env.DEV) {
@@ -137,7 +171,18 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
         throw new Error(`HTTP ${res.status}: ${text}`);
       }
       
-      return await res.json() as T;
+      const data = await res.json() as T;
+      
+      // Debug mode response logging
+      if (typeof localStorage !== 'undefined' && localStorage.NORAH_DEBUG === '1') {
+        console.debug('[NORAH] getFunctionJSON response', {
+          path,
+          status: res.status,
+          preview: JSON.stringify(data).slice(0, 200)
+        });
+      }
+      
+      return data;
     } catch (e) {
       console.error(`[NORAH2 cid:${corr}] ${path} failed (attempt ${i+1}/3):`, (e as any)?.message || e);
       if (!isRetryable(e) || i === 2) {

@@ -29,6 +29,15 @@ function isOriginAllowed(origin: string): boolean {
   } catch { return false; }
 }
 
+async function hash8(s: string): Promise<string> {
+  const buf = new TextEncoder().encode(s);
+  const hashBuf = await crypto.subtle.digest('SHA-1', buf);
+  const hex = Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hex.slice(0, 8);
+}
+
 async function cfEmbed(text: string): Promise<number[]> {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${CF_MODEL}`;
   const res = await fetch(url, {
@@ -94,8 +103,11 @@ Deno.serve((req: Request) => withCors(req, async () => {
     const cid = normalizeUuid(candidate);
     
     if (!cid) {
-      console.warn(`⚠️ norah-embed: invalid x-norah-cid/client_id (raw="${String(candidate).slice(0, 50)}")`);
-      return error(allowedOrigin, 'invalid x-norah-cid', 400);
+      const h = await hash8(candidate || 'empty');
+      const len = String(candidate).length;
+      const regexMatch = UUID_REGEX.test(String(candidate));
+      console.warn(`⚠️ norah-embed: invalid_cid h=${h} len=${len} regex=${regexMatch} origin_ok=${isOriginAllowed(origin)}`);
+      return error(allowedOrigin, 'invalid x-norah-cid/client_id', 400);
     }
     
     console.log(`🧠 norah-embed START: cid=${cid.slice(0, 8)}, batch=${batch}, reembed=${reembed}, source=${source}`);
