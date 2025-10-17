@@ -5,6 +5,8 @@
 
 const ALLOWLIST = [
   /\.m1ssion\.pages\.dev$/i,
+  /\.lovableproject\.com$/i,
+  /\.lovable\.app$/i,
   /^localhost$/i,
   /^127\.0\.0\.1$/i,
 ];
