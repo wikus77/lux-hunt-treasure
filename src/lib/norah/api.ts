@@ -1,88 +1,124 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Norah AI API client utilities
+/**
+ * © 2025 Joseph MULÉ – M1SSION™ – Norah AI 2.0 Network Layer
+ * POST via invoke, GET via fetch direto
+ * NOTA: MANTIENE I LOGS BACKEND FUNZIONANTI (NON TOCCARE EDGE FUNCTIONS)
+ */
 
-import { supabase } from "@/integrations/supabase/client";
-import { functionsBaseUrl, norahHeaders } from "@/lib/supabase/functionsBase";
+import { supabase } from '@/integrations/supabase/client';
 import type { IngestPayload, EmbedPayload, RagQuery, NorahKPIs } from "./types";
 
-// ============ SANDBOX ABORT FIX ============
-// Lovable preview sandbox aborts concurrent fetch() → add pacing/retry
-const isPreview = () => typeof window !== 'undefined' && (window.location.hostname.includes('lovable') || import.meta.env.MODE === 'development');
+// === Helper comuni ===
+const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('lovable');
+export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Retry wrapper for FunctionsFetchError (sandbox abort) + network errors
-async function retryInvoke<T>(
-  functionName: string,
-  body: any,
-  options: { maxRetries?: number; method?: 'POST' | 'GET'; phase?: string } = {}
-): Promise<T> {
-  const { maxRetries = 3, method = 'POST', phase = 'default' } = options;
-  const cid = crypto.randomUUID().slice(0, 8); // Correlation ID for logs
-  
-  let lastError: any;
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt > 0 && import.meta.env.DEV) {
-        console.debug(`[NORAH2 cid:${cid}] Retry ${attempt}/${maxRetries} for ${functionName}`);
-      }
-      
-      // Exponential backoff: 250ms → 500ms → 800ms in preview
-      if (attempt > 0 && isPreview()) {
-        const backoff = [0, 250, 500, 800][attempt] || 800;
-        await sleep(backoff);
-      }
-      
-      const invokeOptions: any = method === 'GET'
-        ? { headers: { 'x-norah-cid': cid } }
-        : { body, headers: { 'x-norah-cid': cid } };
-      const { data, error } = await supabase.functions.invoke(functionName, invokeOptions);
-      
-      if (error) throw error;
-      
-      if (import.meta.env.DEV && attempt > 0) {
-        console.debug(`[NORAH2 cid:${cid}] ${functionName} succeeded after ${attempt} retries`);
-      }
-      
-      return data as T;
-    } catch (error: any) {
-      lastError = error;
-      
-      // Retry on sandbox abort errors + network failures
-      const errorMsg = error?.message?.toLowerCase() || '';
-      const isFetchError = 
-        error?.name === 'FunctionsFetchError' ||
-        error?.name === 'FunctionsRelayError' ||
-        errorMsg.includes('failed to send') ||
-        errorMsg.includes('failed to fetch') ||
-        errorMsg.includes('fetch failed') ||
-        errorMsg.includes('networkerror') ||
-        errorMsg.includes('aborterror') ||
-        errorMsg.includes('operation was aborted') ||
-        errorMsg.includes('network request failed');
-      
-      if (!isFetchError || attempt >= maxRetries) {
-        if (import.meta.env.DEV) {
-          console.error(`[NORAH2 cid:${cid}] ${functionName} failed after ${attempt + 1} attempts:`, error?.message || error);
-        }
-        throw error;
-      }
-      
-      if (import.meta.env.DEV) {
-        console.warn(`[NORAH2 cid:${cid}] ${functionName} fetch aborted (attempt ${attempt + 1}/${maxRetries + 1}), retrying...`);
-      }
-    }
-  }
-  
-  throw lastError;
+function cid() { 
+  return crypto.randomUUID().slice(0, 8); 
 }
 
+function isRetryable(err: unknown) {
+  const msg = String((err as any)?.message ?? err ?? '').toLowerCase();
+  return [
+    'failed to fetch',
+    'failed to send',
+    'networkerror',
+    'aborterror',
+    'operation was aborted',
+    'network request failed'
+  ].some(s => msg.includes(s));
+}
+
+// === POST via invoke (con retry/backoff robusto) ===
+async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T> {
+  const corr = cid();
+  const headers = { 'x-norah-cid': corr };
+  let delay = 250;
+  
+  // Telemetria utile in preview
+  if (isPreview && import.meta.env.DEV) {
+    console.log('[NORAH2]', phase || fn, { 
+      cid: corr, 
+      payloadSize: JSON.stringify(body ?? {}).length 
+    });
+  }
+  
+  for (let i = 0; i < 3; i++) {
+    try {
+      // Pacing in preview per evitare abort della sandbox
+      if (isPreview && i > 0) await sleep(150);
+      
+      const { data, error } = await supabase.functions.invoke<T>(fn, { body, headers });
+      if (error) throw error;
+      return data as T;
+    } catch (e) {
+      console.error(`[NORAH2 cid:${corr}] ${fn} failed (attempt ${i+1}/3):`, (e as any)?.message || e);
+      if (!isRetryable(e) || i === 2) {
+        console.error(`[NORAH2] ${fn} ❌`, e);
+        throw e;
+      }
+      await sleep(delay); 
+      delay = Math.min(delay * 2, 800);
+    }
+  }
+  throw new Error(`invokePOST fellthrough: ${fn}`);
+}
+
+// === GET via fetch directo (fix 405) ===
+async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${path}`;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  const corr = cid();
+
+  // Telemetria utile in preview
+  if (isPreview && import.meta.env.DEV) {
+    console.log('[NORAH2]', phase || path, { cid: corr, method: 'GET' });
+  }
+
+  let delay = 250;
+  for (let i = 0; i < 3; i++) {
+    try {
+      if (isPreview && i > 0) await sleep(150);
+      
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'content-type': 'application/json',
+          'apikey': key,
+          'authorization': `Bearer ${key}`,
+          'x-norah-cid': corr,
+        },
+        keepalive: true, // aiuta su preview
+      });
+      
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}: ${text}`);
+      }
+      
+      return await res.json() as T;
+    } catch (e) {
+      console.error(`[NORAH2 cid:${corr}] ${path} failed (attempt ${i+1}/3):`, (e as any)?.message || e);
+      if (!isRetryable(e) || i === 2) {
+        console.error(`[NORAH2] ${path} ❌`, e);
+        throw e;
+      }
+      await sleep(delay); 
+      delay = Math.min(delay * 2, 800);
+    }
+  }
+  throw new Error(`getFunctionJSON fellthrough: ${path}`);
+}
+
+// === API Exports ===
+
+/**
+ * POST: norah-ingest
+ */
 export async function norahIngest(payload: IngestPayload) {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahIngest →', { docsCount: payload.documents?.length || 0, dryRun: payload.dryRun });
   }
   try {
-    const data = await retryInvoke<any>('norah-ingest', payload, { phase: 'ingest' });
+    const data = await invokePOST<any>('norah-ingest', payload, 'ingest');
     if (import.meta.env.DEV) console.debug('[NORAH2] norahIngest ✅', data);
     return data;
   } catch (error: any) {
@@ -91,12 +127,15 @@ export async function norahIngest(payload: IngestPayload) {
   }
 }
 
+/**
+ * POST: norah-embed
+ */
 export async function norahEmbed(payload: EmbedPayload) {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahEmbed →', payload);
   }
   try {
-    const data = await retryInvoke<any>('norah-embed', payload, { phase: 'embed' });
+    const data = await invokePOST<any>('norah-embed', payload, 'embed');
     if (import.meta.env.DEV) console.debug('[NORAH2] norahEmbed ✅', data);
     return data;
   } catch (error: any) {
@@ -105,6 +144,9 @@ export async function norahEmbed(payload: EmbedPayload) {
   }
 }
 
+/**
+ * POST: norah-rag-search (con compat hits/results)
+ */
 export async function norahSearch(payload: RagQuery) {
   if (!payload.q || !payload.q.trim()) {
     if (import.meta.env.DEV) {
@@ -117,31 +159,28 @@ export async function norahSearch(payload: RagQuery) {
     console.debug('[NORAH2] norahSearch →', payload);
   }
   try {
-    const data = await retryInvoke<any>('norah-rag-search', payload, { phase: 'search' });
+    const data = await invokePOST<any>('norah-rag-search', payload, 'rag');
     
-    // Normalize results → hits for backward compatibility
-    if (data.results && !data.hits) {
-      data.hits = data.results;
-    }
+    // Normalizza hits/results per compat
+    if (data?.results && !data?.hits) data.hits = data.results;
     
-    if (import.meta.env.DEV) {
-      console.debug('[NORAH2] norahSearch ✅', data);
-    }
+    if (import.meta.env.DEV) console.debug('[NORAH2] norahSearch ✅', data);
     return data;
   } catch (error: any) {
-    if (import.meta.env.DEV) {
-      console.error('[NORAH2] norahSearch ❌', error?.message || error);
-    }
+    if (import.meta.env.DEV) console.error('[NORAH2] norahSearch ❌', error?.message || error);
     throw error;
   }
 }
 
+/**
+ * GET: norah-kpis (era 405 con POST, ora fetch directo)
+ */
 export async function norahKpis(): Promise<NorahKPIs> {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahKpis →');
   }
   try {
-    const data = await retryInvoke<NorahKPIs>('norah-kpis', {}, { method: 'GET', phase: 'kpis' });
+    const data = await getFunctionJSON<NorahKPIs>('norah-kpis', 'kpis');
     if (import.meta.env.DEV) console.debug('[NORAH2] norahKpis ✅', data);
     return data;
   } catch (error: any) {
