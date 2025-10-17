@@ -6,7 +6,7 @@
  */
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
 // CORS headers
 function getCorsHeaders(request: Request): Record<string, string> {
@@ -42,7 +42,7 @@ async function sendWebPush(
 ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
   try {
     // Import web-push library
-    const webpush = await import('https://esm.sh/web-push@3.6.7');
+    const webpush = await import('npm:web-push@3.6.7');
     
     webpush.setVapidDetails(
       'mailto:admin@m1ssion.eu',

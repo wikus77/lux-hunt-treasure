@@ -1,7 +1,7 @@
 // © 2025 M1SSION™ – Create Payment Intent with Multi-Auth Support
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.25.0";
+import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { getStripeModeFromKey } from "../_shared/stripeConfig.ts";
 

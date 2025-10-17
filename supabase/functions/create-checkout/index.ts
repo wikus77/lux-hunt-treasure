@@ -2,7 +2,7 @@
 // Stripe Checkout Edge Function - Sistema Abbonamenti M1SSION™
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
+import Stripe from "npm:stripe@14.25.0";
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
 const corsHeaders = {

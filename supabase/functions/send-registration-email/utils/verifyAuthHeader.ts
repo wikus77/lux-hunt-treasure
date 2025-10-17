@@ -1,7 +1,7 @@
 
 // Authentication verification utility
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
 export interface AuthVerificationResult {
   isValid: boolean;

@@ -1,10 +1,9 @@
 {
-  "compilerOptions": {
-    "lib": ["deno.fetch", "deno.unstable"]
-  },
-  "tasks": {},
   "imports": {
     "@supabase/supabase-js": "jsr:@supabase/supabase-js@2.49.8",
     "@supabase/realtime-js": "jsr:@supabase/realtime-js@2.8.4"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom", "esnext"]
   }
 }
