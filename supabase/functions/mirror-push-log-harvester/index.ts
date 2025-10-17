@@ -1,5 +1,5 @@
 // Mirror Push Log Harvester - Extract push logs and save to mirror_push.notification_logs
-import { corsHeaders, handleCors } from '../_shared/cors.ts';
+import { handleCors, corsHeaders } from '../_shared/cors.ts';
 
 interface RequestPayload {
   title: string;
