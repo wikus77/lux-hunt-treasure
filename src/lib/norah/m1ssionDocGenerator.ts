@@ -49,7 +49,7 @@ export function generateM1SSIONKnowledgeBase(): ContentDoc[] {
   const pushDocs: Omit<ContentDoc, 'id'>[] = [
     {
       title: 'Push SAFE Guard - Architecture Overview',
-      text: `Il Push SAFE Guard è un sistema di sicurezza obbligatorio che previene hardcoded secrets nel codebase. Implementato in scripts/push-guard.cjs, esegue scan automatico di tutti i file .ts/.tsx/.js/.jsx prima di ogni build. Il Guard blocca il deploy se rileva: SUPABASE_URL hardcoded, SUPABASE_ANON_KEY, JWT tokens, project ref (vkjrqirvdvjbemsfzxof), VAPID keys. Esegue via pnpm run prebuild nel package.json.`,
+      text: `Il Push SAFE Guard è un sistema di sicurezza obbligatorio che previene hardcoded secrets nel codebase. Implementato in scripts/push-guard.cjs, esegue scan automatico di tutti i file .ts/.tsx/.js/.jsx prima di ogni build. Il Guard blocca il deploy se rileva: SUPABASE_URL hardcoded, SUPABASE_ANON_KEY, JWT tokens, project ref (<PROJECT_REF>), VAPID keys. Esegue via pnpm run prebuild nel package.json.`,
       tags: ['push', 'guard', 'security', 'prebuild'],
       source: 'synthetic' as const,
       url: 'm1ssion://push-guard-architecture',
