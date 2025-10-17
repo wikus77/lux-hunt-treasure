@@ -2,8 +2,23 @@
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { withCors, json, error } from "../_shared/cors.ts";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function normalizeUuid(raw: string | null): string {
+  if (!raw) return '';
+  let cleaned = raw.trim()
+    .replace(/^"+|"+$/g, '')
+    .replace(/^'+|'+$/g, '')
+    .trim();
+  return UUID_REGEX.test(cleaned) ? cleaned : '';
+}
+
 Deno.serve((req: Request) => withCors(req, async () => {
   const origin = req.headers.get('origin');
+  const rawCid = req.headers.get('x-norah-cid');
+  const cid = normalizeUuid(rawCid);
+  
+  console.log(`📥 norah-ingest: cid=${cid || 'none'}, raw="${rawCid}"`);
   
   try {
     if (req.method !== "POST") {
