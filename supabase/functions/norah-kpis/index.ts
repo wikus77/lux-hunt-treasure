@@ -15,10 +15,16 @@ function normalizeUuid(raw: string | null): string {
 
 Deno.serve((req: Request) => withCors(req, async () => {
   const origin = req.headers.get('origin');
-  const rawCid = req.headers.get('x-norah-cid');
+  
+  // Sanitize + validate x-norah-cid (optional for KPIs GET)
+  const rawCid = req.headers.get('x-norah-cid') || '';
   const cid = normalizeUuid(rawCid);
   
-  console.log(`📊 norah-kpis: cid=${cid || 'none'}, raw="${rawCid}"`);
+  if (cid) {
+    console.log(`📊 norah-kpis: cid=${cid.slice(0, 8)}`);
+  } else {
+    console.log(`📊 norah-kpis: no cid (optional for GET)`);
+  }
   
   try {
     if (req.method !== "GET") {

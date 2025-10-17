@@ -15,17 +15,26 @@ function normalizeUuid(raw: string | null): string {
 
 Deno.serve((req: Request) => withCors(req, async () => {
   const origin = req.headers.get('origin');
-  const rawCid = req.headers.get('x-norah-cid');
-  const cid = normalizeUuid(rawCid);
-  
-  console.log(`📥 norah-ingest: cid=${cid || 'none'}, raw="${rawCid}"`);
   
   try {
     if (req.method !== "POST") {
       return error(origin, "Only POST allowed", 405);
     }
 
-    const { documents = [], dryRun = false } = await req.json().catch(() => ({}));
+    // Parse body
+    const bodyData = await req.json().catch(() => ({}));
+    const { documents = [], dryRun = false, client_id } = bodyData;
+
+    // Sanitize + validate x-norah-cid (header or body fallback)
+    const rawCid = req.headers.get('x-norah-cid') || client_id || '';
+    const cid = normalizeUuid(rawCid);
+    
+    if (!cid) {
+      console.warn(`⚠️ norah-ingest: invalid x-norah-cid/client_id (raw="${rawCid}")`);
+      return error(origin, 'invalid x-norah-cid', 400);
+    }
+    
+    console.log(`📥 norah-ingest: cid=${cid.slice(0, 8)}, docs=${documents.length}, dryRun=${dryRun}`);
     
     if (!Array.isArray(documents)) {
       return error(origin, "documents must be an array", 400);
