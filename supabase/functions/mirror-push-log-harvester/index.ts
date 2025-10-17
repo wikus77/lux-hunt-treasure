@@ -1,5 +1,5 @@
 // Mirror Push Log Harvester - Extract push logs and save to mirror_push.notification_logs
-import { corsHeaders } from '../_shared/cors.ts';
+import { corsHeaders, handleCors } from '../_shared/cors.ts';
 
 interface RequestPayload {
   title: string;
@@ -48,9 +48,8 @@ function extractAuthUserId(headers: Record<string, string>): string | null {
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCors(req);
+  if (corsResponse) return corsResponse;
 
   try {
     // Get environment variables
@@ -125,7 +124,7 @@ Deno.serve(async (req) => {
           error: panelError.message
         }), {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }
         });
       }
 
@@ -169,7 +168,7 @@ Deno.serve(async (req) => {
             error: insertError.message
           }), {
             status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }
           });
         }
 
@@ -190,7 +189,7 @@ Deno.serve(async (req) => {
         latest_timestamp: latestTs,
         path: 'fallback_panel'
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
@@ -203,7 +202,7 @@ Deno.serve(async (req) => {
         processed: 0, 
         message: 'No new logs to process' 
       }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }
       });
     }
 
@@ -338,7 +337,7 @@ Deno.serve(async (req) => {
       inserted: notifications.length,
       latest_timestamp: latestTimestamp
     }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
@@ -349,7 +348,7 @@ Deno.serve(async (req) => {
       error: error.message
     }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders(req), 'Content-Type': 'application/json' }
     });
   }
 });
