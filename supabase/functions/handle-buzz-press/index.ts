@@ -1,6 +1,6 @@
 // © 2025 M1SSION™ – Handle BUZZ Press Edge Function
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4'
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 import { corsHeaders } from '../_shared/cors.ts'
 import { getBuzzLevelFromCount } from '../_shared/buzzMapPricing.ts'
 

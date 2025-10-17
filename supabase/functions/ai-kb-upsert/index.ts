@@ -2,7 +2,7 @@
 // Minimal ai-kb-upsert -> Cloudflare embeddings (768 dims)
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 
 function corsHeaders() {
   return {

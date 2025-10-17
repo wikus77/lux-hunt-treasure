@@ -2,7 +2,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.25.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { getStripeModeFromKey } from "../_shared/stripeConfig.ts";
 
 const corsHeaders = {

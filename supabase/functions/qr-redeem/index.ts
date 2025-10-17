@@ -1,7 +1,7 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // QR Code Redemption Edge Function
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
