@@ -13,7 +13,7 @@ export function corsHeaders(req?: Request) {
 
 export function handleCors(req: Request): Response | null {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', {
+    return new Response(null, {
       status: 204,
       headers: corsHeaders(req),
     });
