@@ -7,10 +7,21 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { IngestPayload, EmbedPayload, RagQuery, NorahKPIs } from "./types";
 import { normalizeUuid, generateNormalizedUuid } from './normalizeUuid';
+import { assertAllowedOrHint, getCurrentOrigin, isOriginAllowed } from './originGuard';
 
 // === Helper comuni ===
 const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('lovable');
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
+
+// Origin hygiene check
+function checkOrigin() {
+  if (typeof window === 'undefined') return;
+  const origin = getCurrentOrigin();
+  if (!isOriginAllowed(origin)) {
+    assertAllowedOrHint(origin);
+    throw new Error('Origin not allowed for Norah Functions. Please use *.m1ssion.pages.dev');
+  }
+}
 
 function cid() { 
   // Generate normalized UUID for correlation ID
@@ -31,6 +42,9 @@ function isRetryable(err: unknown) {
 
 // === POST via invoke (con retry/backoff robusto) ===
 async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T> {
+  // Origin hygiene check
+  checkOrigin();
+  
   const corr = cid();
   const cleanCid = normalizeUuid(corr) || corr;
   
@@ -82,6 +96,9 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
 
 // === GET via fetch directo (fix 405) ===
 async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
+  // Origin hygiene check
+  checkOrigin();
+  
   // Prefer dedicated Functions domain to avoid CORS header duplication
   const supaUrl: string = (import.meta as any).env?.VITE_SUPABASE_URL?.trim()?.replace(/\/+$/, '') || '';
   const functionsBase = supaUrl ? supaUrl.replace('.supabase.co', '.functions.supabase.co') : '';

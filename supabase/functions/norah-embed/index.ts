@@ -9,18 +9,20 @@ const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i];
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
 
 function normalizeUuid(raw: unknown): string {
   if (typeof raw !== 'string' || !raw) return '';
+  // Strip nested quotes and whitespace
   let cleaned = raw.trim()
-    .replace(/^"+|"+$/g, '')  // Strip double quotes
-    .replace(/^'+|'+$/g, '')  // Strip single quotes
+    .replace(/^"+|"+$/g, '')  // Remove double quotes
+    .replace(/^'+|'+$/g, '')  // Remove single quotes
     .trim();
   return UUID_REGEX.test(cleaned) ? cleaned : '';
 }
 
 function isOriginAllowed(origin: string): boolean {
+  if (!origin) return false;
   try {
     const host = new URL(origin).hostname;
     return ALLOWED_ORIGINS.some(r => r.test(host));
@@ -69,27 +71,31 @@ function chunkText(text: string, maxChars = 1000): string[] {
 Deno.serve((req: Request) => withCors(req, async () => {
   const origin = req.headers.get('origin') ?? '';
   
-  // CORS origin validation
-  if (origin && !isOriginAllowed(origin)) {
+  // Parse body first
+  const bodyData = await req.json().catch(() => ({}));
+  
+  // CORS origin validation - return empty origin for disallowed domains
+  const allowedOrigin = origin && isOriginAllowed(origin) ? origin : '';
+  if (origin && !allowedOrigin) {
     console.warn(`⚠️ norah-embed: origin not allowlisted: ${origin}`);
   }
   
   try {
     if (req.method !== "POST") {
-      return error(origin, "Only POST allowed", 405);
+      return error(allowedOrigin, "Only POST allowed", 405);
     }
 
-    // Parse body first
-    const bodyData = await req.json().catch(() => ({}));
     const { reembed = false, batch = 100, source = 'all', client_id } = bodyData;
 
     // Sanitize + validate x-norah-cid (header or body fallback)
-    const rawCid = req.headers.get('x-norah-cid') || client_id || '';
-    const cid = normalizeUuid(rawCid);
+    const rawHeader = req.headers.get('x-norah-cid') || '';
+    const rawBody = client_id || '';
+    const candidate = rawHeader || rawBody;
+    const cid = normalizeUuid(candidate);
     
     if (!cid) {
-      console.warn(`⚠️ norah-embed: invalid x-norah-cid/client_id (raw="${String(rawCid).slice(0, 50)}")`);
-      return error(origin, 'invalid x-norah-cid', 400);
+      console.warn(`⚠️ norah-embed: invalid x-norah-cid/client_id (raw="${String(candidate).slice(0, 50)}")`);
+      return error(allowedOrigin, 'invalid x-norah-cid', 400);
     }
     
     console.log(`🧠 norah-embed START: cid=${cid.slice(0, 8)}, batch=${batch}, reembed=${reembed}, source=${source}`);
@@ -105,7 +111,7 @@ Deno.serve((req: Request) => withCors(req, async () => {
     if (docsError) throw docsError;
     if (!docs || docs.length === 0) {
       console.log(`✅ norah-embed: no docs to embed`);
-      return json(origin, { ok: true, embedded: 0, message: "No documents to embed" });
+      return json(allowedOrigin, { ok: true, embedded: 0, message: "No documents to embed" });
     }
 
     let embedded = 0;
@@ -154,10 +160,10 @@ Deno.serve((req: Request) => withCors(req, async () => {
     const duration = Date.now() - startTime;
     console.log(`✅ norah-embed COMPLETE: ${embedded} embeddings in ${duration}ms`);
     
-    return json(origin, { ok: true, embedded });
+    return json(allowedOrigin, { ok: true, embedded });
   } catch (e: any) {
     const duration = Date.now() - (Date.now());
     console.error(`❌ norah-embed FATAL: ${e?.message || e} (stack: ${e?.stack}) (duration: ${duration}ms)`);
-    return error(origin, String(e?.message || e), 500);
+    return error(allowedOrigin, String(e?.message || e), 500);
   }
 }));

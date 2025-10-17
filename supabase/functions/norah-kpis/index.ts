@@ -3,18 +3,20 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { withCors, json, error } from "../_shared/cors.ts";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i];
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
 
 function normalizeUuid(raw: unknown): string {
   if (typeof raw !== 'string' || !raw) return '';
+  // Strip nested quotes and whitespace
   let cleaned = raw.trim()
-    .replace(/^"+|"+$/g, '')
-    .replace(/^'+|'+$/g, '')
+    .replace(/^"+|"+$/g, '')  // Remove double quotes
+    .replace(/^'+|'+$/g, '')  // Remove single quotes
     .trim();
   return UUID_REGEX.test(cleaned) ? cleaned : '';
 }
 
 function isOriginAllowed(origin: string): boolean {
+  if (!origin) return false;
   try {
     const host = new URL(origin).hostname;
     return ALLOWED_ORIGINS.some(r => r.test(host));
@@ -24,8 +26,9 @@ function isOriginAllowed(origin: string): boolean {
 Deno.serve((req: Request) => withCors(req, async () => {
   const origin = req.headers.get('origin') ?? '';
   
-  // CORS origin validation
-  if (origin && !isOriginAllowed(origin)) {
+  // CORS origin validation - return empty origin for disallowed domains
+  const allowedOrigin = origin && isOriginAllowed(origin) ? origin : '';
+  if (origin && !allowedOrigin) {
     console.warn(`⚠️ norah-kpis: origin not allowlisted: ${origin}`);
   }
   
@@ -41,7 +44,7 @@ Deno.serve((req: Request) => withCors(req, async () => {
   
   try {
     if (req.method !== "GET") {
-      return error(origin, "Only GET allowed", 405);
+      return error(allowedOrigin, "Only GET allowed", 405);
     }
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -49,7 +52,7 @@ Deno.serve((req: Request) => withCors(req, async () => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return error(origin, "Server configuration error", 500);
+      return error(allowedOrigin, "Server configuration error", 500);
     }
 
     const admin = createClient(url, key, { auth: { persistSession: false } });
@@ -79,9 +82,9 @@ Deno.serve((req: Request) => withCors(req, async () => {
       last_embed_at: last?.created_at ?? "1970-01-01T00:00:00Z",
     };
 
-    return json(origin, body);
+    return json(allowedOrigin, body);
   } catch (e: any) {
     console.error("❌ norah-kpis error:", e);
-    return error(origin, String(e?.message || e), 500);
+    return error(allowedOrigin, String(e?.message || e), 500);
   }
 }));

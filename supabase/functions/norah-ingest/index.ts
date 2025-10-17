@@ -3,18 +3,20 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { withCors, json, error } from "../_shared/cors.ts";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i];
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
 
 function normalizeUuid(raw: unknown): string {
   if (typeof raw !== 'string' || !raw) return '';
+  // Strip nested quotes and whitespace
   let cleaned = raw.trim()
-    .replace(/^"+|"+$/g, '')
-    .replace(/^'+|'+$/g, '')
+    .replace(/^"+|"+$/g, '')  // Remove double quotes
+    .replace(/^'+|'+$/g, '')  // Remove single quotes
     .trim();
   return UUID_REGEX.test(cleaned) ? cleaned : '';
 }
 
 function isOriginAllowed(origin: string): boolean {
+  if (!origin) return false;
   try {
     const host = new URL(origin).hostname;
     return ALLOWED_ORIGINS.some(r => r.test(host));
@@ -24,37 +26,41 @@ function isOriginAllowed(origin: string): boolean {
 Deno.serve((req: Request) => withCors(req, async () => {
   const origin = req.headers.get('origin') ?? '';
   
-  // CORS origin validation
-  if (origin && !isOriginAllowed(origin)) {
+  // Parse body once
+  const bodyData = await req.json().catch(() => ({}));
+  
+  // CORS origin validation - return empty origin for disallowed domains
+  const allowedOrigin = origin && isOriginAllowed(origin) ? origin : '';
+  if (origin && !allowedOrigin) {
     console.warn(`⚠️ norah-ingest: origin not allowlisted: ${origin}`);
   }
   
   try {
     if (req.method !== "POST") {
-      return error(origin, "Only POST allowed", 405);
+      return error(allowedOrigin, "Only POST allowed", 405);
     }
 
-    // Parse body
-    const bodyData = await req.json().catch(() => ({}));
     const { documents = [], dryRun = false, client_id } = bodyData;
 
     // Sanitize + validate x-norah-cid (header or body fallback)
-    const rawCid = req.headers.get('x-norah-cid') || client_id || '';
-    const cid = normalizeUuid(rawCid);
+    const rawHeader = req.headers.get('x-norah-cid') || '';
+    const rawBody = client_id || '';
+    const candidate = rawHeader || rawBody;
+    const cid = normalizeUuid(candidate);
     
     if (!cid) {
-      console.warn(`⚠️ norah-ingest: invalid x-norah-cid/client_id (raw="${String(rawCid).slice(0, 50)}")`);
-      return error(origin, 'invalid x-norah-cid', 400);
+      console.warn(`⚠️ norah-ingest: invalid x-norah-cid/client_id (raw="${String(candidate).slice(0, 50)}")`);
+      return error(allowedOrigin, 'invalid x-norah-cid', 400);
     }
     
     console.log(`📥 norah-ingest: cid=${cid.slice(0, 8)}, docs=${documents.length}, dryRun=${dryRun}`);
     
     if (!Array.isArray(documents)) {
-      return error(origin, "documents must be an array", 400);
+      return error(allowedOrigin, "documents must be an array", 400);
     }
 
     if (documents.length === 0) {
-      return json(origin, { ok: true, inserted: 0, message: "No documents provided" });
+      return json(allowedOrigin, { ok: true, inserted: 0, message: "No documents provided" });
     }
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -62,11 +68,11 @@ Deno.serve((req: Request) => withCors(req, async () => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return error(origin, "Server configuration error", 500);
+      return error(allowedOrigin, "Server configuration error", 500);
     }
 
     if (dryRun) {
-      return json(origin, { ok: true, inserted: 0, dryRun: true, wouldInsert: documents.length });
+      return json(allowedOrigin, { ok: true, inserted: 0, dryRun: true, wouldInsert: documents.length });
     }
 
     const supabase = createClient(url, key, { auth: { persistSession: false } });
@@ -93,9 +99,9 @@ Deno.serve((req: Request) => withCors(req, async () => {
       }
     }
 
-    return json(origin, { ok: true, inserted });
+    return json(allowedOrigin, { ok: true, inserted });
   } catch (e: any) {
     console.error("❌ norah-ingest error:", e);
-    return error(origin, String(e?.message || e), 500);
+    return error(allowedOrigin, String(e?.message || e), 500);
   }
 }));
