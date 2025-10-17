@@ -44,7 +44,7 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
   for (let i = 0; i < 3; i++) {
     try {
       // Pacing in preview per evitare abort della sandbox
-      if (isPreview && i > 0) await sleep(150);
+      if (isPreview && i > 0) await sleep(300);
       
       const { data, error } = await supabase.functions.invoke<T>(fn, { body, headers });
       if (error) throw error;
@@ -79,7 +79,7 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
   let delay = 250;
   for (let i = 0; i < 3; i++) {
     try {
-      if (isPreview && i > 0) await sleep(150);
+      if (isPreview && i > 0) await sleep(300);
       
       const res = await fetch(url, {
         method: 'GET',
@@ -179,16 +179,19 @@ export async function norahSearch(payload: RagQuery) {
 }
 
 /**
- * GET: norah-kpis (era 405 con POST, ora fetch directo)
+ * GET: norah-kpis (via invoke con method GET)
  */
 export async function norahKpis(): Promise<NorahKPIs> {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahKpis →');
   }
   try {
-    const data = await getFunctionJSON<NorahKPIs>('norah-kpis', 'kpis');
+    const { data, error } = await supabase.functions.invoke<NorahKPIs>('norah-kpis', { 
+      method: 'GET' 
+    });
+    if (error) throw error;
     if (import.meta.env.DEV) console.debug('[NORAH2] norahKpis ✅', data);
-    return data;
+    return data!;
   } catch (error: any) {
     if (import.meta.env.DEV) console.error('[NORAH2] norahKpis ❌', error?.message || error);
     throw error;
