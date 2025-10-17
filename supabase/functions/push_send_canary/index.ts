@@ -2,7 +2,7 @@
 /* Supabase Edge Function - Push Send Canary with Real Web Push */
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 
 // Dynamic CORS headers based on request origin
 function getCorsHeaders(request: Request): Record<string, string> {
