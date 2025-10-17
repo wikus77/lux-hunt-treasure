@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-import { preflight, json, error } from "../_shared/cors.ts";
+import { withCors, json, error } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -24,8 +24,8 @@ async function cfEmbed(text: string): Promise<number[]> {
     throw new Error(`CF embed failed: ${res.status} ${err}`);
   }
 
-  const json = await res.json();
-  let e: any = json?.result?.data ?? json?.data;
+  const result = await res.json();
+  let e: any = result?.result?.data ?? result?.data;
   if (Array.isArray(e) && Array.isArray(e[0])) e = e[0];
   return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
 }
@@ -47,13 +47,12 @@ function chunkText(text: string, maxChars = 1000): string[] {
   return chunks;
 }
 
-Deno.serve(async (req) => {
-  const pf = preflight(req);
-  if (pf) return pf;
-
+Deno.serve((req: Request) => withCors(req, async () => {
+  const origin = req.headers.get('origin');
+  
   try {
     if (req.method !== "POST") {
-      return error(req, "Only POST allowed", 405);
+      return error(origin, "Only POST allowed", 405);
     }
 
     const { reembed = false, batch = 100 } = await req.json().catch(() => ({}));
@@ -67,7 +66,7 @@ Deno.serve(async (req) => {
 
     if (docsError) throw docsError;
     if (!docs || docs.length === 0) {
-      return json(req, { ok: true, embedded: 0, message: "No documents to embed" });
+      return json(origin, { ok: true, embedded: 0, message: "No documents to embed" });
     }
 
     let embedded = 0;
@@ -101,9 +100,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json(req, { ok: true, embedded });
+    return json(origin, { ok: true, embedded });
   } catch (e: any) {
     console.error("❌ norah-embed error:", e);
-    return error(req, String(e?.message || e), 500);
+    return error(origin, String(e?.message || e), 500);
   }
-});
+}));
