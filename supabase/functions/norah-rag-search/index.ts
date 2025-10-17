@@ -1,5 +1,5 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient } from "https://esm.sh/v135/@supabase/supabase-js@2.45.4?target=deno";
 import { preflight, json, error } from "../_shared/cors.ts";
 
 // === Cloudflare Workers AI embeddings (768d) ===
