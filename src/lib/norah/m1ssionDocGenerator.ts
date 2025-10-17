@@ -1,5 +1,19 @@
 // © 2025 Joseph MULÉ – M1SSION™ – Synthetic KB Generator for Norah AI 2.0
 import type { ContentDoc } from './types';
+/** ==== Dynamic Supabase projectRef & Functions base (guard-safe) ==== */
+const PROJECT_REF: string = (() => {
+  const url = (import.meta as any).env?.VITE_SUPABASE_URL ?? '';
+  const m = typeof url === 'string' ? url.match(/^https:\/\/([a-z0-9-]+)\.supabase\.co/i) : null;
+  const envRef = m && m[1] ? m[1] : (globalThis as any).__SUPABASE_PROJECT_REF || '';
+  return envRef;
+})();
+
+const FUNCTIONS_BASE: string =
+  PROJECT_REF
+    ? `https://${PROJECT_REF}.functions.supabase.co`
+    : ((import.meta as any).env?.VITE_SUPABASE_FUNCTIONS_URL || '');
+/** ==== /Dynamic Supabase ==== */
+
 
 // Generate comprehensive M1SSION™ documentation for KB seeding
 export function generateM1SSIONKnowledgeBase(): ContentDoc[] {
@@ -49,7 +63,7 @@ export function generateM1SSIONKnowledgeBase(): ContentDoc[] {
   const pushDocs: Omit<ContentDoc, 'id'>[] = [
     {
       title: 'Push SAFE Guard - Architecture Overview',
-      text: `Il Push SAFE Guard è un sistema di sicurezza obbligatorio che previene hardcoded secrets nel codebase. Implementato in scripts/push-guard.cjs, esegue scan automatico di tutti i file .ts/.tsx/.js/.jsx prima di ogni build. Il Guard blocca il deploy se rileva: SUPABASE_URL hardcoded, SUPABASE_ANON_KEY, JWT tokens, project ref (vkjrqirvdvjbemsfzxof), VAPID keys. Esegue via pnpm run prebuild nel package.json.`,
+      text: `Il Push SAFE Guard è un sistema di sicurezza obbligatorio che previene hardcoded secrets nel codebase. Implementato in scripts/push-guard.cjs, esegue scan automatico di tutti i file .ts/.tsx/.js/.jsx prima di ogni build. Il Guard blocca il deploy se rileva: SUPABASE_URL hardcoded, SUPABASE_ANON_KEY, JWT tokens, project ref (${PROJECT_REF}), VAPID keys. Esegue via pnpm run prebuild nel package.json.`,
       tags: ['push', 'guard', 'security', 'prebuild'],
       source: 'synthetic' as const,
       url: 'm1ssion://push-guard-architecture',
