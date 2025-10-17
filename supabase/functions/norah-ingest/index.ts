@@ -3,7 +3,7 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { withCors, json, error } from "../_shared/cors.ts";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /\.lovableproject\.com$/i, /\.lovable\.app$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
 
 function normalizeUuid(raw: unknown): string {
   if (typeof raw !== 'string' || !raw) return '';

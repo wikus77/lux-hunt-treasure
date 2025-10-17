@@ -9,7 +9,7 @@ const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /\.lovableproject\.com$/i, /\.lovable\.app$/i, /^localhost$/i, /^127\.0\.0\.1$/i];
 
 function normalizeUuid(raw: unknown): string {
   if (typeof raw !== 'string' || !raw) return '';
