@@ -2,7 +2,7 @@
 // Edge Function: rag-search
 // Semantic search over ai_docs using pgvector
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { preflight, json, error } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
