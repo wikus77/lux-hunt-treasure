@@ -6,13 +6,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import type { IngestPayload, EmbedPayload, RagQuery, NorahKPIs } from "./types";
+import { normalizeUuid, generateNormalizedUuid } from './normalizeUuid';
 
 // === Helper comuni ===
 const isPreview = typeof window !== 'undefined' && window.location.hostname.includes('lovable');
 export const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
 function cid() { 
-  return crypto.randomUUID().slice(0, 8); 
+  // Generate normalized UUID for correlation ID
+  return generateNormalizedUuid().slice(0, 8); 
 }
 
 function isRetryable(err: unknown) {
@@ -30,7 +32,8 @@ function isRetryable(err: unknown) {
 // === POST via invoke (con retry/backoff robusto) ===
 async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T> {
   const corr = cid();
-  const headers = { 'x-norah-cid': corr };
+  // Ensure UUID is always sent clean (no quotes)
+  const headers = { 'x-norah-cid': normalizeUuid(corr) || corr };
   let delay = 250;
   
   // Telemetria utile in preview
@@ -87,7 +90,8 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
           'content-type': 'application/json',
           'apikey': key,
           'authorization': `Bearer ${key}`,
-          'x-norah-cid': corr,
+          // Ensure UUID is always sent clean (no quotes)
+          'x-norah-cid': normalizeUuid(corr) || corr,
           'cache-control': 'no-store',
           'pragma': 'no-cache',
         },

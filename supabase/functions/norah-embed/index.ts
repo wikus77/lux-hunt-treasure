@@ -8,6 +8,17 @@ const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
 const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function normalizeUuid(raw: string | null): string {
+  if (!raw) return '';
+  let cleaned = raw.trim()
+    .replace(/^"+|"+$/g, '')  // Strip double quotes
+    .replace(/^'+|'+$/g, '')  // Strip single quotes
+    .trim();
+  return UUID_REGEX.test(cleaned) ? cleaned : '';
+}
+
 async function cfEmbed(text: string): Promise<number[]> {
   const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT}/ai/run/${CF_MODEL}`;
   const res = await fetch(url, {
@@ -55,7 +66,16 @@ Deno.serve((req: Request) => withCors(req, async () => {
       return error(origin, "Only POST allowed", 405);
     }
 
-    const { reembed = false, batch = 100 } = await req.json().catch(() => ({}));
+    // Validate and sanitize x-norah-cid header
+    const rawCid = req.headers.get('x-norah-cid');
+    const cid = normalizeUuid(rawCid);
+    
+    console.log(`🧠 norah-embed START: cid=${cid || 'none'}, raw="${rawCid}"`);
+
+    const { reembed = false, batch = 100, source = 'all' } = await req.json().catch(() => ({}));
+    
+    console.log(`🧠 norah-embed START: batch=${batch}, reembed=${reembed}, source=${source}`);
+    
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 
     // Get docs that need embedding
@@ -66,18 +86,27 @@ Deno.serve((req: Request) => withCors(req, async () => {
 
     if (docsError) throw docsError;
     if (!docs || docs.length === 0) {
+      console.log(`✅ norah-embed: no docs to embed`);
       return json(origin, { ok: true, embedded: 0, message: "No documents to embed" });
     }
 
     let embedded = 0;
+    const startTime = Date.now();
 
     for (const doc of docs) {
+      // Validate doc.id is a clean UUID
+      const cleanDocId = normalizeUuid(doc.id);
+      if (!cleanDocId) {
+        console.error(`❌ Invalid doc.id UUID: "${doc.id}" (skipping)`);
+        continue;
+      }
+
       // Check if already embedded
       if (!reembed) {
         const { count } = await supabase
           .from("ai_docs_embeddings")
           .select("*", { count: "exact", head: true })
-          .eq("doc_id", doc.id);
+          .eq("doc_id", cleanDocId);
         
         if (count && count > 0) continue;
       }
@@ -90,19 +119,27 @@ Deno.serve((req: Request) => withCors(req, async () => {
         const { error: insertError } = await supabase
           .from("ai_docs_embeddings")
           .insert({
-            doc_id: doc.id,
+            doc_id: cleanDocId,
             embedding: `[${embedding.join(",")}]`,
             chunk_idx: idx,
             chunk_text: chunks[idx],
           });
 
-        if (!insertError) embedded++;
+        if (insertError) {
+          console.error(`❌ Failed to insert embedding for doc ${cleanDocId} chunk ${idx}:`, insertError);
+        } else {
+          embedded++;
+        }
       }
     }
 
+    const duration = Date.now() - startTime;
+    console.log(`✅ norah-embed COMPLETE: ${embedded} embeddings in ${duration}ms`);
+    
     return json(origin, { ok: true, embedded });
   } catch (e: any) {
-    console.error("❌ norah-embed error:", e);
+    const duration = Date.now() - (Date.now());
+    console.error(`❌ norah-embed FATAL: ${e?.message || e} (stack: ${e?.stack}) (duration: ${duration}ms)`);
     return error(origin, String(e?.message || e), 500);
   }
 }));
