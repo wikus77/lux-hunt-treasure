@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-import { preflight, json, error } from "../_shared/cors.ts";
+import { withCors, json, error } from "../_shared/cors.ts";
 
 // === Cloudflare Workers AI embeddings (768d) ===
 const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
@@ -25,15 +25,12 @@ async function cfEmbed(text: string): Promise<number[]> {
   return Array.isArray(e) ? e.map((n: any) => Number(n)) : [];
 }
 
-type Req = { q: string; top_k?: number; locale?: string };
-
-Deno.serve(async (req) => {
-  const pf = preflight(req);
-  if (pf) return pf;
-
+Deno.serve((req: Request) => withCors(req, async () => {
+  const origin = req.headers.get('origin');
+  
   try {
     if (req.method !== "POST") {
-      return error(req, "Only POST allowed", 405);
+      return error(origin, "Only POST allowed", 405);
     }
 
     const payload = (await req.json().catch(() => ({}))) as any;
@@ -42,7 +39,7 @@ Deno.serve(async (req) => {
     const locale = (payload?.locale ?? 'it').toString();
     
     if (!q || !q.trim()) {
-      return error(req, "Query parameter 'q' (or 'query') is required and must be non-empty", 400);
+      return error(origin, "Query parameter 'q' (or 'query') is required and must be non-empty", 400);
     }
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -50,7 +47,7 @@ Deno.serve(async (req) => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return error(req, "Server configuration error", 500);
+      return error(origin, "Server configuration error", 500);
     }
 
     const supabaseAdmin = createClient(url, key, { auth: { persistSession: false } });
@@ -82,9 +79,9 @@ Deno.serve(async (req) => {
       console.warn("⚠️ Failed to log RAG query:", logErr);
     }
 
-    return json(req, { ok: true, rag_used: true, results: data || [] });
+    return json(origin, { ok: true, rag_used: true, results: data || [] });
   } catch (e: any) {
     console.error("❌ norah-rag-search error:", e);
-    return error(req, String(e?.message || e), 500);
+    return error(origin, String(e?.message || e), 500);
   }
-});
+}));

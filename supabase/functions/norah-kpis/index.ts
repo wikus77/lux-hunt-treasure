@@ -1,14 +1,13 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
-import { preflight, json, error } from "../_shared/cors.ts";
+import { withCors, json, error } from "../_shared/cors.ts";
 
-Deno.serve(async (req) => {
-  const pf = preflight(req);
-  if (pf) return pf;
-
+Deno.serve((req: Request) => withCors(req, async () => {
+  const origin = req.headers.get('origin');
+  
   try {
     if (req.method !== "GET") {
-      return error(req, "Only GET allowed", 405);
+      return error(origin, "Only GET allowed", 405);
     }
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -16,7 +15,7 @@ Deno.serve(async (req) => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return error(req, "Server configuration error", 500);
+      return error(origin, "Server configuration error", 500);
     }
 
     const admin = createClient(url, key, { auth: { persistSession: false } });
@@ -46,9 +45,9 @@ Deno.serve(async (req) => {
       last_embed_at: last?.created_at ?? "1970-01-01T00:00:00Z",
     };
 
-    return json(req, body);
+    return json(origin, body);
   } catch (e: any) {
     console.error("❌ norah-kpis error:", e);
-    return error(req, String(e?.message || e), 500);
+    return error(origin, String(e?.message || e), 500);
   }
-});
+}));

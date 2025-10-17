@@ -1,38 +1,49 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Universal CORS middleware — safe for Deno Edge
+// Universal CORS middleware — Deno-safe, NO null body on 204
 
-export function corsHeaders(req?: Request) {
-  const origin = req?.headers?.get('origin') ?? '*';
-  return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-norah-cid',
+export function corsHeaders(origin: string | null) {
+  const o = origin ?? '*';
+  return new Headers({
+    'Access-Control-Allow-Origin': o,
     'Vary': 'Origin',
-  };
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info,x-norah-cid',
+    'Access-Control-Max-Age': '86400'
+  });
 }
 
-export function handleCors(req: Request): Response | null {
+export function handleOptions(req: Request): Response {
+  // 204 NO CONTENT - MUST have null body
+  return new Response(null, { 
+    status: 204, 
+    headers: corsHeaders(req.headers.get('origin')) 
+  });
+}
+
+export async function withCors(req: Request, run: () => Promise<Response>): Promise<Response> {
+  // Handle preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: { ...corsHeaders(req) },
-    });
+    return handleOptions(req);
   }
-  return null;
+  
+  // Execute handler and merge CORS headers
+  const res = await run();
+  const h = corsHeaders(req.headers.get('origin'));
+  h.forEach((v, k) => res.headers.set(k, v));
+  return res;
 }
 
-// Alias for backward compatibility
-export const preflight = handleCors;
+// Legacy helpers for backward compatibility
+export const preflight = handleOptions;
 
-export function json(req: Request, body: unknown, status = 200): Response {
-  const headers = { 'Content-Type': 'application/json', ...corsHeaders(req) };
+export function json(origin: string | null, body: unknown, status = 200): Response {
+  const headers = corsHeaders(origin);
+  headers.set('Content-Type', 'application/json');
   return new Response(JSON.stringify(body), { status, headers });
 }
 
-export function error(req: Request, message: string, status = 400): Response {
-  const headers = { 'Content-Type': 'application/json', ...corsHeaders(req) };
-  return new Response(JSON.stringify({ ok: false, error: message }), {
-    status,
-    headers,
-  });
+export function error(origin: string | null, message: string, status = 400): Response {
+  const headers = corsHeaders(origin);
+  headers.set('Content-Type', 'application/json');
+  return new Response(JSON.stringify({ ok: false, error: message }), { status, headers });
 }
