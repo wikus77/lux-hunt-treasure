@@ -64,13 +64,16 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
 
 // === GET via fetch directo (fix 405) ===
 async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
-  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/${path}`;
-  const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+  // Prefer dedicated Functions domain to avoid CORS header duplication
+  const supaUrl: string = (import.meta as any).env?.VITE_SUPABASE_URL?.trim()?.replace(/\/+$/, '') || '';
+  const functionsBase = supaUrl ? supaUrl.replace('.supabase.co', '.functions.supabase.co') : '';
+  const url = `${functionsBase}/${path}`;
+  const key = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
   const corr = cid();
 
   // Telemetria utile in preview
   if (isPreview && import.meta.env.DEV) {
-    console.log('[NORAH2]', phase || path, { cid: corr, method: 'GET' });
+    console.log('[NORAH2]', phase || path, { cid: corr, method: 'GET', url });
   }
 
   let delay = 250;
@@ -85,8 +88,11 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
           'apikey': key,
           'authorization': `Bearer ${key}`,
           'x-norah-cid': corr,
+          'cache-control': 'no-store',
+          'pragma': 'no-cache',
         },
-        keepalive: true, // aiuta su preview
+        keepalive: true,
+        mode: 'cors',
       });
       
       if (!res.ok) {
