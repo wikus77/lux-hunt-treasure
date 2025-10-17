@@ -32,15 +32,27 @@ function isRetryable(err: unknown) {
 // === POST via invoke (con retry/backoff robusto) ===
 async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T> {
   const corr = cid();
+  const cleanCid = normalizeUuid(corr) || corr;
+  
+  // Fail-fast: invalid UUID
+  if (!cleanCid) {
+    console.warn('[NORAH2] Invalid client_id (UUID), cannot call', fn);
+    throw new Error('Invalid client_id (UUID)');
+  }
+  
   // Ensure UUID is always sent clean (no quotes)
-  const headers = { 'x-norah-cid': normalizeUuid(corr) || corr };
+  const headers = { 'x-norah-cid': cleanCid };
+  
+  // Fallback: include client_id in body as well
+  const enrichedBody = { ...(body || {}), client_id: cleanCid };
+  
   let delay = 250;
   
   // Telemetria utile in preview
   if (isPreview && import.meta.env.DEV) {
     console.log('[NORAH2]', phase || fn, { 
-      cid: corr, 
-      payloadSize: JSON.stringify(body ?? {}).length 
+      cid: corr.slice(0, 8), 
+      payloadSize: JSON.stringify(enrichedBody).length 
     });
   }
   
@@ -49,11 +61,14 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
       // Pacing in preview per evitare abort della sandbox
       if (isPreview && i > 0) await sleep(400);
       
-      const { data, error } = await supabase.functions.invoke<T>(fn, { body, headers });
+      const { data, error } = await supabase.functions.invoke<T>(fn, { 
+        body: enrichedBody, 
+        headers 
+      });
       if (error) throw error;
       return data as T;
     } catch (e) {
-      console.error(`[NORAH2 cid:${corr}] ${fn} failed (attempt ${i+1}/3):`, (e as any)?.message || e);
+      console.error(`[NORAH2 cid:${corr.slice(0, 8)}] ${fn} failed (attempt ${i+1}/3):`, (e as any)?.message || e);
       if (!isRetryable(e) || i === 2) {
         console.error(`[NORAH2] ${fn} ❌`, e);
         throw e;
@@ -73,10 +88,11 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
   const url = `${functionsBase}/${path}`;
   const key = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
   const corr = cid();
+  const cleanCid = normalizeUuid(corr) || corr;
 
   // Telemetria utile in preview
   if (isPreview && import.meta.env.DEV) {
-    console.log('[NORAH2]', phase || path, { cid: corr, method: 'GET', url });
+    console.log('[NORAH2]', phase || path, { cid: corr.slice(0, 8), method: 'GET', url });
   }
 
   let delay = 250;
@@ -91,7 +107,7 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
           'apikey': key,
           'authorization': `Bearer ${key}`,
           // Ensure UUID is always sent clean (no quotes)
-          'x-norah-cid': normalizeUuid(corr) || corr,
+          'x-norah-cid': cleanCid,
           'cache-control': 'no-store',
           'pragma': 'no-cache',
         },

@@ -66,13 +66,20 @@ Deno.serve((req: Request) => withCors(req, async () => {
       return error(origin, "Only POST allowed", 405);
     }
 
-    // Validate and sanitize x-norah-cid header
-    const rawCid = req.headers.get('x-norah-cid');
+    // Parse body first
+    const bodyData = await req.json().catch(() => ({}));
+    const { reembed = false, batch = 100, source = 'all', client_id } = bodyData;
+
+    // Sanitize + validate x-norah-cid (header or body fallback)
+    const rawCid = req.headers.get('x-norah-cid') || client_id || '';
     const cid = normalizeUuid(rawCid);
     
-    console.log(`🧠 norah-embed START: cid=${cid || 'none'}, raw="${rawCid}"`);
-
-    const { reembed = false, batch = 100, source = 'all' } = await req.json().catch(() => ({}));
+    if (!cid) {
+      console.warn(`⚠️ norah-embed: invalid x-norah-cid/client_id (raw="${rawCid}")`);
+      return error(origin, 'invalid x-norah-cid', 400);
+    }
+    
+    console.log(`🧠 norah-embed START: cid=${cid.slice(0, 8)}, batch=${batch}, reembed=${reembed}, source=${source}`);
     
     console.log(`🧠 norah-embed START: batch=${batch}, reembed=${reembed}, source=${source}`);
     
