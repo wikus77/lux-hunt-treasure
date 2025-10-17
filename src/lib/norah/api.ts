@@ -179,19 +179,16 @@ export async function norahSearch(payload: RagQuery) {
 }
 
 /**
- * GET: norah-kpis (via invoke con method GET)
+ * GET: norah-kpis (via fetch direto, baseline-compatible)
  */
 export async function norahKpis(): Promise<NorahKPIs> {
   if (import.meta.env.DEV) {
-    console.debug('[NORAH2] norahKpis →');
+    console.debug('[NORAH2] norahKpis → (GET via Functions domain)');
   }
   try {
-    const { data, error } = await supabase.functions.invoke<NorahKPIs>('norah-kpis', { 
-      method: 'GET' 
-    });
-    if (error) throw error;
+    const data = await getFunctionJSON<NorahKPIs>('norah-kpis', 'kpi');
     if (import.meta.env.DEV) console.debug('[NORAH2] norahKpis ✅', data);
-    return data!;
+    return data;
   } catch (error: any) {
     if (import.meta.env.DEV) console.error('[NORAH2] norahKpis ❌', error?.message || error);
     throw error;
