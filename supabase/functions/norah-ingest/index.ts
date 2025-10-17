@@ -7,10 +7,9 @@ const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i, /^127\.0\.0\
 
 function normalizeUuid(raw: unknown): string {
   if (typeof raw !== 'string' || !raw) return '';
-  // Strip nested quotes and whitespace
   let cleaned = raw.trim()
-    .replace(/^"+|"+$/g, '')  // Remove double quotes
-    .replace(/^'+|'+$/g, '')  // Remove single quotes
+    .replace(/^"+|"+$/g, '')
+    .replace(/^'+|'+$/g, '')
     .trim();
   return UUID_REGEX.test(cleaned) ? cleaned : '';
 }
@@ -21,6 +20,15 @@ function isOriginAllowed(origin: string): boolean {
     const host = new URL(origin).hostname;
     return ALLOWED_ORIGINS.some(r => r.test(host));
   } catch { return false; }
+}
+
+async function hash8(s: string): Promise<string> {
+  const buf = new TextEncoder().encode(s);
+  const hashBuf = await crypto.subtle.digest('SHA-1', buf);
+  const hex = Array.from(new Uint8Array(hashBuf))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hex.slice(0, 8);
 }
 
 Deno.serve((req: Request) => withCors(req, async () => {
@@ -42,15 +50,17 @@ Deno.serve((req: Request) => withCors(req, async () => {
 
     const { documents = [], dryRun = false, client_id } = bodyData;
 
-    // Sanitize + validate x-norah-cid (header or body fallback)
     const rawHeader = req.headers.get('x-norah-cid') || '';
     const rawBody = client_id || '';
     const candidate = rawHeader || rawBody;
     const cid = normalizeUuid(candidate);
     
     if (!cid) {
-      console.warn(`⚠️ norah-ingest: invalid x-norah-cid/client_id (raw="${String(candidate).slice(0, 50)}")`);
-      return error(allowedOrigin, 'invalid x-norah-cid', 400);
+      const h = await hash8(candidate || 'empty');
+      const len = String(candidate).length;
+      const regexMatch = UUID_REGEX.test(String(candidate));
+      console.warn(`⚠️ norah-ingest: invalid_cid h=${h} len=${len} regex=${regexMatch} origin_ok=${isOriginAllowed(origin)}`);
+      return error(allowedOrigin, 'invalid x-norah-cid/client_id', 400);
     }
     
     console.log(`📥 norah-ingest: cid=${cid.slice(0, 8)}, docs=${documents.length}, dryRun=${dryRun}`);
