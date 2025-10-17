@@ -23,9 +23,20 @@ function checkOrigin() {
   }
 }
 
-function cid() { 
-  // Generate normalized UUID for correlation ID
-  return generateNormalizedUuid().slice(0, 8); 
+function getClientId(): string {
+  // Stable, valid UUID persisted in localStorage
+  try {
+    const key = 'norah_cid';
+    const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+    const valid = normalizeUuid(stored || '');
+    if (valid) return valid;
+    const fresh = generateNormalizedUuid();
+    if (typeof localStorage !== 'undefined') localStorage.setItem(key, fresh);
+    return fresh;
+  } catch {
+    // Fallback to a fresh UUID if localStorage is unavailable
+    return generateNormalizedUuid();
+  }
 }
 
 function isRetryable(err: unknown) {
@@ -45,7 +56,7 @@ async function invokePOST<T>(fn: string, body?: any, phase?: string): Promise<T>
   // Origin hygiene check
   checkOrigin();
   
-  const corr = cid();
+  const corr = getClientId();
   const cleanCid = normalizeUuid(corr) || corr;
   
   // Fail-fast: invalid UUID
@@ -126,7 +137,7 @@ async function getFunctionJSON<T>(path: string, phase?: string): Promise<T> {
   const functionsBase = supaUrl ? supaUrl.replace('.supabase.co', '.functions.supabase.co') : '';
   const url = `${functionsBase}/${path}`;
   const key = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
-  const corr = cid();
+  const corr = getClientId();
   const cleanCid = normalizeUuid(corr) || corr;
 
   // Debug mode logging
