@@ -35,6 +35,9 @@ export default function KPIPanel() {
 
   useEffect(() => {
     loadKPIs();
+    const onFocus = () => loadKPIs();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   return (

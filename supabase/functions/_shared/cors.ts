@@ -30,7 +30,8 @@ export function withCors(resp: Response, origin?: string): Response {
   h.set("Access-Control-Allow-Origin", allowedOrigin);
   h.set("Vary", "Origin");
   h.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  h.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey, x-client-info");
+  h.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey, x-client-info, x-norah-cid");
+  h.set("Cache-Control", "no-store");
   
   return new Response(resp.body, { 
     status: resp.status, 
@@ -47,8 +48,8 @@ export function preflight(req: Request): Response | null {
   h.set("Access-Control-Allow-Origin", origin);
   h.set("Vary", "Origin");
   h.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  h.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey, x-client-info");
-  
+  h.set("Access-Control-Allow-Headers", "Content-Type, Authorization, apikey, x-client-info, x-norah-cid");
+  h.set("Cache-Control", "no-store");
   return new Response(null, { status: 204, headers: h });
 }
 

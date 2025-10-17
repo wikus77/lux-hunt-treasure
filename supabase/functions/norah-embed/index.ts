@@ -95,7 +95,6 @@ Deno.serve(async (req) => {
           .insert({
             doc_id: doc.id,
             embedding: `[${embedding.join(",")}]`,
-            model: CF_MODEL,
             chunk_idx: idx,
             chunk_text: chunks[idx],
           });
