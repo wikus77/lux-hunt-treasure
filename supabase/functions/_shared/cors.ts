@@ -1,25 +1,28 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-// Shared CORS utilities for Norah edge functions
+// Universal CORS middleware — safe for Deno Edge
 
-export const ALLOW_HEADERS =
-  'authorization,apikey,x-client-info,content-type,x-norah-cid';
-
-function corsHeaders(req: Request) {
-  // Prendi l'origin del client (preview/prod) e varia la cache per origin
-  const origin = req.headers.get('origin') ?? '*';
+export function corsHeaders(req?: Request) {
+  const origin = req?.headers?.get('origin') ?? '*';
   return {
     'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-norah-cid',
     'Vary': 'Origin',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': ALLOW_HEADERS,
-    // Non usiamo cookie/credentials: NON settare Allow-Credentials
   };
 }
 
-export function preflight(req: Request): Response | null {
-  if (req.method !== 'OPTIONS') return null;
-  return new Response(null, { status: 204, headers: corsHeaders(req) });
+export function handleCors(req: Request): Response | null {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', {
+      status: 204,
+      headers: corsHeaders(req),
+    });
+  }
+  return null;
 }
+
+// Alias for backward compatibility
+export const preflight = handleCors;
 
 export function json(req: Request, body: unknown, status = 200): Response {
   const headers = { 'Content-Type': 'application/json', ...corsHeaders(req) };
