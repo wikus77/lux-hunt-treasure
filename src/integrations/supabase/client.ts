@@ -29,8 +29,12 @@ function initSupabaseClient(): SupabaseClient<Database> {
   const SUPABASE_URL = resolveSupabaseUrl();
   const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ?? '';
   
-  if (!SUPABASE_ANON_KEY) {
-    console.warn('⚠️ VITE_SUPABASE_ANON_KEY not set — some operations may fail');
+  // ENV Assert: verificare presenza in preview
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error('[NORAH2] Missing SUPABASE envs in preview', { 
+      url: SUPABASE_URL, 
+      keyPresent: !!SUPABASE_ANON_KEY 
+    });
   }
   
   const client = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
