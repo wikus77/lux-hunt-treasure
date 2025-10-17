@@ -71,20 +71,15 @@ Deno.serve(async (req) => {
 
     console.log('🚀 Mirror Push Log Harvester started');
 
-    // Get the last harvest timestamp
-    const { data: watermark, error: watermarkError } = await supabase
-      .schema('mirror_push')
-      .from('sync_watermarks')
-      .select('last_run_at')
-      .eq('name', 'harvester')
-      .single();
+    // Get the last harvest timestamp via RPC wrapper (accesses mirror_push schema safely)
+    const { data: wmData, error: watermarkError } = await supabase.rpc('mirror_get_watermark', { p_name: 'harvester' });
 
     if (watermarkError) {
       console.error('❌ Error fetching watermark:', watermarkError);
       throw new Error('Failed to fetch watermark');
     }
 
-    const lastHarvestTime = watermark?.last_run_at || '1970-01-01T00:00:00Z';
+    const lastHarvestTime = wmData || '1970-01-01T00:00:00Z';
     console.log('📅 Last harvest time:', lastHarvestTime);
 
     // Use Supabase Analytics query to get function logs
@@ -155,10 +150,7 @@ Deno.serve(async (req) => {
       }
 
       if (notifications.length > 0) {
-        const { error: insertError } = await supabase
-          .schema('mirror_push')
-          .from('notification_logs')
-          .insert(notifications);
+        const { data: insertedCount, error: insertError } = await supabase.rpc('mirror_insert_notification_logs', { p_records: notifications });
         if (insertError) {
           console.error('❌ Error inserting fallback notifications:', insertError);
           return new Response(JSON.stringify({ 
@@ -172,11 +164,7 @@ Deno.serve(async (req) => {
           });
         }
 
-        const { error: updateError } = await supabase
-          .schema('mirror_push')
-          .from('sync_watermarks')
-          .update({ last_run_at: latestTs })
-          .eq('name', 'harvester');
+        const { error: updateError } = await supabase.rpc('mirror_set_watermark', { p_name: 'harvester', p_last_run_at: latestTs });
         if (updateError) {
           console.error('❌ Error updating watermark (fallback):', updateError);
         }
@@ -301,27 +289,21 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Batch insert notifications
     if (notifications.length > 0) {
       console.log(`💾 Inserting ${notifications.length} notification records`);
       
-      const { error: insertError } = await supabase
-        .schema('mirror_push')
-        .from('notification_logs')
-        .insert(notifications);
+      const { data: insertedCount, error: insertError } = await supabase.rpc('mirror_insert_notification_logs', { p_records: notifications });
 
       if (insertError) {
         console.error('❌ Error inserting notifications:', insertError);
         throw new Error('Failed to insert notification logs');
       }
+      
+      console.log(`✅ Successfully inserted ${insertedCount} records`);
     }
 
-    // Update watermark
-    const { error: updateError } = await supabase
-      .schema('mirror_push')
-      .from('sync_watermarks')
-      .update({ last_run_at: latestTimestamp })
-      .eq('name', 'harvester');
+    // Update watermark via RPC wrapper
+    const { error: updateError } = await supabase.rpc('mirror_set_watermark', { p_name: 'harvester', p_last_run_at: latestTimestamp });
 
     if (updateError) {
       console.error('❌ Error updating watermark:', updateError);
