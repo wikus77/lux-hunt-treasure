@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { preflight, json } from "../_shared/cors.ts";
+import { preflight, json, error } from "../_shared/cors.ts";
 
 // === Cloudflare Workers AI embeddings (768d) ===
 const CF_ACCOUNT = Deno.env.get("CLOUDFLARE_ACCOUNT_ID") || "";
@@ -31,11 +31,9 @@ Deno.serve(async (req) => {
   const pf = preflight(req);
   if (pf) return pf;
 
-  const origin = req.headers.get("Origin") || "*";
-
   try {
     if (req.method !== "POST") {
-      return json(405, { ok: false, error: "method-not-allowed", message: "Only POST allowed" }, origin);
+      return error(req, "Only POST allowed", 405);
     }
 
     const payload = (await req.json().catch(() => ({}))) as any;
@@ -44,7 +42,7 @@ Deno.serve(async (req) => {
     const locale = (payload?.locale ?? 'it').toString();
     
     if (!q || !q.trim()) {
-      return json(400, { ok: false, error: "empty-query", message: "Query parameter 'q' (or 'query') is required and must be non-empty" }, origin);
+      return error(req, "Query parameter 'q' (or 'query') is required and must be non-empty", 400);
     }
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -52,7 +50,7 @@ Deno.serve(async (req) => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return json(500, { ok: false, error: "missing-server-secrets", message: "Server configuration error" }, origin);
+      return error(req, "Server configuration error", 500);
     }
 
     const supabaseAdmin = createClient(url, key, { auth: { persistSession: false } });
@@ -64,15 +62,15 @@ Deno.serve(async (req) => {
     }
 
     // 2) Vector search via RPC
-    const { data, error } = await supabaseAdmin.rpc("ai_rag_search_vec", {
+    const { data, error: dbError } = await supabaseAdmin.rpc("ai_rag_search_vec", {
       query_embedding: embedding,
       match_count: top_k,
       in_locale: locale,
     });
     
-    if (error) {
-      console.error("❌ ai_rag_search_vec error:", error);
-      throw new Error(`ai_rag_search_vec failed: ${error.message}`);
+    if (dbError) {
+      console.error("❌ ai_rag_search_vec error:", dbError);
+      throw new Error(`ai_rag_search_vec failed: ${dbError.message}`);
     }
 
     // 3) Log query (best-effort, don't fail on log errors)
@@ -84,9 +82,9 @@ Deno.serve(async (req) => {
       console.warn("⚠️ Failed to log RAG query:", logErr);
     }
 
-    return json(200, { ok: true, rag_used: true, results: data || [] }, origin);
+    return json(req, { ok: true, rag_used: true, results: data || [] });
   } catch (e: any) {
     console.error("❌ norah-rag-search error:", e);
-    return json(500, { ok: false, error: "rag-internal", message: String(e?.message || e) }, origin);
+    return error(req, String(e?.message || e), 500);
   }
 });
