@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { preflight, json } from "../_shared/cors.ts";
+import { preflight, json, error } from "../_shared/cors.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -51,11 +51,9 @@ Deno.serve(async (req) => {
   const pf = preflight(req);
   if (pf) return pf;
 
-  const origin = req.headers.get("Origin") || "*";
-
   try {
     if (req.method !== "POST") {
-      return json(405, { ok: false, error: "method-not-allowed", message: "Only POST allowed" }, origin);
+      return error(req, "Only POST allowed", 405);
     }
 
     const { reembed = false, batch = 100 } = await req.json().catch(() => ({}));
@@ -69,7 +67,7 @@ Deno.serve(async (req) => {
 
     if (docsError) throw docsError;
     if (!docs || docs.length === 0) {
-      return json(200, { ok: true, embedded: 0, message: "No documents to embed" }, origin);
+      return json(req, { ok: true, embedded: 0, message: "No documents to embed" });
     }
 
     let embedded = 0;
@@ -103,9 +101,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    return json(200, { ok: true, embedded }, origin);
+    return json(req, { ok: true, embedded });
   } catch (e: any) {
     console.error("❌ norah-embed error:", e);
-    return json(500, { ok: false, error: "embed-internal", message: String(e?.message || e) }, origin);
+    return error(req, String(e?.message || e), 500);
   }
 });
