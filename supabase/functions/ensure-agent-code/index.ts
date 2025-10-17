@@ -3,7 +3,7 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.1'
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8'
 
 // The reserved code specifically for wikus77@hotmail.it
 const RESERVED_ADMIN_CODE = 'AG-X019';

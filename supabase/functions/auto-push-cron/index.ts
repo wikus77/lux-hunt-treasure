@@ -8,7 +8,7 @@
  * - Quiet hours: 21:00-08:59
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.43.4';
+import { createClient } from 'jsr:@supabase/supabase-js@2.49.8';
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const ADMIN_PUSH_TOKEN = Deno.env.get("PUSH_ADMIN_TOKEN")!;
