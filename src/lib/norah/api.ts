@@ -81,70 +81,28 @@ export async function norahIngest(payload: IngestPayload) {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahIngest →', { docsCount: payload.documents?.length || 0, dryRun: payload.dryRun });
   }
-  const cid = crypto.randomUUID().slice(0, 8);
-  const url = functionsBaseUrl('norah-ingest');
-  const headers = { ...norahHeaders(), 'x-norah-cid': cid } as Record<string, string>;
-  const maxRetries = 2;
-  
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt > 0 && isPreview()) {
-        const backoff = [0, 250, 500][attempt] || 500;
-        await sleep(backoff);
-      }
-      const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
-      if (!res.ok) {
-        const t = await res.text().catch(() => '');
-        throw new Error(`ingest-${res.status} ${t.slice(0,120)}`);
-      }
-      const data = await res.json();
-      if (import.meta.env.DEV) console.debug('[NORAH2] norahIngest ✅', data);
-      return data;
-    } catch (error: any) {
-      const msg = (error?.message || '').toLowerCase();
-      const retriable = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort') || msg.includes('timeout');
-      if (!retriable || attempt >= maxRetries) {
-        if (import.meta.env.DEV) console.error('[NORAH2] norahIngest ❌', error?.message || error);
-        throw error;
-      }
-    }
+  try {
+    const data = await retryInvoke<any>('norah-ingest', payload, { phase: 'ingest' });
+    if (import.meta.env.DEV) console.debug('[NORAH2] norahIngest ✅', data);
+    return data;
+  } catch (error: any) {
+    if (import.meta.env.DEV) console.error('[NORAH2] norahIngest ❌', error?.message || error);
+    throw error;
   }
-  throw new Error('ingest-retry-exhausted');
 }
 
 export async function norahEmbed(payload: EmbedPayload) {
   if (import.meta.env.DEV) {
     console.debug('[NORAH2] norahEmbed →', payload);
   }
-  const cid = crypto.randomUUID().slice(0, 8);
-  const url = functionsBaseUrl('norah-embed');
-  const headers = { ...norahHeaders(), 'x-norah-cid': cid } as Record<string, string>;
-  const maxRetries = 2;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt > 0 && isPreview()) {
-        const backoff = [0, 250, 500][attempt] || 500;
-        await sleep(backoff);
-      }
-      const res = await fetch(url, { method: 'POST', headers, body: JSON.stringify(payload) });
-      if (!res.ok) {
-        const t = await res.text().catch(() => '');
-        throw new Error(`embed-${res.status} ${t.slice(0,120)}`);
-      }
-      const data = await res.json();
-      if (import.meta.env.DEV) console.debug('[NORAH2] norahEmbed ✅', data);
-      return data;
-    } catch (error: any) {
-      const msg = (error?.message || '').toLowerCase();
-      const retriable = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort') || msg.includes('timeout');
-      if (!retriable || attempt >= maxRetries) {
-        if (import.meta.env.DEV) console.error('[NORAH2] norahEmbed ❌', error?.message || error);
-        throw error;
-      }
-    }
+  try {
+    const data = await retryInvoke<any>('norah-embed', payload, { phase: 'embed' });
+    if (import.meta.env.DEV) console.debug('[NORAH2] norahEmbed ✅', data);
+    return data;
+  } catch (error: any) {
+    if (import.meta.env.DEV) console.error('[NORAH2] norahEmbed ❌', error?.message || error);
+    throw error;
   }
-  throw new Error('embed-retry-exhausted');
 }
 
 export async function norahSearch(payload: RagQuery) {
@@ -179,35 +137,17 @@ export async function norahSearch(payload: RagQuery) {
 }
 
 export async function norahKpis(): Promise<NorahKPIs> {
-  const cid = crypto.randomUUID().slice(0, 8);
-  const url = functionsBaseUrl('norah-kpis');
-  const headers = { ...norahHeaders(), 'x-norah-cid': cid } as Record<string, string>;
-  const maxRetries = 3;
-
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      if (attempt > 0 && isPreview()) {
-        const backoff = [0, 250, 500, 800][attempt] || 800;
-        await sleep(backoff);
-        if (import.meta.env.DEV) console.debug(`[NORAH2 cid:${cid}] norahKpis retry ${attempt}/${maxRetries}`);
-      }
-
-      const res = await fetch(url, { method: 'GET', headers });
-      if (!res.ok) throw new Error(`kpis-${res.status}`);
-      const data = await res.json();
-      if (import.meta.env.DEV) console.debug(`[NORAH2 cid:${cid}] norahKpis ✅`, data);
-      return data as NorahKPIs;
-    } catch (e: any) {
-      const msg = (e?.message || '').toLowerCase();
-      const retriable = msg.includes('failed to fetch') || msg.includes('network') || msg.includes('abort');
-      if (!retriable || attempt >= maxRetries) {
-        if (import.meta.env.DEV) console.error(`[NORAH2 cid:${cid}] norahKpis ❌`, e?.message || e);
-        throw e;
-      }
-    }
+  if (import.meta.env.DEV) {
+    console.debug('[NORAH2] norahKpis →');
   }
-
-  throw new Error('kpis-retry-exhausted');
+  try {
+    const data = await retryInvoke<NorahKPIs>('norah-kpis', {}, { method: 'GET', phase: 'kpis' });
+    if (import.meta.env.DEV) console.debug('[NORAH2] norahKpis ✅', data);
+    return data;
+  } catch (error: any) {
+    if (import.meta.env.DEV) console.error('[NORAH2] norahKpis ❌', error?.message || error);
+    throw error;
+  }
 }
 
 /**
