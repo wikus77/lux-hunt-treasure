@@ -3,9 +3,10 @@ import { createClient } from "jsr:@supabase/supabase-js@2.49.8";
 import { withCors, json, error } from "../_shared/cors.ts";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i];
 
-function normalizeUuid(raw: string | null): string {
-  if (!raw) return '';
+function normalizeUuid(raw: unknown): string {
+  if (typeof raw !== 'string' || !raw) return '';
   let cleaned = raw.trim()
     .replace(/^"+|"+$/g, '')
     .replace(/^'+|'+$/g, '')
@@ -13,8 +14,20 @@ function normalizeUuid(raw: string | null): string {
   return UUID_REGEX.test(cleaned) ? cleaned : '';
 }
 
+function isOriginAllowed(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname;
+    return ALLOWED_ORIGINS.some(r => r.test(host));
+  } catch { return false; }
+}
+
 Deno.serve((req: Request) => withCors(req, async () => {
-  const origin = req.headers.get('origin');
+  const origin = req.headers.get('origin') ?? '';
+  
+  // CORS origin validation
+  if (origin && !isOriginAllowed(origin)) {
+    console.warn(`⚠️ norah-kpis: origin not allowlisted: ${origin}`);
+  }
   
   // Sanitize + validate x-norah-cid (optional for KPIs GET)
   const rawCid = req.headers.get('x-norah-cid') || '';

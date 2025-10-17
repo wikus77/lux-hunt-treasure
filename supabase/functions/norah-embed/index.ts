@@ -9,14 +9,22 @@ const CF_TOKEN = Deno.env.get("CLOUDFLARE_API_TOKEN") || "";
 const CF_MODEL = Deno.env.get("CF_EMBEDDING_MODEL") || "@cf/baai/bge-base-en-v1.5";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ALLOWED_ORIGINS = [/\.m1ssion\.pages\.dev$/i, /^localhost$/i];
 
-function normalizeUuid(raw: string | null): string {
-  if (!raw) return '';
+function normalizeUuid(raw: unknown): string {
+  if (typeof raw !== 'string' || !raw) return '';
   let cleaned = raw.trim()
     .replace(/^"+|"+$/g, '')  // Strip double quotes
     .replace(/^'+|'+$/g, '')  // Strip single quotes
     .trim();
   return UUID_REGEX.test(cleaned) ? cleaned : '';
+}
+
+function isOriginAllowed(origin: string): boolean {
+  try {
+    const host = new URL(origin).hostname;
+    return ALLOWED_ORIGINS.some(r => r.test(host));
+  } catch { return false; }
 }
 
 async function cfEmbed(text: string): Promise<number[]> {
@@ -59,7 +67,12 @@ function chunkText(text: string, maxChars = 1000): string[] {
 }
 
 Deno.serve((req: Request) => withCors(req, async () => {
-  const origin = req.headers.get('origin');
+  const origin = req.headers.get('origin') ?? '';
+  
+  // CORS origin validation
+  if (origin && !isOriginAllowed(origin)) {
+    console.warn(`⚠️ norah-embed: origin not allowlisted: ${origin}`);
+  }
   
   try {
     if (req.method !== "POST") {
@@ -75,13 +88,11 @@ Deno.serve((req: Request) => withCors(req, async () => {
     const cid = normalizeUuid(rawCid);
     
     if (!cid) {
-      console.warn(`⚠️ norah-embed: invalid x-norah-cid/client_id (raw="${rawCid}")`);
+      console.warn(`⚠️ norah-embed: invalid x-norah-cid/client_id (raw="${String(rawCid).slice(0, 50)}")`);
       return error(origin, 'invalid x-norah-cid', 400);
     }
     
     console.log(`🧠 norah-embed START: cid=${cid.slice(0, 8)}, batch=${batch}, reembed=${reembed}, source=${source}`);
-    
-    console.log(`🧠 norah-embed START: batch=${batch}, reembed=${reembed}, source=${source}`);
     
     const supabase = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
 

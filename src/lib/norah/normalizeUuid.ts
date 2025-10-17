@@ -8,7 +8,7 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 /**
  * Normalizes and validates a UUID string by:
  * 1. Trimming whitespace
- * 2. Stripping surrounding single/double quotes
+ * 2. Stripping surrounding single/double quotes (even nested)
  * 3. Validating UUID format
  * 
  * @param input - Raw UUID string (may contain quotes/whitespace)
@@ -24,16 +24,16 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
  * normalizeUuid('invalid-uuid') 
  * // → ''
  */
-export function normalizeUuid(input: string | undefined | null): string {
-  if (!input) return '';
+export function normalizeUuid(input: unknown): string {
+  if (typeof input !== 'string' || !input) return '';
   
   // Step 1: Trim whitespace
   let cleaned = input.trim();
   
-  // Step 2: Strip surrounding double quotes
+  // Step 2: Strip surrounding double quotes (repeated to handle nesting)
   cleaned = cleaned.replace(/^"+|"+$/g, '');
   
-  // Step 3: Strip surrounding single quotes  
+  // Step 3: Strip surrounding single quotes (repeated to handle nesting)
   cleaned = cleaned.replace(/^'+|'+$/g, '');
   
   // Step 4: Final trim (in case quotes had spaces inside)
@@ -41,7 +41,6 @@ export function normalizeUuid(input: string | undefined | null): string {
   
   // Step 5: Validate UUID format
   if (!UUID_REGEX.test(cleaned)) {
-    console.warn('[normalizeUuid] Invalid UUID format:', { input, cleaned });
     return '';
   }
   
