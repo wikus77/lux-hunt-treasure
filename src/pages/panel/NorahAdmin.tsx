@@ -42,11 +42,13 @@ export default function NorahAdmin() {
               <h1 className="text-3xl font-orbitron font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
                 Norah AI 2.0
               </h1>
-              <p className="text-sm text-muted-foreground font-rajdhani">Intelligent Knowledge Base • ≥200 docs target</p>
+              <p className="text-sm text-muted-foreground font-rajdhani">
+                Baseline: <code className="text-xs bg-muted px-1 rounded">88dfb241</code> • KB: {kpis?.documents || 0} docs • {kpis?.embeddings || 0} emb
+              </p>
             </div>
           </div>
-          <Badge variant="secondary" className="font-orbitron">
-            KB: {kpis?.documents || 0} docs • {kpis?.embeddings || 0} embeddings
+          <Badge variant="outline" className="font-mono text-xs">
+            Stable 2.0 (No 2.1)
           </Badge>
         </div>
 
