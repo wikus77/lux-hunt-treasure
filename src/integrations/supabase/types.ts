@@ -328,40 +328,61 @@ export type Database = {
           body: string | null
           body_md: string | null
           category: string | null
+          content: string | null
           created_at: string | null
+          description: string | null
           doc_type: string | null
           id: string
           locale: string | null
+          metadata: Json | null
+          path: string | null
+          raw_text: string | null
+          source: string | null
           tags: string[] | null
           text: string | null
           title: string
           updated_at: string | null
+          url: string | null
         }
         Insert: {
           body?: string | null
           body_md?: string | null
           category?: string | null
+          content?: string | null
           created_at?: string | null
+          description?: string | null
           doc_type?: string | null
           id?: string
           locale?: string | null
+          metadata?: Json | null
+          path?: string | null
+          raw_text?: string | null
+          source?: string | null
           tags?: string[] | null
           text?: string | null
           title: string
           updated_at?: string | null
+          url?: string | null
         }
         Update: {
           body?: string | null
           body_md?: string | null
           category?: string | null
+          content?: string | null
           created_at?: string | null
+          description?: string | null
           doc_type?: string | null
           id?: string
           locale?: string | null
+          metadata?: Json | null
+          path?: string | null
+          raw_text?: string | null
+          source?: string | null
           tags?: string[] | null
           text?: string | null
           title?: string
           updated_at?: string | null
+          url?: string | null
         }
         Relationships: []
       }
@@ -373,6 +394,7 @@ export type Database = {
           doc_id: string | null
           embedding: string | null
           id: string
+          model: string
         }
         Insert: {
           chunk_idx: number
@@ -381,6 +403,7 @@ export type Database = {
           doc_id?: string | null
           embedding?: string | null
           id?: string
+          model?: string
         }
         Update: {
           chunk_idx?: number
@@ -389,6 +412,7 @@ export type Database = {
           doc_id?: string | null
           embedding?: string | null
           id?: string
+          model?: string
         }
         Relationships: [
           {
@@ -5277,8 +5301,8 @@ export type Database = {
     Views: {
       ai_docs_kpis: {
         Row: {
-          chunks_count: number | null
-          docs_count: number | null
+          documents: number | null
+          embeddings: number | null
           last_embed_at: string | null
         }
         Relationships: []
@@ -6190,6 +6214,18 @@ export type Database = {
       }
       mark_norah_notification_clicked: {
         Args: { p_notification_id: string }
+        Returns: undefined
+      }
+      mirror_get_watermark: {
+        Args: { p_name: string }
+        Returns: string
+      }
+      mirror_insert_notification_logs: {
+        Args: { p_records: Json }
+        Returns: number
+      }
+      mirror_set_watermark: {
+        Args: { p_last_run_at: string; p_name: string }
         Returns: undefined
       }
       normalize_feed_url: {
