@@ -2,27 +2,22 @@
 // Edge Function: rag-search
 // Semantic search over ai_docs using pgvector
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { preflight, json, error } from '../_shared/cors.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+Deno.serve(async (req) => {
+  const pf = preflight(req);
+  if (pf) return pf;
 
   try {
+    if (req.method !== 'POST') {
+      return error(req, 'Only POST allowed', 405);
+    }
+
     const { query, k = 6, embedding } = await req.json();
 
     if (!embedding || !Array.isArray(embedding) || embedding.length !== 1536) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid embedding: must be array of 1536 floats' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return error(req, 'Invalid embedding: must be array of 1536 floats', 400);
     }
 
     const supabaseClient = createClient(
@@ -31,28 +26,22 @@ serve(async (req) => {
     );
 
     // Call RPC function for semantic search
-    const { data, error } = await supabaseClient.rpc('ai_rag_search', {
+    const { data, error: dbError } = await supabaseClient.rpc('ai_rag_search', {
       query_embedding: embedding,
       match_threshold: 0.7,
       match_count: k
     });
 
-    if (error) throw error;
+    if (dbError) throw dbError;
 
-    return new Response(
-      JSON.stringify({ 
-        query, 
-        results: data || [],
-        count: data?.length || 0 
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-  } catch (error) {
-    console.error('[rag-search] Error:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return json(req, { 
+      query, 
+      results: data || [],
+      count: data?.length || 0 
+    });
+  } catch (e: any) {
+    console.error('[rag-search] Error:', e);
+    return error(req, String(e?.message || e), 500);
   }
 });
 

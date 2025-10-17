@@ -1,16 +1,14 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { preflight, json } from "../_shared/cors.ts";
+import { preflight, json, error } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
   const pf = preflight(req);
   if (pf) return pf;
 
-  const origin = req.headers.get("Origin") || "*";
-
   try {
     if (req.method !== "GET") {
-      return json(405, { ok: false, error: "method-not-allowed", message: "Only GET allowed" }, origin);
+      return error(req, "Only GET allowed", 405);
     }
 
     const url = Deno.env.get("SUPABASE_URL");
@@ -18,7 +16,7 @@ Deno.serve(async (req) => {
     
     if (!url || !key) {
       console.error("❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
-      return json(500, { ok: false, error: "missing-server-secrets", message: "Server configuration error" }, origin);
+      return error(req, "Server configuration error", 500);
     }
 
     const admin = createClient(url, key, { auth: { persistSession: false } });
@@ -48,9 +46,9 @@ Deno.serve(async (req) => {
       last_embed_at: last?.created_at ?? "1970-01-01T00:00:00Z",
     };
 
-    return json(200, body, origin);
+    return json(req, body);
   } catch (e: any) {
     console.error("❌ norah-kpis error:", e);
-    return json(500, { ok: false, error: "kpis-internal", message: String(e?.message || e) }, origin);
+    return error(req, String(e?.message || e), 500);
   }
 });
