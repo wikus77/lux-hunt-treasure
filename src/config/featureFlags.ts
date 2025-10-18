@@ -4,4 +4,8 @@
 export const FEATURE_FLAGS = {
   // Push Preflight panel (incomplete, hidden until fully implemented)
   PUSH_PREFLIGHT_ENABLED: false,
+  
+  // New unified push subscribe flow (one-tap activation)
+  // When enabled, toggle uses the same pipeline as Diagnosi
+  NEW_PUSH_SUBSCRIBE_FLOW: false,
 } as const;

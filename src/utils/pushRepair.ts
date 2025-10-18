@@ -1,5 +1,6 @@
-// Guard-safe Push Repair utilities (no VAPID usage here)
-import { enablePush as coreEnablePush } from '@/features/notifications/enablePush';
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Guard-safe Push Repair utilities - now uses unified pipeline
+import { subscribeFlow } from '@/lib/push/subscribeFlow';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -54,9 +55,15 @@ export async function repairPush(): Promise<PushStatus> {
     // anche se fallisce l'unsubscribe, proviamo a ripartire
   }
 
-  // Riabilita tramite il facade (guard-safe)
-  await coreEnablePush();
-  return getPushStatus();
+  // Use unified pipeline (same as Diagnosi)
+  const result = await subscribeFlow();
+
+  return {
+    supported: true,
+    permission: Notification.permission,
+    hasSubscription: result.ok,
+    endpoint: result.endpoint ?? null
+  };
 }
 
 /**
