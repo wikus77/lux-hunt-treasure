@@ -35,7 +35,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - cleanup old caches and claim clients
+// Activate event - cleanup old caches, claim clients, notify update
 self.addEventListener('activate', (event) => {
   console.log('[M1SSION SW] Activating v2...');
   event.waitUntil(
@@ -49,7 +49,14 @@ self.addEventListener('activate', (event) => {
           return caches.delete(name);
         }),
         // Claim all clients immediately
-        self.clients.claim()
+        self.clients.claim(),
+        // Notify all clients about update ready
+        self.clients.matchAll({ type: 'window' }).then(clients => {
+          clients.forEach(client => {
+            console.log('[M1SSION SW] Notifying client about update');
+            client.postMessage({ type: 'SW_UPDATE_READY' });
+          });
+        })
       ]);
     })
   );
