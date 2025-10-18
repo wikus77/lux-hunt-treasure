@@ -1,9 +1,12 @@
-// © 2025 M1SSION™ NIYVORA KFT – Joseph MULÉ
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Bell, BellOff, Smartphone, Monitor } from 'lucide-react';
 import { useUnifiedPush as usePushNotifications } from '@/hooks/useUnifiedPush';
 import { Badge } from '@/components/ui/badge';
+import { subscribeFlow } from '@/lib/push/subscribeFlow';
+import { FEATURE_FLAGS } from '@/config/featureFlags';
+import { toast } from 'sonner';
 
 export const PushNotificationToggle = () => {
   const {
@@ -24,26 +27,39 @@ export const PushNotificationToggle = () => {
 
   const handleToggle = async () => {
     try {
-      console.debug('[M1SSION FCM] Toggle called:', { isSubscribed, permission });
+      console.debug('[M1SSION] Toggle called:', { isSubscribed, permission });
       
       if (!isSubscribed) {
-        // Request permission first if needed
+        // Use new unified pipeline if feature flag is enabled
+        if (FEATURE_FLAGS.NEW_PUSH_SUBSCRIBE_FLOW) {
+          const res = await subscribeFlow();
+          
+          if (res.ok) {
+            toast.success('Notifiche attivate! 🎉');
+          } else if (res.status === 'permission_denied') {
+            toast.warning('Permesso negato. Abilita le notifiche nelle impostazioni di sistema.');
+          } else {
+            toast.error(`Errore attivazione: ${res.error ?? 'sconosciuto'}`);
+          }
+          return;
+        }
+        
+        // Legacy flow: request permission first if needed
         if (permission !== 'granted') {
           const granted = await requestPermission();
           if (!granted) return;
         }
         
-        // Subscribe to notifications using new FCM system
+        // Subscribe using legacy system
         const result = await subscribe();
-        console.debug('[M1SSION FCM] Subscribe result:', result);
+        console.debug('[M1SSION] Subscribe result:', result);
       } else {
-        // Unsubscribe
-        const result = await unsubscribe();
-        console.debug('[M1SSION FCM] Unsubscribe result:', result);
+        // Disable: inform user to use OS settings
+        toast.info('Le notifiche possono essere disattivate dalle Impostazioni del dispositivo.');
       }
     } catch (error: any) {
-      console.error('[M1SSION FCM] Toggle error:', error);
-      // Error handling is done in the hook
+      console.error('[M1SSION] Toggle error:', error);
+      toast.error(`Errore: ${error?.message ?? 'unknown'}`);
     }
   };
 
