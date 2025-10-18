@@ -7,5 +7,5 @@ export const FEATURE_FLAGS = {
   
   // New unified push subscribe flow (one-tap activation)
   // When enabled, toggle uses the same pipeline as Diagnosi
-  NEW_PUSH_SUBSCRIBE_FLOW: false,
+  NEW_PUSH_SUBSCRIBE_FLOW: true,  // ✅ ATTIVO - One-tap push con backend upsert
 } as const;
