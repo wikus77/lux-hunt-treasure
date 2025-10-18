@@ -31,6 +31,7 @@ import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager"
 import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
+import { UpdateBanner } from "./components/sw/UpdateBanner";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -118,6 +119,9 @@ function App() {
         </ProductionSafety>
       </ProductionSafetyWrapper>
       </ErrorBoundary>
+      
+      {/* Service Worker Update Banner - outside router/auth context */}
+      <UpdateBanner />
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { sanitizeHTML } from '@/lib/sanitize/htmlSanitizer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -117,21 +118,28 @@ export const NorahChat: React.FC = () => {
                   <Bot className="w-4 h-4 text-white" />
                 </div>
               )}
-              <div
-                className={`max-w-[80%] p-3 rounded-xl ${
-                  message.role === 'assistant'
-                    ? 'bg-white/5 text-white'
-                    : 'bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white'
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                <span className="text-xs opacity-50 mt-1 block">
-                  {message.timestamp.toLocaleTimeString('it-IT', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </span>
-              </div>
+                <div
+                  className={`max-w-[80%] p-3 rounded-xl ${
+                    message.role === 'assistant'
+                      ? 'bg-white/5 text-white'
+                      : 'bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white'
+                  }`}
+                >
+                  {message.role === 'assistant' ? (
+                    <div 
+                      className="text-sm prose prose-invert prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(message.content) }}
+                    />
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  )}
+                  <span className="text-xs opacity-50 mt-1 block">
+                    {message.timestamp.toLocaleTimeString('it-IT', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
+                </div>
               {message.role === 'user' && (
                 <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
                   <User className="w-4 h-4 text-white" />

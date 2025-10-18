@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useNorahLLM } from '@/intel/norah/useNorahLLM';
+import { sanitizeHTML } from '@/lib/sanitize/htmlSanitizer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -115,7 +116,14 @@ export const NorahChatLLM: React.FC<{ userId: string }> = ({ userId }) => {
                       : 'bg-gradient-to-r from-[#4361ee] to-[#7209b7] text-white'
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  {message.role === 'assistant' ? (
+                    <div 
+                      className="text-sm prose prose-invert prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: sanitizeHTML(message.content) }}
+                    />
+                  ) : (
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  )}
                   <span className="text-xs opacity-50 mt-1 block">
                     {message.timestamp.toLocaleTimeString('it-IT', {
                       hour: '2-digit',
