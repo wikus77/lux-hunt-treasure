@@ -1,17 +1,22 @@
-import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+// Push Center API Helpers - UNIFIED LOGIC (aligned with SendTab pipeline)
 
-// © 2025 Joseph MULÉ – M1SSION™ – Push Center API Helpers
+import { getProjectRef, functionsBaseUrl } from '@/lib/supabase/functionsBase';
 
 const SUPABASE_URL = `https://${getProjectRef()}.supabase.co`;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? '';
 
 export interface PushSendRequest {
-  audience?: 'all' | { user_id: string } | { endpoint: string };
+  audience?: 'all' | 'list' | { user_id: string } | { endpoint: string };
+  filters?: {
+    ids?: string[];
+  };
   payload: {
     title: string;
     body: string;
     url?: string;
     image?: string;
+    data?: any;
   };
 }
 
@@ -35,6 +40,28 @@ export async function sendPushNotification(
 ): Promise<{ status: number; data: PushSendResponse; responseTime: number }> {
   const startTime = performance.now();
 
+  // ✅ UNIFIED LOGIC: Map request to same endpoints as SendTab (Push Center)
+  let endpoint = '';
+  let requestBody: any = { payload: request.payload };
+  
+  if (request.audience === 'all') {
+    // Broadcast to all subscriptions (requires admin token)
+    endpoint = `${functionsBaseUrl}/webpush-send`;
+    requestBody.audience = 'all';
+  } else if (request.audience === 'list' && request.filters?.ids) {
+    // Targeted send to specific user_ids (Push Control Panel / Sender)
+    endpoint = `${functionsBaseUrl}/webpush-targeted-send`;
+    requestBody.user_ids = request.filters.ids;
+  } else if (typeof request.audience === 'object' && 'user_id' in request.audience) {
+    // Single user_id (legacy format support)
+    endpoint = `${functionsBaseUrl}/webpush-targeted-send`;
+    requestBody.user_ids = [request.audience.user_id];
+  } else {
+    // Default: broadcast (fallback)
+    endpoint = `${functionsBaseUrl}/webpush-send`;
+    requestBody.audience = 'all';
+  }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_ANON_KEY,
@@ -46,10 +73,10 @@ export async function sendPushNotification(
     headers['Authorization'] = `Bearer ${options.userJWT}`;
   }
 
-  const response = await fetch(`${functionsBaseUrl}/webpush-send`, {
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers,
-    body: JSON.stringify(request),
+    body: JSON.stringify(requestBody),
   });
 
   const data = await response.json();
