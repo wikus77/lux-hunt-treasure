@@ -1,11 +1,11 @@
-// © 2025 Joseph MULÉ – M1SSION™
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import { Link, useLocation } from "wouter";
 import { Settings, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationManager } from "@/hooks/useNotificationManager";
 import ProfileDropdown from "@/components/profile/ProfileDropdown";
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useEnhancedNavigation } from "@/hooks/useEnhancedNavigation";
 import { useProfileImage } from "@/hooks/useProfileImage";
 import { useUnifiedAuth } from "@/hooks/useUnifiedAuth";
@@ -18,6 +18,7 @@ interface UnifiedHeaderProps {
   profileImage?: string | null;
   leftComponent?: React.ReactNode;
   onClickMail?: () => void;
+  disableScrollHide?: boolean; // Guard: disable scroll-hide listeners on /buzz
 }
 
 // Page title mapping - MISSION text only - BY JOSEPH MULE
@@ -35,9 +36,21 @@ const pageTitles: Record<string, string> = {
 const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   profileImage: propProfileImage,
   leftComponent,
-  onClickMail
+  onClickMail,
+  disableScrollHide = false
 }) => {
   console.log("✅ M1SSION™ UnifiedHeader component rendering");
+  
+  // 🛡️ SINGLE-MOUNT GUARD: Prevent duplicate header instances
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (mountedRef.current) {
+      console.warn('⚠️ UnifiedHeader: Multiple mounts detected, cleaning up duplicates');
+    }
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+  
   const [location] = useLocation();
   const { unreadCount, openNotificationsDrawer } = useNotificationManager();
   const { goBackWithFeedback, canGoBack } = useEnhancedNavigation();
@@ -47,12 +60,18 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
   const [isCapacitor, setIsCapacitor] = useState(false);
   const [isPWA, setIsPWA] = useState(false);
   const isMapRoute = location === '/map' || location.startsWith('/map/');
+  const isBuzzRoute = location === '/buzz';
   const { shouldHideHeader: windowHide } = useScrollDirection(50);
   const [mapHide, setMapHide] = useState(false);
-  const hideHeader = isMapRoute ? mapHide : windowHide;
+  
+  // 🛡️ BUZZ ROUTE GUARD: Disable scroll-hide on /buzz to prevent freeze
+  const hideHeader = isBuzzRoute ? false : (isMapRoute ? mapHide : windowHide);
 
+  // 🛡️ SCROLL-HIDE LISTENERS: Only active on /map route, disabled on /buzz to prevent freeze
   useEffect(() => {
-    if (!isMapRoute) return;
+    // Guard: Skip listener setup on /buzz or if explicitly disabled
+    if (!isMapRoute || disableScrollHide || isBuzzRoute) return;
+    
     const el = document.querySelector('#map-scroll-container') as HTMLElement | null;
     if (!el) return;
 
@@ -96,7 +115,7 @@ const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
         leaflet.removeEventListener('touchmove', onTouchMove as any);
       }
     };
-  }, [isMapRoute, location]);
+  }, [isMapRoute, location, disableScrollHide, isBuzzRoute]);
 
   // Use profile image from hook or fallback to prop
   const currentProfileImage = profileImage || propProfileImage;
