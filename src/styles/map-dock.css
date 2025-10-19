@@ -1,0 +1,135 @@
+/* M1SSION™ Map Dock Styles */
+
+.map-dock {
+  position: absolute;
+  bottom: 24px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: auto;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.map-dock-button {
+  @apply bg-black/70 border border-cyan-500/30 hover:bg-black/90 hover:border-cyan-500/60;
+  @apply text-cyan-400 hover:text-cyan-300;
+  @apply backdrop-blur-md;
+  @apply transition-all duration-200;
+  @apply shadow-lg shadow-black/50;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+.map-dock-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+}
+
+.map-dock-button:active {
+  transform: scale(0.95);
+}
+
+.map-dock-buzz {
+  @apply bg-gradient-to-br from-cyan-500 to-blue-600;
+  @apply border-cyan-400/50 hover:border-cyan-300;
+  @apply text-white;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-dock-buzz::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.5s ease-out;
+}
+
+.map-dock-buzz:hover::before {
+  transform: translate(-50%, -50%) scale(2);
+}
+
+.map-layers-panel {
+  position: absolute;
+  right: calc(100% + 12px);
+  bottom: 0;
+  width: 220px;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 1px solid rgba(0, 255, 255, 0.3);
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 255, 255, 0.2);
+  z-index: 1001;
+  animation: slide-in-right 0.2s ease-out;
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .map-dock-button {
+    transition: none;
+  }
+  
+  .map-dock-button:hover {
+    transform: none;
+  }
+  
+  .map-layers-panel {
+    animation: none;
+  }
+}
+
+/* Mobile Safe Area Adjustments */
+@media (max-width: 640px) {
+  .map-dock {
+    bottom: 80px; /* Above bottom nav */
+    right: 12px;
+  }
+  
+  .map-layers-panel {
+    right: auto;
+    left: 0;
+    bottom: calc(100% + 12px);
+  }
+}
+
+/* Terrain Layer Container */
+.terrain-layer-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.terrain-layer-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
