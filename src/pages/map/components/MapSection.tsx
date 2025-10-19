@@ -3,6 +3,7 @@ import React, { lazy, Suspense } from 'react';
 import MapLoadingFallback from './MapLoadingFallback';
 import LivingMapOverlay from '@/components/living/LivingMapOverlay';
 import MapDock from '@/components/map/MapDock';
+import PortalContainer from '@/components/map/PortalContainer';
 import '@/styles/map-dock.css';
 
 // Lazy load heavy map components
@@ -77,6 +78,12 @@ const MapSection: React.FC<MapSectionProps> = ({
         
         {/* Living Map™ Overlay */}
         <LivingMapOverlay mode="auto" />
+        
+        {/* M1SSION Portal Container - Left Side */}
+        <PortalContainer 
+          portalCount={12}
+          onPortalAction={(type) => console.log('🎯 Portal filter:', type)}
+        />
         
         {/* M1SSION Map Dock - Unified Controls */}
         <MapDock
