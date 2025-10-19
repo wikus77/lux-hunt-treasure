@@ -12,35 +12,35 @@ export interface DockGroup {
   totalCount: number;
 }
 
-// DEV mock data (fallback)
+// DEV mock data (fallback) - centered near Rome (41.9028, 12.4964) for better visibility
 const DEV_DOCK_GROUPS: DockGroup[] = [
   {
     type: 'Portal',
     totalCount: 4,
     items: [
-      { id: 'p1', type: 'Portal', label: 'Alpha Portal', lat: 43.7874, lng: 7.6326, status: 'active', color: '#00E5FF' },
-      { id: 'p2', type: 'Portal', label: 'Beta Portal', lat: 43.7900, lng: 7.6400, status: 'active', color: '#8A2BE2' }
+      { id: 'p1', type: 'Portal', label: 'Alpha Portal', lat: 41.9028, lng: 12.4964, status: 'active', color: '#00E5FF' },
+      { id: 'p2', type: 'Portal', label: 'Beta Portal', lat: 41.9050, lng: 12.5000, status: 'active', color: '#8A2BE2' }
     ]
   },
   {
     type: 'Event',
     totalCount: 3,
     items: [
-      { id: 'e1', type: 'Event', label: 'Rare Find', lat: 43.7850, lng: 7.6350, status: 'active', color: '#24E39E' }
+      { id: 'e1', type: 'Event', label: 'Rare Find', lat: 41.9000, lng: 12.4980, status: 'active', color: '#24E39E' }
     ]
   },
   {
     type: 'Mission',
     totalCount: 2,
     items: [
-      { id: 'm1', type: 'Mission', label: 'Mission Complete', lat: 43.7880, lng: 7.6360, status: 'active' }
+      { id: 'm1', type: 'Mission', label: 'Mission Complete', lat: 41.9030, lng: 12.4970, status: 'active' }
     ]
   },
   {
     type: 'Alert Zone',
     totalCount: 2,
     items: [
-      { id: 'z1', type: 'Alert Zone', label: 'Sector Alpha', lat: 43.7860, lng: 7.6340, color: '#FFB347' }
+      { id: 'z1', type: 'Alert Zone', label: 'Sector Alpha', lat: 41.9010, lng: 12.4990, color: '#FFB347' }
     ]
   }
 ];

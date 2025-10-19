@@ -3,6 +3,7 @@ import type { AgentDTO } from '../adapters/readOnlyData';
 
 interface AgentsLayerProps {
   agents: AgentDTO[];
+  visible?: boolean;
 }
 
 interface ClusterInfo {
@@ -11,7 +12,9 @@ interface ClusterInfo {
   agents: AgentDTO[];
 }
 
-const AgentsLayer: React.FC<AgentsLayerProps> = ({ agents }) => {
+const AgentsLayer: React.FC<AgentsLayerProps> = ({ agents, visible = true }) => {
+  if (!visible) return null;
+  
   // Simple clustering: group agents within 24px radius
   const clusters = useMemo(() => {
     const CLUSTER_THRESHOLD = 0.0005; // ~50m in degrees

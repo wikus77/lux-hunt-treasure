@@ -24,15 +24,27 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
       if (is3DActive && maplibreMapRef.current) {
         try {
           maplibreMapRef.current.easeTo({ pitch: 60, bearing: 25, duration: 0 });
+          console.log('✅ ControlsTopRight - Applied initial 3D state');
         } catch (e) {
           console.warn('⚠️ Initial 3D state failed:', e);
         }
       }
     };
 
+    // Timeout fallback if MAPLIBRE_READY doesn't arrive
+    const timeout = setTimeout(() => {
+      if (!terrainReady) {
+        console.warn('⚠️ MAPLIBRE_READY timeout - 3D may not be available');
+        toast.error('3D non disponibile (MapLibre non pronto)');
+      }
+    }, 3000);
+
     window.addEventListener('MAPLIBRE_READY', handleMapLibreReady as EventListener);
-    return () => window.removeEventListener('MAPLIBRE_READY', handleMapLibreReady as EventListener);
-  }, [is3DActive]);
+    return () => {
+      window.removeEventListener('MAPLIBRE_READY', handleMapLibreReady as EventListener);
+      clearTimeout(timeout);
+    };
+  }, [is3DActive, terrainReady]);
 
   // Toggle 3D with pitch/bearing changes using MapLibre
   const toggle3D = useCallback(() => {

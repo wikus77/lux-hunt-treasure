@@ -193,12 +193,22 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   }, [mapCenter]);
   const lmZoom = mapRef?.current?.getZoom?.() ?? 12;
 
+  // Create explicit tile pane with proper z-index
+  useEffect(() => {
+    if (mapRef.current && !mapRef.current.getPane('tilePane')) {
+      const tilePane = mapRef.current.createPane('tilePane');
+      tilePane.style.zIndex = '200';
+      console.log('✅ MapContainer - Created tilePane with zIndex 200');
+    }
+  }, []);
+
   // M1_FOCUS event listener for Living Map badge focus
   useEffect(() => {
     const handleFocus = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && mapRef.current) {
-        mapRef.current.flyTo([detail.lat, detail.lng], detail.zoom || 15, { duration: 0.6 });
+        const zoom = detail.zoom || Math.max(mapRef.current.getZoom() ?? 12, 14);
+        mapRef.current.flyTo([detail.lat, detail.lng], zoom, { duration: 0.6 });
       }
     };
     window.addEventListener('M1_FOCUS', handleFocus);

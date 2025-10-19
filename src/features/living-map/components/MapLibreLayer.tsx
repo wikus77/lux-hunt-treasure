@@ -116,7 +116,7 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
             window.dispatchEvent(new CustomEvent('MAPLIBRE_READY', { detail: ml }));
             onMapLibreReady?.(ml);
             console.log('✅ MapLibre - MAPLIBRE_READY event dispatched');
-          }, 100);
+          }, 0);
 
         } catch (err) {
           console.error('❌ MapLibre - Terrain setup error:', err);
