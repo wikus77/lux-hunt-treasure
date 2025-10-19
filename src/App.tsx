@@ -32,6 +32,7 @@ import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 import { UpdateBanner } from "./components/sw/UpdateBanner";
+import '@/features/living-map/styles/livingMap.css';
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration

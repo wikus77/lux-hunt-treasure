@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, lazy, Suspense, useMemo } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 // No default location fallback - GPS only
@@ -19,6 +19,8 @@ import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
+
+const LivingMap = lazy(() => import('@/features/living-map'));
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -182,6 +184,13 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     }, 1000);
   };
 
+  // Living Map center/zoom - riusa variabili esistenti
+  const lmCenter = useMemo(() => {
+    if (!mapCenter) return { lat: 41.9028, lng: 12.4964 };
+    return { lat: mapCenter[0], lng: mapCenter[1] };
+  }, [mapCenter]);
+  const lmZoom = mapRef?.current?.getZoom?.() ?? 12;
+
   return (
     <div 
       className="rounded-[24px] overflow-hidden relative w-full" 
@@ -320,8 +329,23 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       {setShowHelpDialog && 
         <HelpDialog open={showHelpDialog || false} setOpen={setShowHelpDialog} />
       }
+
+      {/* === Living Map™ Overlay (non-distruttivo) === */}
+      {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
+        <div
+          aria-hidden
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1001 }}
+        >
+          <Suspense fallback={null}>
+            <LivingMap center={lmCenter} zoom={lmZoom} />
+          </Suspense>
+        </div>
+      )}
+      {/* === /Living Map™ Overlay === */}
     </div>
   );
 };
 
 export default MapContainerComponent;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
