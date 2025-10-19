@@ -5,6 +5,7 @@ interface TooltipCardProps {
   item: DockItemData;
   onFocus: () => void;
   onFilter?: () => void;
+  onRoute?: () => void;
   onClose: () => void;
   filterActive?: boolean;
 }
@@ -12,7 +13,8 @@ interface TooltipCardProps {
 const TooltipCard: React.FC<TooltipCardProps> = ({ 
   item, 
   onFocus, 
-  onFilter, 
+  onFilter,
+  onRoute, 
   onClose,
   filterActive = true
 }) => {
@@ -83,7 +85,7 @@ const TooltipCard: React.FC<TooltipCardProps> = ({
       )}
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           onClick={onFocus}
           className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
@@ -113,6 +115,21 @@ const TooltipCard: React.FC<TooltipCardProps> = ({
             }}
           >
             {filterActive ? 'Hide' : 'Show'}
+          </button>
+        )}
+
+        {onRoute && (
+          <button
+            onClick={onRoute}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
+            style={{
+              background: 'rgba(138, 43, 226, 0.15)',
+              border: '1px solid rgba(138, 43, 226, 0.3)',
+              color: '#8A2BE2',
+              cursor: 'pointer'
+            }}
+          >
+            Route
           </button>
         )}
         

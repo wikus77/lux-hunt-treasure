@@ -6,13 +6,15 @@ import { useDockLayout } from '../hooks/useDockLayout';
 interface DockLeftProps {
   items: DockItemData[];
   onFocus?: (item: DockItemData) => void;
+  onRoute?: (item: DockItemData) => void;
   filters?: Record<string, boolean>;
   onFilterToggle?: (itemId: string) => void;
 }
 
 const DockLeft: React.FC<DockLeftProps> = ({ 
   items, 
-  onFocus, 
+  onFocus,
+  onRoute, 
   filters = {},
   onFilterToggle 
 }) => {
@@ -126,6 +128,7 @@ const DockLeft: React.FC<DockLeftProps> = ({
                   item={item}
                   onFocus={() => handleFocus(item)}
                   onFilter={onFilterToggle ? () => handleFilter(item.id) : undefined}
+                  onRoute={onRoute ? () => onRoute(item) : undefined}
                   onClose={handleClose}
                   filterActive={filterActive}
                 />

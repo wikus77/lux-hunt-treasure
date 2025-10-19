@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import OverlayButton from './OverlayButton';
 import { toast } from 'sonner';
 
@@ -11,129 +11,53 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
     return sessionStorage.getItem('M1_3D_ON') === 'true';
   });
   const [terrainReady, setTerrainReady] = useState(false);
+  const maplibreMapRef = useRef<any>(null);
 
-  // Detect map engine and initialize terrain
+  // Listen for MapLibre ready event
   useEffect(() => {
-    const initTerrain = async () => {
-      const mapContainer = mapContainerRef?.current;
-      if (!mapContainer) return;
+    const handleMapLibreReady = (event: CustomEvent) => {
+      console.log('✅ ControlsTopRight - MapLibre ready');
+      maplibreMapRef.current = event.detail;
+      setTerrainReady(true);
 
-      // Try to get map instance
-      const mapboxMap = (window as any).mapboxMap || (mapContainer as any)._map;
-      const maplibreMap = (window as any).maplibreMap;
-      const map = mapboxMap || maplibreMap;
-
-      if (!map || typeof map.easeTo !== 'function') {
-        console.log('3D: GL map engine not found');
-        return;
-      }
-
-      // Wait for map to be loaded
-      if (!map.loaded()) {
-        map.on('load', () => initTerrain());
-        return;
-      }
-
-      try {
-        const demSource = import.meta.env.VITE_DEM_SOURCE || 'mapbox-dem';
-        
-        // Add DEM source if not exists
-        if (!map.getSource(demSource)) {
-          map.addSource(demSource, {
-            type: 'raster-dem',
-            url: 'mapbox://mapbox.terrain-rgb',
-            tileSize: 512,
-            maxzoom: 14
-          });
+      // Apply initial 3D state if active
+      if (is3DActive && maplibreMapRef.current) {
+        try {
+          maplibreMapRef.current.easeTo({ pitch: 60, bearing: 25, duration: 0 });
+        } catch (e) {
+          console.warn('⚠️ Initial 3D state failed:', e);
         }
-
-        // Set terrain
-        map.setTerrain({ 
-          source: demSource, 
-          exaggeration: 1.4 
-        });
-
-        // Add sky layer
-        if (!map.getLayer('sky')) {
-          map.addLayer({
-            id: 'sky',
-            type: 'sky',
-            paint: {
-              'sky-type': 'atmosphere',
-              'sky-atmosphere-sun-intensity': 10
-            }
-          });
-        }
-
-        // Add 3D buildings
-        const layers = map.getStyle()?.layers || [];
-        const labelLayerId = layers.find((l: any) => l.type === 'symbol' && l.layout?.['text-field'])?.id;
-        
-        if (!map.getLayer('3d-buildings')) {
-          map.addLayer({
-            id: '3d-buildings',
-            source: 'composite',
-            'source-layer': 'building',
-            filter: ['==', 'extrude', 'true'],
-            type: 'fill-extrusion',
-            minzoom: 14,
-            paint: {
-              'fill-extrusion-color': '#0E1726',
-              'fill-extrusion-height': ['get', 'height'],
-              'fill-extrusion-base': ['get', 'min_height'],
-              'fill-extrusion-opacity': 0.85
-            }
-          }, labelLayerId);
-        }
-
-        setTerrainReady(true);
-        console.log('3D terrain initialized successfully');
-      } catch (error) {
-        console.error('3D terrain initialization failed:', error);
-        toast.error('3D terrain unavailable');
       }
     };
 
-    initTerrain();
-  }, [mapContainerRef]);
+    window.addEventListener('MAPLIBRE_READY', handleMapLibreReady as EventListener);
+    return () => window.removeEventListener('MAPLIBRE_READY', handleMapLibreReady as EventListener);
+  }, [is3DActive]);
 
+  // Toggle 3D with pitch/bearing changes using MapLibre
   const toggle3D = useCallback(() => {
-    const mapContainer = mapContainerRef?.current;
-    if (!mapContainer) return;
-
-    const mapboxMap = (window as any).mapboxMap || (mapContainer as any)._map;
-    const maplibreMap = (window as any).maplibreMap;
-    const map = mapboxMap || maplibreMap;
-
-    if (!map || typeof map.easeTo !== 'function') {
-      toast.error('3D requires Mapbox/MapLibre GL');
+    if (!maplibreMapRef.current) {
+      toast.error('3D non disponibile (MapLibre non pronto)');
       return;
     }
 
-    if (!terrainReady) {
-      toast.error('Terrain not ready');
-      return;
-    }
+    try {
+      const newState = !is3DActive;
 
-    const newState = !is3DActive;
-    setIs3DActive(newState);
-    sessionStorage.setItem('M1_3D_ON', String(newState));
+      if (newState) {
+        maplibreMapRef.current.easeTo({ pitch: 60, bearing: 25, duration: 700 });
+      } else {
+        maplibreMapRef.current.easeTo({ pitch: 0, bearing: 0, duration: 700 });
+      }
 
-    // Animate camera
-    if (newState) {
-      map.easeTo({
-        pitch: 60,
-        bearing: 25,
-        duration: 700
-      });
-    } else {
-      map.easeTo({
-        pitch: 0,
-        bearing: 0,
-        duration: 700
-      });
+      setIs3DActive(newState);
+      sessionStorage.setItem('M1_3D_ON', String(newState));
+      console.log(`✅ 3D view ${newState ? 'activated' : 'deactivated'}`);
+    } catch (error) {
+      console.error('❌ 3D toggle failed:', error);
+      toast.error('Errore toggle 3D');
     }
-  }, [is3DActive, terrainReady, mapContainerRef]);
+  }, [is3DActive]);
 
   const TiltIcon = () => (
     <svg
