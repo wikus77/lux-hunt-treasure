@@ -26,7 +26,9 @@ const MapDock = ({
     <div className="map-dock">
       {/* 3D Toggle */}
       <Map3DToggle 
-        onChange={onToggle3D}
+        onChange={(is3D) => {
+          if (onToggle3D) onToggle3D(is3D);
+        }}
         disabled={!terrain3DAvailable}
       />
 
