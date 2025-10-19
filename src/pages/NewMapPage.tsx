@@ -13,6 +13,7 @@ import { useDeepLinkQR } from '@/hooks/useDeepLinkQR';
 
 const NewMapPage = () => {
   const [showHelpDialog, setShowHelpDialog] = useState(false);
+  const [is3D, setIs3D] = useState(false);
   useDeepLinkQR();
   const { updateActivity, endActivity } = useDynamicIsland();
   const { currentMission, updateMissionProgress } = useMissionManager();
@@ -51,6 +52,20 @@ const NewMapPage = () => {
     updateActivity,
   });
 
+  // Handlers for map dock actions
+  const handleToggle3D = (enabled: boolean) => {
+    setIs3D(enabled);
+  };
+
+  const handleFocusLocation = () => {
+    requestLocationPermission();
+  };
+
+  const handleResetView = () => {
+    // Reset view will be handled in MapContainer
+    console.log('🔄 Reset view requested');
+  };
+
   return (
     <MapPageLayout>
       <MapSection
@@ -75,6 +90,9 @@ const NewMapPage = () => {
         toggleAddingSearchArea={toggleAddingSearchArea}
         showHelpDialog={showHelpDialog}
         setShowHelpDialog={setShowHelpDialog}
+        onToggle3D={handleToggle3D}
+        onFocusLocation={handleFocusLocation}
+        onResetView={handleResetView}
       />
       
       <SidebarLayout

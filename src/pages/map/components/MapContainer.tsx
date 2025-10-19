@@ -19,6 +19,7 @@ import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
+import { createTerrainLayer } from '@/lib/terrain/terrainLayer';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -55,6 +56,9 @@ interface MapContainerProps {
   toggleAddingSearchArea?: () => void;
   showHelpDialog?: boolean;
   setShowHelpDialog?: (show: boolean) => void;
+  onToggle3D?: (is3D: boolean) => void;
+  onFocusLocation?: () => void;
+  onResetView?: () => void;
 }
 
 const MapContainerComponent: React.FC<MapContainerProps> = ({
@@ -79,13 +83,18 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   requestLocationPermission = () => {},
   toggleAddingSearchArea = () => {},
   showHelpDialog = false,
-  setShowHelpDialog = () => {}
+  setShowHelpDialog = () => {},
+  onToggle3D,
+  onFocusLocation,
+  onResetView
 }) => {
   const [mapCenter, setMapCenter] = useState<[number, number]>([46.0, 8.0]); // European view
   const geo = useSimpleGeolocation();
   const ipGeo = useIPGeolocation();
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerDivRef = useRef<HTMLDivElement>(null);
+  const [terrainLayer, setTerrainLayer] = useState<ReturnType<typeof createTerrainLayer> | null>(null);
+  const [is3DActive, setIs3DActive] = useState(false);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
   const { currentWeekAreas, loading: areasLoading, reloadAreas } = useBuzzMapLogic();
@@ -202,6 +211,91 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     };
     window.addEventListener('M1_FOCUS', handleFocus);
     return () => window.removeEventListener('M1_FOCUS', handleFocus);
+  }, []);
+
+  // Initialize terrain layer when map is ready
+  useEffect(() => {
+    if (!mapRef.current || terrainLayer) return;
+
+    const demUrl = import.meta.env.VITE_TERRAIN_URL;
+    if (demUrl) {
+      const layer = createTerrainLayer({
+        demUrl,
+        hillshade: true,
+        sky: false
+      });
+      setTerrainLayer(layer);
+    }
+  }, [mapRef.current]);
+
+  // Handle 3D toggle from parent
+  useEffect(() => {
+    if (!terrainLayer || !mapRef.current) return;
+
+    const handle3DToggle = (is3D: boolean) => {
+      setIs3DActive(is3D);
+      
+      if (is3D) {
+        if (!terrainLayer.isReady()) {
+          terrainLayer.addTo(mapRef.current!);
+        }
+        terrainLayer.show();
+        terrainLayer.setPitch(45);
+        
+        // Apply subtle tilt effect to container
+        if (mapContainerDivRef.current) {
+          const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
+          if (mapPane) {
+            (mapPane as HTMLElement).style.transform = 'perspective(1200px) rotateX(5deg)';
+          }
+        }
+      } else {
+        terrainLayer.hide();
+        terrainLayer.setPitch(0);
+        
+        // Remove tilt
+        if (mapContainerDivRef.current) {
+          const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
+          if (mapPane) {
+            (mapPane as HTMLElement).style.transform = '';
+          }
+        }
+      }
+    };
+
+    if (onToggle3D) {
+      onToggle3D(is3DActive);
+    }
+  }, [terrainLayer, onToggle3D, is3DActive]);
+
+  // Handle focus location from dock
+  const handleFocusLocation = () => {
+    const coords = geo.coords || ipGeo.coords;
+    if (coords && mapRef.current) {
+      mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 });
+    } else {
+      requestLocationPermission();
+    }
+  };
+
+  // Handle reset view from dock
+  const handleResetView = () => {
+    if (mapRef.current) {
+      mapRef.current.setView([54.5260, 15.2551], 4);
+    }
+  };
+
+  // Expose handlers to parent via callback
+  useEffect(() => {
+    if (onFocusLocation) {
+      onFocusLocation();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (onResetView) {
+      onResetView();
+    }
   }, []);
 
   return (

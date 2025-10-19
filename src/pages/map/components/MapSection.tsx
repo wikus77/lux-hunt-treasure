@@ -2,7 +2,8 @@
 import React, { lazy, Suspense } from 'react';
 import MapLoadingFallback from './MapLoadingFallback';
 import LivingMapOverlay from '@/components/living/LivingMapOverlay';
-import PerspectiveToggle from '@/components/living/PerspectiveToggle';
+import MapDock from '@/components/map/MapDock';
+import '@/styles/map-dock.css';
 
 // Lazy load heavy map components
 const MapContainer = lazy(() => import('./MapContainer'));
@@ -29,6 +30,9 @@ interface MapSectionProps {
   toggleAddingSearchArea: () => void;
   showHelpDialog: boolean;
   setShowHelpDialog: (show: boolean) => void;
+  onToggle3D?: (is3D: boolean) => void;
+  onFocusLocation?: () => void;
+  onResetView?: () => void;
 }
 
 const MapSection: React.FC<MapSectionProps> = ({
@@ -53,6 +57,9 @@ const MapSection: React.FC<MapSectionProps> = ({
   toggleAddingSearchArea,
   showHelpDialog,
   setShowHelpDialog,
+  onToggle3D,
+  onFocusLocation,
+  onResetView,
 }) => {
   return (
     <div className="m1ssion-glass-card p-4 sm:p-6 mb-6" style={{ marginTop: "20px" }}>
@@ -71,10 +78,14 @@ const MapSection: React.FC<MapSectionProps> = ({
         {/* Living Map™ Overlay */}
         <LivingMapOverlay mode="auto" />
         
-        {/* 3D Perspective Toggle */}
-        <div className="absolute top-4 right-4 z-[1000] pointer-events-auto">
-          <PerspectiveToggle />
-        </div>
+        {/* M1SSION Map Dock - Unified Controls */}
+        <MapDock
+          onToggle3D={onToggle3D}
+          onFocus={onFocusLocation}
+          onReset={onResetView}
+          onBuzz={handleBuzz}
+          terrain3DAvailable={!!import.meta.env.VITE_TERRAIN_URL}
+        />
         
         <Suspense fallback={<MapLoadingFallback />}>
           <MapContainer
