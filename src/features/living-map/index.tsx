@@ -1,8 +1,5 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-
-import React, { Suspense, lazy, useMemo, useState, useCallback } from 'react';
+import React, { Suspense, lazy, useMemo, useRef, useCallback } from 'react';
 import { useLiveLayers } from './hooks/useLiveLayers';
-import { lmEnabled } from './flags';
 import './styles/livingMap.css';
 
 // Lazy load components for performance
@@ -14,8 +11,7 @@ const ControlZonesLayer = lazy(() => import('./components/ControlZonesLayer'));
 const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
-const ControlsTopRight = lazy(() => import('./components/ControlsTopRight'));
-const DebugPanel = lazy(() => import('./debug/DebugPanel'));
+const Toggle3D = lazy(() => import('./components/Toggle3D'));
 
 interface LivingMapProps {
   center?: { lat: number; lng: number };
@@ -24,13 +20,10 @@ interface LivingMapProps {
 }
 
 const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) => {
-  // Feature flag check (robust with fallbacks)
-  const enabled = lmEnabled();
+  // Feature flag check
+  const enabled = import.meta.env.VITE_ENABLE_LIVING_MAP !== 'false';
 
   const { portals, events, agents, zones, loading } = useLiveLayers(enabled);
-  
-  // Layer filters state
-  const [filters, setFilters] = useState<Record<string, boolean>>({});
 
   // Derive dock items from live data
   const dockItems = useMemo(() => {
@@ -87,19 +80,8 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
       detail: { lat: item.lat, lng: item.lng, zoom: zoom || 15 }
     }));
     
-    console.log('[Living Map] Focus on:', item.label, 'at', item.lat, item.lng);
+    console.log('Focus on:', item.label, 'at', item.lat, item.lng);
   }, [zoom]);
-
-  // Route handler - open external navigation (NOT passed to DockLeft, handled internally)
-  // DockLeft now handles routing internally
-
-  // Filter toggle handler
-  const handleFilterToggle = useCallback((itemId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [itemId]: !(prev[itemId] ?? true)
-    }));
-  }, []);
 
   if (!enabled) {
     return null;
@@ -122,59 +104,44 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
   }
 
   return (
-    <>
-      {/* HUD Header - fuori dall'overlay non interattivo */}
+    <div
+      className="absolute inset-0 pointer-events-none"
+      style={{ zIndex: 999 }}
+    >
       <Suspense fallback={null}>
-        <div style={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 1002, pointerEvents: 'none' }}>
-          <MapHUDHeader center={center} zoom={zoom} />
-        </div>
-      </Suspense>
+        {/* HUD Header */}
+        <MapHUDHeader center={center} zoom={zoom} />
 
-      {/* Radar sweep overlay - non interattivo */}
-      <Suspense fallback={null}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 998, pointerEvents: 'none' }}>
-          <RadarOverlay center={center || { lat: 43.7874, lng: 7.6326 }} />
-        </div>
-      </Suspense>
+        {/* Radar sweep overlay */}
+        <RadarOverlay center={center || { lat: 43.7874, lng: 7.6326 }} />
 
-      {/* Data layers - non interattivi, FILTRABILI tramite visible prop */}
-      <Suspense fallback={null}>
-        <div style={{ position: 'absolute', inset: 0, zIndex: 999, pointerEvents: 'none' }}>
-          <PortalsLayer portals={portals} visible={filters['portals'] !== false} />
-          <EventsLayer events={events} visible={filters['events'] !== false} />
-          <AgentsLayer agents={agents} visible={filters['agents'] !== false} />
-          <ControlZonesLayer zones={zones} visible={filters['zones'] !== false} />
-        </div>
-      </Suspense>
+        {/* Data layers */}
+        <PortalsLayer portals={portals} />
+        <EventsLayer events={events} />
+        <AgentsLayer agents={agents} />
+        <ControlZonesLayer zones={zones} />
 
-      {/* Dock Left - INTERATTIVO con azioni reali */}
-      <Suspense fallback={null}>
-        <DockLeft 
-          items={dockItems}
-          onFocus={handleFocus}
-          filters={filters}
-          onFilterToggle={handleFilterToggle}
-        />
-      </Suspense>
+        {/* Dock Left - Badge pills */}
+        <DockLeft items={dockItems} onFocus={handleFocus} />
 
-      {/* Top-right controls - INTERATTIVI */}
-      <Suspense fallback={null}>
-        <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 12, zIndex: 1003 }}>
+        {/* Top-right HUD controls */}
+        <div
+          className="absolute top-4 right-4 flex items-start gap-3"
+          style={{ zIndex: 1000 }}
+        >
+          {/* Legend */}
           <LegendHUD
             portalsCount={portals.length}
             eventsCount={events.length}
             agentsCount={agents.length}
             zonesCount={zones.length}
           />
-          <ControlsTopRight mapContainerRef={mapContainerRef} />
+
+          {/* 3D Toggle */}
+          <Toggle3D mapContainerRef={mapContainerRef} />
         </div>
       </Suspense>
-
-      {/* Debug Panel - shown only if lmDebug() returns true */}
-      <Suspense fallback={null}>
-        <DebugPanel />
-      </Suspense>
-    </>
+    </div>
   );
 };
 

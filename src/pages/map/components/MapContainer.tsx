@@ -1,4 +1,3 @@
-// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useRef, lazy, Suspense, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
@@ -20,10 +19,8 @@ import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
-import { lmEnabled } from '@/features/living-map/flags';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
-const MapLibreLayer = lazy(() => import('@/features/living-map/components/MapLibreLayer'));
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -195,22 +192,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   }, [mapCenter]);
   const lmZoom = mapRef?.current?.getZoom?.() ?? 12;
 
-  // Create explicit tile pane with proper z-index
-  useEffect(() => {
-    if (mapRef.current && !mapRef.current.getPane('tilePane')) {
-      const tilePane = mapRef.current.createPane('tilePane');
-      tilePane.style.zIndex = '200';
-      console.log('✅ MapContainer - Created tilePane with zIndex 200');
-    }
-  }, []);
-
   // M1_FOCUS event listener for Living Map badge focus
   useEffect(() => {
     const handleFocus = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail && mapRef.current) {
-        const zoom = detail.zoom || Math.max(mapRef.current.getZoom() ?? 12, 14);
-        mapRef.current.flyTo([detail.lat, detail.lng], zoom, { duration: 0.6 });
+        mapRef.current.flyTo([detail.lat, detail.lng], detail.zoom || 15, { duration: 0.6 });
       }
     };
     window.addEventListener('M1_FOCUS', handleFocus);
@@ -260,19 +247,17 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           addNewPoint={handleAddNewPointCallback}
         />
         
-        {/* SINGLE Base TileLayer - dark style with labels */}
+        {/* Balanced tone TileLayer - not too dark, not too light */}
         <TileLayer
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-          pane="tilePane"
         />
-        
-        {/* MapLibre GL Layer for 3D terrain - separate pane above tiles */}
-        {lmEnabled() && (
-          <Suspense fallback={null}>
-            <MapLibreLayer />
-          </Suspense>
-        )}
+
+        {/* Add labels layer separately for better visibility and control */}
+        <TileLayer
+          attribution='&copy; CartoDB'
+          url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
+        />
         
         {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
         <BuzzMapAreas areas={currentWeekAreas} />
@@ -359,13 +344,18 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         <HelpDialog open={showHelpDialog || false} setOpen={setShowHelpDialog} />
       }
 
-      {/* === Living Map™ Overlay (robust flag check) === */}
-      {lmEnabled() && (
-        <Suspense fallback={null}>
-          <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
-        </Suspense>
+      {/* === Living Map™ Overlay (non-distruttivo) === */}
+      {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
+        <div
+          aria-hidden
+          style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1001 }}
+        >
+          <Suspense fallback={null}>
+            <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
+          </Suspense>
+        </div>
       )}
-      {/* === /Living Map™ === */}
+      {/* === /Living Map™ Overlay === */}
     </div>
   );
 };

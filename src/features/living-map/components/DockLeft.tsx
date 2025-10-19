@@ -1,71 +1,69 @@
-import React, { useState, useRef, useEffect } from 'react';
-import DockItem, { DockItemData } from './DockItem';
-import TooltipCard from './TooltipCard';
-import { useDockLayout } from '../hooks/useDockLayout';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import OverlayButton from './OverlayButton';
 
-interface DockLeftProps {
-  items: DockItemData[];
-  onFocus?: (item: DockItemData) => void;
-  onRoute?: (item: DockItemData) => void;
-  filters?: Record<string, boolean>;
-  onFilterToggle?: (itemId: string) => void;
+export interface DockItem {
+  id: string;
+  type: 'Portal' | 'Event' | 'Alert Zone';
+  label: string;
+  lat: number;
+  lng: number;
+  status?: 'active' | 'inactive' | 'pending';
+  color?: string;
 }
 
-const DockLeft: React.FC<DockLeftProps> = ({ 
-  items, 
-  onFocus,
-  onRoute, 
-  filters = {},
-  onFilterToggle 
-}) => {
+interface DockLeftProps {
+  items: DockItem[];
+  onFocus?: (item: DockItem) => void;
+}
+
+interface BadgePosition {
+  id: string;
+  top: number;
+}
+
+const DockLeft: React.FC<DockLeftProps> = ({ items, onFocus }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tooltipId, setTooltipId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use layout hook for positioning
-  const positions = useDockLayout(items.map(i => i.id), {
-    itemHeight: 36,
-    gap: 10,
-    maxIterations: 6
-  });
+  // Anti-overlap collision detection
+  const positions = useMemo(() => {
+    const BADGE_HEIGHT = 32;
+    const GAP = 12;
+    const MAX_ITERATIONS = 6;
+    
+    const result: BadgePosition[] = [];
+    
+    items.forEach((item, index) => {
+      let top = 88 + index * (BADGE_HEIGHT + GAP);
+      let iterations = 0;
+      
+      // Check for overlap and nudge down if needed
+      while (iterations < MAX_ITERATIONS) {
+        const overlaps = result.some(pos => Math.abs(pos.top - top) < BADGE_HEIGHT);
+        if (!overlaps) break;
+        top += 8;
+        iterations++;
+      }
+      
+      result.push({ id: item.id, top });
+    });
+    
+    return result;
+  }, [items]);
 
-  const handleItemClick = (item: DockItemData) => {
+  const handleBadgeClick = (item: DockItem) => {
     if (tooltipId === item.id) {
       setTooltipId(null);
-      setActiveId(null);
     } else {
       setTooltipId(item.id);
       setActiveId(item.id);
     }
   };
 
-  const handleFocus = (item: DockItemData) => {
-    // Dispatch custom event for map to handle focus/zoom
-    window.dispatchEvent(new CustomEvent('M1_FOCUS', {
-      detail: { lat: item.lat, lng: item.lng, zoom: 15 }
-    }));
-    console.log('🎯 Dock - Focus on:', item.label, 'at', item.lat, item.lng);
+  const handleFocus = (item: DockItem) => {
     onFocus?.(item);
     setTooltipId(null);
-    setActiveId(null);
-  };
-
-  const handleFilter = (itemId: string) => {
-    onFilterToggle?.(itemId);
-    console.log('🔍 Dock - Filter toggled for:', itemId);
-  };
-
-  const handleRoute = (item: DockItemData) => {
-    // Open native navigation (Apple Maps on iOS, Google Maps elsewhere)
-    const { lat, lng } = item;
-    const url = /iPhone|iPad|iPod/.test(navigator.userAgent)
-      ? `http://maps.apple.com/?daddr=${lat},${lng}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, '_blank');
-    console.log('🗺️ Dock - Route opened for:', item.label);
-    onRoute?.(item);
-    setTooltipId(null);
-    setActiveId(null);
   };
 
   const handleClose = () => {
@@ -95,68 +93,109 @@ const DockLeft: React.FC<DockLeftProps> = ({
     }
   }, [tooltipId]);
 
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'Portal': return 'var(--living-map-neon-primary)';
+      case 'Event': return '#24E39E';
+      case 'Alert Zone': return '#FFB347';
+      default: return 'var(--living-map-neon-secondary)';
+    }
+  };
+
   return (
-    <div 
-      ref={containerRef} 
-      id="m1-dock"
-      style={{ 
-        position: 'absolute', 
-        left: 12, 
-        top: 92, 
-        width: 196,
-        maxHeight: 'calc(100vh - 160px)',
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        zIndex: 1002,
-        pointerEvents: 'none',
-        // Gradient fade
-        maskImage: 'linear-gradient(to bottom, transparent 0, black 18px, black calc(100% - 18px), transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 18px, black calc(100% - 18px), transparent 100%)'
-      }}
-      className="scrollbar-hide"
-    >
-      <div style={{ position: 'relative', paddingBottom: 20 }}>
-        {items.map((item) => {
-          const position = positions.find(p => p.id === item.id);
-          if (!position) return null;
+    <div ref={containerRef} style={{ position: 'absolute', left: 12, top: 0, zIndex: 1000 }}>
+      {items.map((item, index) => {
+        const position = positions.find(p => p.id === item.id);
+        if (!position) return null;
 
-          const isActive = activeId === item.id;
-          const showTooltip = tooltipId === item.id;
-          const filterActive = filters[item.id] !== false;
+        const isActive = activeId === item.id;
+        const showTooltip = tooltipId === item.id;
 
-          return (
-            <div
-              key={item.id}
-              style={{
-                position: 'absolute',
-                top: position.top,
-                left: 0,
-                width: '100%',
-                transition: 'all 0.3s ease',
-                pointerEvents: 'auto'
-              }}
-            >
-              <DockItem
-                item={item}
-                active={isActive}
-                disabled={!filterActive}
-                onClick={() => handleItemClick(item)}
-              />
+        return (
+          <div
+            key={item.id}
+            style={{
+              position: 'absolute',
+              top: position.top,
+              left: 0,
+              transition: 'all 0.3s ease'
+            }}
+          >
+            {/* Badge */}
+            <OverlayButton
+              label={item.label}
+              active={isActive}
+              onClick={() => handleBadgeClick(item)}
+              className="relative"
+            />
 
-              {showTooltip && (
-                <TooltipCard
-                  item={item}
-                  onFocus={() => handleFocus(item)}
-                  onFilter={onFilterToggle ? () => handleFilter(item.id) : undefined}
-                  onRoute={() => handleRoute(item)}
-                  onClose={handleClose}
-                  filterActive={filterActive}
-                />
-              )}
-            </div>
-          );
-        })}
-      </div>
+            {/* Tooltip */}
+            {showTooltip && (
+              <div
+                className="living-hud-glass absolute left-0 bottom-full mb-2 p-3 pointer-events-auto animate-scale-in"
+                style={{
+                  minWidth: 200,
+                  zIndex: 1001,
+                  color: 'var(--living-map-text-primary)'
+                }}
+              >
+                {/* Title */}
+                <div
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    marginBottom: 4,
+                    color: getTypeColor(item.type)
+                  }}
+                >
+                  {item.label}
+                </div>
+
+                {/* Type */}
+                <div
+                  style={{
+                    fontSize: '11px',
+                    color: 'var(--living-map-text-secondary)',
+                    marginBottom: 12,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  {item.type}
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleFocus(item)}
+                    className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: 'rgba(0, 229, 255, 0.15)',
+                      border: '1px solid rgba(0, 229, 255, 0.3)',
+                      color: 'var(--living-map-neon-primary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Focus
+                  </button>
+                  <button
+                    onClick={handleClose}
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'var(--living-map-text-secondary)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 };
