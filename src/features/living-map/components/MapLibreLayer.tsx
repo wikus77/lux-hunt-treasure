@@ -2,20 +2,26 @@ import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import maplibregl from 'maplibre-gl';
-import '@maplibre/maplibre-gl-leaflet';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// FIX: export globale per il plugin Leaflet
-if (!(window as any).maplibregl) (window as any).maplibregl = maplibregl;
-if (typeof (L as any).maplibreGL !== 'function') {
-  console.log('⚠️ Caricamento manuale plugin MapLibreLeaflet...');
-  try {
-    require('@maplibre/maplibre-gl-leaflet');
-    console.log('✅ Plugin MapLibreLeaflet caricato manualmente');
-  } catch (e) {
-    console.error('❌ ERRORE: plugin MapLibreLeaflet non trovato', e);
-  }
+// FIX: Ensure maplibregl is globally available BEFORE loading the plugin
+if (!(window as any).maplibregl) {
+  (window as any).maplibregl = maplibregl;
+  console.log('✅ maplibregl assigned to window');
 }
+
+// Dynamic import of the Leaflet plugin to ensure proper initialization
+let pluginLoaded = false;
+const loadMapLibrePlugin = async () => {
+  if (pluginLoaded) return;
+  try {
+    await import('@maplibre/maplibre-gl-leaflet');
+    pluginLoaded = true;
+    console.log('✅ MapLibreLeaflet plugin loaded');
+  } catch (e) {
+    console.error('❌ Failed to load MapLibreLeaflet plugin:', e);
+  }
+};
 
 interface MapLibreLayerProps {
   onMapLibreReady?: (map: any) => void;
@@ -28,27 +34,25 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
     if (!leafletMap) return;
 
     console.log('🌍 MapLibreLayer boot...');
-    console.log('🌍 MapLibre - Initializing 3D layer...');
-
+    
     let glLayer: any = null;
+    let cancelled = false;
 
-    try {
-      // Ensure maplibregl is globally available for plugin
-      if (!(window as any).maplibregl) {
-        try {
-          (window as any).maplibregl = maplibregl;
-          console.log('✅ MapLibre - Assigned maplibregl to window');
-        } catch (e) {
-          console.error('❌ maplibregl import/assignment failed', e);
+    const initMapLibre = async () => {
+      try {
+        console.log('🌍 MapLibre - Initializing 3D layer...');
+        
+        // Load the plugin dynamically
+        await loadMapLibrePlugin();
+
+        if (cancelled) return;
+
+        // Check if plugin is available
+        if (typeof (L as any).maplibreGL !== 'function') {
+          console.error('❌ L.maplibreGL not available - plugin not loaded');
+          return;
         }
-      }
-
-      // Check if plugin is available
-      if (typeof (L as any).maplibreGL !== 'function') {
-        console.error('❌ L.maplibreGL not available - plugin not loaded');
-        return;
-      }
-      console.log('✅ L.maplibreGL plugin available');
+        console.log('✅ L.maplibreGL plugin available');
 
       // Create dedicated pane for MapLibre layer (above tiles, below markers)
       const glPane = leafletMap.createPane('glPane');
@@ -144,12 +148,16 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
 
       ml.on('error', (e: any) => console.error('❌ MapLibre error:', e));
 
-    } catch (err) {
-      console.error('❌ MapLibre - Init error:', err);
-    }
+      } catch (err) {
+        console.error('❌ MapLibre - Init error:', err);
+      }
+    };
+
+    initMapLibre();
 
     // Cleanup
     return () => {
+      cancelled = true;
       if (glLayer && leafletMap) {
         try {
           leafletMap.removeLayer(glLayer);
