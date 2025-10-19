@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useMemo, useRef, useCallback } from 'react';
 import { useLiveLayers } from './hooks/useLiveLayers';
 import './styles/livingMap.css';
 
@@ -10,17 +10,78 @@ const AgentsLayer = lazy(() => import('./components/AgentsLayer'));
 const ControlZonesLayer = lazy(() => import('./components/ControlZonesLayer'));
 const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
+const DockLeft = lazy(() => import('./components/DockLeft'));
+const Toggle3D = lazy(() => import('./components/Toggle3D'));
 
 interface LivingMapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
+  mapContainerRef?: React.RefObject<HTMLDivElement>;
 }
 
-const LivingMap: React.FC<LivingMapProps> = ({ center, zoom }) => {
+const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) => {
   // Feature flag check
   const enabled = import.meta.env.VITE_ENABLE_LIVING_MAP !== 'false';
 
   const { portals, events, agents, zones, loading } = useLiveLayers(enabled);
+
+  // Derive dock items from live data
+  const dockItems = useMemo(() => {
+    const items: any[] = [];
+    
+    // Add portals
+    portals.forEach(p => {
+      items.push({
+        id: p.id,
+        type: 'Portal' as const,
+        label: p.name,
+        lat: p.lat,
+        lng: p.lng,
+        status: p.status,
+        color: p.status === 'active' ? '#00E5FF' : '#8A2BE2'
+      });
+    });
+    
+    // Add events
+    events.forEach(e => {
+      items.push({
+        id: e.id,
+        type: 'Event' as const,
+        label: e.title,
+        lat: e.lat,
+        lng: e.lng,
+        color: e.type === 'rare' ? '#00E5FF' : e.type === 'success' ? '#24E39E' : '#FFB347'
+      });
+    });
+    
+    // Add zones as Alert Zones
+    zones.forEach(z => {
+      const center = z.polygon.reduce(
+        (acc, [lat, lng]) => ({ lat: acc.lat + lat / z.polygon.length, lng: acc.lng + lng / z.polygon.length }),
+        { lat: 0, lng: 0 }
+      );
+      items.push({
+        id: z.id,
+        type: 'Alert Zone' as const,
+        label: z.label,
+        lat: center.lat,
+        lng: center.lng,
+        color: z.color
+      });
+    });
+    
+    return items;
+  }, [portals, events, zones]);
+
+  // Focus handler - only modifies view, not markers
+  const handleFocus = useCallback((item: any) => {
+    // Emit custom event for map to handle
+    window.dispatchEvent(new CustomEvent('M1_FOCUS', {
+      detail: { lat: item.lat, lng: item.lng, zoom: zoom || 15 }
+    }));
+    
+    console.log('Focus on:', item.label, 'at', item.lat, item.lng);
+  }, [zoom]);
 
   if (!enabled) {
     return null;
@@ -60,13 +121,25 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom }) => {
         <AgentsLayer agents={agents} />
         <ControlZonesLayer zones={zones} />
 
-        {/* Legend */}
-        <LegendHUD
-          portalsCount={portals.length}
-          eventsCount={events.length}
-          agentsCount={agents.length}
-          zonesCount={zones.length}
-        />
+        {/* Dock Left - Badge pills */}
+        <DockLeft items={dockItems} onFocus={handleFocus} />
+
+        {/* Top-right HUD controls */}
+        <div
+          className="absolute top-4 right-4 flex items-start gap-3"
+          style={{ zIndex: 1000 }}
+        >
+          {/* Legend */}
+          <LegendHUD
+            portalsCount={portals.length}
+            eventsCount={events.length}
+            agentsCount={agents.length}
+            zonesCount={zones.length}
+          />
+
+          {/* 3D Toggle */}
+          <Toggle3D mapContainerRef={mapContainerRef} />
+        </div>
       </Suspense>
     </div>
   );
