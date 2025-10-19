@@ -57,8 +57,8 @@ const MapDock = ({
         <RotateCcw className="w-5 h-5" />
       </Button>
 
-      {/* Buzz CTA */}
-      <Button
+      {/* P0 FIX: REMOVED - BUZZ solo in BuzzMapButtonSecure centrale */}
+      {/* <Button
         variant="default"
         size="sm"
         onClick={onBuzz}
@@ -66,7 +66,7 @@ const MapDock = ({
         title="Attiva BUZZ"
       >
         <Zap className="w-5 h-5" />
-      </Button>
+      </Button> */}
     </div>
   );
 };
