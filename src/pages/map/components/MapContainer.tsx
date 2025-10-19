@@ -242,30 +242,25 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       >
         <MapInitializer onMapReady={handleMapReadyCallback} />
         
-        {/* MapLibre GL Layer for 3D terrain */}
-        {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
-          <Suspense fallback={null}>
-            <MapLibreLayer />
-          </Suspense>
-        )}
-        
         <MapController 
           isAddingPoint={isAddingPoint}
           setIsAddingPoint={setIsAddingPoint}
           addNewPoint={handleAddNewPointCallback}
         />
         
-        {/* Balanced tone TileLayer - not too dark, not too light */}
+        {/* SINGLE Base TileLayer - dark style with labels */}
         <TileLayer
           attribution='&copy; CartoDB'
           url='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+          pane="tilePane"
         />
-
-        {/* Add labels layer separately for better visibility and control */}
-        <TileLayer
-          attribution='&copy; CartoDB'
-          url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
-        />
+        
+        {/* MapLibre GL Layer for 3D terrain - separate pane above tiles */}
+        {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
+          <Suspense fallback={null}>
+            <MapLibreLayer />
+          </Suspense>
+        )}
         
         {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
         <BuzzMapAreas areas={currentWeekAreas} />
