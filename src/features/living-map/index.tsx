@@ -90,15 +90,8 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
     console.log('[Living Map] Focus on:', item.label, 'at', item.lat, item.lng);
   }, [zoom]);
 
-  // Route handler - open external navigation
-  const handleRoute = useCallback((item: any) => {
-    const { lat, lng } = item;
-    const url = /iPhone|iPad|iPod/.test(navigator.userAgent)
-      ? `http://maps.apple.com/?daddr=${lat},${lng}`
-      : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, '_blank');
-    console.log('[Living Map] Route to:', item.label);
-  }, []);
+  // Route handler - open external navigation (NOT passed to DockLeft, handled internally)
+  // DockLeft now handles routing internally
 
   // Filter toggle handler
   const handleFilterToggle = useCallback((itemId: string) => {
@@ -154,12 +147,11 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
         </div>
       </Suspense>
 
-      {/* Dock Left - INTERATTIVO */}
+      {/* Dock Left - INTERATTIVO con azioni reali */}
       <Suspense fallback={null}>
         <DockLeft 
           items={dockItems}
           onFocus={handleFocus}
-          onRoute={handleRoute}
           filters={filters}
           onFilterToggle={handleFilterToggle}
         />

@@ -63,11 +63,12 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
         console.log('✅ MapLibre - Created glPane with zIndex 350');
       }
 
-      // Create MapLibre GL layer
+      // Create MapLibre GL layer with proper terrain style
       glLayer = (L as any).maplibreGL({
         style: import.meta.env.VITE_MAPLIBRE_STYLE || 'https://demotiles.maplibre.org/style.json',
         interactive: false,
-        pane: 'glPane'
+        pane: 'glPane',
+        attribution: '© MapLibre & OSM'
       }).addTo(leafletMap);
 
       // Get MapLibre map instance
@@ -77,19 +78,22 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
         console.log('✅ MapLibre - Style loaded');
 
         try {
-          // Add DEM source
-          const terrainSource = import.meta.env.VITE_TERRAIN_SOURCE || 'terrain';
+          // Add DEM terrain source
+          const terrainSource = 'terrain';
           const terrainUrl = import.meta.env.VITE_TERRAIN_URL || 'https://demotiles.maplibre.org/terrain-tiles/{z}/{x}/{y}.png';
 
-          ml.addSource(terrainSource, {
-            type: 'raster-dem',
-            tiles: [terrainUrl],
-            tileSize: 512,
-            maxzoom: 14,
-          });
+          if (!ml.getSource(terrainSource)) {
+            ml.addSource(terrainSource, {
+              type: 'raster-dem',
+              tiles: [terrainUrl],
+              tileSize: 512,
+              maxzoom: 14
+            });
+            console.log('✅ MapLibre - Terrain source added');
+          }
 
           ml.setTerrain({ source: terrainSource, exaggeration: 1.4 });
-          console.log('✅ MapLibre - Terrain enabled');
+          console.log('✅ MapLibre - Terrain enabled with exaggeration 1.4');
 
           // Add sky
           ml.addLayer({

@@ -16,7 +16,7 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
   // Listen for MapLibre ready event
   useEffect(() => {
     const handleMapLibreReady = (event: CustomEvent) => {
-      console.log('✅ ControlsTopRight - MapLibre ready');
+      console.log('✅ ControlsTopRight - MapLibre ready, map instance:', event.detail);
       maplibreMapRef.current = event.detail;
       setTerrainReady(true);
 
@@ -24,7 +24,7 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
       if (is3DActive && maplibreMapRef.current) {
         try {
           maplibreMapRef.current.easeTo({ pitch: 60, bearing: 25, duration: 0 });
-          console.log('✅ ControlsTopRight - Applied initial 3D state');
+          console.log('✅ ControlsTopRight - Applied initial 3D state (pitch: 60, bearing: 25)');
         } catch (e) {
           console.warn('⚠️ Initial 3D state failed:', e);
         }
@@ -34,10 +34,10 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
     // Timeout fallback if MAPLIBRE_READY doesn't arrive
     const timeout = setTimeout(() => {
       if (!terrainReady) {
-        console.warn('⚠️ MAPLIBRE_READY timeout - 3D may not be available');
-        toast.error('3D non disponibile (MapLibre non pronto)');
+        console.warn('⚠️ MAPLIBRE_READY timeout - 3D controls will be disabled');
+        toast.error('3D non disponibile (MapLibre non pronto)', { duration: 2000 });
       }
-    }, 3000);
+    }, 5000);
 
     window.addEventListener('MAPLIBRE_READY', handleMapLibreReady as EventListener);
     return () => {
@@ -49,7 +49,8 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
   // Toggle 3D with pitch/bearing changes using MapLibre
   const toggle3D = useCallback(() => {
     if (!maplibreMapRef.current) {
-      toast.error('3D non disponibile (MapLibre non pronto)');
+      console.warn('⚠️ 3D toggle attempted but MapLibre not ready');
+      toast.error('3D non disponibile (MapLibre non pronto)', { duration: 2000 });
       return;
     }
 
@@ -57,14 +58,27 @@ const ControlsTopRight: React.FC<ControlsTopRightProps> = ({ mapContainerRef }) 
       const newState = !is3DActive;
 
       if (newState) {
-        maplibreMapRef.current.easeTo({ pitch: 60, bearing: 25, duration: 700 });
+        // Activate 3D view with tilt and rotation
+        maplibreMapRef.current.easeTo({ 
+          pitch: 60, 
+          bearing: 25, 
+          duration: 800 
+        });
+        console.log('✅ 3D view activated - pitch: 60, bearing: 25');
       } else {
-        maplibreMapRef.current.easeTo({ pitch: 0, bearing: 0, duration: 700 });
+        // Deactivate 3D view - return to flat
+        maplibreMapRef.current.easeTo({ 
+          pitch: 0, 
+          bearing: 0, 
+          duration: 800 
+        });
+        console.log('✅ 3D view deactivated - pitch: 0, bearing: 0');
       }
 
       setIs3DActive(newState);
       sessionStorage.setItem('M1_3D_ON', String(newState));
-      console.log(`✅ 3D view ${newState ? 'activated' : 'deactivated'}`);
+      
+      toast.success(newState ? 'Vista 3D attivata' : 'Vista 2D attivata', { duration: 1500 });
     } catch (error) {
       console.error('❌ 3D toggle failed:', error);
       toast.error('Errore toggle 3D');
