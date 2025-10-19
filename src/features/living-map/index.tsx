@@ -1,5 +1,8 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import React, { Suspense, lazy, useMemo, useState, useCallback } from 'react';
 import { useLiveLayers } from './hooks/useLiveLayers';
+import { lmEnabled } from './flags';
 import './styles/livingMap.css';
 
 // Lazy load components for performance
@@ -12,6 +15,7 @@ const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
 const ControlsTopRight = lazy(() => import('./components/ControlsTopRight'));
+const DebugPanel = lazy(() => import('./debug/DebugPanel'));
 
 interface LivingMapProps {
   center?: { lat: number; lng: number };
@@ -20,8 +24,8 @@ interface LivingMapProps {
 }
 
 const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) => {
-  // Feature flag check
-  const enabled = import.meta.env.VITE_ENABLE_LIVING_MAP !== 'false';
+  // Feature flag check (robust with fallbacks)
+  const enabled = lmEnabled();
 
   const { portals, events, agents, zones, loading } = useLiveLayers(enabled);
   
@@ -140,13 +144,13 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
         </div>
       </Suspense>
 
-      {/* Data layers - non interattivi, filtrabili */}
+      {/* Data layers - non interattivi, FILTRABILI tramite visible prop */}
       <Suspense fallback={null}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 999, pointerEvents: 'none' }}>
-          <PortalsLayer portals={portals} visible={filters.portals !== false} />
-          <EventsLayer events={events} visible={filters.events !== false} />
-          <AgentsLayer agents={agents} visible={filters.agents !== false} />
-          <ControlZonesLayer zones={zones} visible={filters.zones !== false} />
+          <PortalsLayer portals={portals} visible={filters['portals'] !== false} />
+          <EventsLayer events={events} visible={filters['events'] !== false} />
+          <AgentsLayer agents={agents} visible={filters['agents'] !== false} />
+          <ControlZonesLayer zones={zones} visible={filters['zones'] !== false} />
         </div>
       </Suspense>
 
@@ -172,6 +176,11 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
           />
           <ControlsTopRight mapContainerRef={mapContainerRef} />
         </div>
+      </Suspense>
+
+      {/* Debug Panel - shown only if lmDebug() returns true */}
+      <Suspense fallback={null}>
+        <DebugPanel />
       </Suspense>
     </>
   );
