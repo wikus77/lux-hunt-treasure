@@ -125,24 +125,33 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
   }
 
   return (
-    <div
-      className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 999 }}
-    >
+    <>
+      {/* HUD Header - fuori dall'overlay non interattivo */}
       <Suspense fallback={null}>
-        {/* HUD Header */}
-        <MapHUDHeader center={center} zoom={zoom} />
+        <div style={{ position: 'absolute', top: 12, left: 12, right: 12, zIndex: 1002, pointerEvents: 'none' }}>
+          <MapHUDHeader center={center} zoom={zoom} />
+        </div>
+      </Suspense>
 
-        {/* Radar sweep overlay */}
-        <RadarOverlay center={center || { lat: 43.7874, lng: 7.6326 }} />
+      {/* Radar sweep overlay - non interattivo */}
+      <Suspense fallback={null}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 998, pointerEvents: 'none' }}>
+          <RadarOverlay center={center || { lat: 43.7874, lng: 7.6326 }} />
+        </div>
+      </Suspense>
 
-        {/* Data layers */}
-        <PortalsLayer portals={portals} />
-        <EventsLayer events={events} />
-        <AgentsLayer agents={agents} />
-        <ControlZonesLayer zones={zones} />
+      {/* Data layers - non interattivi */}
+      <Suspense fallback={null}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 999, pointerEvents: 'none' }}>
+          <PortalsLayer portals={portals} />
+          <EventsLayer events={events} />
+          <AgentsLayer agents={agents} />
+          <ControlZonesLayer zones={zones} />
+        </div>
+      </Suspense>
 
-        {/* Dock Left - Badge pills with filters */}
+      {/* Dock Left - INTERATTIVO */}
+      <Suspense fallback={null}>
         <DockLeft 
           items={dockItems}
           onFocus={handleFocus}
@@ -150,25 +159,21 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
           filters={filters}
           onFilterToggle={handleFilterToggle}
         />
+      </Suspense>
 
-        {/* Top-right HUD controls */}
-        <div
-          className="absolute top-4 right-4 flex items-start gap-3"
-          style={{ zIndex: 1000 }}
-        >
-          {/* Legend */}
+      {/* Top-right controls - INTERATTIVI */}
+      <Suspense fallback={null}>
+        <div style={{ position: 'absolute', top: 16, right: 16, display: 'flex', gap: 12, zIndex: 1003 }}>
           <LegendHUD
             portalsCount={portals.length}
             eventsCount={events.length}
             agentsCount={agents.length}
             zonesCount={zones.length}
           />
-
-          {/* 3D Toggle with real terrain */}
           <ControlsTopRight mapContainerRef={mapContainerRef} />
         </div>
       </Suspense>
-    </div>
+    </>
   );
 };
 

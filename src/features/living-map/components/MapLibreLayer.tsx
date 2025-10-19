@@ -1,7 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-// @ts-ignore - maplibre-gl-leaflet may not have types
 import '@maplibre/maplibre-gl-leaflet';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -11,122 +10,118 @@ interface MapLibreLayerProps {
 
 const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
   const leafletMap = useMap();
-  const glLayerRef = useRef<any>(null);
-  const maplibreMapRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!leafletMap || glLayerRef.current) return;
+    if (!leafletMap) return;
+
+    console.log('🌍 MapLibre - Initializing 3D layer...');
+
+    let glLayer: any = null;
 
     try {
-      console.log('🗺️ MapLibre Layer - Initializing...');
+      // Check if plugin is available
+      if (typeof (L as any).maplibreGL !== 'function') {
+        console.error('❌ L.maplibreGL not available - plugin not loaded');
+        return;
+      }
 
-      const styleUrl = import.meta.env.VITE_MAPLIBRE_STYLE || 'https://demotiles.maplibre.org/style.json';
-      
-      // @ts-ignore - L.maplibreGL from plugin
-      const glLayer = L.maplibreGL({
-        style: styleUrl
-      });
+      // Create MapLibre GL layer
+      glLayer = (L as any).maplibreGL({
+        style: import.meta.env.VITE_MAPLIBRE_STYLE || 'https://demotiles.maplibre.org/style.json',
+        interactive: false,
+      }).addTo(leafletMap);
 
-      glLayerRef.current = glLayer;
-      
-      // Add layer below markers (low pane index)
-      glLayer.addTo(leafletMap);
-      
-      // Get the MapLibre map instance once loaded
-      // @ts-ignore - getMaplibreMap from plugin
-      const maplibreMap = glLayer.getMaplibreMap();
-      
-      maplibreMap.once('load', () => {
-        maplibreMapRef.current = maplibreMap;
-        console.log('✅ MapLibre Layer - Loaded successfully');
+      // Get MapLibre map instance
+      const ml = glLayer.getMaplibreMap();
 
-        // Add terrain and 3D features
+      ml.on('load', () => {
+        console.log('✅ MapLibre - Style loaded');
+
         try {
+          // Add DEM source
           const terrainSource = import.meta.env.VITE_TERRAIN_SOURCE || 'terrain';
           const terrainUrl = import.meta.env.VITE_TERRAIN_URL || 'https://demotiles.maplibre.org/terrain-tiles/{z}/{x}/{y}.png';
 
-          // Add DEM source
-          if (!maplibreMap.getSource(terrainSource)) {
-            maplibreMap.addSource(terrainSource, {
-              type: 'raster-dem',
-              tiles: [terrainUrl],
-              tileSize: 512,
-              maxzoom: 14
-            });
-            console.log('✅ MapLibre - DEM source added');
-          }
-
-          // Set terrain
-          maplibreMap.setTerrain({ 
-            source: terrainSource, 
-            exaggeration: 1.4 
+          ml.addSource(terrainSource, {
+            type: 'raster-dem',
+            tiles: [terrainUrl],
+            tileSize: 512,
+            maxzoom: 14,
           });
+
+          ml.setTerrain({ source: terrainSource, exaggeration: 1.4 });
           console.log('✅ MapLibre - Terrain enabled');
 
-          // Add sky layer (with type workaround for TypeScript)
-          if (!maplibreMap.getLayer('sky')) {
-            maplibreMap.addLayer({
-              id: 'sky',
-              type: 'sky' as any,
-              paint: {
-                'sky-type': 'atmosphere',
-                'sky-atmosphere-sun-intensity': 10
-              } as any
-            });
-            console.log('✅ MapLibre - Sky layer added');
+          // Add sky
+          ml.addLayer({
+            id: 'sky',
+            type: 'sky' as any,
+            paint: {
+              'sky-type': 'atmosphere',
+              'sky-atmosphere-sun-intensity': 10,
+            },
+          });
+          console.log('✅ MapLibre - Sky added');
+
+          // Try 3D buildings
+          try {
+            const style = ml.getStyle();
+            const sources = style?.sources || {};
+            const buildingSrc = sources['openmaptiles'] || sources['openstreetmap'];
+
+            if (buildingSrc) {
+              ml.addLayer({
+                id: '3d-buildings',
+                source: Object.keys(sources).find(k => k.includes('maptiles') || k.includes('openstreet')) || 'openmaptiles',
+                'source-layer': 'building',
+                type: 'fill-extrusion',
+                minzoom: 14,
+                paint: {
+                  'fill-extrusion-color': '#0E1726',
+                  'fill-extrusion-height': ['get', 'height'],
+                  'fill-extrusion-base': ['get', 'min_height'],
+                  'fill-extrusion-opacity': 0.85,
+                },
+              });
+              console.log('✅ MapLibre - 3D buildings added');
+            }
+          } catch (e) {
+            console.warn('⚠️ MapLibre - No buildings layer:', e);
           }
 
-          // Try to add 3D buildings if the style supports it
-          const layers = maplibreMap.getStyle()?.layers || [];
-          const labelLayerId = layers.find((l: any) => 
-            l.type === 'symbol' && l.layout && l.layout['text-field']
-          )?.id;
+          // z-index above tiles, below markers
+          setTimeout(() => {
+            const canvas = document.querySelector('.maplibregl-canvas')?.parentElement as HTMLElement;
+            if (canvas) {
+              canvas.style.zIndex = '400';
+              console.log('✅ MapLibre - Canvas z-index = 400');
+            }
 
-          if (maplibreMap.getSource('openmaptiles') && !maplibreMap.getLayer('3d-buildings')) {
-            maplibreMap.addLayer({
-              id: '3d-buildings',
-              source: 'openmaptiles',
-              'source-layer': 'building',
-              filter: ['==', 'extrude', 'true'],
-              type: 'fill-extrusion',
-              minzoom: 14,
-              paint: {
-                'fill-extrusion-color': '#0E1726',
-                'fill-extrusion-height': ['get', 'render_height'],
-                'fill-extrusion-base': ['get', 'render_min_height'],
-                'fill-extrusion-opacity': 0.85
-              }
-            }, labelLayerId);
-            console.log('✅ MapLibre - 3D buildings added');
-          }
-        } catch (terrainError) {
-          console.warn('⚠️ MapLibre - Terrain setup failed (non-critical):', terrainError);
+            // Dispatch ready event
+            window.dispatchEvent(new CustomEvent('MAPLIBRE_READY', { detail: ml }));
+            onMapLibreReady?.(ml);
+            console.log('✅ MapLibre - MAPLIBRE_READY event dispatched');
+          }, 0);
+
+        } catch (err) {
+          console.error('❌ MapLibre - Terrain setup error:', err);
         }
-
-        // Notify parent
-        onMapLibreReady?.(maplibreMap);
-
-        // Dispatch global event
-        window.dispatchEvent(new CustomEvent('MAPLIBRE_READY', { detail: maplibreMap }));
       });
 
-      maplibreMap.on('error', (e: any) => {
-        console.warn('⚠️ MapLibre error (non-critical):', e);
-      });
+      ml.on('error', (e: any) => console.error('❌ MapLibre error:', e));
 
-    } catch (error) {
-      console.error('❌ MapLibre Layer - Initialization failed:', error);
+    } catch (err) {
+      console.error('❌ MapLibre - Init error:', err);
     }
 
+    // Cleanup
     return () => {
-      if (glLayerRef.current && leafletMap) {
+      if (glLayer && leafletMap) {
         try {
-          leafletMap.removeLayer(glLayerRef.current);
-          glLayerRef.current = null;
-          maplibreMapRef.current = null;
-          console.log('🗑️ MapLibre Layer - Cleaned up');
+          leafletMap.removeLayer(glLayer);
+          console.log('🧹 MapLibre - Cleaned up');
         } catch (e) {
-          console.warn('⚠️ MapLibre cleanup warning:', e);
+          console.warn('⚠️ MapLibre - Cleanup warning:', e);
         }
       }
     };
