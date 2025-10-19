@@ -140,13 +140,13 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
         </div>
       </Suspense>
 
-      {/* Data layers - non interattivi */}
+      {/* Data layers - non interattivi, filtrabili */}
       <Suspense fallback={null}>
         <div style={{ position: 'absolute', inset: 0, zIndex: 999, pointerEvents: 'none' }}>
-          <PortalsLayer portals={portals} />
-          <EventsLayer events={events} />
-          <AgentsLayer agents={agents} />
-          <ControlZonesLayer zones={zones} />
+          <PortalsLayer portals={portals} visible={filters.portals !== false} />
+          <EventsLayer events={events} visible={filters.events !== false} />
+          <AgentsLayer agents={agents} visible={filters.agents !== false} />
+          <ControlZonesLayer zones={zones} visible={filters.zones !== false} />
         </div>
       </Suspense>
 

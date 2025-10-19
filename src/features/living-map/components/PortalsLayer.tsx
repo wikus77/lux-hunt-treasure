@@ -3,10 +3,13 @@ import type { PortalDTO } from '../adapters/readOnlyData';
 
 interface PortalsLayerProps {
   portals: PortalDTO[];
+  visible?: boolean;
   mapRef?: any;
 }
 
-const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals }) => {
+const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals, visible = true }) => {
+  if (!visible) return null;
+  
   return (
     <div className="absolute inset-0 pointer-events-none">
       {portals.map((portal) => (
