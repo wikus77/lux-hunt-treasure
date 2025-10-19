@@ -302,12 +302,28 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   useEffect(() => {
     const handlePortalFilter = (e: Event) => {
       const { type, enabled } = (e as CustomEvent).detail;
-      document.querySelectorAll(`[data-portal-type="${type}"]`).forEach((el) => {
+      const targets = document.querySelectorAll(`[data-portal-type="${type}"]`);
+      console.log(`🎯 Portal filter: ${type} → ${enabled ? 'ON' : 'OFF'} (${targets.length} elementi)`);
+      targets.forEach((el) => {
         el.classList.toggle('is-hidden', !enabled);
       });
     };
     window.addEventListener('M1_PORTAL_FILTER', handlePortalFilter);
     return () => window.removeEventListener('M1_PORTAL_FILTER', handlePortalFilter);
+  }, []);
+
+  // P1 FIX: Listen for M1_LAYER_TOGGLE events
+  useEffect(() => {
+    const handleLayerToggle = (e: Event) => {
+      const { layer, enabled } = (e as CustomEvent).detail;
+      const targets = document.querySelectorAll(`[data-layer="${layer}"]`);
+      console.log(`🎚️ Layer toggle: ${layer} → ${enabled ? 'ON' : 'OFF'} (${targets.length} elementi)`);
+      targets.forEach((el) => {
+        el.classList.toggle('is-hidden', !enabled);
+      });
+    };
+    window.addEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
+    return () => window.removeEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
   }, []);
 
   return (
@@ -365,18 +381,27 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           url='https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png'
         />
         
-        {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
-        <BuzzMapAreas areas={currentWeekAreas} />
+        {/* P1 FIX: PORTALS - Wrapped with data-layer */}
+        <div data-layer="portals">
+          {/* CRITICAL: Display BUZZ MAPPA areas with real-time updates */}
+          <div data-portal-type="ALL">
+            <BuzzMapAreas areas={currentWeekAreas} />
+          </div>
+          
+          {/* QR Map Display - Show QR codes on map */}
+          <div data-portal-type="ALL">
+            <QRMapDisplay userLocation={geo.coords || ipGeo.coords} />
+          </div>
+        </div>
         
-        {/* QR Map Display - Show QR codes on map */}
-        <QRMapDisplay userLocation={geo.coords || ipGeo.coords} />
-        
-        {/* Display search areas */}
-        <SearchAreaMapLayer 
-          searchAreas={searchAreas} 
-          setActiveSearchArea={setActiveSearchArea}
-          deleteSearchArea={deleteSearchArea}
-        />
+        {/* P1 FIX: ZONES - Wrapped with data-layer */}
+        <div data-layer="zones">
+          <SearchAreaMapLayer 
+            searchAreas={searchAreas} 
+            setActiveSearchArea={setActiveSearchArea}
+            deleteSearchArea={deleteSearchArea}
+          />
+        </div>
         
         {/* Use the MapPopupManager component */}
         <MapPopupManager 
@@ -405,32 +430,33 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       {/* {import.meta.env.DEV && <GeoDebugOverlay />} */}
 
 
-      {/* Use the LocationButton component */}
-      <LocationButton requestLocationPermission={async () => {
-        console.log('🎯 LOCATION BUTTON: Pressed!');
-        
-        // Attiva immediatamente IP geolocation
-        const ipLocationPromise = ipGeo.getLocationByIP();
-        
-        // Prova GPS in parallelo con timeout molto breve
-        const gpsPromise = new Promise((resolve) => {
-          setTimeout(() => {
-            console.log('🎯 GPS timeout reached, IP geolocation should be active');
-            resolve(null);
-          }, 1000); // 1 secondo timeout per GPS
+      {/* P2 FIX: Legacy controls wrapped for hiding when Dock active */}
+      <div className="legacy-map-controls">
+        <LocationButton requestLocationPermission={async () => {
+          console.log('🎯 LOCATION BUTTON: Pressed!');
           
-          geo.requestLocation().then(resolve).catch(() => resolve(null));
-        });
-        
-        // Usa la prima che risponde
-        await Promise.race([ipLocationPromise, gpsPromise]);
-      }} />
+          // Attiva immediatamente IP geolocation
+          const ipLocationPromise = ipGeo.getLocationByIP();
+          
+          // Prova GPS in parallelo con timeout molto breve
+          const gpsPromise = new Promise((resolve) => {
+            setTimeout(() => {
+              console.log('🎯 GPS timeout reached, IP geolocation should be active');
+              resolve(null);
+            }, 1000); // 1 secondo timeout per GPS
+            
+            geo.requestLocation().then(resolve).catch(() => resolve(null));
+          });
+          
+          // Usa la prima che risponde
+          await Promise.race([ipLocationPromise, gpsPromise]);
+        }} />
 
-      {/* Add SearchAreaButton component */}
-      <SearchAreaButton 
-        toggleAddingSearchArea={toggleAddingSearchArea} 
-        isAddingSearchArea={isAddingSearchArea} 
-      />
+        <SearchAreaButton 
+          toggleAddingSearchArea={toggleAddingSearchArea} 
+          isAddingSearchArea={isAddingSearchArea} 
+        />
+      </div>
 
       {/* CRITICAL: Use BuzzMapButtonSecure component that ALWAYS requires payment */}
       <BuzzMapButtonSecure 

@@ -19,13 +19,31 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
     { id: 'drop', label: 'Drop', icon: Target, color: 'from-green-500 to-teal-600' },
   ];
 
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['ALL']));
+
   const handlePortalClick = (portalId: string) => {
     onPortalAction?.(portalId);
-    // P1 FIX: Dispatch proper toggle event for portal filters
+    
+    // P1 FIX: Toggle filter state
+    const newFilters = new Set(activeFilters);
+    const filterKey = portalId.toUpperCase();
+    
+    if (newFilters.has(filterKey)) {
+      newFilters.delete(filterKey);
+    } else {
+      newFilters.add(filterKey);
+    }
+    
+    setActiveFilters(newFilters);
+    
+    // Dispatch toggle event for portal filters
+    const enabled = newFilters.has(filterKey);
     const event = new CustomEvent('M1_PORTAL_FILTER', { 
-      detail: { type: portalId.toUpperCase(), enabled: true } 
+      detail: { type: filterKey, enabled } 
     });
     window.dispatchEvent(event);
+    
+    console.log(`🎯 Portal ${filterKey}: ${enabled ? 'ENABLED' : 'DISABLED'}`);
   };
 
   const toggleDrawer = () => {
@@ -70,15 +88,17 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
           <div className="portal-drawer-grid">
             {portals.map((portal) => {
               const Icon = portal.icon;
+              const isActive = activeFilters.has(portal.id.toUpperCase());
               return (
                 <button
                   key={portal.id}
                   onClick={() => handlePortalClick(portal.id)}
-                  className="portal-button"
+                  className={`portal-button ${isActive ? 'portal-button-active' : ''}`}
                   data-portal-type={portal.id}
                   aria-label={`Filter ${portal.label} portals`}
+                  aria-pressed={isActive}
                 >
-                  <div className={`portal-button-gradient bg-gradient-to-br ${portal.color}`}>
+                  <div className={`portal-button-gradient bg-gradient-to-br ${portal.color} ${isActive ? 'opacity-100' : 'opacity-50'}`}>
                     <Icon className="w-5 h-5" />
                   </div>
                   <span className="portal-button-label">{portal.label}</span>

@@ -14,8 +14,7 @@
 
 /* P2 FIX: Hide old scattered controls when Dock is active */
 .m1-dock-enabled .legacy-portal-buttons,
-.m1-dock-enabled > div > button[class*="LocationButton"],
-.m1-dock-enabled > div > button[class*="SearchAreaButton"] {
+.m1-dock-enabled .legacy-map-controls {
   display: none !important;
 }
 
@@ -315,6 +314,17 @@
   color: rgba(255, 255, 255, 0.9);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.portal-button-active {
+  background: rgba(0, 255, 255, 0.15);
+  border-color: rgba(0, 255, 255, 0.6);
+}
+
+.portal-button-active:hover {
+  background: rgba(0, 255, 255, 0.2);
+  border-color: rgba(0, 255, 255, 0.8);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 30px rgba(0, 255, 255, 0.5);
 }
 
 .portal-drawer-footer {
