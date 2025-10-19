@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, lazy, Suspense, useMemo } from 'react';
+import React, { useState, useRef, lazy, Suspense, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 // No default location fallback - GPS only
@@ -85,6 +85,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const geo = useSimpleGeolocation();
   const ipGeo = useIPGeolocation();
   const mapRef = useRef<L.Map | null>(null);
+  const mapContainerDivRef = useRef<HTMLDivElement>(null);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
   const { currentWeekAreas, loading: areasLoading, reloadAreas } = useBuzzMapLogic();
@@ -191,8 +192,21 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   }, [mapCenter]);
   const lmZoom = mapRef?.current?.getZoom?.() ?? 12;
 
+  // M1_FOCUS event listener for Living Map badge focus
+  useEffect(() => {
+    const handleFocus = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail && mapRef.current) {
+        mapRef.current.flyTo([detail.lat, detail.lng], detail.zoom || 15, { duration: 0.6 });
+      }
+    };
+    window.addEventListener('M1_FOCUS', handleFocus);
+    return () => window.removeEventListener('M1_FOCUS', handleFocus);
+  }, []);
+
   return (
     <div 
+      ref={mapContainerDivRef}
       className="rounded-[24px] overflow-hidden relative w-full" 
       style={{ 
         height: '70vh', 
@@ -337,7 +351,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1001 }}
         >
           <Suspense fallback={null}>
-            <LivingMap center={lmCenter} zoom={lmZoom} />
+            <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
           </Suspense>
         </div>
       )}
