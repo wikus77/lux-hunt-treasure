@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
+import maplibregl from 'maplibre-gl';
 import '@maplibre/maplibre-gl-leaflet';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -19,16 +20,30 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
     let glLayer: any = null;
 
     try {
+      // Ensure maplibregl is globally available for plugin
+      if (!(window as any).maplibregl) {
+        (window as any).maplibregl = maplibregl;
+        console.log('✅ MapLibre - Assigned maplibregl to window');
+      }
+
       // Check if plugin is available
       if (typeof (L as any).maplibreGL !== 'function') {
         console.error('❌ L.maplibreGL not available - plugin not loaded');
         return;
       }
 
+      // Create dedicated pane for MapLibre layer (above tiles, below markers)
+      const glPane = leafletMap.createPane('glPane');
+      if (glPane) {
+        glPane.style.zIndex = '350';
+        console.log('✅ MapLibre - Created glPane with zIndex 350');
+      }
+
       // Create MapLibre GL layer
       glLayer = (L as any).maplibreGL({
         style: import.meta.env.VITE_MAPLIBRE_STYLE || 'https://demotiles.maplibre.org/style.json',
         interactive: false,
+        pane: 'glPane'
       }).addTo(leafletMap);
 
       // Get MapLibre map instance
@@ -89,19 +104,19 @@ const MapLibreLayer: React.FC<MapLibreLayerProps> = ({ onMapLibreReady }) => {
             console.warn('⚠️ MapLibre - No buildings layer:', e);
           }
 
-          // z-index above tiles, below markers
+          // Force canvas z-index above base tiles, below markers
           setTimeout(() => {
             const canvas = document.querySelector('.maplibregl-canvas')?.parentElement as HTMLElement;
             if (canvas) {
-              canvas.style.zIndex = '400';
-              console.log('✅ MapLibre - Canvas z-index = 400');
+              canvas.style.zIndex = '350';
+              console.log('✅ MapLibre - Canvas z-index = 350');
             }
 
             // Dispatch ready event
             window.dispatchEvent(new CustomEvent('MAPLIBRE_READY', { detail: ml }));
             onMapLibreReady?.(ml);
             console.log('✅ MapLibre - MAPLIBRE_READY event dispatched');
-          }, 0);
+          }, 100);
 
         } catch (err) {
           console.error('❌ MapLibre - Terrain setup error:', err);

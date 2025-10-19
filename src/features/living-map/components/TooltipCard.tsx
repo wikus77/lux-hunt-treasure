@@ -29,15 +29,26 @@ const TooltipCard: React.FC<TooltipCardProps> = ({
     }
   };
 
+  // Handle route with real navigation
+  const handleRouteClick = () => {
+    const { lat, lng } = item;
+    const url = /iPhone|iPad|iPod/.test(navigator.userAgent)
+      ? `http://maps.apple.com/?daddr=${lat},${lng}`
+      : `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+    window.open(url, '_blank');
+    onRoute?.();
+  };
+
   return (
     <div
-      className="living-hud-glass absolute left-0 bottom-full mb-2 p-3 pointer-events-auto animate-scale-in"
+      className="living-hud-glass absolute left-full ml-2 p-3 pointer-events-auto animate-scale-in"
       style={{
         minWidth: 220,
         maxWidth: 280,
-        zIndex: 1002,
+        zIndex: 1003,
         color: 'var(--living-map-text-primary)',
-        boxShadow: '0 0 24px rgba(0, 229, 255, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4)'
+        boxShadow: '0 0 24px rgba(0, 229, 255, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4)',
+        top: 0
       }}
     >
       {/* Header */}
@@ -120,7 +131,7 @@ const TooltipCard: React.FC<TooltipCardProps> = ({
 
         {onRoute && (
           <button
-            onClick={onRoute}
+            onClick={handleRouteClick}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
             style={{
               background: 'rgba(138, 43, 226, 0.15)',

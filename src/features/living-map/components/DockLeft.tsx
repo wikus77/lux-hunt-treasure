@@ -79,19 +79,20 @@ const DockLeft: React.FC<DockLeftProps> = ({
   return (
     <div 
       ref={containerRef} 
+      id="m1-dock"
       style={{ 
         position: 'absolute', 
         left: 12, 
-        top: 88, 
-        width: 184,
-        maxHeight: 'calc(100vh - 120px)',
+        top: 92, 
+        width: 196,
+        maxHeight: 'calc(100vh - 160px)',
         overflowY: 'auto',
         overflowX: 'hidden',
-        zIndex: 1000,
+        zIndex: 1002,
         pointerEvents: 'none',
         // Gradient fade
-        maskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)'
+        maskImage: 'linear-gradient(to bottom, transparent 0, black 18px, black calc(100% - 18px), transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 18px, black calc(100% - 18px), transparent 100%)'
       }}
       className="scrollbar-hide"
     >
