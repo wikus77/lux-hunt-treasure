@@ -248,6 +248,36 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_dna: {
+        Row: {
+          audacia: number
+          etica: number
+          intuito: number
+          rischio: number
+          updated_at: string
+          user_id: string
+          vibrazione: number
+        }
+        Insert: {
+          audacia?: number
+          etica?: number
+          intuito?: number
+          rischio?: number
+          updated_at?: string
+          user_id: string
+          vibrazione?: number
+        }
+        Update: {
+          audacia?: number
+          etica?: number
+          intuito?: number
+          rischio?: number
+          updated_at?: string
+          user_id?: string
+          vibrazione?: number
+        }
+        Relationships: []
+      }
       agent_finalshot_attempts: {
         Row: {
           coords: Json
@@ -3132,6 +3162,24 @@ export type Database = {
         }
         Relationships: []
       }
+      pulse_state: {
+        Row: {
+          id: number
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          value?: number
+        }
+        Relationships: []
+      }
       push_config: {
         Row: {
           key: string
@@ -5846,6 +5894,10 @@ export type Database = {
       debug_vec_info: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      ensure_agent_dna: {
+        Args: { p_user: string }
+        Returns: undefined
       }
       exec_sql: {
         Args: { sql: string }

@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sparkles, X, ArrowRight } from "lucide-react";
 import LandingFooter from "@/components/landing/LandingFooter";
+import GlobalPulseBar from "@/components/pulse/GlobalPulseBar";
+import AgentDNAWidget from "@/components/dna/AgentDNAWidget";
+import PowerBuzzModal from "@/components/monetization/PowerBuzzModal";
 
 interface XavierStyleLandingPageProps {
   onRegisterClick: () => void;
@@ -15,6 +18,7 @@ interface XavierStyleLandingPageProps {
 
 const XavierStyleLandingPage = ({ onRegisterClick, openInviteFriend }: XavierStyleLandingPageProps) => {
   const [showModal, setShowModal] = useState(false);
+  const [showPowerBuzz, setShowPowerBuzz] = useState(false);
   const titleRef = useRef<HTMLDivElement>(null);
   const sectionsRef = useRef<HTMLDivElement[]>([]);
 
@@ -238,6 +242,23 @@ const XavierStyleLandingPage = ({ onRegisterClick, openInviteFriend }: XavierSty
         </div>
       </section>
 
+      {/* Living Map™ 2.0 - PULSE & DNA Widgets */}
+      <section className="relative py-16 px-4 bg-black/40 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Global PULSE Bar */}
+            <div className="flex items-center justify-center">
+              <GlobalPulseBar onPowerBuzzClick={() => setShowPowerBuzz(true)} />
+            </div>
+            
+            {/* Agent DNA Widget */}
+            <div className="flex items-center justify-center">
+              <AgentDNAWidget />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Mission Description Section */}
       <section ref={addToRefs} className="relative py-32 px-4">
         <div className="max-w-6xl mx-auto text-center">
@@ -406,6 +427,12 @@ const XavierStyleLandingPage = ({ onRegisterClick, openInviteFriend }: XavierSty
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Power Buzz Modal */}
+      <PowerBuzzModal 
+        open={showPowerBuzz} 
+        onOpenChange={setShowPowerBuzz} 
+      />
     </div>
   );
 };

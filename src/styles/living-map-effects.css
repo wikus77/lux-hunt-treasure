@@ -1,0 +1,154 @@
+/* Living Map™ Effects — Custom Overlays */
+
+.living-map-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 400;
+  overflow: hidden;
+}
+
+/* Fog/Blur Effect */
+.living-effect-fog {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(220, 230, 240, 0.1) 0%,
+    rgba(180, 200, 220, 0.3) 100%
+  );
+  transition: opacity 0.5s ease, backdrop-filter 0.5s ease;
+}
+
+/* Rain Canvas */
+.living-effect-rain {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.3s ease;
+}
+
+/* Heat Shimmer */
+.living-effect-heat {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 200, 100, 0.1) 0%,
+    transparent 50%,
+    rgba(255, 220, 150, 0.05) 100%
+  );
+  animation: heatWave 3s ease-in-out infinite;
+  transition: opacity 0.5s ease;
+}
+
+@keyframes heatWave {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-4px);
+    opacity: 0.8;
+  }
+}
+
+/* Night Overlay */
+.living-effect-night {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(20, 30, 60, 0.3) 0%,
+    rgba(10, 15, 35, 0.6) 100%
+  );
+  transition: opacity 0.8s ease;
+}
+
+/* Energy Ripple */
+.living-effect-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  z-index: 450;
+}
+
+.ripple-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border: 2px solid hsl(var(--primary));
+  border-radius: 50%;
+  animation: rippleExpand 2s ease-out;
+  opacity: 0;
+}
+
+.ripple-delay-1 {
+  animation-delay: 0.3s;
+}
+
+.ripple-delay-2 {
+  animation-delay: 0.6s;
+}
+
+@keyframes rippleExpand {
+  0% {
+    width: 40px;
+    height: 40px;
+    opacity: 0.8;
+  }
+  100% {
+    width: 200px;
+    height: 200px;
+    opacity: 0;
+  }
+}
+
+/* Glass Effect for HUD Elements */
+.living-hud-glass {
+  background: hsl(var(--background) / 0.6);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid hsl(var(--border) / 0.4);
+  box-shadow: 
+    0 4px 24px hsl(var(--primary) / 0.1),
+    inset 0 1px 0 hsl(var(--background) / 0.8);
+}
+
+/* 3D Transform Support */
+.living-map-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.living-map-3d.active {
+  transform: perspective(1200px) rotateX(12deg);
+}
+
+/* Performance Optimization */
+@media (prefers-reduced-motion: reduce) {
+  .living-effect-heat,
+  .ripple-circle {
+    animation: none !important;
+  }
+  
+  .living-map-3d {
+    transition: none !important;
+  }
+}
+
+/* iOS Safe Area Support */
+@supports (padding: env(safe-area-inset-top)) {
+  .living-map-overlay {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
