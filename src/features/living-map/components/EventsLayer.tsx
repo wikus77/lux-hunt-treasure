@@ -4,7 +4,6 @@ import type { EventDTO } from '../adapters/readOnlyData';
 
 interface EventsLayerProps {
   events: EventDTO[];
-  visible?: boolean;
 }
 
 const EVENT_COLORS = {
@@ -13,9 +12,7 @@ const EVENT_COLORS = {
   rare: '#00E5FF'
 };
 
-const EventsLayer: React.FC<EventsLayerProps> = ({ events, visible = true }) => {
-  if (!visible) return null;
-  
+const EventsLayer: React.FC<EventsLayerProps> = ({ events }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {events.map((event) => (

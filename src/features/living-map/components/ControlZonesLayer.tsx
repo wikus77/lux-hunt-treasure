@@ -3,12 +3,9 @@ import type { ZoneDTO } from '../adapters/readOnlyData';
 
 interface ControlZonesLayerProps {
   zones: ZoneDTO[];
-  visible?: boolean;
 }
 
-const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones, visible = true }) => {
-  if (!visible) return null;
-  
+const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       <svg className="absolute inset-0 w-full h-full">
