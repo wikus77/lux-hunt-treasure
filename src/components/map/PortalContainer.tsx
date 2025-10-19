@@ -11,12 +11,7 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
   const [isOpen, setIsOpen] = useState(false);
 
   const portals = [
-    { id: 'alpha', label: 'Alpha', icon: Target, color: 'from-cyan-500 to-blue-600' },
-    { id: 'beta', label: 'Beta', icon: Hexagon, color: 'from-blue-500 to-purple-600' },
-    { id: 'gamma', label: 'Gamma', icon: Zap, color: 'from-purple-500 to-pink-600' },
-    { id: 'delta', label: 'Delta', icon: MapPin, color: 'from-pink-500 to-red-600' },
-    { id: 'rare', label: 'Rare', icon: AlertTriangle, color: 'from-yellow-500 to-orange-600' },
-    { id: 'drop', label: 'Drop', icon: Target, color: 'from-green-500 to-teal-600' },
+    { id: 'all', label: 'All Portals', icon: Target, color: 'from-cyan-500 to-purple-600' }
   ];
 
   const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set(['ALL']));
@@ -24,13 +19,14 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
   const handlePortalClick = (portalId: string) => {
     onPortalAction?.(portalId);
     
-    // P1 FIX: Toggle filter state
+    // P0 FIX: Simple ALL toggle
     const newFilters = new Set(activeFilters);
-    const filterKey = portalId.toUpperCase();
+    const filterKey = 'ALL';
     
     if (newFilters.has(filterKey)) {
       newFilters.delete(filterKey);
     } else {
+      newFilters.clear();
       newFilters.add(filterKey);
     }
     
@@ -39,11 +35,11 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
     // Dispatch toggle event for portal filters
     const enabled = newFilters.has(filterKey);
     const event = new CustomEvent('M1_PORTAL_FILTER', { 
-      detail: { type: filterKey, enabled } 
+      detail: { type: 'ALL', enabled } 
     });
     window.dispatchEvent(event);
     
-    console.log(`🎯 Portal ${filterKey}: ${enabled ? 'ENABLED' : 'DISABLED'}`);
+    console.log(`🎯 Portals: ${enabled ? 'VISIBLE' : 'HIDDEN'}`);
   };
 
   const toggleDrawer = () => {
@@ -88,14 +84,14 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
           <div className="portal-drawer-grid">
             {portals.map((portal) => {
               const Icon = portal.icon;
-              const isActive = activeFilters.has(portal.id.toUpperCase());
+              const isActive = activeFilters.has('ALL');
               return (
                 <button
                   key={portal.id}
                   onClick={() => handlePortalClick(portal.id)}
                   className={`portal-button ${isActive ? 'portal-button-active' : ''}`}
                   data-portal-type={portal.id}
-                  aria-label={`Filter ${portal.label} portals`}
+                  aria-label={`Toggle all portals`}
                   aria-pressed={isActive}
                 >
                   <div className={`portal-button-gradient bg-gradient-to-br ${portal.color} ${isActive ? 'opacity-100' : 'opacity-50'}`}>
@@ -110,7 +106,7 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
           {/* Footer Info */}
           <div className="portal-drawer-footer">
             <p className="text-xs text-cyan-400/60">
-              Click per filtrare i portali sulla mappa
+              Click per mostrare/nascondere tutti i portali
             </p>
           </div>
         </div>

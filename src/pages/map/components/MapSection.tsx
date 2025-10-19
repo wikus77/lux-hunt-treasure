@@ -5,6 +5,7 @@ import LivingMapOverlay from '@/components/living/LivingMapOverlay';
 import MapDock from '@/components/map/MapDock';
 import PortalContainer from '@/components/map/PortalContainer';
 import '@/styles/map-dock.css';
+import '@/styles/portal-container.css';
 
 // Lazy load heavy map components
 const MapContainer = lazy(() => import('./MapContainer'));

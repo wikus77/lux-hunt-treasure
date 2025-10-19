@@ -12,9 +12,14 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* P2 FIX: Hide old scattered controls when Dock is active */
+/* P0 FIX: Hide legacy controls when Dock is active */
 .m1-dock-enabled .legacy-portal-buttons,
 .m1-dock-enabled .legacy-map-controls {
+  display: none !important;
+}
+
+/* P0 FIX: Hide elements with is-hidden class (for layer/portal filtering) */
+.is-hidden {
   display: none !important;
 }
 
@@ -88,9 +93,6 @@
   }
 }
 
-.is-hidden {
-  display: none !important;
-}
 
 /* Accessibility: Reduced Motion */
 @media (prefers-reduced-motion: reduce) {

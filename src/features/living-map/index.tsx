@@ -17,9 +17,10 @@ interface LivingMapProps {
   center?: { lat: number; lng: number };
   zoom?: number;
   mapContainerRef?: React.RefObject<HTMLDivElement>;
+  hidePortalBadges?: boolean;
 }
 
-const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) => {
+const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hidePortalBadges = false }) => {
   // Feature flag check
   const enabled = import.meta.env.VITE_ENABLE_LIVING_MAP !== 'false';
 
@@ -121,8 +122,8 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
         <AgentsLayer agents={agents} />
         <ControlZonesLayer zones={zones} />
 
-        {/* Dock Left - Badge pills */}
-        <DockLeft items={dockItems} onFocus={handleFocus} />
+        {/* Dock Left - Badge pills (hidden when Portal Container active) */}
+        {!hidePortalBadges && <DockLeft items={dockItems} onFocus={handleFocus} />}
 
         {/* Top-right HUD controls */}
         <div

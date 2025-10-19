@@ -99,6 +99,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
   const { currentWeekAreas, loading: areasLoading, reloadAreas } = useBuzzMapLogic();
   
+  // TRUE 3D: Check if DEM URL is configured
+  const terrain3DAvailable = !!import.meta.env.VITE_TERRAIN_URL;
+  
   // Use Zustand store for consistent state management
   const { isAddingMapPoint, mapStatus } = useMapStore();
 
@@ -458,7 +461,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         />
       </div>
 
-      {/* CRITICAL: Use BuzzMapButtonSecure component that ALWAYS requires payment */}
+      {/* P0 FIX: Keep ONLY the central BUZZ button - removed duplicate from Dock */}
       <BuzzMapButtonSecure 
         onBuzzPress={handleBuzz} 
         mapCenter={mapCenter}
@@ -483,7 +486,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1001 }}
         >
           <Suspense fallback={null}>
-            <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
+            <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} hidePortalBadges={true} />
           </Suspense>
         </div>
       )}

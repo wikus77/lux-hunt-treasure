@@ -9,6 +9,8 @@
 @import './styles/ios-safe-area-fixes.css';
 @import './styles/norah-modal.css';
 @import './styles/prize-modal.css';
+@import './styles/map-dock.css';
+@import './styles/portal-container.css';
 
 @tailwind base;
 @tailwind components;
