@@ -1,10 +1,12 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-// FIX: Ensure maplibregl is globally available BEFORE loading the plugin
+// Ensure maplibregl is globally available BEFORE loading the plugin
 if (!(window as any).maplibregl) {
   (window as any).maplibregl = maplibregl;
   console.log('✅ maplibregl assigned to window');

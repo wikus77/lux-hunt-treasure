@@ -1,55 +1,69 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+
 import React, { useEffect, useState } from 'react';
+import { lmDebug } from '../flags';
 
 export default function DebugPanel() {
-  if (import.meta.env.VITE_LIVING_MAP_DEBUG !== 'true') return null;
+  if (!lmDebug()) return null;
 
   const [state, setState] = useState<any>({});
 
   useEffect(() => {
-    const data = {
-      env: {
-        VITE_ENABLE_LIVING_MAP: String(import.meta.env.VITE_ENABLE_LIVING_MAP),
-        VITE_MAP_ENGINE: String(import.meta.env.VITE_MAP_ENGINE || '—'),
-        VITE_MAPLIBRE_STYLE: String(import.meta.env.VITE_MAPLIBRE_STYLE || '—'),
-        VITE_TERRAIN_SOURCE: String(import.meta.env.VITE_TERRAIN_SOURCE || '—'),
-        VITE_TERRAIN_URL: String(import.meta.env.VITE_TERRAIN_URL || '—'),
-        VITE_LIVING_MAP_DEBUG: String(import.meta.env.VITE_LIVING_MAP_DEBUG),
-      },
-      dom: {
-        leafletContainer: !!document.querySelector('.leaflet-container'),
-        maplibreCanvas: !!document.querySelector('.maplibregl-canvas'),
-        dock: !!document.querySelector('#m1-dock'),
-        legend: !!document.querySelector('[data-m1=legend-hud]'),
-        controls3D: !!document.querySelector('[data-m1=controls-3d]'),
-      },
-      gl: {
-        hasLmaplibre: typeof (window as any).L?.maplibreGL === 'function',
-        hasMaplibregl: typeof (window as any).maplibregl !== 'undefined',
-      },
-      panes: (() => {
-        const panes: any = {};
-        document.querySelectorAll('.leaflet-pane').forEach((el: any) => {
-          const id = el.className.split(' ').find((c: string) => c.endsWith('-pane')) || 'pane';
-          panes[id] = (el as HTMLElement).style.zIndex || '—';
-        });
-        return panes;
-      })(),
-      ts: new Date().toISOString(),
+    const updateState = () => {
+      const data = {
+        env: {
+          VITE_ENABLE_LIVING_MAP: String(import.meta.env.VITE_ENABLE_LIVING_MAP),
+          VITE_MAP_ENGINE: String(import.meta.env.VITE_MAP_ENGINE || '—'),
+          VITE_MAPLIBRE_STYLE: String(import.meta.env.VITE_MAPLIBRE_STYLE || '—'),
+          VITE_TERRAIN_SOURCE: String(import.meta.env.VITE_TERRAIN_SOURCE || '—'),
+          VITE_TERRAIN_URL: String(import.meta.env.VITE_TERRAIN_URL || '—'),
+          VITE_LIVING_MAP_DEBUG: String(import.meta.env.VITE_LIVING_MAP_DEBUG),
+        },
+        dom: {
+          leafletContainer: !!document.querySelector('.leaflet-container'),
+          maplibreCanvas: !!document.querySelector('.maplibregl-canvas'),
+          dock: !!document.querySelector('#m1-dock'),
+          legend: !!document.querySelector('[data-m1=legend-hud]'),
+          controls3D: !!document.querySelector('[data-m1=controls-3d]'),
+        },
+        gl: {
+          hasLmaplibre: typeof (window as any).L?.maplibreGL === 'function',
+          hasMaplibregl: typeof (window as any).maplibregl !== 'undefined',
+        },
+        panes: (() => {
+          const panes: any = {};
+          document.querySelectorAll('.leaflet-pane').forEach((el: any) => {
+            const id = el.className.split(' ').find((c: string) => c.endsWith('-pane')) || 'pane';
+            panes[id] = (el as HTMLElement).style.zIndex || '—';
+          });
+          return panes;
+        })(),
+        localStorage: {
+          M1_LM_ENABLE: localStorage.getItem('M1_LM_ENABLE') || '—',
+          M1_LM_DEBUG: localStorage.getItem('M1_LM_DEBUG') || '—',
+        },
+        ts: new Date().toISOString(),
+      };
+
+      console.group('%cM1SSION • LIVING MAP — DEBUG', 'color:#00E5FF');
+      console.table(data.env);
+      console.table(data.dom);
+      console.table(data.gl);
+      console.table(data.localStorage);
+      console.log('panes:', data.panes);
+      console.groupEnd();
+
+      setState(data);
     };
 
-    console.group('%cM1SSION • LIVING MAP — DEBUG', 'color:#00E5FF');
-    console.table(data.env);
-    console.table(data.dom);
-    console.table(data.gl);
-    console.log('panes:', data.panes);
-    console.groupEnd();
-
-    setState(data);
+    updateState();
+    const interval = setInterval(updateState, 2000);
+    return () => clearInterval(interval);
   }, []);
 
   const style: React.CSSProperties = {
     position: 'fixed', right: 12, bottom: 84, zIndex: 20000,
-    width: 360, maxHeight: 280, overflow: 'auto',
+    width: 360, maxHeight: 320, overflow: 'auto',
     background: 'rgba(6,10,16,.88)', border: '1px solid rgba(0,229,255,.35)',
     boxShadow: '0 0 22px rgba(0,229,255,.25)', borderRadius: 12,
     color: '#CDE8F3', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 12,
@@ -63,6 +77,7 @@ export default function DebugPanel() {
       </div>
       <div style={{padding:'0 12px 12px', display:'grid', gap:6}}>
         <Row k="Enable Flag" v={String(state?.env?.VITE_ENABLE_LIVING_MAP)} />
+        <Row k="localStorage Enable" v={String(state?.localStorage?.M1_LM_ENABLE)} />
         <Row k="L.maplibreGL" v={String(state?.gl?.hasLmaplibre)} />
         <Row k="maplibregl (window)" v={String(state?.gl?.hasMaplibregl)} />
         <Row k="Leaflet DOM" v={String(state?.dom?.leafletContainer)} />
@@ -70,17 +85,33 @@ export default function DebugPanel() {
         <Row k="Dock" v={String(state?.dom?.dock)} />
         <Row k="Legend HUD" v={String(state?.dom?.legend)} />
         <Row k="3D Controls" v={String(state?.dom?.controls3D)} />
-        <div style={{opacity:.8, marginTop:6}}>panes zIndex: <code>{JSON.stringify(state?.panes)}</code></div>
-        <div style={{opacity:.5}}>ts: {state?.ts}</div>
+        <div style={{opacity:.8, marginTop:6, fontSize:10}}>
+          panes zIndex: <code>{JSON.stringify(state?.panes)}</code>
+        </div>
+        <div style={{opacity:.5, fontSize:10}}>ts: {state?.ts}</div>
+        <div style={{marginTop:8, padding:'8px', background:'rgba(0,229,255,.1)', borderRadius:6, fontSize:10}}>
+          <div style={{fontWeight:700, marginBottom:4}}>Quick Enable:</div>
+          <code style={{display:'block', wordBreak:'break-all'}}>
+            localStorage.setItem('M1_LM_ENABLE','true');
+            localStorage.setItem('M1_LM_DEBUG','true');
+            location.reload();
+          </code>
+        </div>
       </div>
     </div>
   );
 }
 
 function Row({k, v}:{k:string; v:string}) {
+  const isTrue = v === 'true';
+  const isFalse = v === 'false';
   return (
     <div style={{display:'flex', justifyContent:'space-between', gap:10}}>
-      <div style={{opacity:.7}}>{k}</div><div>{v}</div>
+      <div style={{opacity:.7}}>{k}</div>
+      <div style={{
+        color: isTrue ? '#0f0' : isFalse ? '#f33' : '#fff',
+        fontWeight: (isTrue || isFalse) ? 700 : 400
+      }}>{v}</div>
     </div>
   );
 }

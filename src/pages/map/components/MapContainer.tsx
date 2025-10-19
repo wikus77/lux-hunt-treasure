@@ -1,3 +1,4 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 
 import React, { useState, useRef, lazy, Suspense, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
@@ -19,10 +20,10 @@ import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
+import { lmEnabled } from '@/features/living-map/flags';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 const MapLibreLayer = lazy(() => import('@/features/living-map/components/MapLibreLayer'));
-const DebugPanel = lazy(() => import('@/features/living-map/debug/DebugPanel'));
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -267,7 +268,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         />
         
         {/* MapLibre GL Layer for 3D terrain - separate pane above tiles */}
-        {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
+        {lmEnabled() && (
           <Suspense fallback={null}>
             <MapLibreLayer />
           </Suspense>
@@ -358,21 +359,13 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         <HelpDialog open={showHelpDialog || false} setOpen={setShowHelpDialog} />
       }
 
-      {/* === Living Map™ Overlay === */}
-      {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
+      {/* === Living Map™ Overlay (robust flag check) === */}
+      {lmEnabled() && (
         <Suspense fallback={null}>
           <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
         </Suspense>
       )}
       {/* === /Living Map™ === */}
-
-      {/* === Debug Panel === */}
-      {import.meta.env.VITE_LIVING_MAP_DEBUG === 'true' && (
-        <Suspense fallback={null}>
-          <DebugPanel />
-        </Suspense>
-      )}
-      {/* === /Debug Panel === */}
     </div>
   );
 };
