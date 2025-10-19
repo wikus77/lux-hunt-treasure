@@ -21,6 +21,7 @@ import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
+const MapLibreLayer = lazy(() => import('@/features/living-map/components/MapLibreLayer'));
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -240,6 +241,13 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         inertia={true}
       >
         <MapInitializer onMapReady={handleMapReadyCallback} />
+        
+        {/* MapLibre GL Layer for 3D terrain */}
+        {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
+          <Suspense fallback={null}>
+            <MapLibreLayer />
+          </Suspense>
+        )}
         
         <MapController 
           isAddingPoint={isAddingPoint}
