@@ -5,6 +5,18 @@ import maplibregl from 'maplibre-gl';
 import '@maplibre/maplibre-gl-leaflet';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+// FIX: export globale per il plugin Leaflet
+if (!(window as any).maplibregl) (window as any).maplibregl = maplibregl;
+if (typeof (L as any).maplibreGL !== 'function') {
+  console.log('⚠️ Caricamento manuale plugin MapLibreLeaflet...');
+  try {
+    require('@maplibre/maplibre-gl-leaflet');
+    console.log('✅ Plugin MapLibreLeaflet caricato manualmente');
+  } catch (e) {
+    console.error('❌ ERRORE: plugin MapLibreLeaflet non trovato', e);
+  }
+}
+
 interface MapLibreLayerProps {
   onMapLibreReady?: (map: any) => void;
 }
