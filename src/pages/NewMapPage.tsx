@@ -52,18 +52,28 @@ const NewMapPage = () => {
     updateActivity,
   });
 
-  // Handlers for map dock actions
+  // Handlers for map dock actions - store callback refs
+  const [toggle3DCallback, setToggle3DCallback] = useState<((is3D: boolean) => void) | null>(null);
+  const [focusLocationCallback, setFocusLocationCallback] = useState<(() => void) | null>(null);
+  const [resetViewCallback, setResetViewCallback] = useState<(() => void) | null>(null);
+
   const handleToggle3D = (enabled: boolean) => {
     setIs3D(enabled);
+    if (toggle3DCallback) {
+      toggle3DCallback(enabled);
+    }
   };
 
   const handleFocusLocation = () => {
-    requestLocationPermission();
+    if (focusLocationCallback) {
+      focusLocationCallback();
+    }
   };
 
   const handleResetView = () => {
-    // Reset view will be handled in MapContainer
-    console.log('🔄 Reset view requested');
+    if (resetViewCallback) {
+      resetViewCallback();
+    }
   };
 
   return (
@@ -90,9 +100,9 @@ const NewMapPage = () => {
         toggleAddingSearchArea={toggleAddingSearchArea}
         showHelpDialog={showHelpDialog}
         setShowHelpDialog={setShowHelpDialog}
-        onToggle3D={handleToggle3D}
-        onFocusLocation={handleFocusLocation}
-        onResetView={handleResetView}
+        onToggle3D={setToggle3DCallback as any}
+        onFocusLocation={setFocusLocationCallback as any}
+        onResetView={setResetViewCallback as any}
       />
       
       <SidebarLayout

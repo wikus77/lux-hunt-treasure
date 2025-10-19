@@ -228,9 +228,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     }
   }, [mapRef.current]);
 
-  // Handle 3D toggle from parent
+  // Handle 3D toggle from parent - store callback ref
   useEffect(() => {
-    if (!terrainLayer || !mapRef.current) return;
+    if (!terrainLayer || !mapRef.current || !onToggle3D) return;
 
     const handle3DToggle = (is3D: boolean) => {
       setIs3DActive(is3D);
@@ -263,10 +263,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       }
     };
 
-    if (onToggle3D) {
-      onToggle3D(is3DActive);
-    }
-  }, [terrainLayer, onToggle3D, is3DActive]);
+    // Pass the handler to parent (not invoke it!)
+    onToggle3D(handle3DToggle as any);
+  }, [terrainLayer, onToggle3D]);
 
   // Handle focus location from dock
   const handleFocusLocation = () => {
@@ -278,23 +277,27 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     }
   };
 
-  // Handle reset view from dock
+  // Handle reset view from dock - fitBounds to initial European view
   const handleResetView = () => {
     if (mapRef.current) {
-      mapRef.current.setView([54.5260, 15.2551], 4);
+      const europeBounds = L.latLngBounds(
+        L.latLng(35.0, -10.0),  // SW corner
+        L.latLng(71.0, 40.0)    // NE corner
+      );
+      mapRef.current.fitBounds(europeBounds, { padding: [50, 50], animate: true });
     }
   };
 
-  // Expose handlers to parent via callback
+  // P0 FIX: Expose handlers to parent as REF, not invoke them!
   useEffect(() => {
     if (onFocusLocation) {
-      onFocusLocation();
+      (onFocusLocation as any)(handleFocusLocation);
     }
   }, []);
 
   useEffect(() => {
     if (onResetView) {
-      onResetView();
+      (onResetView as any)(handleResetView);
     }
   }, []);
 
