@@ -29,7 +29,7 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
         const newEnabled = !layer.enabled;
         onLayerChange?.(layerId, newEnabled);
         
-        // Toggle CSS class on DOM elements
+        // Toggle CSS class on DOM elements with data-layer attribute
         const elements = document.querySelectorAll(`[data-layer="${layerId}"]`);
         elements.forEach(el => {
           if (newEnabled) {
@@ -38,6 +38,12 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
             el.classList.add('is-hidden');
           }
         });
+        
+        // Dispatch custom event for Living Map integration
+        const event = new CustomEvent('M1_LAYER_TOGGLE', {
+          detail: { layerId, enabled: newEnabled }
+        });
+        window.dispatchEvent(event);
         
         return { ...layer, enabled: newEnabled };
       }
