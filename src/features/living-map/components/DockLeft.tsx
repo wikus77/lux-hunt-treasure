@@ -1,69 +1,50 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import OverlayButton from './OverlayButton';
-
-export interface DockItem {
-  id: string;
-  type: 'Portal' | 'Event' | 'Alert Zone';
-  label: string;
-  lat: number;
-  lng: number;
-  status?: 'active' | 'inactive' | 'pending';
-  color?: string;
-}
+import React, { useState, useRef, useEffect } from 'react';
+import DockItem, { DockItemData } from './DockItem';
+import TooltipCard from './TooltipCard';
+import { useDockLayout } from '../hooks/useDockLayout';
 
 interface DockLeftProps {
-  items: DockItem[];
-  onFocus?: (item: DockItem) => void;
+  items: DockItemData[];
+  onFocus?: (item: DockItemData) => void;
+  filters?: Record<string, boolean>;
+  onFilterToggle?: (itemId: string) => void;
 }
 
-interface BadgePosition {
-  id: string;
-  top: number;
-}
-
-const DockLeft: React.FC<DockLeftProps> = ({ items, onFocus }) => {
+const DockLeft: React.FC<DockLeftProps> = ({ 
+  items, 
+  onFocus, 
+  filters = {},
+  onFilterToggle 
+}) => {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [tooltipId, setTooltipId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Anti-overlap collision detection
-  const positions = useMemo(() => {
-    const BADGE_HEIGHT = 32;
-    const GAP = 12;
-    const MAX_ITERATIONS = 6;
-    
-    const result: BadgePosition[] = [];
-    
-    items.forEach((item, index) => {
-      let top = 88 + index * (BADGE_HEIGHT + GAP);
-      let iterations = 0;
-      
-      // Check for overlap and nudge down if needed
-      while (iterations < MAX_ITERATIONS) {
-        const overlaps = result.some(pos => Math.abs(pos.top - top) < BADGE_HEIGHT);
-        if (!overlaps) break;
-        top += 8;
-        iterations++;
-      }
-      
-      result.push({ id: item.id, top });
-    });
-    
-    return result;
-  }, [items]);
+  // Use layout hook for positioning
+  const positions = useDockLayout(items.map(i => i.id), {
+    itemHeight: 36,
+    gap: 10,
+    maxIterations: 6
+  });
 
-  const handleBadgeClick = (item: DockItem) => {
+  const handleItemClick = (item: DockItemData) => {
     if (tooltipId === item.id) {
       setTooltipId(null);
+      setActiveId(null);
     } else {
       setTooltipId(item.id);
       setActiveId(item.id);
     }
   };
 
-  const handleFocus = (item: DockItem) => {
+  const handleFocus = (item: DockItemData) => {
     onFocus?.(item);
     setTooltipId(null);
+    setActiveId(null);
+  };
+
+  const handleFilter = (itemId: string) => {
+    onFilterToggle?.(itemId);
   };
 
   const handleClose = () => {
@@ -93,109 +74,66 @@ const DockLeft: React.FC<DockLeftProps> = ({ items, onFocus }) => {
     }
   }, [tooltipId]);
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'Portal': return 'var(--living-map-neon-primary)';
-      case 'Event': return '#24E39E';
-      case 'Alert Zone': return '#FFB347';
-      default: return 'var(--living-map-neon-secondary)';
-    }
-  };
-
   return (
-    <div ref={containerRef} style={{ position: 'absolute', left: 12, top: 0, zIndex: 1000 }}>
-      {items.map((item, index) => {
-        const position = positions.find(p => p.id === item.id);
-        if (!position) return null;
+    <div 
+      ref={containerRef} 
+      style={{ 
+        position: 'absolute', 
+        left: 12, 
+        top: 88, 
+        width: 184,
+        maxHeight: 'calc(100vh - 120px)',
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        zIndex: 1000,
+        pointerEvents: 'none',
+        // Gradient fade
+        maskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 20px, black calc(100% - 20px), transparent 100%)'
+      }}
+      className="scrollbar-hide"
+    >
+      <div style={{ position: 'relative', paddingBottom: 20 }}>
+        {items.map((item) => {
+          const position = positions.find(p => p.id === item.id);
+          if (!position) return null;
 
-        const isActive = activeId === item.id;
-        const showTooltip = tooltipId === item.id;
+          const isActive = activeId === item.id;
+          const showTooltip = tooltipId === item.id;
+          const filterActive = filters[item.id] !== false;
 
-        return (
-          <div
-            key={item.id}
-            style={{
-              position: 'absolute',
-              top: position.top,
-              left: 0,
-              transition: 'all 0.3s ease'
-            }}
-          >
-            {/* Badge */}
-            <OverlayButton
-              label={item.label}
-              active={isActive}
-              onClick={() => handleBadgeClick(item)}
-              className="relative"
-            />
+          return (
+            <div
+              key={item.id}
+              style={{
+                position: 'absolute',
+                top: position.top,
+                left: 0,
+                width: '100%',
+                transition: 'all 0.3s ease',
+                pointerEvents: 'auto'
+              }}
+            >
+              <DockItem
+                item={item}
+                active={isActive}
+                disabled={!filterActive}
+                onClick={() => handleItemClick(item)}
+              />
 
-            {/* Tooltip */}
-            {showTooltip && (
-              <div
-                className="living-hud-glass absolute left-0 bottom-full mb-2 p-3 pointer-events-auto animate-scale-in"
-                style={{
-                  minWidth: 200,
-                  zIndex: 1001,
-                  color: 'var(--living-map-text-primary)'
-                }}
-              >
-                {/* Title */}
-                <div
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    marginBottom: 4,
-                    color: getTypeColor(item.type)
-                  }}
-                >
-                  {item.label}
-                </div>
-
-                {/* Type */}
-                <div
-                  style={{
-                    fontSize: '11px',
-                    color: 'var(--living-map-text-secondary)',
-                    marginBottom: 12,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px'
-                  }}
-                >
-                  {item.type}
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleFocus(item)}
-                    className="flex-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: 'rgba(0, 229, 255, 0.15)',
-                      border: '1px solid rgba(0, 229, 255, 0.3)',
-                      color: 'var(--living-map-neon-primary)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Focus
-                  </button>
-                  <button
-                    onClick={handleClose}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      color: 'var(--living-map-text-secondary)',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      })}
+              {showTooltip && (
+                <TooltipCard
+                  item={item}
+                  onFocus={() => handleFocus(item)}
+                  onFilter={onFilterToggle ? () => handleFilter(item.id) : undefined}
+                  onClose={handleClose}
+                  filterActive={filterActive}
+                />
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

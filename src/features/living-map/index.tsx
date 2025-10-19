@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useMemo, useRef, useCallback } from 'react';
+import React, { Suspense, lazy, useMemo, useState, useCallback } from 'react';
 import { useLiveLayers } from './hooks/useLiveLayers';
 import './styles/livingMap.css';
 
@@ -11,7 +11,7 @@ const ControlZonesLayer = lazy(() => import('./components/ControlZonesLayer'));
 const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
-const Toggle3D = lazy(() => import('./components/Toggle3D'));
+const ControlsTopRight = lazy(() => import('./components/ControlsTopRight'));
 
 interface LivingMapProps {
   center?: { lat: number; lng: number };
@@ -24,6 +24,9 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
   const enabled = import.meta.env.VITE_ENABLE_LIVING_MAP !== 'false';
 
   const { portals, events, agents, zones, loading } = useLiveLayers(enabled);
+  
+  // Layer filters state
+  const [filters, setFilters] = useState<Record<string, boolean>>({});
 
   // Derive dock items from live data
   const dockItems = useMemo(() => {
@@ -80,8 +83,16 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
       detail: { lat: item.lat, lng: item.lng, zoom: zoom || 15 }
     }));
     
-    console.log('Focus on:', item.label, 'at', item.lat, item.lng);
+    console.log('[Living Map] Focus on:', item.label, 'at', item.lat, item.lng);
   }, [zoom]);
+
+  // Filter toggle handler
+  const handleFilterToggle = useCallback((itemId: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [itemId]: !(prev[itemId] ?? true)
+    }));
+  }, []);
 
   if (!enabled) {
     return null;
@@ -121,8 +132,13 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
         <AgentsLayer agents={agents} />
         <ControlZonesLayer zones={zones} />
 
-        {/* Dock Left - Badge pills */}
-        <DockLeft items={dockItems} onFocus={handleFocus} />
+        {/* Dock Left - Badge pills with filters */}
+        <DockLeft 
+          items={dockItems} 
+          onFocus={handleFocus}
+          filters={filters}
+          onFilterToggle={handleFilterToggle}
+        />
 
         {/* Top-right HUD controls */}
         <div
@@ -137,8 +153,8 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef }) 
             zonesCount={zones.length}
           />
 
-          {/* 3D Toggle */}
-          <Toggle3D mapContainerRef={mapContainerRef} />
+          {/* 3D Toggle with real terrain */}
+          <ControlsTopRight mapContainerRef={mapContainerRef} />
         </div>
       </Suspense>
     </div>
