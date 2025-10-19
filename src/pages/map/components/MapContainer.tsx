@@ -352,18 +352,13 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         <HelpDialog open={showHelpDialog || false} setOpen={setShowHelpDialog} />
       }
 
-      {/* === Living Map™ Overlay (non-distruttivo) === */}
+      {/* === Living Map™ Overlay === */}
       {import.meta.env.VITE_ENABLE_LIVING_MAP === 'true' && (
-        <div
-          aria-hidden
-          style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 1001 }}
-        >
-          <Suspense fallback={null}>
-            <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
-          </Suspense>
-        </div>
+        <Suspense fallback={null}>
+          <LivingMap center={lmCenter} zoom={lmZoom} mapContainerRef={mapContainerDivRef} />
+        </Suspense>
       )}
-      {/* === /Living Map™ Overlay === */}
+      {/* === /Living Map™ === */}
     </div>
   );
 };
