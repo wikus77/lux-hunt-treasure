@@ -22,6 +22,7 @@ import { useIPGeolocation } from '@/hooks/useIPGeolocation';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 const MapLibreLayer = lazy(() => import('@/features/living-map/components/MapLibreLayer'));
+const DebugPanel = lazy(() => import('@/features/living-map/debug/DebugPanel'));
 
 import L from 'leaflet';
 import { toast } from 'sonner';
@@ -364,6 +365,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         </Suspense>
       )}
       {/* === /Living Map™ === */}
+
+      {/* === Debug Panel === */}
+      {import.meta.env.VITE_LIVING_MAP_DEBUG === 'true' && (
+        <Suspense fallback={null}>
+          <DebugPanel />
+        </Suspense>
+      )}
+      {/* === /Debug Panel === */}
     </div>
   );
 };
