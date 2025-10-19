@@ -21,9 +21,9 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
 
   const handlePortalClick = (portalId: string) => {
     onPortalAction?.(portalId);
-    // Dispatch custom event for layer visibility
+    // P1 FIX: Dispatch proper toggle event for portal filters
     const event = new CustomEvent('M1_PORTAL_FILTER', { 
-      detail: { portalType: portalId } 
+      detail: { type: portalId.toUpperCase(), enabled: true } 
     });
     window.dispatchEvent(event);
   };

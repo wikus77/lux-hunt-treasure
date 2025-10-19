@@ -56,9 +56,9 @@ interface MapContainerProps {
   toggleAddingSearchArea?: () => void;
   showHelpDialog?: boolean;
   setShowHelpDialog?: (show: boolean) => void;
-  onToggle3D?: (is3D: boolean) => void;
-  onFocusLocation?: () => void;
-  onResetView?: () => void;
+  onToggle3D?: (handler: (is3D: boolean) => void) => void;
+  onFocusLocation?: (handler: () => void) => void;
+  onResetView?: (handler: () => void) => void;
 }
 
 const MapContainerComponent: React.FC<MapContainerProps> = ({
@@ -288,17 +288,26 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     }
   };
 
-  // P0 FIX: Expose handlers to parent as REF, not invoke them!
+  // P0 FIX: Register handlers to parent (only once)
   useEffect(() => {
     if (onFocusLocation) {
-      (onFocusLocation as any)(handleFocusLocation);
+      onFocusLocation(handleFocusLocation);
     }
-  }, []);
-
-  useEffect(() => {
     if (onResetView) {
-      (onResetView as any)(handleResetView);
+      onResetView(handleResetView);
     }
+  }, [onFocusLocation, onResetView]);
+
+  // P1 FIX: Listen for M1_PORTAL_FILTER events (UI-only)
+  useEffect(() => {
+    const handlePortalFilter = (e: Event) => {
+      const { type, enabled } = (e as CustomEvent).detail;
+      document.querySelectorAll(`[data-portal-type="${type}"]`).forEach((el) => {
+        el.classList.toggle('is-hidden', !enabled);
+      });
+    };
+    window.addEventListener('M1_PORTAL_FILTER', handlePortalFilter);
+    return () => window.removeEventListener('M1_PORTAL_FILTER', handlePortalFilter);
   }, []);
 
   return (

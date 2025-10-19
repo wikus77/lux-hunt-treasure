@@ -4,12 +4,19 @@
   position: absolute;
   bottom: 24px;
   right: 16px;
-  z-index: 1000;
+  z-index: 1002;
   display: flex;
   flex-direction: column;
   gap: 10px;
   pointer-events: auto;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* P2 FIX: Hide old scattered controls when Dock is active */
+.m1-dock-enabled .legacy-portal-buttons,
+.m1-dock-enabled > div > button[class*="LocationButton"],
+.m1-dock-enabled > div > button[class*="SearchAreaButton"] {
+  display: none !important;
 }
 
 .map-dock-button {
