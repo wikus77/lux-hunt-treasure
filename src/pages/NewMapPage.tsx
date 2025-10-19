@@ -52,29 +52,43 @@ const NewMapPage = () => {
     updateActivity,
   });
 
-  // Handlers for map dock actions - store callback refs
-  const [toggle3DCallback, setToggle3DCallback] = useState<((is3D: boolean) => void) | null>(null);
-  const [focusLocationCallback, setFocusLocationCallback] = useState<(() => void) | null>(null);
-  const [resetViewCallback, setResetViewCallback] = useState<(() => void) | null>(null);
+  // P0 FIX: Store handler refs from MapContainer
+  const toggle3DHandlerRef = React.useRef<((is3D: boolean) => void) | null>(null);
+  const focusLocationHandlerRef = React.useRef<(() => void) | null>(null);
+  const resetViewHandlerRef = React.useRef<(() => void) | null>(null);
 
-  const handleToggle3D = (enabled: boolean) => {
+  // Register handlers from MapContainer (receives function refs)
+  const registerToggle3D = React.useCallback((handler: (is3D: boolean) => void) => {
+    toggle3DHandlerRef.current = handler;
+  }, []);
+
+  const registerFocusLocation = React.useCallback((handler: () => void) => {
+    focusLocationHandlerRef.current = handler;
+  }, []);
+
+  const registerResetView = React.useCallback((handler: () => void) => {
+    resetViewHandlerRef.current = handler;
+  }, []);
+
+  // Operational handlers for MapDock (execute now)
+  const handleToggle3D = React.useCallback((enabled: boolean) => {
     setIs3D(enabled);
-    if (toggle3DCallback) {
-      toggle3DCallback(enabled);
+    if (toggle3DHandlerRef.current) {
+      toggle3DHandlerRef.current(enabled);
     }
-  };
+  }, []);
 
-  const handleFocusLocation = () => {
-    if (focusLocationCallback) {
-      focusLocationCallback();
+  const handleFocusLocation = React.useCallback(() => {
+    if (focusLocationHandlerRef.current) {
+      focusLocationHandlerRef.current();
     }
-  };
+  }, []);
 
-  const handleResetView = () => {
-    if (resetViewCallback) {
-      resetViewCallback();
+  const handleResetView = React.useCallback(() => {
+    if (resetViewHandlerRef.current) {
+      resetViewHandlerRef.current();
     }
-  };
+  }, []);
 
   return (
     <MapPageLayout>
@@ -100,9 +114,12 @@ const NewMapPage = () => {
         toggleAddingSearchArea={toggleAddingSearchArea}
         showHelpDialog={showHelpDialog}
         setShowHelpDialog={setShowHelpDialog}
-        onToggle3D={setToggle3DCallback as any}
-        onFocusLocation={setFocusLocationCallback as any}
-        onResetView={setResetViewCallback as any}
+        onToggle3D={handleToggle3D}
+        onFocusLocation={handleFocusLocation}
+        onResetView={handleResetView}
+        onRegisterToggle3D={registerToggle3D}
+        onRegisterFocusLocation={registerFocusLocation}
+        onRegisterResetView={registerResetView}
       />
       
       <SidebarLayout

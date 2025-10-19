@@ -31,9 +31,13 @@ interface MapSectionProps {
   toggleAddingSearchArea: () => void;
   showHelpDialog: boolean;
   setShowHelpDialog: (show: boolean) => void;
+  // Handlers from NewMapPage
   onToggle3D?: (is3D: boolean) => void;
   onFocusLocation?: () => void;
   onResetView?: () => void;
+  onRegisterToggle3D?: (handler: (is3D: boolean) => void) => void;
+  onRegisterFocusLocation?: (handler: () => void) => void;
+  onRegisterResetView?: (handler: () => void) => void;
 }
 
 const MapSection: React.FC<MapSectionProps> = ({
@@ -61,9 +65,12 @@ const MapSection: React.FC<MapSectionProps> = ({
   onToggle3D,
   onFocusLocation,
   onResetView,
+  onRegisterToggle3D,
+  onRegisterFocusLocation,
+  onRegisterResetView,
 }) => {
   return (
-    <div className="m1ssion-glass-card p-4 sm:p-6 mb-6" style={{ marginTop: "20px" }}>
+    <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 m1-dock-enabled" style={{ marginTop: "20px" }}>
       {/* Titoli sopra la mappa - BY JOSEPH MULE */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-orbitron font-bold mb-1">
@@ -128,6 +135,9 @@ const MapSection: React.FC<MapSectionProps> = ({
             toggleAddingSearchArea={toggleAddingSearchArea}
             showHelpDialog={showHelpDialog}
             setShowHelpDialog={setShowHelpDialog}
+            onToggle3D={onRegisterToggle3D}
+            onFocusLocation={onRegisterFocusLocation}
+            onResetView={onRegisterResetView}
           />
         </Suspense>
       </div>
