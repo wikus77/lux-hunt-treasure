@@ -1,6 +1,8 @@
 // 🔧 FILE CREATO O MODIFICATO — BY JOSEPH MULE
 import React, { lazy, Suspense } from 'react';
 import MapLoadingFallback from './MapLoadingFallback';
+import LivingMapOverlay from '@/components/living/LivingMapOverlay';
+import PerspectiveToggle from '@/components/living/PerspectiveToggle';
 
 // Lazy load heavy map components
 const MapContainer = lazy(() => import('./MapContainer'));
@@ -65,6 +67,15 @@ const MapSection: React.FC<MapSectionProps> = ({
       {/* Container mappa con fix overflow - BY JOSEPH MULE */}
       <div className="relative rounded-lg overflow-hidden border border-white/10" 
            style={{ minHeight: "400px", marginTop: "0px" }}>
+        
+        {/* Living Map™ Overlay */}
+        <LivingMapOverlay mode="auto" />
+        
+        {/* 3D Perspective Toggle */}
+        <div className="absolute top-4 right-4 z-[1000] pointer-events-auto">
+          <PerspectiveToggle />
+        </div>
+        
         <Suspense fallback={<MapLoadingFallback />}>
           <MapContainer
             isAddingPoint={isAddingPoint}
