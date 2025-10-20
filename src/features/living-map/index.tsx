@@ -11,6 +11,7 @@ const ControlZonesLayer = lazy(() => import('./components/ControlZonesLayer'));
 const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
+const BadgeStackOverlay = lazy(() => import('./components/BadgeStackOverlay'));
 
 
 interface LivingMapProps {
@@ -92,10 +93,11 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
         <RadarOverlay center={center || { lat: 43.7874, lng: 7.6326 }} />
 
         {/* Data layers */}
-        <PortalsLayer portals={portals} />
-        <EventsLayer events={events} />
+        <PortalsLayer portals={portals} showLabels={false} />
+        <EventsLayer events={events} showLabels={false} />
         <AgentsLayer agents={agents} />
         <ControlZonesLayer zones={zones} showLabels={false} />
+        <BadgeStackOverlay portals={portals} events={events} zones={zones} />
 
         {/* Dock Left - Badge pills (hidden when Portal Container active) */}
         {!hidePortalBadges && <DockLeft items={dockItems} onFocus={handleFocus} />}
