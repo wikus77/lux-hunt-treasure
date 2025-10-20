@@ -258,6 +258,20 @@ const initializeSentry = () => {
 
 initializeSentry();
 
+// M1SSION™ Debug Bridge - Expose ENV and helpers for runtime diagnostics
+if (typeof window !== 'undefined') {
+  (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+    env: { 
+      TERRAIN: !!import.meta.env.VITE_TERRAIN_URL,
+      CONTOUR: !!import.meta.env.VITE_CONTOUR_URL,
+      SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
+      SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+    },
+    ping: (m: string) => console.log('[M1DEBUG]', m)
+  });
+  console.log('🐛 M1DEBUG bridge ready - window.__M1_DEBUG.ping("test")');
+}
+
 // Create QueryClient instance for React Query with enhanced configuration
 const queryClient = new QueryClient({
   defaultOptions: {

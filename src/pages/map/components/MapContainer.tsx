@@ -597,13 +597,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const init = async () => {
       try {
         // Initialize presence with agent code and coordinates getter
+        // CRITICAL: Self marker ALWAYS tracked (even without coords)
         await initAgentsPresence(currentAgentCode, () => {
           if (geoPosition) {
             console.log('📍 Providing position to agents presence:', geoPosition);
             return { lat: geoPosition.lat, lng: geoPosition.lng };
           }
-          console.log('⏸️ No position available yet');
-          return null;
+          console.log('⏸️ No position available yet (self marker tracked without coords)');
+          return null; // Self is online but location TBD
         });
 
         // Subscribe to agents updates AFTER initialization
@@ -611,30 +612,37 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           console.log('👥 Agents update received:', agents.length, 'online agents');
           
           // Convert AgentPresence[] to Agent[] format for the layer
-          const agentData = agents.map(a => ({
-            id: a.id,
-            agent_code: a.agent_code,
-            lat: a.lat,
-            lng: a.lng,
-          }));
+          // Filter out agents without coordinates (can't render on map)
+          const agentData = agents
+            .filter(a => a.lat !== undefined && a.lng !== undefined)
+            .map(a => ({
+              id: a.id,
+              agent_code: a.agent_code,
+              lat: a.lat!,
+              lng: a.lng!,
+            }));
 
           // Update layer with current user ID for highlighting "You"
           if (agentsLayerRef.current) {
             agentsLayerRef.current.setData(agentData, currentUserId);
             
-            // Update count
+            // Update count with TOTAL agents (including those without coords)
             setLayerCounts(prev => ({
               ...prev,
-              agents: agentData.length,
+              agents: agents.length, // Total online, not just those on map
             }));
             
-            console.log('✅ Agents layer updated with', agentData.length, 'agents');
+            console.log(`✅ Agents layer updated: ${agentData.length}/${agents.length} visible on map`);
           }
         });
         
         console.log('✅ Agents presence fully initialized and subscribed');
       } catch (error) {
         console.error('❌ Error initializing agents presence:', error);
+        toast.error('Agents Online non disponibile', {
+          description: error instanceof Error ? error.message : 'Errore sconosciuto',
+          duration: 4000
+        });
       }
     };
 
