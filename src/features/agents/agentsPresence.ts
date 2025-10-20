@@ -23,8 +23,14 @@ export async function initAgentsPresence(
   agentCode: string,
   getCoords: () => { lat: number; lng: number } | null
 ): Promise<void> {
+  // Update debug status
+  (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+    presence: { status: 'INIT', last: null, error: null, count: 0 }
+  });
+  
   if (channel) {
     console.warn('⚠️ Agents presence already initialized');
+    (window as any).__M1_DEBUG.presence.status = 'ALREADY_INIT';
     return;
   }
 
@@ -33,10 +39,12 @@ export async function initAgentsPresence(
   
   if (!id) {
     console.error('❌ Cannot init agents presence: user not authenticated');
+    (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'NOT_AUTHENTICATED', last: null, count: 0 };
     return;
   }
 
   console.log('🟢 Initializing agents presence for', agentCode);
+  console.log('[Presence] Channel: m1_agents_presence_v1');
 
   // Create presence channel (v1) with presence + broadcast ack
   channel = supabase.channel('m1_agents_presence_v1', {
@@ -46,22 +54,37 @@ export async function initAgentsPresence(
     },
   });
 
+  console.log('[Presence] status → CHANNEL_CREATED');
+  (window as any).__M1_DEBUG.presence.status = 'CHANNEL_CREATED';
+
   // Subscribe to presence state and wait for SUBSCRIBED
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
       console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (8s)');
+      (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TIMEOUT', last: null, count: 0 };
       reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
     }, 8000);
+
+    console.log('[Presence] status → SUBSCRIBING');
+    (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBING';
 
     channel!
       .on('presence', { event: 'sync' }, () => {
         const state = channel!.presenceState();
-        console.log('👥 Agents presence sync:', Object.keys(state).length, 'online');
+        const count = Object.keys(state).length;
+        console.log(`[Presence] status → SYNC(${count})`);
+        (window as any).__M1_DEBUG.presence = {
+          status: `SYNC(${count})`,
+          last: Date.now(),
+          error: null,
+          count
+        };
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           clearTimeout(timeout);
-          console.log('✅ Agents presence channel SUBSCRIBED');
+          console.log('[Presence] status → SUBSCRIBED');
+          (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBED';
           
           // Track initial presence (await to ensure ACK)
           // ALWAYS track self, even without coordinates (online marker)
@@ -72,16 +95,19 @@ export async function initAgentsPresence(
               timestamp: Date.now(),
               ...(getCoords() || {}), // Add coords if available
             };
-            console.log('📤 Tracking initial presence:', initialPayload);
+            console.log('[Presence] Tracking initial payload:', { agent_code: agentCode, hasCoords: !!getCoords() });
             await channel!.track(initialPayload as any);
-            console.log('✅ Initial presence tracked successfully');
+            console.log('[Presence] status → TRACKED');
+            (window as any).__M1_DEBUG.presence.status = 'TRACKED';
           } catch (e) {
-            console.warn('⚠️ Initial presence track failed:', e);
+            console.error('[Presence] Initial track failed:', e);
+            (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TRACK_FAILED', last: null, count: 0 };
           }
           resolve();
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           clearTimeout(timeout);
-          console.error('❌ Agents presence channel error:', status);
+          console.error('[Presence] Channel error:', status);
+          (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: status, last: null, count: 0 };
           reject(new Error(String(status)));
         }
       });
@@ -100,10 +126,12 @@ export async function initAgentsPresence(
       ...(coords || {}), // Include coords if available
     };
     
-    console.log('💓 Heartbeat: Refreshing presence', { 
-      timestamp: payload.timestamp, 
-      hasCoords: !!coords 
-    });
+    if (import.meta.env.DEV) {
+      console.log('💓 Heartbeat: Refreshing presence', { 
+        timestamp: payload.timestamp, 
+        hasCoords: !!coords 
+      });
+    }
     
     channel.track(payload as any).catch(err => {
       console.warn('⚠️ Heartbeat track failed:', err);

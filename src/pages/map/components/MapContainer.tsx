@@ -263,40 +263,44 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
     const contoursUrl = import.meta.env.VITE_CONTOUR_URL as string | undefined;
     
-    console.log('🔧 enable3D() called');
-    console.log('  - VITE_TERRAIN_URL:', demUrl || 'NOT DEFINED');
-    console.log('  - VITE_CONTOUR_URL:', contoursUrl || 'NOT DEFINED');
-    console.log('  - mapRef.current:', !!mapRef.current);
-    console.log('  - terrainRef.current (already exists?):', !!terrainRef.current);
+    console.log('[Terrain] enable3D() called');
+    console.log('[Terrain] env.TERRAIN:', !!demUrl);
+    console.log('[Terrain] VITE_TERRAIN_URL:', demUrl ? `${new URL(demUrl).host}/...` : 'NOT DEFINED');
+    console.log('[Terrain] mapRef.current:', !!mapRef.current);
+    console.log('[Terrain] terrainRef.current:', !!terrainRef.current);
     
     if (!demUrl) {
-      console.error('❌ 3D Terrain CANNOT be enabled: VITE_TERRAIN_URL is not defined');
-      console.error('   Please add to .env file:');
-      console.error('   VITE_TERRAIN_URL=https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=VRJaVKMtkFdyVzhXCjBF');
-      toast.error('3D Terrain non configurato', {
-        description: 'Variabile VITE_TERRAIN_URL mancante',
+      console.error('[Terrain] ❌ CANNOT enable: VITE_TERRAIN_URL not defined');
+      toast.error('3D Terrain non disponibile', {
+        description: 'DEM mancante - configurare VITE_TERRAIN_URL',
         duration: 4000
+      });
+      // Update debug status
+      (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+        terrain3D: { available: false, terrainUrl: null, active: false, error: 'MISSING_DEM_URL' }
       });
       return;
     }
 
     // Validate TileJSON format quickly
     if (!/tiles\.json/i.test(demUrl)) {
-      console.warn('⚠️ VITE_TERRAIN_URL non sembra un TileJSON endpoint (manca tiles.json)');
-      toast.warning('URL DEM non valido (atteso TileJSON)');
+      console.warn('[Terrain] ⚠️ URL non sembra TileJSON endpoint (manca tiles.json)');
+      toast.warning('URL DEM potrebbe non essere valido (atteso TileJSON)');
     }
     
     if (!mapRef.current) {
-      console.error('❌ 3D Terrain CANNOT be enabled: mapRef.current is null');
+      console.error('[Terrain] ❌ CANNOT enable: map not ready');
+      toast.error('Mappa non pronta per 3D');
       return;
     }
     
     if (terrainRef.current) {
-      console.warn('⚠️ Terrain layer already exists, skipping creation');
+      console.log('[Terrain] Layer already exists, skipping creation');
+      toast.info('3D Terrain già attivo');
       return;
     }
     
-    console.log('✅ Preconditions met, creating TerrainLayer...');
+    console.log('[Terrain] ✅ Creating TerrainLayer...');
     
     try {
       const layer = new TerrainLayer({ 
@@ -338,36 +342,44 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         duration: 3000
       });
       
-      // Expose debug info
-      if (import.meta.env.DEV) {
-        (window as any).__M1_DEBUG = {
-          ...(window as any).__M1_DEBUG,
-          terrain3D: {
-            active: true,
-            demUrl,
-            contoursUrl,
-            layerReady: terrainRef.current?.isReady?.() || 'unknown'
-          }
-        };
-      }
+      // Update debug status
+      (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+        terrain3D: {
+          available: true,
+          terrainUrl: demUrl,
+          active: true,
+          error: null,
+          layerReady: terrainRef.current?.isReady?.() || 'unknown'
+        }
+      });
     } catch (error) {
-      console.error('❌ Error creating TerrainLayer:', error);
+      console.error('[Terrain] ❌ Creation failed:', error);
       toast.error('Errore attivazione 3D', {
-        description: String(error),
+        description: error instanceof Error ? error.message : 'Errore sconosciuto',
         duration: 4000
+      });
+      
+      // Update debug status
+      (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+        terrain3D: {
+          available: false,
+          terrainUrl: demUrl,
+          active: false,
+          error: error instanceof Error ? error.message : 'UNKNOWN_ERROR'
+        }
       });
     }
   };
 
   const disable3D = () => {
-    console.log('🔧 disable3D() called');
+    console.log('[Terrain] disable3D() called');
     
     if (!terrainRef.current || !mapRef.current) {
-      console.log('⚠️ Nothing to disable (terrain not active)');
+      console.log('[Terrain] Nothing to disable (not active)');
       return;
     }
     
-    console.log('✅ Removing terrain layer...');
+    console.log('[Terrain] Removing terrain layer...');
     mapRef.current.removeLayer(terrainRef.current);
     terrainRef.current = null;
     
@@ -375,7 +387,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const tilePane = mapRef.current.getPanes().tilePane;
     if (tilePane) {
       tilePane.style.opacity = '1';
-      console.log('✅ Tile pane opacity restored to 1');
+      console.log('[Terrain] Tile pane opacity → 1');
     }
     
     // Remove tilt
@@ -383,26 +395,24 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
       if (mapPane) {
         (mapPane as HTMLElement).style.transform = '';
-        console.log('✅ Perspective transform removed');
+        console.log('[Terrain] Perspective removed');
       }
     }
     
-    console.log('✅ 3D Terrain deactivated - flat map restored');
+    console.log('[Terrain] ✅ Deactivated');
     
-    toast.info('Modalità 2D attivata', {
-      description: 'Mappa piatta ripristinata',
-      duration: 2000
+    toast.info('Modalità 2D attivata');
+    
+    // Update debug status
+    const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
+    (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+      terrain3D: {
+        available: !!demUrl,
+        terrainUrl: demUrl || null,
+        active: false,
+        error: null
+      }
     });
-    
-    // Update debug info
-    if (import.meta.env.DEV) {
-      (window as any).__M1_DEBUG = {
-        ...(window as any).__M1_DEBUG,
-        terrain3D: {
-          active: false
-        }
-      };
-    }
   };
 
   // P0 FIX: Handle 3D toggle from parent (via M1_TOGGLE_3D event)
@@ -593,23 +603,25 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     
     let unsubscribe: (() => void) | null = null;
 
-    // Async initialization
+    // Async initialization with enhanced error handling
     const init = async () => {
       try {
+        console.log('[Presence] Starting initialization...');
+        
         // Initialize presence with agent code and coordinates getter
         // CRITICAL: Self marker ALWAYS tracked (even without coords)
         await initAgentsPresence(currentAgentCode, () => {
           if (geoPosition) {
-            console.log('📍 Providing position to agents presence:', geoPosition);
             return { lat: geoPosition.lat, lng: geoPosition.lng };
           }
-          console.log('⏸️ No position available yet (self marker tracked without coords)');
           return null; // Self is online but location TBD
         });
 
+        console.log('[Presence] ✅ Initialized, subscribing to updates...');
+
         // Subscribe to agents updates AFTER initialization
         unsubscribe = subscribeAgents((agents: AgentPresence[]) => {
-          console.log('👥 Agents update received:', agents.length, 'online agents');
+          console.log('[Presence] Update:', agents.length, 'online');
           
           // Convert AgentPresence[] to Agent[] format for the layer
           // Filter out agents without coordinates (can't render on map)
@@ -632,17 +644,21 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
               agents: agents.length, // Total online, not just those on map
             }));
             
-            console.log(`✅ Agents layer updated: ${agentData.length}/${agents.length} visible on map`);
+            console.log(`[Presence] Rendered: ${agentData.length}/${agents.length} on map`);
           }
         });
         
-        console.log('✅ Agents presence fully initialized and subscribed');
+        console.log('[Presence] ✅ Fully initialized and subscribed');
       } catch (error) {
-        console.error('❌ Error initializing agents presence:', error);
+        console.error('[Presence] ❌ Init failed:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         toast.error('Agents Online non disponibile', {
-          description: error instanceof Error ? error.message : 'Errore sconosciuto',
+          description: errorMsg === 'PRESENCE_SUBSCRIBE_TIMEOUT' 
+            ? 'Timeout connessione - verifica rete' 
+            : 'Errore inizializzazione',
           duration: 4000
         });
+        // Don't re-throw - fail gracefully
       }
     };
 
