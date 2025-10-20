@@ -4,8 +4,8 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 export interface AgentPresence {
   id: string;
   agent_code: string;
-  lat: number;
-  lng: number;
+  lat?: number; // Optional - agent can be online without location
+  lng?: number; // Optional - agent can be online without location
   timestamp: number;
 }
 
@@ -49,7 +49,7 @@ export async function initAgentsPresence(
   // Subscribe to presence state and wait for SUBSCRIBED
   await new Promise<void>((resolve, reject) => {
     const timeout = setTimeout(() => {
-      console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT');
+      console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (8s)');
       reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
     }, 8000);
 
@@ -61,15 +61,20 @@ export async function initAgentsPresence(
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
           clearTimeout(timeout);
-          console.log('✅ Agents presence channel subscribed');
+          console.log('✅ Agents presence channel SUBSCRIBED');
+          
           // Track initial presence (await to ensure ACK)
+          // ALWAYS track self, even without coordinates (online marker)
           try {
-            await channel!.track({
+            const initialPayload = {
               id,
               agent_code: agentCode,
-              ...(getCoords() || {}),
               timestamp: Date.now(),
-            } as any);
+              ...(getCoords() || {}), // Add coords if available
+            };
+            console.log('📤 Tracking initial presence:', initialPayload);
+            await channel!.track(initialPayload as any);
+            console.log('✅ Initial presence tracked successfully');
           } catch (e) {
             console.warn('⚠️ Initial presence track failed:', e);
           }
@@ -82,12 +87,30 @@ export async function initAgentsPresence(
       });
   });
 
-  // Heartbeat every 30s to keep presence alive
+  // Heartbeat every 30s to refresh presence (requirement)
+  // Always track, even without coordinates (keep agent online)
   heartbeatInterval = setInterval(() => {
-    updatePresence(id, agentCode, getCoords);
-  }, 30000);
+    if (!channel) return;
+    
+    const coords = getCoords();
+    const payload = {
+      id,
+      agent_code: agentCode,
+      timestamp: Date.now(),
+      ...(coords || {}), // Include coords if available
+    };
+    
+    console.log('💓 Heartbeat: Refreshing presence', { 
+      timestamp: payload.timestamp, 
+      hasCoords: !!coords 
+    });
+    
+    channel.track(payload as any).catch(err => {
+      console.warn('⚠️ Heartbeat track failed:', err);
+    });
+  }, 30000); // 30s heartbeat
   
-  console.log('✅ Agents presence initialization complete');
+  console.log('✅ Agents presence initialization complete (heartbeat: 30s)');
 }
 
 /**
