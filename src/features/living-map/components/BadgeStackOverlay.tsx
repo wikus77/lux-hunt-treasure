@@ -61,7 +61,7 @@ const BadgeStackOverlay: React.FC<BadgeStackOverlayProps> = ({ portals, events, 
         const top = `${((90 - s.lat) / 180) * 100}%`;
         return (
           <div key={s.key} className="absolute" style={{ left, top, transform: 'translate(-50%, -100%)' }}>
-            <div className="flex flex-col items-center justify-center gap-1 pointer-events-none">
+            <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
               {s.badges.map((b) => (
                 <div
                   key={b.id}
