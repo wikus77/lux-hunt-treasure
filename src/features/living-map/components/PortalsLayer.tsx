@@ -4,9 +4,10 @@ import type { PortalDTO } from '../adapters/readOnlyData';
 interface PortalsLayerProps {
   portals: PortalDTO[];
   mapRef?: any;
+  showLabels?: boolean;
 }
 
-const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals }) => {
+const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals, showLabels = true }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {portals.map((portal) => (
@@ -38,18 +39,20 @@ const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals }) => {
             />
           </div>
 
-          {/* Label pill */}
-          <div
-            className="living-hud-glass mt-2 px-2 py-1 text-xs whitespace-nowrap pointer-events-auto cursor-pointer"
-            style={{
-              color: 'var(--living-map-text-primary)',
-              fontSize: '10px',
-              fontWeight: 600
-            }}
-            title={`${portal.name} - ${portal.intensity}% intensity`}
-          >
-            {portal.name}
-          </div>
+          {showLabels && (
+            /* Label pill */
+            <div
+              className="living-hud-glass mt-2 px-2 py-1 text-xs whitespace-nowrap pointer-events-auto cursor-pointer"
+              style={{
+                color: 'var(--living-map-text-primary)',
+                fontSize: '10px',
+                fontWeight: 600
+              }}
+              title={`${portal.name} - ${portal.intensity}% intensity`}
+            >
+              {portal.name}
+            </div>
+          )}
         </div>
       ))}
     </div>
