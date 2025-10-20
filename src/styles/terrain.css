@@ -1,0 +1,25 @@
+.m1-terrain-container { 
+  will-change: transform; 
+}
+
+.leaflet-container .m1-terrain-container canvas { 
+  pointer-events: none !important; 
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m1-terrain-container { 
+    transition: none !important; 
+  }
+}
+
+/* mantiene i tuoi marker e controlli SOPRA il terrain */
+.leaflet-pane.leaflet-marker-pane { 
+  z-index: 600; 
+}
+
+.leaflet-pane.leaflet-tooltip-pane,
+.leaflet-pane.leaflet-popup-pane { 
+  z-index: 650; 
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
