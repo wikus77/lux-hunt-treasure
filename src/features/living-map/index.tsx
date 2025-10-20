@@ -11,7 +11,7 @@ const ControlZonesLayer = lazy(() => import('./components/ControlZonesLayer'));
 const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
-const SectorBadgesColumn = lazy(() => import('./components/SectorBadgesColumn'));
+
 
 interface LivingMapProps {
   center?: { lat: number; lng: number };
@@ -120,10 +120,7 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
         <PortalsLayer portals={portals} />
         <EventsLayer events={events} />
         <AgentsLayer agents={agents} />
-        <ControlZonesLayer zones={zones} showLabels={false} />
-
-        {/* Sector badges - stacked column on the same side */}
-        <SectorBadgesColumn zones={zones} />
+        <ControlZonesLayer zones={zones} />
 
         {/* Dock Left - Badge pills (hidden when Portal Container active) */}
         {!hidePortalBadges && <DockLeft items={dockItems} onFocus={handleFocus} />}
