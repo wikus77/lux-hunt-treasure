@@ -222,7 +222,16 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
     const contoursUrl = import.meta.env.VITE_CONTOUR_URL as string | undefined;
     
-    if (!demUrl || !mapRef.current || terrainRef.current) return;
+    if (!demUrl || !mapRef.current || terrainRef.current) {
+      if (import.meta.env.DEV && !demUrl) {
+        console.warn('⚠️ VITE_TERRAIN_URL not configured - 3D terrain unavailable');
+      }
+      return;
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log('🔧 Enabling 3D terrain with URL:', demUrl);
+    }
     
     const layer = new TerrainLayer({ 
       demUrl, 
@@ -249,6 +258,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     
     if (import.meta.env.DEV) {
       console.log('✅ 3D Terrain activated - hillshade should be visible');
+      console.log('  - DEM URL:', demUrl);
+      console.log('  - Tile opacity:', '0.35');
+      console.log('  - Pitch:', '55°');
     }
   };
 
