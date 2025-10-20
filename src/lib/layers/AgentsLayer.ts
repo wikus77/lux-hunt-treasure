@@ -2,7 +2,8 @@ import L from 'leaflet';
 
 interface Agent {
   id: string;
-  name: string;
+  name?: string;
+  agent_code: string;
   lat: number;
   lng: number;
 }
@@ -34,41 +35,18 @@ export class AgentsLayer {
     this.group.addTo(map);
   }
 
-  setData(agents: Agent[], currentUser?: { lat: number; lng: number; name: string }) {
+  setData(agents: Agent[], currentUserId?: string) {
     this.group.clearLayers();
     
-    // Add current user marker (red pulsing)
-    if (currentUser) {
-      const userIcon = L.divIcon({
-        html: '<div class="m1-agent-dot m1-agent-dot--me" data-layer="agents" data-agent="me"></div>',
-        className: 'm1-agent-wrapper',
-        iconSize: [12, 12],
-        iconAnchor: [6, 6],
-      });
-
-      const userMarker = L.marker([currentUser.lat, currentUser.lng], {
-        icon: userIcon,
-        pane: 'm1-agents',
-        bubblingMouseEvents: false,
-      });
-
-      userMarker.bindTooltip(currentUser.name || 'Me', {
-        direction: 'top',
-        offset: L.point(0, -8),
-        className: 'm1-portal-tooltip',
-        permanent: false,
-      });
-
-      this.group.addLayer(userMarker);
-    }
-    
-    // Add other agents (smaller red dots)
+    // Render all agents
     agents.forEach((agent) => {
+      const isMe = currentUserId && agent.id === currentUserId;
+      
       const icon = L.divIcon({
-        html: '<div class="m1-agent-dot" data-layer="agents" data-agent="other"></div>',
+        html: `<div class="m1-agent-dot ${isMe ? 'm1-agent-dot--me' : ''}" data-layer="agents" data-agent="${isMe ? 'me' : 'other'}"></div>`,
         className: 'm1-agent-wrapper',
-        iconSize: [8, 8],
-        iconAnchor: [4, 4],
+        iconSize: isMe ? [12, 12] : [8, 8],
+        iconAnchor: isMe ? [6, 6] : [4, 4],
       });
 
       const marker = L.marker([agent.lat, agent.lng], {
@@ -77,10 +55,16 @@ export class AgentsLayer {
         bubblingMouseEvents: false,
       });
 
-      marker.bindTooltip(`Agent • ${agent.name}`, {
+      // Tooltip shows agent code (e.g., "You — AG-X0197" or "AG-X0197")
+      const tooltipText = isMe 
+        ? `You — ${agent.agent_code}`
+        : agent.agent_code;
+
+      marker.bindTooltip(tooltipText, {
         direction: 'top',
         offset: L.point(0, -8),
         className: 'm1-portal-tooltip',
+        permanent: false,
       });
 
       this.group.addLayer(marker);
