@@ -92,24 +92,13 @@ const DockLeft: React.FC<DockLeftProps> = ({ items, onFocus }) => {
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'absolute', left: 12, top: 0, zIndex: 1000 }}>
-      {items.map((item, index) => {
-        const position = positions.find(p => p.id === item.id);
-        if (!position) return null;
-
+    <div ref={containerRef} style={{ position: 'absolute', left: 12, top: 88, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {items.map((item) => {
         const isActive = activeId === item.id;
         const showTooltip = tooltipId === item.id;
 
         return (
-          <div
-            key={item.id}
-            style={{
-              position: 'absolute',
-              top: position.top,
-              left: 0,
-              transition: 'all 0.3s ease'
-            }}
-          >
+          <div key={item.id} className="relative">
             {/* Badge */}
             <OverlayButton
               label={item.label}

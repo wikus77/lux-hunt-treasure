@@ -56,9 +56,10 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
       {/* Pill - Collapsed State */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsOpen(prev => !prev)}
           className="living-layers-pill"
-          aria-label="Open LIVING LAYERS"
+          aria-label="Toggle LIVING LAYERS"
+          aria-expanded={isOpen}
         >
           <Layers className="w-4 h-4" />
           <span className="living-layers-pill-label">LIVING LAYERS</span>
@@ -69,7 +70,12 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
       {isOpen && (
         <div className="living-layers-panel">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-orbitron font-bold text-cyan-400">
+            <h3
+              className="text-sm font-orbitron font-bold text-cyan-400 cursor-pointer select-none"
+              onClick={() => setIsOpen(false)}
+              role="button"
+              aria-label="Close LIVING LAYERS"
+            >
               LIVING LAYERS
             </h3>
             <Button
