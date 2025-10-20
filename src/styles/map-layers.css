@@ -1,0 +1,62 @@
+/* M1SSION Map Layers - Living Layers System */
+
+/* Zone circles with glow */
+.m1-zone-circle {
+  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.3));
+}
+
+/* Layer visibility toggle */
+[data-layer].is-hidden,
+[data-layer].is-hidden * {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Event markers */
+.m1-event-wrapper {
+  background: transparent !important;
+  border: none !important;
+}
+
+.m1-event-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #a855f7;
+  box-shadow: 0 0 6px 2px rgba(168, 85, 247, 0.7),
+              0 0 14px 4px rgba(168, 85, 247, 0.3);
+  cursor: pointer;
+  animation: eventPulse 2.2s ease-in-out infinite;
+}
+
+.m1-event-dot:hover {
+  box-shadow: 0 0 10px 3px rgba(168, 85, 247, 0.9),
+              0 0 20px 6px rgba(168, 85, 247, 0.4);
+  transform: scale(1.1);
+}
+
+@keyframes eventPulse {
+  0%, 100% {
+    box-shadow: 0 0 6px 2px rgba(168, 85, 247, 0.7),
+                0 0 14px 4px rgba(168, 85, 247, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 10px 3px rgba(168, 85, 247, 0.9),
+                0 0 18px 5px rgba(168, 85, 247, 0.4);
+    transform: scale(1.08);
+  }
+}
+
+/* Ensure layers work with Leaflet panes */
+.leaflet-pane[data-layer] {
+  transition: opacity 0.3s ease;
+}
+
+.leaflet-pane[data-layer].is-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */

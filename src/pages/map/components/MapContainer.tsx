@@ -22,12 +22,14 @@ import { useIPGeolocation } from '@/hooks/useIPGeolocation';
 import { TerrainLayer } from '@/lib/terrain/TerrainLayer';
 import '@/styles/terrain.css';
 import '@/styles/portals.css';
+import '@/styles/map-layers.css';
 import { PortalLayer } from '@/lib/portals/PortalLayer';
 import { EventsLayer } from '@/lib/layers/EventsLayer';
 import { AgentsLayer } from '@/lib/layers/AgentsLayer';
 import { ZonesLayer } from '@/lib/layers/ZonesLayer';
 import { PORTALS_SEED } from '@/data/portals.seed';
 import { MOCK_EVENTS, MOCK_AGENTS, MOCK_ZONES } from '@/data/mockLayers';
+import { useGeolocation } from '@/hooks/useGeolocation';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -107,6 +109,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const agentsLayerRef = useRef<AgentsLayer | null>(null);
   const zonesLayerRef = useRef<ZonesLayer | null>(null);
   const [layerCounts, setLayerCounts] = useState({ portals: 0, events: 0, agents: 0, zones: 0 });
+  
+  // Geolocation for current user agent
+  const { position: geoPosition, status: geoStatus } = useGeolocation();
   const [is3DActive, setIs3DActive] = useState(false);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -389,12 +394,17 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       eventsLayerRef.current.setData(MOCK_EVENTS);
     }
     
-    // Initialize Agents
+    // Initialize Agents (with current user position if available)
     if (!agentsLayerRef.current) {
       console.log('👥 Initializing Agents Layer');
       agentsLayerRef.current = new AgentsLayer();
       agentsLayerRef.current.mount(mapRef.current);
-      agentsLayerRef.current.setData(MOCK_AGENTS);
+      const currentUser = geoPosition ? {
+        lat: geoPosition.lat,
+        lng: geoPosition.lng,
+        name: 'Me'
+      } : undefined;
+      agentsLayerRef.current.setData(MOCK_AGENTS, currentUser);
     }
     
     // Initialize Zones
@@ -440,14 +450,38 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const handlePortalClick = (e: Event) => {
       const { id, name, lat, lng } = (e as CustomEvent).detail;
       console.log('🎯 Portal clicked:', name, id, `[${lat}, ${lng}]`);
-      toast.success(`Portal – ${name}`, {
-        description: 'Portal interaction – WIP',
-        duration: 3500,
+      toast.success(`Portal — ${name}`, {
+        description: 'Portal interaction — WIP',
+        duration: 3000,
       });
     };
     window.addEventListener('M1_PORTAL_CLICK', handlePortalClick);
     return () => window.removeEventListener('M1_PORTAL_CLICK', handlePortalClick);
   }, []);
+
+  // Listen for M1_PORTAL_FOCUS events (pan/zoom to portal)
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    const handlePortalFocus = (e: Event) => {
+      const { id, name, lat, lng } = (e as CustomEvent).detail;
+      console.log('🔍 Portal focus:', name, id, `[${lat}, ${lng}]`);
+      
+      if (mapRef.current) {
+        try {
+          mapRef.current.flyTo([lat, lng], 14, {
+            duration: 1.2,
+            easeLinearity: 0.25
+          });
+        } catch (err) {
+          console.error('[M1] Portal focus error:', err);
+        }
+      }
+    };
+    
+    window.addEventListener('M1_PORTAL_FOCUS', handlePortalFocus);
+    return () => window.removeEventListener('M1_PORTAL_FOCUS', handlePortalFocus);
+  }, [mapRef.current]);
 
   return (
     <div 

@@ -18,22 +18,16 @@ export const MOCK_ZONES = [
   {
     id: 'z_pacific',
     name: 'Pacific Zone',
-    coordinates: [
-      [35.0, -125.0],
-      [45.0, -125.0],
-      [45.0, -115.0],
-      [35.0, -115.0],
-    ] as [number, number][],
+    lat: 40.0,
+    lng: -120.0,
+    radius: 800000, // 800km radius
   },
   {
     id: 'z_europe',
     name: 'European Zone',
-    coordinates: [
-      [45.0, -5.0],
-      [55.0, -5.0],
-      [55.0, 15.0],
-      [45.0, 15.0],
-    ] as [number, number][],
+    lat: 50.0,
+    lng: 5.0,
+    radius: 600000, // 600km radius
   },
 ];
 

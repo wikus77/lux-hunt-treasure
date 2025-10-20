@@ -3,7 +3,9 @@ import L from 'leaflet';
 interface Zone {
   id: string;
   name: string;
-  coordinates: [number, number][];
+  lat: number;
+  lng: number;
+  radius: number;
 }
 
 export class ZonesLayer {
@@ -33,26 +35,28 @@ export class ZonesLayer {
     this.group.addTo(map);
   }
 
-  setData(zones: Zone[]) {
+  setData(zones: Array<{ id: string; name: string; lat: number; lng: number; radius: number }>) {
     this.group.clearLayers();
     
     zones.forEach((zone) => {
-      const polygon = L.polygon(zone.coordinates, {
+      const circle = L.circle([zone.lat, zone.lng], {
+        radius: zone.radius,
         color: '#00e5ff',
         fillColor: '#00e5ff',
-        fillOpacity: 0.1,
+        fillOpacity: 0.08,
         weight: 2,
-        opacity: 0.6,
+        opacity: 0.5,
         pane: 'm1-zones',
+        className: 'm1-zone-circle',
       });
 
-      polygon.bindTooltip(zone.name, {
+      circle.bindTooltip(zone.name, {
         direction: 'center',
         className: 'm1-portal-tooltip',
         sticky: true,
       });
 
-      this.group.addLayer(polygon);
+      this.group.addLayer(circle);
     });
   }
 

@@ -34,15 +34,41 @@ export class AgentsLayer {
     this.group.addTo(map);
   }
 
-  setData(agents: Agent[]) {
+  setData(agents: Agent[], currentUser?: { lat: number; lng: number; name: string }) {
     this.group.clearLayers();
     
+    // Add current user marker (red pulsing)
+    if (currentUser) {
+      const userIcon = L.divIcon({
+        html: '<div class="m1-agent-dot m1-agent-dot--me" data-layer="agents" data-agent="me"></div>',
+        className: 'm1-agent-wrapper',
+        iconSize: [12, 12],
+        iconAnchor: [6, 6],
+      });
+
+      const userMarker = L.marker([currentUser.lat, currentUser.lng], {
+        icon: userIcon,
+        pane: 'm1-agents',
+        bubblingMouseEvents: false,
+      });
+
+      userMarker.bindTooltip(currentUser.name || 'Me', {
+        direction: 'top',
+        offset: L.point(0, -8),
+        className: 'm1-portal-tooltip',
+        permanent: false,
+      });
+
+      this.group.addLayer(userMarker);
+    }
+    
+    // Add other agents (smaller red dots)
     agents.forEach((agent) => {
       const icon = L.divIcon({
-        html: '<div class="m1-agent-dot" data-layer="agents"></div>',
+        html: '<div class="m1-agent-dot" data-layer="agents" data-agent="other"></div>',
         className: 'm1-agent-wrapper',
-        iconSize: [10, 10],
-        iconAnchor: [5, 5],
+        iconSize: [8, 8],
+        iconAnchor: [4, 4],
       });
 
       const marker = L.marker([agent.lat, agent.lng], {
@@ -51,7 +77,7 @@ export class AgentsLayer {
         bubblingMouseEvents: false,
       });
 
-      marker.bindTooltip(agent.name, {
+      marker.bindTooltip(`Agent • ${agent.name}`, {
         direction: 'top',
         offset: L.point(0, -8),
         className: 'm1-portal-tooltip',
