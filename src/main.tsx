@@ -267,9 +267,21 @@ if (typeof window !== 'undefined') {
       SUPABASE_URL: !!import.meta.env.VITE_SUPABASE_URL,
       SUPABASE_ANON_KEY: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
     },
+    presence: {
+      status: 'INIT',
+      last: null,
+      error: null,
+      count: 0
+    },
+    terrain3D: {
+      available: false,
+      terrainUrl: import.meta.env.VITE_TERRAIN_URL || null,
+      active: false
+    },
     ping: (m: string) => console.log('[M1DEBUG]', m)
   });
   console.log('🐛 M1DEBUG bridge ready - window.__M1_DEBUG.ping("test")');
+  console.log('🗺️  Terrain URL:', import.meta.env.VITE_TERRAIN_URL ? 'CONFIGURED' : 'MISSING');
 }
 
 // Create QueryClient instance for React Query with enhanced configuration
