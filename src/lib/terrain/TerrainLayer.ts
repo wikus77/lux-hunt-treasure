@@ -24,14 +24,15 @@ export class TerrainLayer extends L.Layer {
   onAdd(map: L.Map) {
     this._leafletMap = map;
 
-    // container WebGL sotto i tile Leaflet
-    const pane = map.getPane('mapPane')!;
+    // container WebGL in overlayPane for better visibility
+    const pane = map.getPane('overlayPane')!;
     this._container = L.DomUtil.create('div', 'm1-terrain-container', pane);
     Object.assign(this._container.style, {
       position: 'absolute',
       inset: '0',
-      zIndex: '0',
+      zIndex: '350',
       pointerEvents: 'none',
+      mixBlendMode: 'multiply',
     });
 
     // istanzia MapLibre
