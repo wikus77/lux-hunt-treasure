@@ -44,16 +44,23 @@ export class TerrainLayer extends L.Layer {
     });
 
     this._gl.on('load', () => {
-      // DEM source
+      if (import.meta.env.DEV) {
+        console.log('🗺️ MapLibre GL loaded, adding terrain source...');
+      }
+
+      // DEM source - use TileJSON URL for robust loading
       this._gl!.addSource('terrain-dem', {
         type: 'raster-dem',
-        tiles: [this._opts.demUrl],
-        tileSize: 256,
+        url: this._opts.demUrl, // TileJSON endpoint (not tiles array)
         encoding: 'mapbox',
         maxzoom: 14,
       } as any);
 
       this._gl!.setTerrain({ source: 'terrain-dem', exaggeration: this._opts.exaggeration });
+      
+      if (import.meta.env.DEV) {
+        console.log('✅ Terrain source added with exaggeration:', this._opts.exaggeration);
+      }
 
       if (this._opts.hillshade) {
         this._gl!.addLayer({
@@ -61,8 +68,15 @@ export class TerrainLayer extends L.Layer {
           type: 'hillshade',
           source: 'terrain-dem',
           layout: {},
-          paint: {},
+          paint: {
+            'hillshade-exaggeration': 0.8,
+            'hillshade-shadow-color': '#000000',
+          },
         });
+        
+        if (import.meta.env.DEV) {
+          console.log('✅ Hillshade layer added');
+        }
       }
 
       if (this._opts.contoursUrl) {
@@ -83,6 +97,13 @@ export class TerrainLayer extends L.Layer {
 
       this._ready = true;
       this._syncFromLeaflet();
+    });
+
+    // Error handling for DEM loading failures
+    this._gl.on('error', (e) => {
+      if (import.meta.env.DEV) {
+        console.error('❌ MapLibre GL error:', e);
+      }
     });
 
     // sync move/zoom
@@ -108,6 +129,7 @@ export class TerrainLayer extends L.Layer {
     if (!this._leafletMap || !this._gl || !this._ready) return;
     const center = this._leafletMap.getCenter();
     const zoom = this._leafletMap.getZoom();
+    // CRITICAL: pitch 55° for true 3D perception
     this._gl.jumpTo({ center: [center.lng, center.lat], zoom, pitch: 55, bearing: 0 });
   };
 
