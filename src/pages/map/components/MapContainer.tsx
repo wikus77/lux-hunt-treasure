@@ -23,7 +23,11 @@ import { TerrainLayer } from '@/lib/terrain/TerrainLayer';
 import '@/styles/terrain.css';
 import '@/styles/portals.css';
 import { PortalLayer } from '@/lib/portals/PortalLayer';
+import { EventsLayer } from '@/lib/layers/EventsLayer';
+import { AgentsLayer } from '@/lib/layers/AgentsLayer';
+import { ZonesLayer } from '@/lib/layers/ZonesLayer';
 import { PORTALS_SEED } from '@/data/portals.seed';
+import { MOCK_EVENTS, MOCK_AGENTS, MOCK_ZONES } from '@/data/mockLayers';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -99,6 +103,10 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const mapContainerDivRef = useRef<HTMLDivElement>(null);
   const terrainRef = useRef<TerrainLayer | null>(null);
   const portalsLayerRef = useRef<PortalLayer | null>(null);
+  const eventsLayerRef = useRef<EventsLayer | null>(null);
+  const agentsLayerRef = useRef<AgentsLayer | null>(null);
+  const zonesLayerRef = useRef<ZonesLayer | null>(null);
+  const [layerCounts, setLayerCounts] = useState({ portals: 0, events: 0, agents: 0, zones: 0 });
   const [is3DActive, setIs3DActive] = useState(false);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -351,53 +359,90 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     return () => window.removeEventListener('M1_PORTAL_FILTER', handlePortalFilter);
   }, []);
 
-  // P1 FIX: Listen for M1_LAYER_TOGGLE events
+  // Initialize all Living Layers on map ready
+  useEffect(() => {
+    if (!mapRef.current) return;
+    
+    // Helper to update layer counts
+    const updateCounts = () => {
+      setLayerCounts({
+        portals: portalsLayerRef.current?.getCount() || 0,
+        events: eventsLayerRef.current?.getCount() || 0,
+        agents: agentsLayerRef.current?.getCount() || 0,
+        zones: zonesLayerRef.current?.getCount() || 0,
+      });
+    };
+    
+    // Initialize Portals
+    if (!portalsLayerRef.current) {
+      console.log('🎯 Initializing Portals Layer');
+      portalsLayerRef.current = new PortalLayer();
+      portalsLayerRef.current.mount(mapRef.current);
+      portalsLayerRef.current.setData(PORTALS_SEED);
+    }
+    
+    // Initialize Events
+    if (!eventsLayerRef.current) {
+      console.log('📅 Initializing Events Layer');
+      eventsLayerRef.current = new EventsLayer();
+      eventsLayerRef.current.mount(mapRef.current);
+      eventsLayerRef.current.setData(MOCK_EVENTS);
+    }
+    
+    // Initialize Agents
+    if (!agentsLayerRef.current) {
+      console.log('👥 Initializing Agents Layer');
+      agentsLayerRef.current = new AgentsLayer();
+      agentsLayerRef.current.mount(mapRef.current);
+      agentsLayerRef.current.setData(MOCK_AGENTS);
+    }
+    
+    // Initialize Zones
+    if (!zonesLayerRef.current) {
+      console.log('🗺️ Initializing Zones Layer');
+      zonesLayerRef.current = new ZonesLayer();
+      zonesLayerRef.current.mount(mapRef.current);
+      zonesLayerRef.current.setData(MOCK_ZONES);
+    }
+    
+    updateCounts();
+    
+    return () => {
+      portalsLayerRef.current?.destroy();
+      eventsLayerRef.current?.destroy();
+      agentsLayerRef.current?.destroy();
+      zonesLayerRef.current?.destroy();
+    };
+  }, [mapRef.current]);
+
+  // Listen for M1_LAYER_TOGGLE events
   useEffect(() => {
     const handleLayerToggle = (e: Event) => {
       const { layer, enabled } = (e as CustomEvent).detail;
+      console.log(`🎚️ Layer toggle: ${layer} → ${enabled ? 'ON' : 'OFF'}`);
       
-      // Handle portals layer with PortalLayer instance
       if (layer === 'portals' && portalsLayerRef.current) {
         enabled ? portalsLayerRef.current.show() : portalsLayerRef.current.hide();
-        console.log(`🎚️ Portals layer: ${enabled ? 'ON' : 'OFF'}`);
+      } else if (layer === 'events' && eventsLayerRef.current) {
+        enabled ? eventsLayerRef.current.show() : eventsLayerRef.current.hide();
+      } else if (layer === 'agents' && agentsLayerRef.current) {
+        enabled ? agentsLayerRef.current.show() : agentsLayerRef.current.hide();
+      } else if (layer === 'zones' && zonesLayerRef.current) {
+        enabled ? zonesLayerRef.current.show() : zonesLayerRef.current.hide();
       }
-      
-      // Handle other layers with DOM toggling
-      const targets = document.querySelectorAll(`[data-layer="${layer}"]`);
-      console.log(`🎚️ Layer toggle: ${layer} → ${enabled ? 'ON' : 'OFF'} (${targets.length} elementi)`);
-      targets.forEach((el) => {
-        el.classList.toggle('is-hidden', !enabled);
-      });
     };
     window.addEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
     return () => window.removeEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
   }, []);
 
-  // Initialize Portals Layer on map ready
-  useEffect(() => {
-    if (!mapRef.current || portalsLayerRef.current) return;
-    
-    console.log('🎯 Initializing Portals Layer with seed data');
-    portalsLayerRef.current = new PortalLayer();
-    portalsLayerRef.current.mount(mapRef.current);
-    portalsLayerRef.current.setData(PORTALS_SEED);
-    
-    return () => {
-      if (portalsLayerRef.current) {
-        portalsLayerRef.current.destroy();
-        portalsLayerRef.current = null;
-      }
-    };
-  }, [mapRef.current]);
-
-  // Listen for M1_PORTAL_CLICK events (placeholder)
+  // Listen for M1_PORTAL_CLICK events
   useEffect(() => {
     const handlePortalClick = (e: Event) => {
       const { id, name, lat, lng } = (e as CustomEvent).detail;
       console.log('🎯 Portal clicked:', name, id, `[${lat}, ${lng}]`);
-      toast.info(`Portal: ${name}`, {
+      toast.success(`Portal – ${name}`, {
         description: 'Portal interaction – WIP',
-        duration: 3000,
+        duration: 3500,
       });
     };
     window.addEventListener('M1_PORTAL_CLICK', handlePortalClick);
