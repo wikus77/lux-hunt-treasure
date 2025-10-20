@@ -60,23 +60,36 @@
 }
 
 .m1-agent-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #ff3366;
   box-shadow: 
-    0 0 6px 2px rgba(255, 51, 102, 0.7),
-    0 0 14px 4px rgba(255, 51, 102, 0.3);
-  animation: agentPulse 2s ease-in-out infinite;
+    0 0 4px 1px rgba(255, 51, 102, 0.7),
+    0 0 10px 3px rgba(255, 51, 102, 0.3);
   cursor: pointer;
 }
 
-@keyframes agentPulse {
+/* Current user agent - larger with pulsing ring */
+.m1-agent-dot--me {
+  width: 12px;
+  height: 12px;
+  background: #ff3366;
+  border: 2px solid rgba(255, 51, 102, 0.3);
+  box-shadow: 
+    0 0 8px 2px rgba(255, 51, 102, 0.8),
+    0 0 16px 5px rgba(255, 51, 102, 0.4);
+  animation: agentPulseMe 2s ease-in-out infinite;
+}
+
+@keyframes agentPulseMe {
   0%, 100% {
-    box-shadow: 0 0 6px 2px rgba(255, 51, 102, 0.7), 0 0 14px 4px rgba(255, 51, 102, 0.3);
+    box-shadow: 0 0 8px 2px rgba(255, 51, 102, 0.8), 0 0 16px 5px rgba(255, 51, 102, 0.4);
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 10px 3px rgba(255, 51, 102, 0.9), 0 0 20px 6px rgba(255, 51, 102, 0.5);
+    box-shadow: 0 0 12px 3px rgba(255, 51, 102, 1), 0 0 24px 8px rgba(255, 51, 102, 0.5);
+    transform: scale(1.15);
   }
 }
 

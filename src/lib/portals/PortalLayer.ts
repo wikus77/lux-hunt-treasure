@@ -61,9 +61,10 @@ export class PortalLayer {
         className: 'm1-portal-tooltip',
       });
 
-      // Click event
+      // Click event with focus action
       marker.on('click', () => {
         try {
+          // Emit portal click event
           window.dispatchEvent(
             new CustomEvent('M1_PORTAL_CLICK', {
               detail: { 
@@ -74,7 +75,20 @@ export class PortalLayer {
               },
             })
           );
-          console.info('[M1] Portal clicked:', portal.name, portal.id);
+          
+          // Emit portal focus for pan/zoom
+          window.dispatchEvent(
+            new CustomEvent('M1_PORTAL_FOCUS', {
+              detail: { 
+                id: portal.id, 
+                name: portal.name,
+                lat: portal.lat,
+                lng: portal.lng
+              },
+            })
+          );
+          
+          console.info('[M1] Portal clicked & focused:', portal.name, portal.id);
         } catch (err) {
           console.error('[M1] Portal click error:', err);
         }
