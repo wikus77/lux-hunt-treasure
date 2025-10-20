@@ -11,7 +11,7 @@ const ControlZonesLayer = lazy(() => import('./components/ControlZonesLayer'));
 const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
-const Toggle3D = lazy(() => import('./components/Toggle3D'));
+
 
 interface LivingMapProps {
   center?: { lat: number; lng: number };
@@ -138,8 +138,6 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
             zonesCount={zones.length}
           />
 
-          {/* 3D Toggle */}
-          <Toggle3D mapContainerRef={mapContainerRef} />
         </div>
       </Suspense>
     </div>
