@@ -130,6 +130,20 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   // TRUE 3D: Check if DEM URL is configured
   const terrain3DAvailable = !!import.meta.env.VITE_TERRAIN_URL;
   
+  // Expose debug info on mount
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      (window as any).__M1_DEBUG = {
+        ...(window as any).__M1_DEBUG,
+        terrain3DAvailable,
+        terrainUrl: import.meta.env.VITE_TERRAIN_URL || 'NOT_DEFINED',
+        contoursUrl: import.meta.env.VITE_CONTOUR_URL || 'NOT_DEFINED',
+        lastAgentsPresence: [],
+      };
+      console.log('🐛 M1 Debug info available at: window.__M1_DEBUG');
+    }
+  }, []);
+  
   // Use Zustand store for consistent state management
   const { isAddingMapPoint, mapStatus } = useMapStore();
 
@@ -249,51 +263,105 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
     const contoursUrl = import.meta.env.VITE_CONTOUR_URL as string | undefined;
     
-    if (!demUrl || !mapRef.current || terrainRef.current) {
-      if (import.meta.env.DEV && !demUrl) {
-        console.warn('⚠️ VITE_TERRAIN_URL not configured - 3D terrain unavailable');
-      }
+    console.log('🔧 enable3D() called');
+    console.log('  - VITE_TERRAIN_URL:', demUrl || 'NOT DEFINED');
+    console.log('  - VITE_CONTOUR_URL:', contoursUrl || 'NOT DEFINED');
+    console.log('  - mapRef.current:', !!mapRef.current);
+    console.log('  - terrainRef.current (already exists?):', !!terrainRef.current);
+    
+    if (!demUrl) {
+      console.error('❌ 3D Terrain CANNOT be enabled: VITE_TERRAIN_URL is not defined');
+      console.error('   Please add to .env file:');
+      console.error('   VITE_TERRAIN_URL=https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=VRJaVKMtkFdyVzhXCjBF');
+      toast.error('3D Terrain non configurato', {
+        description: 'Variabile VITE_TERRAIN_URL mancante',
+        duration: 4000
+      });
       return;
     }
     
-    if (import.meta.env.DEV) {
-      console.log('🔧 Enabling 3D terrain with URL:', demUrl);
+    if (!mapRef.current) {
+      console.error('❌ 3D Terrain CANNOT be enabled: mapRef.current is null');
+      return;
     }
     
-    const layer = new TerrainLayer({ 
-      demUrl, 
-      contoursUrl, 
-      exaggeration: 1.5, 
-      hillshade: true 
-    });
-    layer.addTo(mapRef.current);
-    terrainRef.current = layer;
-    
-    // CRITICAL: Make terrain visible by reducing Leaflet tile opacity
-    const tilePane = mapRef.current.getPanes().tilePane;
-    if (tilePane) {
-      tilePane.style.opacity = '0.35';
+    if (terrainRef.current) {
+      console.warn('⚠️ Terrain layer already exists, skipping creation');
+      return;
     }
     
-    // Apply subtle tilt effect to container
-    if (mapContainerDivRef.current) {
-      const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
-      if (mapPane) {
-        (mapPane as HTMLElement).style.transform = 'perspective(1200px) rotateX(5deg)';
+    console.log('✅ Preconditions met, creating TerrainLayer...');
+    
+    try {
+      const layer = new TerrainLayer({ 
+        demUrl, 
+        contoursUrl, 
+        exaggeration: 1.5, 
+        hillshade: true 
+      });
+      
+      console.log('✅ TerrainLayer instance created, adding to map...');
+      layer.addTo(mapRef.current);
+      terrainRef.current = layer;
+      
+      console.log('✅ TerrainLayer added to map');
+      
+      // CRITICAL: Make terrain visible by reducing Leaflet tile opacity
+      const tilePane = mapRef.current.getPanes().tilePane;
+      if (tilePane) {
+        tilePane.style.opacity = '0.35';
+        console.log('✅ Tile pane opacity set to 0.35');
       }
-    }
-    
-    if (import.meta.env.DEV) {
-      console.log('✅ 3D Terrain activated - hillshade should be visible');
+      
+      // Apply subtle tilt effect to container
+      if (mapContainerDivRef.current) {
+        const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
+        if (mapPane) {
+          (mapPane as HTMLElement).style.transform = 'perspective(1200px) rotateX(5deg)';
+          console.log('✅ Perspective transform applied');
+        }
+      }
+      
+      console.log('🎉 3D Terrain fully activated!');
       console.log('  - DEM URL:', demUrl);
       console.log('  - Tile opacity:', '0.35');
       console.log('  - Pitch:', '55°');
+      
+      toast.success('Modalità 3D Terrain attivata', {
+        description: 'Rilievi visibili con hillshade',
+        duration: 3000
+      });
+      
+      // Expose debug info
+      if (import.meta.env.DEV) {
+        (window as any).__M1_DEBUG = {
+          ...(window as any).__M1_DEBUG,
+          terrain3D: {
+            active: true,
+            demUrl,
+            contoursUrl,
+            layerReady: terrainRef.current?.isReady?.() || 'unknown'
+          }
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error creating TerrainLayer:', error);
+      toast.error('Errore attivazione 3D', {
+        description: String(error),
+        duration: 4000
+      });
     }
   };
 
   const disable3D = () => {
-    if (!terrainRef.current || !mapRef.current) return;
+    console.log('🔧 disable3D() called');
     
+    if (!terrainRef.current || !mapRef.current) {
+      console.log('⚠️ Nothing to disable (terrain not active)');
+      return;
+    }
+    
+    console.log('✅ Removing terrain layer...');
     mapRef.current.removeLayer(terrainRef.current);
     terrainRef.current = null;
     
@@ -301,6 +369,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const tilePane = mapRef.current.getPanes().tilePane;
     if (tilePane) {
       tilePane.style.opacity = '1';
+      console.log('✅ Tile pane opacity restored to 1');
     }
     
     // Remove tilt
@@ -308,25 +377,50 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
       if (mapPane) {
         (mapPane as HTMLElement).style.transform = '';
+        console.log('✅ Perspective transform removed');
       }
     }
     
+    console.log('✅ 3D Terrain deactivated - flat map restored');
+    
+    toast.info('Modalità 2D attivata', {
+      description: 'Mappa piatta ripristinata',
+      duration: 2000
+    });
+    
+    // Update debug info
     if (import.meta.env.DEV) {
-      console.log('✅ 3D Terrain deactivated - flat map restored');
+      (window as any).__M1_DEBUG = {
+        ...(window as any).__M1_DEBUG,
+        terrain3D: {
+          active: false
+        }
+      };
     }
   };
 
   // P0 FIX: Handle 3D toggle from parent (via M1_TOGGLE_3D event)
   useEffect(() => {
-    if (!mapRef.current || !onToggle3D) return;
+    if (!mapRef.current || !onToggle3D) {
+      console.log('⏸️ Skipping 3D toggle registration:', {
+        hasMap: !!mapRef.current,
+        hasCallback: !!onToggle3D
+      });
+      return;
+    }
+
+    console.log('✅ Registering 3D toggle handler with parent');
 
     const handle3DToggle = (is3D: boolean) => {
+      console.log('🎚️ 3D Toggle state change requested:', is3D ? 'ON' : 'OFF');
       setIs3DActive(is3D);
       is3D ? enable3D() : disable3D();
     };
 
     // Pass the handler to parent
     onToggle3D(handle3DToggle as any);
+    
+    console.log('✅ 3D toggle handler registered');
   }, [onToggle3D]);
 
   // Handle focus location from dock
@@ -489,46 +583,63 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   useEffect(() => {
     if (!currentAgentCode || !agentsLayerRef.current) return;
 
-    console.log('🟢 Initializing agents presence tracking...');
+    console.log('🟢 Initializing agents presence tracking for:', currentAgentCode);
+    
+    let unsubscribe: (() => void) | null = null;
 
-    // Initialize presence with agent code and coordinates getter
-    initAgentsPresence(currentAgentCode, () => {
-      if (geoPosition) {
-        return { lat: geoPosition.lat, lng: geoPosition.lng };
-      }
-      return null;
-    });
+    // Async initialization
+    const init = async () => {
+      try {
+        // Initialize presence with agent code and coordinates getter
+        await initAgentsPresence(currentAgentCode, () => {
+          if (geoPosition) {
+            console.log('📍 Providing position to agents presence:', geoPosition);
+            return { lat: geoPosition.lat, lng: geoPosition.lng };
+          }
+          console.log('⏸️ No position available yet');
+          return null;
+        });
 
-    // Subscribe to agents updates
-    const unsubscribe = subscribeAgents((agents: AgentPresence[]) => {
-      console.log('👥 Agents update:', agents.length, 'online');
-      
-      // Convert AgentPresence[] to Agent[] format for the layer
-      const agentData = agents.map(a => ({
-        id: a.id,
-        agent_code: a.agent_code,
-        lat: a.lat,
-        lng: a.lng,
-      }));
+        // Subscribe to agents updates AFTER initialization
+        unsubscribe = subscribeAgents((agents: AgentPresence[]) => {
+          console.log('👥 Agents update received:', agents.length, 'online agents');
+          
+          // Convert AgentPresence[] to Agent[] format for the layer
+          const agentData = agents.map(a => ({
+            id: a.id,
+            agent_code: a.agent_code,
+            lat: a.lat,
+            lng: a.lng,
+          }));
 
-      // Update layer with current user ID for highlighting "You"
-      if (agentsLayerRef.current) {
-        agentsLayerRef.current.setData(agentData, currentUserId);
+          // Update layer with current user ID for highlighting "You"
+          if (agentsLayerRef.current) {
+            agentsLayerRef.current.setData(agentData, currentUserId);
+            
+            // Update count
+            setLayerCounts(prev => ({
+              ...prev,
+              agents: agentData.length,
+            }));
+            
+            console.log('✅ Agents layer updated with', agentData.length, 'agents');
+          }
+        });
         
-        // Update count
-        setLayerCounts(prev => ({
-          ...prev,
-          agents: agentData.length,
-        }));
+        console.log('✅ Agents presence fully initialized and subscribed');
+      } catch (error) {
+        console.error('❌ Error initializing agents presence:', error);
       }
-    });
+    };
+
+    init();
 
     return () => {
       console.log('🔴 Cleaning up agents presence...');
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
       teardownAgentsPresence();
     };
-  }, [currentAgentCode, currentUserId, geoPosition]);
+  }, [currentAgentCode, currentUserId]);
 
   // Listen for M1_PORTAL_CLICK events
   useEffect(() => {

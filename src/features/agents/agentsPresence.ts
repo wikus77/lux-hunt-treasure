@@ -17,37 +17,39 @@ let updateDebounceTimer: NodeJS.Timeout | null = null;
  * Initialize agents presence tracking
  * @param agentCode - Current user's agent code (e.g., "AG-X0197")
  * @param getCoords - Function that returns current coordinates or null
+ * @returns Promise that resolves when initialization is complete
  */
-export function initAgentsPresence(
+export async function initAgentsPresence(
   agentCode: string,
   getCoords: () => { lat: number; lng: number } | null
-) {
+): Promise<void> {
   if (channel) {
     console.warn('⚠️ Agents presence already initialized');
     return;
   }
 
-  const userId = supabase.auth.getSession().then(({ data }) => data.session?.user.id);
+  const { data } = await supabase.auth.getSession();
+  const id = data.session?.user.id;
   
-  userId.then((id) => {
-    if (!id) {
-      console.error('❌ Cannot init agents presence: user not authenticated');
-      return;
-    }
+  if (!id) {
+    console.error('❌ Cannot init agents presence: user not authenticated');
+    return;
+  }
 
-    console.log('🟢 Initializing agents presence for', agentCode);
+  console.log('🟢 Initializing agents presence for', agentCode);
 
-    // Create presence channel
-    channel = supabase.channel('agents_presence', {
-      config: {
-        presence: {
-          key: id,
-        },
+  // Create presence channel
+  channel = supabase.channel('agents_presence', {
+    config: {
+      presence: {
+        key: id,
       },
-    });
+    },
+  });
 
-    // Subscribe to presence state
-    channel
+  // Subscribe to presence state
+  await new Promise<void>((resolve) => {
+    channel!
       .on('presence', { event: 'sync' }, () => {
         const state = channel!.presenceState();
         if (import.meta.env.DEV) {
@@ -56,16 +58,23 @@ export function initAgentsPresence(
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          console.log('✅ Agents presence channel subscribed');
           // Track initial presence
           updatePresence(id, agentCode, getCoords);
+          resolve();
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          console.error('❌ Agents presence channel error:', status);
+          resolve(); // Resolve anyway to not block
         }
       });
-
-    // Heartbeat every 30s to keep presence alive
-    heartbeatInterval = setInterval(() => {
-      updatePresence(id, agentCode, getCoords);
-    }, 30000);
   });
+
+  // Heartbeat every 30s to keep presence alive
+  heartbeatInterval = setInterval(() => {
+    updatePresence(id, agentCode, getCoords);
+  }, 30000);
+  
+  console.log('✅ Agents presence initialization complete');
 }
 
 /**
@@ -134,6 +143,15 @@ export function subscribeAgents(
         }
       });
     });
+
+    // Expose debug info
+    if (import.meta.env.DEV) {
+      (window as any).__M1_DEBUG = {
+        ...(window as any).__M1_DEBUG,
+        lastAgentsPresence: agents,
+        agentsPresenceRaw: state,
+      };
+    }
 
     callback(agents);
   };
