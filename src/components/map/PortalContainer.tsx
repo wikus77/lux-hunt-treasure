@@ -48,11 +48,11 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
 
   return (
     <>
-      {/* Closed Pill - Left Side */}
+      {/* Closed Pill - Centered Top */}
       {!isOpen && (
         <button
           onClick={toggleDrawer}
-          className="portal-pill"
+          className="portal-pill-centered"
           aria-label="Open PORTALS menu"
         >
           <span className="portal-pill-label">PORTALS</span>
@@ -60,9 +60,9 @@ const PortalContainer = ({ portalCount = 12, onPortalAction }: PortalContainerPr
         </button>
       )}
 
-      {/* Open Drawer - Floating Panel */}
+      {/* Open Drawer - Centered Top */}
       {isOpen && (
-        <div className="portal-drawer">
+        <div className="portal-drawer-centered">
           {/* Header */}
           <div className="portal-drawer-header">
             <div className="flex items-center gap-2">

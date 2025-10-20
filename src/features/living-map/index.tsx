@@ -125,9 +125,9 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
         {/* Dock Left - Badge pills (hidden when Portal Container active) */}
         {!hidePortalBadges && <DockLeft items={dockItems} onFocus={handleFocus} />}
 
-        {/* Top-right HUD controls */}
+        {/* Bottom-left HUD controls */}
         <div
-          className="absolute top-4 right-4 flex items-start gap-3"
+          className="absolute bottom-4 left-4 flex items-end gap-3"
           style={{ zIndex: 1000 }}
         >
           {/* Legend */}
