@@ -92,7 +92,7 @@ const DockLeft: React.FC<DockLeftProps> = ({ items, onFocus }) => {
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'absolute', left: 12, top: 88, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+    <div ref={containerRef} style={{ position: 'absolute', left: 12, top: 88, zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start', pointerEvents: 'auto' }}>
       {items.map((item) => {
         const isActive = activeId === item.id;
         const showTooltip = tooltipId === item.id;
