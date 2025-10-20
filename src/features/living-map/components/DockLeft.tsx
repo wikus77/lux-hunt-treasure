@@ -26,26 +26,15 @@ const DockLeft: React.FC<DockLeftProps> = ({ items, onFocus }) => {
   const [tooltipId, setTooltipId] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Anti-overlap collision detection
+  // Vertical stacking (no overlap)
   const positions = useMemo(() => {
-    const BADGE_HEIGHT = 32;
-    const GAP = 12;
-    const MAX_ITERATIONS = 6;
+    const BADGE_HEIGHT = 40;
+    const GAP = 8;
     
     const result: BadgePosition[] = [];
     
     items.forEach((item, index) => {
-      let top = 88 + index * (BADGE_HEIGHT + GAP);
-      let iterations = 0;
-      
-      // Check for overlap and nudge down if needed
-      while (iterations < MAX_ITERATIONS) {
-        const overlaps = result.some(pos => Math.abs(pos.top - top) < BADGE_HEIGHT);
-        if (!overlaps) break;
-        top += 8;
-        iterations++;
-      }
-      
+      const top = 88 + index * (BADGE_HEIGHT + GAP);
       result.push({ id: item.id, top });
     });
     

@@ -52,22 +52,25 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
   };
 
   return (
-    <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => setIsOpen(!isOpen)}
-        className="map-dock-button w-11 h-11 p-0"
-        title="Gestisci Layers"
-      >
-        <Layers className="w-5 h-5" />
-      </Button>
+    <div className="living-layers-container">
+      {/* Pill - Collapsed State */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="living-layers-pill"
+          aria-label="Open LIVING LAYERS"
+        >
+          <Layers className="w-4 h-4" />
+          <span className="living-layers-pill-label">LIVING LAYERS</span>
+        </button>
+      )}
 
+      {/* Panel - Expanded State */}
       {isOpen && (
-        <div className="map-layers-panel">
+        <div className="living-layers-panel">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-orbitron font-bold text-cyan-400">
-              MAP LAYERS
+              LIVING LAYERS
             </h3>
             <Button
               variant="ghost"
@@ -105,7 +108,7 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 
