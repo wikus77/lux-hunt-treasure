@@ -46,6 +46,8 @@ export class TerrainLayer extends L.Layer {
     this._gl.on('load', () => {
       if (import.meta.env.DEV) {
         console.log('🗺️ MapLibre GL loaded, adding terrain source...');
+        console.log('  - DEM URL:', this._opts.demUrl);
+        console.log('  - Contours URL:', this._opts.contoursUrl || 'N/A');
       }
 
       // DEM source - use TileJSON URL for robust loading
@@ -80,6 +82,9 @@ export class TerrainLayer extends L.Layer {
       }
 
       if (this._opts.contoursUrl) {
+        if (import.meta.env.DEV) {
+          console.log('🔧 Adding contour lines...');
+        }
         this._gl!.addSource('contours', {
           type: 'vector',
           tiles: [this._opts.contoursUrl],
@@ -93,16 +98,22 @@ export class TerrainLayer extends L.Layer {
           'source-layer': 'contour',
           paint: { 'line-color': '#ffffff', 'line-opacity': 0.3, 'line-width': 1 },
         });
+        if (import.meta.env.DEV) {
+          console.log('✅ Contour lines added');
+        }
       }
 
       this._ready = true;
       this._syncFromLeaflet();
     });
 
-    // Error handling for DEM loading failures
+    // C) HARDENING: Enhanced error handling for DEM loading failures
     this._gl.on('error', (e) => {
+      console.error('❌ MapLibre GL error:', e);
       if (import.meta.env.DEV) {
-        console.error('❌ MapLibre GL error:', e);
+        console.error('  - DEM URL:', this._opts.demUrl);
+        console.error('  - Check that VITE_TERRAIN_URL is a TileJSON endpoint (.../tiles.json?key=...)');
+        console.error('  - Verify MapTiler API key is valid and not blocked by CORS');
       }
     });
 
