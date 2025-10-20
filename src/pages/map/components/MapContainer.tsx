@@ -19,7 +19,8 @@ import { useMapStore } from '@/stores/mapStore';
 import { QRMapDisplay } from '@/components/map/QRMapDisplay';
 import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
-import { createTerrainLayer } from '@/lib/terrain/terrainLayer';
+import { TerrainLayer } from '@/lib/terrain/TerrainLayer';
+import '@/styles/terrain.css';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -93,7 +94,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const ipGeo = useIPGeolocation();
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerDivRef = useRef<HTMLDivElement>(null);
-  const [terrainLayer, setTerrainLayer] = useState<ReturnType<typeof createTerrainLayer> | null>(null);
+  const terrainRef = useRef<TerrainLayer | null>(null);
   const [is3DActive, setIs3DActive] = useState(false);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -216,59 +217,58 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     return () => window.removeEventListener('M1_FOCUS', handleFocus);
   }, []);
 
-  // Initialize terrain layer when map is ready
-  useEffect(() => {
-    if (!mapRef.current || terrainLayer) return;
-
-    const demUrl = import.meta.env.VITE_TERRAIN_URL;
-    if (demUrl) {
-      const layer = createTerrainLayer({
-        demUrl,
-        hillshade: true,
-        sky: false
-      });
-      setTerrainLayer(layer);
+  // P0 FIX: 3D Terrain - enable/disable handlers
+  const enable3D = () => {
+    const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
+    const contoursUrl = import.meta.env.VITE_CONTOUR_URL as string | undefined;
+    
+    if (!demUrl || !mapRef.current || terrainRef.current) return;
+    
+    const layer = new TerrainLayer({ 
+      demUrl, 
+      contoursUrl, 
+      exaggeration: 1.5, 
+      hillshade: true 
+    });
+    layer.addTo(mapRef.current);
+    terrainRef.current = layer;
+    
+    // Apply subtle tilt effect to container
+    if (mapContainerDivRef.current) {
+      const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
+      if (mapPane) {
+        (mapPane as HTMLElement).style.transform = 'perspective(1200px) rotateX(5deg)';
+      }
     }
-  }, [mapRef.current]);
+  };
 
-  // Handle 3D toggle from parent - store callback ref
+  const disable3D = () => {
+    if (!terrainRef.current || !mapRef.current) return;
+    
+    mapRef.current.removeLayer(terrainRef.current);
+    terrainRef.current = null;
+    
+    // Remove tilt
+    if (mapContainerDivRef.current) {
+      const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
+      if (mapPane) {
+        (mapPane as HTMLElement).style.transform = '';
+      }
+    }
+  };
+
+  // P0 FIX: Handle 3D toggle from parent (via M1_TOGGLE_3D event)
   useEffect(() => {
-    if (!terrainLayer || !mapRef.current || !onToggle3D) return;
+    if (!mapRef.current || !onToggle3D) return;
 
     const handle3DToggle = (is3D: boolean) => {
       setIs3DActive(is3D);
-      
-      if (is3D) {
-        if (!terrainLayer.isReady()) {
-          terrainLayer.addTo(mapRef.current!);
-        }
-        terrainLayer.show();
-        terrainLayer.setPitch(45);
-        
-        // Apply subtle tilt effect to container
-        if (mapContainerDivRef.current) {
-          const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
-          if (mapPane) {
-            (mapPane as HTMLElement).style.transform = 'perspective(1200px) rotateX(5deg)';
-          }
-        }
-      } else {
-        terrainLayer.hide();
-        terrainLayer.setPitch(0);
-        
-        // Remove tilt
-        if (mapContainerDivRef.current) {
-          const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
-          if (mapPane) {
-            (mapPane as HTMLElement).style.transform = '';
-          }
-        }
-      }
+      is3D ? enable3D() : disable3D();
     };
 
-    // Pass the handler to parent (not invoke it!)
+    // Pass the handler to parent
     onToggle3D(handle3DToggle as any);
-  }, [terrainLayer, onToggle3D]);
+  }, [onToggle3D]);
 
   // Handle focus location from dock
   const handleFocusLocation = () => {
