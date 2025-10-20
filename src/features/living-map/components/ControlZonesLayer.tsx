@@ -3,9 +3,10 @@ import type { ZoneDTO } from '../adapters/readOnlyData';
 
 interface ControlZonesLayerProps {
   zones: ZoneDTO[];
+  showLabels?: boolean;
 }
 
-const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones }) => {
+const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones, showLabels = true }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       <svg className="absolute inset-0 w-full h-full">
@@ -47,21 +48,23 @@ const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones }) => {
               />
 
               {/* Label */}
-              <text
-                x={`${zone.polygon.reduce((sum, [, lng]) => sum + lng, 0) / zone.polygon.length}%`}
-                y={`${zone.polygon.reduce((sum, [lat]) => sum + (90 - lat) / 180 * 100, 0) / zone.polygon.length}%`}
-                fill="var(--living-map-text-primary)"
-                fontSize="12"
-                fontWeight="700"
-                textAnchor="middle"
-                className="pointer-events-auto cursor-pointer"
-                style={{ 
-                  filter: `drop-shadow(0 0 4px ${zone.color})`,
-                  letterSpacing: '0.5px'
-                }}
-              >
-                {zone.label}
-              </text>
+              {showLabels && (
+                <text
+                  x={`${zone.polygon.reduce((sum, [, lng]) => sum + lng, 0) / zone.polygon.length}%`}
+                  y={`${zone.polygon.reduce((sum, [lat]) => sum + (90 - lat) / 180 * 100, 0) / zone.polygon.length}%`}
+                  fill="var(--living-map-text-primary)"
+                  fontSize="12"
+                  fontWeight="700"
+                  textAnchor="middle"
+                  className="pointer-events-auto cursor-pointer"
+                  style={{ 
+                    filter: `drop-shadow(0 0 4px ${zone.color})`,
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  {zone.label}
+                </text>
+              )}
             </g>
           );
         })}
