@@ -5,9 +5,10 @@ interface PortalsLayerProps {
   portals: PortalDTO[];
   mapRef?: any;
   showLabels?: boolean;
+  onPortalClick?: (portal: PortalDTO) => void;
 }
 
-const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals, showLabels = true }) => {
+const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals, showLabels = true, onPortalClick }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       {portals.map((portal) => (
@@ -22,19 +23,23 @@ const PortalsLayer: React.FC<PortalsLayerProps> = ({ portals, showLabels = true 
         >
           {/* Portal marker */}
           <div
-            className={`living-portal-marker ${portal.status === 'active' ? 'active' : ''}`}
+            className={`living-portal-marker ${portal.status === 'active' ? 'active' : ''} cursor-pointer hover:scale-110 transition-transform`}
             style={{
               width: 32,
               height: 32,
-              position: 'relative'
+              position: 'relative',
+              pointerEvents: 'auto'
             }}
+            onClick={() => onPortalClick?.(portal)}
+            title={`${portal.name} - Click per dettagli`}
           >
             {/* Inner ring */}
             <div
-              className="absolute inset-1 rounded-full"
+              className="absolute inset-1 rounded-full animate-pulse"
               style={{
                 background: `radial-gradient(circle, ${portal.status === 'active' ? '#00E5FF' : '#8A2BE2'}40, transparent)`,
-                border: `1px solid ${portal.status === 'active' ? '#00E5FF' : '#8A2BE2'}`
+                border: `2px solid ${portal.status === 'active' ? '#00E5FF' : '#8A2BE2'}`,
+                boxShadow: `0 0 20px ${portal.status === 'active' ? '#00E5FF' : '#8A2BE2'}80`
               }}
             />
           </div>
