@@ -393,11 +393,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   // Listen for M1_PORTAL_CLICK events (placeholder)
   useEffect(() => {
     const handlePortalClick = (e: Event) => {
-      const { id, name } = (e as CustomEvent).detail;
-      console.log('🎯 Portal clicked:', name, id);
+      const { id, name, lat, lng } = (e as CustomEvent).detail;
+      console.log('🎯 Portal clicked:', name, id, `[${lat}, ${lng}]`);
       toast.info(`Portal: ${name}`, {
-        description: 'Portal interaction - WIP',
-        duration: 2000,
+        description: 'Portal interaction – WIP',
+        duration: 3000,
       });
     };
     window.addEventListener('M1_PORTAL_CLICK', handlePortalClick);

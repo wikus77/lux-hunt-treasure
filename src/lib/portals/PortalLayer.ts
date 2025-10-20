@@ -38,17 +38,17 @@ export class PortalLayer {
     this.group.clearLayers();
     
     portals.forEach((portal) => {
-      // Create custom DivIcon for portal
+      // Create custom DivIcon for portal with M1SSION design
       const icon = L.divIcon({
         html: `
-          <div class="m1-portal-pin" data-layer="portals">
-            <div class="portal-inner"></div>
-            <div class="portal-label">${portal.name}</div>
+          <div class="m1-portal" data-layer="portals" aria-label="Portal ${portal.name}">
+            <div class="m1-portal__core"></div>
+            <div class="m1-portal__pulse"></div>
           </div>
         `,
         className: 'portal-marker-wrapper',
-        iconSize: [40, 40],
-        iconAnchor: [20, 20],
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
       });
 
       const marker = L.marker([portal.lat, portal.lng], {
@@ -71,7 +71,12 @@ export class PortalLayer {
         try {
           window.dispatchEvent(
             new CustomEvent('M1_PORTAL_CLICK', {
-              detail: { id: portal.id, name: portal.name },
+              detail: { 
+                id: portal.id, 
+                name: portal.name,
+                lat: portal.lat,
+                lng: portal.lng
+              },
             })
           );
           console.info('[M1] Portal clicked:', portal.name, portal.id);
