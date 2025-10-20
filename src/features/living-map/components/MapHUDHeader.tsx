@@ -11,7 +11,7 @@ const MapHUDHeader: React.FC<MapHUDHeaderProps> = ({ center, zoom }) => {
       className="living-hud-glass px-4 py-2"
       style={{
         position: 'absolute',
-        top: 16,
+        bottom: 16,
         left: 16,
         zIndex: 1000,
         maxWidth: 280
