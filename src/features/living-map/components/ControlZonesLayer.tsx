@@ -4,9 +4,10 @@ import type { ZoneDTO } from '../adapters/readOnlyData';
 interface ControlZonesLayerProps {
   zones: ZoneDTO[];
   showLabels?: boolean;
+  labelOffsetPercent?: number; // push label down to stack under event chip
 }
 
-const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones, showLabels = true }) => {
+const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones, showLabels = true, labelOffsetPercent = 1.4 }) => {
   return (
     <div className="absolute inset-0 pointer-events-none">
       <svg className="absolute inset-0 w-full h-full">
@@ -51,7 +52,7 @@ const ControlZonesLayer: React.FC<ControlZonesLayerProps> = ({ zones, showLabels
               {showLabels && (
                 <text
                   x={`${zone.polygon.reduce((sum, [, lng]) => sum + lng, 0) / zone.polygon.length}%`}
-                  y={`${zone.polygon.reduce((sum, [lat]) => sum + (90 - lat) / 180 * 100, 0) / zone.polygon.length}%`}
+                  y={`${zone.polygon.reduce((sum, [lat]) => sum + (90 - lat) / 180 * 100, 0) / zone.polygon.length + labelOffsetPercent}%`}
                   fill="var(--living-map-text-primary)"
                   fontSize="12"
                   fontWeight="700"

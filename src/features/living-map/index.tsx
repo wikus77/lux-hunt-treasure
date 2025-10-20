@@ -26,36 +26,11 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
 
   const { portals, events, agents, zones, loading } = useLiveLayers(enabled);
 
-  // Derive dock items from live data
+  // Derive dock items from live data (only SECTOR = zones)
   const dockItems = useMemo(() => {
     const items: any[] = [];
-    
-    // Add portals
-    portals.forEach(p => {
-      items.push({
-        id: p.id,
-        type: 'Portal' as const,
-        label: p.name,
-        lat: p.lat,
-        lng: p.lng,
-        status: p.status,
-        color: p.status === 'active' ? '#00E5FF' : '#8A2BE2'
-      });
-    });
-    
-    // Add events
-    events.forEach(e => {
-      items.push({
-        id: e.id,
-        type: 'Event' as const,
-        label: e.title,
-        lat: e.lat,
-        lng: e.lng,
-        color: e.type === 'rare' ? '#00E5FF' : e.type === 'success' ? '#24E39E' : '#FFB347'
-      });
-    });
-    
-    // Add zones as Alert Zones
+
+    // Add zones as SECTOR badges only
     zones.forEach(z => {
       const center = z.polygon.reduce(
         (acc, [lat, lng]) => ({ lat: acc.lat + lat / z.polygon.length, lng: acc.lng + lng / z.polygon.length }),
@@ -70,9 +45,9 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
         color: z.color
       });
     });
-    
+
     return items;
-  }, [portals, events, zones]);
+  }, [zones]);
 
   // Focus handler - only modifies view, not markers
   const handleFocus = useCallback((item: any) => {
@@ -120,7 +95,7 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
         <PortalsLayer portals={portals} />
         <EventsLayer events={events} />
         <AgentsLayer agents={agents} />
-        <ControlZonesLayer zones={zones} />
+        <ControlZonesLayer zones={zones} showLabels={false} />
 
         {/* Dock Left - Badge pills (hidden when Portal Container active) */}
         {!hidePortalBadges && <DockLeft items={dockItems} onFocus={handleFocus} />}
