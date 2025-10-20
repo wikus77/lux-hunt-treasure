@@ -21,6 +21,9 @@ import { useSimpleGeolocation } from '@/hooks/useSimpleGeolocation';
 import { useIPGeolocation } from '@/hooks/useIPGeolocation';
 import { TerrainLayer } from '@/lib/terrain/TerrainLayer';
 import '@/styles/terrain.css';
+import '@/styles/portals.css';
+import { PortalLayer } from '@/lib/portals/PortalLayer';
+import { PORTALS_SEED } from '@/data/portals.seed';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -95,6 +98,7 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerDivRef = useRef<HTMLDivElement>(null);
   const terrainRef = useRef<TerrainLayer | null>(null);
+  const portalsLayerRef = useRef<PortalLayer | null>(null);
   const [is3DActive, setIs3DActive] = useState(false);
   
   // CRITICAL: Use the hook to get BUZZ areas with real-time updates
@@ -351,6 +355,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   useEffect(() => {
     const handleLayerToggle = (e: Event) => {
       const { layer, enabled } = (e as CustomEvent).detail;
+      
+      // Handle portals layer with PortalLayer instance
+      if (layer === 'portals' && portalsLayerRef.current) {
+        enabled ? portalsLayerRef.current.show() : portalsLayerRef.current.hide();
+        console.log(`🎚️ Portals layer: ${enabled ? 'ON' : 'OFF'}`);
+      }
+      
+      // Handle other layers with DOM toggling
       const targets = document.querySelectorAll(`[data-layer="${layer}"]`);
       console.log(`🎚️ Layer toggle: ${layer} → ${enabled ? 'ON' : 'OFF'} (${targets.length} elementi)`);
       targets.forEach((el) => {
@@ -359,6 +371,37 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     };
     window.addEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
     return () => window.removeEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
+  }, []);
+
+  // Initialize Portals Layer on map ready
+  useEffect(() => {
+    if (!mapRef.current || portalsLayerRef.current) return;
+    
+    console.log('🎯 Initializing Portals Layer with seed data');
+    portalsLayerRef.current = new PortalLayer();
+    portalsLayerRef.current.mount(mapRef.current);
+    portalsLayerRef.current.setData(PORTALS_SEED);
+    
+    return () => {
+      if (portalsLayerRef.current) {
+        portalsLayerRef.current.destroy();
+        portalsLayerRef.current = null;
+      }
+    };
+  }, [mapRef.current]);
+
+  // Listen for M1_PORTAL_CLICK events (placeholder)
+  useEffect(() => {
+    const handlePortalClick = (e: Event) => {
+      const { id, name } = (e as CustomEvent).detail;
+      console.log('🎯 Portal clicked:', name, id);
+      toast.info(`Portal: ${name}`, {
+        description: 'Portal interaction - WIP',
+        duration: 2000,
+      });
+    };
+    window.addEventListener('M1_PORTAL_CLICK', handlePortalClick);
+    return () => window.removeEventListener('M1_PORTAL_CLICK', handlePortalClick);
   }, []);
 
   return (
