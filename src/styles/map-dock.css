@@ -69,7 +69,7 @@
 
 /* LIVING LAYERS Container */
 .living-layers-container {
-  position: fixed;
+  position: absolute;
   top: 16px;
   right: 16px;
   z-index: 1002;

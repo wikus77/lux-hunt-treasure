@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Crosshair, RotateCcw, Zap } from 'lucide-react';
 import Map3DToggle from './Map3DToggle';
-import MapLayerToggle from './MapLayerToggle';
+
 
 interface MapDockProps {
   onToggle3D?: (is3D: boolean) => void;
@@ -32,8 +32,6 @@ const MapDock = ({
         disabled={!terrain3DAvailable}
       />
 
-      {/* Layers Toggle */}
-      <MapLayerToggle onLayerChange={onLayerChange} />
 
       {/* Focus (GPS Center) */}
       <Button
