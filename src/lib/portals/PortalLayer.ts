@@ -19,12 +19,12 @@ export class PortalLayer {
   mount(map: L.Map) {
     this.map = map;
     
-    // Create dedicated pane for portals
+    // Create dedicated pane for portals - same level as markers
     let pane = map.getPane('m1-portals');
     if (!pane) {
       pane = map.createPane('m1-portals');
       if (pane) {
-        pane.style.zIndex = '450';
+        pane.style.zIndex = '600'; // Above markers (600) but below popups (700)
         pane.style.pointerEvents = 'auto';
         pane.setAttribute('data-layer', 'portals');
       }
@@ -38,32 +38,27 @@ export class PortalLayer {
     this.group.clearLayers();
     
     portals.forEach((portal) => {
-      // Create custom DivIcon for portal with M1SSION design
+      // M1SSION design: cyan glowing dot with pulse
       const icon = L.divIcon({
-        html: `
-          <div class="m1-portal" data-layer="portals" aria-label="Portal ${portal.name}">
-            <div class="m1-portal__core"></div>
-            <div class="m1-portal__pulse"></div>
-          </div>
-        `,
-        className: 'portal-marker-wrapper',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+        html: '<div class="m1-portal-dot" data-layer="portals"></div>',
+        className: 'm1-portal-wrapper',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
       });
 
       const marker = L.marker([portal.lat, portal.lng], {
         icon,
         pane: 'm1-portals',
-        bubblingMouseEvents: true,
+        bubblingMouseEvents: false,
       });
 
-      // Tooltip
+      // Tooltip on hover
       marker.bindTooltip(portal.name, {
         direction: 'top',
-        offset: L.point(0, -20),
+        offset: L.point(0, -8),
         opacity: 1,
         permanent: false,
-        className: 'portal-tooltip',
+        className: 'm1-portal-tooltip',
       });
 
       // Click event
@@ -87,6 +82,12 @@ export class PortalLayer {
 
       this.group.addLayer(marker);
     });
+  }
+  
+  getCount(): number {
+    let count = 0;
+    this.group.eachLayer(() => count++);
+    return count;
   }
 
   show() {
