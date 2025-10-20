@@ -233,12 +233,22 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     layer.addTo(mapRef.current);
     terrainRef.current = layer;
     
+    // CRITICAL: Make terrain visible by reducing Leaflet tile opacity
+    const tilePane = mapRef.current.getPanes().tilePane;
+    if (tilePane) {
+      tilePane.style.opacity = '0.35';
+    }
+    
     // Apply subtle tilt effect to container
     if (mapContainerDivRef.current) {
       const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
       if (mapPane) {
         (mapPane as HTMLElement).style.transform = 'perspective(1200px) rotateX(5deg)';
       }
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ 3D Terrain activated - hillshade should be visible');
     }
   };
 
@@ -248,12 +258,22 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     mapRef.current.removeLayer(terrainRef.current);
     terrainRef.current = null;
     
+    // CRITICAL: Restore full tile opacity
+    const tilePane = mapRef.current.getPanes().tilePane;
+    if (tilePane) {
+      tilePane.style.opacity = '1';
+    }
+    
     // Remove tilt
     if (mapContainerDivRef.current) {
       const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
       if (mapPane) {
         (mapPane as HTMLElement).style.transform = '';
       }
+    }
+    
+    if (import.meta.env.DEV) {
+      console.log('✅ 3D Terrain deactivated - flat map restored');
     }
   };
 
