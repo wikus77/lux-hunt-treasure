@@ -17,7 +17,7 @@ interface MapLayerToggleProps {
 const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [layers, setLayers] = useState<LayerConfig[]>([
-    { id: 'portals', label: 'PORTALS', count: 4, enabled: true },
+    { id: 'portals', label: 'PORTALS', count: 12, enabled: true },
     { id: 'events', label: 'EVENTS', count: 3, enabled: true },
     { id: 'agents', label: 'AGENTS', count: 18, enabled: true },
     { id: 'zones', label: 'ZONES', count: 2, enabled: true },
