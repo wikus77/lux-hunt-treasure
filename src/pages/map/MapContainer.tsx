@@ -7,7 +7,7 @@ import './components/leaflet-fixes.css';
 import MapContent from './MapContent';
 import MapControls from './components/MapControls';
 import BuzzMapButtonSecure from '@/components/map/BuzzMapButtonSecure';
-import MapZoomControls from './components/MapZoomControls';
+
 import HelpDialog from './components/HelpDialog';
 import FinalShotButton from '@/components/map/FinalShotButton';
 import { useBuzzMapLogic } from '@/hooks/useBuzzMapLogic';
@@ -241,8 +241,6 @@ const MapContainer: React.FC<MapContainerProps> = ({
           }}
         />
         
-        {/* Zoom Controls */}
-        <MapZoomControls />
       </LeafletMapContainer>
       
       {/* BUZZ Button - PAID ONLY */}
