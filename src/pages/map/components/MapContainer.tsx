@@ -23,13 +23,21 @@ import { TerrainLayer } from '@/lib/terrain/TerrainLayer';
 import '@/styles/terrain.css';
 import '@/styles/portals.css';
 import '@/styles/map-layers.css';
+import '@/styles/agents.css';
 import { PortalLayer } from '@/lib/portals/PortalLayer';
 import { EventsLayer } from '@/lib/layers/EventsLayer';
 import { AgentsLayer } from '@/lib/layers/AgentsLayer';
 import { ZonesLayer } from '@/lib/layers/ZonesLayer';
 import { PORTALS_SEED } from '@/data/portals.seed';
-import { MOCK_EVENTS, MOCK_AGENTS, MOCK_ZONES } from '@/data/mockLayers';
+import { MOCK_EVENTS, MOCK_ZONES } from '@/data/mockLayers';
 import { useGeolocation } from '@/hooks/useGeolocation';
+import { 
+  initAgentsPresence, 
+  subscribeAgents, 
+  teardownAgentsPresence,
+  type AgentPresence 
+} from '@/features/agents/agentsPresence';
+import { supabase } from '@/integrations/supabase/client';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -109,6 +117,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const agentsLayerRef = useRef<AgentsLayer | null>(null);
   const zonesLayerRef = useRef<ZonesLayer | null>(null);
   const [layerCounts, setLayerCounts] = useState({ portals: 0, events: 0, agents: 0, zones: 0 });
+  const [currentAgentCode, setCurrentAgentCode] = useState<string>('');
+  const [currentUserId, setCurrentUserId] = useState<string>('');
   
   // Geolocation for current user agent
   const { position: geoPosition, status: geoStatus } = useGeolocation();
@@ -394,17 +404,13 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       eventsLayerRef.current.setData(MOCK_EVENTS);
     }
     
-    // Initialize Agents (with current user position if available)
+    // Initialize Agents Layer (real-time presence)
     if (!agentsLayerRef.current) {
       console.log('👥 Initializing Agents Layer');
       agentsLayerRef.current = new AgentsLayer();
       agentsLayerRef.current.mount(mapRef.current);
-      const currentUser = geoPosition ? {
-        lat: geoPosition.lat,
-        lng: geoPosition.lng,
-        name: 'Me'
-      } : undefined;
-      agentsLayerRef.current.setData(MOCK_AGENTS, currentUser);
+      // Initially empty - will be populated by presence subscription
+      agentsLayerRef.current.setData([], undefined);
     }
     
     // Initialize Zones
@@ -444,6 +450,85 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     window.addEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
     return () => window.removeEventListener('M1_LAYER_TOGGLE', handleLayerToggle);
   }, []);
+
+  // Fetch current user's agent code and initialize presence
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchAgentCode = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || !mounted) return;
+
+      const userId = session.user.id;
+      setCurrentUserId(userId);
+
+      // Fetch agent code
+      const { data, error } = await supabase
+        .rpc('get_my_agent_code')
+        .single<{ agent_code?: string }>();
+
+      if (error) {
+        console.error('❌ Error fetching agent code:', error);
+        return;
+      }
+
+      if (data?.agent_code && mounted) {
+        setCurrentAgentCode(data.agent_code);
+        console.log('✅ Agent code fetched:', data.agent_code);
+      }
+    };
+
+    fetchAgentCode();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Initialize agents presence and subscribe to updates
+  useEffect(() => {
+    if (!currentAgentCode || !agentsLayerRef.current) return;
+
+    console.log('🟢 Initializing agents presence tracking...');
+
+    // Initialize presence with agent code and coordinates getter
+    initAgentsPresence(currentAgentCode, () => {
+      if (geoPosition) {
+        return { lat: geoPosition.lat, lng: geoPosition.lng };
+      }
+      return null;
+    });
+
+    // Subscribe to agents updates
+    const unsubscribe = subscribeAgents((agents: AgentPresence[]) => {
+      console.log('👥 Agents update:', agents.length, 'online');
+      
+      // Convert AgentPresence[] to Agent[] format for the layer
+      const agentData = agents.map(a => ({
+        id: a.id,
+        agent_code: a.agent_code,
+        lat: a.lat,
+        lng: a.lng,
+      }));
+
+      // Update layer with current user ID for highlighting "You"
+      if (agentsLayerRef.current) {
+        agentsLayerRef.current.setData(agentData, currentUserId);
+        
+        // Update count
+        setLayerCounts(prev => ({
+          ...prev,
+          agents: agentData.length,
+        }));
+      }
+    });
+
+    return () => {
+      console.log('🔴 Cleaning up agents presence...');
+      unsubscribe();
+      teardownAgentsPresence();
+    };
+  }, [currentAgentCode, currentUserId, geoPosition]);
 
   // Listen for M1_PORTAL_CLICK events
   useEffect(() => {
