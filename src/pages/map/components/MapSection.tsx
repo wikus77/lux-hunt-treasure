@@ -70,6 +70,27 @@ const MapSection: React.FC<MapSectionProps> = ({
   onRegisterFocusLocation,
   onRegisterResetView,
 }) => {
+  // P0 FIX: Internal handler refs to bridge MapDock <-> MapContainer
+  const toggle3DHandlerRef = React.useRef<((is3D: boolean) => void) | null>(null);
+  
+  // When MapContainer registers its handler, store it
+  const handleRegisterToggle3D = React.useCallback((handler: (is3D: boolean) => void) => {
+    toggle3DHandlerRef.current = handler;
+    if (onRegisterToggle3D) {
+      onRegisterToggle3D(handler);
+    }
+  }, [onRegisterToggle3D]);
+  
+  // When MapDock calls onToggle3D, invoke the stored handler
+  const handleToggle3D = React.useCallback((is3D: boolean) => {
+    if (toggle3DHandlerRef.current) {
+      toggle3DHandlerRef.current(is3D);
+    }
+    if (onToggle3D) {
+      onToggle3D(is3D);
+    }
+  }, [onToggle3D]);
+
   return (
     <div className="m1ssion-glass-card p-4 sm:p-6 mb-6 m1-dock-enabled" style={{ marginTop: "20px" }}>
       {/* Titoli sopra la mappa - BY JOSEPH MULE */}
@@ -95,7 +116,7 @@ const MapSection: React.FC<MapSectionProps> = ({
         
         {/* M1SSION Map Dock - Unified Controls */}
         <MapDock
-          onToggle3D={onToggle3D}
+          onToggle3D={handleToggle3D}
           onFocus={onFocusLocation}
           onReset={onResetView}
           onBuzz={handleBuzz}
@@ -136,7 +157,7 @@ const MapSection: React.FC<MapSectionProps> = ({
             toggleAddingSearchArea={toggleAddingSearchArea}
             showHelpDialog={showHelpDialog}
             setShowHelpDialog={setShowHelpDialog}
-            onToggle3D={onRegisterToggle3D}
+            onToggle3D={handleRegisterToggle3D}
             onFocusLocation={onRegisterFocusLocation}
             onResetView={onRegisterResetView}
           />
