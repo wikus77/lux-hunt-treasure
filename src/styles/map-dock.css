@@ -69,13 +69,18 @@
 
 /* LIVING LAYERS Container */
 .living-layers-container {
-  position: relative;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1002;
+  pointer-events: none; /* allow clicks to pass except inner */
 }
+.living-layers-container * { pointer-events: auto; }
 
 .living-layers-pill {
-  position: fixed;
-  bottom: 16px;
-  left: 16px;
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -88,7 +93,6 @@
   cursor: pointer;
   transition: all 0.3s ease;
   z-index: 1000;
-  pointer-events: auto;
 }
 
 .living-layers-pill:hover {
@@ -107,19 +111,18 @@
 }
 
 .living-layers-panel {
-  position: fixed;
-  bottom: 16px;
-  left: 16px;
-  min-width: 240px;
+  position: absolute;
+  top: 48px; /* open just below the pill */
+  right: 0;
+  min-width: 260px;
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(0, 229, 255, 0.3);
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 8px 32px rgba(0, 229, 255, 0.2);
-  animation: slide-in-up 0.3s ease-out;
+  animation: slide-in-right 0.25s ease-out;
   z-index: 1001;
-  pointer-events: auto;
 }
 
 @keyframes slide-in-up {
@@ -422,13 +425,17 @@
   }
 
   .living-layers-pill {
-    bottom: 12px;
-    left: 12px;
+    top: 12px;
+    right: 12px;
+    left: auto;
+    bottom: auto;
   }
 
   .living-layers-panel {
-    bottom: 12px;
-    left: 12px;
+    top: 48px;
+    right: 12px;
+    left: auto;
+    bottom: auto;
   }
 }
 
@@ -457,3 +464,12 @@
 }
 
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+
+/* Hide native map zoom controls (Leaflet / MapLibre / Google) */
+.leaflet-control-zoom,
+.maplibregl-ctrl-zoom,
+.gm-bundled-control .gmnoprint [aria-label='Zoom in'],
+.gm-bundled-control .gmnoprint [aria-label='Zoom out'] {
+  display: none !important;
+}
+
