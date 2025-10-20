@@ -39,9 +39,9 @@ const MapLayerToggle = ({ onLayerChange }: MapLayerToggleProps) => {
           }
         });
         
-        // Dispatch custom event for Living Map integration
+        // Dispatch custom event for Living Map integration (P1 FIX: use 'layer' key for consistency)
         const event = new CustomEvent('M1_LAYER_TOGGLE', {
-          detail: { layerId, enabled: newEnabled }
+          detail: { layer: layerId, enabled: newEnabled }
         });
         window.dispatchEvent(event);
         
