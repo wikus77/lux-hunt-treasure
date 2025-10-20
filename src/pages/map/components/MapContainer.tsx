@@ -279,6 +279,12 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       });
       return;
     }
+
+    // Validate TileJSON format quickly
+    if (!/tiles\.json/i.test(demUrl)) {
+      console.warn('⚠️ VITE_TERRAIN_URL non sembra un TileJSON endpoint (manca tiles.json)');
+      toast.warning('URL DEM non valido (atteso TileJSON)');
+    }
     
     if (!mapRef.current) {
       console.error('❌ 3D Terrain CANNOT be enabled: mapRef.current is null');

@@ -38,33 +38,46 @@ export async function initAgentsPresence(
 
   console.log('🟢 Initializing agents presence for', agentCode);
 
-  // Create presence channel
-  channel = supabase.channel('agents_presence', {
+  // Create presence channel (v1) with presence + broadcast ack
+  channel = supabase.channel('m1_agents_presence_v1', {
     config: {
-      presence: {
-        key: id,
-      },
+      presence: { key: id },
+      broadcast: { ack: true }
     },
   });
 
-  // Subscribe to presence state
-  await new Promise<void>((resolve) => {
+  // Subscribe to presence state and wait for SUBSCRIBED
+  await new Promise<void>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT');
+      reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
+    }, 8000);
+
     channel!
       .on('presence', { event: 'sync' }, () => {
         const state = channel!.presenceState();
-        if (import.meta.env.DEV) {
-          console.log('👥 Agents presence sync:', Object.keys(state).length, 'online');
-        }
+        console.log('👥 Agents presence sync:', Object.keys(state).length, 'online');
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
+          clearTimeout(timeout);
           console.log('✅ Agents presence channel subscribed');
-          // Track initial presence
-          updatePresence(id, agentCode, getCoords);
+          // Track initial presence (await to ensure ACK)
+          try {
+            await channel!.track({
+              id,
+              agent_code: agentCode,
+              ...(getCoords() || {}),
+              timestamp: Date.now(),
+            } as any);
+          } catch (e) {
+            console.warn('⚠️ Initial presence track failed:', e);
+          }
           resolve();
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          clearTimeout(timeout);
           console.error('❌ Agents presence channel error:', status);
-          resolve(); // Resolve anyway to not block
+          reject(new Error(String(status)));
         }
       });
   });
@@ -144,14 +157,12 @@ export function subscribeAgents(
       });
     });
 
-    // Expose debug info
-    if (import.meta.env.DEV) {
-      (window as any).__M1_DEBUG = {
-        ...(window as any).__M1_DEBUG,
-        lastAgentsPresence: agents,
-        agentsPresenceRaw: state,
-      };
-    }
+    // Expose debug info (always available)
+    (window as any).__M1_DEBUG = {
+      ...(window as any).__M1_DEBUG,
+      lastAgentsPresence: agents,
+      agentsPresenceRaw: state,
+    };
 
     callback(agents);
   };
