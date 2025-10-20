@@ -1,5 +1,6 @@
-import React, { Suspense, lazy, useMemo, useRef, useCallback } from 'react';
+import React, { Suspense, lazy, useMemo, useRef, useCallback, useState } from 'react';
 import { useLiveLayers } from './hooks/useLiveLayers';
+import type { PortalDTO } from './adapters/readOnlyData';
 import './styles/livingMap.css';
 
 // Lazy load components for performance
@@ -12,6 +13,7 @@ const LegendHUD = lazy(() => import('./components/LegendHUD'));
 const MapHUDHeader = lazy(() => import('./components/MapHUDHeader'));
 const DockLeft = lazy(() => import('./components/DockLeft'));
 const BadgeStackOverlay = lazy(() => import('./components/BadgeStackOverlay'));
+const PortalOverlay = lazy(() => import('./components/PortalOverlay'));
 
 
 interface LivingMapProps {
@@ -25,7 +27,21 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
   // Feature flag check
   const enabled = import.meta.env.VITE_ENABLE_LIVING_MAP !== 'false';
 
+  const [selectedPortal, setSelectedPortal] = useState<PortalDTO | null>(null);
+  const [portalOverlayVisible, setPortalOverlayVisible] = useState(false);
+
   const { portals, events, agents, zones, loading } = useLiveLayers(enabled);
+
+  const handlePortalClick = useCallback((portal: PortalDTO) => {
+    console.log('🎯 Portal clicked:', portal.name);
+    setSelectedPortal(portal);
+    setPortalOverlayVisible(true);
+  }, []);
+
+  const handleClosePortalOverlay = useCallback(() => {
+    setPortalOverlayVisible(false);
+    setTimeout(() => setSelectedPortal(null), 300);
+  }, []);
 
   // Derive dock items from live data (only SECTOR = zones)
   const dockItems = useMemo(() => {
@@ -93,11 +109,18 @@ const LivingMap: React.FC<LivingMapProps> = ({ center, zoom, mapContainerRef, hi
         <RadarOverlay center={center || { lat: 43.7874, lng: 7.6326 }} />
 
         {/* Data layers */}
-        <PortalsLayer portals={portals} showLabels={false} />
+        <PortalsLayer portals={portals} showLabels={false} onPortalClick={handlePortalClick} />
         <EventsLayer events={events} showLabels={false} />
         <AgentsLayer agents={agents} />
         <ControlZonesLayer zones={zones} showLabels={false} />
         <BadgeStackOverlay portals={portals} events={events} zones={zones} />
+
+        {/* Portal detail overlay */}
+        <PortalOverlay
+          portal={selectedPortal}
+          isVisible={portalOverlayVisible}
+          onClose={handleClosePortalOverlay}
+        />
 
         {/* Dock Left - Badge pills (hidden when Portal Container active) */}
         {!hidePortalBadges && <DockLeft items={dockItems} onFocus={handleFocus} />}
