@@ -44,6 +44,7 @@ const LivingMap = lazy(() => import('@/features/living-map'));
 
 import L from 'leaflet';
 import { toast } from 'sonner';
+import { shouldShowToast } from '@/utils/toastDedup';
 import { GeoDebugOverlay } from '@/components/map/GeoDebugOverlay';
 import { 
   handleMapMove, 
@@ -432,7 +433,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         mapRef.current.flyTo([quick.lat, quick.lng], 15, { duration: 1 });
         lastCenterAtRef.current = Date.now();
         (window as any).__M1_DEBUG.center.source = quick === geo.coords ? 'gps_cached' : 'ip_cached';
-        toast.success('Centrato su posizione corrente');
+        if (shouldShowToast('center_location')) {
+          toast.success('Centrato su posizione corrente');
+        }
         return;
       }
 
@@ -464,13 +467,17 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 });
         lastCenterAtRef.current = Date.now();
         (window as any).__M1_DEBUG.center.source = source;
-        toast.success(`Centrato su ${source === 'gps' ? 'GPS' : source === 'ip' ? 'IP' : 'posizione'}`);
+        if (shouldShowToast('center_location')) {
+          toast.success(`Centrato su ${source === 'gps' ? 'GPS' : source === 'ip' ? 'IP' : 'posizione'}`);
+        }
       } else {
         (window as any).__M1_DEBUG.center = { lastAction: 'click', source: 'none', error: 'NO_COORDS' };
-        toast.warning('Posizione non disponibile', { 
-          description: 'Abilita GPS nelle impostazioni del dispositivo', 
-          duration: 3000 
-        });
+        if (shouldShowToast('center_no_location')) {
+          toast.warning('Posizione non disponibile', { 
+            description: 'Abilita GPS nelle impostazioni del dispositivo', 
+            duration: 3000 
+          });
+        }
       }
     } finally {
       focusInFlightRef.current = false;
@@ -622,6 +629,24 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       mounted = false;
     };
   }, []);
+
+  // P1 FIX: Immediate track when coords become available
+  useEffect(() => {
+    if (!currentAgentCode) return;
+    
+    const coords = geoPosition || ipGeo.coords;
+    if (!coords) return;
+    
+    // Debounce to avoid spam (3s)
+    const timer = setTimeout(() => {
+      import('@/features/agents/agentsPresence').then(({ trackNow }) => {
+        trackNow(currentAgentCode, coords);
+        console.log('[Presence] IMMEDIATE TRACK on coords ready:', coords);
+      });
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [currentAgentCode, geoPosition, ipGeo.coords]);
 
   // Initialize agents presence and subscribe to updates
   useEffect(() => {

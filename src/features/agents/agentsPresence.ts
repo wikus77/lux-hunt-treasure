@@ -168,6 +168,57 @@ export async function initAgentsPresence(
 }
 
 /**
+ * Track position immediately (called externally when coords become available)
+ * @param agentCode - Current user's agent code
+ * @param coords - Coordinates to track
+ */
+export function trackNow(agentCode: string, coords: { lat: number; lng: number }) {
+  if (!channel) {
+    if (import.meta.env.DEV) {
+      console.log('[Presence] ⏸️ trackNow skipped: channel not initialized');
+    }
+    return;
+  }
+
+  // Check channel status via internal state
+  const channelState = (channel as any).state;
+  if (channelState !== 'joined') {
+    if (import.meta.env.DEV) {
+      console.log('[Presence] ⏸️ trackNow skipped: channel not SUBSCRIBED (state:', channelState, ')');
+    }
+    return;
+  }
+
+  supabase.auth.getSession().then(({ data: sessionData }) => {
+    const id = sessionData.session?.user.id;
+    if (!id) return;
+
+    const payload: AgentPresence = {
+      id,
+      agent_code: agentCode,
+      lat: coords.lat,
+      lng: coords.lng,
+      timestamp: Date.now(),
+    };
+
+    channel!.track(payload as any).then(() => {
+      if (import.meta.env.DEV) {
+        console.log('[Presence] ✅ trackNow: immediate track sent', { agent_code: agentCode, coords });
+      }
+      (window as any).__M1_DEBUG = {
+        ...(window as any).__M1_DEBUG,
+        presence: {
+          ...(window as any).__M1_DEBUG?.presence,
+          last: Date.now()
+        }
+      };
+    }).catch((err) => {
+      console.warn('[Presence] ⚠️ trackNow failed:', err);
+    });
+  });
+}
+
+/**
  * Update user's presence with debouncing (5s)
  */
 function updatePresence(
