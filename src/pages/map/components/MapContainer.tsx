@@ -118,6 +118,8 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   const agentsLayerRef = useRef<AgentsLayer | null>(null);
   const zonesLayerRef = useRef<ZonesLayer | null>(null);
   const [layerCounts, setLayerCounts] = useState({ portals: 0, events: 0, agents: 0, zones: 0 });
+  const focusInFlightRef = useRef(false);
+  const lastCenterAtRef = useRef<number>(0);
   const [currentAgentCode, setCurrentAgentCode] = useState<string>('');
   const [currentUserId, setCurrentUserId] = useState<string>('');
   
@@ -407,13 +409,49 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     console.log('✅ 3D toggle handler registered');
   }, [onToggle3D]);
 
-  // Handle focus location from dock
-  const handleFocusLocation = () => {
-    const coords = geo.coords || ipGeo.coords;
-    if (coords && mapRef.current) {
-      mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 });
-    } else {
-      requestLocationPermission();
+  // Handle focus location from dock (robust with debounce and fallbacks)
+  const handleFocusLocation = async () => {
+    const now = Date.now();
+    if (focusInFlightRef.current || now - (lastCenterAtRef.current || 0) < 300) {
+      return;
+    }
+    focusInFlightRef.current = true;
+    try {
+      (window as any).__M1_DEBUG = {
+        ...(window as any).__M1_DEBUG,
+        center: { lastAction: 'click', source: 'none', error: null }
+      };
+
+      // Fast path: existing coords
+      const quick = geo.coords || ipGeo.coords;
+      if (quick && mapRef.current) {
+        mapRef.current.flyTo([quick.lat, quick.lng], 15, { duration: 1 });
+        lastCenterAtRef.current = Date.now();
+        (window as any).__M1_DEBUG.center.source = 'cached';
+        return;
+      }
+
+      // Race GPS (with short timeout) vs IP geolocation
+      const ipPromise = ipGeo.getLocationByIP().then(() => ipGeo.coords).catch(() => null);
+      const gpsPromise = geo.requestLocation().then(() => geo.coords).catch(() => null);
+
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000));
+      const winner = await Promise.race([
+        Promise.all([ipPromise, gpsPromise]).then(([ip, gps]) => (gps || ip) as any),
+        timeout,
+      ]);
+
+      const coords = winner || geo.coords || ipGeo.coords;
+      if (coords && mapRef.current) {
+        mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 });
+        lastCenterAtRef.current = Date.now();
+        (window as any).__M1_DEBUG.center.source = gpsPromise ? 'gps_or_ip' : 'none';
+      } else {
+        (window as any).__M1_DEBUG.center = { lastAction: 'click', source: 'none', error: 'NO_COORDS' };
+        toast.warning('Posizione non disponibile', { description: 'Abilita la posizione nelle impostazioni', duration: 3000 });
+      }
+    } finally {
+      focusInFlightRef.current = false;
     }
   };
 
@@ -581,6 +619,9 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         await initAgentsPresence(currentAgentCode, () => {
           if (geoPosition) {
             return { lat: geoPosition.lat, lng: geoPosition.lng };
+          }
+          if (ipGeo.coords) {
+            return { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng };
           }
           return null; // Self is online but location TBD
         });

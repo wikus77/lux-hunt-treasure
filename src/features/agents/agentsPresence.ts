@@ -57,61 +57,87 @@ export async function initAgentsPresence(
   console.log('[Presence] status → CHANNEL_CREATED');
   (window as any).__M1_DEBUG.presence.status = 'CHANNEL_CREATED';
 
-  // Subscribe to presence state and wait for SUBSCRIBED
-  await new Promise<void>((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (8s)');
-      (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TIMEOUT', last: null, count: 0 };
-      reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
-    }, 8000);
+  // Subscribe with retries (1s, 2s, 4s) before failing
+  async function subscribeWithRetry(maxAttempts = 3): Promise<void> {
+    let attempt = 1;
+    while (attempt <= maxAttempts) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (8s)');
+            (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TIMEOUT', last: null, count: 0 };
+            reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
+          }, 8000);
 
-    console.log('[Presence] status → SUBSCRIBING');
-    (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBING';
+          console.log('[Presence] status → SUBSCRIBING (attempt', attempt, ')');
+          (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBING';
 
-    channel!
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel!.presenceState();
-        const count = Object.keys(state).length;
-        console.log(`[Presence] status → SYNC(${count})`);
-        (window as any).__M1_DEBUG.presence = {
-          status: `SYNC(${count})`,
-          last: Date.now(),
-          error: null,
-          count
-        };
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          clearTimeout(timeout);
-          console.log('[Presence] status → SUBSCRIBED');
-          (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBED';
-          
-          // Track initial presence (await to ensure ACK)
-          // ALWAYS track self, even without coordinates (online marker)
-          try {
-            const initialPayload = {
-              id,
-              agent_code: agentCode,
-              timestamp: Date.now(),
-              ...(getCoords() || {}), // Add coords if available
-            };
-            console.log('[Presence] Tracking initial payload:', { agent_code: agentCode, hasCoords: !!getCoords() });
-            await channel!.track(initialPayload as any);
-            console.log('[Presence] status → TRACKED');
-            (window as any).__M1_DEBUG.presence.status = 'TRACKED';
-          } catch (e) {
-            console.error('[Presence] Initial track failed:', e);
-            (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TRACK_FAILED', last: null, count: 0 };
-          }
-          resolve();
-        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-          clearTimeout(timeout);
-          console.error('[Presence] Channel error:', status);
-          (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: status, last: null, count: 0 };
-          reject(new Error(String(status)));
+          channel!
+            .on('presence', { event: 'sync' }, () => {
+              const state = channel!.presenceState();
+              const count = Object.keys(state).length;
+              console.log(`[Presence] status → SYNC(${count})`);
+              (window as any).__M1_DEBUG.presence = {
+                status: `SYNC(${count})`,
+                last: Date.now(),
+                error: null,
+                count
+              };
+            })
+            .subscribe(async (status) => {
+              if (status === 'SUBSCRIBED') {
+                clearTimeout(timeout);
+                console.log('[Presence] status → SUBSCRIBED');
+                (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBED';
+
+                // Track initial presence (await to ensure ACK)
+                try {
+                  const initialPayload = {
+                    id,
+                    agent_code: agentCode,
+                    timestamp: Date.now(),
+                    ...(getCoords() || {}),
+                  };
+                  console.log('[Presence] Tracking initial payload:', { agent_code: agentCode, hasCoords: !!getCoords() });
+                  await channel!.track(initialPayload as any);
+                  console.log('[Presence] status → TRACKED');
+                  (window as any).__M1_DEBUG.presence.status = 'TRACKED';
+                } catch (e) {
+                  console.error('[Presence] Initial track failed:', e);
+                  (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TRACK_FAILED', last: null, count: 0 };
+                }
+                resolve();
+              } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                clearTimeout(timeout);
+                console.error('[Presence] Channel error:', status);
+                (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: status, last: null, count: 0 };
+                reject(new Error(String(status)));
+              }
+            });
+        });
+        console.log(`[Presence] ✅ SUBSCRIBED on attempt #${attempt}`);
+        return; // success
+      } catch (e) {
+        console.warn(`[Presence] Retry #${attempt} failed`, e);
+        if (attempt >= maxAttempts) throw e;
+        // Recreate channel before retry to avoid stale listeners
+        if (channel) {
+          try { supabase.removeChannel(channel); } catch {}
         }
-      });
-  });
+        channel = supabase.channel('m1_agents_presence_v1', {
+          config: {
+            presence: { key: id },
+            broadcast: { ack: true }
+          },
+        });
+        const backoffMs = Math.pow(2, attempt - 1) * 1000; // 1s, 2s, 4s
+        await new Promise((r) => setTimeout(r, backoffMs));
+        attempt++;
+      }
+    }
+  }
+
+  await subscribeWithRetry();
 
   // Heartbeat every 30s to refresh presence (requirement)
   // Always track, even without coordinates (keep agent online)
