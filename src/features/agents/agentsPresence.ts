@@ -293,13 +293,17 @@ export function subscribeAgents(
       });
     });
 
-    // Expose debug info (always available)
+    // Expose debug info (always available) with full detail for audit
     (window as any).__M1_DEBUG = {
       ...(window as any).__M1_DEBUG,
       lastAgentsPresence: agentsWithCoords, // Only agents with coords for rendering
       agentsPresenceAll: allAgents, // All online agents for badge count
       agentsPresenceRaw: state,
     };
+
+    if (import.meta.env.DEV) {
+      console.log(`[Presence] SYNC → Rendered: ${agentsWithCoords.length} / Online: ${allAgents.length}`);
+    }
 
     // Callback receives ONLY agents with coordinates (for rendering)
     callback(agentsWithCoords);

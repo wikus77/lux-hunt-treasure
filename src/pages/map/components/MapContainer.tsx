@@ -759,18 +759,19 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     const coords = geoPosition || ipGeo.coords;
     if (!coords) return;
     
-    // If we have a presence channel active, log coords availability
-    if (import.meta.env.DEV) {
-      console.log('[Presence] 📍 Coords available for immediate track:', {
-        agent_code: currentAgentCode,
-        lat: coords.lat.toFixed(4),
-        lng: coords.lng.toFixed(4),
-        source: geoPosition ? 'GPS' : 'IP'
-      });
-    }
-    
-    // The actual tracking is done by agentsPresence.ts heartbeat and initial track
-    // This ensures coords are available when initAgentsPresence getCoords() is called
+    // Import trackNow dynamically to call it
+    import('@/features/agents/agentsPresence').then(({ trackNow }) => {
+      trackNow(currentAgentCode, { lat: coords.lat, lng: coords.lng });
+      
+      if (import.meta.env.DEV) {
+        console.log('[Presence] ✅ Immediate track sent:', {
+          agent_code: currentAgentCode,
+          lat: coords.lat.toFixed(4),
+          lng: coords.lng.toFixed(4),
+          source: geoPosition ? 'GPS' : 'IP'
+        });
+      }
+    });
   }, [geoPosition, ipGeo.coords, currentUserId, currentAgentCode]);
 
   // Listen for M1_PORTAL_CLICK events
