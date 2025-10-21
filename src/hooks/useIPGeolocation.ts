@@ -77,29 +77,44 @@ export const useIPGeolocation = () => {
               reject(error);
             },
             { 
-              timeout: 5000, 
+              timeout: 2500, 
               enableHighAccuracy: true,
               maximumAge: 30000 
             }
           );
         });
 
-        // Aspetta GPS per max 5 secondi
+        // Aspetta GPS per max 2.5 secondi
         const gpsCoords = await Promise.race([
           gpsPromise,
           new Promise<null>((_, reject) => 
-            setTimeout(() => reject(new Error('GPS timeout')), 5000)
+            setTimeout(() => reject(new Error('GPS timeout')), 2500)
           )
         ]);
 
         if (gpsCoords) {
           setCoords(gpsCoords);
-          toast.success('🎯 Posizione GPS rilevata con precisione');
+          if (!(window as any).__M1_TOAST_DEDUP) (window as any).__M1_TOAST_DEDUP = {};
+          const now = Date.now();
+          if (!((window as any).__M1_TOAST_DEDUP['gps-success'] > now - 3000)) {
+            toast.success('🎯 Posizione GPS rilevata con precisione');
+            (window as any).__M1_TOAST_DEDUP['gps-success'] = now;
+          }
+          (window as any).__M1_DEBUG = {
+            ...(window as any).__M1_DEBUG,
+            geo: { source: 'gps', last: gpsCoords, error: null }
+          };
           return gpsCoords;
         }
       }
     } catch (gpsError) {
       console.log('🌍 M1SSION™ GEOLOCATION: GPS not available, fallback to IP:', gpsError);
+      if (!(window as any).__M1_TOAST_DEDUP) (window as any).__M1_TOAST_DEDUP = {};
+      const now = Date.now();
+      if (!((window as any).__M1_TOAST_DEDUP['gps-unavailable'] > now - 5000)) {
+        toast.info('GPS non disponibile – uso posizione IP');
+        (window as any).__M1_TOAST_DEDUP['gps-unavailable'] = now;
+      }
     }
 
     // Se GPS fallisce, prova i servizi IP in sequenza
@@ -134,8 +149,17 @@ export const useIPGeolocation = () => {
           // Verifica che le coordinate siano ragionevoli (Europa)
           if (parsed.lat >= 36 && parsed.lat <= 71 && parsed.lng >= -11 && parsed.lng <= 40) {
             setCoords(newCoords);
-            toast.success(`🌍 Posizione rilevata: ${parsed.city}, ${parsed.country}`);
+            if (!(window as any).__M1_TOAST_DEDUP) (window as any).__M1_TOAST_DEDUP = {};
+            const now = Date.now();
+            if (!((window as any).__M1_TOAST_DEDUP['ip-success'] > now - 3000)) {
+              toast.success(`🌍 Posizione rilevata: ${parsed.city}, ${parsed.country}`);
+              (window as any).__M1_TOAST_DEDUP['ip-success'] = now;
+            }
             console.log(`🌍 M1SSION™ GEOLOCATION: SUCCESS with ${service.name}!`, newCoords);
+            (window as any).__M1_DEBUG = {
+              ...(window as any).__M1_DEBUG,
+              geo: { source: 'ip', last: newCoords, city: parsed.city, country: parsed.country, error: null }
+            };
             return newCoords;
           } else {
             console.warn(`🌍 M1SSION™ GEOLOCATION: ${service.name} returned coordinates outside Europe:`, parsed);
@@ -154,7 +178,16 @@ export const useIPGeolocation = () => {
     console.log('🌍 M1SSION™ GEOLOCATION: All services failed, using European fallback');
     const europeFallback = { lat: 50.1109, lng: 8.6821 }; // Francoforte, centro Europa
     setCoords(europeFallback);
-    toast.info('🗺️ Posizione geografica non disponibile, usando vista Europa');
+    if (!(window as any).__M1_TOAST_DEDUP) (window as any).__M1_TOAST_DEDUP = {};
+    const now = Date.now();
+    if (!((window as any).__M1_TOAST_DEDUP['fallback'] > now - 5000)) {
+      toast.info('🗺️ Posizione geografica non disponibile, usando vista Europa');
+      (window as any).__M1_TOAST_DEDUP['fallback'] = now;
+    }
+    (window as any).__M1_DEBUG = {
+      ...(window as any).__M1_DEBUG,
+      geo: { source: 'cached', last: europeFallback, error: 'All services failed' }
+    };
     return europeFallback;
     
   }, []);

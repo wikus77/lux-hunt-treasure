@@ -172,12 +172,12 @@ export async function initAgentsPresence(
  * @param agentCode - Current user's agent code
  * @param coords - Coordinates to track
  */
-export function trackNow(agentCode: string, coords: { lat: number; lng: number }) {
+export async function trackNow(agentCode: string, coords: { lat: number; lng: number }): Promise<void> {
   if (!channel) {
     if (import.meta.env.DEV) {
       console.log('[Presence] ⏸️ trackNow skipped: channel not initialized');
     }
-    return;
+    throw new Error('trackNow: channel not initialized');
   }
 
   // Check channel status via internal state
@@ -186,36 +186,36 @@ export function trackNow(agentCode: string, coords: { lat: number; lng: number }
     if (import.meta.env.DEV) {
       console.log('[Presence] ⏸️ trackNow skipped: channel not SUBSCRIBED (state:', channelState, ')');
     }
-    return;
+    throw new Error(`trackNow: channel not joined (state: ${channelState})`);
   }
 
-  supabase.auth.getSession().then(({ data: sessionData }) => {
-    const id = sessionData.session?.user.id;
-    if (!id) return;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const id = sessionData.session?.user.id;
+  if (!id) {
+    throw new Error('trackNow: no user session');
+  }
 
-    const payload: AgentPresence = {
-      id,
-      agent_code: agentCode,
-      lat: coords.lat,
-      lng: coords.lng,
-      timestamp: Date.now(),
-    };
+  const payload: AgentPresence = {
+    id,
+    agent_code: agentCode,
+    lat: coords.lat,
+    lng: coords.lng,
+    timestamp: Date.now(),
+  };
 
-    channel!.track(payload as any).then(() => {
-      if (import.meta.env.DEV) {
-        console.log('[Presence] ✅ trackNow: immediate track sent', { agent_code: agentCode, coords });
-      }
-      (window as any).__M1_DEBUG = {
-        ...(window as any).__M1_DEBUG,
-        presence: {
-          ...(window as any).__M1_DEBUG?.presence,
-          last: Date.now()
-        }
-      };
-    }).catch((err) => {
-      console.warn('[Presence] ⚠️ trackNow failed:', err);
-    });
-  });
+  await channel.track(payload as any);
+  
+  if (import.meta.env.DEV) {
+    console.log('[Presence] ✅ trackNow: immediate track sent', { agent_code: agentCode, coords });
+  }
+  
+  (window as any).__M1_DEBUG = {
+    ...(window as any).__M1_DEBUG,
+    presence: {
+      ...(window as any).__M1_DEBUG?.presence,
+      last: Date.now()
+    }
+  };
 }
 
 /**

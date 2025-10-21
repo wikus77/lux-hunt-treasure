@@ -671,21 +671,46 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     
     if (!coords) return;
     
-    // Debounce 3s to avoid spamming on rapid GPS updates
-    const timer = setTimeout(() => {
-      trackNow(currentAgentCode, coords);
-      
-      if (import.meta.env.DEV) {
-        console.log('[Presence] ⚡ Immediate track fired:', { 
-          agent: currentAgentCode, 
-          source: geoPosition ? 'GPS' : 'IP-Geo',
-          coords 
+    const source = geoPosition ? 'GPS' : 'IP-Geo';
+    console.log(`[Presence] ⚡ IMMEDIATE coords available (${source}):`, coords);
+    
+    // Store coords locally for retry if not subscribed yet
+    const pendingTrack = { agentCode: currentAgentCode, coords, source };
+    
+    const attemptTrack = () => {
+      trackNow(currentAgentCode, coords).then(() => {
+        console.log(`[Presence] ✅ IMMEDIATE TRACK sent (${source}):`, coords);
+        (window as any).__M1_PENDING_TRACK = null;
+      }).catch(err => {
+        console.error(`[Presence] ❌ IMMEDIATE TRACK failed (${source}):`, err);
+        // Store for retry
+        (window as any).__M1_PENDING_TRACK = pendingTrack;
+      });
+    };
+    
+    // Try immediately with 3s debounce
+    const timer = setTimeout(attemptTrack, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
+
+  // Retry pending track if presence becomes SUBSCRIBED
+  useEffect(() => {
+    const retryInterval = setInterval(() => {
+      const pending = (window as any).__M1_PENDING_TRACK;
+      if (pending && (window as any).__M1_DEBUG?.presence?.status === 'SUBSCRIBED') {
+        console.log('[Presence] ♻️ Retrying pending track:', pending);
+        trackNow(pending.agentCode, pending.coords).then(() => {
+          console.log(`[Presence] ✅ RETRY TRACK sent (${pending.source})`);
+          (window as any).__M1_PENDING_TRACK = null;
+        }).catch(err => {
+          console.error('[Presence] ❌ RETRY TRACK failed:', err);
         });
       }
     }, 3000);
     
-    return () => clearTimeout(timer);
-  }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
+    return () => clearInterval(retryInterval);
+  }, []);
 
   // Initialize agents presence and subscribe to updates
   useEffect(() => {
