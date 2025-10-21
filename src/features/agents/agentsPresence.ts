@@ -13,6 +13,11 @@ let channel: RealtimeChannel | null = null;
 let heartbeatInterval: NodeJS.Timeout | null = null;
 let updateDebounceTimer: NodeJS.Timeout | null = null;
 
+// Internal state machine for channel status
+type ChannelState = 'idle' | 'joining' | 'subscribed' | 'error';
+let channelState: ChannelState = 'idle';
+let pendingTrack: AgentPresence | null = null;
+
 /**
  * Initialize agents presence tracking
  * @param agentCode - Current user's agent code (e.g., "AG-X0197")
@@ -55,7 +60,8 @@ export async function initAgentsPresence(
   });
 
   console.log('[Presence] status → CHANNEL_CREATED');
-  (window as any).__M1_DEBUG.presence.status = 'CHANNEL_CREATED';
+  channelState = 'joining';
+  (window as any).__M1_DEBUG.presence = { status: 'CHANNEL_CREATED', state: channelState, queued: false, count: 0 };
 
   // Subscribe with retries (1s, 2s, 4s) before failing
   async function subscribeWithRetry(maxAttempts = 3): Promise<void> {
@@ -65,12 +71,13 @@ export async function initAgentsPresence(
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
             console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (8s)');
-            (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TIMEOUT', last: null, count: 0 };
+            channelState = 'error';
+            (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TIMEOUT', state: channelState, queued: !!pendingTrack, count: 0 };
             reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
           }, 8000);
 
           console.log('[Presence] status → SUBSCRIBING (attempt', attempt, ')');
-          (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBING';
+          (window as any).__M1_DEBUG.presence = { status: 'SUBSCRIBING', state: channelState, queued: !!pendingTrack, count: 0 };
 
           channel!
             .on('presence', { event: 'sync' }, () => {
@@ -88,7 +95,8 @@ export async function initAgentsPresence(
               if (status === 'SUBSCRIBED') {
                 clearTimeout(timeout);
                 console.log('[Presence] status → SUBSCRIBED');
-                (window as any).__M1_DEBUG.presence.status = 'SUBSCRIBED';
+                channelState = 'subscribed';
+                (window as any).__M1_DEBUG.presence = { status: 'SUBSCRIBED', state: channelState, queued: !!pendingTrack, count: 0 };
 
                 // Track initial presence (await to ensure ACK)
                 try {
@@ -101,16 +109,31 @@ export async function initAgentsPresence(
                   console.log('[Presence] Tracking initial payload:', { agent_code: agentCode, hasCoords: !!getCoords() });
                   await channel!.track(initialPayload as any);
                   console.log('[Presence] status → TRACKED');
-                  (window as any).__M1_DEBUG.presence.status = 'TRACKED';
+                  (window as any).__M1_DEBUG.presence = { status: 'TRACKED', state: channelState, queued: !!pendingTrack, count: 0 };
+                  
+                  // Send any pending track from queue
+                  if (pendingTrack) {
+                    console.log('[Presence] ♻️ Sending queued track:', pendingTrack);
+                    try {
+                      await channel!.track(pendingTrack as any);
+                      console.log('[Presence] ✅ Queued track sent successfully');
+                      pendingTrack = null;
+                      (window as any).__M1_DEBUG.presence.queued = false;
+                    } catch (queueErr) {
+                      console.error('[Presence] ❌ Queued track failed:', queueErr);
+                    }
+                  }
                 } catch (e) {
                   console.error('[Presence] Initial track failed:', e);
-                  (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TRACK_FAILED', last: null, count: 0 };
+                  channelState = 'error';
+                  (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TRACK_FAILED', state: channelState, queued: !!pendingTrack, count: 0 };
                 }
                 resolve();
               } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                 clearTimeout(timeout);
                 console.error('[Presence] Channel error:', status);
-                (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: status, last: null, count: 0 };
+                channelState = 'error';
+                (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: status, state: channelState, queued: !!pendingTrack, count: 0 };
                 reject(new Error(String(status)));
               }
             });
@@ -169,53 +192,87 @@ export async function initAgentsPresence(
 
 /**
  * Track position immediately (called externally when coords become available)
+ * FAIL-SOFT: Never throws - queues if channel not ready
  * @param agentCode - Current user's agent code
  * @param coords - Coordinates to track
  */
 export async function trackNow(agentCode: string, coords: { lat: number; lng: number }): Promise<void> {
   if (!channel) {
     if (import.meta.env.DEV) {
-      console.log('[Presence] ⏸️ trackNow skipped: channel not initialized');
+      console.log('[Presence] ⏸️ trackNow queued: channel not initialized');
     }
-    throw new Error('trackNow: channel not initialized');
+    return; // Fail-soft: don't throw
   }
 
-  // Check channel status via internal state
-  const channelState = (channel as any).state;
-  if (channelState !== 'joined') {
+  // If not subscribed yet, queue the payload
+  if (channelState !== 'subscribed') {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const id = sessionData.session?.user.id;
+    if (!id) {
+      if (import.meta.env.DEV) {
+        console.log('[Presence] ⏸️ trackNow skipped: no user session');
+      }
+      return; // Fail-soft
+    }
+
+    pendingTrack = {
+      id,
+      agent_code: agentCode,
+      lat: coords.lat,
+      lng: coords.lng,
+      timestamp: Date.now(),
+    };
+
     if (import.meta.env.DEV) {
-      console.log('[Presence] ⏸️ trackNow skipped: channel not SUBSCRIBED (state:', channelState, ')');
+      console.log(`[Presence] 📥 trackNow queued (state: ${channelState}):`, pendingTrack);
     }
-    throw new Error(`trackNow: channel not joined (state: ${channelState})`);
+
+    (window as any).__M1_DEBUG = {
+      ...(window as any).__M1_DEBUG,
+      presence: {
+        ...(window as any).__M1_DEBUG?.presence,
+        queued: true
+      }
+    };
+    return; // Queued, will send when subscribed
   }
 
-  const { data: sessionData } = await supabase.auth.getSession();
-  const id = sessionData.session?.user.id;
-  if (!id) {
-    throw new Error('trackNow: no user session');
-  }
-
-  const payload: AgentPresence = {
-    id,
-    agent_code: agentCode,
-    lat: coords.lat,
-    lng: coords.lng,
-    timestamp: Date.now(),
-  };
-
-  await channel.track(payload as any);
-  
-  if (import.meta.env.DEV) {
-    console.log('[Presence] ✅ trackNow: immediate track sent', { agent_code: agentCode, coords });
-  }
-  
-  (window as any).__M1_DEBUG = {
-    ...(window as any).__M1_DEBUG,
-    presence: {
-      ...(window as any).__M1_DEBUG?.presence,
-      last: Date.now()
+  // Channel is subscribed - send immediately
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const id = sessionData.session?.user.id;
+    if (!id) {
+      if (import.meta.env.DEV) {
+        console.log('[Presence] ⏸️ trackNow skipped: no user session');
+      }
+      return; // Fail-soft
     }
-  };
+
+    const payload: AgentPresence = {
+      id,
+      agent_code: agentCode,
+      lat: coords.lat,
+      lng: coords.lng,
+      timestamp: Date.now(),
+    };
+
+    await channel.track(payload as any);
+    
+    if (import.meta.env.DEV) {
+      console.log('[Presence] ✅ trackNow: immediate track sent', { agent_code: agentCode, coords });
+    }
+    
+    (window as any).__M1_DEBUG = {
+      ...(window as any).__M1_DEBUG,
+      presence: {
+        ...(window as any).__M1_DEBUG?.presence,
+        last: Date.now()
+      }
+    };
+  } catch (err) {
+    // Fail-soft: log but don't throw
+    console.error('[Presence] ❌ trackNow failed:', err);
+  }
 }
 
 /**
