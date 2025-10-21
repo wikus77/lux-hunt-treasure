@@ -273,22 +273,14 @@ export function subscribeAgents(
 
   const handleSync = () => {
     const state = channel!.presenceState<AgentPresence>();
-    const allAgents: AgentPresence[] = [];
-    const agentsWithCoords: AgentPresence[] = [];
+    const agents: AgentPresence[] = [];
     const now = Date.now();
 
     // Flatten presence state and filter out stale entries (>90s)
     Object.values(state).forEach((presences) => {
       presences.forEach((presence) => {
         if (now - presence.timestamp < 90000) {
-          allAgents.push(presence);
-          
-          // Track agents WITH coordinates separately
-          if (presence.lat !== undefined && presence.lng !== undefined) {
-            agentsWithCoords.push(presence);
-          } else if (import.meta.env.DEV) {
-            console.log(`[Presence] no coords: ${presence.agent_code}`);
-          }
+          agents.push(presence);
         }
       });
     });
@@ -296,13 +288,11 @@ export function subscribeAgents(
     // Expose debug info (always available)
     (window as any).__M1_DEBUG = {
       ...(window as any).__M1_DEBUG,
-      lastAgentsPresence: agentsWithCoords, // Only agents with coords for rendering
-      agentsPresenceAll: allAgents, // All online agents for badge count
+      lastAgentsPresence: agents,
       agentsPresenceRaw: state,
     };
 
-    // Callback receives ONLY agents with coordinates (for rendering)
-    callback(agentsWithCoords);
+    callback(agents);
   };
 
   // Initial sync

@@ -630,32 +630,23 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     };
   }, []);
 
-  // P1 FIX: Immediate track when coords become available (GPS OR IP-Geo fallback)
+  // P1 FIX: Immediate track when coords become available
   useEffect(() => {
     if (!currentAgentCode) return;
     
-    // Priority: GPS coords > IP-Geo coords
-    const coords = geoPosition 
-      ? { lat: geoPosition.lat, lng: geoPosition.lng }
-      : ipGeo?.coords 
-      ? { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng }
-      : null;
-    
+    const coords = geoPosition || ipGeo.coords;
     if (!coords) return;
     
     // Debounce to avoid spam (3s)
     const timer = setTimeout(() => {
       import('@/features/agents/agentsPresence').then(({ trackNow }) => {
         trackNow(currentAgentCode, coords);
-        if (import.meta.env.DEV) {
-          const source = geoPosition ? 'GPS' : 'IP-Geo';
-          console.log(`[Presence] IMMEDIATE TRACK on coords ready (${source}):`, coords);
-        }
+        console.log('[Presence] IMMEDIATE TRACK on coords ready:', coords);
       });
     }, 3000);
     
     return () => clearTimeout(timer);
-  }, [currentAgentCode, geoPosition, ipGeo]);
+  }, [currentAgentCode, geoPosition, ipGeo.coords]);
 
   // Initialize agents presence and subscribe to updates
   useEffect(() => {
