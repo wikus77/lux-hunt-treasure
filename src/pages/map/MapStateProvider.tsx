@@ -1,6 +1,7 @@
 // © 2025 All Rights Reserved – M1SSION™ – NIYVORA KFT Joseph MULÉ
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { shouldShowToast } from '@/utils/toastDedup';
 
 export type MapStatus = 'idle' | 'locating' | 'ready' | 'denied' | 'error';
 
@@ -47,7 +48,9 @@ export const MapStateProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
           setCenter({ lat: latitude, lng: longitude });
           setStatus('ready');
-          toast.success('📍 Posizione GPS rilevata!');
+          if (shouldShowToast('gps_detected')) {
+            toast.success('📍 Posizione GPS rilevata con precisione');
+          }
         } else {
           setStatus('error');
           if (!warnedToast.current) {
