@@ -16,7 +16,7 @@ on:
 
 env:
   NODE_VERSION: "20"
-  CF_PROJECT: "m1ssion"            # <-- nome progetto Pages corretto
+  CF_PROJECT: "m1ssion"
   BUILD_ID_PREFIX: "lovable-sync"
 
 jobs:
@@ -53,10 +53,10 @@ jobs:
           VITE_BUILD_ID:          ${{ env.VITE_BUILD_ID }}
         run: npm run build
 
-      - name: Upload artifact
+      - name: Upload artifact (tagged by SHA)
         uses: actions/upload-artifact@v4
         with:
-          name: dist-${{ env.VITE_BUILD_ID }}
+          name: dist-${{ github.sha }}
           path: dist
 
       - name: Deploy Preview to Cloudflare Pages
@@ -64,8 +64,13 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          # ⚠️ una sola riga, niente "\" finali
-          command: pages deploy dist --project-name $CF_PROJECT --branch preview-${{ github.sha }} --commit-hash ${{ github.sha }} --commit-message "Preview from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})" --skip-caching
+          command: >-
+            pages deploy dist
+            --project-name ${{ env.CF_PROJECT }}
+            --branch preview-${{ github.sha }}
+            --commit-hash ${{ github.sha }}
+            --commit-message "Preview from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})"
+            --skip-caching
 
   promote:
     if: ${{ github.event.inputs.promote_to_prod == 'yes' }}
@@ -73,16 +78,42 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Download same artifact (best effort)
+      - name: Download same artifact
         uses: actions/download-artifact@v4
         with:
-          name: dist-${{ env.VITE_BUILD_ID }}
+          name: dist-${{ github.sha }}
           path: dist
         continue-on-error: true
+
+      - name: Fallback – rebuild same ref (if artifact not found)
+        if: failure()
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref }}
+      - if: failure()
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - if: failure()
+        run: npm ci
+      - if: failure()
+        env:
+          VITE_ENABLE_LIVING_MAP: ${{ vars.VITE_ENABLE_LIVING_MAP }}
+          VITE_DEMO_WEATHER:      ${{ vars.VITE_DEMO_WEATHER }}
+          VITE_TERRAIN_URL:       ${{ vars.VITE_TERRAIN_URL }}
+          VITE_CONTOUR_URL:       ${{ vars.VITE_CONTOUR_URL }}
+          VITE_BUILD_ID:          ${{ env.VITE_BUILD_ID }}
+        run: npm run build
 
       - name: Deploy Production to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name $CF_PROJECT --branch production --commit-hash ${{ github.sha }} --commit-message "PROD from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})" --skip-caching
+          command: >-
+            pages deploy dist
+            --project-name ${{ env.CF_PROJECT }}
+            --branch production
+            --commit-hash ${{ github.sha }}
+            --commit-message "PROD from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})"
+            --skip-caching
