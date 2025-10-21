@@ -76,9 +76,9 @@ export async function initAgentsPresence(
             .on('presence', { event: 'sync' }, () => {
               const state = channel!.presenceState();
               const count = Object.keys(state).length;
-              console.log(`[Presence] status → SYNC(${count})`);
+              console.log('[Presence] status → SYNC', { count });
               (window as any).__M1_DEBUG.presence = {
-                status: `SYNC(${count})`,
+                status: 'SYNC',
                 last: Date.now(),
                 error: null,
                 count
