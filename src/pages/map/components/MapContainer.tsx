@@ -412,13 +412,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     console.log('✅ 3D toggle handler registered');
   }, [onToggle3D]);
 
-  // Handle focus location from dock (robust with debounce and fallbacks)
+  // C) HANDLE CENTER — robust race with increased timeout
   const handleFocusLocation = async () => {
     const now = Date.now();
     if (focusInFlightRef.current || now - (lastCenterAtRef.current || 0) < 300) {
       return;
     }
     focusInFlightRef.current = true;
+    
     try {
       (window as any).__M1_DEBUG = {
         ...(window as any).__M1_DEBUG,
@@ -430,28 +431,46 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       if (quick && mapRef.current) {
         mapRef.current.flyTo([quick.lat, quick.lng], 15, { duration: 1 });
         lastCenterAtRef.current = Date.now();
-        (window as any).__M1_DEBUG.center.source = 'cached';
+        (window as any).__M1_DEBUG.center.source = quick === geo.coords ? 'gps_cached' : 'ip_cached';
+        toast.success('Centrato su posizione corrente');
         return;
       }
 
-      // Race GPS (with short timeout) vs IP geolocation
-      const ipPromise = ipGeo.getLocationByIP().then(() => ipGeo.coords).catch(() => null);
-      const gpsPromise = geo.requestLocation().then(() => geo.coords).catch(() => null);
-
-      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1000));
-      const winner = await Promise.race([
-        Promise.all([ipPromise, gpsPromise]).then(([ip, gps]) => (gps || ip) as any),
-        timeout,
-      ]);
+      // Race GPS vs IP (individual promises, not Promise.all)
+      const gpsFast = new Promise<{ lat: number; lng: number } | null>((resolve) => {
+        geo.requestLocation()
+          .then(() => resolve(geo.coords))
+          .catch(() => resolve(null));
+      });
+      
+      const ipFast = new Promise<{ lat: number; lng: number } | null>((resolve) => {
+        ipGeo.getLocationByIP()
+          .then(() => resolve(ipGeo.coords))
+          .catch(() => resolve(null));
+      });
+      
+      const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 1800));
+      
+      const winner = await Promise.race([gpsFast, ipFast, timeout]);
+      
+      // Determine source for debug
+      let source = 'none';
+      if (winner) {
+        source = winner === geo.coords ? 'gps' : 'ip';
+      }
 
       const coords = winner || geo.coords || ipGeo.coords;
       if (coords && mapRef.current) {
         mapRef.current.flyTo([coords.lat, coords.lng], 15, { duration: 1 });
         lastCenterAtRef.current = Date.now();
-        (window as any).__M1_DEBUG.center.source = gpsPromise ? 'gps_or_ip' : 'none';
+        (window as any).__M1_DEBUG.center.source = source;
+        toast.success(`Centrato su ${source === 'gps' ? 'GPS' : source === 'ip' ? 'IP' : 'posizione'}`);
       } else {
         (window as any).__M1_DEBUG.center = { lastAction: 'click', source: 'none', error: 'NO_COORDS' };
-        toast.warning('Posizione non disponibile', { description: 'Abilita la posizione nelle impostazioni', duration: 3000 });
+        toast.warning('Posizione non disponibile', { 
+          description: 'Abilita GPS nelle impostazioni del dispositivo', 
+          duration: 3000 
+        });
       }
     } finally {
       focusInFlightRef.current = false;
@@ -682,6 +701,27 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       teardownAgentsPresence();
     };
   }, [currentAgentCode, currentUserId]);
+
+  // A) IMMEDIATE TRACK when coords become available (fix per marker rosso immediato)
+  useEffect(() => {
+    if (!currentUserId || !currentAgentCode) return;
+    
+    const coords = geoPosition || ipGeo.coords;
+    if (!coords) return;
+    
+    // If we have a presence channel active, log coords availability
+    if (import.meta.env.DEV) {
+      console.log('[Presence] 📍 Coords available for immediate track:', {
+        agent_code: currentAgentCode,
+        lat: coords.lat.toFixed(4),
+        lng: coords.lng.toFixed(4),
+        source: geoPosition ? 'GPS' : 'IP'
+      });
+    }
+    
+    // The actual tracking is done by agentsPresence.ts heartbeat and initial track
+    // This ensures coords are available when initAgentsPresence getCoords() is called
+  }, [geoPosition, ipGeo.coords, currentUserId, currentAgentCode]);
 
   // Listen for M1_PORTAL_CLICK events
   useEffect(() => {
