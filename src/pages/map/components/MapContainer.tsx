@@ -138,10 +138,13 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     if (import.meta.env.DEV) {
       (window as any).__M1_DEBUG = {
         ...(window as any).__M1_DEBUG,
+        env: { ...(window as any).__M1_DEBUG?.env, TERRAIN: terrain3DAvailable },
         terrain3DAvailable,
         terrainUrl: import.meta.env.VITE_TERRAIN_URL || 'NOT_DEFINED',
         contoursUrl: import.meta.env.VITE_CONTOUR_URL || 'NOT_DEFINED',
+        terrain3D: { available: terrain3DAvailable, active: false, terrainUrl: import.meta.env.VITE_TERRAIN_URL || null, error: null },
         lastAgentsPresence: [],
+        center: { lastAction: 'init', source: 'none', error: null },
       };
       console.log('🐛 M1 Debug info available at: window.__M1_DEBUG');
     }

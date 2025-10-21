@@ -18,6 +18,11 @@ export function enableTerrain(map: L.Map, opts: EnableTerrainOptions = {}) {
   const exaggeration = opts.exaggeration ?? 1.5;
   const hillshade = opts.hillshade ?? true;
 
+  // Expose env flag
+  (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
+    env: { ...(window as any).__M1_DEBUG?.env, TERRAIN: !!demUrl }
+  });
+
   if (!demUrl) {
     (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
       terrain3D: { available: false, active: false, terrainUrl: null, error: 'MISSING_DEM_URL' }
