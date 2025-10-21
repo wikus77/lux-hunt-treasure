@@ -38,6 +38,7 @@ import {
   type AgentPresence 
 } from '@/features/agents/agentsPresence';
 import { supabase } from '@/integrations/supabase/client';
+import { enableTerrain as enableTerrainHelper, disableTerrain as disableTerrainHelper } from '@/map/terrain/enableTerrain';
 
 const LivingMap = lazy(() => import('@/features/living-map'));
 
@@ -261,68 +262,48 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
   // P0 FIX: 3D Terrain - enable/disable handlers
   const enable3D = () => {
     const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
-    const contoursUrl = import.meta.env.VITE_CONTOUR_URL as string | undefined;
-    
+
     console.log('[Terrain] enable3D() called');
     console.log('[Terrain] env.TERRAIN:', !!demUrl);
     console.log('[Terrain] VITE_TERRAIN_URL:', demUrl ? `${new URL(demUrl).host}/...` : 'NOT DEFINED');
     console.log('[Terrain] mapRef.current:', !!mapRef.current);
     console.log('[Terrain] terrainRef.current:', !!terrainRef.current);
-    
+
+    if (!mapRef.current) {
+      console.error('[Terrain] ❌ CANNOT enable: map not ready');
+      toast.error('Mappa non pronta per 3D');
+      return;
+    }
+
     if (!demUrl) {
       console.error('[Terrain] ❌ CANNOT enable: VITE_TERRAIN_URL not defined');
       toast.error('3D Terrain non disponibile', {
         description: 'DEM mancante - configurare VITE_TERRAIN_URL',
         duration: 4000
       });
-      // Update debug status
       (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
         terrain3D: { available: false, terrainUrl: null, active: false, error: 'MISSING_DEM_URL' }
       });
       return;
     }
 
-    // Validate TileJSON format quickly
-    if (!/tiles\.json/i.test(demUrl)) {
-      console.warn('[Terrain] ⚠️ URL non sembra TileJSON endpoint (manca tiles.json)');
-      toast.warning('URL DEM potrebbe non essere valido (atteso TileJSON)');
-    }
-    
-    if (!mapRef.current) {
-      console.error('[Terrain] ❌ CANNOT enable: map not ready');
-      toast.error('Mappa non pronta per 3D');
-      return;
-    }
-    
     if (terrainRef.current) {
       console.log('[Terrain] Layer already exists, skipping creation');
       toast.info('3D Terrain già attivo');
       return;
     }
-    
-    console.log('[Terrain] ✅ Creating TerrainLayer...');
-    
+
     try {
-      const layer = new TerrainLayer({ 
-        demUrl, 
-        contoursUrl, 
-        exaggeration: 1.5, 
-        hillshade: true 
-      });
-      
-      console.log('✅ TerrainLayer instance created, adding to map...');
-      layer.addTo(mapRef.current);
+      const layer = enableTerrainHelper(mapRef.current, { exaggeration: 1.5, hillshade: true });
       terrainRef.current = layer;
-      
-      console.log('✅ TerrainLayer added to map');
-      
-      // CRITICAL: Make terrain visible by reducing Leaflet tile opacity
+
+      // Make terrain visible by reducing Leaflet tile opacity
       const tilePane = mapRef.current.getPanes().tilePane;
       if (tilePane) {
         tilePane.style.opacity = '0.35';
         console.log('✅ Tile pane opacity set to 0.35');
       }
-      
+
       // Apply subtle tilt effect to container
       if (mapContainerDivRef.current) {
         const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
@@ -331,20 +312,10 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
           console.log('✅ Perspective transform applied');
         }
       }
-      
-      console.log('🎉 3D Terrain fully activated!');
-      console.log('  - DEM URL:', demUrl);
-      console.log('  - Tile opacity:', '0.35');
-      console.log('  - Pitch:', '55°');
-      
-      toast.success('Modalità 3D Terrain attivata', {
-        description: 'Rilievi visibili con hillshade',
-        duration: 3000
-      });
-      
-      // Update debug status
+
       (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
         terrain3D: {
+          ...(window as any).__M1_DEBUG?.terrain3D,
           available: true,
           terrainUrl: demUrl,
           active: true,
@@ -358,8 +329,6 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         description: error instanceof Error ? error.message : 'Errore sconosciuto',
         duration: 4000
       });
-      
-      // Update debug status
       (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
         terrain3D: {
           available: false,
@@ -373,23 +342,23 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
   const disable3D = () => {
     console.log('[Terrain] disable3D() called');
-    
-    if (!terrainRef.current || !mapRef.current) {
-      console.log('[Terrain] Nothing to disable (not active)');
+
+    if (!mapRef.current) {
+      console.log('[Terrain] Map not ready');
       return;
     }
-    
-    console.log('[Terrain] Removing terrain layer...');
-    mapRef.current.removeLayer(terrainRef.current);
+
+    // Remove terrain layer via helper
+    disableTerrainHelper(mapRef.current, terrainRef.current);
     terrainRef.current = null;
-    
-    // CRITICAL: Restore full tile opacity
+
+    // Restore full tile opacity
     const tilePane = mapRef.current.getPanes().tilePane;
     if (tilePane) {
       tilePane.style.opacity = '1';
       console.log('[Terrain] Tile pane opacity → 1');
     }
-    
+
     // Remove tilt
     if (mapContainerDivRef.current) {
       const mapPane = mapContainerDivRef.current.querySelector('.leaflet-container');
@@ -398,12 +367,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
         console.log('[Terrain] Perspective removed');
       }
     }
-    
+
     console.log('[Terrain] ✅ Deactivated');
-    
+
     toast.info('Modalità 2D attivata');
-    
-    // Update debug status
+
     const demUrl = import.meta.env.VITE_TERRAIN_URL as string | undefined;
     (window as any).__M1_DEBUG = Object.assign((window as any).__M1_DEBUG ?? {}, {
       terrain3D: {
