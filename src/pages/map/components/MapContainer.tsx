@@ -641,21 +641,22 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       ? { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng }
       : null;
     
-    if (!coords) return;
+    if (!coords) {
+      if (import.meta.env.DEV) {
+        console.log('[Presence] ⏸️ Immediate track skipped: no coords yet');
+      }
+      return;
+    }
     
-    // Debounce to avoid spam (3s)
-    const timer = setTimeout(() => {
-      import('@/features/agents/agentsPresence').then(({ trackNow }) => {
-        trackNow(currentAgentCode, coords);
-        if (import.meta.env.DEV) {
-          const source = geoPosition ? 'GPS' : 'IP-Geo';
-          console.log(`[Presence] IMMEDIATE TRACK on coords ready (${source}):`, coords);
-        }
-      });
-    }, 3000);
+    const source = geoPosition ? 'GPS' : 'IP-Geo';
+    console.log(`[Presence] 🎯 IMMEDIATE TRACK triggering (${source}):`, coords);
     
-    return () => clearTimeout(timer);
-  }, [currentAgentCode, geoPosition, ipGeo]);
+    // Immediate track without debounce for first-time visibility
+    import('@/features/agents/agentsPresence').then(({ trackNow }) => {
+      trackNow(currentAgentCode, coords);
+      console.log(`[Presence] ✅ IMMEDIATE TRACK sent (${source})`);
+    });
+  }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
 
   // Initialize agents presence and subscribe to updates
   useEffect(() => {
