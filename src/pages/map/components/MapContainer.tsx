@@ -724,6 +724,21 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
             : 'Errore inizializzazione',
           duration: 4000
         });
+        // Fallback: render self marker locally so your red dot is visible even if Realtime fails
+        const selfCoords = geoPosition 
+          ? { lat: geoPosition.lat, lng: geoPosition.lng } 
+          : ipGeo?.coords 
+          ? { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng } 
+          : null;
+        if (agentsLayerRef.current && selfCoords && currentUserId && currentAgentCode) {
+          agentsLayerRef.current.setData([
+            { id: currentUserId, agent_code: currentAgentCode, lat: selfCoords.lat, lng: selfCoords.lng } as any
+          ], currentUserId);
+          setLayerCounts(prev => ({ ...prev, agents: Math.max(prev.agents, 1) }));
+          if (import.meta.env.DEV) {
+            console.log('[Presence:FALLBACK] Rendered LOCAL self marker (presence init failed)', { source: geoPosition ? 'GPS' : 'IP' });
+          }
+        }
         // Don't re-throw - fail gracefully
       }
     };
