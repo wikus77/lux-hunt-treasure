@@ -35,6 +35,7 @@ import {
   initAgentsPresence, 
   subscribeAgents, 
   teardownAgentsPresence,
+  trackNow,
   type AgentPresence 
 } from '@/features/agents/agentsPresence';
 import { supabase } from '@/integrations/supabase/client';
@@ -658,6 +659,34 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     });
   }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
 
+  // ⚡ IMMEDIATE TRACK: Send coords as soon as GPS or IP-Geo is available
+  useEffect(() => {
+    if (!currentAgentCode) return;
+    
+    const coords = geoPosition 
+      ? { lat: geoPosition.lat, lng: geoPosition.lng }
+      : ipGeo?.coords 
+      ? { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng }
+      : null;
+    
+    if (!coords) return;
+    
+    // Debounce 3s to avoid spamming on rapid GPS updates
+    const timer = setTimeout(() => {
+      trackNow(currentAgentCode, coords);
+      
+      if (import.meta.env.DEV) {
+        console.log('[Presence] ⚡ Immediate track fired:', { 
+          agent: currentAgentCode, 
+          source: geoPosition ? 'GPS' : 'IP-Geo',
+          coords 
+        });
+      }
+    }, 3000);
+    
+    return () => clearTimeout(timer);
+  }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
+
   // Initialize agents presence and subscribe to updates
   useEffect(() => {
     if (!currentAgentCode || !agentsLayerRef.current) return;
@@ -708,6 +737,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
             setLayerCounts(prev => ({
               ...prev,
               agents: agents.length, // Total online, not just those on map
+            }));
+            
+            // Dispatch event for MapLayerToggle to update badge with "visible/online" format
+            window.dispatchEvent(new CustomEvent('M1_AGENTS_COUNT_UPDATE', {
+              detail: { visible: agentData.length, online: agents.length }
             }));
             
             console.log(`[Presence] Rendered: ${agentData.length}/${agents.length} on map`);
