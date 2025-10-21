@@ -16,7 +16,7 @@ on:
 
 env:
   NODE_VERSION: "20"
-  CF_PROJECT: "m1ssion-pwa"
+  CF_PROJECT: "m1ssion"         # <— progetto Pages corretto
   BUILD_ID_PREFIX: "lovable-sync"
 
 jobs:
@@ -64,13 +64,14 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: >
-            wrangler pages deploy dist
-            --project-name $CF_PROJECT
-            --branch preview-${{ github.sha }}
-            --commit-hash ${{ github.sha }}
-            --commit-message "Preview from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})"
-            --skip-caching
+          # IMPORTANTE: niente "wrangler" davanti. L'action lo aggiunge già.
+          command: |
+            pages deploy dist \
+              --project-name $CF_PROJECT \
+              --branch preview-${{ github.sha }} \
+              --commit-hash ${{ github.sha }} \
+              --commit-message "Preview from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})" \
+              --skip-caching
 
   promote:
     if: ${{ github.event.inputs.promote_to_prod == 'yes' }}
@@ -78,21 +79,44 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Download same artifact by SHA
-        uses: actions/download-artifact@v4
+      - name: Checkout same ref
+        uses: actions/checkout@v4
         with:
-          name: dist-${{ github.sha }}
-          path: dist
+          ref: ${{ github.event.inputs.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install (npm ci)
+        run: npm ci
+
+      - name: Prepare env (reuse BUILD_ID format)
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          TS=$(date +%Y%m%d-%H%M%S)
+          echo "VITE_BUILD_ID=${BUILD_ID_PREFIX}-${TS}-${SHORT_SHA}" >> $GITHUB_ENV
+          echo "__PWA_VERSION__=${BUILD_ID_PREFIX}-${TS}" >> $GITHUB_ENV
+
+      - name: Build
+        env:
+          VITE_ENABLE_LIVING_MAP: ${{ vars.VITE_ENABLE_LIVING_MAP }}
+          VITE_DEMO_WEATHER:      ${{ vars.VITE_DEMO_WEATHER }}
+          VITE_TERRAIN_URL:       ${{ vars.VITE_TERRAIN_URL }}
+          VITE_CONTOUR_URL:       ${{ vars.VITE_CONTOUR_URL }}
+          VITE_BUILD_ID:          ${{ env.VITE_BUILD_ID }}
+        run: npm run build
 
       - name: Deploy Production to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: >
-            wrangler pages deploy dist
-            --project-name $CF_PROJECT
-            --branch production
-            --commit-hash ${{ github.sha }}
-            --commit-message "PROD from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})"
-            --skip-caching
+          command: |
+            pages deploy dist \
+              --project-name $CF_PROJECT \
+              --branch production \
+              --commit-hash ${{ github.sha }} \
+              --commit-message "PROD from ${{ github.event.inputs.ref }} (BUILD_ID=${{ env.VITE_BUILD_ID }})" \
+              --skip-caching
