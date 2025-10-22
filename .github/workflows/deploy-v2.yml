@@ -1,0 +1,45 @@
+name: Deploy V2 to Cloudflare Pages
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+  CF_PROJECT: "${{ secrets.CF_PROJECT_NAME }}"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          VITE_BUILD_ID: "pipeline-v2-${{ github.sha }}"
+        run: npm run build
+
+      - name: Log BUILD_ID e scrivi artifact
+        run: |
+          echo "$VITE_BUILD_ID" > dist/BUILD_ID.txt
+          echo "BUILD_ID=$VITE_BUILD_ID"
+          ls -la dist | sed -n '1,80p'
+
+      - name: Deploy to Cloudflare Pages (Preview)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: |
+            pages deploy dist \
+              --project-name $CF_PROJECT \
+              --branch preview-${{ github.sha }} \
+              --commit-hash ${{ github.sha }} \
+              --commit-message "V2 preview from main"
