@@ -7,7 +7,6 @@ on:
 
 env:
   NODE_VERSION: "20"
-  CF_PROJECT: "${{ secrets.CF_PROJECT_NAME }}"
 
 jobs:
   deploy:
@@ -24,22 +23,14 @@ jobs:
       - name: Build
         env:
           VITE_BUILD_ID: "pipeline-v2-${{ github.sha }}"
-        run: npm run build
-
-      - name: Log BUILD_ID e scrivi artifact
         run: |
+          npm run build
           echo "$VITE_BUILD_ID" > dist/BUILD_ID.txt
-          echo "BUILD_ID=$VITE_BUILD_ID"
-          ls -la dist | sed -n '1,80p'
+          echo "BUILD_ID=$(cat dist/BUILD_ID.txt)"
 
       - name: Deploy to Cloudflare Pages (Preview)
         uses: cloudflare/wrangler-action@v3
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
+          apiToken:  ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: |
-            pages deploy dist \
-              --project-name $CF_PROJECT \
-              --branch preview-${{ github.sha }} \
-              --commit-hash ${{ github.sha }} \
-              --commit-message "V2 preview from main"
+          command: pages deploy dist --project-name ${{ secrets.CF_PROJECT_NAME }} --branch pipeline-v2-${{ github.sha }} --commit-hash ${{ github.sha }} --commit-message "V2 preview from main"
