@@ -1,0 +1,39 @@
+name: Deploy V2 to Cloudflare Pages
+
+on:
+  push:
+    branches: [ "pipeline-v2" ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "20"
+  CF_PROJECT: "${{ secrets.CF_PROJECT_NAME }}"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - run: npm ci
+
+      - name: Build
+        env:
+          VITE_BUILD_ID: "pipeline-v2-${{ github.sha }}"
+        run: npm run build
+
+      - name: Deploy to Cloudflare Pages (Preview)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: |
+            pages deploy dist \
+              --project-name $CF_PROJECT \
+              --branch pipeline-v2-${{ github.sha }} \
+              --commit-hash ${{ github.sha }} \
+              --commit-message "V2 preview from pipeline-v2"
