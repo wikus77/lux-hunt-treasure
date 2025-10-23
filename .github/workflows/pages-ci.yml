@@ -1,0 +1,137 @@
+name: Pages CI — clean, deterministic previews + promote
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "promote | rollback"
+        required: false
+        default: ""
+      deployment_id:
+        description: "Deployment ID to promote (for promote/rollback)"
+        required: false
+        default: ""
+
+env:
+  CF_PROJECT_NAME: m1ssion-next
+
+jobs:
+  build-and-preview:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive meta (SHORT_SHA / BUILD_ID / PWA_VERSION)
+        id: meta
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          echo "short_sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+          echo "pwa_version=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
+          echo "build_id=pipeline-v2-$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (inject VITE_PWA_VERSION / VITE_BUILD_ID)
+        env:
+          VITE_PWA_VERSION: ${{ steps.meta.outputs.pwa_version }}
+          VITE_BUILD_ID:    ${{ steps.meta.outputs.build_id }}
+        run: |
+          echo "🔧 Injected at build:"
+          echo "  VITE_PWA_VERSION=${VITE_PWA_VERSION}"
+          echo "  VITE_BUILD_ID=${VITE_BUILD_ID}"
+          pnpm run build
+
+      - name: Log traceability
+        run: |
+          echo "=============================================="
+          echo "🔗 REPO:      ${{ github.repository }}"
+          echo "🌿 BRANCH:    ${{ github.ref_name }}"
+          echo "🔐 COMMIT:    ${{ github.sha }}"
+          echo "🧱 CF PROJ:   ${{ env.CF_PROJECT_NAME }}"
+          echo "🏷️ BUILD_ID:  ${{ steps.meta.outputs.build_id }}"
+          echo "🕒 PWA_VER:   ${{ steps.meta.outputs.pwa_version }}"
+          echo "👀 PREVIEW:   preview-${{ steps.meta.outputs.short_sha }}.${{ env.CF_PROJECT_NAME }}.pages.dev"
+          echo "=============================================="
+
+      - name: Deploy Preview to Cloudflare Pages (branch = preview-{shortSHA})
+        id: pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          projectName: ${{ env.CF_PROJECT_NAME }}
+          directory: dist
+          branch: preview-${{ steps.meta.outputs.short_sha }}
+
+      - name: Output Preview URLs / IDs
+        run: |
+          echo "✅ Deployed Preview"
+          echo "  URL: ${{ steps.pages.outputs.deployment-url }}"
+          echo "  ID:  ${{ steps.pages.outputs.deployment-id }}"
+
+      - name: Persist deployment metadata (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-${{ steps.meta.outputs.short_sha }}
+          path: |
+            dist/**
+          retention-days: 7
+
+  promote:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'promote'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require deployment_id
+        if: ${{ inputs.deployment_id == '' }}
+        run: |
+          echo "::error::Missing 'deployment_id'. Re-run with deployment_id from the preview you want to promote."
+          exit 1
+
+      - name: Promote the exact preview to Production (no rebuild)
+        run: |
+          npm i -g wrangler@3
+          wrangler pages deployment promote \
+            --project-name "${{ env.CF_PROJECT_NAME }}" \
+            --deployment-id "${{ inputs.deployment_id }}"
+
+      - name: Log promotion
+        run: |
+          echo "🚀 Promoted deployment '${{ inputs.deployment_id }}' to Production for ${{ env.CF_PROJECT_NAME }}"
+
+  rollback:
+    if: github.event_name == 'workflow_dispatch' && inputs.action == 'rollback'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require deployment_id
+        if: ${{ inputs.deployment_id == '' }}
+        run: |
+          echo "::error::Missing 'deployment_id'. Provide a previous preview deployment ID to promote."
+          exit 1
+
+      - name: Promote previous preview to Production (rollback)
+        run: |
+          npm i -g wrangler@3
+          wrangler pages deployment promote \
+            --project-name "${{ env.CF_PROJECT_NAME }}" \
+            --deployment-id "${{ inputs.deployment_id }}"
+
+      - name: Log rollback
+        run: |
+          echo "↩️ Rolled back to deployment '${{ inputs.deployment_id }}' on ${{ env.CF_PROJECT_NAME }}"
