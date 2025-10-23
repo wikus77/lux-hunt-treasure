@@ -33,4 +33,18 @@ jobs:
         with:
           apiToken:  ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy dist --project-name ${{ secrets.CF_PROJECT_NAME }} --branch pipeline-v2-${{ github.sha }} --commit-hash ${{ github.sha }} --commit-message "V2 preview from main"
+          command: >
+            bash -lc '
+              PROJ="m1ssion-v2";
+              SHORT="${GITHUB_SHA:0:16}";
+              BRANCH="pipeline-v2-${SHORT}";
+              echo "Project: $PROJ";
+              echo "Alias:   $BRANCH";
+              echo "URL:     https://$BRANCH.$PROJ.pages.dev";
+              npx wrangler pages project list | grep -E "^\s*${PROJ}\s" || { echo "❌ Project $PROJ non trovato"; exit 1; }
+              npx wrangler pages deploy dist
+                --project-name "$PROJ"
+                --branch "$BRANCH"
+                --commit-hash "$GITHUB_SHA"
+                --commit-message "V2 preview from main";
+            '
