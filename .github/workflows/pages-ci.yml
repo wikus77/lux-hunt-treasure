@@ -34,16 +34,24 @@ jobs:
           echo "pwa_version=$(date -u +%Y%m%d%H%M%S)" >> $GITHUB_OUTPUT
           echo "build_id=pipeline-v2-$SHORT_SHA" >> $GITHUB_OUTPUT
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.19.0
-
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
+
+      - name: Enable Corepack (use pnpm from package.json)
+        run: |
+          corepack enable
+          PM="$(node -p "require('./package.json').packageManager || ''")"
+          if [[ "$PM" == pnpm@* ]]; then
+            echo "Using $PM"
+            corepack prepare "$PM" --activate
+          else
+            echo "No packageManager pin found; preparing pnpm@9"
+            corepack prepare pnpm@9 --activate
+          fi
+          pnpm --version
 
       - name: Install deps
         run: pnpm install --frozen-lockfile
