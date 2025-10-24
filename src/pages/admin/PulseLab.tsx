@@ -16,6 +16,8 @@ import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { invokeEdge } from '@/utils/edge-invoke';
 import { triggerRitualDistortion } from '@/utils/triggerRitualDistortion';
+import { playRitualAudio } from '@/utils/playRitualAudio';
+import { vibrateRitual } from '@/utils/vibrateRitual';
 
 const ADMIN_EMAILS = [
   'joseph@m1ssion.io',
@@ -65,26 +67,43 @@ export default function PulseLab() {
     checkAuth();
   }, []);
 
-  // Log phase changes and trigger distortion effect
+  // Log phase changes and trigger full cinematic EMP effect
   useEffect(() => {
     if (phase !== 'idle') {
       addLog(`🌟 Phase: ${phase} (ritual_id: ${ritualId})`);
       
-      // Trigger EMP distortion effect for precharge and interference
+      // Trigger full cinematic EMP effect for precharge and interference
       if (phase === 'precharge') {
-        addLog('⚡ EMP EFFECT: Normal intensity');
+        addLog('⚡ EMP EFFECT: Normal intensity (visual + audio + haptic)');
+        
+        // Visual distortion
         triggerRitualDistortion({
-          duration: 9000,
+          duration: 9500,
           intensity: 'normal',
           enableDisplacement: true
         });
+        
+        // Audio sync
+        playRitualAudio(0.7);
+        
+        // Haptic vibration
+        vibrateRitual();
+        
       } else if (phase === 'interference') {
-        addLog('⚡⚡ EMP EFFECT: HIGH intensity');
+        addLog('⚡⚡ EMP EFFECT: HIGH intensity (visual + audio + haptic)');
+        
+        // Visual distortion (high intensity)
         triggerRitualDistortion({
           duration: 2000,
           intensity: 'high',
           enableDisplacement: true
         });
+        
+        // Audio sync
+        playRitualAudio(0.8);
+        
+        // Haptic vibration (more intense)
+        vibrateRitual();
       }
     }
   }, [phase, ritualId]);
