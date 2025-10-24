@@ -97,6 +97,31 @@
   opacity: 0.8;
 }
 
+/* THE PULSE™ Energy Animations */
+@keyframes energyFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.03); 
+  }
+}
+
+.animate-energyFlow {
+  animation: energyFlow 4s linear infinite;
+}
+
+.animate-pulseGlow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
 /* Interactive card effects */
 .card-hover-effect {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);

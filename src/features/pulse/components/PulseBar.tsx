@@ -19,62 +19,61 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
   const value = pulseState?.value ?? 0;
   const isThresholdMoment = lastUpdate?.threshold !== null && lastUpdate?.threshold !== undefined;
 
+  const glowIntensity = value > 80 ? 1 : value > 50 ? 0.8 : 0.6;
+
   return (
     <motion.div
-      className={`${variant === 'fixed' ? 'fixed top-0 left-0 right-0 safe-area-inset-top' : 'relative w-full'} z-[100] bg-background/80 backdrop-blur-md border-b border-border/50`}
+      className={`${variant === 'fixed' ? 'fixed top-0 left-0 right-0 safe-area-inset-top' : 'relative w-full'} z-[120] backdrop-blur-md`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', damping: 20 }}
       onClick={onTap}
       style={{ cursor: onTap ? 'pointer' : 'default' }}
     >
-      <div className="container mx-auto px-4 py-2 flex items-center justify-between gap-3">
-        {/* Icon + Label */}
-        <div className="flex items-center gap-2 min-w-0">
-          <Zap className="w-4 h-4 text-primary shrink-0" />
-          <span className="text-xs font-bold text-foreground uppercase tracking-wider truncate">
-            The PULSE™
-          </span>
+      {/* Energy Bar Container */}
+      <div className="relative w-full h-[12px] rounded-full overflow-hidden shadow-lg">
+        {/* Animated Gradient Background */}
+        <div className="absolute inset-0 animate-energyFlow bg-gradient-to-r from-pink-500 via-cyan-400 to-pink-500" 
+             style={{ backgroundSize: '200% 200%' }} />
+        
+        {/* Pulsing Glow Overlay */}
+        <motion.div 
+          className="absolute inset-0 animate-pulseGlow"
+          style={{ 
+            background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 70%)',
+            opacity: glowIntensity
+          }}
+        />
+
+        {/* Percentage Indicator - Floating */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center gap-2 px-3 py-0.5 bg-black/30 rounded-full backdrop-blur-sm">
+            <Zap className="w-3 h-3 text-white shrink-0 drop-shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-widest drop-shadow-[0_0_6px_rgba(255,255,255,0.9)]">
+              PULSE
+            </span>
+            <span className="text-xs font-mono font-bold text-white tabular-nums drop-shadow-[0_0_6px_rgba(0,255,255,0.8)]">
+              {Math.round(value)}%
+            </span>
+            
+            {/* Threshold indicator */}
+            <AnimatePresence>
+              {isThresholdMoment && (
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  exit={{ scale: 0, rotate: 180 }}
+                  transition={{ type: 'spring', damping: 10 }}
+                  className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shadow-[0_0_8px_rgba(255,255,255,1)]"
+                />
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* Value */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-mono font-bold text-primary tabular-nums">
-            {Math.round(value)}%
-          </span>
-
-          {/* Threshold indicator */}
-          <AnimatePresence>
-            {isThresholdMoment && (
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, rotate: 180 }}
-                transition={{ type: 'spring', damping: 10 }}
-                className="w-2 h-2 rounded-full bg-primary animate-pulse"
-              />
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Progress bar */}
-        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden relative max-w-[200px]">
-          <motion.div
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80 rounded-full"
-            initial={{ width: '0%' }}
-            animate={{ width: `${value}%` }}
-            transition={{ type: 'spring', damping: 25, stiffness: 100 }}
-          />
-
-          {/* Glow effect */}
-          {value > 0 && (
-            <motion.div
-              className="absolute inset-y-0 left-0 bg-primary/30 blur-sm"
-              animate={{ width: `${value}%` }}
-              transition={{ type: 'spring', damping: 25 }}
-            />
-          )}
-        </div>
+        {/* Outer Glow Effect */}
+        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 via-cyan-400/20 to-pink-500/20 blur-md -z-10 animate-energyFlow" 
+             style={{ backgroundSize: '200% 200%' }} />
       </div>
     </motion.div>
   );
