@@ -94,20 +94,25 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
                 </span>
               </div>
 
-              {/* Energy Bar - Identical to Main PulseBar */}
+              {/* Energy Bar - IDENTICAL to Main PulseBar */}
               <div className="relative h-[14px] rounded-full overflow-hidden shadow-[0_0_25px_rgba(0,231,255,0.5)]">
                 <div 
-                  className="absolute inset-0 animate-energyFlow" 
+                  className="animate-energyFlow" 
                   style={{ 
+                    position: 'absolute',
+                    inset: 0,
                     background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
-                    backgroundSize: '300% 300%'
+                    backgroundSize: '300% 300%',
+                    animationDuration: value >= 75 ? '3s' : value >= 50 ? '4s' : value >= 25 ? '5s' : '6s'
                   }} 
                 />
                 <motion.div 
-                  className="absolute inset-0 animate-pulseGlow"
+                  className="animate-pulseGlow"
                   style={{ 
-                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 80%)',
-                    opacity: value > 80 ? 1 : value > 50 ? 0.8 : 0.6,
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 75%)',
+                    opacity: value > 80 ? 1 : value > 50 ? 0.8 : value > 25 ? 0.6 : 0.4,
                     filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none'
                   }}
                 />
@@ -115,7 +120,8 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
                   className="absolute -inset-1 blur-md -z-10 animate-energyFlow" 
                   style={{ 
                     background: 'linear-gradient(270deg, rgba(255,77,240,0.3), rgba(0,234,255,0.3), rgba(255,77,240,0.3))',
-                    backgroundSize: '300% 300%'
+                    backgroundSize: '300% 300%',
+                    animationDuration: value >= 75 ? '3s' : value >= 50 ? '4s' : value >= 25 ? '5s' : '6s'
                   }} 
                 />
               </div>
