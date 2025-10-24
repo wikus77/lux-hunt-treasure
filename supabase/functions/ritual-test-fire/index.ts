@@ -35,7 +35,28 @@ export const handler = withAuthCors(async (req, user, { origin }) => {
     }, origin);
   }
 
-  console.log('[Ritual Test] Starting sandbox ritual for:', user.email);
+  console.log('[Ritual Test] ✅ Authenticated user:', user.email);
+
+  // Parse request body
+  let body: any = {};
+  try {
+    const text = await req.text();
+    if (text) body = JSON.parse(text);
+  } catch (e) {
+    console.warn('[Ritual Test] Failed to parse body, using empty object');
+  }
+
+  // Handle PING request (health check)
+  if (body.action === 'ping') {
+    console.log('[Ritual Test] 🏓 Ping request from:', user.email);
+    return respondJson(200, { 
+      ok: true, 
+      whoami: user.email,
+      timestamp: new Date().toISOString()
+    }, origin);
+  }
+
+  console.log('[Ritual Test] 🎭 Starting sandbox ritual for:', user.email);
 
   try {
     // Generate unique ritual ID for sandbox

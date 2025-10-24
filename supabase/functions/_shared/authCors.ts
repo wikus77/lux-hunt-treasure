@@ -132,17 +132,22 @@ export function checkAdminWhitelist(userEmail: string | undefined): {
     .filter(Boolean);
   
   if (whitelist.length === 0) {
-    console.warn('[Auth] ADMIN_WHITELIST is empty or not set');
+    console.error('[Auth] ❌ ADMIN_WHITELIST is empty or not set');
+    console.error('[Auth] Please configure ADMIN_WHITELIST secret in Supabase Edge Functions');
     return { ok: false, error: 'Admin whitelist not configured' };
   }
   
   const normalizedEmail = userEmail.toLowerCase().trim();
   
+  console.log('[Auth] Checking whitelist for:', normalizedEmail);
+  console.log('[Auth] Whitelist contains:', whitelist.join(', '));
+  
   if (!whitelist.includes(normalizedEmail)) {
-    console.log('[Auth] User not in whitelist:', userEmail);
+    console.error('[Auth] ❌ User not in whitelist:', userEmail);
     return { ok: false, error: 'Not in admin whitelist' };
   }
   
+  console.log('[Auth] ✅ User authorized:', userEmail);
   return { ok: true };
 }
 
