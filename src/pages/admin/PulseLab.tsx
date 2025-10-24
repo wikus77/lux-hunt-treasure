@@ -5,7 +5,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useRitualChannel } from '@/features/pulse/ritual';
 import { RitualOrchestrator } from '@/features/pulse/ritual/RitualOrchestrator';
@@ -15,9 +15,7 @@ import { Shield, Zap, Sparkles, RotateCcw, PlayCircle, Activity } from 'lucide-r
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { invokeEdge } from '@/utils/edge-invoke';
-import { triggerRitualDistortion } from '@/utils/triggerRitualDistortion';
-import { playRitualAudio } from '@/utils/playRitualAudio';
-import { vibrateRitual } from '@/utils/vibrateRitual';
+import { EmpEffectController } from '@/utils/empEffectController';
 
 const ADMIN_EMAILS = [
   'joseph@m1ssion.io',
@@ -34,6 +32,9 @@ export default function PulseLab() {
 
   // Listen to test channel
   const { phase, ritualId, isConnected } = useRitualChannel({ mode: 'test' });
+  
+  // EMP effect controller instance (singleton per component lifecycle)
+  const empControllerRef = useRef<EmpEffectController | null>(null);
 
   // Check authorization
   useEffect(() => {
@@ -67,44 +68,65 @@ export default function PulseLab() {
     checkAuth();
   }, []);
 
-  // Log phase changes and trigger full cinematic EMP effect
+  // Initialize EMP controller and sync with ritual phases
   useEffect(() => {
-    if (phase !== 'idle') {
-      addLog(`🌟 Phase: ${phase} (ritual_id: ${ritualId})`);
-      
-      // Trigger full cinematic EMP effect for precharge and interference
-      if (phase === 'precharge') {
-        addLog('⚡ EMP EFFECT: Normal intensity (visual + audio + haptic)');
-        
-        // Visual distortion
-        triggerRitualDistortion({
-          duration: 9500,
-          intensity: 'normal',
-          enableDisplacement: true
+    const initController = async () => {
+      if (!empControllerRef.current) {
+        empControllerRef.current = new EmpEffectController({
+          enableAudio: true,
+          enableVisual: true,
+          enableHaptic: true
         });
-        
-        // Audio sync
-        playRitualAudio(0.7);
-        
-        // Haptic vibration
-        vibrateRitual();
-        
-      } else if (phase === 'interference') {
-        addLog('⚡⚡ EMP EFFECT: HIGH intensity (visual + audio + haptic)');
-        
-        // Visual distortion (high intensity)
-        triggerRitualDistortion({
-          duration: 2000,
-          intensity: 'high',
-          enableDisplacement: true
-        });
-        
-        // Audio sync
-        playRitualAudio(0.8);
-        
-        // Haptic vibration (more intense)
-        vibrateRitual();
       }
+    };
+    
+    initController();
+    
+    // Cleanup on unmount
+    return () => {
+      if (empControllerRef.current?.isActive()) {
+        empControllerRef.current.stop();
+      }
+    };
+  }, []);
+  
+  // Apply phases to EMP controller
+  useEffect(() => {
+    if (phase === 'idle') return;
+    
+    addLog(`🌟 Phase: ${phase} (ritual_id: ${ritualId})`);
+    
+    const controller = empControllerRef.current;
+    if (!controller) return;
+
+    // Start controller on first non-idle phase
+    if (!controller.isActive()) {
+      addLog('⚡ EMP CONTROLLER: Starting full cinematic effect...');
+      controller.start().then(() => {
+        controller.applyPhase(phase);
+      });
+    } else {
+      // Apply phase to already-running controller
+      controller.applyPhase(phase);
+    }
+    
+    // Log phase-specific actions
+    switch (phase) {
+      case 'precharge':
+        addLog('⚡ PRECHARGE: Sub-bass ramp + flash bursts starting');
+        break;
+      case 'blackout':
+        addLog('⚫ BLACKOUT: Hard audio mute + visual freeze');
+        break;
+      case 'interference':
+        addLog('⚡⚡ INTERFERENCE: Noise + glitch + haptic bursts');
+        break;
+      case 'reveal':
+        addLog('✨ REVEAL: Whoosh + filter sweep');
+        break;
+      case 'closed':
+        addLog('🔒 CLOSED: Fade-out + cleanup');
+        break;
     }
   }, [phase, ritualId]);
 
