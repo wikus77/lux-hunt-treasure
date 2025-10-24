@@ -63,18 +63,18 @@ export async function initAgentsPresence(
   channelState = 'joining';
   (window as any).__M1_DEBUG.presence = { status: 'CHANNEL_CREATED', state: channelState, queued: false, count: 0 };
 
-  // Subscribe with retries (1s, 2s, 4s) before failing
-  async function subscribeWithRetry(maxAttempts = 3): Promise<void> {
+  // Subscribe with retries (1s, 2s, 4s, 8s, 16s) before failing
+  async function subscribeWithRetry(maxAttempts = 5): Promise<void> {
     let attempt = 1;
     while (attempt <= maxAttempts) {
       try {
         await new Promise<void>((resolve, reject) => {
           const timeout = setTimeout(() => {
-            console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (8s)');
+            console.error('❌ PRESENCE_SUBSCRIBE_TIMEOUT (15s)');
             channelState = 'error';
             (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: 'TIMEOUT', state: channelState, queued: !!pendingTrack, count: 0 };
             reject(new Error('PRESENCE_SUBSCRIBE_TIMEOUT'));
-          }, 8000);
+          }, 15000);
 
           console.log('[Presence] status → SUBSCRIBING (attempt', attempt, ')');
           (window as any).__M1_DEBUG.presence = { status: 'SUBSCRIBING', state: channelState, queued: !!pendingTrack, count: 0 };

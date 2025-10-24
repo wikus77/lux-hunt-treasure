@@ -59,6 +59,16 @@ const MapLayerToggle = ({ onLayerChange, layerCounts, agentsVisibleCount }: MapL
     setLayers(prev => prev.map(layer => {
       if (layer.id === layerId) {
         const newEnabled = !layer.enabled;
+        
+        // ✅ FIX: Warning per layer AGENTS
+        if (layerId === 'agents' && !newEnabled) {
+          const { toast } = require('sonner');
+          toast.warning('⚠️ Layer AGENTS disattivato', {
+            description: 'Il tuo marker rosso sarà nascosto',
+            duration: 5000
+          });
+        }
+        
         onLayerChange?.(layerId, newEnabled);
         
         // Toggle CSS class on DOM elements with data-layer attribute
