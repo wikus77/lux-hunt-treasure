@@ -135,6 +135,17 @@
   animation: outlineFlux calc(var(--breath-speed) * 1.2) ease-in-out infinite;
 }
 
+/* transizione fluida larghezza fill */
+.pulse-fill-transition {
+  transition: width 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* percentuale sempre nitida */
+.pulse-percent {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
 /* accessibilità: riduci animazioni */
 @media (prefers-reduced-motion: reduce) {
   .animate-energyFlow, .animate-pulseBreath, .animate-outlineFlux {
