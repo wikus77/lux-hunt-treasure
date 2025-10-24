@@ -168,9 +168,10 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
                   />
                 </div>
 
-                {/* OUTLINE ENERGY (living border, increases with %) */}
-                <div 
-                  className={reduceMotion ? 'absolute inset-0 rounded-full pointer-events-none border border-[rgba(255,255,255,0.3)]' : 'absolute inset-0 rounded-full pointer-events-none animate-outlineFlux'}
+                {/* CONTORNO VIVO sincronizzato alla barra */}
+                <div
+                  className={reduceMotion ? 'absolute inset-0 rounded-full pointer-events-none border border-[rgba(255,255,255,0.3)]' : 'absolute inset-0 rounded-full pointer-events-none pulse-outline'}
+                  aria-hidden="true"
                 />
               </motion.div>
 
