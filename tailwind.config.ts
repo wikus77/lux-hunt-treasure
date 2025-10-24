@@ -10,7 +10,19 @@ const config: Config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
-  safelist: ['animate-energyFlow', 'animate-pulseGlow', 'pulse-outline', 'pulse-fill-transition', 'pulse-percent'],
+  safelist: [
+    'animate-energyFlow',
+    'animate-pulseGlow',
+    'pulse-outline',
+    'pulse-fill-transition',
+    'pulse-percent',
+    'aura-spin',
+    'ritual-interference',
+    'ritual-scanlines',
+    'ritual-chromatic',
+    'ritual-noise',
+    'animate-pulse-ritual-precharge',
+  ],
   prefix: '',
   theme: {
     container: {

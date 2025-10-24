@@ -3284,6 +3284,86 @@ export type Database = {
           },
         ]
       }
+      pulse_global_triggers: {
+        Row: {
+          created_at: string
+          id: number
+          payload: Json | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          payload?: Json | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          payload?: Json | null
+          type?: string
+        }
+        Relationships: []
+      }
+      pulse_ritual_claims: {
+        Row: {
+          claimed_at: string
+          id: number
+          ritual_id: number
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          id?: number
+          ritual_id: number
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          id?: number
+          ritual_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_ritual_claims_ritual_id_fkey"
+            columns: ["ritual_id"]
+            isOneToOne: false
+            referencedRelation: "pulse_rituals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pulse_rituals: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: number
+          reward_package: Json
+          scale_applied: boolean | null
+          snapshot: number | null
+          started_at: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: number
+          reward_package?: Json
+          scale_applied?: boolean | null
+          snapshot?: number | null
+          started_at?: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: number
+          reward_package?: Json
+          scale_applied?: boolean | null
+          snapshot?: number | null
+          started_at?: string
+        }
+        Relationships: []
+      }
       pulse_sponsor_slots: {
         Row: {
           created_at: string
@@ -6382,6 +6462,10 @@ export type Database = {
         Args: { p_meta?: Json; p_type: string; p_user_id: string }
         Returns: Json
       }
+      rpc_pulse_ritual_can_start: { Args: never; Returns: Json }
+      rpc_pulse_ritual_claim: { Args: { p_user: string }; Returns: Json }
+      rpc_pulse_ritual_close: { Args: never; Returns: Json }
+      rpc_pulse_ritual_start: { Args: never; Returns: Json }
       rpc_pulse_state_read: { Args: never; Returns: Json }
       send_user_notification: {
         Args: {

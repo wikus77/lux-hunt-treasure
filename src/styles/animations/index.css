@@ -182,9 +182,102 @@
   100% { outline: 2px solid rgba(255, 255, 255, 0.05); }
 }
 
+/* Ritual Aura Spin (for OPEN button) */
+.aura-spin {
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 77, 240, 0.25),
+    rgba(0, 231, 255, 0.25),
+    rgba(255, 255, 255, 0.05),
+    rgba(0, 231, 255, 0.25),
+    rgba(255, 77, 240, 0.25)
+  );
+  filter: blur(18px) saturate(1.2);
+  animation: auraOrbit calc(var(--flow-speed, 4s) * var(--flow-mult, 1)) linear infinite,
+    auraBreath var(--breath-speed, 2s) ease-in-out infinite;
+  border-radius: 9999px;
+}
+
+@keyframes auraOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes auraBreath {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+/* Ritual FX Layers */
+.ritual-interference {
+  position: relative;
+  overflow: hidden;
+}
+
+.ritual-scanlines {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}
+
+.ritual-chromatic {
+  animation: chromaticShift 0.3s ease-in-out infinite;
+}
+
+@keyframes chromaticShift {
+  0%,
+  100% {
+    filter: none;
+  }
+  33% {
+    filter: hue-rotate(2deg) saturate(1.1);
+  }
+  66% {
+    filter: hue-rotate(-2deg) saturate(0.9);
+  }
+}
+
+.ritual-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  opacity: 0.1;
+}
+
+@keyframes pulse-ritual-precharge {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-ritual-precharge {
+  animation: pulse-ritual-precharge 1s ease-in-out infinite;
+}
+
 /* accessibilità: riduci animazioni */
 @media (prefers-reduced-motion: reduce) {
-  .animate-energyFlow, .animate-pulseBreath, .animate-outlineFlux, .pulse-outline {
+  .animate-energyFlow,
+  .animate-pulseBreath,
+  .animate-outlineFlux,
+  .pulse-outline,
+  .aura-spin,
+  .ritual-chromatic,
+  .animate-pulse-ritual-precharge {
     animation: none !important;
   }
 }
