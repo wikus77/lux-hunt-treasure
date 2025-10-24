@@ -33,7 +33,7 @@ import { NorahProactiveManager } from "./components/norah/NorahProactiveManager"
 import { MissionBadgeInjector } from "./components/home/MissionBadgeInjector";
 import { UpdateBanner } from "./components/sw/UpdateBanner";
 import '@/features/living-map/styles/livingMap.css';
-import { RitualOrchestrator } from "@/features/pulse/ritual";
+import { RitualOrchestratorWrapper } from "@/features/pulse/ritual";
 
 function App() {
   // SW registration now handled by swControl utils - no duplicate registration
@@ -111,7 +111,7 @@ function App() {
                     <XpSystemManager />
                     <NorahProactiveManager />
                     <MissionBadgeInjector />
-                    <RitualOrchestrator />
+                    <RitualOrchestratorWrapper />
                     <Toaster />
                     <BadgeAuditReport />
                   </InterestSignalsProvider>

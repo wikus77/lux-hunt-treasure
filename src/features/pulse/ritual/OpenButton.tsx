@@ -11,9 +11,10 @@ import { useAuth } from '@/hooks/use-auth';
 interface OpenButtonProps {
   ritualId: number | null;
   onClaimed: (reward: any) => void;
+  mode?: 'prod' | 'test';
 }
 
-export function OpenButton({ ritualId, onClaimed }: OpenButtonProps) {
+export function OpenButton({ ritualId, onClaimed, mode = 'prod' }: OpenButtonProps) {
   const { user } = useAuth();
   const [isPressed, setIsPressed] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,23 +49,40 @@ export function OpenButton({ ritualId, onClaimed }: OpenButtonProps) {
   };
 
   const handleOpen = async () => {
-    if (!user?.id || !ritualId || isLoading) return;
+    if (!ritualId || isLoading) return;
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.rpc('rpc_pulse_ritual_claim', {
-        p_user: user.id
-      });
-
-      if (error) throw error;
-
-      // Cast to expected response type
-      const response = data as { success: boolean; reward_package?: any; error?: string; already_claimed?: boolean };
-
-      if (response?.success) {
-        onClaimed(response.reward_package);
+      if (mode === 'test') {
+        // Test mode: fake claim, no DB write
+        console.log('[OpenButton Test] Simulating claim...');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        onClaimed({
+          type: 'test_essence',
+          message: '🧪 Test Ritual Essence (Sandbox)',
+          ritual_id: ritualId
+        });
       } else {
-        console.error('[Ritual] Claim failed:', response?.error);
+        // Production mode: real claim
+        if (!user?.id) {
+          console.error('[OpenButton] No user ID');
+          return;
+        }
+
+        const { data, error } = await supabase.rpc('rpc_pulse_ritual_claim', {
+          p_user: user.id
+        });
+
+        if (error) throw error;
+
+        // Cast to expected response type
+        const response = data as { success: boolean; reward_package?: any; error?: string; already_claimed?: boolean };
+
+        if (response?.success) {
+          onClaimed(response.reward_package);
+        } else {
+          console.error('[Ritual] Claim failed:', response?.error);
+        }
       }
     } catch (err) {
       console.error('[Ritual] Claim error:', err);

@@ -153,3 +153,9 @@ verify_jwt = false
 
 [functions.norah-kpis]
 verify_jwt = false
+
+[functions.ritual-orchestrator]
+verify_jwt = false
+
+[functions.ritual-test-fire]
+verify_jwt = false

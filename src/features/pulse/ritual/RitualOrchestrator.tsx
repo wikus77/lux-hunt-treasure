@@ -6,11 +6,15 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRitualChannel } from './useRitualChannel';
 import { OpenButton } from './OpenButton';
 
-export function RitualOrchestrator() {
-  const { phase, ritualId } = useRitualChannel();
+interface RitualOrchestratorProps {
+  phase: 'idle' | 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
+  ritualId: number | null;
+  mode?: 'prod' | 'test';
+}
+
+export function RitualOrchestrator({ phase, ritualId, mode = 'prod' }: RitualOrchestratorProps) {
   const [rewardData, setRewardData] = useState<any>(null);
   const [showReward, setShowReward] = useState(false);
   
@@ -44,7 +48,23 @@ export function RitualOrchestrator() {
   }, [phase]);
 
   const handleClaimed = (reward: any) => {
-    setRewardData(reward);
+    console.log(`[Ritual ${mode}] Reward claimed:`, reward);
+    
+    // In test mode, show fake reward
+    if (mode === 'test') {
+      setRewardData({
+        type: 'test_essence',
+        copy: '🧪 Test Ritual Essence Captured (Sandbox)',
+        items: [
+          { title: 'Test Echo Fragment', type: 'Narrative', rarity: 'TEST' }
+        ],
+        ritual_id: ritualId,
+        claimed_at: new Date().toISOString()
+      });
+    } else {
+      setRewardData(reward);
+    }
+    
     setShowReward(true);
   };
 
@@ -116,7 +136,7 @@ export function RitualOrchestrator() {
             className="absolute inset-0 bg-gradient-to-b from-black/95 via-black/90 to-black/95 
                        flex items-center justify-center backdrop-blur-md"
           >
-            <OpenButton ritualId={ritualId} onClaimed={handleClaimed} />
+            <OpenButton ritualId={ritualId} onClaimed={handleClaimed} mode={mode} />
           </motion.div>
         )}
 
