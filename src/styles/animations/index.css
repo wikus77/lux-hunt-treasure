@@ -98,50 +98,48 @@
 }
 
 /* THE PULSE™ Energy Animations — ENERGY REBORN */
+:root {
+  --flow-speed: 4s;         /* durata base scorrimento */
+  --breath-speed: 2s;       /* durata respiro */
+  --flow-mult: 1;           /* spike accelera (0.6 = più veloce) */
+  --glow-mult: 1;           /* spike aumenta glow */
+  --pulse-brightness: 1;    /* brightness dinamico */
+  --outline-intensity: 1;   /* intensità contorno */
+}
+
 @keyframes energyFlow {
-  0% { 
-    background-position: 0% 50%; 
-    filter: brightness(var(--pulse-brightness, 0.8)); 
-  }
-  100% { 
-    background-position: 200% 50%; 
-    filter: brightness(var(--pulse-brightness, 1)); 
-  }
+  0%   { background-position: 0% 50%;   filter: brightness(calc(var(--pulse-brightness) * 0.96)); }
+  100% { background-position: 200% 50%; filter: brightness(var(--pulse-brightness)); }
 }
 
 @keyframes pulseBreath {
-  0%, 100% { 
-    opacity: 0.5; 
-    transform: scale(var(--pulse-scale, 1)); 
-  }
-  50% { 
-    opacity: 1; 
-    transform: scale(calc(var(--pulse-scale, 1) * 1.04)); 
-  }
+  0%, 100% { opacity: .55; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.03); }
 }
 
 @keyframes outlineFlux {
-  0%, 100% { 
-    box-shadow: 0 0 calc(12px * var(--outline-intensity, 1)) rgba(0, 231, 255, 0.5); 
-    opacity: 0.6; 
-  }
-  50% { 
-    box-shadow: 0 0 calc(18px * var(--outline-intensity, 1.1)) rgba(255, 77, 240, 0.6); 
-    opacity: 1; 
-  }
+  0%, 100% { box-shadow: 0 0 calc(12px * var(--outline-intensity) * var(--glow-mult)) rgba(0, 231, 255, .55); opacity: .7; }
+  50%      { box-shadow: 0 0 calc(18px * var(--outline-intensity) * var(--glow-mult)) rgba(255, 77, 240, .65); opacity: 1; }
 }
 
 .animate-energyFlow {
   background-size: 400% 400%;
-  animation: energyFlow var(--flow-speed, 4s) linear infinite;
+  animation: energyFlow calc(var(--flow-speed) * var(--flow-mult)) linear infinite;
 }
 
 .animate-pulseBreath {
-  animation: pulseBreath var(--breath-speed, 2s) ease-in-out infinite;
+  animation: pulseBreath var(--breath-speed) ease-in-out infinite;
 }
 
 .animate-outlineFlux {
-  animation: outlineFlux var(--outline-speed, 2.5s) ease-in-out infinite;
+  animation: outlineFlux calc(var(--breath-speed) * 1.2) ease-in-out infinite;
+}
+
+/* accessibilità: riduci animazioni */
+@media (prefers-reduced-motion: reduce) {
+  .animate-energyFlow, .animate-pulseBreath, .animate-outlineFlux {
+    animation: none !important;
+  }
 }
 
 /* Interactive card effects */
