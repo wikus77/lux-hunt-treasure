@@ -1,6 +1,7 @@
 /* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
 /* M1SSION™ AG-X0197 */
 import './styles/map.css';
+import './styles/effects/ritual-distortion.css';
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';

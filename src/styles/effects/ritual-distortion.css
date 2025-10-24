@@ -1,0 +1,250 @@
+/**
+ * The Pulse™ — Ritual EMP Interference Effect
+ * Global UI distortion synchronized with ritual phases
+ * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+ */
+
+/* ========== KEYFRAMES ========== */
+
+/* CRT/Glitch effect - fast stepped animation */
+@keyframes ritual-glitch {
+  0%, 100% {
+    filter: contrast(1) brightness(1) blur(0px);
+    transform: translate(0, 0) skew(0deg);
+  }
+  10% {
+    filter: contrast(1.1) brightness(0.95) blur(0.3px) hue-rotate(2deg);
+    transform: translate(-1px, 1px) skew(0.2deg);
+  }
+  20% {
+    filter: contrast(1.15) brightness(1.05) blur(0px) hue-rotate(-1deg);
+    transform: translate(1px, -1px) skew(-0.3deg);
+  }
+  30% {
+    filter: contrast(0.95) brightness(0.9) blur(0.4px) hue-rotate(1deg);
+    transform: translate(-2px, 0px) skew(0.1deg);
+  }
+  40% {
+    filter: contrast(1.2) brightness(1.1) blur(0.2px) hue-rotate(-2deg);
+    transform: translate(1px, 1px) skew(-0.2deg);
+  }
+  50% {
+    filter: contrast(0.9) brightness(0.85) blur(0.5px) hue-rotate(3deg);
+    transform: translate(0px, -2px) skew(0.4deg);
+  }
+  60% {
+    filter: contrast(1.1) brightness(1) blur(0.1px) hue-rotate(-1deg);
+    transform: translate(-1px, -1px) skew(-0.1deg);
+  }
+  70% {
+    filter: contrast(1.05) brightness(0.95) blur(0.3px) hue-rotate(2deg);
+    transform: translate(2px, 0px) skew(0.2deg);
+  }
+  80% {
+    filter: contrast(0.95) brightness(1.05) blur(0.2px) hue-rotate(-3deg);
+    transform: translate(-1px, 1px) skew(-0.3deg);
+  }
+  90% {
+    filter: contrast(1.15) brightness(0.9) blur(0.4px) hue-rotate(1deg);
+    transform: translate(0px, 2px) skew(0.1deg);
+  }
+}
+
+/* Scanline roll effect */
+@keyframes scanline-roll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+/* Overlay flicker */
+@keyframes overlay-flicker {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.08;
+  }
+}
+
+/* Shear bars (horizontal displacement) */
+@keyframes shear-bars {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10% {
+    transform: translateX(3px);
+  }
+  20% {
+    transform: translateX(-2px);
+  }
+  30% {
+    transform: translateX(0);
+  }
+}
+
+/* ========== ACTIVE STATE ========== */
+
+/* Apply glitch to body when ritual is active */
+body.ritual-distortion-active {
+  animation: ritual-glitch 0.15s steps(2, end) infinite;
+  will-change: transform, filter;
+}
+
+/* Intensified glitch for interference phase */
+body.ritual-distortion-interference {
+  animation: ritual-glitch 0.1s steps(2, end) infinite;
+}
+
+/* Disable pointer events during effect */
+body.ritual-distortion-active * {
+  pointer-events: none !important;
+}
+
+/* Re-enable for overlay controls only */
+.ritual-overlay-controls * {
+  pointer-events: auto !important;
+}
+
+/* ========== OVERLAY LAYERS ========== */
+
+/* CRT Overlay Container */
+.ritual-crt-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999998;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* Scanlines */
+.ritual-scanlines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15) 0px,
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  animation: scanline-roll 8s linear infinite, overlay-flicker 0.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Vignette */
+.ritual-vignette {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 30%,
+    rgba(0, 0, 0, 0.3) 70%,
+    rgba(0, 0, 0, 0.6) 100%
+  );
+  pointer-events: none;
+}
+
+/* Shear bars (horizontal glitch bars) */
+.ritual-shear-bars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.ritual-shear-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.05);
+  animation: shear-bars 0.3s steps(3, end) infinite;
+}
+
+/* ========== SVG DISPLACEMENT FILTER ========== */
+
+/* Container for SVG filter */
+.ritual-displacement-svg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Apply filter to body when active */
+body.ritual-distortion-active.ritual-displacement-enabled {
+  filter: url(#ritual-turbulence-filter);
+}
+
+/* ========== REDUCED MOTION ========== */
+
+@media (prefers-reduced-motion: reduce) {
+  body.ritual-distortion-active {
+    animation: none;
+    filter: contrast(1.05) brightness(0.95);
+  }
+  
+  body.ritual-distortion-interference {
+    animation: none;
+    filter: contrast(1.1) brightness(0.9);
+  }
+  
+  .ritual-scanlines {
+    animation: overlay-flicker 0.5s ease-in-out infinite;
+    opacity: 0.5;
+  }
+  
+  .ritual-shear-bars {
+    display: none;
+  }
+}
+
+/* ========== CHROMATIC ABERRATION (OPTIONAL) ========== */
+
+@keyframes chromatic-aberration {
+  0%, 100% {
+    text-shadow: 
+      1px 0 0 rgba(255, 0, 0, 0.5),
+      -1px 0 0 rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    text-shadow: 
+      -1px 0 0 rgba(255, 0, 0, 0.5),
+      1px 0 0 rgba(0, 255, 255, 0.5);
+  }
+}
+
+body.ritual-distortion-active h1,
+body.ritual-distortion-active h2,
+body.ritual-distortion-active .ritual-chromatic {
+  animation: chromatic-aberration 0.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.ritual-distortion-active h1,
+  body.ritual-distortion-active h2,
+  body.ritual-distortion-active .ritual-chromatic {
+    animation: none;
+    text-shadow: none;
+  }
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
