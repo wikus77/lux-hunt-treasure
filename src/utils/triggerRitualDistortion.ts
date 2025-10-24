@@ -55,6 +55,11 @@ function createOverlay(): HTMLDivElement {
   }
   overlay.appendChild(shearContainer);
 
+  // Flash pulse layer (irregular light bursts)
+  const flashPulse = document.createElement('div');
+  flashPulse.className = 'ritual-flash-pulse';
+  overlay.appendChild(flashPulse);
+
   return overlay;
 }
 

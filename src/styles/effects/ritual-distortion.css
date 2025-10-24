@@ -70,6 +70,17 @@
   }
 }
 
+/* Flash pulse - irregular, asynchronous light bursts */
+@keyframes flash-pulse {
+  0%, 100% { opacity: 0; }
+  10% { opacity: 0.4; }
+  25% { opacity: 0.8; }
+  40% { opacity: 0.1; }
+  60% { opacity: 0.7; }
+  75% { opacity: 0.2; }
+  90% { opacity: 0.5; }
+}
+
 /* Shear bars (horizontal displacement) */
 @keyframes shear-bars {
   0%, 100% {
@@ -174,6 +185,20 @@ body.ritual-distortion-active * {
   height: 2px;
   background: rgba(255, 255, 255, 0.05);
   animation: shear-bars 0.3s steps(3, end) infinite;
+}
+
+/* Flash pulse overlay - irregular light bursts */
+.ritual-flash-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(0, 255, 255, 0.3), rgba(255, 255, 255, 0.05) 80%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0;
+  animation: flash-pulse 8s linear infinite;
 }
 
 /* ========== SVG DISPLACEMENT FILTER ========== */
