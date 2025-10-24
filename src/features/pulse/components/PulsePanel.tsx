@@ -31,8 +31,20 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
   const { pulseState, lastUpdate } = usePulseRealtime();
   const [thresholdLogs, setThresholdLogs] = useState<ThresholdLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   const value = pulseState?.value ?? 0;
+  
+  // Map value to animation intensity (identical to PulseBar)
+  const flowSpeed = value < 25 ? '6s' : value < 50 ? '5s' : value < 75 ? '4s' : '3s';
+  const glowScale = value < 25 ? '1.00' : value < 50 ? '1.01' : value < 75 ? '1.02' : '1.03';
+  const glowIntensity = value > 80 ? 1 : value > 50 ? 0.8 : value > 25 ? 0.6 : 0.4;
+
+  // Check accessibility preference
+  useEffect(() => {
+    const prefersReducedMotion = localStorage.getItem('pulse_reduce_motion') === 'true';
+    setReduceMotion(prefersReducedMotion);
+  }, []);
 
   // Fetch threshold logs
   useEffect(() => {
@@ -97,31 +109,32 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
               {/* Energy Bar - IDENTICAL to Main PulseBar */}
               <div className="relative h-[14px] rounded-full overflow-hidden shadow-[0_0_25px_rgba(0,231,255,0.5)]">
                 <div 
-                  className="animate-energyFlow" 
+                  className={reduceMotion ? '' : 'animate-energyFlow'}
                   style={{ 
                     position: 'absolute',
                     inset: 0,
                     background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
                     backgroundSize: '300% 300%',
-                    animationDuration: value >= 75 ? '3s' : value >= 50 ? '4s' : value >= 25 ? '5s' : '6s'
+                    ['--flow-speed' as any]: flowSpeed
                   }} 
                 />
                 <motion.div 
-                  className="animate-pulseGlow"
+                  className={reduceMotion ? '' : 'animate-pulseGlow'}
                   style={{ 
                     position: 'absolute',
                     inset: 0,
                     background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 75%)',
-                    opacity: value > 80 ? 1 : value > 50 ? 0.8 : value > 25 ? 0.6 : 0.4,
-                    filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none'
+                    opacity: glowIntensity,
+                    filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none',
+                    ['--glow-scale' as any]: glowScale
                   }}
                 />
                 <div 
-                  className="absolute -inset-1 blur-md -z-10 animate-energyFlow" 
+                  className={`absolute -inset-1 blur-md -z-10 ${reduceMotion ? '' : 'animate-energyFlow'}`}
                   style={{ 
                     background: 'linear-gradient(270deg, rgba(255,77,240,0.3), rgba(0,234,255,0.3), rgba(255,77,240,0.3))',
                     backgroundSize: '300% 300%',
-                    animationDuration: value >= 75 ? '3s' : value >= 50 ? '4s' : value >= 25 ? '5s' : '6s'
+                    ['--flow-speed' as any]: flowSpeed
                   }} 
                 />
               </div>
