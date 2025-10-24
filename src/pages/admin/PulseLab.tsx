@@ -84,29 +84,29 @@ export default function PulseLab() {
     addLog('🏓 Pinging edge function...');
     
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session - please refresh');
+      }
+      
+      addLog(`🔑 Using bearer token: ${session.access_token.substring(0, 20)}...`);
       
       const { data, error } = await supabase.functions.invoke('ritual-test-fire', {
-        method: 'GET',
+        body: { mode: 'ping' }
       });
-      
-      clearTimeout(timeout);
       
       if (error) throw error;
       
       addLog(`✅ Ping successful: ${JSON.stringify(data)}`);
       toast({ 
         title: "Edge Function Online",
-        description: `Version ${data?.version || 'unknown'} in ${data?.region || 'unknown'}` 
+        description: `Connected as ${userEmail}` 
       });
     } catch (error: any) {
-      const hint = error.message?.includes('aborted') 
-        ? 'Timeout after 10s' 
-        : error.message || 'Unknown error';
+      const hint = error.message || 'Unknown error';
       addLog(`❌ Ping failed: ${hint}`);
       toast({ 
-        title: "Edge Function Offline",
+        title: "Edge Function Error",
         description: hint,
         variant: "destructive"
       });
@@ -117,21 +117,34 @@ export default function PulseLab() {
     setIsFiring(true);
     addLog('🚀 Firing test ritual...');
     
+    // Check session first
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      addLog('❌ No active session - please refresh page');
+      toast({ 
+        title: "Session Required",
+        description: "Please refresh the page to restore your session",
+        variant: "destructive"
+      });
+      setIsFiring(false);
+      return;
+    }
+    
+    addLog(`🔑 Authenticated as: ${userEmail}`);
+    
     let attempt = 0;
     const maxAttempts = 2;
     
     while (attempt < maxAttempts) {
       try {
         attempt++;
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
         
         const { data, error } = await supabase.functions.invoke('ritual-test-fire', {
-          method: 'POST',
-          body: { channel: 'pulse:ritual:test' }
+          body: { 
+            mode: 'start',
+            channel: 'pulse:ritual:test' 
+          }
         });
-        
-        clearTimeout(timeout);
         
         if (error) {
           addLog(`❌ Invocation error (attempt ${attempt}/${maxAttempts}): ${error.message}`);
@@ -149,18 +162,19 @@ export default function PulseLab() {
         if (!data?.ok) {
           const code = data?.code || 'unknown';
           const hint = data?.hint || 'No details provided';
-          addLog(`❌ Server error [${code}]: ${hint}`);
+          const details = data?.details ? ` (${data.details})` : '';
+          addLog(`❌ Server error [${code}]: ${hint}${details}`);
           
-          if (code === 'forbidden') {
+          if (code === 'FORBIDDEN' || code === 'forbidden') {
             toast({ 
               title: "Access Denied",
-              description: "Check admin whitelist configuration",
+              description: `Admin whitelist required. Your email: ${data?.user_email || userEmail}`,
               variant: "destructive"
             });
           } else if (code === 'auth') {
             toast({ 
-              title: "Authentication Required",
-              description: "Sign in or refresh your session",
+              title: "Authentication Error",
+              description: hint,
               variant: "destructive"
             });
           } else {

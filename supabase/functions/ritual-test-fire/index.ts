@@ -6,11 +6,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, handleOptions } from '../_shared/cors.ts';
 
 interface RitualPhase {
   phase: 'idle' | 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
@@ -23,12 +19,12 @@ const ADMIN_WHITELIST = (Deno.env.get('ADMIN_WHITELIST') || '').split(',').map(e
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
   
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: { ...corsHeaders, 'X-Request-Id': requestId } 
-    });
+    return handleOptions(req);
   }
 
   // GET /ping - Health check
@@ -38,11 +34,12 @@ Deno.serve(async (req) => {
         ok: true, 
         version: '1.0.0',
         region: Deno.env.get('DENO_REGION') || 'unknown',
-        service: 'ritual-test-fire'
+        service: 'ritual-test-fire',
+        timestamp: new Date().toISOString()
       }),
       { 
         headers: { 
-          ...corsHeaders, 
+          ...Object.fromEntries(headers.entries()),
           'Content-Type': 'application/json',
           'X-Request-Id': requestId
         } 
@@ -61,7 +58,7 @@ Deno.serve(async (req) => {
       { 
         status: 405,
         headers: { 
-          ...corsHeaders, 
+          ...Object.fromEntries(headers.entries()),
           'Content-Type': 'application/json',
           'X-Request-Id': requestId
         } 
@@ -70,6 +67,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase clients
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
     // Validate JWT and check admin whitelist
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
@@ -77,12 +79,12 @@ Deno.serve(async (req) => {
         JSON.stringify({ 
           ok: false, 
           code: 'auth',
-          hint: 'Sign-in required'
+          hint: 'Sign-in required - Authorization header missing'
         }),
         { 
           status: 401,
           headers: { 
-            ...corsHeaders, 
+            ...Object.fromEntries(headers.entries()),
             'Content-Type': 'application/json',
             'X-Request-Id': requestId
           } 
@@ -90,14 +92,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client with user's JWT for auth check
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
+    // Create client with auth header to verify JWT
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { authorization: authHeader } },
-      auth: { persistSession: false }
+      global: { 
+        headers: { 
+          authorization: authHeader 
+        } 
+      },
+      auth: { 
+        persistSession: false,
+        autoRefreshToken: false 
+      }
     });
 
     const { data: { user }, error: authError } = await userClient.auth.getUser();
@@ -108,12 +113,13 @@ Deno.serve(async (req) => {
         JSON.stringify({ 
           ok: false, 
           code: 'auth',
-          hint: 'Invalid or expired token'
+          hint: authError?.message || 'Invalid or expired token',
+          details: authError?.name
         }),
         { 
           status: 401,
           headers: { 
-            ...corsHeaders, 
+            ...Object.fromEntries(headers.entries()),
             'Content-Type': 'application/json',
             'X-Request-Id': requestId
           } 
@@ -122,18 +128,22 @@ Deno.serve(async (req) => {
     }
 
     // Check admin whitelist
-    if (!ADMIN_WHITELIST.includes(user.email || '')) {
+    const userEmail = (user.email || '').toLowerCase().trim();
+    const isAdmin = ADMIN_WHITELIST.some(email => email.toLowerCase().trim() === userEmail);
+    
+    if (!isAdmin) {
       console.warn('[Ritual Test] Unauthorized access attempt:', user.email);
       return new Response(
         JSON.stringify({ 
           ok: false, 
-          code: 'forbidden',
-          hint: 'Not in admin whitelist'
+          code: 'FORBIDDEN',
+          hint: 'admin only - not in whitelist',
+          user_email: user.email
         }),
         { 
           status: 403,
           headers: { 
-            ...corsHeaders, 
+            ...Object.fromEntries(headers.entries()),
             'Content-Type': 'application/json',
             'X-Request-Id': requestId
           } 
@@ -141,7 +151,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`[Ritual Test] Authorized admin: ${user.email}`);
+    console.log(`[Ritual Test] ✅ Authorized admin: ${user.email}`);
     
     // Initialize service role client for broadcasting
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -169,7 +179,7 @@ Deno.serve(async (req) => {
         { 
           status: 500,
           headers: { 
-            ...corsHeaders, 
+            ...Object.fromEntries(headers.entries()),
             'Content-Type': 'application/json',
             'X-Request-Id': requestId
           } 
@@ -242,7 +252,7 @@ Deno.serve(async (req) => {
       }),
       { 
         headers: { 
-          ...corsHeaders, 
+          ...Object.fromEntries(headers.entries()),
           'Content-Type': 'application/json',
           'X-Request-Id': requestId
         } 
@@ -261,7 +271,7 @@ Deno.serve(async (req) => {
       { 
         status: 500,
         headers: { 
-          ...corsHeaders, 
+          ...Object.fromEntries(headers.entries()),
           'Content-Type': 'application/json',
           'X-Request-Id': requestId
         } 

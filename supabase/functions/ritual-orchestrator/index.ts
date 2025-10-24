@@ -6,11 +6,7 @@
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders, handleOptions } from '../_shared/cors.ts';
 
 interface RitualPhase {
   phase: 'idle' | 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
@@ -19,9 +15,12 @@ interface RitualPhase {
 }
 
 Deno.serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const headers = corsHeaders(origin);
+  
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return handleOptions(req);
   }
 
   try {
@@ -55,7 +54,7 @@ Deno.serve(async (req) => {
           reason: canStart?.reason || 'Cannot start ritual',
           pulse_value: canStart?.pulse_value 
         }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { headers: { ...Object.fromEntries(headers.entries()), 'Content-Type': 'application/json' } }
       );
     }
 
@@ -134,7 +133,7 @@ Deno.serve(async (req) => {
         ritual_id: ritualId,
         message: 'Ritual orchestration completed'
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...Object.fromEntries(headers.entries()), 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
@@ -146,7 +145,7 @@ Deno.serve(async (req) => {
       }),
       { 
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        headers: { ...Object.fromEntries(headers.entries()), 'Content-Type': 'application/json' } 
       }
     );
   }
