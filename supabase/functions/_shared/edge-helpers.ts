@@ -6,14 +6,45 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 export function corsHeadersFromEnv() {
   const origins = (Deno.env.get('CORS_ORIGINS') ?? '').split(',').map(s => s.trim()).filter(Boolean);
   return (origin: string | null) => {
-    const allow = origin && origins.some(o =>
-      o === origin || (o.includes('*') && origin.endsWith(o.replace('*.', '')))
-    );
+    let allowOrigin = '*';
+    
+    if (origin && origins.length > 0) {
+      try {
+        const originUrl = new URL(origin);
+        const originHost = originUrl.host;
+        
+        const matched = origins.some(pattern => {
+          if (pattern === '*') return true;
+          
+          try {
+            const patternUrl = new URL(pattern);
+            const patternHost = patternUrl.host;
+            
+            // Wildcard matching: *.lovable.app
+            if (patternHost.startsWith('*.')) {
+              const rootDomain = patternHost.slice(2);
+              return originHost === rootDomain || originHost.endsWith('.' + rootDomain);
+            }
+            
+            // Exact match
+            return originHost === patternHost;
+          } catch {
+            return false;
+          }
+        });
+        
+        allowOrigin = matched ? origin : '*';
+      } catch {
+        allowOrigin = '*';
+      }
+    }
+    
     return {
-      'Access-Control-Allow-Origin': allow ? origin! : (origins[0] ?? '*'),
+      'Access-Control-Allow-Origin': allowOrigin,
       'Vary': 'Origin',
-      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Max-Age': '86400',
     };
   };
 }
@@ -24,7 +55,7 @@ export function withCors(handler: (req: Request, ctx: { origin: string | null })
     const headers = corsHeadersFromEnv()(origin);
     
     if (req.method === 'OPTIONS') {
-      return new Response('ok', { status: 200, headers });
+      return new Response(null, { status: 204, headers });
     }
     
     const res = await handler(req, { origin });
@@ -54,15 +85,38 @@ export async function getUserFromAuthHeader(req: Request, supabaseUrl: string, a
   return { user: data.user, error: null };
 }
 
-export function ensureAdmin(userEmail: string | undefined) {
+export function ensureAdmin(userEmail: string | undefined, userId?: string) {
   const raw = Deno.env.get('ADMIN_WHITELIST') ?? '';
-  const list = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   
-  if (!userEmail || !list.includes(userEmail.toLowerCase())) {
-    return { ok: false as const, error: 'Admin whitelist required' };
+  if (!raw || raw.trim() === '') {
+    console.error('[Auth] ❌ ADMIN_WHITELIST is empty or not set');
+    console.error('[Auth] Format: "email1@domain.com,user-id-uuid,email2@domain.com"');
+    return { ok: false as const, error: 'Admin whitelist not configured' };
   }
   
-  return { ok: true as const };
+  const list = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  
+  console.log('[Auth] 🔐 Whitelist loaded:', list.length, 'entries');
+  
+  if (list.length === 0) {
+    console.error('[Auth] ❌ ADMIN_WHITELIST parsed to 0 entries');
+    return { ok: false as const, error: 'Admin whitelist empty after parsing' };
+  }
+  
+  // Check email
+  if (userEmail && list.includes(userEmail.toLowerCase())) {
+    console.log('[Auth] ✅ User authorized by email:', userEmail);
+    return { ok: true as const };
+  }
+  
+  // Check user_id (UUID format)
+  if (userId && list.includes(userId.toLowerCase())) {
+    console.log('[Auth] ✅ User authorized by ID:', userId);
+    return { ok: true as const };
+  }
+  
+  console.error('[Auth] ❌ User not in whitelist:', { email: userEmail, id: userId });
+  return { ok: false as const, error: 'Not in admin whitelist' };
 }
 
 export function supaService() {

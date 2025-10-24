@@ -12,35 +12,50 @@ interface CorsOptions {
 
 /**
  * Get CORS headers from CORS_ORIGINS environment variable
+ * Supports wildcard patterns like *.lovable.app
  */
 function getCorsHeaders(origin: string | null): Record<string, string> {
   const originsStr = Deno.env.get('CORS_ORIGINS') ?? '*';
   const origins = originsStr.split(',').map(o => o.trim()).filter(Boolean);
   
   let allowOrigin = '*';
+  let matched = false;
   
   if (origin && origins.length > 0) {
-    // Check if origin matches any allowed origin (supports wildcards)
-    const matched = origins.some(o => {
-      if (o === '*') return true;
-      if (o.includes('*')) {
-        const pattern = o.replace('*.', '');
-        return origin.endsWith(pattern);
-      }
-      return o === origin;
-    });
-    
-    if (matched) {
-      allowOrigin = origin;
-    } else {
-      allowOrigin = origins[0] || '*';
+    try {
+      const originUrl = new URL(origin);
+      const originHost = originUrl.host;
+      
+      matched = origins.some(pattern => {
+        if (pattern === '*') return true;
+        
+        try {
+          const patternUrl = new URL(pattern);
+          const patternHost = patternUrl.host;
+          
+          // Wildcard matching: *.lovable.app
+          if (patternHost.startsWith('*.')) {
+            const rootDomain = patternHost.slice(2);
+            return originHost === rootDomain || originHost.endsWith('.' + rootDomain);
+          }
+          
+          // Exact match
+          return originHost === patternHost;
+        } catch {
+          return false;
+        }
+      });
+      
+      allowOrigin = matched ? origin : '*';
+    } catch {
+      allowOrigin = '*';
     }
   }
   
   return {
     'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey',
+    'Access-Control-Allow-Headers': 'authorization, content-type, x-client-info, apikey, x-requested-with',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin',
     'Content-Type': 'application/json'
@@ -114,41 +129,54 @@ export async function validateAuth(req: Request): Promise<{
 }
 
 /**
- * Check if user email is in admin whitelist
+ * Check if user is in admin whitelist (by email or user_id)
+ * Supports both email and UUID formats
  */
-export function checkAdminWhitelist(userEmail: string | undefined): {
+export function checkAdminWhitelist(userEmail: string | undefined, userId?: string): {
   ok: boolean;
   error?: string;
 } {
-  if (!userEmail) {
-    return { ok: false, error: 'No email provided' };
-  }
-  
   const whitelistStr = Deno.env.get('ADMIN_WHITELIST') ?? '';
-  const whitelist = whitelistStr
-    .toLowerCase()
-    .split(',')
-    .map(e => e.trim())
-    .filter(Boolean);
   
-  if (whitelist.length === 0) {
+  if (!whitelistStr || whitelistStr.trim() === '') {
     console.error('[Auth] ❌ ADMIN_WHITELIST is empty or not set');
     console.error('[Auth] Please configure ADMIN_WHITELIST secret in Supabase Edge Functions');
+    console.error('[Auth] Format: "email1@domain.com,user-id-uuid,email2@domain.com"');
     return { ok: false, error: 'Admin whitelist not configured' };
   }
   
-  const normalizedEmail = userEmail.toLowerCase().trim();
+  const whitelist = whitelistStr
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
   
-  console.log('[Auth] Checking whitelist for:', normalizedEmail);
-  console.log('[Auth] Whitelist contains:', whitelist.join(', '));
+  console.log('[Auth] 🔐 Whitelist loaded:', whitelist.length, 'entries');
   
-  if (!whitelist.includes(normalizedEmail)) {
-    console.error('[Auth] ❌ User not in whitelist:', userEmail);
-    return { ok: false, error: 'Not in admin whitelist' };
+  if (whitelist.length === 0) {
+    console.error('[Auth] ❌ ADMIN_WHITELIST parsed to 0 entries');
+    return { ok: false, error: 'Admin whitelist empty after parsing' };
   }
   
-  console.log('[Auth] ✅ User authorized:', userEmail);
-  return { ok: true };
+  // Check email
+  if (userEmail) {
+    const normalizedEmail = userEmail.toLowerCase().trim();
+    if (whitelist.includes(normalizedEmail)) {
+      console.log('[Auth] ✅ User authorized by email:', normalizedEmail);
+      return { ok: true };
+    }
+  }
+  
+  // Check user_id (UUID format)
+  if (userId) {
+    const normalizedId = userId.toLowerCase().trim();
+    if (whitelist.includes(normalizedId)) {
+      console.log('[Auth] ✅ User authorized by ID:', normalizedId);
+      return { ok: true };
+    }
+  }
+  
+  console.error('[Auth] ❌ User not in whitelist:', { email: userEmail, id: userId });
+  return { ok: false, error: 'Not in admin whitelist' };
 }
 
 /**
@@ -174,13 +202,18 @@ export function withAuthCors(
       }, origin);
     }
     
-    // Check whitelist
-    const { ok: isAdmin, error: whitelistError } = checkAdminWhitelist(user.email);
+    // Check whitelist (email or user_id)
+    const { ok: isAdmin, error: whitelistError } = checkAdminWhitelist(user.email, user.id);
     if (!isAdmin) {
       return respondJson(403, {
         ok: false,
         code: 'ADMIN_REQUIRED',
-        hint: whitelistError || 'Not in admin whitelist'
+        hint: whitelistError || 'Not in admin whitelist',
+        debug: {
+          user_email: user.email,
+          user_id: user.id,
+          whitelist_env_set: !!Deno.env.get('ADMIN_WHITELIST')
+        }
       }, origin);
     }
     
