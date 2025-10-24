@@ -28,30 +28,44 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
       style={{ cursor: onTap ? 'pointer' : 'default' }}
     >
       {/* Energy Bar Container */}
-      <div className="relative w-full h-[12px] rounded-full overflow-hidden shadow-lg">
-        {/* Animated Gradient Background */}
-        <div className="absolute inset-0 animate-energyFlow bg-gradient-to-r from-pink-500 via-cyan-400 to-pink-500" 
-             style={{ backgroundSize: '200% 200%' }} />
+      <div className="relative w-full h-[14px] rounded-full overflow-hidden shadow-[0_0_25px_rgba(0,231,255,0.5)]">
+        {/* Animated Gradient Background - Vivid Energy Colors */}
+        <div 
+          className="absolute inset-0 animate-energyFlow" 
+          style={{ 
+            background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
+            backgroundSize: '300% 300%'
+          }} 
+        />
         
-        {/* Pulsing Glow Overlay */}
+        {/* Pulsing Glow Overlay - Breathing Effect */}
         <motion.div 
           className="absolute inset-0 animate-pulseGlow"
           style={{ 
-            background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 70%)',
-            opacity: glowIntensity
+            background: 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 80%)',
+            opacity: glowIntensity,
+            filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none'
           }}
         />
 
         {/* Percentage Only - Clean & Elegant */}
         <div className="absolute inset-0 flex items-center justify-end pr-3">
-          <span className="text-xs font-mono font-bold text-white tabular-nums drop-shadow-[0_0_6px_rgba(0,231,255,0.9)]">
+          <span 
+            className="text-[0.85rem] font-mono font-bold text-white tabular-nums drop-shadow-[0_0_6px_rgba(0,231,255,0.9)] transition-opacity duration-500"
+            style={{ textShadow: '0 0 8px rgba(0,231,255,0.9), 0 0 12px rgba(255,77,240,0.5)' }}
+          >
             {Math.round(value)}%
           </span>
         </div>
 
-        {/* Outer Glow Effect */}
-        <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 via-cyan-400/20 to-pink-500/20 blur-md -z-10 animate-energyFlow" 
-             style={{ backgroundSize: '200% 200%' }} />
+        {/* Outer Glow Effect - Enhanced Aura */}
+        <div 
+          className="absolute -inset-1 blur-md -z-10 animate-energyFlow" 
+          style={{ 
+            background: 'linear-gradient(270deg, rgba(255,77,240,0.3), rgba(0,234,255,0.3), rgba(255,77,240,0.3))',
+            backgroundSize: '300% 300%'
+          }} 
+        />
       </div>
     </motion.div>
   );

@@ -95,18 +95,29 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
               </div>
 
               {/* Energy Bar - Identical to Main PulseBar */}
-              <div className="relative h-3 rounded-full overflow-hidden shadow-lg">
-                <div className="absolute inset-0 animate-energyFlow bg-gradient-to-r from-pink-500 via-cyan-400 to-pink-500" 
-                     style={{ backgroundSize: '200% 200%' }} />
+              <div className="relative h-[14px] rounded-full overflow-hidden shadow-[0_0_25px_rgba(0,231,255,0.5)]">
+                <div 
+                  className="absolute inset-0 animate-energyFlow" 
+                  style={{ 
+                    background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
+                    backgroundSize: '300% 300%'
+                  }} 
+                />
                 <motion.div 
                   className="absolute inset-0 animate-pulseGlow"
                   style={{ 
-                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 70%)',
-                    opacity: value > 80 ? 1 : value > 50 ? 0.8 : 0.6
+                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.4) 0%, transparent 80%)',
+                    opacity: value > 80 ? 1 : value > 50 ? 0.8 : 0.6,
+                    filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none'
                   }}
                 />
-                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 via-cyan-400/20 to-pink-500/20 blur-md -z-10 animate-energyFlow" 
-                     style={{ backgroundSize: '200% 200%' }} />
+                <div 
+                  className="absolute -inset-1 blur-md -z-10 animate-energyFlow" 
+                  style={{ 
+                    background: 'linear-gradient(270deg, rgba(255,77,240,0.3), rgba(0,234,255,0.3), rgba(255,77,240,0.3))',
+                    backgroundSize: '300% 300%'
+                  }} 
+                />
               </div>
 
               {/* Last update */}
