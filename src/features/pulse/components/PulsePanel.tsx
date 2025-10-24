@@ -32,6 +32,7 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
   const [thresholdLogs, setThresholdLogs] = useState<ThresholdLog[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [reduceMotion, setReduceMotion] = useState(false);
+  const [visualValue, setVisualValue] = useState(0);
 
   const value = pulseState?.value ?? 0;
   
@@ -41,6 +42,19 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
   const brightness = value < 25 ? '0.85' : value < 50 ? '0.95' : value < 75 ? '1.05' : '1.15';
   const outlineIntensity = value < 25 ? '0.7' : value < 50 ? '0.9' : value < 75 ? '1.1' : '1.3';
   const [showSurge, setShowSurge] = useState(false);
+
+  // Intro surge when panel opens: 0 → 100% → real value (visual effect only)
+  useEffect(() => {
+    if (!open) return;
+    const t1 = setTimeout(() => setVisualValue(100), 30);
+    const t2 = setTimeout(() => setVisualValue(Math.max(0, Math.min(100, value))), 900);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [open]);
+
+  // Follow real value changes smoothly
+  useEffect(() => {
+    setVisualValue(Math.max(0, Math.min(100, value)));
+  }, [value]);
 
   // Threshold surge effect
   useEffect(() => {
@@ -138,10 +152,10 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
                 {/* TRACK (dark, static background) */}
                 <div className="absolute inset-0 bg-[rgba(12,16,24,0.6)] backdrop-blur-[2px]"></div>
 
-                {/* FILL (real progress, width-based mask) */}
+                {/* FILL (visual progress with intro surge, width-based mask) */}
                 <div 
-                  className="absolute inset-y-0 left-0 rounded-full overflow-hidden transition-[width] duration-500 ease-out"
-                  style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+                  className="absolute inset-y-0 left-0 rounded-full overflow-hidden pulse-fill-transition will-change-transform"
+                  style={{ width: `${visualValue}%` }}
                 >
                   {/* Energy flowing INSIDE the fill */}
                   <div 
