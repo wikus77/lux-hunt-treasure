@@ -97,30 +97,51 @@
   opacity: 0.8;
 }
 
-/* THE PULSE™ Energy Animations */
+/* THE PULSE™ Energy Animations — ENERGY REBORN */
 @keyframes energyFlow {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% { 
+    background-position: 0% 50%; 
+    filter: brightness(var(--pulse-brightness, 0.8)); 
+  }
+  100% { 
+    background-position: 200% 50%; 
+    filter: brightness(var(--pulse-brightness, 1)); 
+  }
 }
 
-@keyframes pulseGlow {
+@keyframes pulseBreath {
   0%, 100% { 
-    opacity: 0.6; 
-    transform: scale(var(--glow-scale, 1)); 
+    opacity: 0.5; 
+    transform: scale(var(--pulse-scale, 1)); 
   }
   50% { 
     opacity: 1; 
-    transform: scale(calc(var(--glow-scale, 1) + 0.02)); 
+    transform: scale(calc(var(--pulse-scale, 1) * 1.04)); 
+  }
+}
+
+@keyframes outlineFlux {
+  0%, 100% { 
+    box-shadow: 0 0 calc(12px * var(--outline-intensity, 1)) rgba(0, 231, 255, 0.5); 
+    opacity: 0.6; 
+  }
+  50% { 
+    box-shadow: 0 0 calc(18px * var(--outline-intensity, 1.1)) rgba(255, 77, 240, 0.6); 
+    opacity: 1; 
   }
 }
 
 .animate-energyFlow {
-  background-size: 200% 200%;
+  background-size: 400% 400%;
   animation: energyFlow var(--flow-speed, 4s) linear infinite;
 }
 
-.animate-pulseGlow {
-  animation: pulseGlow 1.8s ease-in-out infinite;
+.animate-pulseBreath {
+  animation: pulseBreath var(--breath-speed, 2s) ease-in-out infinite;
+}
+
+.animate-outlineFlux {
+  animation: outlineFlux var(--outline-speed, 2.5s) ease-in-out infinite;
 }
 
 /* Interactive card effects */

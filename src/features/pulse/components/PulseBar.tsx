@@ -20,10 +20,12 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
 
   const value = pulseState?.value ?? 0;
   
-  // Map value to animation intensity
-  const flowSpeed = value < 25 ? '6s' : value < 50 ? '5s' : value < 75 ? '4s' : '3s';
-  const glowScale = value < 25 ? '1.00' : value < 50 ? '1.01' : value < 75 ? '1.02' : '1.03';
-  const glowIntensity = value > 80 ? 1 : value > 50 ? 0.8 : value > 25 ? 0.6 : 0.4;
+  // Map value to living organism parameters
+  const flowSpeed = value < 25 ? '6s' : value < 50 ? '4s' : value < 75 ? '3s' : '2.5s';
+  const brightness = value < 25 ? 0.7 : value < 50 ? 0.85 : value < 75 ? 1 : 1.1;
+  const pulseScale = value < 25 ? 1 : value < 50 ? 1.01 : value < 75 ? 1.02 : 1.03;
+  const outlineIntensity = value < 25 ? 0.7 : value < 50 ? 0.9 : value < 75 ? 1.1 : 1.3;
+  const breathSpeed = value < 25 ? '2.5s' : value < 50 ? '2s' : value < 75 ? '1.6s' : '1.2s';
   
   // Check accessibility preference
   useEffect(() => {
@@ -39,6 +41,25 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
       return () => clearTimeout(timer);
     }
   }, [lastUpdate?.threshold, reduceMotion]);
+  
+  // Random energy spikes every 20-40s
+  useEffect(() => {
+    if (reduceMotion) return;
+    
+    const triggerSpike = () => {
+      const root = document.documentElement;
+      root.style.setProperty('--flow-speed', '1.2s');
+      root.style.setProperty('--pulse-brightness', '1.3');
+      
+      setTimeout(() => {
+        root.style.setProperty('--flow-speed', flowSpeed);
+        root.style.setProperty('--pulse-brightness', String(brightness));
+      }, 1500);
+    };
+    
+    const interval = setInterval(triggerSpike, Math.random() * 20000 + 20000);
+    return () => clearInterval(interval);
+  }, [flowSpeed, brightness, reduceMotion]);
 
   return (
     <motion.div
@@ -49,68 +70,72 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
       onClick={onTap}
       style={{ cursor: onTap ? 'pointer' : 'default' }}
     >
-      {/* Energy Bar Container with Threshold Surge */}
+      {/* Energy Bar Container — Living Organism */}
       <motion.div 
-        className="relative w-full h-[14px] rounded-full overflow-hidden shadow-[0_0_25px_rgba(0,231,255,0.5)]"
+        className="relative w-full h-[14px] rounded-full overflow-hidden shadow-[0_0_25px_rgba(0,231,255,0.4)]"
         animate={showSurge ? {
           scale: [1, 1.03, 1],
           boxShadow: [
-            '0 0 25px rgba(0,231,255,0.5)',
+            '0 0 25px rgba(0,231,255,0.4)',
             '0 0 40px rgba(255,77,240,0.9)',
-            '0 0 25px rgba(0,231,255,0.5)'
+            '0 0 25px rgba(0,231,255,0.4)'
           ]
         } : {}}
         transition={{ duration: 0.9, ease: 'easeInOut' }}
       >
-        {/* Animated Gradient Background - Vivid Energy Colors */}
+        {/* ENERGY FLOW — Breathing Gradient */}
         <div 
           className={reduceMotion ? '' : 'animate-energyFlow'}
           style={{ 
             position: 'absolute',
             inset: 0,
             background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
-            backgroundSize: '300% 300%',
-            ['--flow-speed' as any]: flowSpeed
+            backgroundSize: '400% 400%',
+            ['--flow-speed' as any]: flowSpeed,
+            ['--pulse-brightness' as any]: brightness
           }} 
         />
         
-        {/* Pulsing Glow Overlay - Breathing Effect */}
+        {/* GLOW / BREATH — Pulsing Life */}
         <motion.div 
-          className={reduceMotion ? '' : 'animate-pulseGlow'}
+          className={reduceMotion ? '' : 'animate-pulseBreath'}
           style={{ 
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 75%)',
-            opacity: glowIntensity,
-            filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none',
-            ['--glow-scale' as any]: glowScale
+            background: 'radial-gradient(circle at center, rgba(255,255,255,0.25) 0%, transparent 80%)',
+            ['--pulse-scale' as any]: pulseScale,
+            ['--breath-speed' as any]: breathSpeed
           }}
         />
 
-        {/* Percentage Only - Clean & Elegant */}
+        {/* OUTLINE ENERGY — Living Border */}
+        <div 
+          className={reduceMotion ? '' : 'animate-outlineFlux'}
+          style={{ 
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '9999px',
+            border: '1px solid rgba(255,255,255,0.3)',
+            boxShadow: '0 0 12px rgba(0,200,255,0.5)',
+            ['--outline-intensity' as any]: outlineIntensity,
+            ['--outline-speed' as any]: breathSpeed
+          }}
+        />
+
+        {/* Percentage — Clean & Glowing */}
         <div className="absolute inset-0 flex items-center justify-end pr-3">
           <motion.span 
-            className="text-[0.85rem] font-mono font-bold text-white tabular-nums drop-shadow-[0_0_6px_rgba(0,231,255,0.9)]"
-            style={{ textShadow: '0 0 8px rgba(0,231,255,0.9), 0 0 12px rgba(255,77,240,0.5)' }}
+            className="text-[0.8rem] font-mono font-bold text-white tracking-wide tabular-nums drop-shadow-[0_0_8px_rgba(0,231,255,0.8)]"
+            style={{ textShadow: '0 0 10px rgba(0,231,255,0.9), 0 0 14px rgba(255,77,240,0.6)' }}
             animate={{ opacity: [0.9, 1, 0.9] }}
-            transition={{ duration: 0.5, ease: 'easeInOut' }}
-            key={value} // Re-animate on value change
+            transition={{ duration: 0.6, ease: 'easeInOut' }}
+            key={value}
           >
             {Math.round(value)}%
           </motion.span>
         </div>
-
-        {/* Outer Glow Effect - Enhanced Aura */}
-        <div 
-          className={`absolute -inset-1 blur-md -z-10 ${reduceMotion ? '' : 'animate-energyFlow'}`}
-          style={{ 
-            background: 'linear-gradient(270deg, rgba(255,77,240,0.3), rgba(0,234,255,0.3), rgba(255,77,240,0.3))',
-            backgroundSize: '300% 300%',
-            ['--flow-speed' as any]: flowSpeed
-          }} 
-        />
         
-        {/* Threshold Surge Particles (optional visual burst) */}
+        {/* Threshold Surge Particles */}
         <AnimatePresence>
           {showSurge && !reduceMotion && (
             <motion.div
