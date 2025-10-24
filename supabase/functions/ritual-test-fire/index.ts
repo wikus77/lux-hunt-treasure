@@ -5,104 +5,88 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-import { handleOptions, ok, err } from '../_shared/cors.ts';
-import { validateAdmin } from '../_shared/client.ts';
-
-interface RitualPhase {
-  phase: 'precharge' | 'blackout' | 'interference' | 'reveal';
-  ritual_id: string;
-  at: string;
-}
+import { withCors, getUserFromAuthHeader, ensureAdmin, broadcast } from '../_shared/edge-helpers.ts';
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-Deno.serve(async (req) => {
-  const origin = req.headers.get('origin');
-  
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return handleOptions(req);
+export const handler = withCors(async (req) => {
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ ok: false, code: 'METHOD_NOT_ALLOWED' }), 
+      { status: 405, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
-  // Validate admin access
-  const { user, error: authError } = await validateAdmin(req);
-  if (authError) {
-    return err(origin, authError.status, authError.code, authError.hint);
+  const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+  // Validate user JWT
+  const { user, error } = await getUserFromAuthHeader(req, SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (error || !user) {
+    console.error('[ritual-test-fire] Auth error:', error);
+    return new Response(
+      JSON.stringify({ ok: false, code: 'AUTH_MISSING', hint: error || 'No valid session' }), 
+      { status: 401, headers: { 'Content-Type': 'application/json' } }
+    );
   }
+
+  // Check admin whitelist
+  const admin = ensureAdmin(user.email);
+  if (!admin.ok) {
+    console.error('[ritual-test-fire] User not in whitelist:', user.email);
+    return new Response(
+      JSON.stringify({ ok: false, code: 'ADMIN_REQUIRED', hint: 'Not in admin whitelist' }), 
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  console.log('[ritual-test-fire] Starting sandbox ritual for:', user.email);
 
   try {
-    console.log('[ritual-test-fire] Starting sandbox ritual for:', user.email);
-
-    // Initialize admin client for Realtime broadcasts (SERVICE_ROLE only)
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
-    // Subscribe to TEST channel (not prod)
-    const channel = adminClient.channel('pulse:ritual:test');
-    await channel.subscribe();
-
-    console.log('[ritual-test-fire] ✅ Subscribed to pulse:ritual:test');
-
-    // Broadcast phases with timing (NO DB writes)
+    // Generate unique ritual ID for sandbox
+    const ritual_id = `test-${Date.now()}`;
     const now = () => new Date().toISOString();
-    
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'precharge', ritual_id: 'test', at: now() }
-    });
+
+    // Broadcast phases on TEST channel (no DB writes)
+    await broadcast('pulse:ritual:test', { phase: 'precharge', ritual_id, at: now() });
     console.log('[ritual-test-fire] → precharge');
     
     await delay(800);
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'blackout', ritual_id: 'test', at: now() }
-    });
+    await broadcast('pulse:ritual:test', { phase: 'blackout', ritual_id, at: now() });
     console.log('[ritual-test-fire] → blackout');
     
     await delay(1600);
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'interference', ritual_id: 'test', at: now() }
-    });
+    await broadcast('pulse:ritual:test', { phase: 'interference', ritual_id, at: now() });
     console.log('[ritual-test-fire] → interference');
     
     await delay(1200);
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'reveal', ritual_id: 'test', at: now() }
-    });
+    await broadcast('pulse:ritual:test', { phase: 'reveal', ritual_id, at: now() });
     console.log('[ritual-test-fire] → reveal');
 
     console.log('[ritual-test-fire] ✅ Sandbox ritual completed');
 
-    // Cleanup
-    await adminClient.removeChannel(channel);
-
-    return ok(origin, { 
-      ok: true, 
-      channel: 'pulse:ritual:test',
-      phases: ['precharge', 'blackout', 'interference', 'reveal'],
-      user: user.email
-    });
+    return new Response(
+      JSON.stringify({ 
+        ok: true, 
+        ritual_id,
+        channel: 'pulse:ritual:test',
+        phases: ['precharge', 'blackout', 'interference', 'reveal'],
+        user: user.email
+      }), 
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
 
   } catch (error: any) {
     console.error('[ritual-test-fire] ❌ Error:', error);
-    return err(origin, 500, 'EDGE_ERROR', error.message);
+    return new Response(
+      JSON.stringify({ ok: false, code: 'EDGE_ERROR', hint: error.message }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 });
+
+Deno.serve(handler);
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™

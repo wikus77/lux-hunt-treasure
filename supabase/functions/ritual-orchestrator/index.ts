@@ -5,40 +5,25 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-import { handleOptions, ok, err } from '../_shared/cors.ts';
-
-interface RitualPhase {
-  phase: 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
-  ritual_id: number | null;
-  at: string;
-}
+import { withCors, supaService, broadcast } from '../_shared/edge-helpers.ts';
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-Deno.serve(async (req) => {
-  const origin = req.headers.get('origin');
-  
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return handleOptions(req);
+export const handler = withCors(async (req) => {
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ ok: false, code: 'METHOD_NOT_ALLOWED' }), 
+      { status: 405, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
-    // Initialize admin client with SERVICE_ROLE key
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
-
     console.log('[Ritual Orchestrator] Starting ritual check...');
+
+    // Get service role client for DB operations
+    const supabase = supaService();
 
     // 1) Check if ritual can start (Pulse must be 100%)
     const { data: canStart, error: canStartError } = await supabase
@@ -51,11 +36,14 @@ Deno.serve(async (req) => {
 
     if (!canStart?.can) {
       console.log('[Ritual Orchestrator] Cannot start ritual:', canStart?.reason || 'unknown');
-      return ok(origin, { 
-        success: false, 
-        reason: canStart?.reason || 'Cannot start ritual',
-        pulse_value: canStart?.pulse_value 
-      });
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          reason: canStart?.reason || 'Cannot start ritual',
+          pulse_value: canStart?.pulse_value 
+        }), 
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
     }
 
     console.log('[Ritual Orchestrator] ✅ Can start ritual! Pulse at 100%');
@@ -72,50 +60,29 @@ Deno.serve(async (req) => {
     const ritualId = startData?.ritual_id;
     console.log('[Ritual Orchestrator] 🌟 Ritual started! ID:', ritualId);
 
-    // 3) Subscribe to PROD channel
-    const channel = supabase.channel('pulse:ritual');
-    await channel.subscribe();
-    console.log('[Ritual Orchestrator] ✅ Subscribed to pulse:ritual (PROD)');
-
-    // 4) Broadcast phase sequence
+    // 3) Broadcast phase sequence on PROD channel
     const now = () => new Date().toISOString();
     
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'precharge', ritual_id: ritualId, at: now() }
-    });
+    await broadcast('pulse:ritual', { phase: 'precharge', ritual_id: ritualId, at: now() });
     console.log('[Ritual Orchestrator] → precharge');
 
     await delay(800);
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'blackout', ritual_id: ritualId, at: now() }
-    });
+    await broadcast('pulse:ritual', { phase: 'blackout', ritual_id: ritualId, at: now() });
     console.log('[Ritual Orchestrator] → blackout');
 
     await delay(1600);
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'interference', ritual_id: ritualId, at: now() }
-    });
+    await broadcast('pulse:ritual', { phase: 'interference', ritual_id: ritualId, at: now() });
     console.log('[Ritual Orchestrator] → interference');
 
     await delay(1200);
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'reveal', ritual_id: ritualId, at: now() }
-    });
+    await broadcast('pulse:ritual', { phase: 'reveal', ritual_id: ritualId, at: now() });
     console.log('[Ritual Orchestrator] → reveal');
 
-    // 5) Wait for claims (30 seconds)
+    // 4) Wait for claims (30 seconds)
     console.log('[Ritual Orchestrator] ⏳ Waiting 30s for claims...');
     await delay(30000);
 
-    // 6) Close the ritual (DB write)
+    // 5) Close the ritual (DB write)
     console.log('[Ritual Orchestrator] Closing ritual...');
     const { error: closeError } = await supabase
       .rpc('rpc_pulse_ritual_close');
@@ -126,28 +93,29 @@ Deno.serve(async (req) => {
     }
 
     // Broadcast closed phase
-    await channel.send({
-      type: 'broadcast',
-      event: 'ritual-phase',
-      payload: { phase: 'closed', ritual_id: ritualId, at: now() }
-    });
+    await broadcast('pulse:ritual', { phase: 'closed', ritual_id: ritualId, at: now() });
     console.log('[Ritual Orchestrator] → closed');
 
     console.log('[Ritual Orchestrator] ✅ Ritual completed successfully!');
 
-    // Cleanup
-    await supabase.removeChannel(channel);
-
-    return ok(origin, { 
-      success: true, 
-      ritual_id: ritualId,
-      message: 'Ritual orchestration completed'
-    });
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        ritual_id: ritualId,
+        message: 'Ritual orchestration completed'
+      }), 
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    );
 
   } catch (error: any) {
     console.error('[Ritual Orchestrator] ❌ Fatal error:', error);
-    return err(origin, 500, 'EDGE_ERROR', error.message);
+    return new Response(
+      JSON.stringify({ ok: false, code: 'EDGE_ERROR', hint: error.message }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
   }
 });
+
+Deno.serve(handler);
 
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
