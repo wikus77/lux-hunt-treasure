@@ -85,23 +85,39 @@ export default function PulseLab() {
     addLog('🏓 Pinging edge function...');
     
     const { data, error } = await invokeEdge('ritual-test-fire', {
-      body: { action: 'ping' }
+      body: { action: 'ping' },
+      retries: 2
     });
     
     if (error) {
       addLog(`❌ Ping failed [${error.code}]: ${error.message}`);
-      toast({ 
-        title: "Edge Function Error",
-        description: error.hint || error.message,
-        variant: "destructive"
-      });
+      
+      if (error.code === 'FORBIDDEN' || error.code === 'ADMIN_REQUIRED') {
+        toast({ 
+          title: "Access Denied",
+          description: "Not in admin whitelist. Check ADMIN_WHITELIST secret.",
+          variant: "destructive"
+        });
+      } else if (error.code === 'UNAUTHORIZED' || error.code === 'AUTH_MISSING' || error.code === 'NO_SESSION') {
+        toast({ 
+          title: "Session Expired",
+          description: "Please log out and log in again",
+          variant: "destructive"
+        });
+      } else {
+        toast({ 
+          title: "Edge Function Error",
+          description: error.hint || error.message,
+          variant: "destructive"
+        });
+      }
       return;
     }
     
-    addLog(`✅ Ping successful: ${JSON.stringify(data)}`);
+    addLog(`✅ Ping successful: ${data.whoami || userEmail}`);
     toast({ 
       title: "Edge Function Online",
-      description: `Connected as ${userEmail}` 
+      description: `Connected as ${data.whoami || userEmail}`
     });
   };
 
@@ -112,24 +128,25 @@ export default function PulseLab() {
     
     const { data, error } = await invokeEdge('ritual-test-fire', {
       body: { 
-        mode: 'start',
-        channel: 'pulse:ritual:test' 
-      }
+        mode: 'test',
+        timestamp: Date.now()
+      },
+      retries: 2
     });
     
     if (error) {
-      addLog(`❌ Error [${error.code}]: ${error.message}`);
+      addLog(`❌ Ritual fire failed [${error.code}]: ${error.message}`);
       
-      if (error.code === 'FORBIDDEN') {
+      if (error.code === 'FORBIDDEN' || error.code === 'ADMIN_REQUIRED') {
         toast({ 
           title: "Access Denied",
-          description: error.hint || "Admin whitelist required",
+          description: "Not in admin whitelist. Email must match ADMIN_WHITELIST secret.",
           variant: "destructive"
         });
-      } else if (error.code === 'UNAUTHORIZED' || error.code === 'NO_SESSION') {
+      } else if (error.code === 'UNAUTHORIZED' || error.code === 'AUTH_MISSING' || error.code === 'NO_SESSION') {
         toast({ 
-          title: "Authentication Required",
-          description: error.hint || "Please refresh the page",
+          title: "Session Expired",
+          description: "Please log out and log in again to refresh your session",
           variant: "destructive"
         });
       } else {
@@ -144,13 +161,14 @@ export default function PulseLab() {
       return;
     }
     
-    addLog(`✅ Test ritual fired successfully`);
-    addLog(`📊 Ritual ID: ${data.test_ritual_id}`);
-    addLog(`📡 Phases: ${data.phases?.length || 0}`);
+    addLog(`✅ Test ritual sequence started`);
+    addLog(`📊 Ritual ID: ${data.test_ritual_id || 'N/A'}`);
+    addLog(`📡 Channel: ${data.channel || 'pulse:ritual:test'}`);
+    addLog(`🌟 Phases queued: ${data.phases?.join(' → ') || 'precharge → blackout → interference → reveal → closed'}`);
     
     toast({ 
-      title: "Ritual Started",
-      description: "Watch for phase broadcasts in the log below" 
+      title: "Ritual Fired!",
+      description: "Watch for phase broadcasts in the event log below"
     });
     
     setIsFiring(false);

@@ -5,18 +5,25 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { withCors, supaService, broadcast } from '../_shared/edge-helpers.ts';
+import { handleOptions, respondJson } from '../_shared/authCors.ts';
+import { supaService, broadcast } from '../_shared/edge-helpers.ts';
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export const handler = withCors(async (req) => {
+export const handler = async (req: Request) => {
+  const origin = req.headers.get('Origin');
+  
+  // Handle OPTIONS
+  const optionsRes = handleOptions(req);
+  if (optionsRes) return optionsRes;
+  
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ ok: false, code: 'METHOD_NOT_ALLOWED' }), 
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
-    );
+    return respondJson(405, { 
+      ok: false, 
+      code: 'METHOD_NOT_ALLOWED' 
+    }, origin);
   }
 
   try {
@@ -36,14 +43,11 @@ export const handler = withCors(async (req) => {
 
     if (!canStart?.can) {
       console.log('[Ritual Orchestrator] Cannot start ritual:', canStart?.reason || 'unknown');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          reason: canStart?.reason || 'Cannot start ritual',
-          pulse_value: canStart?.pulse_value 
-        }), 
-        { status: 200, headers: { 'Content-Type': 'application/json' } }
-      );
+      return respondJson(200, { 
+        success: false, 
+        reason: canStart?.reason || 'Cannot start ritual',
+        pulse_value: canStart?.pulse_value 
+      }, origin);
     }
 
     console.log('[Ritual Orchestrator] ✅ Can start ritual! Pulse at 100%');
@@ -98,23 +102,21 @@ export const handler = withCors(async (req) => {
 
     console.log('[Ritual Orchestrator] ✅ Ritual completed successfully!');
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        ritual_id: ritualId,
-        message: 'Ritual orchestration completed'
-      }), 
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return respondJson(200, {
+      success: true, 
+      ritual_id: ritualId,
+      message: 'Ritual orchestration completed'
+    }, origin);
 
   } catch (error: any) {
     console.error('[Ritual Orchestrator] ❌ Fatal error:', error);
-    return new Response(
-      JSON.stringify({ ok: false, code: 'EDGE_ERROR', hint: error.message }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return respondJson(500, { 
+      ok: false, 
+      code: 'EDGE_ERROR', 
+      hint: error.message 
+    }, origin);
   }
-});
+};
 
 Deno.serve(handler);
 

@@ -5,44 +5,37 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { withCors, getUserFromAuthHeader, ensureAdmin, broadcast } from '../_shared/edge-helpers.ts';
+import { withAuthCors, respondJson } from '../_shared/authCors.ts';
+import { supaService } from '../_shared/edge-helpers.ts';
 
 function delay(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export const handler = withCors(async (req) => {
+async function broadcast(channel: string, payload: unknown) {
+  const supabase = supaService();
+  const ch = supabase.channel(channel);
+  
+  await ch.subscribe();
+  await ch.send({ 
+    type: 'broadcast', 
+    event: 'ritual-phase', 
+    payload 
+  });
+  
+  await supabase.removeChannel(ch);
+}
+
+export const handler = withAuthCors(async (req, user, { origin }) => {
   if (req.method !== 'POST') {
-    return new Response(
-      JSON.stringify({ ok: false, code: 'METHOD_NOT_ALLOWED' }), 
-      { status: 405, headers: { 'Content-Type': 'application/json' } }
-    );
+    return respondJson(405, { 
+      ok: false, 
+      code: 'METHOD_NOT_ALLOWED',
+      hint: 'Only POST allowed' 
+    }, origin);
   }
 
-  const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-  const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-  // Validate user JWT
-  const { user, error } = await getUserFromAuthHeader(req, SUPABASE_URL, SUPABASE_ANON_KEY);
-  if (error || !user) {
-    console.error('[ritual-test-fire] Auth error:', error);
-    return new Response(
-      JSON.stringify({ ok: false, code: 'AUTH_MISSING', hint: error || 'No valid session' }), 
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  // Check admin whitelist
-  const admin = ensureAdmin(user.email);
-  if (!admin.ok) {
-    console.error('[ritual-test-fire] User not in whitelist:', user.email);
-    return new Response(
-      JSON.stringify({ ok: false, code: 'ADMIN_REQUIRED', hint: 'Not in admin whitelist' }), 
-      { status: 403, headers: { 'Content-Type': 'application/json' } }
-    );
-  }
-
-  console.log('[ritual-test-fire] Starting sandbox ritual for:', user.email);
+  console.log('[Ritual Test] Starting sandbox ritual for:', user.email);
 
   try {
     // Generate unique ritual ID for sandbox
@@ -50,40 +43,42 @@ export const handler = withCors(async (req) => {
     const now = () => new Date().toISOString();
 
     // Broadcast phases on TEST channel (no DB writes)
+    console.log('[Ritual Test] phase: precharge');
     await broadcast('pulse:ritual:test', { phase: 'precharge', ritual_id, at: now() });
-    console.log('[ritual-test-fire] → precharge');
     
     await delay(800);
+    console.log('[Ritual Test] phase: blackout');
     await broadcast('pulse:ritual:test', { phase: 'blackout', ritual_id, at: now() });
-    console.log('[ritual-test-fire] → blackout');
     
     await delay(1600);
+    console.log('[Ritual Test] phase: interference');
     await broadcast('pulse:ritual:test', { phase: 'interference', ritual_id, at: now() });
-    console.log('[ritual-test-fire] → interference');
     
     await delay(1200);
+    console.log('[Ritual Test] phase: reveal');
     await broadcast('pulse:ritual:test', { phase: 'reveal', ritual_id, at: now() });
-    console.log('[ritual-test-fire] → reveal');
+    
+    await delay(2400);
+    console.log('[Ritual Test] phase: closed');
+    await broadcast('pulse:ritual:test', { phase: 'closed', ritual_id, at: now() });
 
-    console.log('[ritual-test-fire] ✅ Sandbox ritual completed');
+    console.log('[Ritual Test] ✅ Sandbox ritual completed');
 
-    return new Response(
-      JSON.stringify({ 
-        ok: true, 
-        ritual_id,
-        channel: 'pulse:ritual:test',
-        phases: ['precharge', 'blackout', 'interference', 'reveal'],
-        user: user.email
-      }), 
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
-    );
+    return respondJson(200, { 
+      ok: true, 
+      test_ritual_id: ritual_id,
+      channel: 'pulse:ritual:test',
+      phases: ['precharge', 'blackout', 'interference', 'reveal', 'closed'],
+      whoami: user.email
+    }, origin);
 
   } catch (error: any) {
-    console.error('[ritual-test-fire] ❌ Error:', error);
-    return new Response(
-      JSON.stringify({ ok: false, code: 'EDGE_ERROR', hint: error.message }), 
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    console.error('[Ritual Test] ❌ Error:', error);
+    return respondJson(500, { 
+      ok: false, 
+      code: 'EDGE_ERROR', 
+      hint: error.message 
+    }, origin);
   }
 });
 
