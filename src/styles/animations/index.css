@@ -146,9 +146,45 @@
   text-rendering: optimizeLegibility;
 }
 
+/* Outline vivo: doppia aura + scan ionico, sincronizzati con i parametri della barra */
+.pulse-outline {
+  --o-int: var(--outline-intensity, 1);
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  /* bordo sottile sempre visibile */
+  box-shadow:
+    0 0 calc(10px * var(--o-int) * var(--glow-mult, 1)) rgba(0, 231, 255, 0.45),
+    0 0 calc(16px * var(--o-int) * var(--glow-mult, 1)) rgba(255, 77, 240, 0.35) inset;
+  animation:
+    outlineBreath calc(var(--breath-speed, 2s) * 1) ease-in-out infinite,
+    outlineScan calc(var(--flow-speed, 4s) * var(--flow-mult, 1)) linear infinite;
+}
+
+@keyframes outlineBreath {
+  0%, 100% {
+    box-shadow:
+      0 0 calc(10px * var(--o-int) * var(--glow-mult, 1)) rgba(0, 231, 255, 0.50),
+      0 0 calc(14px * var(--o-int) * var(--glow-mult, 1)) rgba(255, 77, 240, 0.30) inset;
+    filter: brightness(calc(var(--pulse-brightness, 1) * 0.98));
+  }
+  50% {
+    box-shadow:
+      0 0 calc(18px * var(--o-int) * var(--glow-mult, 1)) rgba(255, 77, 240, 0.55),
+      0 0 calc(22px * var(--o-int) * var(--glow-mult, 1)) rgba(0, 231, 255, 0.45) inset;
+    filter: brightness(calc(var(--pulse-brightness, 1) * 1.08));
+  }
+}
+
+@keyframes outlineScan {
+  0% { outline: 2px solid rgba(255, 255, 255, 0.05); }
+  50% { outline: 2px solid rgba(255, 255, 255, 0.10); }
+  100% { outline: 2px solid rgba(255, 255, 255, 0.05); }
+}
+
 /* accessibilità: riduci animazioni */
 @media (prefers-reduced-motion: reduce) {
-  .animate-energyFlow, .animate-pulseBreath, .animate-outlineFlux {
+  .animate-energyFlow, .animate-pulseBreath, .animate-outlineFlux, .pulse-outline {
     animation: none !important;
   }
 }

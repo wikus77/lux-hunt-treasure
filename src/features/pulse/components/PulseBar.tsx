@@ -118,15 +118,17 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
           />
         </div>
 
-        {/* OUTLINE ENERGY (living border, increases with %) */}
-        <div 
-          className={reduceMotion ? 'absolute inset-0 rounded-full pointer-events-none border border-[rgba(255,255,255,0.3)]' : 'absolute inset-0 rounded-full pointer-events-none animate-outlineFlux'}
+        {/* CONTORNO VIVO sincronizzato alla barra */}
+        <div
+          className={reduceMotion ? 'absolute inset-0 rounded-full pointer-events-none border border-[rgba(255,255,255,0.3)]' : 'absolute inset-0 rounded-full pointer-events-none pulse-outline'}
+          aria-hidden="true"
         />
 
-        {/* Percentage — Clean & Smooth (no pixels) */}
-        <span 
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-[0.8rem] font-technovier text-white/90 tracking-wide [text-rendering:optimizeLegibility] antialiased drop-shadow-[0_0_6px_rgba(0,231,255,0.8)]"
-        >
+        {/* PERCENTUALE (clean typography) */}
+        <span className="pulse-percent absolute right-2 top-1/2 -translate-y-1/2
+                         text-[0.8rem] font-technovier tracking-wide text-white/90
+                         antialiased [text-rendering:optimizeLegibility]
+                         drop-shadow-[0_0_6px_rgba(0,231,255,0.8)]">
           {Math.round(value)}%
         </span>
         
