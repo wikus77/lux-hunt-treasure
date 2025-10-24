@@ -94,16 +94,19 @@ export const PulsePanel = ({ open, onOpenChange }: PulsePanelProps) => {
                 </span>
               </div>
 
-              {/* Progress bar */}
-              <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary/90 to-primary/80"
-                  animate={{ width: `${value}%` }}
-                  transition={{ type: 'spring', damping: 25 }}
+              {/* Energy Bar - Identical to Main PulseBar */}
+              <div className="relative h-3 rounded-full overflow-hidden shadow-lg">
+                <div className="absolute inset-0 animate-energyFlow bg-gradient-to-r from-pink-500 via-cyan-400 to-pink-500" 
+                     style={{ backgroundSize: '200% 200%' }} />
+                <motion.div 
+                  className="absolute inset-0 animate-pulseGlow"
+                  style={{ 
+                    background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 70%)',
+                    opacity: value > 80 ? 1 : value > 50 ? 0.8 : 0.6
+                  }}
                 />
-                {value >= 100 && (
-                  <div className="absolute inset-0 bg-primary/20 animate-pulse" />
-                )}
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/20 via-cyan-400/20 to-pink-500/20 blur-md -z-10 animate-energyFlow" 
+                     style={{ backgroundSize: '200% 200%' }} />
               </div>
 
               {/* Last update */}
