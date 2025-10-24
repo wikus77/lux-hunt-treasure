@@ -14,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Shield, Zap, Sparkles, RotateCcw, PlayCircle, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
+import { invokeEdge } from '@/utils/edge-invoke';
 
 const ADMIN_EMAILS = [
   'joseph@m1ssion.io',
@@ -83,144 +84,74 @@ export default function PulseLab() {
   const handlePingEdge = async () => {
     addLog('🏓 Pinging edge function...');
     
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('No active session - please refresh');
-      }
-      
-      addLog(`🔑 Using bearer token: ${session.access_token.substring(0, 20)}...`);
-      
-      const { data, error } = await supabase.functions.invoke('ritual-test-fire', {
-        body: { mode: 'ping' }
-      });
-      
-      if (error) throw error;
-      
-      addLog(`✅ Ping successful: ${JSON.stringify(data)}`);
-      toast({ 
-        title: "Edge Function Online",
-        description: `Connected as ${userEmail}` 
-      });
-    } catch (error: any) {
-      const hint = error.message || 'Unknown error';
-      addLog(`❌ Ping failed: ${hint}`);
+    const { data, error } = await invokeEdge('ritual-test-fire', {
+      method: 'GET'
+    });
+    
+    if (error) {
+      addLog(`❌ Ping failed [${error.code}]: ${error.message}`);
       toast({ 
         title: "Edge Function Error",
-        description: hint,
+        description: error.hint || error.message,
         variant: "destructive"
       });
+      return;
     }
+    
+    addLog(`✅ Ping successful: ${JSON.stringify(data)}`);
+    toast({ 
+      title: "Edge Function Online",
+      description: `Connected as ${userEmail}` 
+    });
   };
 
   const handleFireRitual = async () => {
     setIsFiring(true);
     addLog('🚀 Firing test ritual...');
+    addLog(`🔑 Authenticated as: ${userEmail}`);
     
-    // Check session first
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      addLog('❌ No active session - please refresh page');
-      toast({ 
-        title: "Session Required",
-        description: "Please refresh the page to restore your session",
-        variant: "destructive"
-      });
+    const { data, error } = await invokeEdge('ritual-test-fire', {
+      body: { 
+        mode: 'start',
+        channel: 'pulse:ritual:test' 
+      }
+    });
+    
+    if (error) {
+      addLog(`❌ Error [${error.code}]: ${error.message}`);
+      
+      if (error.code === 'FORBIDDEN') {
+        toast({ 
+          title: "Access Denied",
+          description: error.hint || "Admin whitelist required",
+          variant: "destructive"
+        });
+      } else if (error.code === 'UNAUTHORIZED' || error.code === 'NO_SESSION') {
+        toast({ 
+          title: "Authentication Required",
+          description: error.hint || "Please refresh the page",
+          variant: "destructive"
+        });
+      } else {
+        toast({ 
+          title: "Ritual Failed",
+          description: error.hint || error.message,
+          variant: "destructive"
+        });
+      }
+      
       setIsFiring(false);
       return;
     }
     
-    addLog(`🔑 Authenticated as: ${userEmail}`);
+    addLog(`✅ Test ritual fired successfully`);
+    addLog(`📊 Ritual ID: ${data.test_ritual_id}`);
+    addLog(`📡 Phases: ${data.phases?.length || 0}`);
     
-    let attempt = 0;
-    const maxAttempts = 2;
-    
-    while (attempt < maxAttempts) {
-      try {
-        attempt++;
-        
-        const { data, error } = await supabase.functions.invoke('ritual-test-fire', {
-          body: { 
-            mode: 'start',
-            channel: 'pulse:ritual:test' 
-          }
-        });
-        
-        if (error) {
-          addLog(`❌ Invocation error (attempt ${attempt}/${maxAttempts}): ${error.message}`);
-          
-          if (attempt < maxAttempts) {
-            const backoff = Math.pow(2, attempt) * 1000;
-            addLog(`⏳ Retrying in ${backoff}ms...`);
-            await new Promise(resolve => setTimeout(resolve, backoff));
-            continue;
-          }
-          
-          throw error;
-        }
-        
-        if (!data?.ok) {
-          const code = data?.code || 'unknown';
-          const hint = data?.hint || 'No details provided';
-          const details = data?.details ? ` (${data.details})` : '';
-          addLog(`❌ Server error [${code}]: ${hint}${details}`);
-          
-          if (code === 'FORBIDDEN' || code === 'forbidden') {
-            toast({ 
-              title: "Access Denied",
-              description: `Admin whitelist required. Your email: ${data?.user_email || userEmail}`,
-              variant: "destructive"
-            });
-          } else if (code === 'auth') {
-            toast({ 
-              title: "Authentication Error",
-              description: hint,
-              variant: "destructive"
-            });
-          } else {
-            toast({ 
-              title: "Edge Function Error",
-              description: hint,
-              variant: "destructive"
-            });
-          }
-          
-          setIsFiring(false);
-          return;
-        }
-        
-        addLog(`✅ Test ritual fired successfully`);
-        addLog(`📊 Ritual ID: ${data.test_ritual_id}`);
-        addLog(`📡 Phases: ${data.phases?.length || 0}`);
-        
-        toast({ 
-          title: "Ritual Started",
-          description: "Watch for phase broadcasts in the log below" 
-        });
-        
-        setIsFiring(false);
-        return;
-        
-      } catch (error: any) {
-        const hint = error.message?.includes('aborted') 
-          ? 'Timeout after 10s — edge function might be cold-starting'
-          : error.message || 'Unknown error';
-        
-        addLog(`❌ Fatal error (attempt ${attempt}/${maxAttempts}): ${hint}`);
-        
-        if (attempt < maxAttempts) {
-          const backoff = Math.pow(2, attempt) * 1000;
-          addLog(`⏳ Retrying in ${backoff}ms...`);
-          await new Promise(resolve => setTimeout(resolve, backoff));
-        } else {
-          toast({ 
-            title: "Ritual Failed",
-            description: "Check logs and Edge Function status",
-            variant: "destructive"
-          });
-        }
-      }
-    }
+    toast({ 
+      title: "Ritual Started",
+      description: "Watch for phase broadcasts in the log below" 
+    });
     
     setIsFiring(false);
   };
