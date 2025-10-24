@@ -11,8 +11,9 @@ import { useRitualChannel } from '@/features/pulse/ritual';
 import { RitualOrchestrator } from '@/features/pulse/ritual/RitualOrchestrator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Zap, Sparkles, RotateCcw, PlayCircle } from 'lucide-react';
+import { Shield, Zap, Sparkles, RotateCcw, PlayCircle, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useToast } from '@/hooks/use-toast';
 
 const ADMIN_EMAILS = [
   'joseph@m1ssion.io',
@@ -20,6 +21,7 @@ const ADMIN_EMAILS = [
 ];
 
 export default function PulseLab() {
+  const { toast } = useToast();
   const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
   const [userEmail, setUserEmail] = useState<string>('');
   const [mockValue, setMockValue] = useState(45);
@@ -78,23 +80,135 @@ export default function PulseLab() {
     addLog('🎯 Pulse simulated at 100%');
   };
 
+  const handlePingEdge = async () => {
+    addLog('🏓 Pinging edge function...');
+    
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      
+      const { data, error } = await supabase.functions.invoke('ritual-test-fire', {
+        method: 'GET',
+      });
+      
+      clearTimeout(timeout);
+      
+      if (error) throw error;
+      
+      addLog(`✅ Ping successful: ${JSON.stringify(data)}`);
+      toast({ 
+        title: "Edge Function Online",
+        description: `Version ${data?.version || 'unknown'} in ${data?.region || 'unknown'}` 
+      });
+    } catch (error: any) {
+      const hint = error.message?.includes('aborted') 
+        ? 'Timeout after 10s' 
+        : error.message || 'Unknown error';
+      addLog(`❌ Ping failed: ${hint}`);
+      toast({ 
+        title: "Edge Function Offline",
+        description: hint,
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleFireRitual = async () => {
     setIsFiring(true);
     addLog('🚀 Firing test ritual...');
-
-    try {
-      const { data, error } = await supabase.functions.invoke('ritual-test-fire');
-      
-      if (error) {
-        addLog(`❌ Error: ${error.message}`);
-      } else {
-        addLog(`✅ Test ritual fired: ${JSON.stringify(data)}`);
+    
+    let attempt = 0;
+    const maxAttempts = 2;
+    
+    while (attempt < maxAttempts) {
+      try {
+        attempt++;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        
+        const { data, error } = await supabase.functions.invoke('ritual-test-fire', {
+          method: 'POST',
+          body: { channel: 'pulse:ritual:test' }
+        });
+        
+        clearTimeout(timeout);
+        
+        if (error) {
+          addLog(`❌ Invocation error (attempt ${attempt}/${maxAttempts}): ${error.message}`);
+          
+          if (attempt < maxAttempts) {
+            const backoff = Math.pow(2, attempt) * 1000;
+            addLog(`⏳ Retrying in ${backoff}ms...`);
+            await new Promise(resolve => setTimeout(resolve, backoff));
+            continue;
+          }
+          
+          throw error;
+        }
+        
+        if (!data?.ok) {
+          const code = data?.code || 'unknown';
+          const hint = data?.hint || 'No details provided';
+          addLog(`❌ Server error [${code}]: ${hint}`);
+          
+          if (code === 'forbidden') {
+            toast({ 
+              title: "Access Denied",
+              description: "Check admin whitelist configuration",
+              variant: "destructive"
+            });
+          } else if (code === 'auth') {
+            toast({ 
+              title: "Authentication Required",
+              description: "Sign in or refresh your session",
+              variant: "destructive"
+            });
+          } else {
+            toast({ 
+              title: "Edge Function Error",
+              description: hint,
+              variant: "destructive"
+            });
+          }
+          
+          setIsFiring(false);
+          return;
+        }
+        
+        addLog(`✅ Test ritual fired successfully`);
+        addLog(`📊 Ritual ID: ${data.test_ritual_id}`);
+        addLog(`📡 Phases: ${data.phases?.length || 0}`);
+        
+        toast({ 
+          title: "Ritual Started",
+          description: "Watch for phase broadcasts in the log below" 
+        });
+        
+        setIsFiring(false);
+        return;
+        
+      } catch (error: any) {
+        const hint = error.message?.includes('aborted') 
+          ? 'Timeout after 10s — edge function might be cold-starting'
+          : error.message || 'Unknown error';
+        
+        addLog(`❌ Fatal error (attempt ${attempt}/${maxAttempts}): ${hint}`);
+        
+        if (attempt < maxAttempts) {
+          const backoff = Math.pow(2, attempt) * 1000;
+          addLog(`⏳ Retrying in ${backoff}ms...`);
+          await new Promise(resolve => setTimeout(resolve, backoff));
+        } else {
+          toast({ 
+            title: "Ritual Failed",
+            description: "Check logs and Edge Function status",
+            variant: "destructive"
+          });
+        }
       }
-    } catch (error: any) {
-      addLog(`❌ Fatal error: ${error.message}`);
-    } finally {
-      setIsFiring(false);
     }
+    
+    setIsFiring(false);
   };
 
   const handleReset = () => {
@@ -237,15 +351,25 @@ export default function PulseLab() {
               </div>
             </div>
 
-            {/* Fire Ritual Button */}
-            <Button
-              onClick={handleFireRitual}
-              disabled={isFiring}
-              className="w-full"
-              size="lg"
-            >
-              {isFiring ? 'Firing...' : 'Avvia Ritual (Sandbox)'}
-            </Button>
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                onClick={handlePingEdge}
+                variant="outline"
+                className="w-full"
+              >
+                <Activity className="w-4 h-4 mr-2" />
+                Ping Edge
+              </Button>
+              <Button
+                onClick={handleFireRitual}
+                disabled={isFiring}
+                className="w-full"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                {isFiring ? 'Firing...' : 'Avvia Ritual'}
+              </Button>
+            </div>
 
             <p className="text-xs text-muted-foreground">
               Triggers complete ritual sequence on test channel. Safe, no DB writes to production.
