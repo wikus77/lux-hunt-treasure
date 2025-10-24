@@ -1,22 +1,25 @@
 /**
  * The Pulse™ — Ritual Orchestrator Edge Function
  * Automatically triggers ritual phases when pulse reaches 100%
- * Broadcasts phases via Supabase Realtime
+ * Broadcasts phases via Supabase Realtime on pulse:ritual (PROD)
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-import { corsHeaders, handleOptions } from '../_shared/cors.ts';
+import { handleOptions, ok, err } from '../_shared/cors.ts';
 
 interface RitualPhase {
-  phase: 'idle' | 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
+  phase: 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
   ritual_id: number | null;
   at: string;
 }
 
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
-  const headers = corsHeaders(origin);
   
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -24,7 +27,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client with service_role key
+    // Initialize admin client with SERVICE_ROLE key
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
@@ -37,7 +40,7 @@ Deno.serve(async (req) => {
 
     console.log('[Ritual Orchestrator] Starting ritual check...');
 
-    // 1) Check if ritual can start
+    // 1) Check if ritual can start (Pulse must be 100%)
     const { data: canStart, error: canStartError } = await supabase
       .rpc('rpc_pulse_ritual_can_start');
 
@@ -48,19 +51,16 @@ Deno.serve(async (req) => {
 
     if (!canStart?.can) {
       console.log('[Ritual Orchestrator] Cannot start ritual:', canStart?.reason || 'unknown');
-      return new Response(
-        JSON.stringify({ 
-          success: false, 
-          reason: canStart?.reason || 'Cannot start ritual',
-          pulse_value: canStart?.pulse_value 
-        }),
-        { headers: { ...Object.fromEntries(headers.entries()), 'Content-Type': 'application/json' } }
-      );
+      return ok(origin, { 
+        success: false, 
+        reason: canStart?.reason || 'Cannot start ritual',
+        pulse_value: canStart?.pulse_value 
+      });
     }
 
     console.log('[Ritual Orchestrator] ✅ Can start ritual! Pulse at 100%');
 
-    // 2) Start the ritual
+    // 2) Start the ritual (DB write)
     const { data: startData, error: startError } = await supabase
       .rpc('rpc_pulse_ritual_start');
 
@@ -72,44 +72,50 @@ Deno.serve(async (req) => {
     const ritualId = startData?.ritual_id;
     console.log('[Ritual Orchestrator] 🌟 Ritual started! ID:', ritualId);
 
-    // 3) Broadcast phases with timing
+    // 3) Subscribe to PROD channel
     const channel = supabase.channel('pulse:ritual');
-
-    // Helper to broadcast a phase
-    const broadcastPhase = async (phase: RitualPhase['phase'], delayMs: number = 0) => {
-      if (delayMs > 0) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-      }
-
-      const payload: RitualPhase = {
-        phase,
-        ritual_id: ritualId,
-        at: new Date().toISOString()
-      };
-
-      console.log(`[Ritual Orchestrator] Broadcasting phase: ${phase}`);
-      
-      await channel.send({
-        type: 'broadcast',
-        event: 'ritual-phase',
-        payload
-      });
-    };
-
-    // Subscribe to channel
     await channel.subscribe();
+    console.log('[Ritual Orchestrator] ✅ Subscribed to pulse:ritual (PROD)');
 
-    // Execute phase sequence
-    await broadcastPhase('precharge', 0);           // t=0
-    await broadcastPhase('blackout', 800);          // t=+800ms
-    await broadcastPhase('interference', 1600);     // t=+2400ms total
-    await broadcastPhase('reveal', 1200);           // t=+3600ms total
+    // 4) Broadcast phase sequence
+    const now = () => new Date().toISOString();
+    
+    await channel.send({
+      type: 'broadcast',
+      event: 'ritual-phase',
+      payload: { phase: 'precharge', ritual_id: ritualId, at: now() }
+    });
+    console.log('[Ritual Orchestrator] → precharge');
 
-    // 4) Wait for claims (30 seconds)
+    await delay(800);
+    await channel.send({
+      type: 'broadcast',
+      event: 'ritual-phase',
+      payload: { phase: 'blackout', ritual_id: ritualId, at: now() }
+    });
+    console.log('[Ritual Orchestrator] → blackout');
+
+    await delay(1600);
+    await channel.send({
+      type: 'broadcast',
+      event: 'ritual-phase',
+      payload: { phase: 'interference', ritual_id: ritualId, at: now() }
+    });
+    console.log('[Ritual Orchestrator] → interference');
+
+    await delay(1200);
+    await channel.send({
+      type: 'broadcast',
+      event: 'ritual-phase',
+      payload: { phase: 'reveal', ritual_id: ritualId, at: now() }
+    });
+    console.log('[Ritual Orchestrator] → reveal');
+
+    // 5) Wait for claims (30 seconds)
     console.log('[Ritual Orchestrator] ⏳ Waiting 30s for claims...');
-    await new Promise(resolve => setTimeout(resolve, 30000));
+    await delay(30000);
 
-    // 5) Close the ritual
+    // 6) Close the ritual (DB write)
     console.log('[Ritual Orchestrator] Closing ritual...');
     const { error: closeError } = await supabase
       .rpc('rpc_pulse_ritual_close');
@@ -120,34 +126,27 @@ Deno.serve(async (req) => {
     }
 
     // Broadcast closed phase
-    await broadcastPhase('closed', 0);
+    await channel.send({
+      type: 'broadcast',
+      event: 'ritual-phase',
+      payload: { phase: 'closed', ritual_id: ritualId, at: now() }
+    });
+    console.log('[Ritual Orchestrator] → closed');
 
     console.log('[Ritual Orchestrator] ✅ Ritual completed successfully!');
 
     // Cleanup
     await supabase.removeChannel(channel);
 
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        ritual_id: ritualId,
-        message: 'Ritual orchestration completed'
-      }),
-      { headers: { ...Object.fromEntries(headers.entries()), 'Content-Type': 'application/json' } }
-    );
+    return ok(origin, { 
+      success: true, 
+      ritual_id: ritualId,
+      message: 'Ritual orchestration completed'
+    });
 
-  } catch (error) {
-    console.error('[Ritual Orchestrator] Fatal error:', error);
-    return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error.message 
-      }),
-      { 
-        status: 500,
-        headers: { ...Object.fromEntries(headers.entries()), 'Content-Type': 'application/json' } 
-      }
-    );
+  } catch (error: any) {
+    console.error('[Ritual Orchestrator] ❌ Fatal error:', error);
+    return err(origin, 500, 'EDGE_ERROR', error.message);
   }
 });
 

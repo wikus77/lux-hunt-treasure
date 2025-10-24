@@ -24,7 +24,7 @@ export interface EdgeResponse<T = any> {
 }
 
 /**
- * Invokes an Edge Function with proper auth, timeout, and retry logic
+ * Invokes an Edge Function with proper JWT auth, timeout, and retry logic
  * 
  * @param functionName - Name of the Edge Function to invoke
  * @param options - Invocation options
@@ -36,17 +36,17 @@ export async function invokeEdge<T = any>(
 ): Promise<EdgeResponse<T>> {
   const {
     method = 'POST',
-    body,
+    body = {},
     timeout = 10000,
-    retries = 2
+    retries = 1
   } = options;
 
-  // Check for active session
+  // Check for active session and get JWT token
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
+  if (!session?.access_token) {
     return {
       error: {
-        message: 'No active session - please refresh the page',
+        message: 'No active session - please log in',
         code: 'NO_SESSION',
         hint: 'Session expired or not authenticated'
       }
@@ -55,61 +55,75 @@ export async function invokeEdge<T = any>(
 
   let lastError: any = null;
   
-  for (let attempt = 1; attempt <= retries; attempt++) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       // Create abort controller for timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      // Invoke using Supabase client (handles auth automatically)
-      const { data, error } = await supabase.functions.invoke(functionName, {
-        body,
+      // Direct fetch with JWT token in Authorization header
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+        method,
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+        mode: 'cors',
+        cache: 'no-store',
+        credentials: 'omit'
       });
 
       clearTimeout(timeoutId);
 
-      // Check for invocation error
-      if (error) {
-        lastError = error;
+      // Parse response
+      let data: any;
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      // Handle HTTP errors
+      if (!response.ok) {
+        lastError = { status: response.status, data };
         
-        // Don't retry on auth errors
-        if (error.message?.includes('401') || error.message?.includes('403')) {
+        // Don't retry on auth errors (401/403)
+        if (response.status === 401 || response.status === 403) {
           return {
             error: {
-              message: error.message,
-              code: error.message.includes('403') ? 'FORBIDDEN' : 'UNAUTHORIZED',
-              hint: 'Check your authentication and whitelist status'
+              message: data.hint || `${response.status === 401 ? 'Unauthorized' : 'Forbidden'} - check whitelist`,
+              code: data.code || (response.status === 401 ? 'AUTH_MISSING' : 'ADMIN_REQUIRED'),
+              hint: data.hint || 'Check your authentication and admin whitelist status'
             }
           };
         }
 
         // Retry on other errors
         if (attempt < retries) {
-          const backoff = Math.pow(2, attempt) * 400;
+          const backoff = 400 * (attempt + 1);
           await new Promise(resolve => setTimeout(resolve, backoff));
           continue;
         }
 
         return {
           error: {
-            message: error.message,
-            code: 'INVOCATION_ERROR',
-            hint: 'Edge function invocation failed'
+            message: data.hint || `HTTP ${response.status}`,
+            code: data.code || 'HTTP_ERROR',
+            hint: data.hint
           }
         };
       }
 
-      // Check response format
-      if (data && !data.ok && data.code) {
+      // Check response format for error flag
+      if (data && data.ok === false) {
         return {
           error: {
             message: data.hint || 'Edge function returned error',
-            code: data.code,
-            hint: data.hint,
-            details: data.details
+            code: data.code || 'EDGE_ERROR',
+            hint: data.hint
           }
         };
       }
@@ -123,7 +137,7 @@ export async function invokeEdge<T = any>(
       // Handle timeout
       if (error.name === 'AbortError') {
         if (attempt < retries) {
-          const backoff = Math.pow(2, attempt) * 400;
+          const backoff = 400 * (attempt + 1);
           await new Promise(resolve => setTimeout(resolve, backoff));
           continue;
         }
@@ -137,9 +151,9 @@ export async function invokeEdge<T = any>(
         };
       }
 
-      // Don't retry on network errors after first attempt
+      // Retry on network errors
       if (attempt < retries) {
-        const backoff = Math.pow(2, attempt) * 400;
+        const backoff = 400 * (attempt + 1);
         await new Promise(resolve => setTimeout(resolve, backoff));
         continue;
       }
@@ -149,9 +163,9 @@ export async function invokeEdge<T = any>(
   // All retries exhausted
   return {
     error: {
-      message: lastError?.message || 'Unknown error',
-      code: 'RETRY_EXHAUSTED',
-      hint: `Failed after ${retries} attempts`
+      message: lastError?.message || lastError?.data?.hint || 'Unknown error',
+      code: lastError?.data?.code || 'RETRY_EXHAUSTED',
+      hint: `Failed after ${retries + 1} attempts`
     }
   };
 }

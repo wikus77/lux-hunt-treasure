@@ -6,8 +6,8 @@ export function corsHeaders(origin: string | null) {
   return new Headers({
     'Access-Control-Allow-Origin': o,
     'Vary': 'Origin',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info,x-norah-cid',
+    'Access-Control-Allow-Methods': 'POST,GET,OPTIONS',
+    'Access-Control-Allow-Headers': 'authorization,apikey,content-type,x-client-info',
     'Access-Control-Max-Age': '86400'
   });
 }
@@ -31,6 +31,19 @@ export async function withCors(req: Request, run: () => Promise<Response>): Prom
   const h = corsHeaders(req.headers.get('origin'));
   h.forEach((v, k) => res.headers.set(k, v));
   return res;
+}
+
+// Helper response builders with CORS
+export function ok(origin: string | null, body: unknown): Response {
+  const headers = corsHeaders(origin);
+  headers.set('Content-Type', 'application/json');
+  return new Response(JSON.stringify(body), { status: 200, headers });
+}
+
+export function err(origin: string | null, status: number, code: string, hint?: string): Response {
+  const headers = corsHeaders(origin);
+  headers.set('Content-Type', 'application/json');
+  return new Response(JSON.stringify({ ok: false, code, hint }), { status, headers });
 }
 
 // Legacy helpers for backward compatibility
