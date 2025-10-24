@@ -6466,6 +6466,7 @@ export type Database = {
       rpc_pulse_ritual_claim: { Args: { p_user: string }; Returns: Json }
       rpc_pulse_ritual_close: { Args: never; Returns: Json }
       rpc_pulse_ritual_start: { Args: never; Returns: Json }
+      rpc_pulse_ritual_test_fire: { Args: never; Returns: Json }
       rpc_pulse_state_read: { Args: never; Returns: Json }
       send_user_notification: {
         Args: {
