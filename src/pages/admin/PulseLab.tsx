@@ -85,7 +85,7 @@ export default function PulseLab() {
     addLog('🏓 Pinging edge function...');
     
     const { data, error } = await invokeEdge('ritual-test-fire', {
-      method: 'GET'
+      body: { action: 'ping' }
     });
     
     if (error) {

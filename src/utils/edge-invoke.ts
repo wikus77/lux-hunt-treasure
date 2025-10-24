@@ -7,7 +7,6 @@
 import { supabase } from '@/integrations/supabase/client';
 
 export interface EdgeInvokeOptions {
-  method?: 'GET' | 'POST';
   body?: any;
   timeout?: number;
   retries?: number;
@@ -25,6 +24,7 @@ export interface EdgeResponse<T = any> {
 
 /**
  * Invokes an Edge Function with proper JWT auth, timeout, and retry logic
+ * Always uses POST method (no GET with body)
  * 
  * @param functionName - Name of the Edge Function to invoke
  * @param options - Invocation options
@@ -35,7 +35,6 @@ export async function invokeEdge<T = any>(
   options: EdgeInvokeOptions = {}
 ): Promise<EdgeResponse<T>> {
   const {
-    method = 'POST',
     body = {},
     timeout = 10000,
     retries = 1
@@ -64,7 +63,7 @@ export async function invokeEdge<T = any>(
       // Direct fetch with JWT token in Authorization header
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
-        method,
+        method: 'POST', // Always POST (no GET with body)
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
