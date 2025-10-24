@@ -5,17 +5,14 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 import { corsHeaders, handleOptions } from '../_shared/cors.ts';
+import { makeAdminClient, validateAdmin } from '../_shared/client.ts';
 
 interface RitualPhase {
   phase: 'idle' | 'precharge' | 'blackout' | 'interference' | 'reveal' | 'closed';
   ritual_id: number | null;
   at: string;
 }
-
-// Admin whitelist from environment
-const ADMIN_WHITELIST = (Deno.env.get('ADMIN_WHITELIST') || '').split(',').map(e => e.trim()).filter(Boolean);
 
 Deno.serve(async (req) => {
   const requestId = crypto.randomUUID();
@@ -67,81 +64,19 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase clients
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    // Validate admin authorization
+    const { user, error: authError } = await validateAdmin(req);
     
-    // Validate JWT and check admin whitelist
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
+    if (authError) {
+      console.warn('[Ritual Test] Auth failed:', authError.hint);
       return new Response(
         JSON.stringify({ 
           ok: false, 
-          code: 'auth',
-          hint: 'Sign-in required - Authorization header missing'
+          code: authError.code,
+          hint: authError.hint
         }),
         { 
-          status: 401,
-          headers: { 
-            ...Object.fromEntries(headers.entries()),
-            'Content-Type': 'application/json',
-            'X-Request-Id': requestId
-          } 
-        }
-      );
-    }
-
-    // Create client with auth header to verify JWT
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { 
-        headers: { 
-          authorization: authHeader 
-        } 
-      },
-      auth: { 
-        persistSession: false,
-        autoRefreshToken: false 
-      }
-    });
-
-    const { data: { user }, error: authError } = await userClient.auth.getUser();
-    
-    if (authError || !user) {
-      console.error('[Ritual Test] Auth error:', authError);
-      return new Response(
-        JSON.stringify({ 
-          ok: false, 
-          code: 'auth',
-          hint: authError?.message || 'Invalid or expired token',
-          details: authError?.name
-        }),
-        { 
-          status: 401,
-          headers: { 
-            ...Object.fromEntries(headers.entries()),
-            'Content-Type': 'application/json',
-            'X-Request-Id': requestId
-          } 
-        }
-      );
-    }
-
-    // Check admin whitelist
-    const userEmail = (user.email || '').toLowerCase().trim();
-    const isAdmin = ADMIN_WHITELIST.some(email => email.toLowerCase().trim() === userEmail);
-    
-    if (!isAdmin) {
-      console.warn('[Ritual Test] Unauthorized access attempt:', user.email);
-      return new Response(
-        JSON.stringify({ 
-          ok: false, 
-          code: 'FORBIDDEN',
-          hint: 'admin only - not in whitelist',
-          user_email: user.email
-        }),
-        { 
-          status: 403,
+          status: authError.status,
           headers: { 
             ...Object.fromEntries(headers.entries()),
             'Content-Type': 'application/json',
@@ -153,18 +88,13 @@ Deno.serve(async (req) => {
 
     console.log(`[Ritual Test] ✅ Authorized admin: ${user.email}`);
     
-    // Initialize service role client for broadcasting
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    });
+    // Initialize admin client for broadcasting
+    const adminClient = makeAdminClient();
 
     console.log('[Ritual Test] Starting test ritual simulation...');
 
     // Call test RPC to create test ritual record
-    const { data: testData, error: testError } = await supabase
+    const { data: testData, error: testError } = await adminClient
       .rpc('rpc_pulse_ritual_test_fire');
 
     if (testError) {
@@ -191,7 +121,7 @@ Deno.serve(async (req) => {
     console.log('[Ritual Test] 🧪 Test ritual created:', testRitualId);
 
     // Broadcast phases on TEST channel
-    const channel = supabase.channel('pulse:ritual:test');
+    const channel = adminClient.channel('pulse:ritual:test');
 
     const phases: Array<{ phase: RitualPhase['phase']; at: string }> = [];
 
@@ -241,7 +171,7 @@ Deno.serve(async (req) => {
     console.log('[Ritual Test] ✅ Test ritual completed!');
 
     // Cleanup
-    await supabase.removeChannel(channel);
+    await adminClient.removeChannel(channel);
 
     return new Response(
       JSON.stringify({ 
