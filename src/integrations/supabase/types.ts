@@ -99,7 +99,7 @@ export type Database = {
           device: string | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           note: string | null
           reason: string | null
           route: string | null
@@ -114,7 +114,7 @@ export type Database = {
           device?: string | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           note?: string | null
           reason?: string | null
           route?: string | null
@@ -129,7 +129,7 @@ export type Database = {
           device?: string | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           note?: string | null
           reason?: string | null
           route?: string | null
@@ -3162,23 +3162,234 @@ export type Database = {
         }
         Relationships: []
       }
+      pulse_abuse_counters: {
+        Row: {
+          count: number
+          type: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          type: string
+          user_id: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          type?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      pulse_config_weights: {
+        Row: {
+          cooldown_sec: number
+          created_at: string
+          description: string | null
+          enabled: boolean
+          per_user_cap_day: number
+          type: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          cooldown_sec?: number
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          per_user_cap_day?: number
+          type: string
+          updated_at?: string
+          weight: number
+        }
+        Update: {
+          cooldown_sec?: number
+          created_at?: string
+          description?: string | null
+          enabled?: boolean
+          per_user_cap_day?: number
+          type?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      pulse_cosmetics: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+          key: string
+          tier: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id?: string
+          key: string
+          tier?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+          key?: string
+          tier?: number
+        }
+        Relationships: []
+      }
+      pulse_events: {
+        Row: {
+          created_at: string
+          device_hash: string | null
+          id: string
+          meta: Json
+          type: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          meta?: Json
+          type: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          device_hash?: string | null
+          id?: string
+          meta?: Json
+          type?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_events_type_fkey"
+            columns: ["type"]
+            isOneToOne: false
+            referencedRelation: "pulse_config_weights"
+            referencedColumns: ["type"]
+          },
+        ]
+      }
+      pulse_sponsor_slots: {
+        Row: {
+          created_at: string
+          creative_meta: Json
+          id: string
+          intended_delta: number
+          sponsor_name: string
+          status: string
+          updated_at: string
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          created_at?: string
+          creative_meta?: Json
+          id?: string
+          intended_delta: number
+          sponsor_name: string
+          status?: string
+          updated_at?: string
+          window_end: string
+          window_start: string
+        }
+        Update: {
+          created_at?: string
+          creative_meta?: Json
+          id?: string
+          intended_delta?: number
+          sponsor_name?: string
+          status?: string
+          updated_at?: string
+          window_end?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       pulse_state: {
         Row: {
           id: number
+          last_threshold: number
           updated_at: string
           value: number
         }
         Insert: {
-          id?: number
+          id: number
+          last_threshold?: number
           updated_at?: string
           value?: number
         }
         Update: {
           id?: number
+          last_threshold?: number
           updated_at?: string
           value?: number
         }
         Relationships: []
+      }
+      pulse_thresholds_log: {
+        Row: {
+          id: string
+          reached_at: string
+          threshold: number
+          value_snapshot: number
+        }
+        Insert: {
+          id?: string
+          reached_at?: string
+          threshold: number
+          value_snapshot: number
+        }
+        Update: {
+          id?: string
+          reached_at?: string
+          threshold?: number
+          value_snapshot?: number
+        }
+        Relationships: []
+      }
+      pulse_user_cosmetics: {
+        Row: {
+          acquired_at: string
+          cosmetic_key: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          cosmetic_key: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          cosmetic_key?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pulse_user_cosmetics_cosmetic_key_fkey"
+            columns: ["cosmetic_key"]
+            isOneToOne: false
+            referencedRelation: "pulse_cosmetics"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       push_config: {
         Row: {
@@ -3876,7 +4087,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           severity: string | null
           user_agent: string | null
           user_id: string | null
@@ -3886,7 +4097,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           severity?: string | null
           user_agent?: string | null
           user_id?: string | null
@@ -3896,7 +4107,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           severity?: string | null
           user_agent?: string | null
           user_id?: string | null
@@ -3909,7 +4120,7 @@ export type Database = {
           event_data: Json | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string | null
         }
@@ -3918,7 +4129,7 @@ export type Database = {
           event_data?: Json | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -3927,7 +4138,7 @@ export type Database = {
           event_data?: Json | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string | null
         }
@@ -4567,7 +4778,7 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string
         }
@@ -4576,7 +4787,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id: string
         }
@@ -4585,7 +4796,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string
         }
@@ -5525,6 +5736,26 @@ export type Database = {
           },
         ]
       }
+      pulse_leaderboard_daily: {
+        Row: {
+          agent_code: string | null
+          event_count: number | null
+          full_name: string | null
+          last_contribution: string | null
+          total_contribution: number | null
+        }
+        Relationships: []
+      }
+      pulse_leaderboard_weekly: {
+        Row: {
+          agent_code: string | null
+          event_count: number | null
+          full_name: string | null
+          last_contribution: string | null
+          total_contribution: number | null
+        }
+        Relationships: []
+      }
       push_stats_daily: {
         Row: {
           date: string | null
@@ -5690,10 +5921,7 @@ export type Database = {
       }
     }
     Functions: {
-      _gen_unique_agent_code: {
-        Args: { len?: number }
-        Returns: string
-      }
+      _gen_unique_agent_code: { Args: { len?: number }; Returns: string }
       _upsert_premium_feed_source: {
         Args: {
           p_enabled: boolean
@@ -5740,32 +5968,27 @@ export type Database = {
           title: string
         }[]
       }
-      ai_rag_search_vec_json: {
-        Args: { k: number; minscore: number; qvec: string } | { payload: Json }
-        Returns: {
-          category: string
-          chunk_idx: number
-          chunk_text: string
-          distance: number
-          doc_id: string
-          locale: string
-          title: string
-        }[]
-      }
-      assign_area_radius: {
-        Args: { p_mission_id: string }
-        Returns: number
-      }
-      award_xp: {
-        Args:
-          | { p_source: string; p_user_id: string; p_xp_amount: number }
-          | { p_user_id: string; p_xp_amount: number }
-        Returns: undefined
-      }
-      binary_quantize: {
-        Args: { "": string } | { "": unknown }
-        Returns: unknown
-      }
+      ai_rag_search_vec_json:
+        | {
+            Args: { payload: Json }
+            Returns: {
+              category: string
+              chunk_idx: number
+              chunk_text: string
+              distance: number
+              doc_id: string
+              locale: string
+              title: string
+            }[]
+          }
+        | { Args: { k: number; minscore: number; qvec: string }; Returns: Json }
+      assign_area_radius: { Args: { p_mission_id: string }; Returns: number }
+      award_xp:
+        | {
+            Args: { p_source: string; p_user_id: string; p_xp_amount: number }
+            Returns: undefined
+          }
+        | { Args: { p_user_id: string; p_xp_amount: number }; Returns: Json }
       block_ip: {
         Args: {
           block_duration_minutes?: number
@@ -5774,22 +5997,13 @@ export type Database = {
         }
         Returns: undefined
       }
-      buzz_today_count: {
-        Args: { p_user_id: string }
-        Returns: number
-      }
+      buzz_today_count: { Args: { p_user_id: string }; Returns: number }
       calculate_access_start_date: {
         Args: { plan_name: string }
         Returns: string
       }
-      calculate_access_start_time: {
-        Args: { p_plan: string }
-        Returns: string
-      }
-      calculate_buzz_price: {
-        Args: { daily_count: number }
-        Returns: number
-      }
+      calculate_access_start_time: { Args: { p_plan: string }; Returns: string }
+      calculate_buzz_price: { Args: { daily_count: number }; Returns: number }
       calculate_direction: {
         Args: { lat1: number; lat2: number; lng1: number; lng2: number }
         Returns: string
@@ -5806,18 +6020,9 @@ export type Database = {
         Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
       }
-      can_user_access_mission: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
-      can_user_buzz_mappa: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
-      can_user_use_buzz: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
+      can_user_access_mission: { Args: { user_id: string }; Returns: boolean }
+      can_user_buzz_mappa: { Args: { p_user_id: string }; Returns: boolean }
+      can_user_use_buzz: { Args: { p_user_id: string }; Returns: boolean }
       check_abuse_limit: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
@@ -5839,70 +6044,34 @@ export type Database = {
         Args: { p_action: string; p_limit?: number; p_window_minutes?: number }
         Returns: boolean
       }
-      cleanup_duplicate_subscriptions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      cleanup_expired_idempotency_keys: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_push_tokens: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_old_abuse_logs: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_security_tables: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      consume_buzz_mappa: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      consume_buzz_usage: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
+      cleanup_duplicate_subscriptions: { Args: never; Returns: Json }
+      cleanup_expired_idempotency_keys: { Args: never; Returns: undefined }
+      cleanup_expired_push_tokens: { Args: never; Returns: undefined }
+      cleanup_old_abuse_logs: { Args: never; Returns: undefined }
+      cleanup_security_tables: { Args: never; Returns: undefined }
+      consume_buzz_mappa: { Args: { p_user_id: string }; Returns: Json }
+      consume_buzz_usage: { Args: { p_user_id: string }; Returns: boolean }
       consume_credit: {
         Args: { p_credit_type: string; p_user_id: string }
         Returns: boolean
       }
       consume_free_buzz: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["CompositeTypes"]["consume_free_buzz_result"]
+        SetofOptions: {
+          from: "*"
+          to: "consume_free_buzz_result"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
-      count_distinct_push_tokens: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      count_push_tokens: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      count_push_tokens_since: {
-        Args: { since: string }
-        Returns: number
-      }
-      create_free_subscription: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      debug_vec_info: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      ensure_agent_dna: {
-        Args: { p_user: string }
-        Returns: undefined
-      }
-      exec_sql: {
-        Args: { sql: string }
-        Returns: Json
-      }
+      count_distinct_push_tokens: { Args: never; Returns: number }
+      count_push_tokens: { Args: never; Returns: number }
+      count_push_tokens_since: { Args: { since: string }; Returns: number }
+      create_free_subscription: { Args: never; Returns: Json }
+      debug_vec_info: { Args: never; Returns: Json }
+      ensure_agent_dna: { Args: { p_user: string }; Returns: undefined }
+      exec_sql: { Args: { sql: string }; Returns: Json }
       fn_candidates_for_user: {
         Args: { p_limit?: number; p_user_id: string }
         Returns: {
@@ -5915,30 +6084,12 @@ export type Database = {
           url: string
         }[]
       }
-      force_subscription_sync: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
-      force_user_to_base_tier: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      generate_agent_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_qr_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_referral_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      generate_unique_agent_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      force_subscription_sync: { Args: { p_user_id: string }; Returns: boolean }
+      force_user_to_base_tier: { Args: { p_user_id: string }; Returns: Json }
+      generate_agent_code: { Args: never; Returns: string }
+      generate_qr_code: { Args: never; Returns: string }
+      generate_referral_code: { Args: never; Returns: string }
+      generate_unique_agent_code: { Args: never; Returns: string }
       geo_push_log_delivery: {
         Args: {
           p_body: string
@@ -5977,39 +6128,27 @@ export type Database = {
           tier: string
         }[]
       }
-      get_authenticated_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_authenticated_user_id: { Args: never; Returns: string }
       get_buzz_override: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           cooldown_disabled: boolean
           expires_at: string
           free_remaining: number
         }[]
       }
-      get_current_game_week: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_current_mission_week: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      get_current_game_week: { Args: never; Returns: number }
+      get_current_mission_week: { Args: never; Returns: number }
       get_current_user_profile_safe: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           role: string
         }[]
       }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_role: { Args: never; Returns: string }
       get_current_week_and_year: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           week_num: number
           year_num: number
@@ -6032,96 +6171,58 @@ export type Database = {
         Args: { p_generation_count: number; p_week: number }
         Returns: number
       }
-      get_max_buzz_for_week: {
-        Args: { week_num: number }
-        Returns: number
-      }
-      get_max_map_generations: {
-        Args: { p_week: number }
-        Returns: number
-      }
+      get_max_buzz_for_week: { Args: { week_num: number }; Returns: number }
+      get_max_map_generations: { Args: { p_week: number }; Returns: number }
       get_my_agent_code: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           agent_code: string
         }[]
       }
-      get_my_balance: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_unread_count: {
-        Args: { p_user_id?: string }
-        Returns: number
-      }
+      get_my_balance: { Args: never; Returns: Json }
+      get_unread_count: { Args: { p_user_id?: string }; Returns: number }
       get_user_by_email: {
         Args: { email_param: string }
         Returns: unknown[]
+        SetofOptions: {
+          from: "*"
+          to: "users"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_user_flags: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           hide_tutorial: boolean
         }[]
       }
-      get_user_role_safe: {
-        Args: { p_user_id: string }
-        Returns: string
-      }
+      get_user_role_safe: { Args: { p_user_id: string }; Returns: string }
       get_user_roles: {
         Args: { user_id: string }
         Returns: {
           role: string
         }[]
       }
-      get_user_sync_status: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
+      get_user_sync_status: { Args: { p_user_id: string }; Returns: Json }
       get_user_weekly_buzz_status: {
         Args: { p_user_id: string }
         Returns: Json
       }
-      get_user_xp_status: {
-        Args: { p_user_id: string }
-        Returns: Json
-      }
-      get_week_start_date: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_xp_status: { Args: { p_user_id: string }; Returns: Json }
+      get_week_start_date: { Args: never; Returns: string }
       grant_buzz: {
         Args: { p_count: number; p_source: string; p_user: string }
         Returns: undefined
-      }
-      halfvec_avg: {
-        Args: { "": number[] }
-        Returns: unknown
-      }
-      halfvec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      halfvec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      halfvec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
       handle_new_user: {
         Args: { new_user_id: string; user_email: string }
         Returns: undefined
       }
-      has_admin_role_secure: {
-        Args: Record<PropertyKey, never> | { user_id_param: string }
-        Returns: boolean
-      }
-      has_mission_started: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      has_admin_role_secure:
+        | { Args: never; Returns: boolean }
+        | { Args: { user_id_param: string }; Returns: boolean }
+      has_mission_started: { Args: never; Returns: boolean }
       has_role: {
         Args: { role_name: string; user_id: string }
         Returns: boolean
@@ -6134,30 +6235,8 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
-      hnsw_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnsw_sparsevec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      hnswhandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      inc_buzz_today: {
-        Args: { p_user_id: string }
-        Returns: number
-      }
-      increment_buzz_counter: {
-        Args: { p_user_id: string }
-        Returns: number
-      }
+      inc_buzz_today: { Args: { p_user_id: string }; Returns: number }
+      increment_buzz_counter: { Args: { p_user_id: string }; Returns: number }
       increment_buzz_map_counter: {
         Args: { p_user_id: string }
         Returns: number
@@ -6174,50 +6253,12 @@ export type Database = {
         Args: { p_amount: number; p_user: string }
         Returns: undefined
       }
-      interest_track: {
-        Args: { payload: Json }
-        Returns: undefined
-      }
-      is_admin: {
-        Args: { user_id?: string }
-        Returns: boolean
-      }
-      is_admin_email_safe: {
-        Args: { p_email: string }
-        Returns: boolean
-      }
-      is_admin_secure: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_ip_blocked: {
-        Args: { ip_addr: unknown }
-        Returns: boolean
-      }
-      ivfflat_bit_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflat_halfvec_support: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      ivfflathandler: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      l2_norm: {
-        Args: { "": unknown } | { "": unknown }
-        Returns: number
-      }
-      l2_normalize: {
-        Args: { "": string } | { "": unknown } | { "": unknown }
-        Returns: unknown
-      }
+      interest_track: { Args: { payload: Json }; Returns: undefined }
+      is_admin: { Args: { user_id?: string }; Returns: boolean }
+      is_admin_email_safe: { Args: { p_email: string }; Returns: boolean }
+      is_admin_secure: { Args: never; Returns: boolean }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_ip_blocked: { Args: { ip_addr: unknown }; Returns: boolean }
       list_my_redemptions: {
         Args: { limit_rows?: number; offset_rows?: number }
         Returns: {
@@ -6230,22 +6271,31 @@ export type Database = {
           reward_value: string | null
           user_id: string
         }[]
+        SetofOptions: {
+          from: "*"
+          to: "qr_redemptions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       log_potential_abuse: {
         Args: { p_event_type: string; p_user_id: string }
         Returns: boolean
       }
-      log_security_event: {
-        Args:
-          | {
+      log_security_event:
+        | {
+            Args: { p_event_data?: Json; p_event_type: string }
+            Returns: string
+          }
+        | {
+            Args: {
               event_data_param?: Json
               event_type_param: string
               severity_param?: string
               user_id_param?: string
             }
-          | { p_event_data?: Json; p_event_type: string }
-        Returns: string
-      }
+            Returns: string
+          }
       log_user_action: {
         Args: {
           p_action: string
@@ -6256,22 +6306,13 @@ export type Database = {
         }
         Returns: string
       }
-      lookup_user_id_by_email: {
-        Args: { p_email: string }
-        Returns: string
-      }
-      mark_choose_plan_seen: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      lookup_user_id_by_email: { Args: { p_email: string }; Returns: string }
+      mark_choose_plan_seen: { Args: never; Returns: undefined }
       mark_norah_notification_clicked: {
         Args: { p_notification_id: string }
         Returns: undefined
       }
-      mirror_get_watermark: {
-        Args: { p_name: string }
-        Returns: string
-      }
+      mirror_get_watermark: { Args: { p_name: string }; Returns: string }
       mirror_insert_notification_logs: {
         Args: { p_records: Json }
         Returns: number
@@ -6280,14 +6321,8 @@ export type Database = {
         Args: { p_last_run_at: string; p_name: string }
         Returns: undefined
       }
-      normalize_feed_url: {
-        Args: { input_url: string }
-        Returns: string
-      }
-      perform_security_check: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      normalize_feed_url: { Args: { input_url: string }; Returns: string }
+      perform_security_check: { Args: never; Returns: Json }
       process_stripe_webhook_completed: {
         Args: {
           p_amount_total: number
@@ -6321,14 +6356,8 @@ export type Database = {
         Args: { p_mission_id: string; p_tool_name: string; p_user_id: string }
         Returns: boolean
       }
-      redeem_qr: {
-        Args: { code_input: string }
-        Returns: Json
-      }
-      refresh_current_week_leaderboard: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      redeem_qr: { Args: { code_input: string }; Returns: Json }
+      refresh_current_week_leaderboard: { Args: never; Returns: undefined }
       register_user_to_active_mission: {
         Args: { p_user_id: string }
         Returns: boolean
@@ -6345,6 +6374,15 @@ export type Database = {
         Args: { user_id_input: string }
         Returns: Json
       }
+      rpc_pulse_decay_tick: {
+        Args: { p_decay_percent?: number }
+        Returns: Json
+      }
+      rpc_pulse_event_record: {
+        Args: { p_meta?: Json; p_type: string; p_user_id: string }
+        Returns: Json
+      }
+      rpc_pulse_state_read: { Args: never; Returns: Json }
       send_user_notification: {
         Args: {
           p_message: string
@@ -6355,53 +6393,29 @@ export type Database = {
         }
         Returns: string
       }
-      set_hide_tutorial: {
-        Args: { p_hide: boolean }
-        Returns: undefined
-      }
-      setup_developer_user: {
-        Args: { uid: string }
-        Returns: undefined
-      }
-      sparsevec_out: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      sparsevec_send: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      sparsevec_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
-      }
+      set_hide_tutorial: { Args: { p_hide: boolean }; Returns: undefined }
+      setup_developer_user: { Args: { uid: string }; Returns: undefined }
       submit_final_shot: {
         Args: { p_latitude: number; p_longitude: number; p_mission_id: string }
         Returns: Json
       }
-      supabase_client_health: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      sync_user_permissions: {
-        Args: { p_user_id: string }
-        Returns: undefined
-      }
-      trigger_mirror_push_harvest: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      update_personality_quiz_result: {
-        Args:
-          | {
+      supabase_client_health: { Args: never; Returns: Json }
+      sync_user_permissions: { Args: { p_user_id: string }; Returns: undefined }
+      trigger_mirror_push_harvest: { Args: never; Returns: Json }
+      update_personality_quiz_result:
+        | {
+            Args: {
               p_assigned_description: string
               p_assigned_type: string
               p_quiz_answers: Json
               p_user_id: string
             }
-          | { p_investigative_style: string; p_user_id: string }
-        Returns: Json
-      }
+            Returns: Json
+          }
+        | {
+            Args: { p_investigative_style: string; p_user_id: string }
+            Returns: undefined
+          }
       update_user_plan_complete: {
         Args: {
           p_amount?: number
@@ -6440,18 +6454,12 @@ export type Database = {
         Args: { p_delta: number; p_user_id: string }
         Returns: number
       }
-      upsert_prize_category: {
-        Args: { cat_name: string }
-        Returns: string
-      }
+      upsert_prize_category: { Args: { cat_name: string }; Returns: string }
       upsert_user_position: {
         Args: { lat: number; lng: number; uid: string }
         Returns: undefined
       }
-      validate_buzz_user_id: {
-        Args: { p_user_id: string }
-        Returns: boolean
-      }
+      validate_buzz_user_id: { Args: { p_user_id: string }; Returns: boolean }
       validate_progressive_pricing: {
         Args: {
           p_generation: number
@@ -6460,30 +6468,6 @@ export type Database = {
           p_user_id: string
         }
         Returns: boolean
-      }
-      vector_avg: {
-        Args: { "": number[] }
-        Returns: string
-      }
-      vector_dims: {
-        Args: { "": string } | { "": unknown }
-        Returns: number
-      }
-      vector_norm: {
-        Args: { "": string }
-        Returns: number
-      }
-      vector_out: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      vector_send: {
-        Args: { "": string }
-        Returns: string
-      }
-      vector_typmod_in: {
-        Args: { "": unknown[] }
-        Returns: number
       }
     }
     Enums: {
