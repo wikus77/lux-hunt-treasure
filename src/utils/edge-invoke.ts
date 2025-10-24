@@ -1,6 +1,7 @@
 /**
  * Edge Function Invocation Helper
  * Handles JWT auth, CORS, retries, and error formatting
+ * Uses Supabase Functions.invoke for proper auth handling
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
@@ -24,7 +25,7 @@ export interface EdgeResponse<T = any> {
 
 /**
  * Invokes an Edge Function with proper JWT auth, timeout, and retry logic
- * Always uses POST method (no GET with body)
+ * Uses supabase.functions.invoke for automatic JWT handling
  * 
  * @param functionName - Name of the Edge Function to invoke
  * @param options - Invocation options
@@ -40,7 +41,7 @@ export async function invokeEdge<T = any>(
     retries = 1
   } = options;
 
-  // Check for active session and get JWT token
+  // Check for active session
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) {
     return {
@@ -56,52 +57,41 @@ export async function invokeEdge<T = any>(
   
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
-      // Create abort controller for timeout
+      // Use supabase.functions.invoke with timeout
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      // Direct fetch with JWT token in Authorization header
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
-        method: 'POST', // Always POST (no GET with body)
+      // Use the official Supabase client method
+      const { data, error } = await supabase.functions.invoke(functionName, {
+        body,
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-        mode: 'cors',
-        cache: 'no-store',
-        credentials: 'omit'
+        }
       });
 
       clearTimeout(timeoutId);
 
-      // Parse response
-      let data: any;
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
-
-      // Handle HTTP errors
-      if (!response.ok) {
-        lastError = { status: response.status, data };
+      // Handle errors
+      if (error) {
+        lastError = error;
+        
+        // Parse error details
+        const errorData = typeof error === 'object' ? error : { message: String(error) };
+        const status = (errorData as any)?.status || 0;
         
         // Don't retry on auth errors (401/403)
-        if (response.status === 401 || response.status === 403) {
+        if (status === 401 || status === 403) {
           return {
             error: {
-              message: data.hint || `${response.status === 401 ? 'Unauthorized' : 'Forbidden'} - check whitelist`,
-              code: data.code || (response.status === 401 ? 'AUTH_MISSING' : 'ADMIN_REQUIRED'),
-              hint: data.hint || 'Check your authentication and admin whitelist status'
+              message: (errorData as any)?.hint || (status === 401 ? 'Unauthorized - session expired' : 'Forbidden - not in admin whitelist'),
+              code: (errorData as any)?.code || (status === 401 ? 'UNAUTHORIZED' : 'FORBIDDEN'),
+              hint: (errorData as any)?.hint || 'Check authentication and admin whitelist'
             }
           };
         }
 
         // Retry on other errors
-        if (attempt < retries) {
+        if (attempt < retries && (status === 0 || status >= 500)) {
           const backoff = 400 * (attempt + 1);
           await new Promise(resolve => setTimeout(resolve, backoff));
           continue;
@@ -109,26 +99,26 @@ export async function invokeEdge<T = any>(
 
         return {
           error: {
-            message: data.hint || `HTTP ${response.status}`,
-            code: data.code || 'HTTP_ERROR',
-            hint: data.hint
+            message: (errorData as any)?.hint || (errorData as any)?.message || 'Edge function error',
+            code: (errorData as any)?.code || 'EDGE_ERROR',
+            hint: (errorData as any)?.hint
           }
         };
       }
 
       // Check response format for error flag
-      if (data && data.ok === false) {
+      if (data && typeof data === 'object' && (data as any).ok === false) {
         return {
           error: {
-            message: data.hint || 'Edge function returned error',
-            code: data.code || 'EDGE_ERROR',
-            hint: data.hint
+            message: (data as any).hint || 'Edge function returned error',
+            code: (data as any).code || 'EDGE_ERROR',
+            hint: (data as any).hint
           }
         };
       }
 
       // Success
-      return { data };
+      return { data: data as T };
 
     } catch (error: any) {
       lastError = error;
@@ -162,8 +152,8 @@ export async function invokeEdge<T = any>(
   // All retries exhausted
   return {
     error: {
-      message: lastError?.message || lastError?.data?.hint || 'Unknown error',
-      code: lastError?.data?.code || 'RETRY_EXHAUSTED',
+      message: lastError?.message || 'Unknown error',
+      code: lastError?.code || 'RETRY_EXHAUSTED',
       hint: `Failed after ${retries + 1} attempts`
     }
   };
