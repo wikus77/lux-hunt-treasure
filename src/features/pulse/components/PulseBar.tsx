@@ -10,9 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface PulseBarProps {
   onTap?: () => void;
+  variant?: 'inline' | 'fixed';
 }
 
-export const PulseBar = ({ onTap }: PulseBarProps) => {
+export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
   const { pulseState, lastUpdate } = usePulseRealtime();
 
   const value = pulseState?.value ?? 0;
@@ -20,7 +21,7 @@ export const PulseBar = ({ onTap }: PulseBarProps) => {
 
   return (
     <motion.div
-      className="fixed top-0 left-0 right-0 z-[100] safe-area-inset-top bg-background/80 backdrop-blur-md border-b border-border/50"
+      className={`${variant === 'fixed' ? 'fixed top-0 left-0 right-0 safe-area-inset-top' : 'relative w-full'} z-[100] bg-background/80 backdrop-blur-md border-b border-border/50`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ type: 'spring', damping: 20 }}
