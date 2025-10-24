@@ -10,6 +10,7 @@ const config: Config = {
     './app/**/*.{ts,tsx}',
     './src/**/*.{ts,tsx}',
   ],
+  safelist: ['animate-energyFlow', 'animate-pulseGlow'],
   prefix: '',
   theme: {
     container: {

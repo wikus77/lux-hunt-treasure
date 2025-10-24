@@ -106,16 +106,17 @@
 @keyframes pulseGlow {
   0%, 100% { 
     opacity: 0.6; 
-    transform: scale(1); 
+    transform: scale(var(--glow-scale, 1)); 
   }
   50% { 
     opacity: 1; 
-    transform: scale(1.04); 
+    transform: scale(calc(var(--glow-scale, 1) + 0.02)); 
   }
 }
 
 .animate-energyFlow {
-  animation: energyFlow 4s linear infinite;
+  background-size: 200% 200%;
+  animation: energyFlow var(--flow-speed, 4s) linear infinite;
 }
 
 .animate-pulseGlow {

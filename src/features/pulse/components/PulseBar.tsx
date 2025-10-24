@@ -21,15 +21,9 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
   const value = pulseState?.value ?? 0;
   
   // Map value to animation intensity
-  const getAnimationSpeed = (val: number) => {
-    if (val >= 75) return '3s';
-    if (val >= 50) return '4s';
-    if (val >= 25) return '5s';
-    return '6s';
-  };
-  
+  const flowSpeed = value < 25 ? '6s' : value < 50 ? '5s' : value < 75 ? '4s' : '3s';
+  const glowScale = value < 25 ? '1.00' : value < 50 ? '1.01' : value < 75 ? '1.02' : '1.03';
   const glowIntensity = value > 80 ? 1 : value > 50 ? 0.8 : value > 25 ? 0.6 : 0.4;
-  const flowSpeed = getAnimationSpeed(value);
   
   // Check accessibility preference
   useEffect(() => {
@@ -76,7 +70,7 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
             inset: 0,
             background: 'linear-gradient(270deg, #ff4df0, #00eaff, #e0ffff, #00eaff, #ff4df0)',
             backgroundSize: '300% 300%',
-            animationDuration: flowSpeed
+            ['--flow-speed' as any]: flowSpeed
           }} 
         />
         
@@ -88,7 +82,8 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
             inset: 0,
             background: 'radial-gradient(circle at center, rgba(255,255,255,0.35) 0%, transparent 75%)',
             opacity: glowIntensity,
-            filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none'
+            filter: value > 80 ? 'drop-shadow(0 0 10px rgba(255,0,255,0.8))' : 'none',
+            ['--glow-scale' as any]: glowScale
           }}
         />
 
@@ -111,7 +106,7 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
           style={{ 
             background: 'linear-gradient(270deg, rgba(255,77,240,0.3), rgba(0,234,255,0.3), rgba(255,77,240,0.3))',
             backgroundSize: '300% 300%',
-            animationDuration: flowSpeed
+            ['--flow-speed' as any]: flowSpeed
           }} 
         />
         
