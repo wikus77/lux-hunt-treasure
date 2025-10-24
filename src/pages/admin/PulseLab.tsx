@@ -15,6 +15,7 @@ import { Shield, Zap, Sparkles, RotateCcw, PlayCircle, Activity } from 'lucide-r
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { invokeEdge } from '@/utils/edge-invoke';
+import { triggerRitualDistortion } from '@/utils/triggerRitualDistortion';
 
 const ADMIN_EMAILS = [
   'joseph@m1ssion.io',
@@ -64,10 +65,27 @@ export default function PulseLab() {
     checkAuth();
   }, []);
 
-  // Log phase changes
+  // Log phase changes and trigger distortion effect
   useEffect(() => {
     if (phase !== 'idle') {
       addLog(`🌟 Phase: ${phase} (ritual_id: ${ritualId})`);
+      
+      // Trigger EMP distortion effect for precharge and interference
+      if (phase === 'precharge') {
+        addLog('⚡ EMP EFFECT: Normal intensity');
+        triggerRitualDistortion({
+          duration: 9000,
+          intensity: 'normal',
+          enableDisplacement: true
+        });
+      } else if (phase === 'interference') {
+        addLog('⚡⚡ EMP EFFECT: HIGH intensity');
+        triggerRitualDistortion({
+          duration: 2000,
+          intensity: 'high',
+          enableDisplacement: true
+        });
+      }
     }
   }, [phase, ritualId]);
 
