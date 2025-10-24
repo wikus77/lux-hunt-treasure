@@ -11,6 +11,7 @@ import CommandCenterWrapper from "./CommandCenterWrapper";
 import { LuxuryCarsSection } from "./LuxuryCarsSection";
 import ExclusivePrizesSection from "./ExclusivePrizesSection";
 import MissionGamesSection from "./MissionGamesSection";
+import { PulseBar } from "@/features/pulse";
 
 export default function HomeContent() {
   console.log("[HomeContent] COMPONENT MOUNTED! - BY JOSEPH MULÈ, CEO NIYVORA KFT™");
@@ -43,6 +44,11 @@ export default function HomeContent() {
           
           {/* New Exclusive Prizes Section */}
           <ExclusivePrizesSection />
+          
+          {/* THE PULSE™ - Living Energy Bar */}
+          <div className="px-4 py-3">
+            <PulseBar variant="inline" />
+          </div>
           
           {/* Luxury Cars Section */}
           <LuxuryCarsSection />
