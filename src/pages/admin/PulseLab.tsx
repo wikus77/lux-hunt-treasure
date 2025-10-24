@@ -6,7 +6,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useRitualChannel } from '@/features/pulse/ritual';
 import { RitualOrchestrator } from '@/features/pulse/ritual/RitualOrchestrator';
@@ -21,9 +20,8 @@ const ADMIN_EMAILS = [
 ];
 
 export default function PulseLab() {
-  const navigate = useNavigate();
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [authStatus, setAuthStatus] = useState<'loading' | 'authorized' | 'denied'>('loading');
+  const [userEmail, setUserEmail] = useState<string>('');
   const [mockValue, setMockValue] = useState(45);
   const [logs, setLogs] = useState<string[]>([]);
   const [isFiring, setIsFiring] = useState(false);
@@ -38,7 +36,7 @@ export default function PulseLab() {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
-          navigate('/');
+          setAuthStatus('denied');
           return;
         }
 
@@ -46,22 +44,22 @@ export default function PulseLab() {
         const isAdmin = ADMIN_EMAILS.includes(user.email || '');
         
         if (!isAdmin) {
-          navigate('/');
+          setAuthStatus('denied');
+          setUserEmail(user.email || 'unknown');
           return;
         }
 
-        setIsAuthorized(true);
+        setAuthStatus('authorized');
+        setUserEmail(user.email || '');
         addLog(`✅ Authorized: ${user.email}`);
       } catch (error) {
         console.error('[PulseLab] Auth check error:', error);
-        navigate('/');
-      } finally {
-        setIsLoading(false);
+        setAuthStatus('denied');
       }
     };
 
     checkAuth();
-  }, [navigate]);
+  }, []);
 
   // Log phase changes
   useEffect(() => {
@@ -105,7 +103,7 @@ export default function PulseLab() {
     addLog('🔄 Lab reset');
   };
 
-  if (isLoading) {
+  if (authStatus === 'loading') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-pulse text-muted-foreground">Authorizing...</div>
@@ -113,8 +111,35 @@ export default function PulseLab() {
     );
   }
 
-  if (!isAuthorized) {
-    return null;
+  if (authStatus === 'denied') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Shield className="w-5 h-5" />
+              Access Denied
+            </CardTitle>
+            <CardDescription>
+              Admin Pulse Lab — Restricted Area
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              You do not have permission to access this page.
+            </p>
+            {userEmail && (
+              <p className="text-xs text-muted-foreground font-mono">
+                Current user: {userEmail}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              This area is restricted to authorized M1SSION™ administrators only.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
