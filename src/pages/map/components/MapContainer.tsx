@@ -555,8 +555,23 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       console.log('👥 Initializing Agents Layer');
       agentsLayerRef.current = new AgentsLayer();
       agentsLayerRef.current.mount(mapRef.current);
-      // Initially empty - will be populated by presence subscription
-      agentsLayerRef.current.setData([], undefined);
+      
+      // ✅ FIX: Pre-populate with self marker if coords available
+      const selfCoords = geoPosition 
+        ? { lat: geoPosition.lat, lng: geoPosition.lng }
+        : ipGeo?.coords 
+        ? { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng }
+        : null;
+      
+      if (selfCoords && currentUserId && currentAgentCode) {
+        console.log('[AgentsLayer] Pre-populating with self marker');
+        agentsLayerRef.current.setData([
+          { id: currentUserId, agent_code: currentAgentCode, lat: selfCoords.lat, lng: selfCoords.lng }
+        ], currentUserId);
+      } else {
+        // Empty init — will be populated by Realtime
+        agentsLayerRef.current.setData([], undefined);
+      }
     }
     
     // Initialize Zones
@@ -608,19 +623,31 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       const userId = session.user.id;
       setCurrentUserId(userId);
 
-      // Fetch agent code
+      // ✅ FIX: Check cache first
+      const cacheKey = `agent_code_${userId}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        console.log('✅ Agent code loaded from cache:', cached);
+        setCurrentAgentCode(cached);
+        // Continue with RPC in background to refresh cache
+      }
+
+      // Fetch from DB
       const { data, error } = await supabase
         .rpc('get_my_agent_code')
         .single<{ agent_code?: string }>();
 
       if (error) {
         console.error('❌ Error fetching agent code:', error);
-        return;
+        // If cache exists, keep using it
+        if (!cached) return;
       }
 
       if (data?.agent_code && mounted) {
         setCurrentAgentCode(data.agent_code);
-        console.log('✅ Agent code fetched:', data.agent_code);
+        localStorage.setItem(cacheKey, data.agent_code); // Update cache
+        console.log('✅ Agent code fetched and cached:', data.agent_code);
       }
     };
 
@@ -631,11 +658,11 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     };
   }, []);
 
-  // P1 FIX: Immediate track when coords become available (GPS OR IP-Geo fallback)
+  // ✅ FIX STEP 2: UNIFIED useEffect — NO debounce, prioritize GPS > IP-Geo
   useEffect(() => {
     if (!currentAgentCode) return;
     
-    // Priority: GPS coords > IP-Geo coords
+    // Priority: GPS > IP-Geo > null
     const coords = geoPosition 
       ? { lat: geoPosition.lat, lng: geoPosition.lng }
       : ipGeo?.coords 
@@ -644,46 +671,17 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
     
     if (!coords) {
       if (import.meta.env.DEV) {
-        console.log('[Presence] ⏸️ Immediate track skipped: no coords yet');
+        console.log('[Presence] ⏸️ Immediate track skipped: no coords');
       }
       return;
     }
     
     const source = geoPosition ? 'GPS' : 'IP-Geo';
-    console.log(`[Presence] 🎯 IMMEDIATE TRACK triggering (${source}):`, coords);
+    console.log(`[Presence] ⚡ IMMEDIATE track (${source}):`, coords);
     
-    // Immediate track without debounce for first-time visibility
-    import('@/features/agents/agentsPresence').then(({ trackNow }) => {
-      trackNow(currentAgentCode, coords);
-      console.log(`[Presence] ✅ IMMEDIATE TRACK sent (${source})`);
-    });
-  }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
-
-  // ⚡ IMMEDIATE TRACK: Send coords as soon as GPS or IP-Geo is available
-  useEffect(() => {
-    if (!currentAgentCode) return;
+    // NO DEBOUNCE — fire immediately
+    void trackNow(currentAgentCode, coords);
     
-    const coords = geoPosition 
-      ? { lat: geoPosition.lat, lng: geoPosition.lng }
-      : ipGeo?.coords 
-      ? { lat: ipGeo.coords.lat, lng: ipGeo.coords.lng }
-      : null;
-    
-    if (!coords) return;
-    
-    const source = geoPosition ? 'GPS' : 'IP-Geo';
-    console.log(`[Presence] ⚡ IMMEDIATE coords available (${source}):`, coords);
-    
-    // Try immediately with 3s debounce - fail-soft (no error handling needed)
-    const timer = setTimeout(() => {
-      void trackNow(currentAgentCode, coords); // Fire and forget - queues if not ready
-      
-      if (import.meta.env.DEV) {
-        console.log(`[Presence] ⚡ trackNow called (${source})`);
-      }
-    }, 3000);
-    
-    return () => clearTimeout(timer);
   }, [currentAgentCode, geoPosition?.lat, geoPosition?.lng, ipGeo?.coords?.lat, ipGeo?.coords?.lng]);
 
   // Initialize agents presence and subscribe to updates
