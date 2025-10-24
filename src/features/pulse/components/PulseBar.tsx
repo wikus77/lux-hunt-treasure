@@ -84,13 +84,25 @@ export const PulseBar = ({ onTap, variant = 'fixed' }: PulseBarProps) => {
 
   return (
     <motion.div
-      className={`${variant === 'fixed' ? 'fixed top-0 left-0 right-0 safe-area-inset-top' : 'relative w-full'} z-[120]`}
-      initial={variant === 'fixed' ? { y: -100 } : { opacity: 0 }}
-      animate={variant === 'fixed' ? { y: 0 } : { opacity: 1 }}
+      className={`${variant === 'fixed' ? 'fixed top-0 left-0 right-0 safe-area-inset-top' : 'relative w-full p-4 bg-card/30 backdrop-blur-sm rounded-xl border border-border/30'} z-[120]`}
+      initial={variant === 'fixed' ? { y: -100 } : { opacity: 0, y: 10 }}
+      animate={variant === 'fixed' ? { y: 0 } : { opacity: 1, y: 0 }}
       transition={{ type: 'spring', damping: 20 }}
       onClick={onTap}
       style={{ cursor: onTap ? 'pointer' : 'default' }}
     >
+      {/* Label for inline variant */}
+      {variant === 'inline' && (
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-xs font-technovier text-muted-foreground tracking-wide uppercase">
+            The Pulse™
+          </span>
+          <span className="text-xs font-technovier text-primary/70">
+            Global Energy
+          </span>
+        </div>
+      )}
+
       {/* Energy Bar Container — Living Organism with Real Progress */}
       <motion.div 
         className="relative w-full h-[14px] rounded-full overflow-hidden"
