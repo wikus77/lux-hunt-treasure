@@ -48,6 +48,8 @@ import MissionSettings from "@/pages/settings/MissionSettings";
 import NotificationsSettings from "@/pages/settings/NotificationsSettings";
 import PrivacySettings from "@/pages/settings/PrivacySettings";
 import LegalSettings from "@/pages/settings/LegalSettings";
+import BattleLobby from "@/pages/BattleLobby";
+import BattleArena from "@/pages/BattleArena";
 import AppInfoSettings from "@/pages/settings/AppInfoSettings";
 import DiagnosticsSettings from "@/pages/settings/DiagnosticsSettings";
 import PrivacyPermissionsSettings from "@/pages/settings/PrivacyPermissionsSettings";
@@ -275,6 +277,19 @@ const WouterRoutes: React.FC = () => {
           <Route path="/norah-assistant">
             <ProtectedRoute>
               <GlobalLayout><NorahAssistant /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* TRON BATTLE Routes - © 2025 Joseph MULÉ */}
+          <Route path="/battle">
+            <ProtectedRoute>
+              <BattleLobby />
+            </ProtectedRoute>
+          </Route>
+
+          <Route path="/battle/:battleId">
+            <ProtectedRoute>
+              <BattleArena />
             </ProtectedRoute>
           </Route>
 
