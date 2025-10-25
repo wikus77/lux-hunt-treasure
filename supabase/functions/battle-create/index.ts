@@ -13,7 +13,8 @@ const corsHeaders = {
 };
 
 interface CreateBattleRequest {
-  opponent_id: string;
+  opponent_id?: string;
+  opponent_handle?: string;
   stake_type: 'buzz' | 'clue' | 'energy';
   stake_percentage: 25 | 50 | 75;
   arena_lat?: number;
@@ -39,20 +40,61 @@ serve(async (req) => {
     }
 
     const body: CreateBattleRequest = await req.json();
-    const { opponent_id, stake_type, stake_percentage, arena_lat, arena_lng } = body;
+    let { opponent_id, opponent_handle, stake_type, stake_percentage, arena_lat, arena_lng } = body;
 
-    // Validation
-    if (!opponent_id || !stake_type || !stake_percentage) {
+    // Validation: must have opponent_id OR opponent_handle
+    if (!opponent_id && !opponent_handle) {
       return Response.json(
-        { error: 'Missing required fields' },
-        { status: 400, headers: corsHeaders }
+        { 
+          code: 'MISSING_OPPONENT',
+          error: 'Provide opponent_id or opponent_handle',
+          success: false 
+        },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    if (!stake_type || !stake_percentage) {
+      return Response.json(
+        { 
+          code: 'MISSING_FIELDS',
+          error: 'Missing required fields: stake_type, stake_percentage',
+          success: false 
+        },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Resolve opponent_handle to opponent_id if needed
+    if (!opponent_id && opponent_handle) {
+      const { data: opponentProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .or(`agent_code.ilike.${opponent_handle},display_name.ilike.${opponent_handle}`)
+        .single();
+
+      if (!opponentProfile) {
+        return Response.json(
+          { 
+            code: 'OPPONENT_NOT_FOUND',
+            error: `Opponent "${opponent_handle}" not found`,
+            success: false 
+          },
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      opponent_id = opponentProfile.id;
     }
 
     if (opponent_id === user.id) {
       return Response.json(
-        { error: 'Cannot battle yourself' },
-        { status: 400, headers: corsHeaders }
+        { 
+          code: 'SELF_BATTLE',
+          error: 'Cannot battle yourself',
+          success: false 
+        },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -78,7 +120,14 @@ serve(async (req) => {
       .single();
 
     if (!profile) {
-      return Response.json({ error: 'Profile not found' }, { status: 404, headers: corsHeaders });
+      return Response.json(
+        { 
+          code: 'PROFILE_NOT_FOUND',
+          error: 'Profile not found',
+          success: false 
+        },
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Calculate stake amount
@@ -91,8 +140,12 @@ serve(async (req) => {
 
     if (stakeAmount <= 0) {
       return Response.json(
-        { error: `Insufficient ${stake_type} balance` },
-        { status: 400, headers: corsHeaders }
+        { 
+          code: 'INSUFFICIENT_BALANCE',
+          error: `Insufficient ${stake_type} balance. You have ${availableAmount}, need at least ${stake_percentage}% for stake.`,
+          success: false 
+        },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -123,8 +176,13 @@ serve(async (req) => {
     if (battleError) {
       console.error('Battle creation error:', battleError);
       return Response.json(
-        { error: 'Failed to create battle' },
-        { status: 500, headers: corsHeaders }
+        { 
+          code: 'DATABASE_ERROR',
+          error: 'Failed to create battle',
+          details: battleError.message,
+          success: false 
+        },
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -151,8 +209,13 @@ serve(async (req) => {
   } catch (error) {
     console.error('Unexpected error:', error);
     return Response.json(
-      { error: 'Internal server error' },
-      { status: 500, headers: corsHeaders }
+      { 
+        code: 'INTERNAL_ERROR',
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        success: false 
+      },
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
