@@ -97,12 +97,14 @@ export default function BattleLobby() {
   };
 
   const loadTopAgents = async () => {
-    const { data } = await supabase
-      .from('battle_top_agents')
-      .select('*')
-      .limit(10);
-
-    setTopAgents(data || []);
+    // Use RPC to query the view until types are regenerated
+    const { data, error } = await supabase.rpc('get_top_agents', {});
+    if (error) {
+      console.error('⚠️ Failed to load top agents:', error);
+      setTopAgents([]);
+    } else {
+      setTopAgents(data || []);
+    }
   };
 
   const handleRandomOpponent = async () => {
@@ -133,11 +135,11 @@ export default function BattleLobby() {
 
   const handleSelectTopAgent = (agent: any) => {
     setOpponentId(agent.id);
-    setOpponentHandle(agent.handle || agent.agent_code);
+    setOpponentHandle(agent.username || agent.agent_code);
     
     toast({
       title: '👑 Top Agent Selected',
-      description: `Challenge ${agent.handle || agent.agent_code}`,
+      description: `Challenge ${agent.username || agent.agent_code}`,
     });
   };
 
@@ -423,7 +425,7 @@ export default function BattleLobby() {
                           </div>
                           <div>
                             <p className="text-white font-bold text-sm">
-                              {agent.handle || agent.agent_code || 'Agent'}
+                              {agent.username || agent.agent_code || 'Agent'}
                             </p>
                             <p className="text-gray-400 text-xs">
                               {agent.wins} wins • ELO {agent.elo}
