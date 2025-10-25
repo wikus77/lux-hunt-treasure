@@ -14,17 +14,38 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Swords, Trophy, Zap, Users, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { createBattle, acceptBattle } from '@/lib/battle/invokeBattle';
+import { ErrorBoundary } from '@/components/utils/ErrorBoundary';
+import { Input } from '@/components/ui/input';
+
+// Safe stake options with type guard
+const STAKE_OPTIONS = ['energy', 'buzz', 'clue'] as const;
+type StakeType = typeof STAKE_OPTIONS[number];
+const STAKE_PERCENTAGES = [25, 50, 75] as const;
+type StakePercentage = typeof STAKE_PERCENTAGES[number];
 
 export default function BattleLobby() {
-  const navigate = useSafeNavigate(); // Safe navigation compatible with embedded contexts
+  const navigate = useSafeNavigate();
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
-  const [stakeType, setStakeType] = useState<'buzz' | 'clue' | 'energy'>('energy');
-  const [stakePercentage, setStakePercentage] = useState<25 | 50 | 75>(25);
+  
+  // Battle creation state with safe defaults
+  const [stakeType, setStakeType] = useState<StakeType>('energy');
+  const [stakePercentage, setStakePercentage] = useState<StakePercentage>(25);
+  const [opponentHandle, setOpponentHandle] = useState<string>('');
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Battle lists
   const [pendingBattles, setPendingBattles] = useState<any[]>([]);
   const [myBattles, setMyBattles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
+
+  // Form validation
+  const stakeValid = STAKE_OPTIONS.includes(stakeType);
+  const percentValid = STAKE_PERCENTAGES.includes(stakePercentage);
+  const opponentValid = opponentHandle.trim().length > 0;
+  const canCreate = stakeValid && percentValid && opponentValid && !submitting;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -77,58 +98,83 @@ export default function BattleLobby() {
   };
 
   const handleCreateBattle = async () => {
-    if (!userId) return;
-    setLoading(true);
+    if (!canCreate || !userId) return;
 
-    // For demo: create battle against random user (in production, select opponent)
-    const { data: users } = await supabase
-      .from('profiles')
-      .select('id')
-      .neq('id', userId)
-      .limit(1)
-      .single();
+    setSubmitting(true);
 
-    if (!users) {
-      toast({ title: 'No opponents available', variant: 'destructive' });
-      setLoading(false);
-      return;
-    }
-
-    const { data, error } = await supabase.functions.invoke('battle-create', {
-      body: {
-        opponent_id: users.id,
+    try {
+      const payload = {
+        opponent_handle: opponentHandle.trim(),
         stake_type: stakeType,
         stake_percentage: stakePercentage,
-      },
-    });
+      };
 
-    setLoading(false);
+      const result = await createBattle(payload);
 
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      return;
+      toast({
+        title: '⚔️ Battle Created!',
+        description: `Arena: ${result.arena_name} | Stake: ${result.stake_amount} ${stakeType}`,
+      });
+
+      // Reset form
+      setOpponentHandle('');
+      
+      // Navigate to arena or refresh battles list
+      if (result.battle_id) {
+        navigate(`/battle/${result.battle_id}`);
+      } else {
+        loadBattles(userId);
+      }
+    } catch (error: any) {
+      console.error('⚠️ Battle creation error:', error?.message);
+      
+      // Surface explicit backend errors
+      toast({
+        title: 'Battle Creation Failed',
+        description: error?.message || 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
     }
-
-    toast({ title: '⚔️ Battle Created!', description: `Waiting for opponent...` });
-    navigate(`/battle/${data.battle_id}`);
   };
 
   const handleAcceptBattle = async (battleId: string) => {
     setLoading(true);
 
-    const { error } = await supabase.functions.invoke('battle-accept', {
-      body: { battle_id: battleId },
-    });
+    try {
+      await acceptBattle(battleId);
 
-    setLoading(false);
+      toast({
+        title: '✅ Battle Accepted!',
+        description: 'Entering arena...',
+      });
 
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      return;
+      navigate(`/battle/${battleId}`);
+    } catch (error: any) {
+      console.error('⚠️ Battle accept error:', error?.message);
+      
+      toast({
+        title: 'Accept Failed',
+        description: error?.message || 'Unknown error occurred',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
+  };
 
-    toast({ title: '✅ Battle Accepted!', description: 'Entering arena...' });
-    navigate(`/battle/${battleId}`);
+  // Safe stake type change handler with guard rail
+  const handleStakeTypeChange = (value: string) => {
+    try {
+      if (!value || !STAKE_OPTIONS.includes(value as StakeType)) {
+        console.warn('⚠️ Invalid stake type:', value);
+        return;
+      }
+      setStakeType(value as StakeType);
+    } catch (error) {
+      console.error('⚠️ Stake type change error:', error);
+    }
   };
 
   return (
@@ -197,45 +243,74 @@ export default function BattleLobby() {
                 <CardDescription>Challenge an opponent with your stake</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Stake Type</label>
-                  <Select value={stakeType} onValueChange={(v: any) => setStakeType(v)}>
-                    <SelectTrigger className="bg-gray-700 border-cyan-500/30">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="energy">⚡ Energy Fragments</SelectItem>
-                      <SelectItem value="buzz">📡 Buzz Points</SelectItem>
-                      <SelectItem value="clue">🔍 Clues</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm text-gray-400 mb-2 block">Stake Amount (%)</label>
-                  <div className="grid grid-cols-3 gap-4">
-                    {[25, 50, 75].map((pct) => (
-                      <Button
-                        key={pct}
-                        variant={stakePercentage === pct ? 'default' : 'outline'}
-                        onClick={() => setStakePercentage(pct as 25 | 50 | 75)}
-                        className={stakePercentage === pct ? 'bg-cyan-500 hover:bg-cyan-600' : ''}
-                      >
-                        {pct}%
-                      </Button>
-                    ))}
+                <ErrorBoundary>
+                  {/* Opponent Selector */}
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">
+                      Opponent Handle or Agent Code
+                    </label>
+                    <Input
+                      placeholder="e.g., AGENT-001 or @username"
+                      className="bg-gray-700 border-cyan-500/30 text-white placeholder:text-gray-500"
+                      value={opponentHandle}
+                      onChange={(e) => setOpponentHandle(e.target.value)}
+                      disabled={submitting}
+                    />
                   </div>
-                </div>
 
-                <Button
-                  onClick={handleCreateBattle}
-                  disabled={loading}
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600"
-                >
-                  <Swords className="mr-2" />
-                  Create Battle
-                </Button>
+                  {/* Stake Type */}
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Stake Type</label>
+                    <Select value={stakeType} onValueChange={handleStakeTypeChange}>
+                      <SelectTrigger className="bg-gray-700 border-cyan-500/30">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="energy">⚡ Energy Fragments</SelectItem>
+                        <SelectItem value="buzz">📡 Buzz Points</SelectItem>
+                        <SelectItem value="clue">🔍 Clues</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Stake Percentage */}
+                  <div>
+                    <label className="text-sm text-gray-400 mb-2 block">Stake Amount (%)</label>
+                    <div className="grid grid-cols-3 gap-4">
+                      {STAKE_PERCENTAGES.map((pct) => (
+                        <Button
+                          key={pct}
+                          variant={stakePercentage === pct ? 'default' : 'outline'}
+                          onClick={() => setStakePercentage(pct)}
+                          disabled={submitting}
+                          className={stakePercentage === pct ? 'bg-cyan-500 hover:bg-cyan-600' : ''}
+                        >
+                          {pct}%
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Create Button */}
+                  <Button
+                    onClick={handleCreateBattle}
+                    disabled={!canCreate}
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Swords className="mr-2" />
+                    {submitting ? 'Creating Battle...' : 'Create Battle'}
+                  </Button>
+
+                  {/* Validation hints */}
+                  {!canCreate && !submitting && (
+                    <p className="text-xs text-gray-500 text-center">
+                      {!opponentValid && 'Enter opponent handle • '}
+                      {!stakeValid && 'Select stake type • '}
+                      {!percentValid && 'Select stake percentage'}
+                    </p>
+                  )}
+                </ErrorBoundary>
               </CardContent>
             </Card>
           </TabsContent>
