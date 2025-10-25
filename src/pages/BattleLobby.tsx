@@ -97,13 +97,14 @@ export default function BattleLobby() {
   };
 
   const loadTopAgents = async () => {
-    // Use RPC to query the view until types are regenerated
-    const { data, error } = await supabase.rpc('get_top_agents', {});
-    if (error) {
+    try {
+      // Direct query using PostgreSQL function (types will be regenerated on next deploy)
+      const { data, error } = await supabase.rpc('get_top_agents' as any);
+      if (error) throw error;
+      setTopAgents(data || []);
+    } catch (error) {
       console.error('⚠️ Failed to load top agents:', error);
       setTopAgents([]);
-    } else {
-      setTopAgents(data || []);
     }
   };
 
