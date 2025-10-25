@@ -54,7 +54,8 @@ export function BattleArenaOverlay({ battleId, open, onClose }: BattleArenaOverl
                 </div>
               }
             >
-              <BattleArena />
+              {/* Pass battleId as prop to support embedded context */}
+              <BattleArena battleId={battleId} />
             </Suspense>
           </div>
 

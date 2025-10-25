@@ -5,7 +5,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useSafeNavigate } from '@/lib/navigation/safeNavigate';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TronDisc } from '@/components/tron-battle/TronDisc';
 import { useBattleRealtime } from '@/hooks/useBattleRealtime';
@@ -16,9 +17,14 @@ import { Button } from '@/components/ui/button';
 
 type BattleStatus = 'waiting' | 'countdown' | 'active' | 'tapped' | 'resolved';
 
-export default function BattleArena() {
-  const { battleId } = useParams<{ battleId: string }>();
-  const navigate = useNavigate();
+interface BattleArenaProps {
+  battleId?: string; // Optional prop for embedded/overlay context
+}
+
+export default function BattleArena({ battleId: battleIdProp }: BattleArenaProps = {}) {
+  const params = useParams<{ battleId: string }>();
+  const battleId = battleIdProp || params.battleId; // Use prop if provided, else from route
+  const navigate = useSafeNavigate(); // Safe navigation for embedded contexts
   const { toast } = useToast();
 
   const [status, setStatus] = useState<BattleStatus>('waiting');

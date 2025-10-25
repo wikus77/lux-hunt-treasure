@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSafeNavigate } from '@/lib/navigation/safeNavigate';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,7 @@ import { Swords, Trophy, Zap, Users, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function BattleLobby() {
-  const navigate = useNavigate();
+  const navigate = useSafeNavigate(); // Safe navigation compatible with embedded contexts
   const { toast } = useToast();
   const [userId, setUserId] = useState<string | null>(null);
   const [stakeType, setStakeType] = useState<'buzz' | 'clue' | 'energy'>('energy');
