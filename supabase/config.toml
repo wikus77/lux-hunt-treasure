@@ -159,3 +159,15 @@ verify_jwt = false
 
 [functions.ritual-test-fire]
 verify_jwt = false
+
+[functions.battle-create]
+
+[functions.battle-accept]
+
+[functions.battle-ready]
+
+[functions.battle-tap-commit]
+
+[functions.battle-resolve]
+
+[functions.battle-cancel]
