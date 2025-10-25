@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         opponent_id: selectedOpponent.id,
-        opponent_name: selectedOpponent.handle || selectedOpponent.agent_code || 'Agent',
+        opponent_name: selectedOpponent.username || selectedOpponent.agent_code || 'Agent',
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

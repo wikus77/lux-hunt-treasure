@@ -6601,6 +6601,16 @@ export type Database = {
         }[]
       }
       get_my_balance: { Args: never; Returns: Json }
+      get_top_agents: {
+        Args: never
+        Returns: {
+          agent_code: string
+          elo: number
+          id: string
+          username: string
+          wins: number
+        }[]
+      }
       get_unread_count: { Args: { p_user_id?: string }; Returns: number }
       get_user_by_email: {
         Args: { email_param: string }
