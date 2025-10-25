@@ -4,8 +4,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PrizeVision } from "./home-sections/PrizeVision";
-import { BrokerConsole } from "./home-sections/BrokerConsole";
+import { BattleConsole } from "./home-sections/BattleConsole";
 import { AgentDiary } from "./home-sections/AgentDiary";
+import { BattleArenaOverlay } from "@/components/battle/BattleArenaOverlay";
+import { useBattleOverlay } from "@/hooks/useBattleOverlay";
 import { ActiveMissionBox } from "./home-sections/ActiveMissionBox";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { toast } from "sonner";
@@ -25,6 +27,9 @@ export default function CommandCenterHome() {
   const { userClues, loading: prizeLoading } = usePrizeData();
   const { userCluesCount } = useBuzzPricing(user?.id);
   const { missionStatus, loading: missionLoading } = useMissionStatus();
+  
+  // Battle overlay for deep-links
+  const { battleId, isOpen, closeBattle } = useBattleOverlay();
   
   // 🧹 FORCE CLEAR ALL CACHE - RESET COMPLETO 17/07/2025
   useEffect(() => {
@@ -222,19 +227,16 @@ export default function CommandCenterHome() {
 {/* Floating button handles invitations; removed inline list button */}
 
 
-      {/* Two column layout for Console and Agent */}
+      {/* Two column layout for Battle Console and Agent */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Left Column - M1SSION CONSOLE (Broker Console) */}
+        {/* Left Column - M1SSION BATTLE (Battle Console) */}
         <motion.div 
           className="order-2 md:order-1"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <BrokerConsole 
-            credits={credits}
-            onPurchaseClue={handlePurchaseClue} 
-          />
+          <BattleConsole />
         </motion.div>
 
         {/* Right Column - M1SSION AGENT (Agent Diary) */}
@@ -251,6 +253,15 @@ export default function CommandCenterHome() {
           />
         </motion.div>
       </div>
+
+      {/* Battle Arena Overlay - Opens for deep-links */}
+      <BattleArenaOverlay
+        battleId={battleId}
+        open={isOpen}
+        onClose={closeBattle}
+      />
     </div>
   );
 }
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
