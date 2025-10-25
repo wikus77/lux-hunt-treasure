@@ -12,17 +12,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Swords, Trophy, Zap, Users, Clock } from 'lucide-react';
+import { Swords, Trophy, Zap, Users, Clock, Shuffle, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { createBattle, acceptBattle } from '@/lib/battle/invokeBattle';
+import { createBattle, acceptBattle, getRandomOpponent } from '@/lib/battle/invokeBattle';
 import { ErrorBoundary } from '@/components/utils/ErrorBoundary';
 import { Input } from '@/components/ui/input';
-
-// Safe stake options with type guard
-const STAKE_OPTIONS = ['energy', 'buzz', 'clue'] as const;
-type StakeType = typeof STAKE_OPTIONS[number];
-const STAKE_PERCENTAGES = [25, 50, 75] as const;
-type StakePercentage = typeof STAKE_PERCENTAGES[number];
+import { STAKE_TYPES, STAKE_PERCENTS, StakeType, StakePercent } from '@/lib/battle/constants';
 
 export default function BattleLobby() {
   const navigate = useSafeNavigate();
@@ -30,21 +25,24 @@ export default function BattleLobby() {
   const [userId, setUserId] = useState<string | null>(null);
   
   // Battle creation state with safe defaults
-  const [stakeType, setStakeType] = useState<StakeType>('energy');
-  const [stakePercentage, setStakePercentage] = useState<StakePercentage>(25);
+  const [stakeType, setStakeType] = useState<StakeType>('energy_frag');
+  const [stakePercentage, setStakePercentage] = useState<StakePercent>(25);
   const [opponentHandle, setOpponentHandle] = useState<string>('');
+  const [opponentId, setOpponentId] = useState<string>('');
   const [submitting, setSubmitting] = useState(false);
+  const [loadingRandom, setLoadingRandom] = useState(false);
   
   // Battle lists
   const [pendingBattles, setPendingBattles] = useState<any[]>([]);
   const [myBattles, setMyBattles] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<any>(null);
+  const [topAgents, setTopAgents] = useState<any[]>([]);
 
   // Form validation
-  const stakeValid = STAKE_OPTIONS.includes(stakeType);
-  const percentValid = STAKE_PERCENTAGES.includes(stakePercentage);
-  const opponentValid = opponentHandle.trim().length > 0;
+  const stakeValid = STAKE_TYPES.some(t => t.value === stakeType);
+  const percentValid = STAKE_PERCENTS.includes(stakePercentage);
+  const opponentValid = opponentHandle.trim().length > 0 || opponentId.trim().length > 0;
   const canCreate = stakeValid && percentValid && opponentValid && !submitting;
 
   useEffect(() => {
@@ -53,6 +51,7 @@ export default function BattleLobby() {
         setUserId(data.user.id);
         loadBattles(data.user.id);
         loadStats(data.user.id);
+        loadTopAgents();
       }
     });
 
@@ -97,17 +96,68 @@ export default function BattleLobby() {
     setStats(data);
   };
 
+  const loadTopAgents = async () => {
+    const { data } = await supabase
+      .from('battle_top_agents')
+      .select('*')
+      .limit(10);
+
+    setTopAgents(data || []);
+  };
+
+  const handleRandomOpponent = async () => {
+    setLoadingRandom(true);
+
+    try {
+      const opponent = await getRandomOpponent();
+      
+      setOpponentId(opponent.opponent_id);
+      setOpponentHandle(opponent.opponent_name);
+
+      toast({
+        title: '🎲 Random Opponent Found',
+        description: `Matched with ${opponent.opponent_name}`,
+      });
+    } catch (error: any) {
+      console.error('⚠️ Random opponent error:', error?.message);
+      
+      toast({
+        title: 'No Opponent Found',
+        description: error?.message || 'Try again later',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingRandom(false);
+    }
+  };
+
+  const handleSelectTopAgent = (agent: any) => {
+    setOpponentId(agent.id);
+    setOpponentHandle(agent.handle || agent.agent_code);
+    
+    toast({
+      title: '👑 Top Agent Selected',
+      description: `Challenge ${agent.handle || agent.agent_code}`,
+    });
+  };
+
   const handleCreateBattle = async () => {
     if (!canCreate || !userId) return;
 
     setSubmitting(true);
 
     try {
-      const payload = {
-        opponent_handle: opponentHandle.trim(),
+      const payload: any = {
         stake_type: stakeType,
         stake_percentage: stakePercentage,
       };
+
+      // Prefer opponent_id if available, fallback to opponent_handle
+      if (opponentId) {
+        payload.opponent_id = opponentId;
+      } else {
+        payload.opponent_handle = opponentHandle.trim();
+      }
 
       const result = await createBattle(payload);
 
@@ -118,6 +168,7 @@ export default function BattleLobby() {
 
       // Reset form
       setOpponentHandle('');
+      setOpponentId('');
       
       // Navigate to arena or refresh battles list
       if (result.battle_id) {
@@ -167,7 +218,7 @@ export default function BattleLobby() {
   // Safe stake type change handler with guard rail
   const handleStakeTypeChange = (value: string) => {
     try {
-      if (!value || !STAKE_OPTIONS.includes(value as StakeType)) {
+      if (!value || !STAKE_TYPES.some(t => t.value === value)) {
         console.warn('⚠️ Invalid stake type:', value);
         return;
       }
@@ -178,55 +229,59 @@ export default function BattleLobby() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-8">
+    <div className="h-auto max-h-[70vh] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-6 rounded-lg">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
-          <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-4">
-            TRON BATTLE ARENA
+          <h1 className="text-4xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400 mb-2">
+            M1SSION BATTLE ARENA
           </h1>
-          <p className="text-cyan-400 text-lg">Enter the grid. Test your reaction.</p>
+          <p className="text-cyan-400 text-base">Enter the grid. Test your reaction.</p>
         </motion.div>
 
         {/* Stats Overview */}
         {stats && (
-          <Card className="bg-gray-800/50 border-cyan-500/30 mb-8">
+          <Card className="bg-gray-800/50 border-cyan-500/30 mb-6">
             <CardHeader>
-              <CardTitle className="text-cyan-400 flex items-center gap-2">
+              <CardTitle className="text-cyan-400 flex items-center gap-2 text-lg">
                 <Trophy className="w-5 h-5" />
                 Your Stats
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="text-center">
-                  <p className="text-gray-400 text-sm">Win Rate</p>
-                  <p className="text-2xl font-bold text-white">{stats.win_rate_percentage}%</p>
+                  <p className="text-gray-400 text-xs">Win Rate</p>
+                  <p className="text-xl font-bold text-white">{stats.win_rate_percentage}%</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-gray-400 text-sm">Battles</p>
-                  <p className="text-2xl font-bold text-white">{stats.total_battles}</p>
+                  <p className="text-gray-400 text-xs">Battles</p>
+                  <p className="text-xl font-bold text-white">{stats.total_battles}</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-gray-400 text-sm">Avg Reaction</p>
-                  <p className="text-2xl font-bold text-cyan-400">{stats.avg_reaction_ms}ms</p>
+                  <p className="text-gray-400 text-xs">Avg Reaction</p>
+                  <p className="text-xl font-bold text-cyan-400">{stats.avg_reaction_ms}ms</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-gray-400 text-sm">Fastest</p>
-                  <p className="text-2xl font-bold text-green-400">{stats.fastest_reaction_ms}ms</p>
+                  <p className="text-gray-400 text-xs">Fastest</p>
+                  <p className="text-xl font-bold text-green-400">{stats.fastest_reaction_ms}ms</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         )}
 
-        <Tabs defaultValue="create" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 bg-gray-800/50">
-            <TabsTrigger value="create">Create Battle</TabsTrigger>
+        <Tabs defaultValue="create" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-800/50">
+            <TabsTrigger value="create">Create</TabsTrigger>
+            <TabsTrigger value="top">
+              <Crown className="w-3 h-3 mr-1" />
+              Top
+            </TabsTrigger>
             <TabsTrigger value="pending">
               Challenges ({pendingBattles.length})
             </TabsTrigger>
@@ -239,23 +294,37 @@ export default function BattleLobby() {
           <TabsContent value="create">
             <Card className="bg-gray-800/50 border-cyan-500/30">
               <CardHeader>
-                <CardTitle className="text-cyan-400">Create New Battle</CardTitle>
-                <CardDescription>Challenge an opponent with your stake</CardDescription>
+                <CardTitle className="text-cyan-400 text-lg">Create New Battle</CardTitle>
+                <CardDescription className="text-sm">Challenge an opponent with your stake</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-4">
                 <ErrorBoundary>
-                  {/* Opponent Selector */}
+                  {/* Opponent Selector with Random Button */}
                   <div>
                     <label className="text-sm text-gray-400 mb-2 block">
                       Opponent Handle or Agent Code
                     </label>
-                    <Input
-                      placeholder="e.g., AGENT-001 or @username"
-                      className="bg-gray-700 border-cyan-500/30 text-white placeholder:text-gray-500"
-                      value={opponentHandle}
-                      onChange={(e) => setOpponentHandle(e.target.value)}
-                      disabled={submitting}
-                    />
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="e.g., AGENT-001 or @username"
+                        className="bg-gray-700 border-cyan-500/30 text-white placeholder:text-gray-500 flex-1"
+                        value={opponentHandle}
+                        onChange={(e) => {
+                          setOpponentHandle(e.target.value);
+                          setOpponentId(''); // Clear ID when typing manually
+                        }}
+                        disabled={submitting || loadingRandom}
+                      />
+                      <Button
+                        onClick={handleRandomOpponent}
+                        disabled={loadingRandom || submitting}
+                        variant="outline"
+                        className="bg-purple-600/20 border-purple-500/30 hover:bg-purple-600/40"
+                      >
+                        <Shuffle className="w-4 h-4 mr-1" />
+                        Random
+                      </Button>
+                    </div>
                   </div>
 
                   {/* Stake Type */}
@@ -266,9 +335,11 @@ export default function BattleLobby() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="energy">⚡ Energy Fragments</SelectItem>
-                        <SelectItem value="buzz">📡 Buzz Points</SelectItem>
-                        <SelectItem value="clue">🔍 Clues</SelectItem>
+                        {STAKE_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.icon} {type.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -276,8 +347,8 @@ export default function BattleLobby() {
                   {/* Stake Percentage */}
                   <div>
                     <label className="text-sm text-gray-400 mb-2 block">Stake Amount (%)</label>
-                    <div className="grid grid-cols-3 gap-4">
-                      {STAKE_PERCENTAGES.map((pct) => (
+                    <div className="grid grid-cols-3 gap-3">
+                      {STAKE_PERCENTS.map((pct) => (
                         <Button
                           key={pct}
                           variant={stakePercentage === pct ? 'default' : 'outline'}
@@ -305,12 +376,72 @@ export default function BattleLobby() {
                   {/* Validation hints */}
                   {!canCreate && !submitting && (
                     <p className="text-xs text-gray-500 text-center">
-                      {!opponentValid && 'Enter opponent handle • '}
+                      {!opponentValid && 'Enter opponent or pick random • '}
                       {!stakeValid && 'Select stake type • '}
                       {!percentValid && 'Select stake percentage'}
                     </p>
                   )}
                 </ErrorBoundary>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Top Agents */}
+          <TabsContent value="top">
+            <Card className="bg-gray-800/50 border-cyan-500/30">
+              <CardHeader>
+                <CardTitle className="text-yellow-400 flex items-center gap-2 text-lg">
+                  <Crown className="w-5 h-5" />
+                  Top Agents
+                </CardTitle>
+                <CardDescription className="text-sm">Challenge the best players</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {topAgents.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400">
+                      <Trophy className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">No rankings yet</p>
+                    </div>
+                  ) : (
+                    topAgents.map((agent, index) => (
+                      <motion.div
+                        key={agent.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-3 rounded-lg bg-gray-700/30 border border-gray-600/30 hover:border-yellow-500/50 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${
+                            index === 0 ? 'bg-yellow-500 text-black' :
+                            index === 1 ? 'bg-gray-400 text-black' :
+                            index === 2 ? 'bg-orange-600 text-white' :
+                            'bg-gray-600 text-white'
+                          }`}>
+                            #{index + 1}
+                          </div>
+                          <div>
+                            <p className="text-white font-bold text-sm">
+                              {agent.handle || agent.agent_code || 'Agent'}
+                            </p>
+                            <p className="text-gray-400 text-xs">
+                              {agent.wins} wins • ELO {agent.elo}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={() => handleSelectTopAgent(agent)}
+                          size="sm"
+                          variant="outline"
+                          className="bg-yellow-600/20 border-yellow-500/30 hover:bg-yellow-600/40 text-yellow-400"
+                        >
+                          Challenge
+                        </Button>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
