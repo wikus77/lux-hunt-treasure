@@ -15,11 +15,15 @@ const corsHeaders = {
 interface CreateBattleRequest {
   opponent_id?: string;
   opponent_handle?: string;
-  stake_type: 'buzz' | 'clue' | 'energy';
+  stake_type: 'energy' | 'buzz' | 'clue';
   stake_percentage: 25 | 50 | 75;
   arena_lat?: number;
   arena_lng?: number;
 }
+
+// Validation constants
+const VALID_STAKE_TYPES = ['energy', 'buzz', 'clue'] as const;
+const VALID_STAKE_PERCENTAGES = [25, 50, 75] as const;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -42,23 +46,41 @@ serve(async (req) => {
     const body: CreateBattleRequest = await req.json();
     let { opponent_id, opponent_handle, stake_type, stake_percentage, arena_lat, arena_lng } = body;
 
+    console.log('📥 Battle creation request:', { stake_type, stake_percentage, has_opponent_id: !!opponent_id, has_opponent_handle: !!opponent_handle });
+
     // Validation: must have opponent_id OR opponent_handle
     if (!opponent_id && !opponent_handle) {
       return Response.json(
         { 
-          code: 'MISSING_OPPONENT',
-          error: 'Provide opponent_id or opponent_handle',
+          code: 'INVALID_INPUT',
+          error: 'Missing opponent',
+          hint: 'Provide opponent_id or opponent_handle',
           success: false 
         },
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!stake_type || !stake_percentage) {
+    // Validate stake_type
+    if (!stake_type || !VALID_STAKE_TYPES.includes(stake_type as any)) {
       return Response.json(
         { 
-          code: 'MISSING_FIELDS',
-          error: 'Missing required fields: stake_type, stake_percentage',
+          code: 'INVALID_INPUT',
+          error: 'Invalid stake_type',
+          hint: `stake_type must be one of: ${VALID_STAKE_TYPES.join(', ')}`,
+          success: false 
+        },
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate stake_percentage
+    if (!stake_percentage || !VALID_STAKE_PERCENTAGES.includes(stake_percentage as any)) {
+      return Response.json(
+        { 
+          code: 'INVALID_INPUT',
+          error: 'Invalid stake_percentage',
+          hint: `stake_percentage must be one of: ${VALID_STAKE_PERCENTAGES.join(', ')}`,
           success: false 
         },
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -77,7 +99,8 @@ serve(async (req) => {
         return Response.json(
           { 
             code: 'OPPONENT_NOT_FOUND',
-            error: `Opponent "${opponent_handle}" not found`,
+            error: 'Opponent not found',
+            hint: `No user found with handle or agent_code: "${opponent_handle}"`,
             success: false 
           },
           { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -90,8 +113,9 @@ serve(async (req) => {
     if (opponent_id === user.id) {
       return Response.json(
         { 
-          code: 'SELF_BATTLE',
+          code: 'INVALID_INPUT',
           error: 'Cannot battle yourself',
+          hint: 'Choose a different opponent',
           success: false 
         },
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -107,8 +131,13 @@ serve(async (req) => {
 
     if (ghostMode?.ghost_mode_active && ghostMode?.ghost_until && new Date(ghostMode.ghost_until) > new Date()) {
       return Response.json(
-        { error: 'You are in ghost mode', ghost_until: ghostMode.ghost_until },
-        { status: 403, headers: corsHeaders }
+        { 
+          code: 'GHOST_MODE',
+          error: 'You are in ghost mode',
+          hint: `Ghost mode active until ${ghostMode.ghost_until}`,
+          success: false 
+        },
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -123,7 +152,8 @@ serve(async (req) => {
       return Response.json(
         { 
           code: 'PROFILE_NOT_FOUND',
-          error: 'Profile not found',
+          error: 'User profile not found',
+          hint: 'Complete your profile setup before creating battles',
           success: false 
         },
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -142,12 +172,15 @@ serve(async (req) => {
       return Response.json(
         { 
           code: 'INSUFFICIENT_BALANCE',
-          error: `Insufficient ${stake_type} balance. You have ${availableAmount}, need at least ${stake_percentage}% for stake.`,
+          error: `Insufficient ${stake_type} balance`,
+          hint: `You have ${availableAmount} ${stake_type}, need at least ${stake_percentage}% for stake (minimum 1)`,
           success: false 
         },
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log(`✅ Stake validated: ${stakeAmount} ${stake_type} (${stake_percentage}% of ${availableAmount})`);
 
     // Generate arena name if GPS provided
     let arenaName = 'TRON Arena';
@@ -174,12 +207,12 @@ serve(async (req) => {
       .single();
 
     if (battleError) {
-      console.error('Battle creation error:', battleError);
+      console.error('❌ Battle creation DB error:', battleError);
       return Response.json(
         { 
           code: 'DATABASE_ERROR',
           error: 'Failed to create battle',
-          details: battleError.message,
+          hint: battleError.message,
           success: false 
         },
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -207,12 +240,12 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Unexpected error:', error);
+    console.error('❌ Unexpected error in battle-create:', error);
     return Response.json(
       { 
         code: 'INTERNAL_ERROR',
         error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error',
+        hint: error instanceof Error ? error.message : 'Unknown exception in edge function',
         success: false 
       },
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

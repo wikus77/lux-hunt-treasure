@@ -15,6 +15,13 @@ interface CreateBattlePayload {
   arena_lng?: number;
 }
 
+interface ErrorResponse {
+  code?: string;
+  error?: string;
+  hint?: string;
+  details?: string;
+}
+
 interface BattleResponse {
   success: boolean;
   battle_id: string;
@@ -46,17 +53,26 @@ export async function createBattle(payload: CreateBattlePayload): Promise<Battle
 
   // Supabase Functions returns {data, error}. If status is not 2xx, error is populated.
   if (error) {
-    // Extract status code and message for explicit error reporting
-    const status = (error as any).status || 'n/a';
-    const code = (error as any).code || error.name || 'EdgeError';
-    const message = error.message || 'Unknown error';
+    console.error('❌ Edge function error:', error);
     
-    // Surface backend error with full context
-    throw new Error(`${code} [${status}]: ${message}`);
+    // Try to extract error details from response
+    const errorData = (error as any).context?.body as ErrorResponse | undefined;
+    const status = (error as any).status || (error as any).context?.status || 'n/a';
+    const code = errorData?.code || (error as any).code || error.name || 'EDGE_ERROR';
+    const hint = errorData?.hint || errorData?.error || error.message || 'Edge function returned non-2xx status';
+    
+    // Surface backend error with explicit context
+    throw new Error(`${code} [${status}]: ${hint}`);
   }
 
-  if (!data?.success) {
-    throw new Error(data?.error || 'Battle creation failed');
+  if (!data) {
+    throw new Error('EMPTY_RESPONSE [500]: No data returned from edge function');
+  }
+
+  if (!data.success) {
+    const errorCode = (data as any).code || 'BATTLE_FAILED';
+    const errorHint = (data as any).error || (data as any).hint || 'Battle creation failed';
+    throw new Error(`${errorCode}: ${errorHint}`);
   }
 
   return data;
@@ -84,14 +100,17 @@ export async function acceptBattle(battleId: string): Promise<void> {
   });
 
   if (error) {
+    const errorData = (error as any).context?.body as ErrorResponse | undefined;
     const status = (error as any).status || 'n/a';
-    const code = (error as any).code || error.name || 'EdgeError';
-    const message = error.message || 'Unknown error';
-    throw new Error(`${code} [${status}]: ${message}`);
+    const code = errorData?.code || (error as any).code || error.name || 'EDGE_ERROR';
+    const hint = errorData?.hint || errorData?.error || error.message || 'Unknown error';
+    throw new Error(`${code} [${status}]: ${hint}`);
   }
 
   if (!data?.success) {
-    throw new Error(data?.error || 'Battle accept failed');
+    const errorCode = (data as any).code || 'ACCEPT_FAILED';
+    const errorHint = (data as any).error || (data as any).hint || 'Battle accept failed';
+    throw new Error(`${errorCode}: ${errorHint}`);
   }
 }
 
@@ -116,14 +135,17 @@ export async function getRandomOpponent(): Promise<{ opponent_id: string; oppone
   });
 
   if (error) {
+    const errorData = (error as any).context?.body as ErrorResponse | undefined;
     const status = (error as any).status || 'n/a';
-    const code = (error as any).code || error.name || 'EdgeError';
-    const message = error.message || 'Unknown error';
-    throw new Error(`${code} [${status}]: ${message}`);
+    const code = errorData?.code || (error as any).code || error.name || 'EDGE_ERROR';
+    const hint = errorData?.hint || errorData?.error || error.message || 'Unknown error';
+    throw new Error(`${code} [${status}]: ${hint}`);
   }
 
-  if (!data?.opponent_id) {
-    throw new Error('No opponent found');
+  if (!data || !data.opponent_id) {
+    const errorCode = (data as any)?.code || 'NO_OPPONENT_FOUND';
+    const errorHint = (data as any)?.error || 'No eligible opponents available';
+    throw new Error(`${errorCode}: ${errorHint}`);
   }
 
   return data;
