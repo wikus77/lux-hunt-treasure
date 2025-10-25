@@ -3050,6 +3050,13 @@ export type Database = {
             foreignKeyName: "personality_quiz_results_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: true
+            referencedRelation: "battle_top_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personality_quiz_results_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -4750,6 +4757,13 @@ export type Database = {
             foreignKeyName: "user_buzz_counter_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "battle_top_agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_buzz_counter_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -4798,6 +4812,13 @@ export type Database = {
           week?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "user_buzz_map_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "battle_top_agents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "user_buzz_map_user_id_fkey"
             columns: ["user_id"]
@@ -4958,6 +4979,13 @@ export type Database = {
             columns: ["prize_id"]
             isOneToOne: false
             referencedRelation: "prizes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_clues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "battle_top_agents"
             referencedColumns: ["id"]
           },
           {
@@ -5949,6 +5977,16 @@ export type Database = {
         }
         Relationships: []
       }
+      battle_top_agents: {
+        Row: {
+          agent_code: string | null
+          elo: number | null
+          id: string | null
+          username: string | null
+          wins: number | null
+        }
+        Relationships: []
+      }
       buzz_map_markers: {
         Row: {
           active: boolean | null
@@ -6706,6 +6744,14 @@ export type Database = {
       }
       normalize_feed_url: { Args: { input_url: string }; Returns: string }
       perform_security_check: { Args: never; Returns: Json }
+      pick_random_opponent: {
+        Args: { p_me: string }
+        Returns: {
+          agent_code: string
+          id: string
+          username: string
+        }[]
+      }
       process_stripe_webhook_completed: {
         Args: {
           p_amount_total: number
