@@ -25,7 +25,7 @@ export default function BattleLobby() {
   const [userId, setUserId] = useState<string | null>(null);
   
   // Battle creation state with safe defaults
-  const [stakeType, setStakeType] = useState<StakeType>('energy_frag');
+  const [stakeType, setStakeType] = useState<StakeType>('energy');
   const [stakePercentage, setStakePercentage] = useState<StakePercent>(25);
   const [opponentHandle, setOpponentHandle] = useState<string>('');
   const [opponentId, setOpponentId] = useState<string>('');
@@ -87,13 +87,40 @@ export default function BattleLobby() {
   };
 
   const loadStats = async (uid: string) => {
-    const { data } = await supabase
-      .from('battle_metrics')
-      .select('*')
-      .eq('user_id', uid)
-      .single();
+    try {
+      // Calculate stats from battles table directly
+      const { data: battles } = await supabase
+        .from('battles')
+        .select('*')
+        .or(`creator_id.eq.${uid},opponent_id.eq.${uid}`)
+        .eq('status', 'resolved');
 
-    setStats(data);
+      if (battles) {
+        const total = battles.length;
+        const wins = battles.filter(b => b.winner_id === uid).length;
+        const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+        
+        // Calculate reaction times
+        const reactions = battles
+          .map(b => b.creator_id === uid ? b.creator_reaction_ms : b.opponent_reaction_ms)
+          .filter((ms): ms is number => ms !== null && ms !== undefined);
+        
+        const avgReaction = reactions.length > 0 
+          ? Math.round(reactions.reduce((a, b) => a + b, 0) / reactions.length)
+          : 0;
+        const fastest = reactions.length > 0 ? Math.min(...reactions) : 0;
+
+        setStats({
+          total_battles: total,
+          win_rate_percentage: winRate,
+          avg_reaction_ms: avgReaction,
+          fastest_reaction_ms: fastest,
+        });
+      }
+    } catch (error) {
+      console.error('⚠️ Stats calculation error:', error);
+      setStats(null);
+    }
   };
 
   const loadTopAgents = async () => {
@@ -180,12 +207,23 @@ export default function BattleLobby() {
         loadBattles(userId);
       }
     } catch (error: any) {
-      console.error('⚠️ Battle creation error:', error?.message);
+      console.error('⚠️ Battle creation error:', error);
       
-      // Surface explicit backend errors
+      // Parse error code and hint from backend
+      let errorMsg = 'Unknown error occurred';
+      if (error?.message) {
+        // Extract error_code and hint from message if present
+        const match = error.message.match(/([A-Z_]+)\s*\[(\d+)\]:\s*(.+)/);
+        if (match) {
+          errorMsg = `${match[1]}: ${match[3]}`;
+        } else {
+          errorMsg = error.message;
+        }
+      }
+      
       toast({
         title: 'Battle Creation Failed',
-        description: error?.message || 'Unknown error occurred',
+        description: errorMsg,
         variant: 'destructive',
       });
     } finally {

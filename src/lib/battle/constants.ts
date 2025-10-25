@@ -4,10 +4,10 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-export type StakeType = 'buzz' | 'clue' | 'energy_frag';
+export type StakeType = 'energy' | 'buzz' | 'clue';
 
 export const STAKE_TYPES = [
-  { value: 'energy_frag' as const, label: 'Energy Fragments', icon: '⚡' },
+  { value: 'energy' as const, label: 'Energy Fragments', icon: '⚡' },
   { value: 'buzz' as const, label: 'Buzz Points', icon: '📡' },
   { value: 'clue' as const, label: 'Clues', icon: '🔍' },
 ] as const;
