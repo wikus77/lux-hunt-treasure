@@ -681,21 +681,62 @@ if (typeof window !== 'undefined') {
   }, 100);
 }
 
-// Enhanced global error handling
+// Enhanced global error handling with flood prevention
+let _lastErrorLog = 0;
+let _errorLogCount = 0;
+const ERROR_LOG_COOLDOWN = 1000; // 1 second cooldown
+const MAX_ERROR_LOGS_PER_MINUTE = 5;
+
 window.addEventListener('error', (event) => {
-  console.error('🚨 GLOBAL ERROR CAUGHT:', {
-    message: event.error?.message,
-    filename: event.filename,
+  const now = Date.now();
+  
+  // Reset counter every minute
+  if (now - _lastErrorLog > 60000) {
+    _errorLogCount = 0;
+  }
+  
+  // Prevent flood: max 5 logs per minute with 1s cooldown
+  if (now - _lastErrorLog < ERROR_LOG_COOLDOWN || _errorLogCount >= MAX_ERROR_LOGS_PER_MINUTE) {
+    return;
+  }
+  
+  // Skip logging if error has no meaningful information
+  if (!event.error?.message && !event.filename && event.lineno === 0) {
+    return;
+  }
+  
+  _lastErrorLog = now;
+  _errorLogCount++;
+  
+  console.error('🚨 GLOBAL ERROR:', {
+    message: event.error?.message || 'Unknown error',
+    filename: event.filename || 'n/a',
     lineno: event.lineno,
     colno: event.colno,
-    error: event.error
   });
 });
 
+let _lastRejectionLog = 0;
+let _rejectionLogCount = 0;
+
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('🚨 UNHANDLED PROMISE REJECTION:', {
-    reason: event.reason,
-    promise: event.promise
+  const now = Date.now();
+  
+  // Reset counter every minute
+  if (now - _lastRejectionLog > 60000) {
+    _rejectionLogCount = 0;
+  }
+  
+  // Prevent flood: max 5 logs per minute with 1s cooldown
+  if (now - _lastRejectionLog < ERROR_LOG_COOLDOWN || _rejectionLogCount >= MAX_ERROR_LOGS_PER_MINUTE) {
+    return;
+  }
+  
+  _lastRejectionLog = now;
+  _rejectionLogCount++;
+  
+  console.error('🚨 UNHANDLED REJECTION:', {
+    reason: event.reason instanceof Error ? event.reason.message : String(event.reason),
   });
 });
 
