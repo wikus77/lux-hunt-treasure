@@ -95,4 +95,38 @@ export async function acceptBattle(battleId: string): Promise<void> {
   }
 }
 
+/**
+ * Gets a random eligible opponent for quick match
+ */
+export async function getRandomOpponent(): Promise<{ opponent_id: string; opponent_name: string }> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+
+  if (!token) {
+    throw new Error('Authentication required - please sign in');
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+
+  const { data, error } = await supabase.functions.invoke('battle-random-opponent', {
+    headers,
+  });
+
+  if (error) {
+    const status = (error as any).status || 'n/a';
+    const code = (error as any).code || error.name || 'EdgeError';
+    const message = error.message || 'Unknown error';
+    throw new Error(`${code} [${status}]: ${message}`);
+  }
+
+  if (!data?.opponent_id) {
+    throw new Error('No opponent found');
+  }
+
+  return data;
+}
+
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
