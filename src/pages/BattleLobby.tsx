@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SafeSelect } from '@/components/ui/SafeSelect';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Swords, Trophy, Zap, Users, Clock, Shuffle, Crown } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -256,18 +256,6 @@ export default function BattleLobby() {
     }
   };
 
-  // Safe stake type change handler with guard rail
-  const handleStakeTypeChange = (value: string) => {
-    try {
-      if (!value || !STAKE_TYPES.some(t => t.value === value)) {
-        console.warn('⚠️ Invalid stake type:', value);
-        return;
-      }
-      setStakeType(value as StakeType);
-    } catch (error) {
-      console.error('⚠️ Stake type change error:', error);
-    }
-  };
 
   return (
     <div className="h-auto max-h-[70vh] overflow-y-auto custom-scrollbar bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-6 rounded-lg">
@@ -371,18 +359,11 @@ export default function BattleLobby() {
                   {/* Stake Type */}
                   <div>
                     <label className="text-sm text-gray-400 mb-2 block">Stake Type</label>
-                    <Select value={stakeType} onValueChange={handleStakeTypeChange}>
-                      <SelectTrigger className="bg-gray-700 border-cyan-500/30">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STAKE_TYPES.map((type) => (
-                          <SelectItem key={type.value} value={type.value}>
-                            {type.icon} {type.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SafeSelect 
+                      value={stakeType} 
+                      onChange={setStakeType}
+                      disabled={submitting || loadingRandom}
+                    />
                   </div>
 
                   {/* Stake Percentage */}
