@@ -104,7 +104,9 @@ async function upsertBackend(sub: PushSubscription): Promise<void> {
     throw new Error('Chiavi subscription mancanti');
   }
 
-  const platform = sub.endpoint.includes('web.push.apple.com') ? 'ios' : 'web';
+  // ✅ Use safe platform detection
+  const { detectPlatformSafe } = await import('@/utils/pushPlatform');
+  const platform = detectPlatformSafe();
 
   // ✅ SAME ENDPOINT AS DIAGNOSI (line 222 in PushDiagnosi.tsx)
   const { error } = await supabase.functions.invoke('webpush-upsert', {
