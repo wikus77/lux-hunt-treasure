@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import PushToggleV2 from '@/components/push/PushToggleV2';
+import WebPushToggle from '@/components/WebPushToggle';
 import { useAuth } from '@/hooks/useAuth';
 import { 
   enablePushNotifications, 
@@ -290,15 +292,35 @@ const NotificationsPage: React.FC = () => {
     );
   }
 
+  // Feature flag for PushToggleV2
+  const showV2 = import.meta.env.VITE_PUSH_TOGGLE_V2 === '1';
+
   return (
     <div className="space-y-6">
-      {/* Toggle Switch */}
+      {/* Web Push Notifications (V2/V1) */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-4 h-4" />
+            Web Push Notifications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {showV2 ? (
+            <PushToggleV2 data-push-toggle-v2 />
+          ) : (
+            <WebPushToggle data-push-toggle-v1 />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* FCM Toggle Switch */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {getStateIcon(notificationState)}
-              Push Notifications
+              FCM Push (Mobile Apps)
             </div>
             <Switch
               checked={isToggleOn()}
@@ -465,3 +487,5 @@ const NotificationsPage: React.FC = () => {
 };
 
 export default NotificationsPage;
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
