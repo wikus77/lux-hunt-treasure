@@ -7,6 +7,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { emitReconnecting, emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 
 export interface Battle {
   id: string;
@@ -70,9 +71,12 @@ export function useBattleRealtime({
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
           setConnected(true);
+          emitSubscribed(`battle:${battleId}`);
           console.log(`✅ Subscribed to battle:${battleId}`);
         } else if (status === 'CLOSED') {
           setConnected(false);
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          emitError(String(status), `battle:${battleId}`);
         }
       });
 

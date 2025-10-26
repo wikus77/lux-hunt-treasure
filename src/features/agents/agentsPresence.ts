@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { emitReconnecting, emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 
 export interface AgentPresence {
   id: string;
@@ -96,6 +97,7 @@ export async function initAgentsPresence(
                 clearTimeout(timeout);
                 console.log('[Presence] status → SUBSCRIBED');
                 channelState = 'subscribed';
+                emitSubscribed('m1_agents_presence_v1');
                 (window as any).__M1_DEBUG.presence = { status: 'SUBSCRIBED', state: channelState, queued: !!pendingTrack, count: 0 };
 
                 // Track initial presence (await to ensure ACK)
@@ -133,6 +135,7 @@ export async function initAgentsPresence(
                 clearTimeout(timeout);
                 console.error('[Presence] Channel error:', status);
                 channelState = 'error';
+                emitError(String(status), 'm1_agents_presence_v1');
                 (window as any).__M1_DEBUG.presence = { status: 'ERROR', error: status, state: channelState, queued: !!pendingTrack, count: 0 };
                 reject(new Error(String(status)));
               }

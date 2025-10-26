@@ -6,6 +6,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { emitReconnecting, emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 
 export interface PulseState {
   value: number; // 0-100
@@ -78,7 +79,14 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
           console.log('🔄 Pulse state updated:', newRow);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          emitSubscribed('pulse_state_changes');
+          console.log('✅ Subscribed to pulse_state_changes');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          emitError(String(status), 'pulse_state_changes');
+        }
+      });
 
     // Subscribe to custom pulse_channel notifications
     const notifyChannel = supabase
@@ -92,7 +100,14 @@ export const usePulseRealtime = (): UsePulseRealtimeReturn => {
         setLastUpdate(payload.payload as PulseRealtimePayload);
         console.log('⚡ Pulse notification:', payload.payload);
       })
-      .subscribe();
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          emitSubscribed('pulse_notifications');
+          console.log('✅ Subscribed to pulse_notifications');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          emitError(String(status), 'pulse_notifications');
+        }
+      });
 
     channelRef.current = { stateChannel, notifyChannel };
 
