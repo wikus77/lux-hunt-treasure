@@ -33,6 +33,7 @@
   /**
    * Reconnect badge container
    * Fixed position with safe area awareness
+   * Auto-positioning: top by default, bottom if toast present
    */
   .reconnect-badge {
     position: fixed;
@@ -42,6 +43,25 @@
     z-index: 9999;
     pointer-events: none;
     animation: slideInDown 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /**
+   * Bottom positioning variant
+   * Used when toast is present to avoid overlap
+   */
+  .reconnect-badge.reconnect-bottom {
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);
+    animation: slideInUp 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /**
+   * RTL support
+   */
+  [dir="rtl"] .reconnect-badge {
+    left: auto;
+    right: 50%;
+    transform: translateX(50%);
   }
 
   /**
@@ -85,7 +105,7 @@
   /* ========================================
      ANIMATIONS
      ======================================== */
-  
+   
   @keyframes slideInDown {
     from {
       opacity: 0;
@@ -94,6 +114,42 @@
     to {
       opacity: 1;
       transform: translate(-50%, 0);
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  /**
+   * RTL animation variants
+   */
+  [dir="rtl"] @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translate(50%, -1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translate(50%, 0);
+    }
+  }
+
+  [dir="rtl"] @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translate(50%, 1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translate(50%, 0);
     }
   }
 
