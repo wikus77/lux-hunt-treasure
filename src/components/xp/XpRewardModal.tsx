@@ -1,9 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { Gift, Zap, MapPin, Star } from 'lucide-react';
+import { shouldShow, markShown } from '@/lib/ux/frequencyGate';
 
 interface XpRewardModalProps {
   open: boolean;
@@ -22,6 +23,16 @@ export const XpRewardModal: React.FC<XpRewardModalProps> = ({
   onRedirectToBuzz,
   onRedirectToBuzzMap
 }) => {
+  // Frequency gate: show max 1/day
+  const canShowModal = shouldShow('xp-reward', 24);
+
+  // Mark as shown when modal opens
+  useEffect(() => {
+    if (open && canShowModal) {
+      markShown('xp-reward');
+    }
+  }, [open, canShowModal]);
+
   const handleBuzzRedirect = () => {
     onOpenChange(false);
     onRedirectToBuzz();
@@ -31,6 +42,11 @@ export const XpRewardModal: React.FC<XpRewardModalProps> = ({
     onOpenChange(false);
     onRedirectToBuzzMap();
   };
+
+  // Don't render if frequency gate blocks it
+  if (!canShowModal) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
