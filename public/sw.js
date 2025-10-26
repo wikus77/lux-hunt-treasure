@@ -1,9 +1,11 @@
-// sw-bump-2025-10-15-01
-// M1SSION™ PWA Service Worker - Unified Web Push + Caching
+// sw-bump-2025-10-15-02
+// M1SSION™ PWA Service Worker - Unified Web Push + Caching + S-W-R
 // © 2025 Joseph MULÉ – NIYVORA KFT™
 
-const CACHE_NAME = 'm1ssion-v2';
-const STATIC_CACHE = 'm1ssion-static-v2';
+const SW_VERSION = '2.1.0'; // Semantic versioning for update detection
+const CACHE_NAME = 'm1ssion-v2.1';
+const STATIC_CACHE = 'm1ssion-static-v2.1';
+const ASSET_CACHE = 'm1ssion-assets-v2.1'; // S-W-R cache
 
 // Precache critical resources
 const PRECACHE_RESOURCES = [
@@ -37,24 +39,27 @@ self.addEventListener('install', (event) => {
 
 // Activate event - cleanup old caches, claim clients, notify update
 self.addEventListener('activate', (event) => {
-  console.log('[M1SSION SW] Activating v2...');
+  console.log(`[M1SSION SW] Activating v${SW_VERSION}...`);
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all([
         // Delete old caches
         ...cacheNames.filter(name => 
-          name !== CACHE_NAME && name !== STATIC_CACHE
+          name !== CACHE_NAME && name !== STATIC_CACHE && name !== ASSET_CACHE
         ).map(name => {
           console.log('[M1SSION SW] Deleting old cache:', name);
           return caches.delete(name);
         }),
         // Claim all clients immediately
         self.clients.claim(),
-        // Notify all clients about update ready
+        // Notify all clients about update available
         self.clients.matchAll({ type: 'window' }).then(clients => {
           clients.forEach(client => {
             console.log('[M1SSION SW] Notifying client about update');
-            client.postMessage({ type: 'SW_UPDATE_READY' });
+            client.postMessage({ 
+              type: 'M1_SW_UPDATE_AVAILABLE',
+              version: SW_VERSION
+            });
           });
         })
       ]);
@@ -62,7 +67,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - NetworkFirst with offline fallback
+// Fetch event - NetworkFirst with S-W-R for static assets + offline fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -71,17 +76,58 @@ self.addEventListener('fetch', (event) => {
   const isGET = request.method === 'GET';
   const isHTML = request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html');
   
-  // Exclude critical endpoints (Supabase, Edge Functions, SW itself, VAPID)
+  // Exclude critical endpoints (Supabase - NEVER cache these)
   const isSupabase = url.hostname.endsWith('.supabase.co');
+  const isSupabaseRest = url.pathname.startsWith('/rest/v1');
+  const isSupabaseAuth = url.pathname.startsWith('/auth/v1');
+  const isSupabaseFunctions = url.pathname.startsWith('/functions/v1');
   const isEdgeFunctions = url.pathname.startsWith('/functions/v1');
   const isServiceWorker = url.pathname === '/sw.js';
   const isVapid = url.pathname === '/vapid-public.txt';
   
-  // Skip non-GET or non-http requests
-  if (!isGET || !request.url.startsWith('http')) return;
+  // Identify static assets for S-W-R strategy
+  const isStaticAsset = /\.(js|css|png|jpg|jpeg|gif|svg|webp|woff|woff2|ttf|eot|ico)$/.test(url.pathname) ||
+                        url.pathname.startsWith('/assets/');
   
+  // Skip non-GET or non-http requests, and NEVER cache Supabase
+  if (!isGET || !request.url.startsWith('http') || isSupabase || isSupabaseRest || isSupabaseAuth || isSupabaseFunctions) return;
+  
+  // S-W-R: Static assets - CacheFirst with background revalidate
+  if (isStaticAsset && !isServiceWorker && !isVapid) {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(request);
+        
+        // Fetch in background and update cache
+        const fetchPromise = fetch(request).then(response => {
+          if (response && response.status === 200) {
+            const responseClone = response.clone();
+            caches.open(ASSET_CACHE).then(cache => {
+              cache.put(request, responseClone);
+            });
+            
+            // Notify clients about asset update
+            self.clients.matchAll({ type: 'window' }).then(clients => {
+              clients.forEach(client => {
+                client.postMessage({ 
+                  type: 'M1_ASSET_UPDATED',
+                  url: request.url
+                });
+              });
+            });
+          }
+          return response;
+        }).catch(() => null);
+        
+        // Return cached version immediately if available, otherwise wait for network
+        return cached || fetchPromise || new Response('Asset not available', { status: 503 });
+      })()
+    );
+    return;
+  }
+
   // Handle HTML navigation with offline fallback
-  if (isHTML && !isSupabase && !isEdgeFunctions && !isServiceWorker && !isVapid) {
+  if (isHTML && !isEdgeFunctions && !isServiceWorker && !isVapid) {
     event.respondWith(
       (async () => {
         try {
@@ -102,7 +148,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Default NetworkFirst strategy for other resources
+  // Default NetworkFirst strategy for other resources (non-asset, non-HTML)
   event.respondWith(
     fetch(request)
       .then(response => {
@@ -220,6 +266,14 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-console.log('[M1SSION SW] ✅ Service Worker loaded successfully');
+// Message event - handle SKIP_WAITING from update prompt
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[M1SSION SW] ⏭️ SKIP_WAITING received, activating new SW...');
+    self.skipWaiting();
+  }
+});
+
+console.log(`[M1SSION SW] ✅ Service Worker v${SW_VERSION} loaded successfully`);
 
 // sw-bump-1759826182
