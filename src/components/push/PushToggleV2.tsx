@@ -87,11 +87,19 @@ const PushToggleV2: React.FC = () => {
     }
     lastClickRef.current = now;
 
+    // ✅ TASK 3: Global anti-loop guard
+    if ((window as any).__m1_push_in_progress) {
+      console.info('[PUSH-V2] Already in progress, ignoring');
+      return;
+    }
+
     setIsLoading(true);
+    (window as any).__m1_push_in_progress = true;
     
     try {
       if (!isEnabled) {
-        // Subscribe using COMPLETE pipeline (same as "Ripara" button)
+        // ✅ TASK 2: Subscribe using COMPLETE pipeline (auto-repair)
+        // Includes: SW ready → Permission → Subscription → Backend Upsert
         console.info('[PUSH-V2] Starting subscribeFlow()...');
         const t0 = performance.now();
         
@@ -102,10 +110,10 @@ const PushToggleV2: React.FC = () => {
         
         if (result.ok) {
           setIsEnabled(true);
-          console.info('[PUSH-V2] ✅ Subscription successful with backend upsert');
+          console.info('📬 [PUSH-V2] Subscription OK');
         } else {
           // Fallback silently - don't throw, don't change state
-          console.warn('[PUSH-V2] ⚠️ Subscription failed:', result.error || result.message);
+          console.warn('⚠️ [PUSH-V2] Subscription failed:', result.error || result.message);
           
           // User-friendly message
           let errorMessage = 'Impossibile attivare le notifiche.';
@@ -142,6 +150,10 @@ const PushToggleV2: React.FC = () => {
       alert(errorMessage);
     } finally {
       setIsLoading(false);
+      // Clear lock after 1 second
+      setTimeout(() => {
+        (window as any).__m1_push_in_progress = false;
+      }, 1000);
     }
   }, [isEnabled, isSupported]);
 
