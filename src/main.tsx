@@ -2,6 +2,7 @@
 /* M1SSION™ AG-X0197 */
 import './styles/map.css';
 import './styles/effects/ritual-distortion.css';
+import './styles/ios-native.css';
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';

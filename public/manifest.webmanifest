@@ -5,8 +5,9 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#0f0f23",
-  "theme_color": "#8b5cf6",
+  "display_override": ["standalone", "fullscreen"],
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "orientation": "portrait-primary",
   "gcm_sender_id": "103953800507",
   "icons": [
