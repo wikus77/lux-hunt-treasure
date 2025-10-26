@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { usePushNotificationLogger } from '@/hooks/usePushNotificationLogger';
+import { shouldShow as shouldShowFrequency, markShown } from '@/lib/ux/frequencyGate';
 
 interface IOSPermissionManagerProps {
   show?: boolean;
@@ -32,6 +33,12 @@ export const IOSPermissionManager: React.FC<IOSPermissionManagerProps> = ({
 
   // Check if should show permission manager
   const shouldShow = useCallback(() => {
+    // Frequency gate: max 1/day unless user explicitly interacts
+    const canShowByFrequency = shouldShowFrequency('ios-permission', 24);
+    
+    // Allow bypass if permission was granted or denied (user interacted)
+    const userHasInteracted = permissionState !== 'default';
+    
     return (
       show ||
       (
@@ -39,6 +46,7 @@ export const IOSPermissionManager: React.FC<IOSPermissionManagerProps> = ({
         isPWA &&
         permissionState === 'default' &&
         !hasRequestedOnce &&
+        canShowByFrequency &&
         typeof window !== 'undefined' &&
         'Notification' in window
       )
@@ -55,7 +63,13 @@ export const IOSPermissionManager: React.FC<IOSPermissionManagerProps> = ({
 
       // Small delay to ensure proper mounting
       const timer = setTimeout(() => {
-        setIsVisible(shouldShow());
+        const shouldShowNow = shouldShow();
+        setIsVisible(shouldShowNow);
+        
+        // Mark as shown when visible
+        if (shouldShowNow) {
+          markShown('ios-permission');
+        }
       }, 200);
 
       return () => clearTimeout(timer);
