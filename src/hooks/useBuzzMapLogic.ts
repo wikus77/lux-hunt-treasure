@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { emitReconnecting, emitSubscribed, emitError } from '@/lib/realtime/reconnectBus';
 
 export interface BuzzMapArea {
   id: string;
@@ -222,7 +223,14 @@ export const useBuzzMapLogic = () => {
             }
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            emitSubscribed('user_map_areas_changes');
+            console.log('✅ Subscribed to user_map_areas_changes');
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            emitError(String(status), 'user_map_areas_changes');
+          }
+        });
 
       return () => {
         console.log('🔔 useBuzzMapLogic: Unsubscribing from real-time');

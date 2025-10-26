@@ -6,24 +6,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'wouter';
-
-/**
- * Route title mapping for accessibility announcements
- */
-const ROUTE_TITLES: Record<string, string> = {
-  '/': 'Home',
-  '/home': 'Home',
-  '/map': 'Map',
-  '/buzz': 'Buzz',
-  '/intelligence': 'Intelligence',
-  '/notifications': 'Notifications',
-  '/leaderboard': 'Leaderboard',
-  '/profile': 'Profile',
-  '/settings': 'Settings',
-  '/subscriptions': 'Subscriptions',
-  '/login': 'Login',
-  '/register': 'Register',
-};
+import { getRouteTitle } from '@/lib/a11y/routeTitles';
 
 /**
  * useRouteAnnouncements Hook
@@ -62,9 +45,9 @@ export const useRouteAnnouncements = () => {
         return;
       }
 
-      // Get human-readable route title
-      const routeTitle = ROUTE_TITLES[location] || location.replace('/', '').replace('-', ' ');
-      const announcement = `Navigated to ${routeTitle}`;
+      // Get human-readable route title (localized)
+      const routeTitle = getRouteTitle(location);
+      const announcement = `Navigato a ${routeTitle}`;
 
       // Prevent duplicate announcements
       if (announcement === lastAnnouncedRef.current) {
