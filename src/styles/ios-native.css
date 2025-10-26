@@ -1,380 +1,134 @@
-/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
-/* iOS Native PWA Enhancements - Touch, Scroll, Glass, Depth */
+/**
+ * M1SSION™ - iOS Native PWA Styles
+ * Enhances native app feel with accessibility and UX polish
+ */
 
-/* ============================================
-   1. BASE iOS BEHAVIOR
-   ============================================ */
+@tailwind utilities;
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: #000;
-  color: #fff;
-  overscroll-behavior: none;
-}
-
-body {
-  /* iOS elastic scroll */
-  -webkit-overflow-scrolling: touch;
+@layer utilities {
+  /* ========================================
+     ACCESSIBILITY - Screen Reader Only
+     ======================================== */
   
-  /* Remove tap highlight */
-  -webkit-tap-highlight-color: transparent;
+  /**
+   * Screen reader only - completely hidden but accessible
+   * Used for live regions and accessible labels
+   */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* ========================================
+     RECONNECT BADGE - Network Status
+     ======================================== */
   
-  /* iOS Safe Area insets */
-  padding-top: env(safe-area-inset-top);
-  padding-bottom: env(safe-area-inset-bottom);
-  padding-left: env(safe-area-inset-left);
-  padding-right: env(safe-area-inset-right);
+  /**
+   * Reconnect badge container
+   * Fixed position with safe area awareness
+   */
+  .reconnect-badge {
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 1rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    pointer-events: none;
+    animation: slideInDown 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /**
+   * Badge content with glassmorphism effect
+   * Uses semantic HSL colors from design system
+   */
+  .reconnect-badge-content {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: hsl(var(--card) / 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.3);
+    border-radius: 9999px;
+    box-shadow: 
+      0 4px 12px hsl(var(--background) / 0.3),
+      0 2px 4px hsl(var(--background) / 0.2);
+  }
+
+  /**
+   * Spinner icon animation
+   */
+  .reconnect-badge-spinner {
+    flex-shrink: 0;
+    color: hsl(var(--primary));
+    animation: spin 1s linear infinite;
+  }
+
+  /**
+   * Badge text styling
+   */
+  .reconnect-badge-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+    white-space: nowrap;
+  }
+
+  /* ========================================
+     ANIMATIONS
+     ======================================== */
   
-  /* Prevent text size adjustment */
-  -webkit-text-size-adjust: 100%;
+  @keyframes slideInDown {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -1rem);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ========================================
+     DARK MODE OVERRIDES
+     ======================================== */
   
-  /* Smooth font rendering */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  @media (prefers-color-scheme: dark) {
+    .reconnect-badge-content {
+      background: hsl(var(--card) / 0.98);
+      border-color: hsl(var(--border) / 0.4);
+    }
+  }
 
-/* ============================================
-   2. TOUCH BEHAVIOR (No Delay)
-   ============================================ */
-
-* {
-  /* Immediate touch response */
-  touch-action: manipulation;
+  /* ========================================
+     REDUCED MOTION SUPPORT
+     ======================================== */
   
-  /* Remove default margins/padding */
-  -webkit-tap-highlight-color: transparent;
-}
-
-button, a, [role="button"] {
-  /* Fast tap response */
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-}
-
-/* ============================================
-   3. iOS SCROLL BEHAVIOR
-   ============================================ */
-
-.scroll-ios {
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-}
-
-/* Smooth scrolling containers */
-.scroll-smooth {
-  scroll-behavior: smooth;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* ============================================
-   4. GLASS MORPHISM (iOS Depth)
-   ============================================ */
-
-.backdrop-glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px) saturate(120%);
-  -webkit-backdrop-filter: blur(16px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-}
-
-.backdrop-glass-dark {
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(20px) saturate(150%);
-  -webkit-backdrop-filter: blur(20px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.backdrop-glass-header {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(12px) saturate(100%);
-  -webkit-backdrop-filter: blur(12px) saturate(100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-/* ============================================
-   5. PAGE TRANSITIONS (UIKit-like)
-   ============================================ */
-
-@keyframes page-enter {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes page-exit {
-  from {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-10px) scale(0.98);
-  }
-}
-
-@keyframes page-push-enter {
-  from {
-    opacity: 0;
-    transform: translateX(100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes page-push-exit {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateX(-30%);
-  }
-}
-
-.page-enter {
-  animation: page-enter 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.page-exit {
-  animation: page-exit 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.page-push-enter {
-  animation: page-push-enter 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.page-push-exit {
-  animation: page-push-exit 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-/* ============================================
-   6. iOS INPUT FIXES
-   ============================================ */
-
-input, textarea, select {
-  /* Prevent iOS zoom on focus */
-  font-size: 16px;
-  
-  /* Remove default styling */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  
-  /* Smooth rendering */
-  -webkit-font-smoothing: antialiased;
-}
-
-input:focus, textarea:focus, select:focus {
-  outline: none;
-}
-
-/* ============================================
-   7. SOFT SHADOWS (iOS Elevation)
-   ============================================ */
-
-.shadow-soft {
-  box-shadow: 
-    0 2px 8px rgba(0, 0, 0, 0.12),
-    0 1px 2px rgba(0, 0, 0, 0.08);
-}
-
-.shadow-soft-md {
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.18),
-    0 2px 4px rgba(0, 0, 0, 0.12);
-}
-
-.shadow-soft-lg {
-  box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.24),
-    0 4px 8px rgba(0, 0, 0, 0.16);
-}
-
-/* ============================================
-   8. HAPTIC FEEDBACK (Visual Only)
-   ============================================ */
-
-.haptic-light:active {
-  transform: scale(0.97);
-  transition: transform 0.1s ease;
-}
-
-.haptic-medium:active {
-  transform: scale(0.95);
-  transition: transform 0.1s ease;
-}
-
-/* ============================================
-   9. ACCESSIBILITY (Reduced Motion)
-   ============================================ */
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
-  .page-enter,
-  .page-exit,
-  .page-push-enter,
-  .page-push-exit {
-    animation: none;
-  }
-}
-
-/* ============================================
-   10. PWA FULLSCREEN MODE
-   ============================================ */
-
-@media (display-mode: standalone) {
-  body {
-    /* Additional padding for notch devices */
-    padding-top: max(env(safe-area-inset-top), 0px);
-  }
-  
-  /* Hide browser UI hints */
-  .browser-only {
-    display: none !important;
-  }
-}
-
-/* ============================================
-   11. INTERACTIVE ELEMENTS (60fps)
-   ============================================ */
-
-.smooth-transform {
-  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
-  will-change: transform;
-}
-
-.smooth-opacity {
-  transition: opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
-  will-change: opacity;
-}
-
-/* ============================================
-   12. iOS CARD STYLE
-   ============================================ */
-
-.ios-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.18),
-    0 2px 4px rgba(0, 0, 0, 0.12);
-}
-
-.ios-card-active {
-  background: rgba(255, 255, 255, 0.08);
-  transform: scale(0.98);
-}
-
-/* ============================================
-   13. PREVENT OVERSCROLL (iOS Rubber Band)
-   ============================================ */
-
-.no-overscroll {
-  overscroll-behavior: none;
-}
-
-.overscroll-contain {
-  overscroll-behavior: contain;
-}
-
-/* ============================================
-   14. ACCESSIBILITY - FOCUS RING
-   ============================================ */
-
-/* Hide focus ring by default (touch users) */
-:focus {
-  outline: none;
-}
-
-/* Show focus ring only for keyboard navigation */
-:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
-  border-radius: 4px;
-}
-
-/* Enhanced focus for buttons and interactive elements */
-button:focus-visible,
-a:focus-visible,
-[role="button"]:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 2px;
-  box-shadow: 0 0 0 4px hsla(var(--primary), 0.2);
-}
-
-/* Focus for inputs */
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: 2px solid hsl(var(--primary));
-  outline-offset: 0;
-  border-color: hsl(var(--primary));
-}
-
-/* ============================================
-   15. ACCESSIBILITY - LIVE REGION
-   ============================================ */
-
-/* Screen reader-only content for route announcements */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-
-/* Route announcer - hidden but read by screen readers */
-#route-announcer {
-  position: absolute;
-  left: -10000px;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-}
-
-/* ============================================
-   16. HIGH CONTRAST MODE SUPPORT
-   ============================================ */
-
-@media (prefers-contrast: high) {
-  .backdrop-glass,
-  .backdrop-glass-dark {
-    border-width: 2px;
-    border-color: currentColor;
-  }
-  
-  :focus-visible {
-    outline-width: 3px;
+  @media (prefers-reduced-motion: reduce) {
+    .reconnect-badge {
+      animation: none;
+    }
+    
+    .reconnect-badge-spinner {
+      animation: none;
+    }
   }
 }
 
