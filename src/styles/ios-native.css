@@ -1,0 +1,305 @@
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
+/* iOS Native PWA Enhancements - Touch, Scroll, Glass, Depth */
+
+/* ============================================
+   1. BASE iOS BEHAVIOR
+   ============================================ */
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: #000;
+  color: #fff;
+  overscroll-behavior: none;
+}
+
+body {
+  /* iOS elastic scroll */
+  -webkit-overflow-scrolling: touch;
+  
+  /* Remove tap highlight */
+  -webkit-tap-highlight-color: transparent;
+  
+  /* iOS Safe Area insets */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  
+  /* Prevent text size adjustment */
+  -webkit-text-size-adjust: 100%;
+  
+  /* Smooth font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   2. TOUCH BEHAVIOR (No Delay)
+   ============================================ */
+
+* {
+  /* Immediate touch response */
+  touch-action: manipulation;
+  
+  /* Remove default margins/padding */
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"] {
+  /* Fast tap response */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* ============================================
+   3. iOS SCROLL BEHAVIOR
+   ============================================ */
+
+.scroll-ios {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* Smooth scrolling containers */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   4. GLASS MORPHISM (iOS Depth)
+   ============================================ */
+
+.backdrop-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.backdrop-glass-dark {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.backdrop-glass-header {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px) saturate(100%);
+  -webkit-backdrop-filter: blur(12px) saturate(100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ============================================
+   5. PAGE TRANSITIONS (UIKit-like)
+   ============================================ */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+}
+
+@keyframes page-push-enter {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes page-push-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-30%);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.page-exit {
+  animation: page-exit 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.page-push-enter {
+  animation: page-push-enter 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.page-push-exit {
+  animation: page-push-exit 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* ============================================
+   6. iOS INPUT FIXES
+   ============================================ */
+
+input, textarea, select {
+  /* Prevent iOS zoom on focus */
+  font-size: 16px;
+  
+  /* Remove default styling */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  /* Smooth rendering */
+  -webkit-font-smoothing: antialiased;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* ============================================
+   7. SOFT SHADOWS (iOS Elevation)
+   ============================================ */
+
+.shadow-soft {
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.shadow-soft-md {
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.shadow-soft-lg {
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.24),
+    0 4px 8px rgba(0, 0, 0, 0.16);
+}
+
+/* ============================================
+   8. HAPTIC FEEDBACK (Visual Only)
+   ============================================ */
+
+.haptic-light:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease;
+}
+
+.haptic-medium:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease;
+}
+
+/* ============================================
+   9. ACCESSIBILITY (Reduced Motion)
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .page-enter,
+  .page-exit,
+  .page-push-enter,
+  .page-push-exit {
+    animation: none;
+  }
+}
+
+/* ============================================
+   10. PWA FULLSCREEN MODE
+   ============================================ */
+
+@media (display-mode: standalone) {
+  body {
+    /* Additional padding for notch devices */
+    padding-top: max(env(safe-area-inset-top), 0px);
+  }
+  
+  /* Hide browser UI hints */
+  .browser-only {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   11. INTERACTIVE ELEMENTS (60fps)
+   ============================================ */
+
+.smooth-transform {
+  transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: transform;
+}
+
+.smooth-opacity {
+  transition: opacity 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity;
+}
+
+/* ============================================
+   12. iOS CARD STYLE
+   ============================================ */
+
+.ios-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+.ios-card-active {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(0.98);
+}
+
+/* ============================================
+   13. PREVENT OVERSCROLL (iOS Rubber Band)
+   ============================================ */
+
+.no-overscroll {
+  overscroll-behavior: none;
+}
+
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™ */
