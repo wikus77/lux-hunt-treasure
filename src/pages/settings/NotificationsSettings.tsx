@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Bell, Volume2, VolumeX, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { UnifiedPushToggle } from '@/components/UnifiedPushToggle';
+import PushToggleV2 from '@/components/push/PushToggleV2';
 import PushDebugPanel from '@/components/PushDebugPanel';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import NotificationsStatus from '@/components/NotificationsStatus';
@@ -249,9 +250,13 @@ const NotificationsSettings: React.FC = () => {
             </div>
           </div>
 
-          {/* Push Notifications using UnifiedPushToggle */}
+          {/* Push Notifications with V2 toggle when flag enabled */}
           <div className="border-t border-white/10 pt-4">
-            <UnifiedPushToggle className="w-full" />
+            {import.meta.env.VITE_PUSH_TOGGLE_V2 === '1' ? (
+              <PushToggleV2 data-push-toggle-v2 />
+            ) : (
+              <UnifiedPushToggle className="w-full" data-push-toggle-v1 />
+            )}
             <div className="mt-4">
               <NotificationsStatus userId="495246c1-9154-4f01-a428-7f37fe230180" />
             </div>

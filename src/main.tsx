@@ -4,6 +4,9 @@ import './styles/map.css';
 import './styles/effects/ritual-distortion.css';
 import './styles/ios-native.css';
 
+// ✅ TASK 4: Auto-register SW on all hosts (not just *.pages.dev)
+import '@/lib/pwa/sw-autorun';
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import * as Sentry from "@sentry/react";
