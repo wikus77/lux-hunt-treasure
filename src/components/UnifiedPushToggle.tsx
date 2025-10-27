@@ -14,6 +14,30 @@ import { useUnifiedPush } from '@/hooks/useUnifiedPush';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { runRepairFlow } from '@/lib/push/repairFlow';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+
+/**
+ * Helper: verifica se esiste una riga attiva per l'endpoint corrente
+ */
+async function backendHasActiveEndpoint(endpoint: string): Promise<boolean> {
+  if (!endpoint) return false;
+  try {
+    const { count, error } = await supabase
+      .from('webpush_subscriptions')
+      .select('endpoint', { head: true, count: 'exact' })
+      .eq('endpoint', endpoint)
+      .eq('is_active', true);
+    
+    if (error) {
+      console.warn('[PUSH] backendHasActiveEndpoint error:', error.message);
+      return false;
+    }
+    return (count ?? 0) > 0;
+  } catch (e) {
+    console.warn('[PUSH] backendHasActiveEndpoint exception:', e);
+    return false;
+  }
+}
 
 interface UnifiedPushToggleProps {
   className?: string;
@@ -65,28 +89,50 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
   };
 
   const handleToggle = async () => {
-    if (isSubscribed) {
-      await unsubscribe();
-      await refresh();
-    } else {
-      // ✅ REPAIR FLOW: Use same flow as "Ripara" button
-      setIsRepairLoading(true);
-      try {
-        await navigator.serviceWorker.ready;
-        const result = await runRepairFlow();
-        
-        if (result.ok && result.subscription) {
-          toast.success('Notifiche attivate ✅');
-          await refresh();
-        } else {
-          toast.error('Impossibile completare l\'attivazione (riprovare)');
+    setIsRepairLoading(true);
+    try {
+      // ⭐ Assicura che il SW sia pronto prima di leggere lo stato reale
+      const reg = await navigator.serviceWorker?.ready.catch(() => null);
+      const sub = reg ? await reg.pushManager.getSubscription() : null;
+
+      if (isSubscribed) {
+        // ⭐ VERIFY & REPAIR: se il backend NON conosce l'endpoint, NON fare unsubscribe: esegui REPAIR
+        const known = sub ? await backendHasActiveEndpoint(sub.endpoint) : false;
+        if (!known) {
+          console.warn('[PUSH] Toggle ON→click: backend mismatch detected → running repairFlow');
+          const result = await runRepairFlow();
+          
+          if (result.ok && result.subscription) {
+            toast.success('Notifiche riparate e riattivate ✅');
+            await refresh();
+          } else {
+            toast.error('Impossibile riparare la subscription');
+          }
+          return;
         }
-      } catch (error) {
-        console.error('[UnifiedPushToggle] Repair failed:', error);
-        toast.error('Errore durante l\'attivazione');
-      } finally {
-        setIsRepairLoading(false);
+        
+        // Backend ok → normale unsubscribe
+        await unsubscribe();
+        await refresh();
+        toast.success('Notifiche disattivate');
+        return;
       }
+
+      // OFF → ON: già corretto (ripara sempre)
+      await navigator.serviceWorker.ready;
+      const result = await runRepairFlow();
+      
+      if (result.ok && result.subscription) {
+        toast.success('Notifiche attivate ✅');
+        await refresh();
+      } else {
+        toast.error('Impossibile completare l\'attivazione (riprovare)');
+      }
+    } catch (error) {
+      console.error('[UnifiedPushToggle] handleToggle error:', error);
+      toast.error('Errore durante l\'operazione');
+    } finally {
+      setIsRepairLoading(false);
     }
   };
 
