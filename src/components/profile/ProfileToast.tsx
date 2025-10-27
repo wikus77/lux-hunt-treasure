@@ -218,8 +218,9 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`fixed top-20 right-4 w-80 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 max-h-[100dvh] ${className}`}
+            className={`fixed z-[60] inset-x-4 top-[calc(env(safe-area-inset-top)+16px)] bottom-[calc(env(safe-area-inset-bottom)+16px)] w-auto md:inset-auto md:top-20 md:right-4 md:bottom-auto md:w-96 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl overflow-hidden ${className}`}
             style={{
+              maxHeight: "calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 32px)",
               boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
               touchAction: "pan-y"
             }}
@@ -244,12 +245,11 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
 
             {/* Content */}
             <div 
-              className="p-4 space-y-4 overflow-y-auto"
+              className="p-4 space-y-4 h-full overflow-y-auto overscroll-contain"
               data-profile-scroll="enabled"
               style={{
                 WebkitOverflowScrolling: 'touch',
-                maxHeight: 'calc(100dvh - 6rem)',
-                paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+                paddingBottom: 'calc(env(safe-area-inset-bottom) + 96px)'
               }}
             >
               {loading ? (
