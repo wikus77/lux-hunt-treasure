@@ -31,6 +31,7 @@
   --bottom-nav-height: 54px;
   --app-header-height: 72px;
   --app-bottom-nav-height: 64px;
+  --m1-bottom-nav: 96px; /* Fallback height for bottom navigation */
 }
 
 @layer base {
