@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, BellOff, AlertCircle, Loader2 } from 'lucide-react';
-import { subscribeFlow, type SubscribeFlowResult } from '@/lib/push/subscribeFlow';
+import { runRepairFlow } from '@/lib/push/repairFlow';
 import { 
   isWebPushSupported, 
   isPWAMode,
@@ -98,32 +98,21 @@ const PushToggleV2: React.FC = () => {
     
     try {
       if (!isEnabled) {
-        // ✅ TASK 2: Subscribe using COMPLETE pipeline (auto-repair)
-        // Includes: SW ready → Permission → Subscription → Backend Upsert
-        console.info('[PUSH-V2] Starting subscribeFlow()...');
+        // ✅ REPAIR FLOW: Cleanup + Subscribe + Upsert
+        console.info('[PUSH-V2] Starting runRepairFlow()...');
         const t0 = performance.now();
         
-        const result: SubscribeFlowResult = await subscribeFlow();
+        const result = await runRepairFlow();
         
         const elapsed = Math.round(performance.now() - t0);
-        console.info(`[PUSH-V2] subscribeFlow() completed in ${elapsed}ms:`, result);
+        console.info(`[PUSH-V2] runRepairFlow() completed in ${elapsed}ms:`, result);
         
-        if (result.ok) {
+        if (result.ok && result.subscription) {
           setIsEnabled(true);
-          console.info('📬 [PUSH-V2] Subscription OK');
+          console.info('📬 [PUSH-V2] Notifiche attivate ✅');
         } else {
-          // Fallback silently - don't throw, don't change state
-          console.warn('⚠️ [PUSH-V2] Subscription failed:', result.error || result.message);
-          
-          // User-friendly message
-          let errorMessage = 'Impossibile attivare le notifiche.';
-          if (result.status === 'permission_denied') {
-            errorMessage = 'Permesso notifiche negato. Controlla le impostazioni del browser.';
-          } else if (result.error?.includes('home screen')) {
-            errorMessage = 'Aggiungi l\'app alla home screen per abilitare le notifiche.';
-          }
-          
-          alert(errorMessage);
+          console.warn('⚠️ [PUSH-V2] Repair failed:', result.error || result.message);
+          alert('Impossibile completare l\'attivazione (riprovare)');
         }
       } else {
         // Unsubscribe
@@ -171,7 +160,7 @@ const PushToggleV2: React.FC = () => {
   }
 
   return (
-    <div className="flex items-center gap-2" data-push-toggle-v2>
+    <div className="flex items-center gap-2" data-push-toggle-v2 data-push-toggle-repair="1">
       <Button
         onClick={handleToggle}
         disabled={isLoading}

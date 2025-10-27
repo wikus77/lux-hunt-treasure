@@ -4,7 +4,7 @@
  * © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Bell, BellOff, Smartphone, Monitor, AlertCircle, CheckCircle } from 'lucide-react';
 import { useUnifiedPush } from '@/hooks/useUnifiedPush';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { runRepairFlow } from '@/lib/push/repairFlow';
+import { toast } from 'sonner';
 
 interface UnifiedPushToggleProps {
   className?: string;
@@ -31,7 +33,10 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
     subscribe,
     requestPermission,
     unsubscribe,
+    refresh,
   } = useUnifiedPush();
+
+  const [isRepairLoading, setIsRepairLoading] = useState(false);
 
   const getPlatformIcon = () => {
     return <Monitor className="w-4 h-4" />;
@@ -62,10 +67,26 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
   const handleToggle = async () => {
     if (isSubscribed) {
       await unsubscribe();
-    } else if (permission === 'granted') {
-      await subscribe();
+      await refresh();
     } else {
-      await requestPermission();
+      // ✅ REPAIR FLOW: Use same flow as "Ripara" button
+      setIsRepairLoading(true);
+      try {
+        await navigator.serviceWorker.ready;
+        const result = await runRepairFlow();
+        
+        if (result.ok && result.subscription) {
+          toast.success('Notifiche attivate ✅');
+          await refresh();
+        } else {
+          toast.error('Impossibile completare l\'attivazione (riprovare)');
+        }
+      } catch (error) {
+        console.error('[UnifiedPushToggle] Repair failed:', error);
+        toast.error('Errore durante l\'attivazione');
+      } finally {
+        setIsRepairLoading(false);
+      }
     }
   };
 
@@ -86,7 +107,7 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
   }
 
   return (
-    <Card className={className}>
+    <Card className={className} data-push-toggle-v1 data-push-toggle-repair="1">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="w-5 h-5" />
@@ -164,7 +185,7 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
           <Switch
             checked={isSubscribed}
             onCheckedChange={handleToggle}
-            disabled={isLoading || (!canSubscribe && !isSubscribed)}
+            disabled={isLoading || isRepairLoading || (!canSubscribe && !isSubscribed)}
           />
         </div>
 
