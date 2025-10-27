@@ -1,6 +1,6 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 // Guard-safe Push Repair utilities - now uses unified pipeline
-import { subscribeFlow } from '@/lib/push/subscribeFlow';
+import { runRepairFlow } from '@/lib/push/repairFlow';
 import { functionsBaseUrl } from '@/lib/supabase/functionsBase';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -55,13 +55,13 @@ export async function repairPush(): Promise<PushStatus> {
     // anche se fallisce l'unsubscribe, proviamo a ripartire
   }
 
-  // Use unified pipeline (same as Diagnosi)
-  const result = await subscribeFlow();
+  // Use unified repair flow (includes cleanup + subscribe + upsert)
+  const result = await runRepairFlow();
 
   return {
     supported: true,
     permission: Notification.permission,
-    hasSubscription: result.ok,
+    hasSubscription: result.ok && !!result.subscription,
     endpoint: result.endpoint ?? null
   };
 }
