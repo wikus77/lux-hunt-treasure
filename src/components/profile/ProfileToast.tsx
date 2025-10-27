@@ -218,9 +218,10 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -20 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className={`fixed top-20 right-4 w-80 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 ${className}`}
+            className={`fixed top-20 right-4 w-80 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-xl border border-slate-700/50 rounded-xl shadow-2xl z-50 max-h-[100dvh] ${className}`}
             style={{
-              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)"
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+              touchAction: "pan-y"
             }}
           >
             {/* Header */}
@@ -242,7 +243,15 @@ const ProfileToast: React.FC<ProfileToastProps> = ({ isOpen, onClose, className 
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-4">
+            <div 
+              className="p-4 space-y-4 overflow-y-auto"
+              data-profile-scroll="enabled"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                maxHeight: 'calc(100dvh - 6rem)',
+                paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))'
+              }}
+            >
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
