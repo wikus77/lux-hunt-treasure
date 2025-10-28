@@ -27,6 +27,8 @@ import LegalOnboarding from "./components/legal/LegalOnboarding";
 import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
 import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
+import DNAManager from "./components/dna/DNAManager";
+import { DNABadgeOverlay } from "./components/dna/DNABadgeOverlay";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
@@ -110,6 +112,8 @@ function App() {
                     <BuzzPaymentMonitor />
                     <LegalOnboarding />
                     <FirstLoginQuizManager />
+                    <DNAManager />
+                    <DNABadgeOverlay />
                     <WalkthroughManager />
                     <WouterRoutes />
                     <InstallPrompt />
