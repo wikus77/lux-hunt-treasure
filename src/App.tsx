@@ -29,6 +29,7 @@ import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
 import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
 import DNAManager from "./components/dna/DNAManager";
 import { DNABadgeOverlay } from "./components/dna/DNABadgeOverlay";
+import DNAFloatingButton from "./components/dna/DNAFloatingButton";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
@@ -114,6 +115,7 @@ function App() {
                     <FirstLoginQuizManager />
                     <DNAManager />
                     <DNABadgeOverlay />
+                    <DNAFloatingButton />
                     <WalkthroughManager />
                     <WouterRoutes />
                     <InstallPrompt />
