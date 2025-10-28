@@ -29,6 +29,7 @@ export class AgentsLayer {
         pane.style.zIndex = '650';
         pane.style.pointerEvents = 'auto';
         pane.setAttribute('data-layer', 'agents');
+        pane.classList.add('m1-agents');
       }
     }
     this.pane = pane;
