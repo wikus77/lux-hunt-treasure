@@ -187,6 +187,29 @@ serve(async (req) => {
       });
     }
 
+    // M1SSION™ Soft-cleanup: deactivate other endpoints for same user+platform
+    try {
+      const { error: cleanupError } = await supabase
+        .from('webpush_subscriptions')
+        .update({ 
+          is_active: false, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('user_id', userId)
+        .eq('is_active', true)
+        .neq('endpoint', endpoint)
+        .ilike('device_info->>platform', platform || 'web');
+
+      if (cleanupError) {
+        console.warn('[WEBPUSH-UPSERT] Soft-cleanup warning (non-critical):', cleanupError.message);
+      } else {
+        console.log('[WEBPUSH-UPSERT] ✅ Soft-cleanup completed for user+platform');
+      }
+    } catch (cleanupErr) {
+      // Non-critical: log and continue
+      console.warn('[WEBPUSH-UPSERT] Soft-cleanup exception (non-critical):', cleanupErr);
+    }
+
     return new Response(JSON.stringify({
       ok: true,
       upserted: {

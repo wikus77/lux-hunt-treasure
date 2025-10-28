@@ -95,9 +95,28 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
       const reg = await navigator.serviceWorker?.ready.catch(() => null);
       const sub = reg ? await reg.pushManager.getSubscription() : null;
 
+      // M1SSION™ telemetry (dev only)
+      if (import.meta.env.DEV) {
+        console.debug('[UnifiedPushToggle:handleToggle]', {
+          sw_ready: !!reg,
+          browser_has_sub: !!sub,
+          endpoint_tail: sub?.endpoint?.slice(-24) || null,
+          isSubscribed
+        });
+      }
+
       if (isSubscribed) {
         // ⭐ VERIFY & REPAIR: se il backend NON conosce l'endpoint, NON fare unsubscribe: esegui REPAIR
         const known = sub ? await backendHasActiveEndpoint(sub.endpoint) : false;
+        
+        // M1SSION™ telemetry (dev only)
+        if (import.meta.env.DEV) {
+          console.debug('[UnifiedPushToggle:ON→click]', {
+            backend_match: known,
+            action: known ? 'unsubscribe' : 'repair'
+          });
+        }
+        
         if (!known) {
           console.warn('[PUSH] Toggle ON→click: backend mismatch detected → running repairFlow');
           const result = await runRepairFlow();
@@ -119,6 +138,10 @@ export const UnifiedPushToggle: React.FC<UnifiedPushToggleProps> = ({ className 
       }
 
       // OFF → ON: già corretto (ripara sempre)
+      if (import.meta.env.DEV) {
+        console.debug('[UnifiedPushToggle:OFF→ON]', { action: 'repair' });
+      }
+      
       await navigator.serviceWorker.ready;
       const result = await runRepairFlow();
       
