@@ -91,7 +91,7 @@ const Auth = () => {
     // Handle skip case (playerType is null when user clicks "Salta Quiz")
     if (!playerType) {
       console.log("User skipped quiz - recording skip date");
-      recordQuizSkip();
+      recordQuizSkip(userId!);
       setHasCompletedQuiz(true);
       toast.info("Quiz saltato. Riapparirà domani all'apertura dell'app.", {
         description: "Potrai completarlo anche dalla tua area profilo."

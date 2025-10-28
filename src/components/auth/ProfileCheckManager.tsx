@@ -23,7 +23,7 @@ export const ProfileCheckManager: React.FC<ProfileCheckManagerProps> = ({
       }
 
       // Daily local guard: if user skipped today, don't show quiz again today
-      if (!shouldShowQuizAfterSkip()) {
+      if (!shouldShowQuizAfterSkip(userId)) {
         console.log("Daily guard active - user skipped today, not showing quiz");
         onProfileComplete();
         return;
@@ -53,7 +53,7 @@ export const ProfileCheckManager: React.FC<ProfileCheckManagerProps> = ({
         // If user has skipped quiz before (first_login_completed but no investigative_style)
         else if (data?.first_login_completed) {
           // Check if a day has passed since last skip
-          const shouldShow = shouldShowQuizAfterSkip();
+          const shouldShow = shouldShowQuizAfterSkip(userId);
           if (shouldShow) {
             console.log("User skipped quiz before, but new day - showing quiz");
             onProfileIncomplete();
@@ -61,7 +61,7 @@ export const ProfileCheckManager: React.FC<ProfileCheckManagerProps> = ({
             console.log("User skipped quiz today - not showing quiz");
             onProfileComplete();
           }
-        } 
+        }
         // First time user or no profile yet
         else {
           console.log("User has not completed profile setup - showing quiz");
