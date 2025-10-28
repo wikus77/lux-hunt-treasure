@@ -278,6 +278,30 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_dna_events: {
+        Row: {
+          created_at: string
+          delta: Json
+          id: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: Json
+          id?: number
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: Json
+          id?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       agent_finalshot_attempts: {
         Row: {
           coords: Json
