@@ -43,10 +43,27 @@ function initSupabaseClient(): SupabaseClient<Database> {
       autoRefreshToken: true,
       detectSessionInUrl: true,
     },
+    realtime: {
+      params: {
+        apikey: SUPABASE_ANON_KEY,
+        eventsPerSecond: 10
+      }
+    }
+  });
+  
+  // Sync Realtime token on auth state changes
+  client.auth.onAuthStateChange((_evt, session) => {
+    const token = session?.access_token ?? SUPABASE_ANON_KEY;
+    client.realtime.setAuth(token);
   });
   
   // Track instance creation for diagnostics
   incSupabaseInstanceCount();
+  
+  // Expose client in dev for console tests
+  if (import.meta?.env?.DEV) {
+    (globalThis as any).supabase = client;
+  }
   
   return client;
 }
