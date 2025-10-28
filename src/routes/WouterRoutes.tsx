@@ -70,6 +70,7 @@ import BulkMarkerDropPage from "@/pages/panel/BulkMarkerDropPage";
 import NorahAdmin from "@/pages/panel/NorahAdmin";
 import DiagSupabase from "@/pages/DiagSupabase";
 import PushTest from "@/pages/debug/PushTest";
+import DNAPanel from "@/pages/dna/DNAPanel";
 import PushDiagnostic from "@/pages/debug/PushDiagnostic";
 import M1ssionPushTest from "@/pages/M1ssionPushTest";
 import { M1ssionDebugTest } from "@/pages/M1ssionDebugTest";
@@ -385,6 +386,13 @@ const WouterRoutes: React.FC = () => {
           <Route path="/settings">
             <ProtectedRoute>
               <GlobalLayout><SettingsPage /></GlobalLayout>
+            </ProtectedRoute>
+          </Route>
+
+          {/* DNA Route - M1SSION DNA™ */}
+          <Route path="/dna">
+            <ProtectedRoute>
+              <GlobalLayout><DNAPanel /></GlobalLayout>
             </ProtectedRoute>
           </Route>
 
