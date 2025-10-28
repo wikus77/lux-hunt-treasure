@@ -18,12 +18,27 @@ export function useUnifiedPush() {
     subscriptionEndpoint: null,
   });
 
+  // M1SSION™ auto-repair guard: await SW ready + backend verification
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        // ⭐ Ensure SW ready before reading state
+        await navigator.serviceWorker?.ready.catch(() => null);
+        
         const status = await webPushManager.getStatus();
         if (!mounted) return;
+        
+        // M1SSION™ telemetry (dev only)
+        if (import.meta.env.DEV) {
+          console.debug('[useUnifiedPush:init]', {
+            sw_ready: !!navigator.serviceWorker?.controller,
+            browser_has_sub: !!status.enabled,
+            endpoint_tail: status.endpoint?.slice(-24) || null,
+            permission: status.permission
+          });
+        }
+        
         setState(s => ({
           ...s,
           enabled: !!status.enabled,

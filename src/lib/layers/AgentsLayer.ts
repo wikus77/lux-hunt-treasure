@@ -25,7 +25,8 @@ export class AgentsLayer {
     if (!pane) {
       pane = map.createPane('m1-agents');
       if (pane) {
-        pane.style.zIndex = '620';
+        // M1SSION™ z-index fix: 650 to stay above terrain (640) and portals (640)
+        pane.style.zIndex = '650';
         pane.style.pointerEvents = 'auto';
         pane.setAttribute('data-layer', 'agents');
       }

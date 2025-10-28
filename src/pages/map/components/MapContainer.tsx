@@ -728,6 +728,14 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
 
           // Update layer with current user ID for highlighting "You"
           if (agentsLayerRef.current) {
+            // M1SSION™ debug telemetry (dev only)
+            if (import.meta.env.DEV) {
+              console.debug('[AGENTS] Realtime update', { 
+                count: agentData.length, 
+                me: currentUserId 
+              });
+            }
+            
             agentsLayerRef.current.setData(agentData, currentUserId);
             
             // Update count with TOTAL agents (including those without coords)
