@@ -556,6 +556,15 @@ const MapContainerComponent: React.FC<MapContainerProps> = ({
       agentsLayerRef.current = new AgentsLayer();
       agentsLayerRef.current.mount(mapRef.current);
       
+      // M1SSION™ telemetry (dev only)
+      if (import.meta.env.DEV) {
+        const pane = mapRef.current.getPane('m1-agents');
+        console.debug('[AGENTS] pane=mounted', {
+          z_index: pane?.style.zIndex || 'N/A',
+          toggle: 'ON (default)'
+        });
+      }
+      
       // ✅ FIX: Pre-populate with self marker if coords available
       const selfCoords = geoPosition 
         ? { lat: geoPosition.lat, lng: geoPosition.lng }
