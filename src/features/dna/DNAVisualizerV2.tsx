@@ -36,12 +36,12 @@ function project(p: V3, perspective = 700, scale = 1) {
   return { x: p.x * d * scale, y: p.y * d * scale, d };
 }
 
-// 3D Pentagon constants (Tron-Glass effect)
-const DEPTH = 25;            // Glass thickness (more pronounced 3D)
+// 3D Pentagon constants (Tron-Glass effect - DRAMATIC)
+const DEPTH = 45;            // Glass thickness (very pronounced 3D extrusion)
 const ROLL = 0;              // No roll for stable look
-const PERSPECTIVE = 600;     // Camera distance (closer = more dramatic)
-const FACE_ALPHA = 0.28;     // Front face translucency
-const EDGE_ALPHA = 0.92;     // Edge visibility (more prominent wireframe)
+const PERSPECTIVE = 450;     // Camera distance (closer = much more dramatic)
+const FACE_ALPHA = 0.35;     // Front face translucency
+const EDGE_ALPHA = 1.0;      // Edge visibility (maximum wireframe prominence)
 // =================================================================
 
 interface DNAVisualizerProps {
@@ -413,9 +413,9 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       const ry = toRad(rot.y);
       const rz = toRad(ROLL);
       
-      // Debug trace (first 10 frames only)
-      if (DEBUG_DNA && debugFramesRef.current < 10) {
-        console.log(`[DNA 3D] frame=${frame} rot=(${rot.x.toFixed(2)}, ${rot.y.toFixed(2)})`);
+      // Debug trace (first 20 frames to verify movement)
+      if (DEBUG_DNA && debugFramesRef.current < 20) {
+        console.log(`[DNA 3D] frame=${frame} rot=(${rot.x.toFixed(2)}, ${rot.y.toFixed(2)}) rx=${rx.toFixed(3)} ry=${ry.toFixed(3)}`);
         debugFramesRef.current++;
       }
       
@@ -440,9 +440,9 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       const F = faceFront3D.map(v => project(rotate3D(v, rx, ry, rz), PERSPECTIVE, 1));
       const B = faceBack3D.map(v => project(rotate3D(v, rx, ry, rz), PERSPECTIVE, 1));
       
-      // Debug projection depth (first frame only)
-      if (DEBUG_DNA && frame === 0) {
-        console.log(`[DNA 3D] proj dFront=${F[0].d.toFixed(3)} dBack=${B[0].d.toFixed(3)}`);
+      // Debug projection depth (first 3 frames)
+      if (DEBUG_DNA && frame <= 2) {
+        console.log(`[DNA 3D] proj dFront=${F[0].d.toFixed(3)} dBack=${B[0].d.toFixed(3)} F0=(${F[0].x.toFixed(1)},${F[0].y.toFixed(1)}) B0=(${B[0].x.toFixed(1)},${B[0].y.toFixed(1)})`);
       }
       
       // No transform needed - we're drawing directly with projected coordinates
@@ -480,9 +480,9 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       const pulseScale = (animate && !reducedVisuals) ? 1 + Math.sin(frame / 60) * 0.02 : 1;
       
       if (ENABLE_3D_EFFECTS) {
-        // BACK FACE (deeper, translucent - more visible for 3D effect)
+        // BACK FACE (deeper, translucent - highly visible for dramatic 3D)
         ctx.save();
-        ctx.globalAlpha = FACE_ALPHA * 0.65;
+        ctx.globalAlpha = FACE_ALPHA * 0.8;
         ctx.beginPath();
         B.forEach((pt, idx) => {
           const x = centerX + pt.x;
@@ -499,17 +499,17 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         ctx.fillStyle = backGradient;
         ctx.fill();
         
-        // Back face stroke
-        ctx.strokeStyle = `${archetypeConfig.color}60`;
-        ctx.lineWidth = 2;
+        // Back face stroke (more visible)
+        ctx.strokeStyle = `${archetypeConfig.color}85`;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
         ctx.restore();
         
-        // EDGE CONNECTORS (wireframe glass effect - more prominent)
+        // EDGE CONNECTORS (wireframe glass effect - MAXIMUM prominence)
         ctx.save();
-        ctx.globalAlpha = EDGE_ALPHA * 0.75;
-        ctx.strokeStyle = `${archetypeConfig.color}95`;
-        ctx.lineWidth = 2;
+        ctx.globalAlpha = EDGE_ALPHA * 0.9;
+        ctx.strokeStyle = `${archetypeConfig.color}`;
+        ctx.lineWidth = 2.5;
         for (let i = 0; i < F.length; i++) {
           ctx.beginPath();
           ctx.moveTo(centerX + F[i].x, centerY + F[i].y);
@@ -549,9 +549,14 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         ctx.shadowBlur = 0;
         ctx.restore();
         
-        // FRONT FACE STROKE (bright edge)
+        // FRONT FACE STROKE (bright edge with glow)
         ctx.save();
         ctx.globalAlpha = EDGE_ALPHA;
+        
+        // Add subtle glow to front edge
+        ctx.shadowColor = archetypeConfig.color;
+        ctx.shadowBlur = 8;
+        
         ctx.beginPath();
         F.forEach((pt, idx) => {
           const x = centerX + pt.x;
@@ -561,8 +566,11 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         });
         ctx.closePath();
         ctx.strokeStyle = archetypeConfig.color;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 3.5;
         ctx.stroke();
+        
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
         ctx.restore();
       } else {
         // Fallback: 2D rendering (legacy)
