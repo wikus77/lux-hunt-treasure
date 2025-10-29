@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
 import { TesseractDNA } from './TesseractDNA';
+import { DNAHyperCube } from './visuals/DNAHyperCube';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
@@ -47,6 +48,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showSkippedPill, setShowSkippedPill] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [reduceAnimations, setReduceAnimations] = useState(false);
+  const [enableTesseract] = useState(true); // Enable new HyperCube
   const { getCurrentUser } = useUnifiedAuth();
 
   const archetypeConfig = ARCHETYPE_CONFIGS[dnaProfile.archetype];
@@ -238,11 +240,17 @@ export const DNAHub: React.FC<DNAHubProps> = ({
 
                 {/* Tesseract 3D Visualizer */}
                 <div className="flex justify-center relative">
-                  <TesseractDNA 
-                    profile={dnaProfile} 
-                    size={400} 
-                    disableTilt={reduceAnimations}
-                  />
+                  {enableTesseract ? (
+                    <div className="w-full max-w-3xl h-[600px] rounded-2xl overflow-hidden bg-black/40 backdrop-blur-sm border border-primary/20">
+                      <DNAHyperCube reducedMotion={reduceAnimations} />
+                    </div>
+                  ) : (
+                    <TesseractDNA 
+                      profile={dnaProfile} 
+                      size={400} 
+                      disableTilt={reduceAnimations}
+                    />
+                  )}
                 </div>
 
                 {/* Actions */}
