@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { DNAProfile } from './dnaTypes';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
-import { DNA3DPentagon } from './DNA3DPentagon';
+import { DNA3DPentagonIsomorphic } from './DNA3DPentagonIsomorphic';
 
 interface DNAVisualizerProps {
   profile: DNAProfile;
@@ -547,11 +547,14 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       }}
     >
       {ENABLE_3D ? (
-        // 3D Pentagon (React Three Fiber)
-        <DNA3DPentagon 
-          rotation={rotationLiveRef.current} 
-          color={archetypeConfig.color} 
+        // 3D Pentagon Isomorphic (Exact 2D replica with depth)
+        <DNA3DPentagonIsomorphic
+          rotation={rotationLiveRef.current}
+          color={archetypeConfig.color}
           size={size}
+          profile={profile}
+          strokeWidth={3}
+          glowIntensity={0.6}
         />
       ) : (
         // 2D Canvas fallback
