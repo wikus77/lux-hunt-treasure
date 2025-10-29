@@ -162,23 +162,24 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       if (!inputEnabledRef.current) return;
       
       if (isDraggingRef.current && dragStartRef.current) {
-        // Dragging mode
-        const dx = e.clientX - dragStartRef.current.x;
-        const dy = e.clientY - dragStartRef.current.y;
-        
-        const gain = e.pointerType === 'mouse' ? MOUSE_GAIN : TOUCH_GAIN;
-        const max = e.pointerType === 'mouse' ? MAX_ROT_MOUSE : MAX_ROT_TOUCH;
-        
-        const newX = clamp(dragStartRef.current.rotX + dy * gain * 0.1, -max, max);
-        const newY = clamp(dragStartRef.current.rotY + dx * gain * 0.1, -max, max);
-        
-        targetRotationRef.current = { x: newX, y: newY };
-        
-        // Track velocity for inertia
-        velocityRef.current = {
-          x: newX - targetRotationRef.current.x,
-          y: newY - targetRotationRef.current.y,
-        };
+      // Dragging mode
+      const dx = e.clientX - dragStartRef.current.x;
+      const dy = e.clientY - dragStartRef.current.y;
+      
+      const gain = e.pointerType === 'mouse' ? MOUSE_GAIN : TOUCH_GAIN;
+      const max = e.pointerType === 'mouse' ? MAX_ROT_MOUSE : MAX_ROT_TOUCH;
+      
+      const newX = clamp(dragStartRef.current.rotX + dy * gain * 0.1, -max, max);
+      const newY = clamp(dragStartRef.current.rotY + dx * gain * 0.1, -max, max);
+      
+      // Track velocity BEFORE updating target (for perceptible inertia)
+      const prevTarget = targetRotationRef.current;
+      velocityRef.current = {
+        x: newX - prevTarget.x,
+        y: newY - prevTarget.y,
+      };
+      
+      targetRotationRef.current = { x: newX, y: newY };
         return;
       }
       
@@ -466,7 +467,8 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         ctx.font = 'bold 11px Inter, sans-serif';
       });
 
-      if (animate && !reducedVisuals) {
+      // ALWAYS redraw to reflect rotation changes (tilt is control, not decoration)
+      if (animate) {
         frame++;
         animationId = requestAnimationFrame(draw);
       }
