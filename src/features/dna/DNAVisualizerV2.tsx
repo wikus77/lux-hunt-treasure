@@ -4,44 +4,53 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { DNAProfile } from './dnaTypes';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
 
-// ============= 3D UTILITIES (Holographic Pentagon) =============
-type V3 = { x: number; y: number; z: number };
+// ============= 3D UTILITIES (Full Radar 3D Projection) =============
+type Vec3 = { x: number; y: number; z: number };
+type Mat3 = [number, number, number, number, number, number, number, number, number];
 
-const toRad = (deg: number) => (deg * Math.PI) / 180;
+const deg = (a: number) => (a * Math.PI) / 180;
 
-function rotate3D(p: V3, rx: number, ry: number, rz: number): V3 {
-  const cx = Math.cos(rx), sx = Math.sin(rx);
-  const cy = Math.cos(ry), sy = Math.sin(ry);
-  const cz = Math.cos(rz), sz = Math.sin(rz);
-
-  // Rot X
-  let y = p.y * cx - p.z * sx;
-  let z = p.y * sx + p.z * cx;
-  let x = p.x;
-
-  // Rot Y
-  const x2 = x * cy + z * sy;
-  const z2 = -x * sy + z * cy;
-  x = x2; z = z2;
-
-  // Rot Z
-  const x3 = x * cz - y * sz;
-  const y3 = x * sz + y * cz;
-
-  return { x: x3, y: y3, z };
+// Rotation matrices
+function rotX(a: number): Mat3 {
+  const c = Math.cos(a), s = Math.sin(a);
+  return [1, 0, 0, 0, c, -s, 0, s, c];
 }
 
-function project(p: V3, perspective = 700, scale = 1) {
-  const d = 1 / (1 + p.z / perspective);
-  return { x: p.x * d * scale, y: p.y * d * scale, d };
+function rotY(a: number): Mat3 {
+  const c = Math.cos(a), s = Math.sin(a);
+  return [c, 0, s, 0, 1, 0, -s, 0, c];
 }
 
-// 3D Pentagon constants (Tron-Glass effect - DRAMATIC)
-const DEPTH = 45;            // Glass thickness (very pronounced 3D extrusion)
-const ROLL = 0;              // No roll for stable look
-const PERSPECTIVE = 450;     // Camera distance (closer = much more dramatic)
+// Matrix multiplication
+function mulMV(m: Mat3, v: Vec3): Vec3 {
+  return {
+    x: m[0] * v.x + m[1] * v.y + m[2] * v.z,
+    y: m[3] * v.x + m[4] * v.y + m[5] * v.z,
+    z: m[6] * v.x + m[7] * v.y + m[8] * v.z
+  };
+}
+
+function compose(a: Mat3, b: Mat3): Mat3 {
+  return [
+    a[0] * b[0] + a[1] * b[3] + a[2] * b[6], a[0] * b[1] + a[1] * b[4] + a[2] * b[7], a[0] * b[2] + a[1] * b[5] + a[2] * b[8],
+    a[3] * b[0] + a[4] * b[3] + a[5] * b[6], a[3] * b[1] + a[4] * b[4] + a[5] * b[7], a[3] * b[2] + a[4] * b[5] + a[5] * b[8],
+    a[6] * b[0] + a[7] * b[3] + a[8] * b[6], a[6] * b[1] + a[7] * b[4] + a[8] * b[7], a[6] * b[2] + a[7] * b[5] + a[8] * b[8]
+  ];
+}
+
+// Perspective projection
+function project(v: Vec3, fov = 520, zOff = 240): { x: number; y: number } {
+  const z = v.z + zOff;
+  const k = fov / (fov + z);
+  return { x: v.x * k, y: v.y * k };
+}
+
+// 3D Radar constants (Full Tron-Glass with depth layering)
+const DEPTH = 45;            // Glass thickness for pentagon
+const FOV = 520;             // Field of view
+const Z_OFFSET = 240;        // Camera distance offset
 const FACE_ALPHA = 0.35;     // Front face translucency
-const EDGE_ALPHA = 1.0;      // Edge visibility (maximum wireframe prominence)
+const EDGE_ALPHA = 1.0;      // Edge visibility
 // =================================================================
 
 interface DNAVisualizerProps {
@@ -91,8 +100,6 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   // Debug tracing (temporary)
   const debugFramesRef = useRef(0);
   const DEBUG_DNA = true;
-  // 3D Glass-Neon Effects flag (WebGL-enhanced canvas)
-  const ENABLE_3D_EFFECTS = true;
   
   // Separate concerns: visual effects vs interaction control
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -181,7 +188,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       console.log('[DNA TRACE] listeners attached: pointer=ON');
       console.log('[DNA TRACE] reducedMotion=', prefersReducedMotion, 'disableTilt=', disableTilt);
       console.log('[DNA TRACE] containerRef attached=', !!containerRef.current);
-      console.log('[DNA TRACE] 3D Glass-Neon mode=', ENABLE_3D_EFFECTS ? 'ON (WebGL Enhanced)' : 'OFF (Canvas 2D)');
+      console.log('[DNA TRACE] Full 3D Radar mode: ON (Tron-Glass)');
     } else {
       console.log('[DNA] hover parallax enabled (desktop), drag enabled (desktop+mobile), prefersReducedMotion=' + prefersReducedMotion);
     }
@@ -409,13 +416,17 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       
       // Get current rotation from live ref
       const rot = rotationLiveRef.current;
-      const rx = toRad(rot.x);
-      const ry = toRad(rot.y);
-      const rz = toRad(ROLL);
+      const rx = deg(rot.x);
+      const ry = deg(rot.y);
+      
+      // Build rotation matrix once (Y then X for natural look)
+      const RX = rotX(rx);
+      const RY = rotY(ry);
+      const R = compose(RY, RX);
       
       // Debug trace (first 20 frames to verify movement)
       if (DEBUG_DNA && debugFramesRef.current < 20) {
-        console.log(`[DNA 3D] frame=${frame} rot=(${rot.x.toFixed(2)}, ${rot.y.toFixed(2)}) rx=${rx.toFixed(3)} ry=${ry.toFixed(3)}`);
+        console.log(`[DNA 3D FULL] frame=${frame} rot=(${rot.x.toFixed(2)}, ${rot.y.toFixed(2)})`);
         debugFramesRef.current++;
       }
       
@@ -432,167 +443,190 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
           };
         });
       
-      // Create 3D vertices (front face z=0, back face z=-DEPTH)
-      const faceFront3D: V3[] = pts2D.map(p => ({ x: p.x, y: p.y, z: 0 }));
-      const faceBack3D: V3[] = pts2D.map(p => ({ x: p.x, y: p.y, z: -DEPTH }));
-      
-      // Rotate & project both faces
-      const F = faceFront3D.map(v => project(rotate3D(v, rx, ry, rz), PERSPECTIVE, 1));
-      const B = faceBack3D.map(v => project(rotate3D(v, rx, ry, rz), PERSPECTIVE, 1));
-      
-      // Debug projection depth (first 3 frames)
-      if (DEBUG_DNA && frame <= 2) {
-        console.log(`[DNA 3D] proj dFront=${F[0].d.toFixed(3)} dBack=${B[0].d.toFixed(3)} F0=(${F[0].x.toFixed(1)},${F[0].y.toFixed(1)}) B0=(${B[0].x.toFixed(1)},${B[0].y.toFixed(1)})`);
-      }
-      
-      // No transform needed - we're drawing directly with projected coordinates
       ctx.save();
 
-      // Grid lines (concentric pentagons) - static 2D
+      // ============= FULL 3D RENDERING: All layers with depth =============
+      
+      // Z-depth levels for layering effect
+      const gridDepths = [28, 18, 8, -2, -12]; // outer to inner (5 levels)
+      
+      // Grid lines (concentric pentagons) - FULL 3D with depth
       for (let i = 1; i <= 5; i++) {
         const gridRadius = (radius * i) / 5;
+        const gridZ = gridDepths[i - 1];
+        
         ctx.beginPath();
         attributes.forEach((attr, idx) => {
-          const x = centerX + gridRadius * Math.cos(attr.angle);
-          const y = centerY + gridRadius * Math.sin(attr.angle);
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          const px = gridRadius * Math.cos(attr.angle);
+          const py = gridRadius * Math.sin(attr.angle);
+          const v = mulMV(R, { x: px, y: py, z: gridZ });
+          const s = project(v, FOV, Z_OFFSET);
+          
+          if (idx === 0) ctx.moveTo(centerX + s.x, centerY + s.y);
+          else ctx.lineTo(centerX + s.x, centerY + s.y);
         });
         ctx.closePath();
-        ctx.strokeStyle = `rgba(255, 255, 255, ${0.05 + i * 0.02})`;
-        ctx.lineWidth = 1;
+        
+        // Double-stroke for neon glow (Tron style)
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.08 + i * 0.03})`;
+        ctx.lineWidth = 1.5;
         ctx.stroke();
+        
+        if (!reducedVisuals) {
+          ctx.globalAlpha = 0.5;
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.03 + i * 0.015})`;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
       }
 
-      // Axis lines - static 2D
+      // Axis lines - FULL 3D with slight depth
       attributes.forEach((attr) => {
+        // Center point (slight negative z for depth)
+        const vCenter = mulMV(R, { x: 0, y: 0, z: -8 });
+        const sCenter = project(vCenter, FOV, Z_OFFSET);
+        
+        // Outer point (positive z for extrusion)
+        const px = radius * Math.cos(attr.angle);
+        const py = radius * Math.sin(attr.angle);
+        const vOuter = mulMV(R, { x: px, y: py, z: 12 });
+        const sOuter = project(vOuter, FOV, Z_OFFSET);
+        
         ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        const x = centerX + radius * Math.cos(attr.angle);
-        const y = centerY + radius * Math.sin(attr.angle);
-        ctx.lineTo(x, y);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-        ctx.lineWidth = 1;
+        ctx.moveTo(centerX + sCenter.x, centerY + sCenter.y);
+        ctx.lineTo(centerX + sOuter.x, centerY + sOuter.y);
+        
+        // Double-stroke for neon effect
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
+        
+        if (!reducedVisuals) {
+          ctx.globalAlpha = 0.4;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
       });
 
-      // ============= 3D HOLOGRAPHIC RENDERING =============
+      // ============= DATA PENTAGON: 3D Glass with depth =============
       const pulseScale = (animate && !reducedVisuals) ? 1 + Math.sin(frame / 60) * 0.02 : 1;
       
-      if (ENABLE_3D_EFFECTS) {
-        // BACK FACE (deeper, translucent - highly visible for dramatic 3D)
-        ctx.save();
-        ctx.globalAlpha = FACE_ALPHA * 0.8;
+      // Create 3D vertices (front face z=0, back face z=-DEPTH)
+      const faceFront3D: Vec3[] = pts2D.map(p => ({ x: p.x, y: p.y, z: 0 }));
+      const faceBack3D: Vec3[] = pts2D.map(p => ({ x: p.x, y: p.y, z: -DEPTH }));
+      
+      // Rotate & project both faces
+      const F = faceFront3D.map(v => {
+        const rotated = mulMV(R, v);
+        return project(rotated, FOV, Z_OFFSET);
+      });
+      const B = faceBack3D.map(v => {
+        const rotated = mulMV(R, v);
+        return project(rotated, FOV, Z_OFFSET);
+      });
+      
+      // Debug projection (first 3 frames)
+      if (DEBUG_DNA && frame <= 2) {
+        console.log(`[DNA 3D FULL] pentagon proj F0=(${F[0].x.toFixed(1)},${F[0].y.toFixed(1)}) B0=(${B[0].x.toFixed(1)},${B[0].y.toFixed(1)})`);
+      }
+      
+      // BACK FACE (deeper, translucent - glass back)
+      ctx.save();
+      ctx.globalAlpha = FACE_ALPHA * 0.8;
+      ctx.beginPath();
+      B.forEach((pt, idx) => {
+        const x = centerX + pt.x;
+        const y = centerY + pt.y;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      
+      // Back face fill
+      const backGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      backGradient.addColorStop(0, `${archetypeConfig.color}40`);
+      backGradient.addColorStop(1, `${archetypeConfig.color}10`);
+      ctx.fillStyle = backGradient;
+      ctx.fill();
+      
+      // Back face stroke
+      ctx.strokeStyle = `${archetypeConfig.color}85`;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      ctx.restore();
+      
+      // EDGE CONNECTORS (wireframe glass effect)
+      ctx.save();
+      ctx.globalAlpha = EDGE_ALPHA * 0.9;
+      ctx.strokeStyle = `${archetypeConfig.color}`;
+      ctx.lineWidth = 2.5;
+      for (let i = 0; i < F.length; i++) {
         ctx.beginPath();
-        B.forEach((pt, idx) => {
-          const x = centerX + pt.x;
-          const y = centerY + pt.y;
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        
-        // Back face fill
-        const backGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-        backGradient.addColorStop(0, `${archetypeConfig.color}40`);
-        backGradient.addColorStop(1, `${archetypeConfig.color}10`);
-        ctx.fillStyle = backGradient;
-        ctx.fill();
-        
-        // Back face stroke (more visible)
-        ctx.strokeStyle = `${archetypeConfig.color}85`;
-        ctx.lineWidth = 2.5;
-        ctx.stroke();
-        ctx.restore();
-        
-        // EDGE CONNECTORS (wireframe glass effect - MAXIMUM prominence)
-        ctx.save();
-        ctx.globalAlpha = EDGE_ALPHA * 0.9;
-        ctx.strokeStyle = `${archetypeConfig.color}`;
-        ctx.lineWidth = 2.5;
-        for (let i = 0; i < F.length; i++) {
-          ctx.beginPath();
-          ctx.moveTo(centerX + F[i].x, centerY + F[i].y);
-          ctx.lineTo(centerX + B[i].x, centerY + B[i].y);
-          ctx.stroke();
-        }
-        ctx.restore();
-        
-        // FRONT FACE (main data polygon with holographic glow)
-        ctx.save();
-        ctx.globalAlpha = FACE_ALPHA;
-        
-        // Dynamic shadow based on rotation
-        const shadowIntensity = Math.abs(Math.sin(rx)) * 0.5 + Math.abs(Math.sin(ry)) * 0.5;
-        ctx.shadowColor = `${archetypeConfig.color}70`;
-        ctx.shadowBlur = 25 + shadowIntensity * 20;
-        ctx.shadowOffsetX = Math.sin(ry) * 12;
-        ctx.shadowOffsetY = Math.sin(rx) * 12;
-        
-        ctx.beginPath();
-        F.forEach((pt, idx) => {
-          const x = centerX + pt.x;
-          const y = centerY + pt.y;
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        
-        // Front face fill with gradient
-        const frontGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-        frontGradient.addColorStop(0, `${archetypeConfig.color}60`);
-        frontGradient.addColorStop(1, `${archetypeConfig.color}20`);
-        ctx.fillStyle = frontGradient;
-        ctx.fill();
-        
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.restore();
-        
-        // FRONT FACE STROKE (bright edge with glow)
-        ctx.save();
-        ctx.globalAlpha = EDGE_ALPHA;
-        
-        // Add subtle glow to front edge
-        ctx.shadowColor = archetypeConfig.color;
-        ctx.shadowBlur = 8;
-        
-        ctx.beginPath();
-        F.forEach((pt, idx) => {
-          const x = centerX + pt.x;
-          const y = centerY + pt.y;
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        ctx.strokeStyle = archetypeConfig.color;
-        ctx.lineWidth = 3.5;
-        ctx.stroke();
-        
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.restore();
-      } else {
-        // Fallback: 2D rendering (legacy)
-        ctx.beginPath();
-        pts2D.forEach((pt, idx) => {
-          const x = centerX + pt.x;
-          const y = centerY + pt.y;
-          if (idx === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
-        ctx.closePath();
-        
-        const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-        gradient.addColorStop(0, `${archetypeConfig.color}60`);
-        gradient.addColorStop(1, `${archetypeConfig.color}20`);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-        
-        ctx.strokeStyle = archetypeConfig.color;
-        ctx.lineWidth = 3;
+        ctx.moveTo(centerX + F[i].x, centerY + F[i].y);
+        ctx.lineTo(centerX + B[i].x, centerY + B[i].y);
         ctx.stroke();
       }
+      ctx.restore();
+      
+      // FRONT FACE (main data polygon with holographic glow)
+      ctx.save();
+      ctx.globalAlpha = FACE_ALPHA;
+      
+      // Dynamic shadow based on rotation
+      const shadowIntensity = Math.abs(Math.sin(rx)) * 0.5 + Math.abs(Math.sin(ry)) * 0.5;
+      ctx.shadowColor = `${archetypeConfig.color}70`;
+      ctx.shadowBlur = 25 + shadowIntensity * 20;
+      ctx.shadowOffsetX = Math.sin(ry) * 12;
+      ctx.shadowOffsetY = Math.sin(rx) * 12;
+      
+      ctx.beginPath();
+      F.forEach((pt, idx) => {
+        const x = centerX + pt.x;
+        const y = centerY + pt.y;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      
+      // Front face fill with gradient
+      const frontGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+      frontGradient.addColorStop(0, `${archetypeConfig.color}60`);
+      frontGradient.addColorStop(1, `${archetypeConfig.color}20`);
+      ctx.fillStyle = frontGradient;
+      ctx.fill();
+      
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      
+      // FRONT FACE STROKE (bright edge with glow)
+      ctx.save();
+      ctx.globalAlpha = EDGE_ALPHA;
+      
+      // Add subtle glow to front edge
+      if (!reducedVisuals) {
+        ctx.shadowColor = archetypeConfig.color;
+        ctx.shadowBlur = 8;
+      }
+      
+      ctx.beginPath();
+      F.forEach((pt, idx) => {
+        const x = centerX + pt.x;
+        const y = centerY + pt.y;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.strokeStyle = archetypeConfig.color;
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+      
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.restore();
       
       // Reset shadow
       ctx.shadowColor = 'transparent';
@@ -600,15 +634,15 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
-      // Data points with pulse effect (on front face vertices)
+      // Data points with pulse effect (on front face vertices in 3D)
       attributes.forEach((attr, idx) => {
         const value = profile[attr.key as keyof DNAProfile] as number;
         const isPulsing = vertexPulses.some(p => p.key === attr.key);
         const vertexPulseScale = isPulsing && !reducedVisuals ? 1.06 : 1;
         
         // Use projected 3D coordinates for front face
-        const x = ENABLE_3D_EFFECTS ? centerX + F[idx].x : centerX + (value / 100) * radius * Math.cos(attr.angle);
-        const y = ENABLE_3D_EFFECTS ? centerY + F[idx].y : centerY + (value / 100) * radius * Math.sin(attr.angle);
+        const x = centerX + F[idx].x;
+        const y = centerY + F[idx].y;
 
         // Ring ripple on pulse
         if (isPulsing && !reducedVisuals) {
@@ -699,21 +733,19 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         WebkitUserSelect: 'none'
       }}
     >
-      {/* Canvas with True 3D Holographic Pentagon (Tron-style) */}
+      {/* Canvas with Full 3D Radar (Tron-Glass) */}
       <canvas
         ref={canvasRef}
         className="rounded-lg"
         style={{
-          filter: ENABLE_3D_EFFECTS 
-            ? `drop-shadow(0 0 40px ${archetypeConfig.color}50) brightness(1.1)` 
-            : `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
+          filter: `drop-shadow(0 0 40px ${archetypeConfig.color}50) brightness(1.1)`,
           cursor: disableTiltControl ? 'default' : (isDragging ? 'grabbing' : 'grab'),
           pointerEvents: 'auto'
         }}
       />
       
       {/* Debug label (DEV only) */}
-      {process.env.NODE_ENV === 'development' && ENABLE_3D_EFFECTS && (
+      {process.env.NODE_ENV === 'development' && (
         <div 
           style={{
             position: 'absolute',
@@ -726,7 +758,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
             pointerEvents: 'none'
           }}
         >
-          3D HOLOGRAPHIC (Tron)
+          FULL 3D RADAR (Tron-Glass)
         </div>
       )}
     </motion.div>
