@@ -133,8 +133,8 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     // Constants
     const MAX_ROT_MOUSE = 18;
     const MAX_ROT_TOUCH = 22;
-    const MOUSE_GAIN = 1.6;
-    const TOUCH_GAIN = 0.35;
+    const MOUSE_GAIN = 1.0;
+    const TOUCH_GAIN = 0.5;
     const INERTIA_DECAY = 0.92;
     
     const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
@@ -183,19 +183,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         return;
       }
       
-      // Parallax mode (only for mouse when not dragging)
-      if (e.pointerType === 'mouse') {
-        const rect = container.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const nx = (e.clientX - cx) / rect.width;
-        const ny = (e.clientY - cy) / rect.height;
-        
-        targetRotationRef.current = {
-          x: clamp(ny * MAX_ROT_MOUSE, -MAX_ROT_MOUSE, MAX_ROT_MOUSE),
-          y: clamp(nx * MAX_ROT_MOUSE, -MAX_ROT_MOUSE, MAX_ROT_MOUSE),
-        };
-      }
+      // No parallax mode - pentagon only moves on explicit drag
     };
     
     const onPointerUp = (e: PointerEvent) => {
