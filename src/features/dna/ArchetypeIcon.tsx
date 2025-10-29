@@ -1,11 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Archetype } from './dnaTypes';
+import { Archetype, ARCHETYPE_CONFIGS } from './dnaTypes';
 
 interface ArchetypeIconProps {
   archetype: Archetype;
-  color: string;
   size?: number;
   animated?: boolean;
 }
@@ -22,11 +21,11 @@ interface ArchetypeIconProps {
  */
 export const ArchetypeIcon: React.FC<ArchetypeIconProps> = ({
   archetype,
-  color,
   size = 24,
   animated = true
 }) => {
   const shouldAnimate = animated && window.matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  const color = ARCHETYPE_CONFIGS[archetype].color;
 
   const iconVariants = {
     Seeker: (

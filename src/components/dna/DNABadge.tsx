@@ -5,6 +5,7 @@ import { useLocation } from 'wouter';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { ARCHETYPE_CONFIGS } from '@/features/dna/dnaTypes';
 import type { Archetype } from '@/features/dna/dnaTypes';
+import { ArchetypeIcon } from '@/features/dna/ArchetypeIcon';
 
 interface DNABadgeProps {
   archetype: Archetype;
@@ -29,7 +30,12 @@ export const DNABadge: React.FC<DNABadgeProps> = ({ archetype, className = '' })
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <span className="text-base">{config.icon}</span>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ArchetypeIcon 
+                archetype={archetype} 
+                size={24}
+              />
+            </div>
             
             {/* Pulsing glow */}
             <motion.div
