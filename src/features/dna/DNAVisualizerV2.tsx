@@ -134,7 +134,14 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     // Prevent native touch scroll/pan
     (container.style as any).touchAction = 'none';
     
-    console.log('[DNA] hover parallax enabled (desktop), drag enabled (desktop+mobile), prefersReducedMotion=' + prefersReducedMotion);
+    if (DEBUG_DNA) {
+      console.log('[DNA TRACE] visualizer mounted: DNAVisualizerV2.tsx');
+      console.log('[DNA TRACE] listeners attached: pointer=ON');
+      console.log('[DNA TRACE] reducedMotion=', prefersReducedMotion, 'disableTilt=', disableTilt);
+      console.log('[DNA TRACE] containerRef attached=', !!containerRef.current);
+    } else {
+      console.log('[DNA] hover parallax enabled (desktop), drag enabled (desktop+mobile), prefersReducedMotion=' + prefersReducedMotion);
+    }
     
     // Constants
     const MAX_ROT_MOUSE = 18;
@@ -162,6 +169,10 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       };
       
       velocityRef.current = { x: 0, y: 0 };
+      
+      if (DEBUG_DNA) {
+        console.log('[DNA TRACE] pointerdown type=', e.pointerType, 'isDragging=true');
+      }
     };
     
     const onPointerMove = (e: PointerEvent) => {
@@ -189,11 +200,19 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
           y: (baseY - prevTarget.y) * 0.25,
         };
         targetRotationRef.current = { x: baseX, y: baseY };
+        
+        if (DEBUG_DNA) {
+          console.log('[DNA TRACE] pointermove type=', e.pointerType, 'isDragging=true baseX=', baseX.toFixed(2), 'baseY=', baseY.toFixed(2));
+        }
       } else if (e.pointerType === 'mouse') {
         // Passive parallax hover (desktop only, reduced sensitivity)
         const hoverX = baseX * 0.5; // 50% sensitivity for subtle effect
         const hoverY = baseY * 0.5;
         targetRotationRef.current = { x: hoverX, y: hoverY };
+        
+        if (DEBUG_DNA) {
+          console.log('[DNA TRACE] pointermove type=mouse isDragging=false hoverX=', hoverX.toFixed(2), 'hoverY=', hoverY.toFixed(2), 'nx=', nx.toFixed(3), 'ny=', ny.toFixed(3));
+        }
         
         // Idle stabilization: reset to (0,0) if mouse stays still
         if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
@@ -211,6 +230,10 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       setIsDragging(false);
       dragStartRef.current = null;
       container.releasePointerCapture?.(e.pointerId);
+      
+      if (DEBUG_DNA) {
+        console.log('[DNA TRACE] pointerup type=', e.pointerType, 'velocity=', velocityRef.current);
+      }
       
       // Inertia: continue movement with decay (desktop + mobile)
       const DECAY = 0.92;
@@ -292,6 +315,13 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         const newX = lerp(prev.x, target.x, alpha);
         const newY = lerp(prev.y, target.y, alpha);
         
+        // Update live ref for draw() to consume (fixes stale closure)
+        rotationLiveRef.current = { x: newX, y: newY };
+        
+        if (DEBUG_DNA && debugFramesRef.current < 20) {
+          console.log('[DNA TRACE] lerp rot=', newX.toFixed(2), newY.toFixed(2));
+        }
+        
         // Stop animating if close enough
         if (Math.abs(newX - target.x) < 0.01 && Math.abs(newY - target.y) < 0.01) {
           return { x: target.x, y: target.y };
@@ -339,8 +369,15 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       ctx.translate(centerX, centerY);
       
       if (!disableTiltControl) {
-        const rotX = (rotation.x * Math.PI) / 180;
-        const rotY = (rotation.y * Math.PI) / 180;
+        // Read from live ref (fixes stale closure bug)
+        const rot = rotationLiveRef.current;
+        const rotX = (rot.x * Math.PI) / 180;
+        const rotY = (rot.y * Math.PI) / 180;
+        
+        if (DEBUG_DNA && debugFramesRef.current < 20) {
+          console.log('[DNA TRACE] draw frame=', frame, 'rot=', rot);
+          debugFramesRef.current++;
+        }
         
         // Simple 2D projection approximation
         const scaleX = Math.cos(rotY);
