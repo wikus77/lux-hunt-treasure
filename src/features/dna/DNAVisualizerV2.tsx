@@ -36,11 +36,19 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   const prevProfileRef = useRef<DNAProfile>(profile);
   const [vertexPulses, setVertexPulses] = useState<VertexPulse[]>([]);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  
+  // Refs for input handling - no stale closure
+  const inputEnabledRef = useRef(true);
   const targetRotationRef = useRef({ x: 0, y: 0 });
   const isDraggingRef = useRef(false);
-  const dragStartRef = useRef({ x: 0, y: 0, rotX: 0, rotY: 0 });
+  const dragStartRef = useRef<{ x: number; y: number; rotX: number; rotY: number } | null>(null);
+  const velocityRef = useRef({ x: 0, y: 0 });
+  const leaveTimeoutRef = useRef<number | null>(null);
+  
+  // Separate concerns: visual effects vs interaction control
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const reducedMotion = prefersReducedMotion || disableTilt;
+  const reducedVisuals = prefersReducedMotion || disableTilt; // Only affects decorative animations
+  const disableTiltControl = false; // Tilt is always enabled unless explicitly disabled
   
   // Gain adjustments for better sensitivity
   const MOUSE_GAIN = useRef(1.6);
@@ -87,7 +95,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       }
     });
 
-    if (changedKeys.length > 0 && !prefersReducedMotion) {
+    if (changedKeys.length > 0 && !reducedVisuals) {
       const newPulses: VertexPulse[] = changedKeys.map(key => ({
         key,
         timestamp: Date.now()
@@ -101,12 +109,12 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     }
 
     prevProfileRef.current = profile;
-  }, [profile, prefersReducedMotion]);
+  }, [profile, reducedVisuals]);
 
-  // Mouse/touch/pointer parallax interaction
+  // Unified Pointer Events interaction - NO STALE CLOSURE
   useEffect(() => {
-    if (reducedMotion) {
-      console.log('[DNA] Tilt disabled (reduced motion or explicit disable)');
+    if (disableTiltControl) {
+      console.log('[DNA] Tilt control explicitly disabled');
       return;
     }
     
@@ -116,127 +124,148 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       return;
     }
     
-    console.log('[DNA] Listeners attached: mousemove=ON, touchmove=ON, pointerdown=ON, prefersReducedMotion=' + prefersReducedMotion);
+    // Prevent native touch scroll/pan
+    (container.style as any).touchAction = 'none';
     
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDraggingRef.current) return;
-      
-      const rect = container.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      
-      const deltaX = (e.clientX - centerX) / rect.width;
-      const deltaY = (e.clientY - centerY) / rect.height;
-      
-      // Increased limits: ±20 degrees desktop
-      const maxRot = 20;
-      targetRotationRef.current = {
-        x: Math.max(-maxRot, Math.min(maxRot, deltaY * maxRot * MOUSE_GAIN.current)),
-        y: Math.max(-maxRot, Math.min(maxRot, deltaX * maxRot * MOUSE_GAIN.current))
-      };
-    };
+    console.log('[DNA] Listeners attached: pointer=ON, mouse=ON, prefersReducedMotion=' + prefersReducedMotion);
     
-    const handleMouseLeave = () => {
-      if (!isDraggingRef.current) {
-        // Smooth return to 0 with easing
-        targetRotationRef.current = { x: 0, y: 0 };
-      }
-    };
+    // Constants
+    const MAX_ROT_MOUSE = 18;
+    const MAX_ROT_TOUCH = 22;
+    const MOUSE_GAIN = 1.6;
+    const TOUCH_GAIN = 0.35;
+    const INERTIA_DECAY = 0.92;
     
-    const handleTouchStart = (e: TouchEvent) => {
-      if (e.touches.length !== 1) return;
-      e.preventDefault();
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+    
+    // Pointer Events (unified for mouse, touch, pen)
+    const onPointerDown = (e: PointerEvent) => {
+      if (!inputEnabledRef.current) return;
+      
+      inputEnabledRef.current = true;
       isDraggingRef.current = true;
-      const touch = e.touches[0];
-      dragStartRef.current = {
-        x: touch.clientX,
-        y: touch.clientY,
-        rotX: targetRotationRef.current.x,
-        rotY: targetRotationRef.current.y
-      };
-    };
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isDraggingRef.current || e.touches.length !== 1) return;
-      e.preventDefault();
+      container.setPointerCapture?.(e.pointerId);
       
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - dragStartRef.current.x;
-      const deltaY = touch.clientY - dragStartRef.current.y;
-      
-      // Increased limits: ±25 degrees mobile
-      const maxRot = 25;
-      targetRotationRef.current = {
-        x: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotX + deltaY * TOUCH_GAIN.current)),
-        y: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotY + deltaX * TOUCH_GAIN.current))
-      };
-    };
-    
-    const handleTouchEnd = () => {
-      isDraggingRef.current = false;
-    };
-    
-    // Pointer events fallback
-    const handlePointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'touch') return; // Already handled by touch
-      isDraggingRef.current = true;
       dragStartRef.current = {
         x: e.clientX,
         y: e.clientY,
         rotX: targetRotationRef.current.x,
-        rotY: targetRotationRef.current.y
+        rotY: targetRotationRef.current.y,
       };
+      
+      velocityRef.current = { x: 0, y: 0 };
     };
     
-    const handlePointerMove = (e: PointerEvent) => {
-      if (!isDraggingRef.current || e.pointerType === 'touch') return;
-      e.preventDefault();
+    const onPointerMove = (e: PointerEvent) => {
+      if (!inputEnabledRef.current) return;
       
-      const deltaX = e.clientX - dragStartRef.current.x;
-      const deltaY = e.clientY - dragStartRef.current.y;
+      if (isDraggingRef.current && dragStartRef.current) {
+        // Dragging mode
+        const dx = e.clientX - dragStartRef.current.x;
+        const dy = e.clientY - dragStartRef.current.y;
+        
+        const gain = e.pointerType === 'mouse' ? MOUSE_GAIN : TOUCH_GAIN;
+        const max = e.pointerType === 'mouse' ? MAX_ROT_MOUSE : MAX_ROT_TOUCH;
+        
+        const newX = clamp(dragStartRef.current.rotX + dy * gain * 0.1, -max, max);
+        const newY = clamp(dragStartRef.current.rotY + dx * gain * 0.1, -max, max);
+        
+        targetRotationRef.current = { x: newX, y: newY };
+        
+        // Track velocity for inertia
+        velocityRef.current = {
+          x: newX - targetRotationRef.current.x,
+          y: newY - targetRotationRef.current.y,
+        };
+        return;
+      }
       
-      const maxRot = 20;
-      targetRotationRef.current = {
-        x: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotX + deltaY * 0.15)),
-        y: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotY + deltaX * 0.15))
-      };
+      // Parallax mode (only for mouse when not dragging)
+      if (e.pointerType === 'mouse') {
+        const rect = container.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const nx = (e.clientX - cx) / rect.width;
+        const ny = (e.clientY - cy) / rect.height;
+        
+        targetRotationRef.current = {
+          x: clamp(ny * MAX_ROT_MOUSE, -MAX_ROT_MOUSE, MAX_ROT_MOUSE),
+          y: clamp(nx * MAX_ROT_MOUSE, -MAX_ROT_MOUSE, MAX_ROT_MOUSE),
+        };
+      }
     };
     
-    const handlePointerUp = () => {
+    const onPointerUp = (e: PointerEvent) => {
       isDraggingRef.current = false;
+      dragStartRef.current = null;
+      container.releasePointerCapture?.(e.pointerId);
+      
+      // Apply inertia on mobile/touch
+      if (e.pointerType === 'touch' && (Math.abs(velocityRef.current.x) > 0.5 || Math.abs(velocityRef.current.y) > 0.5)) {
+        const applyInertia = () => {
+          if (Math.abs(velocityRef.current.x) < 0.01 && Math.abs(velocityRef.current.y) < 0.01) {
+            return;
+          }
+          
+          velocityRef.current.x *= INERTIA_DECAY;
+          velocityRef.current.y *= INERTIA_DECAY;
+          
+          targetRotationRef.current = {
+            x: clamp(targetRotationRef.current.x + velocityRef.current.x, -MAX_ROT_TOUCH, MAX_ROT_TOUCH),
+            y: clamp(targetRotationRef.current.y + velocityRef.current.y, -MAX_ROT_TOUCH, MAX_ROT_TOUCH),
+          };
+          
+          requestAnimationFrame(applyInertia);
+        };
+        applyInertia();
+      }
     };
     
-    const handleDoubleClick = () => {
+    const onMouseLeave = () => {
+      // Clear any pending timeout
+      if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current);
+      }
+      
+      // Delayed return to center (300ms)
+      leaveTimeoutRef.current = window.setTimeout(() => {
+        if (!isDraggingRef.current) {
+          targetRotationRef.current = { x: 0, y: 0 };
+        }
+      }, 300);
+    };
+    
+    const onDoubleClick = () => {
       targetRotationRef.current = { x: 0, y: 0 };
       setRotation({ x: 0, y: 0 });
+      velocityRef.current = { x: 0, y: 0 };
     };
     
-    container.addEventListener('mousemove', handleMouseMove);
-    container.addEventListener('mouseleave', handleMouseLeave);
-    container.addEventListener('touchstart', handleTouchStart, { passive: false });
-    container.addEventListener('touchmove', handleTouchMove, { passive: false });
-    container.addEventListener('touchend', handleTouchEnd);
-    container.addEventListener('pointerdown', handlePointerDown);
-    container.addEventListener('pointermove', handlePointerMove);
-    container.addEventListener('pointerup', handlePointerUp);
-    container.addEventListener('dblclick', handleDoubleClick);
+    // Register unified handlers
+    container.addEventListener('pointerdown', onPointerDown);
+    container.addEventListener('pointermove', onPointerMove);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('pointercancel', onPointerUp);
+    container.addEventListener('mouseleave', onMouseLeave);
+    container.addEventListener('dblclick', onDoubleClick);
     
     return () => {
-      container.removeEventListener('mousemove', handleMouseMove);
-      container.removeEventListener('mouseleave', handleMouseLeave);
-      container.removeEventListener('touchstart', handleTouchStart);
-      container.removeEventListener('touchmove', handleTouchMove);
-      container.removeEventListener('touchend', handleTouchEnd);
-      container.removeEventListener('pointerdown', handlePointerDown);
-      container.removeEventListener('pointermove', handlePointerMove);
-      container.removeEventListener('pointerup', handlePointerUp);
-      container.removeEventListener('dblclick', handleDoubleClick);
+      container.removeEventListener('pointerdown', onPointerDown);
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
+      container.removeEventListener('mouseleave', onMouseLeave);
+      container.removeEventListener('dblclick', onDoubleClick);
+      
+      if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current);
+      }
     };
-  }, [reducedMotion, prefersReducedMotion]);
+  }, []); // ❗️ EMPTY DEPENDENCY - NO STALE CLOSURE
   
-  // Lerp/spring easing for smooth rotation
+  // Lerp/spring easing for smooth rotation - ALWAYS ACTIVE (independent from visual effects)
   useEffect(() => {
-    if (reducedMotion) return;
+    if (disableTiltControl) return;
     
     let animationId: number;
     const lerp = (current: number, target: number, alpha: number) => {
@@ -266,7 +295,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [reducedMotion]);
+  }, [disableTiltControl]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -292,12 +321,11 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     const draw = () => {
       ctx.clearRect(0, 0, size, size);
       
-      // Apply perspective transform for parallax
+      // Apply perspective transform for parallax - ALWAYS if not disabled
       ctx.save();
       ctx.translate(centerX, centerY);
       
-      if (!reducedMotion) {
-        const perspective = 600;
+      if (!disableTiltControl) {
         const rotX = (rotation.x * Math.PI) / 180;
         const rotY = (rotation.y * Math.PI) / 180;
         
@@ -341,7 +369,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       });
 
       // Data polygon
-      const pulseScale = (animate && !prefersReducedMotion) ? 1 + Math.sin(frame / 60) * 0.02 : 1;
+      const pulseScale = (animate && !reducedVisuals) ? 1 + Math.sin(frame / 60) * 0.02 : 1;
       ctx.beginPath();
       attributes.forEach((attr, idx) => {
         const value = profile[attr.key as keyof DNAProfile] as number;
@@ -369,14 +397,14 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       attributes.forEach((attr) => {
         const value = profile[attr.key as keyof DNAProfile] as number;
         const isPulsing = vertexPulses.some(p => p.key === attr.key);
-        const vertexPulseScale = isPulsing && !prefersReducedMotion ? 1.06 : 1;
+        const vertexPulseScale = isPulsing && !reducedVisuals ? 1.06 : 1;
         
         const normalizedValue = (value / 100) * radius * pulseScale;
         const x = centerX + normalizedValue * Math.cos(attr.angle);
         const y = centerY + normalizedValue * Math.sin(attr.angle);
 
         // Ring ripple on pulse
-        if (isPulsing && !prefersReducedMotion) {
+        if (isPulsing && !reducedVisuals) {
           const pulse = vertexPulses.find(p => p.key === attr.key);
           if (pulse) {
             const elapsed = (Date.now() - pulse.timestamp) / 600; // 0-1 over 600ms
@@ -435,7 +463,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         ctx.font = 'bold 11px Inter, sans-serif';
       });
 
-      if (animate && !prefersReducedMotion) {
+      if (animate && !reducedVisuals) {
         frame++;
         animationId = requestAnimationFrame(draw);
       }
@@ -446,19 +474,21 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [profile, size, animate, archetypeConfig.color, vertexPulses, prefersReducedMotion]);
+  }, [profile, size, animate, archetypeConfig.color, vertexPulses, reducedVisuals]);
 
   return (
     <motion.div
       ref={containerRef}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: prefersReducedMotion ? 0.1 : 0.6, ease: "easeOut" }}
+      transition={{ duration: reducedVisuals ? 0.1 : 0.6, ease: "easeOut" }}
       className="relative"
       style={{ 
         width: size, 
         height: size,
-        touchAction: 'none' // Prevent scroll during drag
+        touchAction: 'none', // Prevent scroll during drag
+        userSelect: 'none',
+        WebkitUserSelect: 'none'
       }}
     >
       <canvas
@@ -466,7 +496,8 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         className="rounded-lg"
         style={{
           filter: `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
-          cursor: reducedMotion ? 'default' : 'grab'
+          cursor: disableTiltControl ? 'default' : (isDraggingRef.current ? 'grabbing' : 'grab'),
+          pointerEvents: 'auto'
         }}
       />
     </motion.div>
