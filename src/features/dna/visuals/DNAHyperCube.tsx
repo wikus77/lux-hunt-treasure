@@ -4,8 +4,9 @@ import React, { useRef, useMemo, useEffect, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment } from '@react-three/drei';
 import * as THREE from 'three';
-import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postprocessing';
+import { Bloom, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction, KernelSize } from 'postprocessing';
+import { SafeComposer } from './components/SafeComposer';
 import { useDNA } from '@/hooks/useDNA';
 import { isMobile } from '@/lib/utils/device';
 import { createGlassMaterial } from './materials/GlassMaterial';
@@ -148,31 +149,30 @@ export const DNAHyperCube: React.FC<DNAHyperCubeProps> = ({
         />
 
         {/* Post-processing effects */}
-        {!reducedMotion && (
-          <EffectComposer multisampling={mobile ? 0 : 4}>
-            <Bloom
-              intensity={mobile ? 0.8 : 1.1}
-              luminanceThreshold={0.2}
-              luminanceSmoothing={0.9}
-              kernelSize={KernelSize.MEDIUM}
-              mipmapBlur
-            />
-            <ChromaticAberration
-              blendFunction={BlendFunction.NORMAL}
-              offset={new THREE.Vector2(0.0018, 0.0018)}
-            />
-          </EffectComposer>
-        )}
-        {reducedMotion && (
-          <EffectComposer multisampling={mobile ? 0 : 4}>
+        <SafeComposer multisampling={mobile ? 0 : 4}>
+          {!reducedMotion ? (
+            <>
+              <Bloom
+                intensity={mobile ? 0.8 : 1.1}
+                luminanceThreshold={0.2}
+                luminanceSmoothing={0.9}
+                kernelSize={KernelSize.MEDIUM}
+                mipmapBlur
+              />
+              <ChromaticAberration
+                blendFunction={BlendFunction.NORMAL}
+                offset={new THREE.Vector2(0.0018, 0.0018)}
+              />
+            </>
+          ) : (
             <Bloom
               intensity={0.3}
               luminanceThreshold={0.4}
               luminanceSmoothing={0.9}
               kernelSize={KernelSize.SMALL}
             />
-          </EffectComposer>
-        )}
+          )}
+        </SafeComposer>
       </Canvas>
     </div>
   );
