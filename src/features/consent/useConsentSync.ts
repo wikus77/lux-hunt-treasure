@@ -35,7 +35,7 @@ export function useConsentSync(onConsentChange?: (consent: ConsentData | null) =
           return;
         }
 
-        const remoteConsent = data?.cookie_consent as ConsentData | null;
+        const remoteConsent = data?.cookie_consent ? (data.cookie_consent as unknown as ConsentData) : null;
         if (!remoteConsent) {
           console.info('[Consent Sync] No remote consent found');
           return;
@@ -79,7 +79,7 @@ export function useConsentSync(onConsentChange?: (consent: ConsentData | null) =
       try {
         const { error } = await supabase
           .from('profiles')
-          .update({ cookie_consent: consent })
+          .update({ cookie_consent: consent as any })
           .eq('id', user.id);
 
         if (error) {
