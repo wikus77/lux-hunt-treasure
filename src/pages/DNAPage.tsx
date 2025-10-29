@@ -5,8 +5,9 @@ import { useDNA } from '@/hooks/useDNA';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 import { DNAHub } from '@/features/dna/DNAHub';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 
 /**
  * DNA Page - Full-screen DNA Hub
@@ -168,11 +169,37 @@ const DNAPage: React.FC = () => {
   }
 
   return (
-    <DNAHub 
-      dnaProfile={dnaProfile} 
-      events={events}
-      onEvolve={handleEvolve}
-    />
+    <div className="relative min-h-screen">
+      {/* Back Button - Sticky top-left with safe-area support */}
+      <motion.button
+        onClick={() => {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            setLocation('/home');
+          }
+        }}
+        className="fixed top-4 left-4 z-50 w-11 h-11 rounded-full bg-background/80 backdrop-blur-md border border-border/50 shadow-lg flex items-center justify-center hover:bg-background/90 transition-all focus:outline-none focus:ring-2 focus:ring-primary/50"
+        style={{
+          top: 'max(1rem, env(safe-area-inset-top))',
+          left: 'max(1rem, env(safe-area-inset-left))'
+        }}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.3 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        aria-label="Torna indietro"
+      >
+        <ArrowLeft className="w-5 h-5 text-foreground" />
+      </motion.button>
+
+      <DNAHub 
+        dnaProfile={dnaProfile} 
+        events={events}
+        onEvolve={handleEvolve}
+      />
+    </div>
   );
 };
 
