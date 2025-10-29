@@ -9,6 +9,7 @@ import { isMobile } from '@/lib/utils/device';
 import { TesseractGrid } from './geometry/TesseractGrid';
 import { DNAPanels } from './panels/DNAPanels';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+import { useStableComposer } from './components/useStableComposer';
 
 // Lazy load vanilla postprocessing
 let EffectComposer: any;
@@ -191,9 +192,8 @@ interface HyperCubeSceneProps {
 const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }) => {
   const { dnaProfile } = useDNA();
   const groupRef = useRef<THREE.Group>(null);
-  const { gl, scene } = useThree();
+  const { gl, scene, camera } = useThree();
   const [activePanelIndex, setActivePanelIndex] = useState<number | null>(null);
-  const composerRef = useRef<any>(null);
   const cubeCamera = useRef<THREE.CubeCamera>();
   const frameCount = useRef(0);
   const [envMap, setEnvMap] = useState<THREE.Texture | null>(null);
@@ -231,53 +231,38 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
     };
   }, [scene]);
 
-  // Setup vanilla postprocessing with SEPARATE passes for convolution effects
-  useEffect(() => {
-    let composer: any;
-    
-    const setupPostProcessing = async () => {
-      const { EffectComposer, RenderPass, BloomEffect, ChromaticAberrationEffect, EffectPass, SMAAEffect } = 
-        await loadPostProcessing();
+  // Create post-processing effects (memoized to avoid rebuilding)
+  const effects = useMemo(() => {
+    const createEffects = async () => {
+      const { BloomEffect, ChromaticAberrationEffect, SMAAEffect } = await loadPostProcessing();
       
-      composer = new EffectComposer(gl);
-      
-      // CRITICAL: Add RenderPass first
-      composer.addPass(new RenderPass(scene, gl.getContext().canvas));
-      
-      // CRITICAL: Separate EffectPass for each convolution effect
-      // Bloom pass (convolution effect #1)
       const bloom = new BloomEffect({
         intensity: reducedMotion ? 0.35 : (mobile ? 0.8 : 1.2),
         luminanceThreshold: reducedMotion ? 0.4 : 0.2,
         luminanceSmoothing: reducedMotion ? 0.8 : 0.9,
         mipmapBlur: !reducedMotion
       });
-      composer.addPass(new EffectPass(gl.getContext().canvas, bloom));
       
-      // ChromaticAberration pass (convolution effect #2) - only if not reduced motion
-      if (!reducedMotion) {
-        const chroma = new ChromaticAberrationEffect({
-          offset: new THREE.Vector2(0.0015, 0.0015)
-        });
-        composer.addPass(new EffectPass(gl.getContext().canvas, chroma));
-      }
+      const chroma = reducedMotion ? null : new ChromaticAberrationEffect({
+        offset: new THREE.Vector2(0.0015, 0.0015)
+      });
       
-      // SMAA pass (anti-aliasing, can be combined with other non-convolution effects)
       const smaa = new SMAAEffect();
-      composer.addPass(new EffectPass(gl.getContext().canvas, smaa));
       
-      composerRef.current = composer;
-      console.log('🟢 DNA Composer ready (vanilla) - separate passes');
+      return { bloom, chroma, smaa };
     };
     
-    setupPostProcessing();
-    
-    return () => {
-      if (composer) {
-        composer.dispose();
-      }
-    };
-  }, [gl, scene, mobile, reducedMotion]);
+    return createEffects();
+  }, [mobile, reducedMotion]);
+
+  const [effectsConfig, setEffectsConfig] = useState<any>({});
+
+  useEffect(() => {
+    effects.then(setEffectsConfig);
+  }, [effects]);
+
+  // Setup stable composer with proper pass separation
+  const composerRef = useStableComposer(gl, scene, camera, effectsConfig);
 
   // Glass material with Fresnel shader
   const glassMaterial = useMemo(() => {
@@ -370,9 +355,16 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
       glassMaterial.uniforms.time.value = state.clock.elapsedTime;
     }
     
-    // Render with composer
+    // Render with composer (fallback to direct render if composer not ready)
     if (composerRef.current) {
-      composerRef.current.render(delta);
+      try {
+        composerRef.current.render(delta);
+      } catch (error) {
+        console.warn('⚠️ [DNA Composer] Render failed, using fallback:', error);
+        gl.render(scene, camera);
+      }
+    } else {
+      gl.render(scene, camera);
     }
     
     frameCount.current++;
