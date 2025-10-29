@@ -36,6 +36,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   const prevProfileRef = useRef<DNAProfile>(profile);
   const [vertexPulses, setVertexPulses] = useState<VertexPulse[]>([]);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
   
   // Refs for input handling - no stale closure
   const inputEnabledRef = useRef(true);
@@ -144,6 +145,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       
       inputEnabledRef.current = true;
       isDraggingRef.current = true;
+      setIsDragging(true);
       container.setPointerCapture?.(e.pointerId);
       
       dragStartRef.current = {
@@ -197,6 +199,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     
     const onPointerUp = (e: PointerEvent) => {
       isDraggingRef.current = false;
+      setIsDragging(false);
       dragStartRef.current = null;
       container.releasePointerCapture?.(e.pointerId);
       
@@ -496,7 +499,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         className="rounded-lg"
         style={{
           filter: `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
-          cursor: disableTiltControl ? 'default' : (isDraggingRef.current ? 'grabbing' : 'grab'),
+          cursor: disableTiltControl ? 'default' : (isDragging ? 'grabbing' : 'grab'),
           pointerEvents: 'auto'
         }}
       />
