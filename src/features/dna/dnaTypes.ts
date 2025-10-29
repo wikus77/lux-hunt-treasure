@@ -8,7 +8,7 @@ export interface DNAScores {
   vibrazione: number;
 }
 
-export type Archetype = 'Seeker' | 'Breaker' | 'Oracle' | 'Warden';
+export type Archetype = 'Seeker' | 'Breaker' | 'Oracle' | 'Warden' | 'Nomad';
 
 export interface DNAProfile extends DNAScores {
   archetype: Archetype;
@@ -61,6 +61,15 @@ export const ARCHETYPE_CONFIGS: Record<Archetype, ArchetypeConfig> = {
     color: '#00ff85',
     icon: '🛡️',
     accentVar: 'hsl(152, 100%, 50%)'
+  },
+  Nomad: {
+    id: 'Nomad',
+    name: 'Nomad',
+    nameIt: 'Nomade',
+    description: 'Equilibrio e adattabilità. Il tuo DNA è in costante ricerca della propria identità.',
+    color: '#9d9d9d',
+    icon: '🌐',
+    accentVar: 'hsl(0, 0%, 62%)'
   }
 };
 

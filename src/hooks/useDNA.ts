@@ -41,8 +41,8 @@ export const useDNA = () => {
         const remoteDNA = await dnaClient.getDna(userId);
         
         if (remoteDNA) {
-          // Calculate archetype from scores
-          const archetype = calculateArchetype({
+          // Use archetype from database if available, otherwise calculate
+          const archetype = (remoteDNA.archetype as Archetype) || calculateArchetype({
             intuito: remoteDNA.intuito,
             audacia: remoteDNA.audacia,
             etica: remoteDNA.etica,
@@ -166,6 +166,35 @@ export const useDNA = () => {
 
     return saveDNA(updatedScores);
   };
+
+  // Expose DNA helper for testing in dev
+  useEffect(() => {
+    if (import.meta.env.DEV && typeof window !== 'undefined') {
+      (window as any).__dna = {
+        simulateDelta: async (delta: Partial<DNAScores>) => {
+          if (!user?.id) {
+            console.warn('[DNA] No user logged in');
+            return;
+          }
+          
+          try {
+            const { error } = await (await import('@/integrations/supabase/client')).supabase.rpc('fn_dna_apply_delta', {
+              p_user: user.id,
+              p_delta: delta,
+              p_source: 'dev_simulation',
+              p_note: 'Simulazione manuale da console'
+            });
+            
+            if (error) throw error;
+            console.log('[DNA] Delta applicato:', delta);
+          } catch (error) {
+            console.error('[DNA] Errore simulazione:', error);
+          }
+        },
+        currentProfile: dnaProfile
+      };
+    }
+  }, [user, dnaProfile]);
 
   return {
     dnaProfile,

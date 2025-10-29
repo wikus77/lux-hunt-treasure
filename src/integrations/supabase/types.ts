@@ -250,27 +250,33 @@ export type Database = {
       }
       agent_dna: {
         Row: {
+          archetype: string | null
           audacia: number
           etica: number
           intuito: number
+          mutated_at: string | null
           rischio: number
           updated_at: string
           user_id: string
           vibrazione: number
         }
         Insert: {
+          archetype?: string | null
           audacia?: number
           etica?: number
           intuito?: number
+          mutated_at?: string | null
           rischio?: number
           updated_at?: string
           user_id: string
           vibrazione?: number
         }
         Update: {
+          archetype?: string | null
           audacia?: number
           etica?: number
           intuito?: number
+          mutated_at?: string | null
           rischio?: number
           updated_at?: string
           user_id?: string
@@ -283,6 +289,7 @@ export type Database = {
           created_at: string
           delta: Json
           id: number
+          note: string | null
           source: string
           user_id: string
         }
@@ -290,6 +297,7 @@ export type Database = {
           created_at?: string
           delta: Json
           id?: number
+          note?: string | null
           source: string
           user_id: string
         }
@@ -297,6 +305,7 @@ export type Database = {
           created_at?: string
           delta?: Json
           id?: number
+          note?: string | null
           source?: string
           user_id?: string
         }
@@ -6528,6 +6537,25 @@ export type Database = {
           title: string
           url: string
         }[]
+      }
+      fn_dna_apply_delta: {
+        Args: {
+          p_delta: Json
+          p_note?: string
+          p_source: string
+          p_user: string
+        }
+        Returns: undefined
+      }
+      fn_dna_compute_archetype: {
+        Args: {
+          p_a: number
+          p_e: number
+          p_i: number
+          p_r: number
+          p_v: number
+        }
+        Returns: string
       }
       force_subscription_sync: { Args: { p_user_id: string }; Returns: boolean }
       force_user_to_base_tier: { Args: { p_user_id: string }; Returns: Json }

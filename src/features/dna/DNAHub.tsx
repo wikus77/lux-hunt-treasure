@@ -1,0 +1,274 @@
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { ARCHETYPE_CONFIGS } from './dnaTypes';
+import type { DNAProfile } from './dnaTypes';
+import { DNAVisualizer } from './DNAVisualizer';
+import { DNAEvolutionScene } from './DNAEvolutionScene';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+
+interface DNAHubProps {
+  dnaProfile: DNAProfile;
+  events?: Array<{
+    id: string;
+    source: string;
+    delta: any;
+    note?: string;
+    created_at: string;
+  }>;
+  onEvolve?: () => void;
+}
+
+/**
+ * M1SSION DNA™ Hub - Living Identity Dashboard
+ * 
+ * The central interface for viewing and managing agent DNA.
+ * Features:
+ * - Dynamic pentagon visualization of 5 DNA attributes
+ * - Evolution timeline with mutation history
+ * - Archetype badge and description
+ * - Cinematic evolution trigger
+ */
+export const DNAHub: React.FC<DNAHubProps> = ({ 
+  dnaProfile, 
+  events = [],
+  onEvolve
+}) => {
+  const [showEvolution, setShowEvolution] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
+
+  const archetypeConfig = ARCHETYPE_CONFIGS[dnaProfile.archetype];
+
+  const handleEvolve = () => {
+    setShowEvolution(true);
+    onEvolve?.();
+  };
+
+  return (
+    <>
+      <div 
+        className="min-h-screen bg-black text-white overflow-hidden"
+        style={{
+          background: `radial-gradient(circle at 50% 0%, ${archetypeConfig.color}15, transparent 70%), black`
+        }}
+      >
+        {/* Header */}
+        <motion.header
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-6 border-b border-white/10 backdrop-blur-xl bg-black/40"
+        >
+          <div className="max-w-6xl mx-auto">
+            <motion.h1 
+              className="text-3xl md:text-4xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent mb-2"
+            >
+              M1SSION DNA™
+            </motion.h1>
+            <p className="text-sm md:text-base text-white/60 font-medium">
+              Identità Evolutiva dell'Agente — Codice Vivo
+            </p>
+          </div>
+        </motion.header>
+
+        {/* Main Content */}
+        <div className="max-w-6xl mx-auto p-6 space-y-8">
+          {/* Archetype Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col md:flex-row items-center gap-6 p-6 rounded-2xl border backdrop-blur-xl"
+            style={{
+              backgroundColor: `${archetypeConfig.color}10`,
+              borderColor: `${archetypeConfig.color}30`,
+              boxShadow: `0 0 40px ${archetypeConfig.color}20`
+            }}
+          >
+            <div 
+              className="text-6xl md:text-8xl"
+              style={{
+                filter: `drop-shadow(0 0 20px ${archetypeConfig.color}60)`
+              }}
+            >
+              {archetypeConfig.icon}
+            </div>
+            <div className="flex-1 text-center md:text-left">
+              <Badge 
+                className="mb-2"
+                style={{
+                  backgroundColor: `${archetypeConfig.color}20`,
+                  color: archetypeConfig.color,
+                  borderColor: `${archetypeConfig.color}40`
+                }}
+              >
+                {archetypeConfig.name}
+              </Badge>
+              <h2 
+                className="text-2xl md:text-3xl font-bold mb-2"
+                style={{ color: archetypeConfig.color }}
+              >
+                {archetypeConfig.nameIt}
+              </h2>
+              <p className="text-white/70 text-sm md:text-base">
+                {archetypeConfig.description}
+              </p>
+            </div>
+          </motion.div>
+
+          {/* Tabs */}
+          <div className="flex gap-2 border-b border-white/10">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+                activeTab === 'overview'
+                  ? 'border-cyan-400 text-cyan-400'
+                  : 'border-transparent text-white/50 hover:text-white/80'
+              }`}
+            >
+              DNA Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('history')}
+              className={`px-6 py-3 font-semibold transition-all border-b-2 ${
+                activeTab === 'history'
+                  ? 'border-cyan-400 text-cyan-400'
+                  : 'border-transparent text-white/50 hover:text-white/80'
+              }`}
+            >
+              Storia Genetica
+            </button>
+          </div>
+
+          {/* Tab Content */}
+          <AnimatePresence mode="wait">
+            {activeTab === 'overview' ? (
+              <motion.div
+                key="overview"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="space-y-8"
+              >
+                {/* Pentagon Visualizer */}
+                <div className="flex justify-center">
+                  <DNAVisualizer profile={dnaProfile} size={400} />
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col md:flex-row gap-4 justify-center">
+                  <Button
+                    onClick={handleEvolve}
+                    size="lg"
+                    className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-bold px-8"
+                  >
+                    🧬 EVOLVI DNA
+                  </Button>
+                  <Button
+                    onClick={() => setActiveTab('history')}
+                    size="lg"
+                    variant="outline"
+                    className="border-white/20 hover:bg-white/10 font-bold px-8"
+                  >
+                    📜 STORIA GENETICA
+                  </Button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="history"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+              >
+                {/* Timeline */}
+                <ScrollArea className="h-[500px] rounded-lg border border-white/10 bg-black/40 backdrop-blur-xl p-6">
+                  {events.length === 0 ? (
+                    <div className="text-center text-white/50 py-12">
+                      <p className="text-lg mb-2">Nessuna mutazione registrata</p>
+                      <p className="text-sm">Le tue azioni future scriveranno la storia del tuo DNA</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {events.map((event, idx) => (
+                        <motion.div
+                          key={event.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.05 }}
+                          className="p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {event.source}
+                                </Badge>
+                                <span className="text-xs text-white/50">
+                                  {format(new Date(event.created_at), 'dd MMM yyyy, HH:mm', { locale: it })}
+                                </span>
+                              </div>
+                              {event.note && (
+                                <p className="text-sm text-white/70 mb-2">{event.note}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2">
+                                {Object.entries(event.delta || {}).map(([key, val]: [string, any]) => (
+                                  <span
+                                    key={key}
+                                    className={`text-xs font-mono px-2 py-1 rounded ${
+                                      val > 0
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : val < 0
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : 'bg-white/10 text-white/60'
+                                    }`}
+                                  >
+                                    {key.toUpperCase()}: {val > 0 ? '+' : ''}{val}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </ScrollArea>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Neon Glow Effect */}
+          <div className="fixed inset-0 pointer-events-none">
+            <motion.div
+              className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full opacity-20 blur-[100px]"
+              style={{
+                background: `radial-gradient(circle, ${archetypeConfig.color}, transparent 70%)`
+              }}
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.15, 0.25, 0.15]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Evolution Scene */}
+      <DNAEvolutionScene
+        isOpen={showEvolution}
+        archetype={dnaProfile.archetype}
+        onComplete={() => setShowEvolution(false)}
+      />
+    </>
+  );
+};
+
+// © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
