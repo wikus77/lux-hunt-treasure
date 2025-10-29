@@ -128,7 +128,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     // Prevent native touch scroll/pan
     (container.style as any).touchAction = 'none';
     
-    console.log('[DNA] Listeners attached: pointer=ON, mouse=ON, prefersReducedMotion=' + prefersReducedMotion);
+    console.log('[DNA] hover parallax enabled (desktop), drag enabled (desktop+mobile), prefersReducedMotion=' + prefersReducedMotion);
     
     // Constants
     const MAX_ROT_MOUSE = 18;
@@ -161,6 +161,29 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     const onPointerMove = (e: PointerEvent) => {
       if (!inputEnabledRef.current) return;
       
+      // Desktop parallax hover (no-drag): follow mouse without click
+      if (!isDraggingRef.current && e.pointerType === 'mouse') {
+        const rect = container.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const nx = (e.clientX - cx) / rect.width;   // -0.5..+0.5 approx
+        const ny = (e.clientY - cy) / rect.height;  // -0.5..+0.5 approx
+        const max = MAX_ROT_MOUSE; // ±18°
+        
+        targetRotationRef.current = {
+          x: clamp(ny * max, -max, max),
+          y: clamp(nx * max, -max, max),
+        };
+        
+        // Light velocity for smooth glide
+        velocityRef.current = {
+          x: (targetRotationRef.current.x - targetRotationRef.current.x) * 0.15,
+          y: (targetRotationRef.current.y - targetRotationRef.current.y) * 0.15,
+        };
+        
+        return; // Don't enter drag logic
+      }
+      
       if (isDraggingRef.current && dragStartRef.current) {
       // Dragging mode
       const dx = e.clientX - dragStartRef.current.x;
@@ -182,8 +205,6 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       targetRotationRef.current = { x: newX, y: newY };
         return;
       }
-      
-      // No parallax mode - pentagon only moves on explicit drag
     };
     
     const onPointerUp = (e: PointerEvent) => {
@@ -192,39 +213,37 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       dragStartRef.current = null;
       container.releasePointerCapture?.(e.pointerId);
       
-      // Apply inertia on mobile/touch
-      if (e.pointerType === 'touch' && (Math.abs(velocityRef.current.x) > 0.5 || Math.abs(velocityRef.current.y) > 0.5)) {
-        const applyInertia = () => {
-          if (Math.abs(velocityRef.current.x) < 0.01 && Math.abs(velocityRef.current.y) < 0.01) {
-            return;
-          }
-          
-          velocityRef.current.x *= INERTIA_DECAY;
-          velocityRef.current.y *= INERTIA_DECAY;
+      // Inertia: continue movement with decay (desktop + mobile)
+      const DECAY = 0.92;
+      const threshold = 0.01;
+      const velocityThreshold = e.pointerType === 'mouse' ? 0.3 : 0.5;
+      
+      if (Math.abs(velocityRef.current.x) > velocityThreshold || Math.abs(velocityRef.current.y) > velocityThreshold) {
+        const max = e.pointerType === 'mouse' ? MAX_ROT_MOUSE : MAX_ROT_TOUCH;
+        
+        const decay = () => {
+          velocityRef.current.x *= DECAY;
+          velocityRef.current.y *= DECAY;
           
           targetRotationRef.current = {
-            x: clamp(targetRotationRef.current.x + velocityRef.current.x, -MAX_ROT_TOUCH, MAX_ROT_TOUCH),
-            y: clamp(targetRotationRef.current.y + velocityRef.current.y, -MAX_ROT_TOUCH, MAX_ROT_TOUCH),
+            x: clamp(targetRotationRef.current.x + velocityRef.current.x, -max, max),
+            y: clamp(targetRotationRef.current.y + velocityRef.current.y, -max, max),
           };
           
-          requestAnimationFrame(applyInertia);
+          if (Math.abs(velocityRef.current.x) > threshold || Math.abs(velocityRef.current.y) > threshold) {
+            requestAnimationFrame(decay);
+          }
         };
-        applyInertia();
+        requestAnimationFrame(decay);
       }
     };
     
     const onMouseLeave = () => {
-      // Clear any pending timeout
+      // No auto-reset: keep last rotation when mouse leaves
+      // User can double-click/tap to reset manually if needed
       if (leaveTimeoutRef.current) {
         clearTimeout(leaveTimeoutRef.current);
       }
-      
-      // Delayed return to center (300ms)
-      leaveTimeoutRef.current = window.setTimeout(() => {
-        if (!isDraggingRef.current) {
-          targetRotationRef.current = { x: 0, y: 0 };
-        }
-      }, 300);
     };
     
     const onDoubleClick = () => {
