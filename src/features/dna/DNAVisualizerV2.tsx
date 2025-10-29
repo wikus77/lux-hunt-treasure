@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { DNAProfile } from './dnaTypes';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
+import { DNA3DPentagon } from './DNA3DPentagon';
 
 interface DNAVisualizerProps {
   profile: DNAProfile;
@@ -51,6 +52,8 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   // Debug tracing (temporary)
   const debugFramesRef = useRef(0);
   const DEBUG_DNA = true;
+  // 3D mode flag
+  const ENABLE_3D = true;
   
   // Separate concerns: visual effects vs interaction control
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -139,6 +142,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       console.log('[DNA TRACE] listeners attached: pointer=ON');
       console.log('[DNA TRACE] reducedMotion=', prefersReducedMotion, 'disableTilt=', disableTilt);
       console.log('[DNA TRACE] containerRef attached=', !!containerRef.current);
+      console.log('[DNA TRACE] 3D mode=', ENABLE_3D ? 'ON (React Three Fiber)' : 'OFF (Canvas 2D)');
     } else {
       console.log('[DNA] hover parallax enabled (desktop), drag enabled (desktop+mobile), prefersReducedMotion=' + prefersReducedMotion);
     }
@@ -342,7 +346,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || ENABLE_3D) return; // Skip 2D draw if 3D mode is active
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -542,15 +546,43 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         WebkitUserSelect: 'none'
       }}
     >
-      <canvas
-        ref={canvasRef}
-        className="rounded-lg"
-        style={{
-          filter: `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
-          cursor: disableTiltControl ? 'default' : (isDragging ? 'grabbing' : 'grab'),
-          pointerEvents: 'auto'
-        }}
-      />
+      {ENABLE_3D ? (
+        // 3D Pentagon (React Three Fiber)
+        <DNA3DPentagon 
+          rotation={rotationLiveRef.current} 
+          color={archetypeConfig.color} 
+          size={size}
+        />
+      ) : (
+        // 2D Canvas fallback
+        <canvas
+          ref={canvasRef}
+          className="rounded-lg"
+          style={{
+            filter: `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
+            cursor: disableTiltControl ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+            pointerEvents: 'auto'
+          }}
+        />
+      )}
+      
+      {/* Debug label (DEV only) */}
+      {process.env.NODE_ENV === 'development' && ENABLE_3D && (
+        <div 
+          style={{
+            position: 'absolute',
+            bottom: -25,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            fontSize: 10,
+            color: 'rgba(255,255,255,0.4)',
+            fontFamily: 'monospace',
+            pointerEvents: 'none'
+          }}
+        >
+          3D MODE ON
+        </div>
+      )}
     </motion.div>
   );
 };
