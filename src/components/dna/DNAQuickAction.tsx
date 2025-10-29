@@ -69,7 +69,6 @@ const DNAQuickAction: React.FC = () => {
       <div className="relative z-10">
         <ArchetypeIcon 
           archetype={dnaProfile.archetype}
-          color={archetypeConfig.color}
           size={24}
           animated={true}
         />

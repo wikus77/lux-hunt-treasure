@@ -28,6 +28,7 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
 }) => {
   const [phase, setPhase] = useState<'intro' | 'reveal' | 'outro'>('intro');
   const archetypeConfig = ARCHETYPE_CONFIGS[archetype];
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
     if (!isOpen) {
@@ -78,11 +79,11 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
               {/* Pulsing Background */}
               <motion.div
                 className="absolute inset-0 pointer-events-none"
-                animate={{
+                animate={prefersReducedMotion ? {} : {
                   scale: [1, 1.2, 1],
                   opacity: [0.3, 0.5, 0.3]
                 }}
-                transition={{
+                transition={prefersReducedMotion ? {} : {
                   duration: 2,
                   repeat: Infinity,
                   ease: "easeInOut"
@@ -99,11 +100,11 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
               {/* Archetype Icon */}
               <motion.div
                 className="relative z-10"
-                animate={{
+                animate={prefersReducedMotion ? {} : {
                   scale: [0.9, 1.1, 1],
                   rotate: [0, 5, -5, 0]
                 }}
-                transition={{
+                transition={prefersReducedMotion ? {} : {
                   duration: 2,
                   ease: "easeInOut"
                 }}
@@ -142,8 +143,8 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
                 </motion.div>
               </motion.div>
 
-              {/* Energy Particles - Increased from 12 to 18 */}
-              {[...Array(18)].map((_, i) => {
+              {/* Energy Particles - Respect prefers-reduced-motion */}
+              {!prefersReducedMotion && [...Array(18)].map((_, i) => {
                 const isOuter = i >= 12;
                 const angle = ((i % 12) / 12) * Math.PI * 2;
                 const distance = isOuter ? 350 : 300;
