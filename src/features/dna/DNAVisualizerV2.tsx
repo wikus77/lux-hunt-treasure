@@ -46,6 +46,11 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   const velocityRef = useRef({ x: 0, y: 0 });
   const leaveTimeoutRef = useRef<number | null>(null);
   const idleTimeoutRef = useRef<number | null>(null);
+  // Live rotation consumed by draw() to avoid stale closure
+  const rotationLiveRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  // Debug tracing (temporary)
+  const debugFramesRef = useRef(0);
+  const DEBUG_DNA = true;
   
   // Separate concerns: visual effects vs interaction control
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
