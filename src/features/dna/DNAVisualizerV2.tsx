@@ -161,50 +161,28 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     const onPointerMove = (e: PointerEvent) => {
       if (!inputEnabledRef.current) return;
       
-      // Desktop parallax hover (no-drag): follow mouse without click
-      if (!isDraggingRef.current && e.pointerType === 'mouse') {
-        const rect = container.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const nx = (e.clientX - cx) / rect.width;   // -0.5..+0.5 approx
-        const ny = (e.clientY - cy) / rect.height;  // -0.5..+0.5 approx
-        const max = MAX_ROT_MOUSE; // ±18°
-        
-        targetRotationRef.current = {
-          x: clamp(ny * max, -max, max),
-          y: clamp(nx * max, -max, max),
-        };
-        
-        // Light velocity for smooth glide
-        velocityRef.current = {
-          x: (targetRotationRef.current.x - targetRotationRef.current.x) * 0.15,
-          y: (targetRotationRef.current.y - targetRotationRef.current.y) * 0.15,
-        };
-        
-        return; // Don't enter drag logic
-      }
-      
-      if (isDraggingRef.current && dragStartRef.current) {
-      // Dragging mode
-      const dx = e.clientX - dragStartRef.current.x;
-      const dy = e.clientY - dragStartRef.current.y;
-      
-      const gain = e.pointerType === 'mouse' ? MOUSE_GAIN : TOUCH_GAIN;
-      const max = e.pointerType === 'mouse' ? MAX_ROT_MOUSE : MAX_ROT_TOUCH;
-      
-      const newX = clamp(dragStartRef.current.rotX + dy * gain * 0.1, -max, max);
-      const newY = clamp(dragStartRef.current.rotY + dx * gain * 0.1, -max, max);
-      
-      // Track velocity BEFORE updating target (for perceptible inertia)
+      // Direct follow: map pointer position to rotation (mouse hover + mouse drag + touch drag)
+      const rect = container.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const nx = (e.clientX - cx) / rect.width;   // roughly -0.5..+0.5
+      const ny = (e.clientY - cy) / rect.height;  // roughly -0.5..+0.5
+
+      const isTouch = e.pointerType === 'touch';
+      const max = isTouch ? MAX_ROT_TOUCH : MAX_ROT_MOUSE;
+      const gain = isTouch ? TOUCH_GAIN : MOUSE_GAIN;
+
+      const newX = clamp(ny * max * gain, -max, max);
+      const newY = clamp(nx * max * gain, -max, max);
+
+      // Track velocity vs previous target for smooth inertia on release
       const prevTarget = targetRotationRef.current;
       velocityRef.current = {
-        x: newX - prevTarget.x,
-        y: newY - prevTarget.y,
+        x: (newX - prevTarget.x) * 0.25,
+        y: (newY - prevTarget.y) * 0.25,
       };
-      
+
       targetRotationRef.current = { x: newX, y: newY };
-        return;
-      }
     };
     
     const onPointerUp = (e: PointerEvent) => {
