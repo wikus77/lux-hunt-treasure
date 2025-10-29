@@ -220,7 +220,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                     >
                       <Info className="w-4 h-4 text-cyan-400" />
                       <span className="text-sm text-cyan-400 font-medium">
-                        Muovi il mouse / Trascina per ruotare — doppio clic per reset
+                        Muovi il mouse / Trascina per ruotare · Doppio clic per reset · Tocca i pannelli
                       </span>
                     </motion.div>
                   )}
