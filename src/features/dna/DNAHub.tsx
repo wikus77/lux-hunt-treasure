@@ -1,15 +1,17 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
-import { DNAVisualizer } from './DNAVisualizer';
+import { DNAVisualizer } from './DNAVisualizerV2';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { X } from 'lucide-react';
+import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface DNAHubProps {
   dnaProfile: DNAProfile;
@@ -40,8 +42,28 @@ export const DNAHub: React.FC<DNAHubProps> = ({
 }) => {
   const [showEvolution, setShowEvolution] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
+  const [showSkippedPill, setShowSkippedPill] = useState(false);
+  const { getCurrentUser } = useUnifiedAuth();
 
   const archetypeConfig = ARCHETYPE_CONFIGS[dnaProfile.archetype];
+  const user = getCurrentUser();
+
+  // Check if user skipped today's onboarding
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const getTodayKey = () => {
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    };
+
+    const lastShown = localStorage.getItem(`dna:lastShown:${user.id}`);
+    const completed = localStorage.getItem(`dna:completed:${user.id}`) === '1';
+    const today = getTodayKey();
+
+    // Show pill if skipped today and not completed
+    setShowSkippedPill(lastShown === today && !completed);
+  }, [user?.id]);
 
   const handleEvolve = () => {
     setShowEvolution(true);
@@ -60,7 +82,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 border-b border-white/10 backdrop-blur-xl bg-black/40"
+          className="p-6 border-b border-white/10 backdrop-blur-xl bg-black/40 relative"
         >
           <div className="max-w-6xl mx-auto">
             <motion.h1 
@@ -72,6 +94,29 @@ export const DNAHub: React.FC<DNAHubProps> = ({
               Identità Evolutiva dell'Agente — Codice Vivo
             </p>
           </div>
+
+          {/* Skipped Today Pill */}
+          <AnimatePresence>
+            {showSkippedPill && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                className="absolute top-6 right-6 flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/30 backdrop-blur-sm"
+              >
+                <span className="text-xs text-yellow-400 font-medium">
+                  Primo sequenziamento disponibile domani
+                </span>
+                <button
+                  onClick={() => setShowSkippedPill(false)}
+                  className="text-yellow-400/60 hover:text-yellow-400 transition-colors"
+                  aria-label="Chiudi"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.header>
 
         {/* Main Content */}

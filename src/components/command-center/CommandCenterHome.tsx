@@ -17,6 +17,7 @@ import { useBuzzPricing } from "@/hooks/useBuzzPricing";
 import { useMissionStatus } from "@/hooks/useMissionStatus";
 import { useAuth } from "@/hooks/use-auth";
 import InviteFloatingButton from "@/components/home/InviteFloatingButton";
+import DNAQuickAction from "@/components/dna/DNAQuickAction";
 import { PulseBar, PulsePanel } from "@/features/pulse";
 
 export default function CommandCenterHome() {
@@ -209,6 +210,9 @@ export default function CommandCenterHome() {
 
 {/* Floating Invite circle button in top-right */}
 <InviteFloatingButton />
+
+{/* DNA Quick Action below Invite */}
+<DNAQuickAction />
 
     {/* Active Mission Box below the Prize Vision */}
       <motion.div 
