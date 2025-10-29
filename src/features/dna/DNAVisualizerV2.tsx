@@ -36,8 +36,8 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   const prevProfileRef = useRef<DNAProfile>(profile);
   const [vertexPulses, setVertexPulses] = useState<VertexPulse[]>([]);
   const [rotation, setRotation] = useState({ x: 0, y: 0 });
-  const [targetRotation, setTargetRotation] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
+  const targetRotationRef = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
   const dragStartRef = useRef({ x: 0, y: 0, rotX: 0, rotY: 0 });
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const reducedMotion = prefersReducedMotion || disableTilt;
@@ -119,7 +119,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     console.log('[DNA] Listeners attached: mousemove=ON, touchmove=ON, pointerdown=ON, prefersReducedMotion=' + prefersReducedMotion);
     
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) return;
+      if (isDraggingRef.current) return;
       
       const rect = container.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -130,34 +130,34 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       
       // Increased limits: ±20 degrees desktop
       const maxRot = 20;
-      setTargetRotation({
+      targetRotationRef.current = {
         x: Math.max(-maxRot, Math.min(maxRot, deltaY * maxRot * MOUSE_GAIN.current)),
         y: Math.max(-maxRot, Math.min(maxRot, deltaX * maxRot * MOUSE_GAIN.current))
-      });
+      };
     };
     
     const handleMouseLeave = () => {
-      if (!isDragging) {
+      if (!isDraggingRef.current) {
         // Smooth return to 0 with easing
-        setTargetRotation({ x: 0, y: 0 });
+        targetRotationRef.current = { x: 0, y: 0 };
       }
     };
     
     const handleTouchStart = (e: TouchEvent) => {
       if (e.touches.length !== 1) return;
       e.preventDefault();
-      setIsDragging(true);
+      isDraggingRef.current = true;
       const touch = e.touches[0];
       dragStartRef.current = {
         x: touch.clientX,
         y: touch.clientY,
-        rotX: targetRotation.x,
-        rotY: targetRotation.y
+        rotX: targetRotationRef.current.x,
+        rotY: targetRotationRef.current.y
       };
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isDragging || e.touches.length !== 1) return;
+      if (!isDraggingRef.current || e.touches.length !== 1) return;
       e.preventDefault();
       
       const touch = e.touches[0];
@@ -166,48 +166,48 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       
       // Increased limits: ±25 degrees mobile
       const maxRot = 25;
-      setTargetRotation({
+      targetRotationRef.current = {
         x: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotX + deltaY * TOUCH_GAIN.current)),
         y: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotY + deltaX * TOUCH_GAIN.current))
-      });
+      };
     };
     
     const handleTouchEnd = () => {
-      setIsDragging(false);
+      isDraggingRef.current = false;
     };
     
     // Pointer events fallback
     const handlePointerDown = (e: PointerEvent) => {
       if (e.pointerType === 'touch') return; // Already handled by touch
-      setIsDragging(true);
+      isDraggingRef.current = true;
       dragStartRef.current = {
         x: e.clientX,
         y: e.clientY,
-        rotX: targetRotation.x,
-        rotY: targetRotation.y
+        rotX: targetRotationRef.current.x,
+        rotY: targetRotationRef.current.y
       };
     };
     
     const handlePointerMove = (e: PointerEvent) => {
-      if (!isDragging || e.pointerType === 'touch') return;
+      if (!isDraggingRef.current || e.pointerType === 'touch') return;
       e.preventDefault();
       
       const deltaX = e.clientX - dragStartRef.current.x;
       const deltaY = e.clientY - dragStartRef.current.y;
       
       const maxRot = 20;
-      setTargetRotation({
+      targetRotationRef.current = {
         x: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotX + deltaY * 0.15)),
         y: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotY + deltaX * 0.15))
-      });
+      };
     };
     
     const handlePointerUp = () => {
-      setIsDragging(false);
+      isDraggingRef.current = false;
     };
     
     const handleDoubleClick = () => {
-      setTargetRotation({ x: 0, y: 0 });
+      targetRotationRef.current = { x: 0, y: 0 };
       setRotation({ x: 0, y: 0 });
     };
     
@@ -232,7 +232,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       container.removeEventListener('pointerup', handlePointerUp);
       container.removeEventListener('dblclick', handleDoubleClick);
     };
-  }, [isDragging, targetRotation, reducedMotion, prefersReducedMotion]);
+  }, [reducedMotion, prefersReducedMotion]);
   
   // Lerp/spring easing for smooth rotation
   useEffect(() => {
@@ -245,13 +245,14 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     
     const animate = () => {
       setRotation(prev => {
-        const alpha = isDragging ? 0.16 : 0.12; // More responsive on drag
-        const newX = lerp(prev.x, targetRotation.x, alpha);
-        const newY = lerp(prev.y, targetRotation.y, alpha);
+        const alpha = isDraggingRef.current ? 0.16 : 0.12; // More responsive on drag
+        const target = targetRotationRef.current;
+        const newX = lerp(prev.x, target.x, alpha);
+        const newY = lerp(prev.y, target.y, alpha);
         
         // Stop animating if close enough
-        if (Math.abs(newX - targetRotation.x) < 0.01 && Math.abs(newY - targetRotation.y) < 0.01) {
-          return { x: targetRotation.x, y: targetRotation.y };
+        if (Math.abs(newX - target.x) < 0.01 && Math.abs(newY - target.y) < 0.01) {
+          return { x: target.x, y: target.y };
         }
         
         return { x: newX, y: newY };
@@ -265,7 +266,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     return () => {
       if (animationId) cancelAnimationFrame(animationId);
     };
-  }, [targetRotation, isDragging, reducedMotion]);
+  }, [reducedMotion]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
