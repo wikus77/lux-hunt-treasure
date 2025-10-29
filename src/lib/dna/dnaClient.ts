@@ -7,6 +7,8 @@ export interface AgentDNA {
   etica: number;
   rischio: number;
   vibrazione: number;
+  archetype?: string;
+  mutated_at?: string;
   updated_at: string;
 }
 
