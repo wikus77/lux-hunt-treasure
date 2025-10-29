@@ -131,55 +131,61 @@ export const TesseractDNA: React.FC<TesseractDNAProps> = ({
     scene.add(cubeGroup);
     cubeGroupRef.current = cubeGroup;
 
-    // Premium glass material matching reference images - ultra-clear with strong refraction
+    // Ultra-premium glass material - nearly invisible with maximum refraction (reference-matched)
     const glassMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xe8f9ff,
+      color: 0xf5feff,
       transmission: 1.0,
-      opacity: 0.04,
+      opacity: 0.02,
       transparent: true,
-      thickness: 0.65,
-      roughness: 0.02,
+      thickness: 0.75,
+      roughness: 0.01,
       metalness: 0.0,
-      ior: 1.55,
-      specularIntensity: 1.2,
+      ior: 1.58,
+      specularIntensity: 1.4,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.02,
-      envMapIntensity: 2.2,
-      attenuationColor: new THREE.Color(0x88ffff),
-      attenuationDistance: 1.8,
+      clearcoatRoughness: 0.01,
+      envMapIntensity: 2.5,
+      attenuationColor: new THREE.Color(0x99ffff),
+      attenuationDistance: 2.0,
       side: THREE.DoubleSide,
-      reflectivity: 1.0
+      reflectivity: 1.0,
+      iridescence: 1.0,
+      iridescenceIOR: 1.3,
+      iridescenceThicknessRange: [100, 400]
     });
 
-    // Ultra-bright iridescent wireframe edges matching reference rainbow glow
+    // MAXIMUM INTENSITY rainbow wireframe edges - exactly matching reference photos
     const boxSize = 1.85;
     const boxGeo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
     const edgesGeo = new THREE.EdgesGeometry(boxGeo);
     
-    // Rainbow iridescent colors (cyan→lime→yellow→pink→magenta→violet)
+    // Extended rainbow spectrum for full iridescence (cyan→green→yellow→orange→red→pink→magenta→violet→blue)
     const rainbowColors = [
       new THREE.Color(0x00ffff), // cyan
-      new THREE.Color(0x00ff88), // cyan-green
-      new THREE.Color(0x88ff00), // lime
+      new THREE.Color(0x00ff99), // cyan-green
+      new THREE.Color(0x00ff00), // green
+      new THREE.Color(0x99ff00), // lime
       new THREE.Color(0xffff00), // yellow
-      new THREE.Color(0xff8800), // orange
-      new THREE.Color(0xff0088), // pink
+      new THREE.Color(0xffaa00), // orange
+      new THREE.Color(0xff6600), // red-orange
+      new THREE.Color(0xff0066), // hot pink
       new THREE.Color(0xff00ff), // magenta
-      new THREE.Color(0x8800ff)  // violet
+      new THREE.Color(0xaa00ff), // purple
+      new THREE.Color(0x6600ff)  // violet
     ];
     
-    // Triple-layer edges for intense prismatic rainbow glow (reference image style)
-    [1.0, 0.85, 0.65, 0.45].forEach((opacity, layer) => {
+    // Quad-layer edges for INTENSE holographic rainbow glow
+    [1.0, 0.9, 0.75, 0.55, 0.35].forEach((opacity, layer) => {
       const colorIndex = (layer * 2) % rainbowColors.length;
       const edgesMat = new THREE.LineBasicMaterial({
         color: rainbowColors[colorIndex],
-        linewidth: 2 + layer * 0.5,
+        linewidth: 3 + layer * 0.8,
         transparent: true,
         opacity: opacity,
         blending: THREE.AdditiveBlending
       });
       const wireframe = new THREE.LineSegments(edgesGeo.clone(), edgesMat);
-      wireframe.scale.setScalar(1 + layer * 0.002); // Slight offset for depth
+      wireframe.scale.setScalar(1 + layer * 0.003);
       cubeGroup.add(wireframe);
     });
 
@@ -201,41 +207,47 @@ export const TesseractDNA: React.FC<TesseractDNAProps> = ({
       cubeGroup.add(panel);
     });
 
-    // Ultra-bright glowing prismatic core (reference image center glow)
-    const coreGeo = new THREE.IcosahedronGeometry(0.36, 2);
+    // ULTRA-BRIGHT glowing prismatic core (matching reference center brilliance)
+    const coreGeo = new THREE.IcosahedronGeometry(0.38, 2);
     const coreMat = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      emissive: 0xff66ff,
-      emissiveIntensity: 4.5,
-      transmission: 0.7,
-      opacity: 0.98,
+      emissive: 0xff44ff,
+      emissiveIntensity: 5.5,
+      transmission: 0.75,
+      opacity: 1.0,
       transparent: true,
-      roughness: 0.02,
-      metalness: 0.2,
-      clearcoat: 1.0
+      roughness: 0.0,
+      metalness: 0.25,
+      clearcoat: 1.0,
+      iridescence: 1.0,
+      iridescenceIOR: 1.5
     });
     const core = new THREE.Mesh(coreGeo, coreMat);
     cubeGroup.add(core);
 
-    // Ultra-dense recursive lattice matching reference images (8³ = 512 mini-cubes)
-    const miniCubeSize = 0.11;
+    // MAXIMUM DENSITY recursive lattice - exactly matching reference photos (8³ = 512 mini-cubes)
+    const miniCubeSize = 0.10;
     const miniCubeGeo = new THREE.BoxGeometry(miniCubeSize, miniCubeSize, miniCubeSize);
     const miniEdgesGeo = new THREE.EdgesGeometry(miniCubeGeo);
     
     const instanceCount = Math.pow(latticeCount, 3);
     
-    // Rainbow gradient for depth (matching reference prismatic effect)
+    // FULL SPECTRUM rainbow gradient matching reference iridescence
     const getDepthRainbowColor = (x: number, y: number, z: number) => {
       const dist = Math.sqrt(x*x + y*y + z*z);
       const angle = Math.atan2(z, x);
-      const hue = ((angle / Math.PI + 1) * 0.5 + dist * 0.15) % 1.0;
-      // Wide spectrum: cyan→green→yellow→orange→pink→magenta
-      return new THREE.Color().setHSL(hue * 0.7 + 0.15, 0.95, 0.65);
+      const angleY = Math.atan2(y, Math.sqrt(x*x + z*z));
+      
+      // Complex multi-axis hue calculation for full rainbow spectrum
+      const hue = ((angle / Math.PI + 1) * 0.5 + (angleY / Math.PI + 0.5) * 0.3 + dist * 0.2) % 1.0;
+      
+      // Full spectrum: cyan→green→yellow→orange→red→pink→magenta→violet
+      return new THREE.Color().setHSL(hue * 0.8 + 0.1, 1.0, 0.7);
     };
     
-    // Create ultra-dense lattice grid with rainbow iridescence
+    // Create ultra-dense lattice with INTENSE rainbow iridescence
     const latticeGroup = new THREE.Group();
-    const spacing = 0.22;
+    const spacing = 0.20;
     const offset = (latticeCount - 1) * spacing / 2;
     
     for (let x = 0; x < latticeCount; x++) {
@@ -245,30 +257,30 @@ export const TesseractDNA: React.FC<TesseractDNAProps> = ({
           const py = y * spacing - offset;
           const pz = z * spacing - offset;
           
-          // Rainbow color based on 3D position
+          // Rainbow color with spatial variation
           const color = getDepthRainbowColor(px, py, pz);
           
-          // Distance-based opacity (brighter at edges, dimmer at center for depth)
+          // BRIGHTER opacity matching reference photos (edges brighter than center)
           const distFromCenter = Math.sqrt(px*px + py*py + pz*pz);
           const maxDist = Math.sqrt(3 * Math.pow(offset, 2));
           const normalizedDist = distFromCenter / maxDist;
-          const opacity = 0.55 + normalizedDist * 0.35;
+          const opacity = 0.65 + normalizedDist * 0.3;
           
           const latticeMaterial = new THREE.LineBasicMaterial({
             color: color,
             transparent: true,
             opacity: opacity,
-            linewidth: 1,
+            linewidth: 1.2,
             blending: THREE.AdditiveBlending
           });
           
           const miniWireframe = new THREE.LineSegments(miniEdgesGeo.clone(), latticeMaterial);
           miniWireframe.position.set(px, py, pz);
           
-          // Micro-jitter for organic shimmer
-          miniWireframe.rotation.x = Math.random() * 0.015;
-          miniWireframe.rotation.y = Math.random() * 0.015;
-          miniWireframe.rotation.z = Math.random() * 0.015;
+          // Subtle micro-jitter for organic holographic shimmer
+          miniWireframe.rotation.x = Math.random() * 0.02;
+          miniWireframe.rotation.y = Math.random() * 0.02;
+          miniWireframe.rotation.z = Math.random() * 0.02;
           
           latticeGroup.add(miniWireframe);
         }
@@ -287,18 +299,18 @@ export const TesseractDNA: React.FC<TesseractDNAProps> = ({
       composer.addPass(renderPass);
 
       if (!effectiveReducedMotion) {
-        // Ultra-bright bloom matching reference image intensity
+        // MAXIMUM INTENSITY bloom exactly matching reference photos
         const bloomEffect = new BloomEffect({
           intensity: bloomStrength,
-          luminanceThreshold: 0.15,
-          luminanceSmoothing: 0.9,
-          radius: 0.85,
+          luminanceThreshold: 0.1,
+          luminanceSmoothing: 0.95,
+          radius: 0.9,
           mipmapBlur: true
         });
         
-        // Stronger chromatic aberration for prismatic glass dispersion
+        // Enhanced chromatic aberration for strong prismatic dispersion
         const chromaticEffect = new ChromaticAberrationEffect({
-          offset: new THREE.Vector2(0.004, 0.004)
+          offset: new THREE.Vector2(0.006, 0.006)
         });
         
         const effectPass = new EffectPass(camera, bloomEffect, chromaticEffect);
@@ -438,34 +450,47 @@ export const TesseractDNA: React.FC<TesseractDNAProps> = ({
         cubeGroup.rotation.y = rotationRef.current.y;
       }
       
-      // Ultra-bright prismatic core pulse (reference image intensity)
+      // MAXIMUM INTENSITY prismatic core pulse (matching reference brilliance)
       if (core && !effectiveReducedMotion) {
-        const pulse = 1 + Math.sin(clockRef.current.elapsedTime * 2.4) * 0.15;
+        const pulse = 1 + Math.sin(clockRef.current.elapsedTime * 2.6) * 0.18;
         core.scale.setScalar(pulse);
         
-        // Full rainbow spectrum color shift
-        const hue = (clockRef.current.elapsedTime * 0.2) % 1.0;
-        coreMat.emissive.setHSL(hue, 1.0, 0.6);
-        coreMat.emissiveIntensity = 4.5 + Math.sin(clockRef.current.elapsedTime * 3) * 0.8;
+        // FULL rainbow spectrum color shift (faster for more dynamic effect)
+        const hue = (clockRef.current.elapsedTime * 0.25) % 1.0;
+        coreMat.emissive.setHSL(hue, 1.0, 0.65);
+        coreMat.emissiveIntensity = 5.5 + Math.sin(clockRef.current.elapsedTime * 3.2) * 1.2;
       }
       
-      // Enhanced lattice shimmer with rainbow wave
+      // INTENSE lattice rainbow wave animation (exactly like reference photos)
       if (latticeGroup && !effectiveReducedMotion) {
+        const time = clockRef.current.elapsedTime;
+        
         latticeGroup.children.forEach((child: any, i) => {
           if (child.material && child.material.color) {
-            // Color wave through lattice
-            const wave = Math.sin(clockRef.current.elapsedTime * 2 + i * 0.05);
-            const hueShift = (wave + 1) * 0.5;
-            const baseHue = ((child.position.x + child.position.z) * 0.2 + hueShift * 0.3) % 1.0;
-            child.material.color.setHSL(baseHue * 0.7 + 0.15, 0.95, 0.65);
+            // Multi-dimensional color wave creating flowing rainbow effect
+            const wave1 = Math.sin(time * 2.2 + i * 0.04);
+            const wave2 = Math.cos(time * 1.8 + i * 0.06);
+            const hueShift = (wave1 + wave2 + 2) * 0.25;
             
-            // Opacity shimmer
+            // Complex spatial hue calculation for full spectrum
+            const spatialHue = (
+              (child.position.x + child.position.z) * 0.25 + 
+              child.position.y * 0.15 + 
+              hueShift * 0.4
+            ) % 1.0;
+            
+            // Full rainbow spectrum (cyan→green→yellow→orange→red→pink→magenta→violet)
+            child.material.color.setHSL(spatialHue * 0.85 + 0.08, 1.0, 0.7);
+            
+            // Enhanced opacity shimmer
             if (child.material.opacity) {
-              const shimmer = Math.sin(clockRef.current.elapsedTime * 3.5 + i * 0.08) * 0.12;
+              const shimmer = Math.sin(time * 4 + i * 0.09) * 0.15;
               const distFactor = Math.sqrt(
-                child.position.x ** 2 + child.position.y ** 2 + child.position.z ** 2
+                child.position.x ** 2 + 
+                child.position.y ** 2 + 
+                child.position.z ** 2
               ) / offset;
-              child.material.opacity = 0.55 + distFactor * 0.35 + shimmer;
+              child.material.opacity = 0.65 + distFactor * 0.3 + shimmer;
             }
           }
         });
