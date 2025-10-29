@@ -36,12 +36,12 @@ function project(p: V3, perspective = 700, scale = 1) {
   return { x: p.x * d * scale, y: p.y * d * scale, d };
 }
 
-// 3D Pentagon constants
-const DEPTH = 12;            // Glass thickness
+// 3D Pentagon constants (Tron-Glass effect)
+const DEPTH = 25;            // Glass thickness (more pronounced 3D)
 const ROLL = 0;              // No roll for stable look
-const PERSPECTIVE = 700;     // Camera distance
-const FACE_ALPHA = 0.22;     // Front face translucency
-const EDGE_ALPHA = 0.85;     // Edge visibility
+const PERSPECTIVE = 600;     // Camera distance (closer = more dramatic)
+const FACE_ALPHA = 0.28;     // Front face translucency
+const EDGE_ALPHA = 0.92;     // Edge visibility (more prominent wireframe)
 // =================================================================
 
 interface DNAVisualizerProps {
@@ -480,9 +480,9 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       const pulseScale = (animate && !reducedVisuals) ? 1 + Math.sin(frame / 60) * 0.02 : 1;
       
       if (ENABLE_3D_EFFECTS) {
-        // BACK FACE (deeper, translucent)
+        // BACK FACE (deeper, translucent - more visible for 3D effect)
         ctx.save();
-        ctx.globalAlpha = FACE_ALPHA * 0.5;
+        ctx.globalAlpha = FACE_ALPHA * 0.65;
         ctx.beginPath();
         B.forEach((pt, idx) => {
           const x = centerX + pt.x;
@@ -505,11 +505,11 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         ctx.stroke();
         ctx.restore();
         
-        // EDGE CONNECTORS (wireframe glass effect)
+        // EDGE CONNECTORS (wireframe glass effect - more prominent)
         ctx.save();
-        ctx.globalAlpha = EDGE_ALPHA * 0.6;
-        ctx.strokeStyle = `${archetypeConfig.color}80`;
-        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = EDGE_ALPHA * 0.75;
+        ctx.strokeStyle = `${archetypeConfig.color}95`;
+        ctx.lineWidth = 2;
         for (let i = 0; i < F.length; i++) {
           ctx.beginPath();
           ctx.moveTo(centerX + F[i].x, centerY + F[i].y);
