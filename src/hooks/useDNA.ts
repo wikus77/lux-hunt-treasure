@@ -1,9 +1,10 @@
 // © 2025 Joseph MULÉ – M1SSION™ – ALL RIGHTS RESERVED – NIYVORA KFT™
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useUnifiedAuth } from './useUnifiedAuth';
 import { dnaClient } from '@/lib/dna/dnaClient';
 import type { DNAScores, DNAProfile, Archetype } from '@/features/dna/dnaTypes';
 import { calculateArchetype, getDefaultScores } from '@/features/dna/dnaTypes';
+import { useDebounce } from './useDebounce';
 
 /**
  * Get today's date key in YYYY-MM-DD format (local timezone)
@@ -151,21 +152,34 @@ export const useDNA = () => {
   };
 
   /**
-   * Update specific DNA attributes (partial update)
+   * Update specific DNA attributes (partial update) with debounce
    */
-  const updateDNA = async (partial: Partial<DNAScores>): Promise<boolean> => {
+  const pendingUpdateRef = useRef<NodeJS.Timeout | null>(null);
+  
+  const updateDNA = useCallback(async (partial: Partial<DNAScores>): Promise<boolean> => {
     if (!dnaProfile) return false;
 
-    const updatedScores: DNAScores = {
-      intuito: partial.intuito ?? dnaProfile.intuito,
-      audacia: partial.audacia ?? dnaProfile.audacia,
-      etica: partial.etica ?? dnaProfile.etica,
-      rischio: partial.rischio ?? dnaProfile.rischio,
-      vibrazione: partial.vibrazione ?? dnaProfile.vibrazione
-    };
+    // Clear any pending update
+    if (pendingUpdateRef.current) {
+      clearTimeout(pendingUpdateRef.current);
+    }
 
-    return saveDNA(updatedScores);
-  };
+    return new Promise((resolve) => {
+      // Debounce for 400ms to prevent burst updates
+      pendingUpdateRef.current = setTimeout(async () => {
+        const updatedScores: DNAScores = {
+          intuito: partial.intuito ?? dnaProfile.intuito,
+          audacia: partial.audacia ?? dnaProfile.audacia,
+          etica: partial.etica ?? dnaProfile.etica,
+          rischio: partial.rischio ?? dnaProfile.rischio,
+          vibrazione: partial.vibrazione ?? dnaProfile.vibrazione
+        };
+
+        const result = await saveDNA(updatedScores);
+        resolve(result);
+      }, 400);
+    });
+  }, [dnaProfile, saveDNA]);
 
   // Expose DNA helper for testing in dev
   useEffect(() => {

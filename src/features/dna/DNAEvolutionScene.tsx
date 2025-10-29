@@ -141,30 +141,39 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
                 </motion.div>
               </motion.div>
 
-              {/* Energy Particles */}
-              {[...Array(12)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-2 h-2 rounded-full"
-                  style={{
-                    backgroundColor: archetypeConfig.color,
-                    left: '50%',
-                    top: '50%'
-                  }}
-                  animate={{
-                    x: [0, Math.cos((i / 12) * Math.PI * 2) * 300],
-                    y: [0, Math.sin((i / 12) * Math.PI * 2) * 300],
-                    opacity: [1, 0],
-                    scale: [1, 0]
-                  }}
-                  transition={{
-                    duration: 2,
-                    ease: "easeOut",
-                    repeat: Infinity,
-                    repeatDelay: 0.5
-                  }}
-                />
-              ))}
+              {/* Energy Particles - Increased from 12 to 18 */}
+              {[...Array(18)].map((_, i) => {
+                const isOuter = i >= 12;
+                const angle = ((i % 12) / 12) * Math.PI * 2;
+                const distance = isOuter ? 350 : 300;
+                
+                return (
+                  <motion.div
+                    key={i}
+                    className="absolute rounded-full"
+                    style={{
+                      width: isOuter ? '3px' : '2px',
+                      height: isOuter ? '3px' : '2px',
+                      backgroundColor: archetypeConfig.color,
+                      left: '50%',
+                      top: '50%'
+                    }}
+                    animate={{
+                      x: [0, Math.cos(angle) * distance],
+                      y: [0, Math.sin(angle) * distance],
+                      opacity: [1, 0],
+                      scale: [1, 0]
+                    }}
+                    transition={{
+                      duration: isOuter ? 2.3 : 2,
+                      ease: "easeOut",
+                      repeat: Infinity,
+                      repeatDelay: isOuter ? 0.3 : 0.5,
+                      delay: isOuter ? 0.2 : 0
+                    }}
+                  />
+                );
+              })}
             </motion.div>
           )}
 
