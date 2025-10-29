@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 import { useDNA } from "@/hooks/useDNA";
 import { ARCHETYPE_CONFIGS } from "@/features/dna/dnaTypes";
 import { toast } from "sonner";
-import { DNABadge } from "./DNABadge";
+import { ArchetypeIcon } from "@/features/dna/ArchetypeIcon";
 
 /**
  * DNA Quick Action - positioned below "Invita un amico" button
@@ -65,25 +65,15 @@ const DNAQuickAction: React.FC = () => {
         }}
       />
 
-      {/* DNA Helix Icon */}
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="w-5 h-5 md:w-6 md:h-6 relative z-10"
-        style={{
-          color: archetypeConfig.color,
-          filter: `drop-shadow(0 0 8px ${archetypeConfig.color}60)`,
-        }}
-      >
-        <path d="M2 12C2 7.5 4 4 7 2c3-2 6-2 9 0s5 5.5 5 10-2 8-5 10c-3 2-6 2-9 0s-5-5.5-5-10z" />
-        <path d="M8 8c2 1 4 1 6 0M10 12h4M8 16c2-1 4-1 6 0" />
-      </svg>
+      {/* Archetype Icon - Cinematic */}
+      <div className="relative z-10">
+        <ArchetypeIcon 
+          archetype={dnaProfile.archetype}
+          color={archetypeConfig.color}
+          size={24}
+          animated={true}
+        />
+      </div>
     </motion.button>
   );
 };
