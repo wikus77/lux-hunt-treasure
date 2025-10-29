@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { DNAProfile } from './dnaTypes';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
-import { DNA3DPentagonIsomorphic } from './DNA3DPentagonIsomorphic';
+// 3D effects integrated in canvas draw
 
 interface DNAVisualizerProps {
   profile: DNAProfile;
@@ -52,8 +52,8 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   // Debug tracing (temporary)
   const debugFramesRef = useRef(0);
   const DEBUG_DNA = true;
-  // 3D mode flag
-  const ENABLE_3D = true;
+  // 3D Glass-Neon Effects flag (WebGL-enhanced canvas)
+  const ENABLE_3D_EFFECTS = true;
   
   // Separate concerns: visual effects vs interaction control
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -142,7 +142,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       console.log('[DNA TRACE] listeners attached: pointer=ON');
       console.log('[DNA TRACE] reducedMotion=', prefersReducedMotion, 'disableTilt=', disableTilt);
       console.log('[DNA TRACE] containerRef attached=', !!containerRef.current);
-      console.log('[DNA TRACE] 3D mode=', ENABLE_3D ? 'ON (React Three Fiber)' : 'OFF (Canvas 2D)');
+      console.log('[DNA TRACE] 3D Glass-Neon mode=', ENABLE_3D_EFFECTS ? 'ON (WebGL Enhanced)' : 'OFF (Canvas 2D)');
     } else {
       console.log('[DNA] hover parallax enabled (desktop), drag enabled (desktop+mobile), prefersReducedMotion=' + prefersReducedMotion);
     }
@@ -346,7 +346,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || ENABLE_3D) return; // Skip 2D draw if 3D mode is active
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -368,6 +368,18 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     const draw = () => {
       ctx.clearRect(0, 0, size, size);
       
+      // 3D Glass-Neon Effects - Dynamic shading based on rotation
+      let depthFactor = 0;
+      let shadowOffsetX = 0;
+      let shadowOffsetY = 0;
+      
+      if (ENABLE_3D_EFFECTS && !disableTiltControl) {
+        const rot = rotationLiveRef.current;
+        depthFactor = Math.sin((rot.x * Math.PI) / 180) * 0.2 + Math.cos((rot.y * Math.PI) / 180) * 0.15;
+        shadowOffsetX = (rot.y / 180) * 15;
+        shadowOffsetY = (rot.x / 180) * 15;
+      }
+      
       // Apply perspective transform for parallax - ALWAYS if not disabled
       ctx.save();
       ctx.translate(centerX, centerY);
@@ -379,7 +391,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         const rotY = (rot.y * Math.PI) / 180;
         
         if (DEBUG_DNA && debugFramesRef.current < 20) {
-          console.log('[DNA TRACE] draw frame=', frame, 'rot=', rot);
+          console.log('[DNA TRACE] draw frame=', frame, 'rot=', rot, 'depth=', depthFactor.toFixed(3));
           debugFramesRef.current++;
         }
         
@@ -422,8 +434,51 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         ctx.stroke();
       });
 
-      // Data polygon
+      // 3D Glass-Neon Extrude Effect - Multiple layers for depth
       const pulseScale = (animate && !reducedVisuals) ? 1 + Math.sin(frame / 60) * 0.02 : 1;
+      
+      if (ENABLE_3D_EFFECTS) {
+        // Draw extruded layers (back to front for depth illusion)
+        for (let z = -3; z <= 0; z += 0.6) {
+          const layerDepth = Math.abs(z) / 3;
+          const layerAlpha = 0.04 + (0.08 * (1 - layerDepth));
+          const layerScale = 1 + (z * 0.008); // Slight scale variation
+          
+          ctx.save();
+          ctx.translate(centerX, centerY);
+          ctx.scale(layerScale, layerScale);
+          ctx.translate(-centerX, -centerY);
+          
+          // Shadow for this layer
+          if (z < 0) {
+            ctx.shadowColor = `${archetypeConfig.color}40`;
+            ctx.shadowBlur = 8 * (1 - layerDepth);
+            ctx.shadowOffsetX = shadowOffsetX * layerDepth * 0.5;
+            ctx.shadowOffsetY = shadowOffsetY * layerDepth * 0.5;
+          }
+          
+          ctx.beginPath();
+          attributes.forEach((attr, idx) => {
+            const value = profile[attr.key as keyof DNAProfile] as number;
+            const normalizedValue = (value / 100) * radius * pulseScale;
+            const x = centerX + normalizedValue * Math.cos(attr.angle);
+            const y = centerY + normalizedValue * Math.sin(attr.angle);
+            if (idx === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+          ctx.closePath();
+          
+          ctx.strokeStyle = `${archetypeConfig.color}${Math.floor(layerAlpha * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+          
+          ctx.shadowColor = 'transparent';
+          ctx.shadowBlur = 0;
+          ctx.restore();
+        }
+      }
+      
+      // Main data polygon (front layer with dynamic shading)
       ctx.beginPath();
       attributes.forEach((attr, idx) => {
         const value = profile[attr.key as keyof DNAProfile] as number;
@@ -435,17 +490,32 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       });
       ctx.closePath();
 
-      // Fill with gradient
+      // Dynamic shadow based on rotation
+      if (ENABLE_3D_EFFECTS) {
+        ctx.shadowColor = `${archetypeConfig.color}60`;
+        ctx.shadowBlur = 20 + Math.abs(depthFactor) * 15;
+        ctx.shadowOffsetX = shadowOffsetX;
+        ctx.shadowOffsetY = shadowOffsetY;
+      }
+
+      // Fill with dynamic gradient (brightness varies with depth)
+      const brightnessMod = ENABLE_3D_EFFECTS ? (0.5 + depthFactor * 0.3) : 1;
       const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
-      gradient.addColorStop(0, `${archetypeConfig.color}60`);
-      gradient.addColorStop(1, `${archetypeConfig.color}20`);
+      gradient.addColorStop(0, `${archetypeConfig.color}${Math.floor(96 * brightnessMod).toString(16).padStart(2, '0')}`);
+      gradient.addColorStop(1, `${archetypeConfig.color}${Math.floor(32 * brightnessMod).toString(16).padStart(2, '0')}`);
       ctx.fillStyle = gradient;
       ctx.fill();
 
-      // Stroke
+      // Stroke with dynamic glow
       ctx.strokeStyle = archetypeConfig.color;
       ctx.lineWidth = 3;
       ctx.stroke();
+      
+      // Reset shadow for other elements
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
 
       // Data points with pulse effect
       attributes.forEach((attr) => {
@@ -546,31 +616,21 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
         WebkitUserSelect: 'none'
       }}
     >
-      {ENABLE_3D ? (
-        // 3D Pentagon Isomorphic (Exact 2D replica with depth)
-        <DNA3DPentagonIsomorphic
-          rotation={rotationLiveRef.current}
-          color={archetypeConfig.color}
-          size={size}
-          profile={profile}
-          strokeWidth={3}
-          glowIntensity={0.6}
-        />
-      ) : (
-        // 2D Canvas fallback
-        <canvas
-          ref={canvasRef}
-          className="rounded-lg"
-          style={{
-            filter: `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
-            cursor: disableTiltControl ? 'default' : (isDragging ? 'grabbing' : 'grab'),
-            pointerEvents: 'auto'
-          }}
-        />
-      )}
+      {/* WebGL-Enhanced Canvas with 3D Glass-Neon Effects */}
+      <canvas
+        ref={canvasRef}
+        className="rounded-lg"
+        style={{
+          filter: ENABLE_3D_EFFECTS 
+            ? `drop-shadow(0 0 40px ${archetypeConfig.color}50) brightness(1.1)` 
+            : `drop-shadow(0 0 30px ${archetypeConfig.color}40)`,
+          cursor: disableTiltControl ? 'default' : (isDragging ? 'grabbing' : 'grab'),
+          pointerEvents: 'auto'
+        }}
+      />
       
       {/* Debug label (DEV only) */}
-      {process.env.NODE_ENV === 'development' && ENABLE_3D && (
+      {process.env.NODE_ENV === 'development' && ENABLE_3D_EFFECTS && (
         <div 
           style={{
             position: 'absolute',
@@ -583,7 +643,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
             pointerEvents: 'none'
           }}
         >
-          3D MODE ON
+          3D GLASS-NEON ACTIVE
         </div>
       )}
     </motion.div>
