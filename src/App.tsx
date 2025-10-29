@@ -28,6 +28,7 @@ import { InterestSignalsProvider } from "./components/InterestSignalsProvider";
 import FirstLoginQuizManager from "./components/quiz/FirstLoginQuizManager";
 import { WalkthroughManager } from "./components/walkthrough/WalkthroughManager";
 import DNAManager from "./components/dna/DNAManager";
+import { CookieConsentManager } from "./features/consent/CookieConsentManager";
 // Import per esporre funzione popolamento KB globalmente
 import "@/utils/populateKnowledgeBase";
 import { NorahProactiveManager } from "./components/norah/NorahProactiveManager";
@@ -112,6 +113,7 @@ function App() {
                     <LegalOnboarding />
                     <FirstLoginQuizManager />
                     <DNAManager />
+                    <CookieConsentManager />
                     <WalkthroughManager />
                     <WouterRoutes />
                     <InstallPrompt />

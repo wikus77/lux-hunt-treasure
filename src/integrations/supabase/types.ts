@@ -3328,6 +3328,7 @@ export type Database = {
           can_access_app: boolean | null
           choose_plan_seen: boolean
           city: string | null
+          cookie_consent: Json | null
           country: string | null
           created_at: string
           credits: number | null
@@ -3387,6 +3388,7 @@ export type Database = {
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
+          cookie_consent?: Json | null
           country?: string | null
           created_at?: string
           credits?: number | null
@@ -3446,6 +3448,7 @@ export type Database = {
           can_access_app?: boolean | null
           choose_plan_seen?: boolean
           city?: string | null
+          cookie_consent?: Json | null
           country?: string | null
           created_at?: string
           credits?: number | null
