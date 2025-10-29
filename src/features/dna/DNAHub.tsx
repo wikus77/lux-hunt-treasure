@@ -8,6 +8,7 @@ import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
 import { DNAVisualizer } from './DNAVisualizerV2';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
+import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { X } from 'lucide-react';
@@ -132,14 +133,10 @@ export const DNAHub: React.FC<DNAHubProps> = ({
               boxShadow: `0 0 40px ${archetypeConfig.color}20`
             }}
           >
-            <div 
-              className="text-6xl md:text-8xl"
-              style={{
-                filter: `drop-shadow(0 0 20px ${archetypeConfig.color}60)`
-              }}
-            >
-              {archetypeConfig.icon}
-            </div>
+            <ArchetypeIcon 
+              archetype={dnaProfile.archetype} 
+              size={120}
+            />
             <div className="flex-1 text-center md:text-left">
               <Badge 
                 className="mb-2"

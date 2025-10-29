@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { ARCHETYPE_CONFIGS, type Archetype } from './dnaTypes';
+import { ArchetypeIcon } from './ArchetypeIcon';
 
 interface DNAEvolutionSceneProps {
   isOpen: boolean;
@@ -97,10 +98,7 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
 
               {/* Archetype Icon */}
               <motion.div
-                className="text-[120px] md:text-[200px] relative z-10"
-                style={{
-                  filter: `drop-shadow(0 0 40px ${archetypeConfig.color})`
-                }}
+                className="relative z-10"
                 animate={{
                   scale: [0.9, 1.1, 1],
                   rotate: [0, 5, -5, 0]
@@ -110,7 +108,10 @@ export const DNAEvolutionScene: React.FC<DNAEvolutionSceneProps> = ({
                   ease: "easeInOut"
                 }}
               >
-                {archetypeConfig.icon}
+                <ArchetypeIcon 
+                  archetype={archetype}
+                  size={160}
+                />
               </motion.div>
 
               {/* Text */}

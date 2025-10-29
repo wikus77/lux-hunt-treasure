@@ -29,10 +29,15 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   animate = true 
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const archetypeConfig = ARCHETYPE_CONFIGS[profile.archetype];
   const prevProfileRef = useRef<DNAProfile>(profile);
   const [vertexPulses, setVertexPulses] = useState<VertexPulse[]>([]);
+  const [rotation, setRotation] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0, rotX: 0, rotY: 0 });
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reducedMotion = prefersReducedMotion;
 
   // Pentagon vertex positions (clockwise from top)
   const attributes = [
@@ -75,6 +80,89 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     prevProfileRef.current = profile;
   }, [profile, prefersReducedMotion]);
 
+  // Mouse/touch parallax interaction
+  useEffect(() => {
+    if (reducedMotion) return;
+    
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isDragging) return;
+      
+      const rect = container.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const deltaX = (e.clientX - centerX) / rect.width;
+      const deltaY = (e.clientY - centerY) / rect.height;
+      
+      // Limit rotation to ±10 degrees
+      const maxRot = 10;
+      setRotation({
+        x: Math.max(-maxRot, Math.min(maxRot, deltaY * maxRot)),
+        y: Math.max(-maxRot, Math.min(maxRot, deltaX * maxRot))
+      });
+    };
+    
+    const handleMouseLeave = () => {
+      if (!isDragging) {
+        setRotation({ x: 0, y: 0 });
+      }
+    };
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      setIsDragging(true);
+      const touch = e.touches[0];
+      dragStartRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+        rotX: rotation.x,
+        rotY: rotation.y
+      };
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isDragging || e.touches.length !== 1) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - dragStartRef.current.x;
+      const deltaY = touch.clientY - dragStartRef.current.y;
+      
+      const maxRot = 15;
+      setRotation({
+        x: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotX + deltaY * 0.3)),
+        y: Math.max(-maxRot, Math.min(maxRot, dragStartRef.current.rotY + deltaX * 0.3))
+      });
+    };
+    
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+    };
+    
+    const handleDoubleClick = () => {
+      setRotation({ x: 0, y: 0 });
+    };
+    
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseleave', handleMouseLeave);
+    container.addEventListener('touchstart', handleTouchStart, { passive: false });
+    container.addEventListener('touchmove', handleTouchMove, { passive: false });
+    container.addEventListener('touchend', handleTouchEnd);
+    container.addEventListener('dblclick', handleDoubleClick);
+    
+    return () => {
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+      container.removeEventListener('touchstart', handleTouchStart);
+      container.removeEventListener('touchmove', handleTouchMove);
+      container.removeEventListener('touchend', handleTouchEnd);
+      container.removeEventListener('dblclick', handleDoubleClick);
+    };
+  }, [isDragging, rotation, reducedMotion]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -98,6 +186,26 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
 
     const draw = () => {
       ctx.clearRect(0, 0, size, size);
+      
+      // Apply perspective transform for parallax
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      
+      if (!reducedMotion) {
+        const perspective = 600;
+        const rotX = (rotation.x * Math.PI) / 180;
+        const rotY = (rotation.y * Math.PI) / 180;
+        
+        // Simple 2D projection approximation
+        const scaleX = Math.cos(rotY);
+        const skewY = Math.sin(rotY) * 0.3;
+        const scaleY = Math.cos(rotX);
+        const skewX = Math.sin(rotX) * 0.3;
+        
+        ctx.transform(scaleX, skewX, skewY, scaleY, 0, 0);
+      }
+      
+      ctx.translate(-centerX, -centerY);
 
       // Grid lines (concentric pentagons)
       for (let i = 1; i <= 5; i++) {
