@@ -231,7 +231,7 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
     };
   }, [scene]);
 
-  // Setup vanilla postprocessing
+  // Setup vanilla postprocessing with SEPARATE passes for convolution effects
   useEffect(() => {
     let composer: any;
     
@@ -240,40 +240,34 @@ const HyperCubeScene: React.FC<HyperCubeSceneProps> = ({ reducedMotion = false }
         await loadPostProcessing();
       
       composer = new EffectComposer(gl);
+      
+      // CRITICAL: Add RenderPass first
       composer.addPass(new RenderPass(scene, gl.getContext().canvas));
       
-      const effects: any[] = [];
+      // CRITICAL: Separate EffectPass for each convolution effect
+      // Bloom pass (convolution effect #1)
+      const bloom = new BloomEffect({
+        intensity: reducedMotion ? 0.35 : (mobile ? 0.8 : 1.2),
+        luminanceThreshold: reducedMotion ? 0.4 : 0.2,
+        luminanceSmoothing: reducedMotion ? 0.8 : 0.9,
+        mipmapBlur: !reducedMotion
+      });
+      composer.addPass(new EffectPass(gl.getContext().canvas, bloom));
       
+      // ChromaticAberration pass (convolution effect #2) - only if not reduced motion
       if (!reducedMotion) {
-        const bloom = new BloomEffect({
-          intensity: mobile ? 0.8 : 1.2,
-          luminanceThreshold: 0.2,
-          luminanceSmoothing: 0.9,
-          mipmapBlur: true
-        });
-        effects.push(bloom);
-        
         const chroma = new ChromaticAberrationEffect({
           offset: new THREE.Vector2(0.0015, 0.0015)
         });
-        effects.push(chroma);
-      } else {
-        const bloom = new BloomEffect({
-          intensity: 0.35,
-          luminanceThreshold: 0.4,
-          luminanceSmoothing: 0.8
-        });
-        effects.push(bloom);
+        composer.addPass(new EffectPass(gl.getContext().canvas, chroma));
       }
       
+      // SMAA pass (anti-aliasing, can be combined with other non-convolution effects)
       const smaa = new SMAAEffect();
-      effects.push(smaa);
-      
-      if (effects.length > 0) {
-        composer.addPass(new EffectPass(gl.getContext().canvas, ...effects));
-      }
+      composer.addPass(new EffectPass(gl.getContext().canvas, smaa));
       
       composerRef.current = composer;
+      console.log('🟢 DNA Composer ready (vanilla) - separate passes');
     };
     
     setupPostProcessing();
