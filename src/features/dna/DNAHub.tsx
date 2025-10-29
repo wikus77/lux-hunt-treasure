@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
-import { DNAVisualizer } from './DNAVisualizerV2';
+import { TesseractDNA } from './TesseractDNA';
 import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
@@ -220,7 +220,7 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                     >
                       <Info className="w-4 h-4 text-cyan-400" />
                       <span className="text-sm text-cyan-400 font-medium">
-                        Muovi il mouse / Trascina per ruotare · Doppio clic per reset · Tocca i pannelli
+                        Muovi il mouse / Trascina per ruotare — doppio clic per reset
                       </span>
                     </motion.div>
                   )}
@@ -236,9 +236,9 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                   />
                 </div>
 
-                {/* Pentagon Visualizer */}
+                {/* Tesseract 3D Visualizer */}
                 <div className="flex justify-center relative">
-                  <DNAVisualizer 
+                  <TesseractDNA 
                     profile={dnaProfile} 
                     size={400} 
                     disableTilt={reduceAnimations}
