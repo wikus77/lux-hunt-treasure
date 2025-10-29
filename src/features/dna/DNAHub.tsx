@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { ARCHETYPE_CONFIGS } from './dnaTypes';
 import type { DNAProfile } from './dnaTypes';
 import { DNAVisualizer } from './DNAVisualizerV2';
@@ -11,7 +12,7 @@ import { DNAEvolutionScene } from './DNAEvolutionScene';
 import { ArchetypeIcon } from './ArchetypeIcon';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { X } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import { useUnifiedAuth } from '@/hooks/useUnifiedAuth';
 
 interface DNAHubProps {
@@ -44,12 +45,14 @@ export const DNAHub: React.FC<DNAHubProps> = ({
   const [showEvolution, setShowEvolution] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'history'>('overview');
   const [showSkippedPill, setShowSkippedPill] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [reduceAnimations, setReduceAnimations] = useState(false);
   const { getCurrentUser } = useUnifiedAuth();
 
   const archetypeConfig = ARCHETYPE_CONFIGS[dnaProfile.archetype];
   const user = getCurrentUser();
 
-  // Check if user skipped today's onboarding
+  // Check if user skipped today's onboarding & show hint
   useEffect(() => {
     if (!user?.id) return;
 
@@ -64,7 +67,19 @@ export const DNAHub: React.FC<DNAHubProps> = ({
 
     // Show pill if skipped today and not completed
     setShowSkippedPill(lastShown === today && !completed);
-  }, [user?.id]);
+    
+    // Show hint once per day
+    const hintKey = `dna:hintShown:${user.id}:${today}`;
+    const hintShown = localStorage.getItem(hintKey) === '1';
+    
+    if (!hintShown && activeTab === 'overview') {
+      setShowHint(true);
+      localStorage.setItem(hintKey, '1');
+      
+      // Auto-hide after 2.5s
+      setTimeout(() => setShowHint(false), 2500);
+    }
+  }, [user?.id, activeTab]);
 
   const handleEvolve = () => {
     setShowEvolution(true);
@@ -194,9 +209,40 @@ export const DNAHub: React.FC<DNAHubProps> = ({
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-8"
               >
+                {/* Hint Pill */}
+                <AnimatePresence>
+                  {showHint && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center justify-center gap-2 px-4 py-2 mx-auto w-fit rounded-full bg-cyan-500/10 border border-cyan-500/30 backdrop-blur-sm"
+                    >
+                      <Info className="w-4 h-4 text-cyan-400" />
+                      <span className="text-sm text-cyan-400 font-medium">
+                        Suggerimento: muovi il mouse o trascina per ruotare il DNA
+                      </span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                
+                {/* Accessibility Toggle */}
+                <div className="flex items-center justify-center gap-3 px-4 py-2 mx-auto w-fit rounded-lg bg-white/5 border border-white/10">
+                  <span className="text-sm text-white/70">Riduci animazioni</span>
+                  <Switch
+                    checked={reduceAnimations}
+                    onCheckedChange={setReduceAnimations}
+                    aria-label="Riduci animazioni DNA"
+                  />
+                </div>
+
                 {/* Pentagon Visualizer */}
-                <div className="flex justify-center">
-                  <DNAVisualizer profile={dnaProfile} size={400} />
+                <div className="flex justify-center relative">
+                  <DNAVisualizer 
+                    profile={dnaProfile} 
+                    size={400} 
+                    disableTilt={reduceAnimations}
+                  />
                 </div>
 
                 {/* Actions */}
