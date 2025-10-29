@@ -51,6 +51,14 @@ export const Footer = () => {
                   Cookie Policy
                 </Link>
               </li>
+              <li>
+                <button 
+                  onClick={() => window.__consent?.open()}
+                  className="text-sm text-gray-400 hover:text-white transition-colors text-left"
+                >
+                  Gestisci preferenze cookie
+                </button>
+              </li>
             </ul>
           </div>
           

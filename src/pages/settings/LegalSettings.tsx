@@ -20,7 +20,13 @@ const LegalSettings: React.FC = () => {
   const { profileImage } = useProfileImage();
   const [loading, setLoading] = useState(false);
 
-  const legalLinks = [
+  const legalLinks: Array<{
+    title: string;
+    description: string;
+    url: string;
+    icon: any;
+    action?: () => void;
+  }> = [
     {
       title: 'Termini di Servizio',
       description: 'Condizioni d\'uso dell\'applicazione M1SSION™',
@@ -38,6 +44,13 @@ const LegalSettings: React.FC = () => {
       description: 'Come utilizziamo i cookie e tecnologie simili',
       url: '/cookie-policy',
       icon: Settings
+    },
+    {
+      title: 'Gestisci preferenze cookie',
+      description: 'Modifica le tue preferenze sui cookie',
+      url: '#consent',
+      icon: Settings,
+      action: () => window.__consent?.open()
     },
     {
       title: 'Regolamento M1SSION™',
@@ -150,7 +163,7 @@ const LegalSettings: React.FC = () => {
                     </div>
                   </div>
                   <Button
-                    onClick={() => openExternalLink(link.url)}
+                    onClick={() => link.action ? link.action() : openExternalLink(link.url)}
                     size="sm"
                     variant="outline"
                     className="border-white/20 text-white hover:bg-white/10"
