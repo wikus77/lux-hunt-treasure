@@ -45,6 +45,7 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
   const dragStartRef = useRef<{ x: number; y: number; rotX: number; rotY: number } | null>(null);
   const velocityRef = useRef({ x: 0, y: 0 });
   const leaveTimeoutRef = useRef<number | null>(null);
+  const idleTimeoutRef = useRef<number | null>(null);
   
   // Separate concerns: visual effects vs interaction control
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -161,7 +162,6 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
     const onPointerMove = (e: PointerEvent) => {
       if (!inputEnabledRef.current) return;
       
-      // Direct follow: map pointer position to rotation (mouse hover + mouse drag + touch drag)
       const rect = container.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
@@ -172,17 +172,33 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       const max = isTouch ? MAX_ROT_TOUCH : MAX_ROT_MOUSE;
       const gain = isTouch ? TOUCH_GAIN : MOUSE_GAIN;
 
-      const newX = clamp(ny * max * gain, -max, max);
-      const newY = clamp(nx * max * gain, -max, max);
+      const baseX = clamp(ny * max * gain, -max, max);
+      const baseY = clamp(nx * max * gain, -max, max);
 
-      // Track velocity vs previous target for smooth inertia on release
-      const prevTarget = targetRotationRef.current;
-      velocityRef.current = {
-        x: (newX - prevTarget.x) * 0.25,
-        y: (newY - prevTarget.y) * 0.25,
-      };
-
-      targetRotationRef.current = { x: newX, y: newY };
+      // Differentiate: explicit drag vs passive hover
+      if (isDraggingRef.current) {
+        // Manual control during drag (desktop + mobile)
+        const prevTarget = targetRotationRef.current;
+        velocityRef.current = {
+          x: (baseX - prevTarget.x) * 0.25,
+          y: (baseY - prevTarget.y) * 0.25,
+        };
+        targetRotationRef.current = { x: baseX, y: baseY };
+      } else if (e.pointerType === 'mouse') {
+        // Passive parallax hover (desktop only, reduced sensitivity)
+        const hoverX = baseX * 0.5; // 50% sensitivity for subtle effect
+        const hoverY = baseY * 0.5;
+        targetRotationRef.current = { x: hoverX, y: hoverY };
+        
+        // Idle stabilization: reset to (0,0) if mouse stays still
+        if (idleTimeoutRef.current) clearTimeout(idleTimeoutRef.current);
+        idleTimeoutRef.current = setTimeout(() => {
+          if (!isDraggingRef.current) {
+            targetRotationRef.current = { x: 0, y: 0 };
+          }
+        }, 800) as unknown as number;
+      }
+      // Touch without drag: no effect (touch requires explicit drag)
     };
     
     const onPointerUp = (e: PointerEvent) => {
@@ -248,6 +264,9 @@ export const DNAVisualizer: React.FC<DNAVisualizerProps> = ({
       
       if (leaveTimeoutRef.current) {
         clearTimeout(leaveTimeoutRef.current);
+      }
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
       }
     };
   }, []); // ❗️ EMPTY DEPENDENCY - NO STALE CLOSURE
