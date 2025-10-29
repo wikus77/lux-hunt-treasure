@@ -35,7 +35,9 @@ export function useConsentSync(onConsentChange?: (consent: ConsentData | null) =
           return;
         }
 
-        const remoteConsent = data?.cookie_consent ? (data.cookie_consent as unknown as ConsentData) : null;
+        // Type assertion: cookie_consent column exists but types haven't regenerated yet
+        const rawData = data as any;
+        const remoteConsent = rawData?.cookie_consent ? (rawData.cookie_consent as unknown as ConsentData) : null;
         if (!remoteConsent) {
           console.info('[Consent Sync] No remote consent found');
           return;
